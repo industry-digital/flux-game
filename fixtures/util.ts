@@ -1,47 +1,11 @@
-import { randomUUID } from '~/lib/uuid';
-import {
-  Character,
-  CharacterAttributes,
-  Entity,
-  EntityType,
-  EntityURN,
-  Exit,
-  ModifiableBoundedAttribute,
-  ModifiableScalarAttribute,
-  Place,
-  PlaceAttributes,
-  PlaceURN,
-  ROOT_NAMESPACE,
-  Taxonomy,
-} from '~/types/domain';
+import { ROOT_NAMESPACE } from '~/types/domain';
+import { Taxonomy } from '~/taxonomy';
+import { ModifiableScalarAttribute, ModifiableBoundedAttribute } from '~/entity/attribute';
+import { EntityURN, EntityType, Entity } from '~/entity/entity';
+import { Place, PlaceAttributes, Exit, PlaceURN } from '~/entity/place';
+import { Character, CharacterAttributes, CharacterCondition } from '~/entity/character';
 
-export const createEntityUrn = (type: EntityType, id: string): EntityURN => `${ROOT_NAMESPACE}:${type}:${id}`;
 export const identity = <T>(x: T): T => x;
-
-export type EntityEnvelopeTransformer = (entity: EntityEnvelope) => EntityEnvelope
-
-export type EntityEnvelope = Omit<Entity, 'type' | 'attributes'>;
-
-export const createEntityEnvelope = <
-  T extends EntityType,
-> (
-  type: T,
-  transform: EntityEnvelopeTransformer = identity,
-  now = Date.now(),
-): EntityEnvelope => {
-  return transform({
-    id: createEntityUrn(type, randomUUID()),
-    name: '',
-    description: '',
-    createdAt: now,
-    updatedAt: now,
-    version: 0,
-  });
-};
-
-export const isCharacter = (character: Entity): character is Character => {
-  return character.type === EntityType.CHARACTER;
-};
 
 export const createModifiableScalarAttribute = (
   transform: (attribute: ModifiableScalarAttribute) => ModifiableScalarAttribute = identity
@@ -55,6 +19,14 @@ export const createModifiableBoundedAttribute = (
   return transform({ natural: { current: 10, max: 10 } });
 };
 
+export const createEntityUrn = <T extends EntityType>(type: T, ...tokens: string[]): EntityURN => {
+  const prefix = `${ROOT_NAMESPACE}:${type}`;
+  // Only filter out null/undefined, but keep empty strings if they're intentional
+  const suffix = tokens.filter(token => token != null).join(':');
+  return `${prefix}:${suffix}` as EntityURN;
+};
+
+// Generic type to create any entity type
 export type EntityCreator<T extends EntityType, A extends object> = (
   entity: Entity<T, A>
 ) => Entity<T, A>;
@@ -91,7 +63,7 @@ export const createCharacter = (
   options: FactoryOptions = {}
 ): Character => {
   return createBaseEntity(
-    EntityType.CHARACTER as EntityType,
+    'character',
     (baseEntity) => transform({
       ...baseEntity,
       attributes: {
@@ -140,7 +112,7 @@ export const createPlace = (
   options: FactoryOptions = {}
 ): Place => {
   return createBaseEntity(
-    EntityType.PLACE as EntityType,
+    EntityType.PLACE,
     (baseEntity) => {
       // Apply default place attributes
       const withDefaults: Place = {
@@ -152,6 +124,7 @@ export const createPlace = (
         }
       };
 
+      // Apply user-provided transformations
       return transform(withDefaults);
     },
     options,
