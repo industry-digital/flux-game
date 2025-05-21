@@ -1,0 +1,5 @@
+#!/usr/bin/env bash
+
+npx typia setup --manager=npm
+
+

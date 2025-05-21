@@ -37,7 +37,7 @@ type ActorMovementEventInputBase = {
 
 export type ActorMovementDidFailEventInput = EmergentEventInput<
   EventType.ACTOR_MOVEMENT_DID_FAIL,
-  ActorMovementEventInputBase & { cause: Taxonomy.Causes }
+  ActorMovementEventInputBase & { reason: string }
 >;
 
 export type ActorMovementDidSucceedEventInput = EmergentEventInput<

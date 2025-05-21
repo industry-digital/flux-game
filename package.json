@@ -8,7 +8,8 @@
   "main": "dist/index.js",
   "scripts": {
     "build": "tsc",
-    "test": "vitest"
+    "test": "vitest",
+    "prepare": "ts-patch install"
   },
   "volta": {
     "node": "22.15.0",
@@ -16,7 +17,9 @@
   },
   "devDependencies": {
     "@faker-js/faker": "^9.8.0",
-    "flux-types": "0.0.68",
+    "flux-types": "0.0.71",
+    "ts-patch": "^3.3.0",
+    "typescript": "~5.8.3",
     "vite": "^6.3.5",
     "vitest": "^3.1.3"
   },
