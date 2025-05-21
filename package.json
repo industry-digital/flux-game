@@ -17,7 +17,7 @@
   },
   "devDependencies": {
     "@faker-js/faker": "^9.8.0",
-    "flux-types": "0.0.71",
+    "flux-types": "0.0.74",
     "ts-patch": "^3.3.0",
     "typescript": "~5.8.3",
     "vite": "^6.3.5",

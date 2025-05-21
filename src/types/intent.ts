@@ -1,3 +1,3 @@
-  export enum CommandType {
-    MOVE = 'MOVE',
-  }
+export enum CommandType {
+  MOVE = 'MOVE',
+}

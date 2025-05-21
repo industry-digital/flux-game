@@ -1,7 +1,9 @@
-import { DeclarationContainer } from 'flux-types';
+import { Command, DeclarationContainer, Entity, EntityURN, Intent, Place, PlaceURN } from 'flux-types';
 
 export type {
   Command,
+  CommandInput,
+  CommandHandlerInterface,
   Character,
   CharacterAttributes,
   CharacterStats,
@@ -14,6 +16,8 @@ export type {
   Entity,
   EntityURN,
   Exit,
+  IntentInput,
+  Intent,
   Inventory,
   ModifiableBoundedAttribute,
   ModifiableScalarAttribute,
@@ -24,6 +28,7 @@ export type {
   PlaceEntities,
   PlaceScopedHistoricalEvent,
   PureReducer,
+  PureHandlerInterface,
   PureHandlerImplementation,
   SymbolicLink,
   Taxonomy,
@@ -51,6 +56,8 @@ export type {
   ItemURN,
 } from 'flux-types';
 
+export type AllowedInput = Command | Intent;
+
 export enum EntityType {
   PLACE = "place",
   CHARACTER = "character",
@@ -63,7 +70,30 @@ export type URNLike = `${string}:${string}`;
 
 export { CommandType } from './intent';
 
-export type PureReducerContext<ExpectedWorldState = any> = DeclarationContainer & {
+/**
+ * This is the minimal representation of the world state that is passed to all pure reducers
+ */
+export type BaseWorldStateProjection = {
+  /**
+   * The URN of the current actor
+   */
+  self: EntityURN;
+
+  /**
+   * The various actors of the world, indexed by URN
+   * This will always contain the current actor
+   */
+  actors: Record<EntityURN, Entity<any>>;
+
+  /**
+   * The various places of the world, indexed by URN
+   */
+  places: Record<PlaceURN, Place>;
+};
+
+export type PureReducerContext<
+  ExpectedWorldState extends BaseWorldStateProjection = BaseWorldStateProjection,
+> = DeclarationContainer & {
   world: ExpectedWorldState;
 };
 
