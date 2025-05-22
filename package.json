@@ -1,11 +1,13 @@
 {
   "name": "flux-game",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "description": "Core game logic for the Flux Simulation Project",
   "license": "UNLICENCED",
   "author": "",
   "type": "commonjs",
   "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "files": ["dist"],
   "scripts": {
     "build": "tsc",
     "test": "vitest",
