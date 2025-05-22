@@ -20,3 +20,4 @@ node_modules
 /.runtime
 *.log
 
+/package-lock.json
