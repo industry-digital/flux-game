@@ -71,9 +71,10 @@ export type URNLike = `${string}:${string}`;
 export { CommandType } from './intent';
 
 /**
- * This is the minimal representation of the world state that is passed to all pure reducers
+ * This is the minimal representation of the world state that is passed to all pure reducers in the
+ * Transformation stage of the pipeline. All projections in the server *must* be a superset of this type.
  */
-export type BaseWorldStateProjection = {
+export type MinimalWorldStateProjection = {
   /**
    * The URN of the current actor
    */
@@ -92,7 +93,7 @@ export type BaseWorldStateProjection = {
 };
 
 export type PureReducerContext<
-  ExpectedWorldState extends BaseWorldStateProjection = BaseWorldStateProjection,
+  ExpectedWorldState extends MinimalWorldStateProjection = MinimalWorldStateProjection,
 > = DeclarationContainer & {
   world: ExpectedWorldState;
 };
