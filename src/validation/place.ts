@@ -1,4 +1,5 @@
 import * as typia from 'typia';
+import { createEntityValidator } from './entity';
 import {
   PlaceAttributes,
   PlaceURN,
@@ -6,8 +7,7 @@ import {
   PlaceScopedHistoricalEvent,
   Exit,
   EntityType,
-} from '~/types/domain';
-import { createEntityValidator } from './entity';
+} from '~/types';
 
 /**
  * Validator for a complete Place entity

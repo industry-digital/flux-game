@@ -3,7 +3,7 @@ import {
   ModifiableScalarAttribute,
   ModifiableBoundedAttribute,
   NormalizedValueBetweenZeroAndOne,
-} from '~/types/domain';
+} from '~/types';
 
 /**
  * Validator for ModifiableScalarAttribute

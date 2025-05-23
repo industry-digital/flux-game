@@ -1,15 +1,20 @@
 export {
-  PureReducerContext, MinimalWorldStateProjection, PureHandlerImplementation, PureReducer,
-  Command, Intent,
-} from '~/types/domain';
-export { EventType } from '~/types/event';
-export { CommandType } from '~/types/intent';
-import { MoveCommandHandler } from '~/command/MOVE/handler';
+  Command,
+  CommandType,
+  EventType,
+  Intent,
+  MinimalWorldProjection,
+  PureHandlerImplementation,
+  PureReducer,
+  PureReducerContext,
+} from '~/types';
+
+import { MOVE } from '~/command/MOVE';
 
 /**
  * Export all command handlers
- * The Flux World Server will use this to build the Transformation stage DAG
+ * The Flux World Server literally spreads this array into the Transformation stage
  */
 export const handlers = [
-  MoveCommandHandler,
+  MOVE,
 ];

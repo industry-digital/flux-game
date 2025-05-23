@@ -7,7 +7,7 @@ import {
   SymbolicLink,
   Character,
   Place
-} from '~/types/domain';
+} from '~/types';
 
 /**
  * Validator for the base Entity type

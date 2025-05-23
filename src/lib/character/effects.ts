@@ -1,12 +1,11 @@
-import { createTaxonomyUrn } from '~/lib/taxonomy';
-import { Vocabulary } from '~/types/domain';
+import { createEffectUrn } from '~/lib/taxonomy';
 
-export enum EffectType {
-  DEAD = 'dead',
-  INCAPACITATED = 'incapacitated',
-  UNCONSCIOUS = 'unconscious',
-  STUNNED = 'stunned',
-  BLINDED = 'blinded',
-}
+export const EffectType = {
+  DEAD: createEffectUrn('dead'),
+  INCAPACITATED: createEffectUrn('incapacitated'),
+  UNCONSCIOUS: createEffectUrn('unconscious'),
+  STUNNED: createEffectUrn('stunned'),
+  BLINDED: createEffectUrn('blinded'),
+} as const;
 
-export const createEffectURN = (effect: EffectType): string => createTaxonomyUrn(Vocabulary.EFFECT, effect);
+export type EffectType = typeof EffectType[keyof typeof EffectType];

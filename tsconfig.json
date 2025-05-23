@@ -12,7 +12,10 @@
     "paths": {
       "~/*": [
         "src/*"
-      ]
+      ],
+      "@flux/*": [
+        "src/types/*"
+      ],
     },
     "plugins": [
       {

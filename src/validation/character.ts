@@ -1,4 +1,5 @@
 import * as typia from 'typia';
+import { createEntityValidator } from './entity';
 import {
   CharacterAttributes,
   CharacterStats,
@@ -10,9 +11,7 @@ import {
   SkillState,
   EntityType,
   Inventory,
-
-} from '~/types/domain';
-import { createEntityValidator } from './entity';
+} from '~/types';
 
 /**
  * Validator for a complete Character entity

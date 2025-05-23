@@ -1,24 +1,16 @@
-import { Command, CommandType, PureReducer, PureReducerContext } from '~/types/domain';
-import { useActorMovement } from '~/lib/actor/movement';
+import { CommandType, Transformer } from '~/types';
 import { MoveCommandArgs } from '~/command/MOVE';
+import { useActorMovement } from '~/lib/actor/movement';
 
 /**
  * Reducer for MOVE commands
  * Uses the actor movement hook to process movement between places
  */
-export const MoveCommandReducer: PureReducer<
-  PureReducerContext,
-  Command<CommandType.MOVE,
-  MoveCommandArgs>
-> = (context, command) => {
+export const MoveCommandReducer: Transformer<CommandType.MOVE, MoveCommandArgs> = (context, command) => {
   const { move } = useActorMovement(context);
   const { direction } = command.args;
-  const { success, reason } = move(direction);
 
-  // Could handle results here if needed
-  // if (!success) {
-  //   context.declareError(new Error(reason));
-  // }
+  move(direction);
 
   return context;
 };

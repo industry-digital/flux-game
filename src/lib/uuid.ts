@@ -2,7 +2,7 @@
 
 export type RandomUUIDGenerator = () => `${string}-${string}-${string}-${string}-${string}`;
 
-export const createRandomUUIDGenerator = (fallback?: RandomUUIDGenerator): (() => string) => {
+export const createRandomUUIDGenerator = (fallback?: RandomUUIDGenerator): RandomUUIDGenerator => {
   // Modern browsers and Node.js 16+ with native crypto.randomUUID
   if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
     return () => crypto.randomUUID();

@@ -1,4 +1,7 @@
-import { EntityURN, PlaceURN, Taxonomy } from '@flux/taxonomy';
+/**
+ * Override this with an enum in your local codebase via declaration merging.
+ */
+export type EventType = any;
 
 export type EventPayload = Record<string, any>;
 
@@ -8,7 +11,7 @@ export type EmergentEventInput<T extends EventType, P extends EventPayload = Eve
    */
   id?: string;
   /**
-   * Identfies Intent or Command that triggered this event.
+   * The Intent or Command that triggered this event.
    */
   trace?: string;
   /**
@@ -33,25 +36,3 @@ export type EmergentEvent<T extends EventType = EventType, P extends EventPayloa
   ts: number;
   trace: string;
 }
-
-export enum EventType {
-  ACTOR_MOVEMENT_DID_SUCCEED = 'actor:move:success',
-  ACTOR_MOVEMENT_DID_FAIL = 'actor:move:failure',
-};
-
-type ActorMovementEventInputBase = {
-  actor: EntityURN;
-  origin: PlaceURN;
-  dest: PlaceURN;
-  exit: Taxonomy.Directions;
-};
-
-export type ActorMovementDidFailEventInput = EmergentEventInput<
-  EventType.ACTOR_MOVEMENT_DID_FAIL,
-  ActorMovementEventInputBase & { reason: string }
->;
-
-export type ActorMovementDidSucceedEventInput = EmergentEventInput<
-  EventType.ACTOR_MOVEMENT_DID_SUCCEED,
-  ActorMovementEventInputBase
->;

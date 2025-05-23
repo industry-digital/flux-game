@@ -1,77 +1,57 @@
+import { createDirectionUrn, createPlaceUrn, createUrn } from '~/lib/taxonomy';
 import { randomUUID } from '~/lib/uuid';
 import {
   Character,
   CharacterAttributes,
+  CharacterCondition,
+  DirectionURN,
   Entity,
   EntityType,
-  EntityURN,
   Exit,
   ModifiableBoundedAttribute,
   ModifiableScalarAttribute,
   Place,
   PlaceAttributes,
   PlaceURN,
-  ROOT_NAMESPACE,
   Taxonomy,
-} from '~/types/domain';
+  UUIDLike,
+} from '~/types';
 
-export const createEntityUrn = (type: EntityType, id: string): EntityURN => `${ROOT_NAMESPACE}:${type}:${id}`;
-export const identity = <T>(x: T): T => x;
-
-export type EntityEnvelopeTransformer = (entity: EntityEnvelope) => EntityEnvelope
-
-export type EntityEnvelope = Omit<Entity, 'type' | 'attributes'>;
-
-export const createEntityEnvelope = <
-  T extends EntityType,
-> (
-  type: T,
-  transform: EntityEnvelopeTransformer = identity,
-  now = Date.now(),
-): EntityEnvelope => {
-  return transform({
-    id: createEntityUrn(type, randomUUID()),
-    name: '',
-    description: '',
-    createdAt: now,
-    updatedAt: now,
-    version: 0,
-  });
-};
+const identity = <T>(x: T): T => x;
 
 export const isCharacter = (character: Entity): character is Character => {
   return character.type === EntityType.CHARACTER;
 };
 
 export const createModifiableScalarAttribute = (
-  transform: (attribute: ModifiableScalarAttribute) => ModifiableScalarAttribute = identity
+  transform: (attribute: ModifiableScalarAttribute) => ModifiableScalarAttribute = identity,
 ): ModifiableScalarAttribute => {
   return transform({ natural: 10 });
 };
 
 export const createModifiableBoundedAttribute = (
-  transform: (attribute: ModifiableBoundedAttribute) => ModifiableBoundedAttribute = identity
+  transform: (attribute: ModifiableBoundedAttribute) => ModifiableBoundedAttribute = identity,
 ): ModifiableBoundedAttribute => {
   return transform({ natural: { current: 10, max: 10 } });
 };
 
 export type EntityCreator<T extends EntityType, A extends object> = (
-  entity: Entity<T, A>
+  entity: Entity<T, A>,
 ) => Entity<T, A>;
 
 export type FactoryOptions = {
   now?: number;
+  uuid?: () => UUIDLike;
 };
 
-// Create a base entity with common properties but with proper typing
-export const createBaseEntity = <T extends EntityType, A extends object>(
+export const createEntity = <T extends EntityType, A extends object>(
   type: T,
   transform: EntityCreator<T, A> = identity,
-  { now = Date.now() }: FactoryOptions = {}
+  { now = Date.now(), uuid = randomUUID }: FactoryOptions = {},
 ): Entity<T, A> => {
-  // Create an entity with minimal defaults
-  const baseEntity: Partial<Entity<T, A>> = {
-    id: createEntityUrn(type, crypto.randomUUID()),
+  const urn = createUrn(type, uuid());
+  const defaults: Partial<Entity<T, A>> = {
+    id: urn,
     type,
     name: '',
     description: '',
@@ -81,22 +61,20 @@ export const createBaseEntity = <T extends EntityType, A extends object>(
     version: 0
   };
 
-  // Apply any transformations
-  return transform(baseEntity as Entity<T, A>);
+  return transform(defaults as Entity<T, A>);
 };
 
-// Character creation with proper typing
 export const createCharacter = (
-  transform: EntityCreator<EntityType, CharacterAttributes> = identity,
+  transform: EntityCreator<EntityType.CHARACTER, CharacterAttributes> = identity,
   options: FactoryOptions = {}
 ): Character => {
-  return createBaseEntity(
-    EntityType.CHARACTER as EntityType,
-    (baseEntity) => transform({
-      ...baseEntity,
+  return createEntity(
+    EntityType.CHARACTER,
+    (entity) => transform({
+      ...entity,
       attributes: {
         level: 1,
-        condition: 'alive',
+        condition: CharacterCondition.ALIVE,
         hp: createModifiableBoundedAttribute(),
         mana: {},
         stats: {
@@ -112,7 +90,7 @@ export const createCharacter = (
         injuries: {},
         mass: createModifiableScalarAttribute(attr => ({
           ...attr,
-          natural: 70,
+          natural: 70_000,
         })),
         origin: '',
         equipment: {},
@@ -128,35 +106,34 @@ export const createCharacter = (
         },
         abilities: {},
         preferences: {},
+        reputation: {},
       },
     }),
     options,
   );
 };
 
-// Place creation with proper typing
 export const createPlace = (
   transform: EntityCreator<EntityType.PLACE, PlaceAttributes> = identity,
   options: FactoryOptions = {}
 ): Place => {
-  return createBaseEntity(
-    EntityType.PLACE as EntityType,
-    (baseEntity) => {
-      // Apply default place attributes
-      const withDefaults: Place = {
-        ...baseEntity,
+  return createEntity(
+    EntityType.PLACE,
+    (entity) => {
+      return transform({
+        ...entity,
+        id: entity.id,
         attributes: {
-          exits: {},         // No exits by default
-          entities: {},      // Empty place initially
-          history: []        // No history yet
+          exits: {},
+          entities: {},
+          history: []
         }
-      };
-
-      return transform(withDefaults);
+      });
     },
     options,
   );
 };
+
 
 /**
  * Factory function to create an Exit with standard defaults
@@ -164,13 +141,13 @@ export const createPlace = (
  */
 export const createExit = (
   transform: (exit: Exit) => Exit = identity,
+  { uuid = randomUUID }: FactoryOptions = {}
 ): Exit => {
   return transform({
     label: '',
-    to: createEntityUrn(EntityType.PLACE, crypto.randomUUID()) as PlaceURN,
+    to: createPlaceUrn(uuid()),
   });
 };
-
 
 /**
  * Interface for edge definitions that connect places
@@ -192,6 +169,43 @@ interface PlaceDefinition {
 }
 
 /**
+ * Given a list of place definitions, create a map of places
+ */
+export const createPlaces = (
+  placeDefinitions: PlaceDefinition[],
+  directions: Record<string, Taxonomy.Directions>,
+  urns: Record<string, PlaceURN>
+): Record<string, Place> => {
+  return Object.fromEntries(
+    placeDefinitions.map(placeDef => {
+      const payload = createPlace(place => ({
+        ...place,
+        id: createPlaceUrn(placeDef.id),
+        name: placeDef.name,
+        description: placeDef.description,
+        attributes: {
+          exits: Object.fromEntries(
+            placeDef.edges.map(edge => [
+              directions[edge.direction as keyof typeof directions],
+              createExit(exit => ({
+                ...exit,
+                label: edge.label,
+                to: urns[edge.to]
+              }))
+            ])
+          ),
+          entities: {},
+          monsters: {},
+          history: [],
+        },
+      }));
+
+      return [placeDef.id, payload];
+    }),
+  );
+};
+
+/**
  * Result type for a place graph, containing created places and their URNs
  */
 export interface PlaceGraph {
@@ -201,28 +215,32 @@ export interface PlaceGraph {
   urns: Record<string, Taxonomy.Places>;
 }
 
+const DEFAULT_DIRECTIONS: Record<string, DirectionURN> = Object.fromEntries(
+    ['north', 'northeast', 'east', 'southeast', 'south', 'southwest', 'west', 'northwest'].map(dir => {
+      return [dir, createDirectionUrn(dir) as DirectionURN]
+    }),
+);
+
 /**
  * Creates a connected graph of places from place definitions
  */
-export const createPlaceGraph = (placeDefinitions: PlaceDefinition[]): PlaceGraph => {
-  const urns = Object.fromEntries(
-    placeDefinitions.map(place => [
-      place.id,
-      createEntityUrn(EntityType.PLACE, place.id) as Taxonomy.Places
-    ])
-  );
+export const createPlaceGraph = (
+  placeDefinitions: PlaceDefinition[],
+  directions: Record<string, Taxonomy.Directions> = DEFAULT_DIRECTIONS,
+): PlaceGraph => {
+  validatePlaceDefinitions(placeDefinitions, directions);
 
-  const directions = {
-    north: 'flux:direction:north' as Taxonomy.Directions,
-    northeast: 'flux:direction:northeast' as Taxonomy.Directions,
-    east: 'flux:direction:east' as Taxonomy.Directions,
-    southeast: 'flux:direction:southeast' as Taxonomy.Directions,
-    south: 'flux:direction:south' as Taxonomy.Directions,
-    southwest: 'flux:direction:southwest' as Taxonomy.Directions,
-    west: 'flux:direction:west' as Taxonomy.Directions,
-    northwest: 'flux:direction:northwest' as Taxonomy.Directions
-  };
+  const urnEntries = placeDefinitions.map(place => [place.id, createPlaceUrn(place.id) as PlaceURN])
+  const urns = Object.fromEntries(urnEntries);
+  const places = createPlaces(placeDefinitions, directions, urns);
 
+  return { places, urns };
+};
+
+const validatePlaceDefinitions = (
+  placeDefinitions: PlaceDefinition[],
+  directions: Record<string, Taxonomy.Directions>,
+): void => {
   const placeIds = new Set(placeDefinitions.map(place => place.id));
   for (const place of placeDefinitions) {
     for (const edge of place.edges) {
@@ -234,39 +252,4 @@ export const createPlaceGraph = (placeDefinitions: PlaceDefinition[]): PlaceGrap
       }
     }
   }
-
-  const places = Object.fromEntries(
-    placeDefinitions.map(place => {
-      const placeObj = createPlace(p => ({
-        ...p,
-        id: urns[place.id],
-        name: place.name,
-        description: {
-          base: place.description,
-          emergent: "",
-        },
-        attributes: {
-          exits: Object.fromEntries(
-            place.edges.map(edge => [
-              directions[edge.direction as keyof typeof directions],
-              createExit(exit => ({
-                ...exit,
-                label: edge.label,
-                to: urns[edge.to]
-              }))
-            ])
-          ),
-          entities: {},
-          history: []
-        }
-      }));
-
-      return [place.id, placeObj];
-    })
-  );
-
-  return {
-    places,
-    urns
-  };
-}
+};

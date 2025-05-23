@@ -1,4 +1,4 @@
-import { Command, CommandType, Intent } from '~/types/domain';
+import { Command, CommandType, Intent } from '~/types';
 
 export type AllowedInput = Command | Intent;
 
