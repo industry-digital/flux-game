@@ -15,7 +15,7 @@ export type AllowedInput = Command | Intent;
  */
 export type MinimalWorldProjection = {
   self: EntityURN;
-  actors: Record<EntityURN, Entity<any, any>>;
+  actors: Record<EntityURN, Entity>;
   places: Record<PlaceURN, Place>;
 };
 

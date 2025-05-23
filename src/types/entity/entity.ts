@@ -48,9 +48,12 @@ export interface SymbolicLink<T extends EntityType = EntityType> {
 
 /**
  * An Entity is anything that has a representation in the World that the player can interact with. This includes
- * characters, items, places, and anything else that can be represented in the world.
+ * characters, items, places, and collections. It does not include things like rooms, which are represented by Places.
  */
-export interface Entity<T extends EntityType = EntityType, A extends object = {}> extends Omit<SymbolicLink<T>, 'id'> {
+export interface Entity<
+  T extends EntityType = EntityType,
+  Attributes extends object = {},
+> extends Omit<SymbolicLink<T>, 'id'> {
   /**
    * The entity's unique identifier. This is the runtime representation of the entity's ID, and not what we store in the
    * database.
@@ -97,7 +100,7 @@ export interface Entity<T extends EntityType = EntityType, A extends object = {}
   /**
    * The entity's attributes
    */
-  attributes: A;
+  attributes: Attributes;
 
   /**
    * The moment the entity came into existence, expressed as milliseconds since the UNIX epoch

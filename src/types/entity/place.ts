@@ -17,11 +17,11 @@ export interface PlaceScopedHistoricalEvent {
   ts: number;
 }
 
-export type PlaceEntityDescriptor = {
+export type PlaceEntityDescriptor<T extends EntityType = EntityType>  = {
   /**
    * The entity
    */
-  entity: Entity<any, any>;
+  entity: Entity<T, any>;
   /**
    * The visibility of this entity to other entities.
    */

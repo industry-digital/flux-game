@@ -52,13 +52,13 @@ export const createTaxonomyUrn = (vocabulary: RootVocabulary, ...terms: string[]
 
 // === Entity URN Creators ===
 
-export const createEntityUrn = <T extends EntityType>(type: T, id: string): EntityURN<T> => {
-  return createUrn(type, id) as EntityURN<T>;
+export const createEntityUrn = <T extends EntityType>(type: T, ...terms: string[]): EntityURN<T> => {
+  return createUrn(type, ...terms) as EntityURN<T>;
 };
 
 // === Specific URN Creators ===
-export const createPlaceUrn = (...terms: string[]): PlaceURN => createTaxonomyUrn('place', ...terms);
-export const createCharacterUrn = (...terms: string[]): CharacterURN => createTaxonomyUrn('character', ...terms);
+export const createPlaceUrn = (...terms: string[]): PlaceURN => createEntityUrn(EntityType.PLACE, ...terms);
+export const createCharacterUrn = (...terms: string[]): CharacterURN => createEntityUrn(EntityType.CHARACTER, ...terms);
 export const createItemUrn = (...terms: string[]): ItemURN => createTaxonomyUrn('item', ...terms);
 export const createTraitUrn = (...terms: string[]): TraitURN => createTaxonomyUrn('trait', ...terms);
 export const createSkillUrn = (...terms: string[]): SkillURN => createTaxonomyUrn('skill', ...terms);
