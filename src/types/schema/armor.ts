@@ -1,6 +1,6 @@
-import { Taxonomy } from '../taxonomy';
-import { EquipmentMixin } from './equipment';
-import { NormalizedValueBetweenZeroAndOne } from '../entity/attribute';
+import { Taxonomy } from '~/types/taxonomy';
+import { EquipmentMixin } from '~/types/schema/equipment';
+import { NormalizedValueBetweenZeroAndOne } from '~/types/entity/attribute';
 
 /**
  * Represents a physical component of an armor piece

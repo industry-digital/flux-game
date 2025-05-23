@@ -1,4 +1,4 @@
-import { Command, CommandType, Intent } from '~/types';
+import { Command, CommandType, Intent } from '@flux';
 
 export type AllowedInput = Command | Intent;
 

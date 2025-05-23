@@ -1,4 +1,10 @@
-import { DirectionURN, EventType, PlaceURN, Taxonomy, TransformerContext } from '~/types';
+import {
+  DirectionURN,
+  EventType,
+  PlaceURN,
+  Taxonomy,
+  TransformerContext,
+} from '@flux';
 
 export type ActorMovementHook = {
   move: (direction: Taxonomy.Directions) => MoveResult;

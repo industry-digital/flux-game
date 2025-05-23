@@ -1,6 +1,6 @@
-import { Taxonomy, } from '@flux/taxonomy';
-import { ModifiableBoundedAttribute } from '@flux/entity/attribute';
-import { GOLDEN_RATIO } from '@flux/world/constants';
+import { Taxonomy, } from '~/types/taxonomy';
+import { ModifiableBoundedAttribute } from '~/types/entity/attribute';
+import { GOLDEN_RATIO } from '~/types/world/constants';
 import { createSkillUrn } from '~/lib/taxonomy';
 
 /**

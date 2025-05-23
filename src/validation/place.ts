@@ -7,7 +7,7 @@ import {
   PlaceScopedHistoricalEvent,
   Exit,
   EntityType,
-} from '~/types';
+} from '@flux';
 
 /**
  * Validator for a complete Place entity

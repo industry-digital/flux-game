@@ -1,11 +1,7 @@
-import {
-  Duration,
-  EffectURN,
-  Requirements,
-  SkillURN,
-  TargetingSpecification,
-  Taxonomy,
-} from '~/types';
+import { Duration } from '~/types/world/time';
+import { Taxonomy, EffectURN, SkillURN } from '~/types/taxonomy';
+import { Requirements } from '~/types/requirements';
+import { TargetingSpecification } from '~/types/combat';
 
 export type AbilityEffects = Partial<Record<EffectURN, any>>;
 

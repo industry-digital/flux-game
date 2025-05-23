@@ -9,20 +9,26 @@ import {
   ItemURN,
   PlaceURN,
   ROOT_NAMESPACE,
+  RootNamespace,
   RootVocabulary,
   TAXONOMY,
   TraitURN,
   WeaponURN,
-  URNLike,
   SkillURN,
-} from '~/types';
+} from '@flux';
 
 // === Core URN Creation ===
 
+export type TaxonomyURN<V extends RootVocabulary> = `${RootNamespace}:${V}:${string}`;
+
 /**
- * Creates a URN from a list of terms
+ * Creates a URN from a vocabulary and additional terms
  */
-export const createUrn = (...terms: string[]): URNLike => {
+export const createTaxonomyUrn = <V extends RootVocabulary>(vocabulary: V, ...terms: string[]): TaxonomyURN<V> => {
+  if (!vocabulary) {
+    throw new Error('Vocabulary is required to create a taxonomy URN');
+  }
+
   if (terms.length === 0) {
     throw new Error('At least one term is required to create a URN');
   }
@@ -37,23 +43,13 @@ export const createUrn = (...terms: string[]): URNLike => {
     throw new Error(`Terms may not contain a colon: ${invalidTerms.join(', ')}`);
   }
 
-  return `${ROOT_NAMESPACE}:${terms.join(':')}`;
-};
-
-/**
- * Creates a URN from a vocabulary and additional terms
- */
-export const createTaxonomyUrn = (vocabulary: RootVocabulary, ...terms: string[]): URNLike => {
-  if (!vocabulary) {
-    throw new Error('Vocabulary is required to create a taxonomy URN');
-  }
-  return createUrn(vocabulary, ...terms);
+  return `${ROOT_NAMESPACE}:${vocabulary}:${terms.join(':')}`;
 };
 
 // === Entity URN Creators ===
 
 export const createEntityUrn = <T extends EntityType>(type: T, ...terms: string[]): EntityURN<T> => {
-  return createUrn(type, ...terms) as EntityURN<T>;
+  return createTaxonomyUrn(type, ...terms);
 };
 
 // === Specific URN Creators ===

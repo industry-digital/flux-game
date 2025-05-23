@@ -7,14 +7,23 @@ export {
   PureHandlerImplementation,
   PureReducer,
   PureReducerContext,
-} from '~/types';
+} from '@flux';
 
+import { Command, PureHandlerImplementation, TransformerContext } from '@flux';
 import { MOVE } from '~/command/MOVE';
+import { safeTopologicalSort } from '~/lib/dag';
 
 /**
  * Export all command handlers
  * The Flux World Server literally spreads this array into the Transformation stage
+ * We perform a topological sort right here to ensure handler dependencies aren't problematic. If there is a cycle,
+ * this line throws.
  */
-export const handlers = [
-  MOVE,
-];
+// @ts-expect-error
+export const PURE_GAME_LOGIC_HANDLERS: PureHandlerImplementation<TransformerContext, Command>[]
+= safeTopologicalSort(
+  [
+    MOVE,
+  ],
+  (Handler) => Handler.prototype.dependencies ?? [],
+);

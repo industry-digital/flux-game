@@ -7,7 +7,7 @@ import {
   SymbolicLink,
   Character,
   Place
-} from '~/types';
+} from '@flux';
 
 /**
  * Validator for the base Entity type

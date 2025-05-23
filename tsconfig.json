@@ -13,8 +13,8 @@
       "~/*": [
         "src/*"
       ],
-      "@flux/*": [
-        "src/types/*"
+      "@flux": [
+        "src/types/index.ts"
       ],
     },
     "plugins": [

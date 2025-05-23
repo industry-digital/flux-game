@@ -1,9 +1,9 @@
-import { EmergentEvent, EmergentEventInput, EventType } from '@flux/event';
-import { Command, CommandType, Intent } from '@flux/intent';
-import { EntityURN, PlaceURN } from '@flux/taxonomy';
-import { Entity } from '@flux/entity/entity';
-import { Place } from '@flux/entity/place';
-import { SideEffect, SideEffectInput } from '@flux/side-effects';
+import { EmergentEvent, EmergentEventInput, EventType } from '@flux';
+import { Command, CommandType, Intent } from '@flux';
+import { EntityURN, PlaceURN } from '@flux';
+import { Entity } from '@flux';
+import { Place } from '@flux';
+import { SideEffect, SideEffectInput } from '@flux';
 
 /**
  * Union type of all allowed input types for the pipeline

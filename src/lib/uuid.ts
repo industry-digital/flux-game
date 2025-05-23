@@ -1,6 +1,7 @@
 // @ts-nocheck
 
-export type RandomUUIDGenerator = () => `${string}-${string}-${string}-${string}-${string}`;
+export type UUIDLike = `${string}-${string}-${string}-${string}-${string}`;
+export type RandomUUIDGenerator = () => UUIDLike;
 
 export const createRandomUUIDGenerator = (fallback?: RandomUUIDGenerator): RandomUUIDGenerator => {
   // Modern browsers and Node.js 16+ with native crypto.randomUUID

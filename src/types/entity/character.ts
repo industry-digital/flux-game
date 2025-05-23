@@ -1,6 +1,6 @@
 import { Taxonomy, EntityURN } from '~/types/taxonomy';
 import { EmergentNarrative, Entity, EntityType, SymbolicLink } from '~/types/entity/entity';
-import { SkillState } from './skill';
+import { SkillState } from '~/types/entity/skill';
 import { AppliedEffect } from '~/types/effect';
 import { ItemAttributes, ItemURN } from '~/types/entity/item';
 import { AbilityState } from '~/types/entity/ability';

@@ -1,6 +1,6 @@
-import { RollSpecification } from '@flux/dice';
-import { NormalizedValueBetweenZeroAndOne } from '@flux/entity/attribute';
-import { CharacterStatName } from '@flux/entity/character';
+import { RollSpecification } from '~/types/dice';
+import { NormalizedValueBetweenZeroAndOne } from '~/types/entity/attribute';
+import { CharacterStatName } from '~/types/entity/character';
 
 /**
  * Represents all possible damage types in the cyberpunk world.

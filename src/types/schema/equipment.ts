@@ -1,6 +1,6 @@
-import { CharacterStatName } from '@flux/entity/character';
-import { RootNamespace, Taxonomy } from '@flux/taxonomy';
-import { EffectSchema } from '@flux/taxonomy/effect';
+import { CharacterStatName } from '~/types/entity/character';
+import { RootNamespace, Taxonomy } from '~/types/taxonomy';
+import { EffectSchema } from '~/types/taxonomy/effect';
 
 export type EquipmentRequirements = {
   stats?: Partial<Record<CharacterStatName, number>>;

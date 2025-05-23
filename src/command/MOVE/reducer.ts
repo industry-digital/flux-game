@@ -1,4 +1,4 @@
-import { CommandType, Transformer } from '~/types';
+import { CommandType, Transformer } from '@flux';
 import { MoveCommandArgs } from '~/command/MOVE';
 import { useActorMovement } from '~/lib/actor/movement';
 

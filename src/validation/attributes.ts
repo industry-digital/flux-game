@@ -3,7 +3,7 @@ import {
   ModifiableScalarAttribute,
   ModifiableBoundedAttribute,
   NormalizedValueBetweenZeroAndOne,
-} from '~/types';
+} from '@flux';
 
 /**
  * Validator for ModifiableScalarAttribute

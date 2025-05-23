@@ -1,10 +1,11 @@
-import { RootNamespace, Taxonomy } from '@flux/taxonomy';
-import { EquipmentMixin } from './equipment';
-import { Duration } from '@flux/world/time';
-import { CharacterStatName } from '@flux/entity/character';
-import { DamageSpecification } from '@flux/damage';
-import { UnitOfMeasure } from '@flux/world/measures';
-import { ChargeableMixin } from '@flux/entity/item';
+import { RootNamespace, Taxonomy } from '~/types/taxonomy';
+import { EquipmentMixin } from '~/types/schema/equipment';
+import { ChargeableMixin } from '~/types/entity/item';
+import { Duration } from '~/types/world/time';
+import { CharacterStatName } from '~/types/entity/character';
+import { DamageSpecification } from '~/types/damage';
+import { UnitOfMeasure } from '~/types/world/measures';
+import { } from '~/types/schema/equipment';
 
 export type WeaponAttackSpecification = {
   /**

@@ -5,7 +5,7 @@ import {
   isCommandOfType,
   TransformerInterface,
   Taxonomy,
-} from '~/types';
+} from '@flux';
 
 export type MoveCommandArgs = {
   direction: Taxonomy.Directions;

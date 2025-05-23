@@ -87,8 +87,6 @@ export {
 
 export {
   ItemAttributes,
-  ItemProvenanceEntry,
-  ItemProvenanceEvent,
 } from './entity/item';
 
 export {
@@ -121,7 +119,6 @@ export {
   WeaponURN,
   ArmorURN,
   ItemURN,
-  URNLike,
 } from './taxonomy';
 
 export {
@@ -142,3 +139,8 @@ export {
   TargetingSpecification,
   TargetType,
 } from './combat';
+
+export {
+  SideEffect,
+  SideEffectInput,
+} from './side-effects';

@@ -11,7 +11,7 @@ import {
   SkillState,
   EntityType,
   Inventory,
-} from '~/types';
+} from '@flux';
 
 /**
  * Validator for a complete Character entity
