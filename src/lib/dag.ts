@@ -1,9 +1,14 @@
 type DependencyResolver<T> = (item: T) => T[];
 
-export const detectCycles = <T>(array: T[], getDependencies: DependencyResolver<T>): T[] | null => {
+type CycleDetectionResult<T> = {
+  cycle?: T[];
+};
+
+export const detectCycles = <T>(array: T[], getDependencies: DependencyResolver<T>): CycleDetectionResult<T> => {
+  const arraySet = new Set(array);
   const temporaryMarks: Set<T> = new Set();
   const permanentMarks: Set<T> = new Set();
-  const path: T[] = []; // To track the cycle path
+  const path: T[] = [];
 
   const visit = (item: T): boolean => {
     if (permanentMarks.has(item)) {
@@ -19,7 +24,7 @@ export const detectCycles = <T>(array: T[], getDependencies: DependencyResolver<
     path.push(item);
 
     for (const dependency of getDependencies(item)) {
-      if (visit(dependency)) {
+      if (arraySet.has(dependency) && visit(dependency)) {
         return true;
       }
     }
@@ -36,46 +41,50 @@ export const detectCycles = <T>(array: T[], getDependencies: DependencyResolver<
       path.length = 0;
       if (visit(item)) {
         const cycleStart = path.findIndex(node => node === path[path.length - 1]);
-        return path.slice(cycleStart);
+        return { cycle: path.slice(cycleStart) };
       }
     }
   }
 
-  return null;
+  return {};
 };
 
 export const topologicalSort = <T>(array: T[], getDependencies: DependencyResolver<T>): T[] => {
-  const sorted: T[] = [];
-  const visited: Set<T> = new Set();
+ const arraySet = new Set(array);
+ const sorted: T[] = [];
+ const visited: Set<T> = new Set();
 
-  const visit = (item: T) => {
-    if (!visited.has(item)) {
-      visited.add(item);
-      getDependencies(item).forEach(visit);
-      sorted.push(item);
-    }
-  };
+ const visit = (item: T) => {
+   if (!visited.has(item)) {
+     visited.add(item);
+     getDependencies(item)
+       .filter(dep => arraySet.has(dep)) // Only visit dependencies in array
+       .forEach(visit);
+     sorted.push(item);
+   }
+ };
 
-  array.forEach(visit);
-  return sorted.reverse();
+ array.forEach(visit);
+ return sorted.reverse();
 };
 
 export const safeTopologicalSort = <T>(array: T[], getDependencies: (item: T) => T[]): T[] => {
   const arraySet = new Set(array);
 
-  // Throw if
+  // Check for missing dependencies
   for (const item of array) {
     for (const dep of getDependencies(item)) {
       if (!arraySet.has(dep)) {
-        throw new Error(`Handler ${item.constructor.name} depends on ${dep.constructor.name}, which is not in the handlers array`);
+        throw new Error(`Item depends on another item that is not in the array`);
       }
     }
   }
 
-  const cycle = detectCycles(array, getDependencies);
+  const { cycle } = detectCycles(array, getDependencies);
   if (cycle) {
-    const cycleNames = cycle.map(item => item.constructor.name).join(' -> ');
-    throw new Error(`Cycle detected in handler dependencies: ${cycleNames}`);
+    const message = `Cycle detected in dependencies`;
+    console.error(message,  cycle.map(node => String(node)).join(' -> '));
+    throw new Error(message);
   }
 
   return topologicalSort(array, getDependencies);
