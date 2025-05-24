@@ -1,5 +1,4 @@
-import { Duration } from '@flux/world/time';
-import { Taxonomy } from '@flux/taxonomy';
+import { Modifiers } from './modifier';
 
 export enum DieType {
   D4 = 'd4',
@@ -11,31 +10,11 @@ export enum DieType {
   D100 = 'd100',
 }
 
+/**
+ * A RollSpecification is a string that describes a roll. It consists of a number followed by a die type.
+ * For example, "2d6" means two six-sided dice are rolled.
+ */
 export type RollSpecification = `${number}${DieType}`;
-
-/**
- * A Modifier is a number that is added to or subtracted from the result of a roll as a result of a relationship
- * with some kind of taxonomic classification. For example, a skill might give a +2 modifier to an attack roll, or
- * a trait might give a -1 modifier to a damage roll.
- */
-export interface Modifier {
-  type: Taxonomy.Modifiers;
-  /**
-   * `intrinsic` means the source of the modifier is the host object itself
-   */
-  source: Taxonomy.Skills | Taxonomy.Effects | Taxonomy.Traits | 'intrinsic';
-  value: number;
-  ts: number; // The moment the modifier was applied, expressed as milliseconds since the UNIX epoch
-  duration: Duration; // The duration of the modifier
-}
-
-export type ModifierID = string;
-
-/**
- * Modifiers is a dictionary indexed by modifier types.
- * The keys are the names of the modifiers, and the values are dictionaries
- */
-export type Modifiers = Record<ModifierID, Modifier>;
 
 export interface RollResult {
   /**

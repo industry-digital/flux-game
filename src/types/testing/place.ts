@@ -1,5 +1,5 @@
-import { Exit, Place } from '@flux/entity/place';
-import { Taxonomy } from '@flux/taxonomy';
+import { Exit, Place } from '~/types/entity/place';
+import { Taxonomy } from '~/types/taxonomy';
 
 /**
  * Interface for edge definitions that connect places

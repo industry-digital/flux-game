@@ -31,3 +31,18 @@ export enum SpecialDuration {
  * (e.g. "5min" for 5 minutes) or as a SpecialDuration.
  */
 export type Duration = SpecialDuration | [number, TimeUnit];
+
+/**
+ * A mixin for anything that has
+ */
+export type ScheduledDuration = {
+  /**
+   * The duration
+   */
+  duration: Duration; // The duration of the modifier
+
+  /**
+   * The moment the duration started, expressed as milliseconds since the UNIX epoch
+   */
+  ts: number; // The moment the modifier was applied, expressed as milliseconds since the UNIX epoch
+}

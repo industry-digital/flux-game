@@ -5,3 +5,10 @@ export enum UnitOfMeasure {
   VOLUME_ML = 'volume:ml',
   EACH = 'each',
 }
+
+export enum UnitOfDistance {
+  METERS = 'distance:m',
+  KILOMETERS = 'distance:km',
+  CENTIMETERS = 'distance:cm',
+  MILLIMETERS = 'distance:mm',
+}

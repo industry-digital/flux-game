@@ -43,7 +43,6 @@ export {
   Character,
   CharacterAttributes,
   CharacterCondition,
-  CharacterEffect,
   CharacterStatName,
   CharacterStats,
   Equipment,
@@ -59,12 +58,18 @@ export {
 
 export { ROOT_NAMESPACE } from './constants';
 
+export { Self } from './actor';
+
 export {
   DieType,
-  Modifier,
   RollResult,
   RollSpecification
 } from './dice';
+
+export {
+  Modifier,
+  Modifiers,
+} from './modifier';
 
 export {
   EmergentNarrative,
@@ -106,6 +111,7 @@ export {
 export {
   TAXONOMY,
   Taxonomy,
+  Intrinsic,
   RootNamespace,
   RootVocabulary,
   EntityURN,
@@ -119,12 +125,14 @@ export {
   WeaponURN,
   ArmorURN,
   ItemURN,
+  ModifierURN,
 } from './taxonomy';
 
 export {
   Duration,
   SpecialDuration,
   TimeUnit,
+  ScheduledDuration,
 } from './world/time';
 
 export {
@@ -133,7 +141,7 @@ export {
 
 export {
   Requirements,
-} from './requirements';
+} from './requirement';
 
 export {
   TargetingSpecification,
@@ -143,4 +151,4 @@ export {
 export {
   SideEffect,
   SideEffectInput,
-} from './side-effects';
+} from './side-effect';

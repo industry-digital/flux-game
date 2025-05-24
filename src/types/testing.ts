@@ -1,4 +1,4 @@
-import { Entity, EntityType } from '@flux/entity/entity';
+import { Entity, EntityType } from '~/types/entity/entity';
 
 export type EntityTransformer = <T extends EntityType>(entity: Entity<T>) => Entity<T>
 

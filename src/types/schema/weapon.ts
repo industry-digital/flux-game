@@ -1,10 +1,10 @@
-import { RootNamespace, Taxonomy } from '~/types/taxonomy';
+import { Taxonomy, AmmoURN } from '~/types/taxonomy';
 import { EquipmentMixin } from '~/types/schema/equipment';
 import { ChargeableMixin } from '~/types/entity/item';
 import { Duration } from '~/types/world/time';
 import { CharacterStatName } from '~/types/entity/character';
 import { DamageSpecification } from '~/types/damage';
-import { UnitOfMeasure } from '~/types/world/measures';
+import { UnitOfDistance } from '~/types/world/measures';
 import { } from '~/types/schema/equipment';
 
 export type WeaponAttackSpecification = {
@@ -20,7 +20,7 @@ export type WeaponAttackSpecification = {
   base: number;
 }
 
-export type WeaponTimersDictionary = {
+export type WeaponTimers = {
   /**
    * The time it takes to ready the weapon for combat, after combat starts
    */
@@ -48,9 +48,10 @@ export type WeaponTimersDictionary = {
 }
 
 export type WeaponRangeSpecification = {
-  optimal: [number, UnitOfMeasure];
-  falloff?: [number, UnitOfMeasure];
-  min?: [number, UnitOfMeasure];
+  optimal: | [number, UnitOfDistance];
+  falloff?: [number, UnitOfDistance];
+  min?: [number, UnitOfDistance];
+  max?: [number, UnitOfDistance];
 }
 
 /**
@@ -81,10 +82,10 @@ export interface WeaponSpecification extends EquipmentMixin, Partial<ChargeableM
   /**
    * The timers that affect the weapon's performance
    */
-  timers?: WeaponTimersDictionary;
+  timers: WeaponTimers;
 
   /**
-   * If this weapon takes ammo, this defines the ammo type and behavior
+   * If this weapon consumes ammo, this is the type of ammo it uses
    */
-  ammo?: `${RootNamespace}:ammo:${string}`;
+  ammo?: AmmoURN;
 }

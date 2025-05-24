@@ -1,4 +1,4 @@
-import { Taxonomy } from '@flux/taxonomy';
+import { Taxonomy } from '~/types/taxonomy';
 
 export type RequirementType =
   | Taxonomy.Mana

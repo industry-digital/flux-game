@@ -1,14 +1,21 @@
-import { EmergentEvent, EmergentEventInput, EventType } from '@flux';
-import { Command, CommandType, Intent } from '@flux';
-import { EntityURN, PlaceURN } from '@flux';
-import { Entity } from '@flux';
-import { Place } from '@flux';
-import { SideEffect, SideEffectInput } from '@flux';
+import { EmergentEvent, EmergentEventInput, EventType } from '~/types/event';
+import { Command, CommandType, Intent } from '~/types/intent';
+import { EntityURN, PlaceURN } from '~/types/taxonomy';
+import { Entity } from '~/types/entity/entity';
+import { Place } from '~/types/entity/place';
+import { SideEffect, SideEffectInput } from '~/types/side-effect';
+;
 
 /**
  * Union type of all allowed input types for the pipeline
  */
 export type AllowedInput = Command | Intent;
+
+/**
+ * For filter() and find() methods, this is a function that takes an EmergentEvent
+ * and returns a boolean indicating whether the event matches the filter criteria.
+ */
+type EventFilter = (event: EmergentEvent) => boolean;
 
 /**
  * This is the minimal set of properties that a world projection must have.
@@ -32,14 +39,14 @@ export type ExecutionError = {
    */
   error: Error;
   /**
-   * For diagnosing problems
+   * Identifies the Intent or Command that caused the error
    */
   trace: string;
 };
 
 export type ErrorDeclarationContainer = {
   /**
-   * Declare an error to be emitted in response to the input.
+   * Declare an error to be emitted in response to the input
    */
   declareError(error: Error): void;
   declareError(message: string): void;
@@ -54,15 +61,12 @@ export type EventDeclarationConsumer = {
   /**
    * Get the list of emergent events that have been declared as a result of handling the input.
    */
-  getDeclaredEvents(): EmergentEvent<any, any>[];
+  getDeclaredEvents(): EmergentEvent[];
 
   /**
    * Return a count of the number of times the given event type has been declared.
    */
-  countDeclaredEvents<T extends EventType, P extends Record<string, any> = {}>(
-    type?: T,
-    filter?: (event: EmergentEvent<T, P>
-  ) => boolean): number;
+  countDeclaredEvents(type?: EventType, filter?: EventFilter): number;
 };
 
 /**
@@ -72,11 +76,10 @@ export type EventDeclarationProducer = {
   /**
    * Declare an emergent event to be emitted in response to the input.
    */
-  declareEvent<T extends EventType, P extends Record<string, any>>(input: EmergentEventInput<T, P>): void;
+  declareEvent(input: EmergentEventInput): void;
 };
 
 export type SideEffectDeclarationContainer = {
-
   /**
    * Declare a side effect to be emitted in response to the input.
    */

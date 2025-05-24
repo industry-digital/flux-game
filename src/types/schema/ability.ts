@@ -1,6 +1,6 @@
 import { Duration } from '~/types/world/time';
 import { Taxonomy, EffectURN, SkillURN } from '~/types/taxonomy';
-import { Requirements } from '~/types/requirements';
+import { Requirements } from '~/types/requirement';
 import { TargetingSpecification } from '~/types/combat';
 
 export type AbilityEffects = Partial<Record<EffectURN, any>>;

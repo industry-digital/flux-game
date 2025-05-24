@@ -1,4 +1,4 @@
-import { RootNamespace, TAXONOMY } from '@flux/taxonomy';
+import { RootNamespace, TAXONOMY } from '~/types/taxonomy';
 
 /**
  * Base type for all anatomy taxonomic URNs

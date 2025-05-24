@@ -1,8 +1,7 @@
-import { Taxonomy, EntityURN } from '~/types/taxonomy';
+import { Taxonomy, ItemURN } from '~/types/taxonomy';
 import { EmergentNarrative, Entity, EntityType, SymbolicLink } from '~/types/entity/entity';
 import { SkillState } from '~/types/entity/skill';
-import { AppliedEffect } from '~/types/effect';
-import { ItemAttributes, ItemURN } from '~/types/entity/item';
+import { ItemAttributes } from '~/types/entity/item';
 import { AbilityState } from '~/types/entity/ability';
 import { InteractiveSessionState } from '~/types/entity/session';
 import {
@@ -28,8 +27,6 @@ export type CharacterStats = Record<CharacterStatName, ModifiableScalarAttribute
 export type EquipmentSlots = Partial<Record<ItemURN, 1>>;
 export type Equipment = Partial<Record<Taxonomy.Anatomy, EquipmentSlots>>; // maps slot -> Item EntityID
 export type Skills = Partial<Record<Taxonomy.Skills, SkillState>>;
-export type CharacterEffect = AppliedEffect<EntityURN | Taxonomy.Skills>;
-export type CharacterEffects = Partial<Record<string, CharacterEffect>>;
 export type Membership = { role: string; ts: number; duration?: number };
 export type Memberships = Partial<Record<Taxonomy.Factions, Membership>>;
 export type Reputation = Partial<Record<Taxonomy.Factions, NormalizedBipolarValue>>;

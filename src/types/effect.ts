@@ -1,10 +1,16 @@
-import { AbilityURN, AnatomyURN, EffectURN, EntityURN, ItemURN, SkillURN } from '@flux/taxonomy';
-import { Duration } from '@flux/world/time';
+import { Self } from '~/types/actor';
+import { ScheduledDuration } from '~/types/world/time';
+import {
+  AbilityURN,
+  AnatomyURN,
+  EffectURN,
+  EntityURN,
+  Intrinsic,
+  ItemURN,
+  SkillURN,
+} from '~/types/taxonomy';
 
-export const INTRINSIC = 'intrinsic' as const;
-export type Intrinsic = typeof INTRINSIC;
-
-export type AllowedEffectSource =
+export type EffectOriginType =
   | EntityURN
   | SkillURN
   | AbilityURN
@@ -12,13 +18,17 @@ export type AllowedEffectSource =
   | AnatomyURN
   | Intrinsic;
 
+export type EffectOrigin = {
+  type: EffectOriginType;
+  actor?: EntityURN | Self;
+};
+
 /**
  * An AppliedEffect is a temporary state or condition applied to an Entity.
  */
-export interface AppliedEffect<
-  O extends AllowedEffectSource = AllowedEffectSource,
+export type AppliedEffect<
   State extends Record<string, any> = Record<string, any>,
-> {
+> = ScheduledDuration & {
 
   /**
    * The taxonomic identifier that describes the effect.
@@ -28,17 +38,7 @@ export interface AppliedEffect<
   /**
    * The origin of the effect
    */
-  origin: O;
-
-  /**
-   * The moment the effect was applied (milliseconds since UNIX epoch).
-   */
-  ts: number;
-
-  /**
-   * How long the effect lasts.
-   */
-  duration: Duration;
+  origin: EffectOrigin;
 
   /**
    * Optional human-friendly description for display purposes.
@@ -49,7 +49,7 @@ export interface AppliedEffect<
    * For tracking the state of the effect over time
    */
   state?: State;
-}
+};
 
 /**
  * Core effect categories for our system

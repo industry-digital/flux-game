@@ -1,6 +1,4 @@
-import { Modifier } from '~/types/dice';
-
-export type URNLike = `${string}:${string}`;
+import { Modifiers } from '~/types/modifier';
 
 type UnmodifiedScalarAttribute = {
   natural: number;
@@ -8,7 +6,7 @@ type UnmodifiedScalarAttribute = {
 
 type ModifiedScalarAttribute = UnmodifiedScalarAttribute & {
   effective: number;
-  modifiers: Record<string, Modifier>;
+  modifiers: Modifiers;
 };
 
 type BoundedValue = { current: number; max : number };
@@ -19,7 +17,7 @@ type UnmodifiedBoundedAttribute = {
 
 type ModifiedBoundedAttribute = UnmodifiedBoundedAttribute & {
   effective: BoundedValue;
-  modifiers: Record<string, Modifier>;
+  modifiers: Modifiers;
 };
 
 type UnmodifiedStatefulValueWithFloor = {

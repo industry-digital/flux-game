@@ -1,5 +1,7 @@
-import { ROOT_NAMESPACE } from '@flux/constants';
-import { EntityType } from '@flux/entity/entity';
+import { ROOT_NAMESPACE } from '~/types/constants';
+import { EntityType } from '~/types/entity/entity';
+
+export type Intrinsic = 'intrinsic';
 
 export type RootNamespace = typeof ROOT_NAMESPACE;
 
@@ -127,7 +129,9 @@ export type RootVocabulary = {
   [K in keyof typeof TAXONOMY.terms]: K extends `${string}:${string}` ? never : K
 }[keyof typeof TAXONOMY.terms];
 
-export type TaxonomyURN<Vocabulary extends RootVocabulary> = `${RootNamespace}:${Vocabulary}:${string}`;
+export type TaxonomyURN<
+  Vocabulary extends RootVocabulary = RootVocabulary,
+> = `${RootNamespace}:${Vocabulary}:${string}`;
 
 // Generate taxonomy namespace
 export namespace Taxonomy {
@@ -152,6 +156,7 @@ export namespace Taxonomy {
   export type Preferences = TaxonomyURN<'pref'>;
   export type Collections = TaxonomyURN<'collection'>;
   export type Ammo = TaxonomyURN<'ammo'>;
+  export type Timers = TaxonomyURN<'timer'>;
 }
 
 export type EntityURN<T extends EntityType = EntityType> = `${RootNamespace}:${T}:${string}`;
@@ -166,3 +171,6 @@ export type WeaponURN = Taxonomy.Weapons;
 export type ArmorURN = Taxonomy.Armor;
 export type ItemURN = Taxonomy.Items;
 export type AnatomyURN = Taxonomy.Anatomy;
+export type ModifierURN = Taxonomy.Modifiers;
+export type TimerURN = Taxonomy.Timers;
+export type AmmoURN = Taxonomy.Ammo;

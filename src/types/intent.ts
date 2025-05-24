@@ -1,4 +1,4 @@
-import { EntityURN } from '@flux/taxonomy';
+import { EntityURN } from '~/types/taxonomy';
 
 export type InputMetadata = { __type: 'command' | 'intent' };
 

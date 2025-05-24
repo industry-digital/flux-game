@@ -1,8 +1,8 @@
-import { EntityURN, PlaceURN, Taxonomy } from '@flux/taxonomy';
+import { EntityURN, PlaceURN, Taxonomy } from '~/types/taxonomy';
 
 export type EventPayload = Record<string, any>;
 
-export type EmergentEventInput<T extends EventType, P extends EventPayload = EventPayload> = {
+export type AbstractEmergentEventInput<T extends EventType, P extends EventPayload = EventPayload> = {
   /**
    * The unique identifier for this event.
    */
@@ -28,7 +28,7 @@ export type EmergentEventInput<T extends EventType, P extends EventPayload = Eve
 /**
  * An EmergentEvent is an event that is generated as a result of processing a command.
  */
-export type EmergentEvent<T extends EventType = EventType, P extends EventPayload = EventPayload> = EmergentEventInput<T, P> & {
+export type EmergentEvent = EmergentEventInput & {
   id: string;
   ts: number;
   trace: string;
@@ -39,19 +39,34 @@ export enum EventType {
   ACTOR_MOVEMENT_DID_FAIL = 'actor:move:failure',
 };
 
-type ActorMovementEventInputBase = {
+type ActorEventPayloadBase = {
   actor: EntityURN;
-  origin: PlaceURN;
-  dest: PlaceURN;
-  exit: Taxonomy.Directions;
 };
 
-export type ActorMovementDidFailEventInput = EmergentEventInput<
+export type ActorMovementEventPayload = ActorEventPayloadBase & {
+  origin: PlaceURN;
+  direction: Taxonomy.Directions;
+};
+
+export type ActorMovementDidFailEventPayload = ActorMovementEventPayload & {
+  reason: string;
+  message?: string;
+};
+
+export type ActorMovementDidSucceedEventPayload = ActorMovementEventPayload & {
+  destination: PlaceURN;
+}
+
+export type ActorMovementDidFailEventInput = AbstractEmergentEventInput<
   EventType.ACTOR_MOVEMENT_DID_FAIL,
-  ActorMovementEventInputBase & { reason: string }
+  ActorMovementDidFailEventPayload
 >;
 
-export type ActorMovementDidSucceedEventInput = EmergentEventInput<
+export type ActorMovementDidSucceedEventInput = AbstractEmergentEventInput<
   EventType.ACTOR_MOVEMENT_DID_SUCCEED,
-  ActorMovementEventInputBase
+  ActorMovementDidSucceedEventPayload
 >;
+
+export type EmergentEventInput =
+  | ActorMovementDidFailEventInput
+  | ActorMovementDidSucceedEventInput;

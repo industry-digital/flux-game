@@ -1,10 +1,4 @@
-import {
-  DirectionURN,
-  EventType,
-  PlaceURN,
-  Taxonomy,
-  TransformerContext,
-} from '@flux';
+import { DirectionURN, EventType, PlaceURN, Taxonomy, TransformerContext } from '@flux';
 
 export type ActorMovementHook = {
   move: (direction: Taxonomy.Directions) => MoveResult;
@@ -15,9 +9,9 @@ export type MoveResult =
   | { success: false; reason: string; message?: string };
 
 export const useActorMovement = (
-  context: TransformerContext,
+  { world, declareEvent }: TransformerContext,
 ): ActorMovementHook => {
-  const { self, actors, places } = context.world;
+  const { self, actors, places } = world;
   const actor = actors[self];
 
   if (!actor) {
@@ -31,26 +25,28 @@ export const useActorMovement = (
 
   const DEFAULT_ERROR_MESSAGE = "You can't go that way.";
 
-  const declareMovementFailure = (reason: string, message?: string): MoveResult => {
-    context.declareEvent({
+  const declareMovementFailure = (direction: DirectionURN, reason: string, message = DEFAULT_ERROR_MESSAGE): MoveResult => {
+    declareEvent({
       type: EventType.ACTOR_MOVEMENT_DID_FAIL,
       payload: {
         actor: actor.id,
         origin: origin.id,
+        direction,
         reason,
-        message: message || DEFAULT_ERROR_MESSAGE
+        message,
       }
     });
 
     return {
       success: false,
       reason,
-      message: message || DEFAULT_ERROR_MESSAGE,
+      message,
     };
   };
 
-  const declareMovementSuccess = (destination: PlaceURN, direction: DirectionURN): MoveResult => {
-    context.declareEvent({
+  const declareMovementSuccess = (direction: DirectionURN, destination: PlaceURN): MoveResult => {
+
+    declareEvent({
       type: EventType.ACTOR_MOVEMENT_DID_SUCCEED,
       payload: {
         actor: actor.id,
@@ -66,27 +62,27 @@ export const useActorMovement = (
   const move = (direction: Taxonomy.Directions): MoveResult => {
     const exit = origin.attributes.exits[direction];
     if (!exit) {
-      return declareMovementFailure('No exit in that direction');
+      return declareMovementFailure(direction, 'No exit in that direction');
     }
 
     const destination = places[exit.to];
     if (!destination) {
-      return declareMovementFailure('Destination place not found in `places` projection');
+      return declareMovementFailure(direction, 'Destination place not found in `places` projection');
     }
 
     // Assign a new location to the actor
     actor.location = exit.to;
 
-    // Transfer the actor's representation to the destination
+    // Now all we have to do is "transfer" actor's representation from the origin to the destination.
     const descriptor = origin.attributes.entities[actor.id];
     if (!descriptor) {
-      return declareMovementFailure('Actor not found at `origin`');
+      return declareMovementFailure(direction, 'Actor not found at `origin`');
     }
 
     destination.attributes.entities[actor.id] = descriptor;
     delete origin.attributes.entities[actor.id];
 
-    return declareMovementSuccess(destination.id, direction);
+    return declareMovementSuccess(direction, exit.to);
   };
 
   return { move };

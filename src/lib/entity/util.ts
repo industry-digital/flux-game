@@ -1,4 +1,4 @@
-import { createDirectionUrn, createPlaceUrn, createUrn } from '~/lib/taxonomy';
+import { createDirectionUrn, createPlaceUrn, createEntityUrn } from '~/lib/taxonomy';
 import { randomUUID } from '~/lib/uuid';
 import {
   Character,
@@ -15,7 +15,7 @@ import {
   PlaceURN,
   Taxonomy,
   UUIDLike,
-} from '~/types';
+} from '@flux';
 
 const identity = <T>(x: T): T => x;
 
@@ -49,7 +49,7 @@ export const createEntity = <T extends EntityType, A extends object>(
   transform: EntityCreator<T, A> = identity,
   { now = Date.now(), uuid = randomUUID }: FactoryOptions = {},
 ): Entity<T, A> => {
-  const urn = createUrn(type, uuid());
+  const urn = createEntityUrn(type, uuid());
   const defaults: Partial<Entity<T, A>> = {
     id: urn,
     type,
@@ -66,7 +66,7 @@ export const createEntity = <T extends EntityType, A extends object>(
 
 export const createCharacter = (
   transform: EntityCreator<EntityType.CHARACTER, CharacterAttributes> = identity,
-  options: FactoryOptions = {}
+  options: FactoryOptions = {},
 ): Character => {
   return createEntity(
     EntityType.CHARACTER,
@@ -115,7 +115,7 @@ export const createCharacter = (
 
 export const createPlace = (
   transform: EntityCreator<EntityType.PLACE, PlaceAttributes> = identity,
-  options: FactoryOptions = {}
+  options: FactoryOptions = {},
 ): Place => {
   return createEntity(
     EntityType.PLACE,
@@ -141,7 +141,7 @@ export const createPlace = (
  */
 export const createExit = (
   transform: (exit: Exit) => Exit = identity,
-  { uuid = randomUUID }: FactoryOptions = {}
+  { uuid = randomUUID }: FactoryOptions = {},
 ): Exit => {
   return transform({
     label: '',
@@ -152,21 +152,21 @@ export const createExit = (
 /**
  * Interface for edge definitions that connect places
  */
-interface EdgeDefinition {
+export type EdgeDefinition = {
   to: string;
   direction: string;
   label: string;
-}
+};
 
 /**
  * Interface for defining a place and its connections
  */
-interface PlaceDefinition {
+export type PlaceDefinition = {
   id: string;
   name: string;
   description: string;
   edges: EdgeDefinition[];
-}
+};
 
 /**
  * Given a list of place definitions, create a map of places
@@ -208,12 +208,12 @@ export const createPlaces = (
 /**
  * Result type for a place graph, containing created places and their URNs
  */
-export interface PlaceGraph {
+export type PlaceGraph = {
   /** Map of place ID to place object */
   places: Record<string, Place>;
   /** Map of place ID to place URN for easy reference */
   urns: Record<string, Taxonomy.Places>;
-}
+};
 
 const DEFAULT_DIRECTIONS: Record<string, DirectionURN> = Object.fromEntries(
     ['north', 'northeast', 'east', 'southeast', 'south', 'southwest', 'west', 'northwest'].map(dir => {

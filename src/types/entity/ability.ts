@@ -1,4 +1,4 @@
-import { Modifier } from '~/types/dice';
+import { Modifiers } from '~/types/modifier';
 import { ModifiableScalarAttribute } from '~/types/entity/attribute';
 
 /**
@@ -18,5 +18,5 @@ export interface AbilityState {
   /**
    * The modifiers affecting this ability
    */
-  modifiers: Record<string, Modifier>;
+  modifiers: Modifiers;
 }

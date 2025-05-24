@@ -1,6 +1,6 @@
-import { Duration } from '@flux/world/time';
+import { Duration } from '~/types/world/time';
 import { createEffectUrn } from '~/lib/taxonomy';
-import { EntityURN, Taxonomy } from '~/types';
+import { Intrinsic, EntityURN, Taxonomy } from '~/types';
 
 export type EffectSchema = {
   /**
@@ -19,14 +19,24 @@ export type EffectSchema = {
   summary: string;
 };
 
+export type EffectOriginType =
+  | EntityURN
+  | Taxonomy.Skills
+  | Intrinsic;
+
+export type EffectOrigin = {
+  type: EffectOriginType;
+  actor?: EntityURN;
+};
+
 /**
  * An Effect is a temporary state or condition applied to an Entity.
  */
-export interface AppliedEffect<S extends (EntityURN | Taxonomy.Skills | 'intrinsic')> extends EffectSchema {
+export interface AppliedEffect extends EffectSchema {
   /**
    * The source of the effect (an Entity, a skill, or 'intrinsic').
    */
-  source: S;
+  origin: EffectOrigin;
 
   /**
    * When the effect was applied (milliseconds since UNIX epoch).
@@ -34,8 +44,7 @@ export interface AppliedEffect<S extends (EntityURN | Taxonomy.Skills | 'intrins
   ts: number;
 }
 
-export type AppliedEffects = Partial<Record<string, AppliedEffect<EntityURN | Taxonomy.Skills>>>;
-export type AppliedIntrinsicEffects = Partial<Record<string, AppliedEffect<'intrinsic'>>>;
+export type AppliedEffects = Partial<Record<string, AppliedEffect>>;
 
 /**
  * Core effect categories for our system
