@@ -63,6 +63,17 @@ export type Command<
    */
   self: EntityURN;
 }
+/**
+ * Serializable NLP analysis results from processing the intent text
+ */
+export type NaturalLanguageAnalysis = {
+  entities: Array<{ text: string; type: string; }>;
+  verbs: string[];
+  nouns: string[];
+  adjectives: string[];
+  sentiment?: number;
+  confidence?: number;
+}
 
 /**
  * Input format for text-based intents from users
@@ -88,15 +99,21 @@ export type IntentInput = {
    * The raw text input from the user
    */
   text: string;
-}
+
+  /**
+   * Optional NLP analysis results from processing the text
+   */
+  nlp?: NaturalLanguageAnalysis;
+};
 
 /**
  * A fully validated Intent with guaranteed fields
  */
-export type Intent = InputMetadata & Omit<IntentInput, 'id' | 'ts'> & {
+export type Intent = InputMetadata & Omit<IntentInput, 'id' | 'ts' | 'nlp'> & {
   id: string;
   ts: number;
-}
+  nlp: NaturalLanguageAnalysis;
+};
 
 /**
  * Type guard to check if input has the command metadata type
@@ -127,7 +144,8 @@ export const isIntent = (input: unknown): input is Intent => {
     'text' in input &&
     'id' in input &&
     'ts' in input &&
-    'self' in input
+    'self' in input &&
+    (!('nlp' in input) || typeof (input as Intent).nlp === 'object')
   );
 };
 
