@@ -15,8 +15,8 @@ type IntentTransformer = Transformer<Intent>;
 
 export const createIntentFromText = (
   nlp: (text: string) => any,
-  text: string,
   self: EntityURN,
+  text: string,
   transform: IntentTransformer = identity,
   { now = Date.now(), uuid = randomUUID }: FactoryOptions = {},
 ): Intent => {
