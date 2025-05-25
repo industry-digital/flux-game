@@ -18,7 +18,7 @@ export {
 } from './dice';
 
 export {
-  AppliedEffect as Effect,
+  AppliedEffect,
 } from './effect';
 
 export {
@@ -112,6 +112,12 @@ export {
   Intent,
   IntentInput,
 } from './intent';
+
+export {
+  createIntent,
+  createCommand,
+  createCommandFromIntent,
+} from '~/lib/intent';
 
 export {
   Modifier,
