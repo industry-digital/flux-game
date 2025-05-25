@@ -170,53 +170,15 @@ export type TransformerImplementation<
 > = new (...args: any[]) => TransformerInterface<I>;
 
 /**
- * Interface for handlers that operate in the Planning stage
- * These handlers inspect the world state projection (an Immer draft), as well as declared events.
- * They declare side effects that should be executed in the Actuation stage.
- */
-export type PlannerInterface<
-  I extends Command,
-> = {
-  /**
-   * The implementation should return `true` if the handler is interested in processing the input
-   */
-  handles: (command: Command) => command is I;
-
-  /**
-   * Dependencies on other planners that must run before this one
-   */
-  dependencies: PlannerImplementation<I>[];
-
-  /**
-   * A pure, deterministic reducer function that plans side effects
-   */
-  reduce: PureReducer<PlannerContext, I>;
-}
-
-export type PlannerImplementation<
-  I extends Command,
-> = new (...args: any[]) => PlannerInterface<I>;
-
-export type PureReducerContext = TransformerContext | PlannerContext;
-
-/**
  * A pure, deterministic reducer function with zero side effects.
  * It processes input and may declare emergent events on the supplied context.
  */
-export type PureReducer<
-  C extends PureReducerContext,
-  I extends AllowedInput,
-> = (context: C, input: I) => C;
+export type PureReducer<C, I> = (context: C, input: I) => C;
 
 /**
  * A reducer that acts in the pure Transformation stage
  */
 export type Transformer<T extends CommandType, A extends Record<string, any>> = PureReducer<TransformerContext, Command<T, A>>;
-
-/**
- * A reducer that acts in the pure Planning stage
- */
-export type Planner<T extends CommandType, A extends Record<string, any>> = PureReducer<PlannerContext, Command<T, A>>;
 
 /**
  * Type guard for determining if a handler can process a specific input
@@ -230,7 +192,7 @@ export type InputTypeGuard<I extends Command, S extends I> = (input: I) => input
  * in a pure and deterministic manner.
  */
 export type PureHandlerInterface<
-  C extends PureReducerContext,
+  C,
   I extends AllowedInput,
 > = {
   /**
@@ -250,7 +212,7 @@ export type PureHandlerInterface<
 }
 
 export type PureHandlerImplementation<
-  C extends PureReducerContext,
+  C,
   I extends AllowedInput,
 > = new (...args: any[]) => PureHandlerInterface<C, I>;
 
@@ -278,4 +240,11 @@ export const isCommandOfType = <T extends CommandType, A extends Record<string, 
   type: T
 ): input is Command<T, A> => {
   return 'type' in input && input.__type === 'command' && input.type === type;
+};
+
+/**
+ * Type guard that ensures the input is an Intent
+ */
+export const isIntent = (input: AllowedInput): input is Intent => {
+  return 'type' in input && input.__type === 'intent';
 };

@@ -1,4 +1,4 @@
-import { Entity, Place, PureReducerContext, EntityURN, EntityType, PlaceEntities, PlaceEntityDescriptor } from '@flux';
+import { Entity, Place, EntityURN, EntityType, PlaceEntities, PlaceEntityDescriptor, TransformerContext } from '@flux';
 
 /**
  * Interface for entity-related operations
@@ -37,7 +37,7 @@ export type PlaceEntitiesHook = {
 };
 
 export const usePlaceEntities = (
-  context: PureReducerContext,
+  context: TransformerContext,
   place: Place,
 ): PlaceEntitiesHook => {
   const placeEntities = getPlaceEntities(place);

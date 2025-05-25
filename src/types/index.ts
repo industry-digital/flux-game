@@ -94,7 +94,6 @@ export {
   PureHandlerImplementation,
   PureHandlerInterface,
   PureReducer,
-  PureReducerContext,
   SideEffectDeclarationContainer,
   Transformer,
   TransformerContext,
