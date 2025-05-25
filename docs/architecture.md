@@ -107,23 +107,23 @@ Every world interaction flows through a deterministic five-stage pipeline, where
 
 ```mermaid
 flowchart LR
-    A[Incoming XMPP Intent or Command] --> B[Negotiation DAG]
-    B --> C[Contextualization DAG]
-    C --> D[Transformation DAG]
-    D --> E[Planning DAG]
-    E --> F[Actuation DAG]
+    A[Incoming XMPP Intent] --> B[Negotiation]
+    B --> C[Contextualization]
+    C --> D[Transformation]
+    D --> E[Planning]
+    E --> F[Actuation]
 
-    classDef effectful fill:#f96,stroke:#333,stroke-width:2px
-    classDef pure fill:#9f6,stroke:#333,stroke-width:2px
+    classDef effectful fill:#a00,stroke:#333,stroke-width:2px
+    classDef pure fill:#0a0,stroke:#333,stroke-width:2px
 
-    class B,C,F effectful
-    class D,E pure
+    class C,F effectful
+    class B,D,E pure
 ```
 
 ### 1. Negotiation
 - **Purpose:** Transform player "intents" (like text commands, XMPP stanzas, or ambiguous instructions) into canonical Command objects
-- **Implementation:** Effectful handlers that parse, interpret, disambiguate, and normalize incoming intents
-- **Output:** Well-formed Command objects with authenticated actor context
+- **Implementation:** Pure handlers that parse, interpret, disambiguate, and normalize incoming intents
+- **Output:** Well-formed Command
 - **Key Point:** This stage is skipped entirely when the pipeline receives a well-formed Command as input (e.g., from HTTP/JSON APIs or structured client interfaces)
 
 ### 2. Contextualization

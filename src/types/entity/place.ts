@@ -1,5 +1,6 @@
 import { Entity, EntityType } from './entity';
-import { Taxonomy, EntityURN, PlaceURN } from '~/types/taxonomy';
+import { EntityURN, PlaceURN } from '~/types/taxonomy';
+import { Direction } from '~/types/world/space';
 import { SpecialVisibility } from '~/types/world/visibility';
 
 export interface PlaceScopedHistoricalEvent {
@@ -44,7 +45,7 @@ export type Exit = {
   to: PlaceURN;
 }
 
-export type Exits = Partial<Record<Taxonomy.Directions, Exit>>;
+export type Exits = Partial<Record<Direction, Exit>>;
 export type PlaceEntities = Partial<Record<EntityURN, PlaceEntityDescriptor>>;
 
 /**

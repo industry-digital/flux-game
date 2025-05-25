@@ -1,7 +1,7 @@
-import { DirectionURN, EventType, PlaceURN, Taxonomy, TransformerContext } from '@flux';
+import { Direction, EventType, PlaceURN, TransformerContext } from '@flux';
 
 export type ActorMovementHook = {
-  move: (direction: Taxonomy.Directions) => MoveResult;
+  move: (direction: Direction) => MoveResult;
 };
 
 export type MoveResult =
@@ -29,7 +29,7 @@ export const useActorMovement = (
 
   const DEFAULT_ERROR_MESSAGE = "You can't go that way.";
 
-  const declareMovementFailure = (direction: DirectionURN, reason: string, message = DEFAULT_ERROR_MESSAGE): MoveResult => {
+  const declareMovementFailure = (direction: Direction, reason: string, message = DEFAULT_ERROR_MESSAGE): MoveResult => {
     declareEvent({
       type: EventType.ACTOR_MOVEMENT_DID_FAIL,
       payload: {
@@ -48,7 +48,7 @@ export const useActorMovement = (
     };
   };
 
-  const declareMovementSuccess = (direction: DirectionURN, destination: PlaceURN): MoveResult => {
+  const declareMovementSuccess = (direction: Direction, destination: PlaceURN): MoveResult => {
     declareEvent({
       type: EventType.ACTOR_MOVEMENT_DID_SUCCEED,
       payload: {
@@ -62,7 +62,7 @@ export const useActorMovement = (
     return { success: true };
   };
 
-  const move = (direction: Taxonomy.Directions): MoveResult => {
+  const move = (direction: Direction): MoveResult => {
     const exit = origin.attributes.exits[direction];
     if (!exit) {
       return declareMovementFailure(direction, 'No exit in that direction');

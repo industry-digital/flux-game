@@ -162,6 +162,10 @@ export {
 } from '~/lib/taxonomy';
 
 export {
+  Direction,
+} from './world/space';
+
+export {
   Duration,
   ScheduledDuration,
   SpecialDuration,

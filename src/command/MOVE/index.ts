@@ -4,11 +4,11 @@ import {
   Command,
   isCommandOfType,
   TransformerInterface,
-  Taxonomy,
+  Direction,
 } from '@flux';
 
 export type MoveCommandArgs = {
-  direction: Taxonomy.Directions;
+  direction: Direction;
 };
 
 export type MoveCommand = Command<CommandType.MOVE, MoveCommandArgs>;
