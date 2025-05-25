@@ -2,35 +2,24 @@
 // This provides a clean API boundary and makes it easier to share types
 // across multiple services in our MUD architecture if needed
 
-export {
-  MinimalWorldProjection,
-  ExecutionError,
-  ErrorDeclarationContainer,
-  EventDeclarationConsumer,
-  EventDeclarationProducer,
-  SideEffectDeclarationContainer,
-  TransformerContext,
-  PlannerContext,
-  PureReducerContext,
-  PureReducer,
-  InputTypeGuard,
-  PureHandlerImplementation,
-  PureHandlerInterface,
-  CommandTypeGuard,
-  TransformerImplementation,
-  TransformerInterface,
-  Transformer,
-  createCommandGuard,
-  isCommandOfType,
-} from './handler';
+export { Self } from './actor';
 
 export {
-  Command,
-  CommandInput,
-  IntentInput,
-  Intent,
-  CommandType,
-} from './intent';
+  TargetingSpecification,
+  TargetType,
+} from './combat';
+
+export { ROOT_NAMESPACE } from './constants';
+
+export {
+  DieType,
+  RollResult,
+  RollSpecification
+} from './dice';
+
+export {
+  AppliedEffect as Effect,
+} from './effect';
 
 export {
   ModifiableBoundedAttribute,
@@ -56,21 +45,6 @@ export {
   CollectionURN,
 } from './entity/collection';
 
-export { ROOT_NAMESPACE } from './constants';
-
-export { Self } from './actor';
-
-export {
-  DieType,
-  RollResult,
-  RollSpecification
-} from './dice';
-
-export {
-  Modifier,
-  Modifiers,
-} from './modifier';
-
 export {
   EmergentNarrative,
   Entity,
@@ -78,17 +52,6 @@ export {
   SymbolicLink,
   UUIDLike
 } from './entity/entity';
-
-export {
-  AppliedEffect as Effect,
-} from './effect';
-
-export {
-  EmergentEvent,
-  EmergentEventInput,
-  EventType,
-  EventPayload,
-} from './event';
 
 export {
   ItemAttributes,
@@ -109,46 +72,87 @@ export {
 } from './entity/skill';
 
 export {
-  TAXONOMY,
-  Taxonomy,
-  Intrinsic,
-  RootNamespace,
-  RootVocabulary,
-  EntityURN,
-  PlaceURN,
-  CharacterURN,
-  TraitURN,
-  AbilityURN,
-  SkillURN,
-  EffectURN,
-  DirectionURN,
-  WeaponURN,
-  ArmorURN,
-  ItemURN,
-  ModifierURN,
-} from './taxonomy';
+  EmergentEvent,
+  EmergentEventInput,
+  EventPayload,
+  EventType,
+} from './event';
 
 export {
-  Duration,
-  SpecialDuration,
-  TimeUnit,
-  ScheduledDuration,
-} from './world/time';
+  CombatProjectionMixin,
+  CommandTypeGuard,
+  ErrorDeclarationConsumer,
+  ErrorDeclarationProducer,
+  EventDeclarationConsumer,
+  EventDeclarationProducer,
+  ExecutionError,
+  InputTypeGuard,
+  MinimalWorldProjection,
+  PlannerContext,
+  PureHandlerImplementation,
+  PureHandlerInterface,
+  PureReducer,
+  PureReducerContext,
+  SideEffectDeclarationContainer,
+  Transformer,
+  TransformerContext,
+  TransformerImplementation,
+  TransformerInterface,
+  WorldProjection,
+  VendorProjectionMixin,
+  createCommandGuard,
+  isCommandOfType,
+} from './handler';
 
 export {
-  SpecialVisibility,
-} from './world/visibility';
+  Command,
+  CommandInput,
+  CommandType,
+  Intent,
+  IntentInput,
+} from './intent';
+
+export {
+  Modifier,
+  Modifiers,
+} from './modifier';
 
 export {
   Requirements,
 } from './requirement';
 
 export {
-  TargetingSpecification,
-  TargetType,
-} from './combat';
-
-export {
   SideEffect,
   SideEffectInput,
 } from './side-effect';
+
+export {
+  AbilityURN,
+  ArmorURN,
+  CharacterURN,
+  DirectionURN,
+  EffectURN,
+  EntityURN,
+  Intrinsic,
+  ItemURN,
+  ModifierURN,
+  PlaceURN,
+  RootNamespace,
+  RootVocabulary,
+  SkillURN,
+  TAXONOMY,
+  Taxonomy,
+  TraitURN,
+  WeaponURN,
+} from './taxonomy';
+
+export {
+  Duration,
+  ScheduledDuration,
+  SpecialDuration,
+  TimeUnit,
+} from './world/time';
+
+export {
+  SpecialVisibility,
+} from './world/visibility';

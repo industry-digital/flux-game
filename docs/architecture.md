@@ -2,9 +2,11 @@
 
 ## Introduction
 
-This document outlines the architectural design of our multiplayer text-based game (MUD), with a central emphasis on emergent gameplay. A MUD (Multi-User Dungeon) is a text-based virtual world where players interact with the environment and each other through written commands, receiving rich narrative descriptions in return; they are the earliest form of online multiplayer games and remain compelling due to their focus on imagination, narrative depth, and complex world simulation. Our goal is to foster rich, unscripted experiences that arise from the interplay of simulation systems, player actions, and AI-driven world elements. The architecture is deliberately structured to encourage surprising outcomes and dynamic narrative developments—where the world feels alive not because it is prewritten, but because it is reactive, systemic, and full of possibility.
+This document outlines the architectural design of our multiplayer text-based game (MUD), with a central emphasis on emergent gameplay.
 
-Our supporting goals include low-latency communication, world consistency, extensibility through functional composition, and a deeply immersive multiplayer experience that evolves over time.
+A MUD (Multi-User Dungeon) is a text-based virtual world where players interact with the environment and each other through written commands, receiving rich narrative descriptions in return; they are the earliest form of online multiplayer games and remain compelling due to their focus on imagination, narrative depth, and complex world simulation.
+
+Our goal is to foster rich, unscripted experiences that arise from the interplay of simulation systems, player actions, and AI-driven world elements. The architecture is deliberately structured to encourage surprising outcomes and dynamic narrative developments—where the world feels alive not because it is prewritten, but because it is reactive, systemic, and full of possibility.
 
 ## Executive Summary
 
@@ -84,7 +86,7 @@ Our architecture embraces reducers as the primary pattern for state transformati
 - **Pipeline Stages as Reducers**: Each stage transforms the execution context immutably
 - **Entity Loaders with Reducers**: Data loading operations use reducers to update world state
 - **Game Logic as Pure Reducers**: Core game mechanics are implemented as pure functions
-- **Consistent Pattern**: `(state, action) => newState` throughout the entire codebase
+- **Consistent Pattern**: `(State, Input) => New State` throughout the entire codebase
 
 This approach provides numerous benefits: predictable unidirectional data flow, easier debugging and testing, better separation of concerns, and functional composition to build complex behavior from simple parts.
 
@@ -136,15 +138,15 @@ flowchart LR
 
 At its core, each GameLogicHandler implements a pure, deterministic reducer function:
 
-$f : (World, Command) \rightarrow (World', EmergentEvents)$
+$f : (W, C) \rightarrow (W', E)$
 
 Where:
-- $World$ represents the current world state
-- $Command$ represents the command to be processed
-- $World'$ represents the new world state after transformation
-- $EmergentEvents$ represents the set of emergent events generated
+- $W$ represents a projection of world state
+- $C$ represents the command to be processed
+- $W'$ represents a new world state projection
+- $E$ represents the set of emergent events generated
 
-**Keeping Transformation Handlers Pure:** We deliberately keep handlers in this stage as pure and focused as possible. These handlers are primarily responsible for the deterministic transformation of world state in response to commands. We've consciously moved side effects, external interactions, and complex conditional logic out of these core functions because pure functions are incredibly easy to test. Given the same input (current world state and a command), they always produce the same output (new world state and declared events/side effects). We can literally test our game logic in a browser with no internet connection—and that's exactly what we do.
+**Keeping Transformation Handlers Pure:** We deliberately keep handlers in this stage as pure and focused as possible. These handlers are primarily responsible for the deterministic transformation of world state in response to commands. We've consciously moved side effects, external interactions, and complex conditional logic out of these core functions because pure functions are incredibly easy to test. Given the same input (current world state and a command), they always produce the same output (new world state and declared events/side effects). We can literally develop game features in a browser with no internet connection — and that's exactly what we do.
 
 ### 4. Planning
 - **Purpose:** Analyze both emergent events and world state changes to determine necessary side effects

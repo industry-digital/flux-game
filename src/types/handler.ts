@@ -4,7 +4,6 @@ import { EntityURN, PlaceURN } from '~/types/taxonomy';
 import { Entity } from '~/types/entity/entity';
 import { Place } from '~/types/entity/place';
 import { SideEffect, SideEffectInput } from '~/types/side-effect';
-;
 
 /**
  * Union type of all allowed input types for the pipeline
@@ -26,6 +25,21 @@ export type MinimalWorldProjection = {
   places: Record<PlaceURN, Place>;
 };
 
+export type CombatProjectionMixin = {
+  // add combat-specific fields
+};
+
+export type VendorProjectionMixin = {
+  // add vendor-specific fields
+};
+
+// Union of all possible projections.
+// The Flux World Server satisfies the projection in the Contextualization stage.
+export type WorldProjection =
+  | MinimalWorldProjection
+  | MinimalWorldProjection & CombatProjectionMixin
+  | MinimalWorldProjection & VendorProjectionMixin;
+
 /**
  * An error that occurred during the execution of a command.
  */
@@ -44,18 +58,20 @@ export type ExecutionError = {
   trace: string;
 };
 
-export type ErrorDeclarationContainer = {
+export type ErrorDeclarationProducer = {
   /**
    * Declare an error to be emitted in response to the input
    */
   declareError(error: Error): void;
   declareError(message: string): void;
+};
 
+export type ErrorDeclarationConsumer = {
   /**
    * Get the list of errors that have been declared as a result of handling the input.
    */
   getDeclaredErrors(): ExecutionError[];
-}
+};
 
 export type EventDeclarationConsumer = {
   /**
@@ -91,26 +107,42 @@ export type SideEffectDeclarationContainer = {
   getDeclaredSideEffects(): SideEffect<any, any>[];
 };
 
+export type PotentiallyImpureOperations = {
+  /**
+   * A function that returns a random value between 0 and 1, inclusive.
+   */
+  random: () => number;
+  /**
+   * A function that returns the number of milliseconds elapsed since the Unix epoch.
+   */
+  now: () => number;
+};
+
 /**
  *
  */
 export type TransformerContext<
   W extends MinimalWorldProjection = MinimalWorldProjection,
 > =
-  & ErrorDeclarationContainer
+  & PotentiallyImpureOperations
+  & ErrorDeclarationProducer
   & EventDeclarationProducer
   & { world: W };
 
 export type PlannerContext<
   W extends MinimalWorldProjection = MinimalWorldProjection,
 > =
+  & PotentiallyImpureOperations
+  & ErrorDeclarationProducer
+  & ErrorDeclarationConsumer
   & EventDeclarationConsumer
   & SideEffectDeclarationContainer
   & { world: W };
 
 /**
  * Interface for handlers that operate in the Transformation stage
- * These handlers process commands/intents and declare events and errors
+ * These handlers immutably update the world state projection (an Immer draft), and declare emergent events like
+ * `ACTOR_DID_MOVE`.
  */
 export type TransformerInterface<
   I extends Command,
@@ -118,7 +150,7 @@ export type TransformerInterface<
   /**
    * The implementation should return `true` if the handler is interested in processing the input
    */
-  handles: (input: Command) => input is I;
+  handles: (command: Command) => command is I;
 
   /**
    * Dependencies on other transformers that must run before this one
@@ -126,7 +158,9 @@ export type TransformerInterface<
   dependencies: TransformerImplementation<I>[];
 
   /**
-   * A pure, deterministic reducer function that transforms world state
+   * A pure, deterministic reducer function that:
+   * 1) performs immutable updates to the world projection, and
+   * 2) declares emergent events.
    */
   reduce: PureReducer<TransformerContext, I>;
 }
@@ -137,7 +171,8 @@ export type TransformerImplementation<
 
 /**
  * Interface for handlers that operate in the Planning stage
- * These handlers consume events and declare side effects
+ * These handlers inspect the world state projection (an Immer draft), as well as declared events.
+ * They declare side effects that should be executed in the Actuation stage.
  */
 export type PlannerInterface<
   I extends Command,
@@ -145,7 +180,7 @@ export type PlannerInterface<
   /**
    * The implementation should return `true` if the handler is interested in processing the input
    */
-  handles: (input: Command) => input is I;
+  handles: (command: Command) => command is I;
 
   /**
    * Dependencies on other planners that must run before this one
