@@ -149,6 +149,20 @@ export {
 } from './taxonomy';
 
 export {
+  createEntityUrn,
+  createPlaceUrn,
+  createCharacterUrn,
+  createItemUrn,
+  createTraitUrn,
+  createSkillUrn,
+  createAbilityUrn,
+  createWeaponUrn,
+  createArmorUrn,
+  createDirectionUrn,
+  createEffectUrn,
+} from '~/lib/taxonomy';
+
+export {
   Duration,
   ScheduledDuration,
   SpecialDuration,

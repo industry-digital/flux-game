@@ -18,9 +18,13 @@ export const useActorMovement = (
     throw new Error('Actor not found in `actors` projection');
   }
 
-  const origin = places[actor.location as PlaceURN];
+  if (!actor.location) {
+    throw new Error('Actor does not have a `location`');
+  }
+
+  const origin = places[actor.location];
   if (!origin) {
-    throw new Error('Origin not found in `places` projection');
+    throw new Error('Actor location not found in `places` projection');
   }
 
   const DEFAULT_ERROR_MESSAGE = "You can't go that way.";
@@ -45,7 +49,6 @@ export const useActorMovement = (
   };
 
   const declareMovementSuccess = (direction: DirectionURN, destination: PlaceURN): MoveResult => {
-
     declareEvent({
       type: EventType.ACTOR_MOVEMENT_DID_SUCCEED,
       payload: {
@@ -70,17 +73,18 @@ export const useActorMovement = (
       return declareMovementFailure(direction, 'Destination place not found in `places` projection');
     }
 
-    // Assign a new location to the actor
-    actor.location = exit.to;
-
     // Now all we have to do is "transfer" actor's representation from the origin to the destination.
     const descriptor = origin.attributes.entities[actor.id];
     if (!descriptor) {
       return declareMovementFailure(direction, 'Actor not found at `origin`');
     }
 
+    // Transfer actor's descriptor from origin to destination
     destination.attributes.entities[actor.id] = descriptor;
     delete origin.attributes.entities[actor.id];
+
+    // Update actor's location
+    actor.location = destination.id;
 
     return declareMovementSuccess(direction, exit.to);
   };
