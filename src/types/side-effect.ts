@@ -1,17 +1,18 @@
-/**
- * Override via declaration merging
- */
-export type SideEffectType = any;
-
-export type SideEffectInput<T, A> = {
+export type SideEffectInput<
+  T extends string = string,
+  A extends object = {},
+> = {
   id?: string;
   trace?: string;
   ts?: number;
-  type: T;
+  type: T,
   args: A;
 };
 
-export type SideEffect<T, A> = Omit<SideEffectInput<T, A>, 'id' | 'trace' | 'ts'> & {
+export type SideEffect<
+  T extends string = string,
+  A extends object = {},
+> = Omit<SideEffectInput<T, A>, 'id' | 'trace' | 'ts'> & {
   id: string;
   trace: string;
   ts: number;

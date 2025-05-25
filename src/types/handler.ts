@@ -99,12 +99,12 @@ export type SideEffectDeclarationContainer = {
   /**
    * Declare a side effect to be emitted in response to the input.
    */
-  declareSideEffect<T, A>(input: SideEffectInput<T, A>): void;
+  declareSideEffect(input: SideEffectInput): void;
 
   /**
    * Get the list of side effects that have been declared as a result of handling the input.
    */
-  getDeclaredSideEffects(): SideEffect<any, any>[];
+  getDeclaredSideEffects(): SideEffect[];
 };
 
 export type PotentiallyImpureOperations = {
@@ -122,7 +122,7 @@ export type PotentiallyImpureOperations = {
  *
  */
 export type TransformerContext<
-  W extends MinimalWorldProjection = MinimalWorldProjection,
+  W extends WorldProjection = WorldProjection,
 > =
   & PotentiallyImpureOperations
   & ErrorDeclarationProducer
@@ -130,7 +130,7 @@ export type TransformerContext<
   & { world: W };
 
 export type PlannerContext<
-  W extends MinimalWorldProjection = MinimalWorldProjection,
+  W extends WorldProjection = WorldProjection,
 > =
   & PotentiallyImpureOperations
   & ErrorDeclarationProducer
