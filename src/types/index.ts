@@ -79,6 +79,7 @@ export {
 } from './event';
 
 export {
+  AllowedInput,
   CombatProjectionMixin,
   CommandTypeGuard,
   ErrorDeclarationConsumer,
