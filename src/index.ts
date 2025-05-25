@@ -1,4 +1,5 @@
 export * from '@flux';
+export * from '~/lib/taxonomy';
 
 import { Command, PureHandlerImplementation, TransformerContext } from '@flux';
 import { MOVE } from '~/command/MOVE';
