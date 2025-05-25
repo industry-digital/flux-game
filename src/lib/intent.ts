@@ -1,6 +1,6 @@
-import { createCharacterUrn } from '~/lib/taxonomy';
 import { randomUUID } from '~/lib/uuid';
-import { Command, CommandType, Intent } from '~/types/intent';
+import { Command, CommandType, Intent, NaturalLanguageAnalysis } from '~/types/intent';
+import { EntityURN } from '~/types/taxonomy';
 
 const identity = <I, O = I>(x: I): O => x as unknown as O;
 
@@ -13,15 +13,22 @@ type Transformer<I, O = I> = (input: I) => O;
 
 type IntentTransformer = Transformer<Intent>;
 
-export const createIntent = (
+export const createIntentFromText = (
+  nlp: (text: string) => any,
+  text: string,
+  self: EntityURN,
   transform: IntentTransformer = identity,
   { now = Date.now(), uuid = randomUUID }: FactoryOptions = {},
-): Intent  => {
+): Intent => {
+  const nlpAnalysis = createNaturalLanguageAnalysis(nlp, text);
+
   const defaults: Partial<Intent> = {
     __type: 'intent',
-    id:  uuid(),
+    id: uuid(),
     ts: now,
-    self: createCharacterUrn('nobody'),
+    self,
+    text,
+    nlp: nlpAnalysis,
   };
 
   return transform(defaults as Intent) as Intent;
@@ -55,4 +62,17 @@ export const createCommandFromIntent = <T extends CommandType>(
   };
 
   return transform(defaults as Command<T>) as Command<T>;
+};
+
+export const createNaturalLanguageAnalysis = (
+  nlp: (text: string) => any,
+  text: string
+): NaturalLanguageAnalysis => {
+  const doc = nlp(text);
+
+  return {
+    verbs: doc.verbs().out('array'),
+    nouns: doc.nouns().out('array'),
+    adjectives: doc.adjectives().out('array'),
+  };
 };

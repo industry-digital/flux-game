@@ -63,17 +63,15 @@ export type Command<
    */
   self: EntityURN;
 }
+
 /**
  * Serializable NLP analysis results from processing the intent text
  */
 export type NaturalLanguageAnalysis = {
-  entities: Array<{ text: string; type: string; }>;
   verbs: string[];
   nouns: string[];
   adjectives: string[];
-  sentiment?: number;
-  confidence?: number;
-}
+};
 
 /**
  * Input format for text-based intents from users

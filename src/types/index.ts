@@ -111,10 +111,12 @@ export {
   CommandType,
   Intent,
   IntentInput,
+  isCommand,
+  isIntent,
 } from './intent';
 
 export {
-  createIntent,
+  createIntentFromText,
   createCommand,
   createCommandFromIntent,
 } from '~/lib/intent';
