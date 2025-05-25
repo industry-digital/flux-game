@@ -8,6 +8,7 @@ export {
   ErrorDeclarationProducer,
   Intent,
   MinimalWorldProjection,
+  WorldProjection,
   CombatProjectionMixin,
   VendorProjectionMixin,
   PureHandlerImplementation,
