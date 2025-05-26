@@ -2,6 +2,15 @@ export * from '@flux';
 export * from '~/lib/taxonomy';
 export * from '~/lib/entity/util';
 
+export {
+  parseEntityUrn,
+  parseEntityUrnOrFail,
+  parseEntityUrnAs,
+  getEntityUrn,
+  getEntityUrnOrFail,
+  isValidEntityUrn,
+} from '~/lib/entity/urn';
+
 import { Command, PureHandlerImplementation, TransformerContext } from '@flux';
 import { MOVE } from '~/command/MOVE';
 import { safeTopologicalSort } from '~/lib/dag';
