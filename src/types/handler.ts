@@ -4,7 +4,6 @@ import { EntityURN, PlaceURN } from '~/types/taxonomy';
 import { Entity } from '~/types/entity/entity';
 import { Place } from '~/types/entity/place';
 import { SideEffect, SideEffectInput } from '~/types/side-effect';
-import { UUIDLike } from '~/lib/uuid';
 
 /**
  * Union type of all allowed input types for the pipeline
@@ -117,12 +116,13 @@ export type PotentiallyImpureOperations = {
   /**
    * A function that returns the number of milliseconds elapsed since the Unix epoch.
    */
-  now: () => number;
+  timestamp: () => number;
 
   /**
-   * A function that returns a UUID
+   * A function that returns a globally unique identifier. Implementations may return a UUID
+   * or any string of sufficient entropy.
    */
-  uuid: () => UUIDLike;
+  uniqid: () => string;
 };
 
 /**

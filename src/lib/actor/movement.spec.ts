@@ -91,7 +91,7 @@ describe('useActorMovement', () => {
       declareEvent: mockDeclareEvent,
       declareError: vi.fn(),
       random: Math.random,
-      now: Date.now
+      timestamp: Date.now
     };
   });
 

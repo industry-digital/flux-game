@@ -136,7 +136,7 @@ flowchart LR
 - **Implementation:** Pure handlers that compute state transitions without side effects and declare emergent events through a formal event schema
 - **Output:** State delta objects and event declarations
 
-At its core, each GameLogicHandler implements a pure, deterministic reducer function:
+At its core, each game logic handler implements a pure, deterministic reducer function:
 
 $f : (W, C) \rightarrow (W', E)$
 
