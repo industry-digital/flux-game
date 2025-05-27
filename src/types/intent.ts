@@ -61,7 +61,7 @@ export type Command<
   /**
    * The entity that issued this command
    */
-  self: EntityURN;
+  actor: EntityURN;
 }
 
 /**
@@ -91,7 +91,7 @@ export type IntentInput = {
   /**
    * The entity that issued this intent
    */
-  self: EntityURN;
+  actor: EntityURN;
 
   /**
    * The raw text input from the user
@@ -126,7 +126,7 @@ export const isCommand = (input: unknown): input is Command => {
     'args' in input &&
     'id' in input &&
     'ts' in input &&
-    'self' in input
+    'actor' in input
   );
 };
 
@@ -142,7 +142,7 @@ export const isIntent = (input: unknown): input is Intent => {
     'text' in input &&
     'id' in input &&
     'ts' in input &&
-    'self' in input &&
+    'actor' in input &&
     (!('nlp' in input) || typeof (input as Intent).nlp === 'object')
   );
 };

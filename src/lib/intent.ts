@@ -26,7 +26,7 @@ export const createIntentFromText = (
     __type: 'intent',
     id: uuid(),
     ts: now,
-    self,
+    actor: self,
     text,
     nlp: nlpAnalysis,
   };
@@ -58,7 +58,7 @@ export const createCommandFromIntent = <T extends CommandType>(
     __type: 'command',
     id: intent.id,
     ts: now,
-    self: intent.self,
+    actor: intent.actor,
   };
 
   return transform(defaults as Command<T>) as Command<T>;
