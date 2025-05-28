@@ -147,7 +147,7 @@ export type PlannerContext<
   & ErrorDeclarationProducer
   & ErrorDeclarationConsumer
   & EventDeclarationConsumer
-  & SideEffectDeclarationContainer
+  & SideEffectDeclarationProducer
   & { world: W };
 
 /**
