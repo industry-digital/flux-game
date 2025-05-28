@@ -155,7 +155,7 @@ export const createExit = (
 export type EdgeDefinition = {
   to: string;
   direction: string;
-  label: string;
+  label?: string;
 };
 
 /**
@@ -163,8 +163,8 @@ export type EdgeDefinition = {
  */
 export type PlaceDefinition = {
   id: string;
-  name: string;
-  description: string;
+  name?: string;
+  description?: string;
   edges: EdgeDefinition[];
 };
 
@@ -181,15 +181,15 @@ export const createPlaces = (
       const payload = createPlace(place => ({
         ...place,
         id: createPlaceUrn(placeDef.id),
-        name: placeDef.name,
-        description: placeDef.description,
+        name: placeDef.name || placeDef.id,
+        description: placeDef.description || 'Lorem ipsum dolor sit amet',
         attributes: {
           exits: Object.fromEntries(
             placeDef.edges.map(edge => [
               directions[edge.direction as keyof typeof directions],
               createExit(exit => ({
                 ...exit,
-                label: edge.label,
+                label: edge.label || `An exit to the ${edge.direction}`,
                 to: urns[edge.to]
               }))
             ])

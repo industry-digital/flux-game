@@ -1,3 +1,5 @@
+import { CreatePlaceCommandArgs } from '~/command/CREATE_PLACE';
+import { MoveCommandArgs } from '~/command/MOVE';
 import { EntityURN } from '~/types/taxonomy';
 
 export type InputMetadata = { __type: 'command' | 'intent' };
@@ -14,6 +16,8 @@ export enum CommandType {
    * through the pipeline so that all stages have an opportunity to act.
    */
   UNRESOLVED_COMMAND = 'UNRESOLVED_COMMAND',
+  CREATE_PLACE = 'CREATE_PLACE',
+  CREATE_CHARACTER = 'CREATE_CHARACTER',
   MOVE = 'MOVE',
 }
 
@@ -209,3 +213,8 @@ export const isMoveCommand = createCommandTypeGuard(CommandType.MOVE);
 export const isMoveCommandInline = (input: unknown): input is Command<CommandType.MOVE> => {
   return isCommandOfType(input, CommandType.MOVE);
 };
+
+export type KnownCommand =
+| Command<CommandType.UNRESOLVED_COMMAND, any>
+| Command<CommandType.CREATE_PLACE, CreatePlaceCommandArgs>
+| Command<CommandType.MOVE, MoveCommandArgs>

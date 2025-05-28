@@ -111,6 +111,7 @@ export {
   CommandType,
   Intent,
   IntentInput,
+  KnownCommand,
   isCommand,
   isIntent,
 } from './intent';
