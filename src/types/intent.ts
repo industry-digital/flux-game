@@ -8,6 +8,12 @@ export type InputMetadata = { __type: 'command' | 'intent' };
  * via declaration merging
  */
 export enum CommandType {
+  /**
+   * Represents an unresolved command that could not be processed
+   * If an Intent cannot be converted to an actual Command, we still pass this UNRESOLVED_COMMAND
+   * through the pipeline so that all stages have an opportunity to act.
+   */
+  UNRESOLVED_COMMAND = 'UNRESOLVED_COMMAND',
   MOVE = 'MOVE',
 }
 
