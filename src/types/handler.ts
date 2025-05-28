@@ -95,17 +95,21 @@ export type EventDeclarationProducer = {
   declareEvent(input: EmergentEventInput): void;
 };
 
-export type SideEffectDeclarationContainer = {
+export type SideEffectDeclarationProducer = {
   /**
    * Declare a side effect to be emitted in response to the input.
    */
   declareSideEffect(input: SideEffectInput): void;
+};
 
+export type SideEffectDeclarationConsumer = {
   /**
    * Get the list of side effects that have been declared as a result of handling the input.
    */
   getDeclaredSideEffects(): SideEffect[];
 };
+
+export type SideEffectDeclarationContainer = SideEffectDeclarationProducer & SideEffectDeclarationConsumer;
 
 export type PotentiallyImpureOperations = {
   /**
