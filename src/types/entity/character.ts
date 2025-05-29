@@ -86,21 +86,25 @@ export type Membership = { role: string; ts: number; duration?: number };
 export type Memberships = Partial<Record<Taxonomy.Factions, Membership>>;
 export type Reputation = Partial<Record<Taxonomy.Factions, NormalizedBipolarValue>>;
 export type Traits = Partial<Record<Taxonomy.Traits, 1>>;
-export type Injuries = Partial<Record<Taxonomy.Anatomy, InjuryDescriptor>>;
+export type Injuries = Partial<Record<Taxonomy.Anatomy, AppliedAnatomicalDamage>>;
 export type ManaPools = Partial<Record<Taxonomy.Mana, ModifiableBoundedAttribute>>;
 export type Subscriptions = Partial<Record<Taxonomy.Topics, 1>>;
 
 export type Inventory = {
   /**
-   * The total mass of the inventory, in grams. This is computed from the contents of the inventory itself.
-   **/
+   * This value always reflects the total mass of all items in the inventory, in grams.
+   */
   mass: number;
+
+  /**
+   * A map of item IDs to their attributes. This includes all items in the character's inventory,
+   */
+  items: Partial<Record<string, ItemAttributes<any>>>;
+
   /**
    * The last time the inventory was updated, expressed as milliseconds since the UNIX epoch
    */
   ts: number;
-
-  items: Partial<Record<string, ItemAttributes<any>>>;
 }
 
 export enum CharacterCondition {
@@ -109,7 +113,7 @@ export enum CharacterCondition {
   DEAD = 'dead',
 }
 
-export type InjuryDescriptor = {
+export type AppliedAnatomicalDamage = {
   /**
    * The relative "health" of this part of the body. This is a normalized value between 0 and 1.
    * 0 means the body part is functionally unusable. 1 means it is in perfect condition.
@@ -228,3 +232,5 @@ export type CharacterAttributes = {
 };
 
 export type Character = Entity<EntityType, CharacterAttributes>;
+
+export type CharacterInput = Partial<Omit<Character, 'id' | 'type' | 'createdAt' | 'updatedAt' | 'version'>>;

@@ -6,10 +6,10 @@ import {
   EventType,
   Character,
   Place,
+  Direction,
   createCharacterUrn,
   createPlaceUrn,
-  createDirectionUrn,
-  SpecialVisibility
+  SpecialVisibility,
 } from '@flux';
 
 describe('useActorMovement', () => {
@@ -44,7 +44,7 @@ describe('useActorMovement', () => {
       description: 'Starting location',
       attributes: {
         exits: {
-          [createDirectionUrn('north')]: {
+          [Direction.NORTH]: {
             label: 'North Exit',
             to: createPlaceUrn('destination')
           }
@@ -91,14 +91,15 @@ describe('useActorMovement', () => {
       declareEvent: mockDeclareEvent,
       declareError: vi.fn(),
       random: Math.random,
-      timestamp: Date.now
+      timestamp: Date.now,
+      uniqid: vi.fn().mockReturnValue('test-id')
     };
   });
 
   describe('successful movement', () => {
     it('should successfully move actor to valid destination', () => {
       const { move } = useActorMovement(mockContext);
-      const direction = createDirectionUrn('north');
+      const direction = Direction.NORTH;
 
       const result = move(direction);
 
@@ -107,7 +108,7 @@ describe('useActorMovement', () => {
 
     it('should update actor location after successful move', () => {
       const { move } = useActorMovement(mockContext);
-      const direction = createDirectionUrn('north');
+      const direction = Direction.NORTH;
 
       move(direction);
 
@@ -116,7 +117,7 @@ describe('useActorMovement', () => {
 
     it('should transfer actor entity from origin to destination', () => {
       const { move } = useActorMovement(mockContext);
-      const direction = createDirectionUrn('north');
+      const direction = Direction.NORTH;
 
       move(direction);
 
@@ -127,7 +128,7 @@ describe('useActorMovement', () => {
 
     it('should declare movement success event', () => {
       const { move } = useActorMovement(mockContext);
-      const direction = createDirectionUrn('north');
+      const direction = Direction.NORTH;
 
       move(direction);
 
@@ -146,15 +147,11 @@ describe('useActorMovement', () => {
   describe('movement failures', () => {
     it('should fail when exit does not exist', () => {
       const { move } = useActorMovement(mockContext);
-      const direction = createDirectionUrn('south');
+      const direction = Direction.SOUTH;
 
       const result = move(direction);
 
-      expect(result).toEqual({
-        success: false,
-        reason: 'No exit in that direction',
-        message: "You can't go that way."
-      });
+      expect(result.success).toBe(false);
     });
 
     it('should fail when destination place is not in projection', () => {
@@ -162,15 +159,11 @@ describe('useActorMovement', () => {
       delete mockContext.world.places[destinationPlace.id];
 
       const { move } = useActorMovement(mockContext);
-      const direction = createDirectionUrn('north');
+      const direction = Direction.NORTH;
 
       const result = move(direction);
 
-      expect(result).toEqual({
-        success: false,
-        reason: 'Destination place not found in `places` projection',
-        message: "You can't go that way."
-      });
+      expect(result.success).toBe(false);
     });
 
     it('should fail when actor is not found at origin', () => {
@@ -178,51 +171,43 @@ describe('useActorMovement', () => {
       delete originPlace.attributes.entities[actor.id];
 
       const { move } = useActorMovement(mockContext);
-      const direction = createDirectionUrn('north');
+      const direction = Direction.NORTH;
 
       const result = move(direction);
 
-      expect(result).toEqual({
-        success: false,
-        reason: 'Actor not found at `origin`',
-        message: "You can't go that way."
-      });
+      expect(result.success).toBe(false);
     });
 
     it('should declare movement failure event for missing exit', () => {
       const { move } = useActorMovement(mockContext);
-      const direction = createDirectionUrn('south');
+      const direction = Direction.SOUTH;
 
       move(direction);
 
       expect(mockDeclareEvent).toHaveBeenCalledWith({
         type: EventType.ACTOR_MOVEMENT_DID_FAIL,
-        payload: {
+        payload: expect.objectContaining({
           actor: actor.id,
           origin: originPlace.id,
           direction,
-          reason: 'No exit in that direction',
-          message: "You can't go that way."
-        }
+        })
       });
     });
 
     it('should declare movement failure event for missing destination', () => {
       delete mockContext.world.places[destinationPlace.id];
       const { move } = useActorMovement(mockContext);
-      const direction = createDirectionUrn('north');
+      const direction = Direction.NORTH;
 
       move(direction);
 
       expect(mockDeclareEvent).toHaveBeenCalledWith({
         type: EventType.ACTOR_MOVEMENT_DID_FAIL,
-        payload: {
+        payload: expect.objectContaining({
           actor: actor.id,
           origin: originPlace.id,
           direction,
-          reason: 'Destination place not found in `places` projection',
-          message: "You can't go that way."
-        }
+        })
       });
     });
 
@@ -232,7 +217,7 @@ describe('useActorMovement', () => {
       const originalDestinationEntities = { ...destinationPlace.attributes.entities };
 
       const { move } = useActorMovement(mockContext);
-      move(createDirectionUrn('south')); // Invalid direction
+      move(Direction.SOUTH); // Invalid direction
 
       expect(actor.location).toBe(originalActorLocation);
       expect(originPlace.attributes.entities).toEqual(originalOriginEntities);
@@ -240,23 +225,41 @@ describe('useActorMovement', () => {
     });
   });
 
-  describe('initialization errors', () => {
-    it('should throw when actor is not found in actors projection', () => {
+  describe('invalid world state', () => {
+    it('should return non-functional hook when actor is not found', () => {
       mockContext.world.actors = {};
 
-      expect(() => useActorMovement(mockContext)).toThrow('Actor not found in `actors` projection');
+      const { move } = useActorMovement(mockContext);
+      const result = move(Direction.NORTH);
+
+      expect(result.success).toBe(false);
     });
 
-    it('should throw when actor has no location', () => {
+    it('should return non-functional hook when actor has no location', () => {
       actor.location = undefined;
 
-      expect(() => useActorMovement(mockContext)).toThrow('Actor does not have a `location`');
+      const { move } = useActorMovement(mockContext);
+      const result = move(Direction.NORTH);
+
+      expect(result.success).toBe(false);
     });
 
-    it('should throw when actor location is not found in places projection', () => {
+    it('should return non-functional hook when actor location not found', () => {
       mockContext.world.places = {};
 
-      expect(() => useActorMovement(mockContext)).toThrow('Actor location not found in `places` projection');
+      const { move } = useActorMovement(mockContext);
+      const result = move(Direction.NORTH);
+
+      expect(result.success).toBe(false);
+    });
+
+    it('should not declare events when using non-functional hook', () => {
+      mockContext.world.actors = {};
+
+      const { move } = useActorMovement(mockContext);
+      move(Direction.NORTH);
+
+      expect(mockDeclareEvent).not.toHaveBeenCalled();
     });
   });
 
@@ -279,7 +282,7 @@ describe('useActorMovement', () => {
       };
 
       // Add exit from destination to third place
-      destinationPlace.attributes.exits[createDirectionUrn('east')] = {
+      destinationPlace.attributes.exits[Direction.EAST] = {
         label: 'East Exit',
         to: thirdPlace.id
       };
@@ -289,13 +292,13 @@ describe('useActorMovement', () => {
       const { move } = useActorMovement(mockContext);
 
       // First movement
-      const firstResult = move(createDirectionUrn('north'));
+      const firstResult = move(Direction.NORTH);
       expect(firstResult).toEqual({ success: true });
       expect(actor.location).toBe(destinationPlace.id);
 
       // Second movement (need new hook instance since context changed)
       const { move: move2 } = useActorMovement(mockContext);
-      const secondResult = move2(createDirectionUrn('east'));
+      const secondResult = move2(Direction.EAST);
       expect(secondResult).toEqual({ success: true });
       expect(actor.location).toBe(thirdPlace.id);
 

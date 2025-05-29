@@ -8,24 +8,28 @@ export type MoveResult =
   | { success: true }
   | { success: false; reason: string; message?: string };
 
+const createDummyActorMovementHook = (reason: string): ActorMovementHook => ({
+  move: () => ({ success: false, reason }),
+});
+
 export const useActorMovement = (
-  { world, declareEvent }: TransformerContext,
+  context: TransformerContext,
 ): ActorMovementHook => {
+  const { world, declareError, declareEvent } = context;
   const { self, actors, places } = world;
   const actor = actors[self];
 
   if (!actor) {
-
-    throw new Error('Actor not found in `actors` projection');
+    return createDummyActorMovementHook('Actor not found in `actors` projection');
   }
 
   if (!actor.location) {
-    throw new Error('Actor does not have a `location`');
+    return createDummyActorMovementHook('Actor does not have a location');
   }
 
-  const origin = places[actor.location];
+  const origin = places[actor.location!];
   if (!origin) {
-    throw new Error('Actor location not found in `places` projection');
+    return createDummyActorMovementHook('Actor `location` not found in `places`');
   }
 
   const DEFAULT_ERROR_MESSAGE = "You can't go that way.";

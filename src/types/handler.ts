@@ -111,7 +111,7 @@ export type SideEffectDeclarationConsumer = {
 
 export type SideEffectDeclarationContainer = SideEffectDeclarationProducer & SideEffectDeclarationConsumer;
 
-export type PotentiallyImpure<Logger = any> = {
+export type PotentiallyImpure = {
   /**
    * A function that returns a random value between 0 and 1, inclusive.
    */
@@ -127,11 +127,6 @@ export type PotentiallyImpure<Logger = any> = {
    * or any string of sufficient entropy.
    */
   uniqid: () => string;
-
-  /**
-   * A logger that can be used to log messages, warnings, and errors.
-   */
-  log: Logger;
 };
 
 /**

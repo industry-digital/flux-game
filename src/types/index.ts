@@ -30,12 +30,13 @@ export {
 
 export {
   Character,
+  CharacterInput,
   CharacterAttributes,
   CharacterCondition,
   CharacterStatName,
   CharacterStats,
   Equipment,
-  InjuryDescriptor,
+  AppliedAnatomicalDamage as InjuryDescriptor,
   Inventory,
   Skills,
 } from './entity/character';

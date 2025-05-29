@@ -20,8 +20,10 @@ export type EffectSchema = {
 };
 
 export type EffectOriginType =
-  | EntityURN
   | Taxonomy.Skills
+  | Taxonomy.Abilities
+  | Taxonomy.Traits
+  | Taxonomy.Items
   | Intrinsic;
 
 export type EffectOrigin = {
