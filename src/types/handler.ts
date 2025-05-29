@@ -111,7 +111,7 @@ export type SideEffectDeclarationConsumer = {
 
 export type SideEffectDeclarationContainer = SideEffectDeclarationProducer & SideEffectDeclarationConsumer;
 
-export type PotentiallyImpureOperations = {
+export type PotentiallyImpure<Logger = any> = {
   /**
    * A function that returns a random value between 0 and 1, inclusive.
    */
@@ -127,6 +127,11 @@ export type PotentiallyImpureOperations = {
    * or any string of sufficient entropy.
    */
   uniqid: () => string;
+
+  /**
+   * A logger that can be used to log messages, warnings, and errors.
+   */
+  log: Logger;
 };
 
 /**
@@ -135,7 +140,7 @@ export type PotentiallyImpureOperations = {
 export type TransformerContext<
   W extends WorldProjection = WorldProjection,
 > =
-  & PotentiallyImpureOperations
+  & PotentiallyImpure
   & ErrorDeclarationProducer
   & EventDeclarationProducer
   & { world: W };
@@ -143,7 +148,7 @@ export type TransformerContext<
 export type PlannerContext<
   W extends WorldProjection = WorldProjection,
 > =
-  & PotentiallyImpureOperations
+  & PotentiallyImpure
   & ErrorDeclarationProducer
   & ErrorDeclarationConsumer
   & EventDeclarationConsumer

@@ -82,10 +82,10 @@ export const createCharacter = (
           con: createModifiableScalarAttribute(),
           agi: createModifiableScalarAttribute(),
           dex: createModifiableScalarAttribute(),
-          spd: createModifiableScalarAttribute(),
           int: createModifiableScalarAttribute(),
           wis: createModifiableScalarAttribute(),
-          cha: createModifiableScalarAttribute(),
+          prs: createModifiableScalarAttribute(),
+          lck: createModifiableScalarAttribute(),
         },
         injuries: {},
         mass: createModifiableScalarAttribute(attr => ({

@@ -133,30 +133,117 @@ export type TaxonomyURN<
   Vocabulary extends RootVocabulary = RootVocabulary,
 > = `${RootNamespace}:${Vocabulary}:${string}`;
 
-// Generate taxonomy namespace
 export namespace Taxonomy {
-  // Generate specific vocabulary types
+
+  /**
+   * The various Places of the game world
+   */
   export type Places = TaxonomyURN<'place'>;
+
+  /**
+   * Characters of the game world
+   */
   export type Characters = TaxonomyURN<'character'>;
+
+  /**
+   * Character stats
+   */
   export type Stats = TaxonomyURN<'stat'>;
-  export type Items = TaxonomyURN<'item'>;
-  export type Weapons = TaxonomyURN<'weapon'>;
-  export type Armor = TaxonomyURN<'armor'>;
+
+  /**
+   * Kinds of skills
+   */
   export type Skills = TaxonomyURN<'skill'>;
+
+  /**
+   * The various kinds of in-game effects that can be applied to things
+   */
   export type Effects = TaxonomyURN<'effect'>;
-  export type Directions = TaxonomyURN<'direction'>;
+
+  /**
+   * Anatomical parts and locations
+   */
   export type Anatomy = TaxonomyURN<'anatomy'>;
+
+  /**
+   * Kinds of items
+   */
+  export type Items = TaxonomyURN<'item'>;
+
+  /**
+   * Kinds of weapons
+   */
+  export type Weapons = TaxonomyURN<'weapon'>;
+
+  /**
+   * Kinds of armor
+   */
+  export type Armor = TaxonomyURN<'armor'>;
+
+  /**
+   * The various directions of the game world ("up", "down", "north", etc.)
+   */
+  export type Directions = TaxonomyURN<'direction'>;
+
+  /**
+   * The various kinds of damage that can be inflicted
+   */
   export type Damage = TaxonomyURN<'damage'>;
+
+  /**
+   * The various well-known groups in the game world
+   */
   export type Factions = TaxonomyURN<'faction'>;
+
+  /**
+   * The various topics that can be discussed or explored
+   */
   export type Topics = TaxonomyURN<'topic'>;
+
+  /**
+   * The various kinds of traits that can be applied to characters or items
+   */
   export type Traits = TaxonomyURN<'trait'>;
+
+  /**
+   * The various kinds of modifiers that can affect stats or abilities
+   */
   export type Modifiers = TaxonomyURN<'modifier'>;
+
+  /**
+   * The various kinds of mana or energy used in the game
+   */
   export type Mana = TaxonomyURN<'mana'>;
+
+  /**
+   * Special abilities that characters can use
+   */
   export type Abilities = TaxonomyURN<'ability'>;
+
+  /**
+   * User preferences and settings
+   */
   export type Preferences = TaxonomyURN<'pref'>;
+
+  /**
+   * Kinds of collections or groups of things
+   */
   export type Collections = TaxonomyURN<'collection'>;
+
+  /**
+   * Kinds of ammo
+   */
   export type Ammo = TaxonomyURN<'ammo'>;
+
+  /**
+   * The various kinds of timers used in the simulation
+   */
   export type Timers = TaxonomyURN<'timer'>;
+
+  /**
+   * The various ways to measure or quantify something in the game world.
+   */
+  export type Dimensions = TaxonomyURN<'dimension'>;
 }
 
 export type EntityURN<T extends EntityType = EntityType> = `${RootNamespace}:${T}:${string}`;
@@ -174,3 +261,4 @@ export type AnatomyURN = Taxonomy.Anatomy;
 export type ModifierURN = Taxonomy.Modifiers;
 export type TimerURN = Taxonomy.Timers;
 export type AmmoURN = Taxonomy.Ammo;
+export type DimensionURN = Taxonomy.Dimensions;

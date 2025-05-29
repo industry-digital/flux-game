@@ -90,7 +90,7 @@ export {
   InputTypeGuard,
   MinimalWorldProjection,
   PlannerContext,
-  PotentiallyImpureOperations,
+  PotentiallyImpure as PotentiallyImpureOperations,
   PureHandlerImplementation,
   PureHandlerInterface,
   PureReducer,

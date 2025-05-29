@@ -1,4 +1,5 @@
 import { Taxonomy, ItemURN } from '~/types/taxonomy';
+import { AppliedEffects } from '~/types/taxonomy/effect';
 import { EmergentNarrative, Entity, EntityType, SymbolicLink } from '~/types/entity/entity';
 import { SkillState } from '~/types/entity/skill';
 import { ItemAttributes } from '~/types/entity/item';
@@ -10,17 +11,71 @@ import {
   ModifiableScalarAttribute,
   NormalizedBipolarValue,
 } from '~/types/entity/attribute';
-import { AppliedEffects } from '~/types/taxonomy/effect';
 
 export enum CharacterStatName {
+  /**
+   * Strength,. Physical power and raw force. Affects:
+   * - Heavy weapon effectiveness
+   * - Athletic feats requiring force
+   * - Carrying capacity
+   */
   STR = 'str',
-  CON = 'con',
-  AGI = 'agi',
+
+  /**
+   * Dexterity. Fine motor control and precision. Affects:
+   * - Precise weapon effectiveness
+   * - Delicate manual tasks
+   * - Crafting quality
+   */
   DEX = 'dex',
-  SPD = 'spd',
+
+  /**
+   * Agility. Speed, grace, and coordination. Affects:
+   * - Movement speed and evasion
+   * - Initiative in combat
+   * - Athletic feats requiring agility
+   */
+  AGI = 'agi',
+
+  /**
+   * Constitution. Physical resilience and endurance. Affects:
+   * - Health points and injury resistance
+   * - Stamina and fatigue resistance
+   * - Resistance to poison, disease, and physical afflictions
+   */
+  CON = 'con',
+
+  /**
+   * Intelligence. Reasoning ability and learning capacity. Affects:
+   * - Rate of experience gain (PXP→XP conversion)
+   * - Complex abilities and higher learning
+   * - Problem-solving and analysis
+   */
   INT = 'int',
+
+  /**
+   * Wisdom. Awareness, intuition, and mental fortitude. Affects:
+   * - Detecting deception and hidden threats
+   * - Resistance to fear, confusion, and mental effects
+   * - Situational awareness and gut instincts
+   */
   WIS = 'wis',
-  CHA = 'cha',
+
+  /**
+   * Presence. Force of personality and social influence. Affects:
+   * - All social interactions and negotiations
+   * - Leadership and group coordination
+   * - Intimidation and commanding respect
+   */
+  PRS = 'prs',
+
+  /**
+   * Luck. Fortune and supernatural favor. Affects:
+   * - Critical successes and failure avoidance
+   * - Rare item discovery and advantageous encounters
+   * - Quest opportunities and serendipitous events
+   */
+  LCK = 'lck',
 }
 
 export type CharacterStats = Record<CharacterStatName, ModifiableScalarAttribute>;
@@ -76,7 +131,7 @@ export type CharacterAttributes = {
   level: number;
 
   /**
-   * If the character is a member of a party, this is the ID of the party.
+   * If the character is a member of a party, this is a symbolic link to the party entity.
    */
   party?: SymbolicLink;
 
@@ -106,7 +161,7 @@ export type CharacterAttributes = {
   condition: CharacterCondition;
 
   /**
-   * D&D style character stats
+   * The innate characteristics of the character
    */
   stats: CharacterStats;
 

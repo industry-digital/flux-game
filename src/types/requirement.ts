@@ -6,6 +6,10 @@ export type RequirementType =
   | Taxonomy.Skills
   | Taxonomy.Abilities
   | Taxonomy.Anatomy
-  | Taxonomy.Items;
+  | Taxonomy.Items
+  | Taxonomy.Dimensions;
 
+/**
+ * Represents an abstract set of "requirements" that must be met.
+ */
 export type Requirements = Partial<Record<RequirementType, number>>;

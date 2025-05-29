@@ -15,6 +15,7 @@ export const useActorMovement = (
   const actor = actors[self];
 
   if (!actor) {
+
     throw new Error('Actor not found in `actors` projection');
   }
 
