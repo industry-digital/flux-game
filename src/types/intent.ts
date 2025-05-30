@@ -1,5 +1,6 @@
-import { CreatePlaceCommandArgs } from '~/command/CREATE_PLACE';
 import { MoveCommandArgs } from '~/command/MOVE';
+import { PlaceDefinition } from '~/lib/entity/util';
+import { CharacterInput } from '~/types/entity/character';
 import { EntityURN } from '~/types/taxonomy';
 
 export type InputMetadata = { __type: 'command' | 'intent' };
@@ -216,5 +217,6 @@ export const isMoveCommandInline = (input: unknown): input is Command<CommandTyp
 
 export type KnownCommand =
 | Command<CommandType.UNRESOLVED_COMMAND, any>
-| Command<CommandType.CREATE_PLACE, CreatePlaceCommandArgs>
+| Command<CommandType.CREATE_PLACE, PlaceDefinition>
 | Command<CommandType.MOVE, MoveCommandArgs>
+| Command<CommandType.CREATE_CHARACTER, CharacterInput>;

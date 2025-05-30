@@ -2,6 +2,9 @@ export * from '@flux';
 export * from '~/lib/taxonomy';
 export * from '~/lib/entity/util';
 
+export { CreateCharacterCommand } from '~/command/CREATE_CHARACTER';
+export { CreatePlaceCommand } from '~/command/CREATE_PLACE';
+
 export {
   parseEntityUrn,
   parseEntityUrnOrFail,
