@@ -174,7 +174,12 @@ export {
 } from '~/lib/taxonomy';
 
 export {
+  GOLDEN_RATIO,
+} from './world/constants';
+
+export {
   Direction,
+  WellKnownPlaceName,
 } from './world/space';
 
 export {

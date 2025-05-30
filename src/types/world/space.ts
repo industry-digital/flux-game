@@ -16,3 +16,8 @@ export enum Direction {
   LEFT = 'left',
   RIGHT = 'right',
 }
+
+export enum WellKnownPlaceName {
+  NOWHERE = 'nowhere',
+  WORLD = 'world',
+}
