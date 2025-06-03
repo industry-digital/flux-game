@@ -35,12 +35,12 @@ const factory = (): PlaceDefinition[] => {
           label: 'Take the NCART to Afterlife'
         },
         {
-          direction: 'east',
+          direction: 'west',
           to: 'corpo-plaza',
           label: 'Catch an AVX to Corpo Plaza'
         },
         {
-          direction: 'west',
+          direction: 'east',
           to: 'pacifica-combat-zone',
           label: 'Take the underground tunnel to Pacifica'
         }
@@ -57,7 +57,7 @@ const factory = (): PlaceDefinition[] => {
           label: 'Take a corporate shuttle to Afterlife'
         },
         {
-          direction: 'north',
+          direction: 'east',
           to: 'watson-market',
           label: 'Ride the monorail to Watson Market'
         },
@@ -79,12 +79,12 @@ const factory = (): PlaceDefinition[] => {
           label: 'Ride with a nomad convoy to Afterlife'
         },
         {
-          direction: 'east',
+          direction: 'west',
           to: 'watson-market',
           label: 'Sneak through maintenance tunnels to Watson Market'
         },
         {
-          direction: 'west',
+          direction: 'north',
           to: 'corpo-plaza',
           label: 'Pay for NetWatch protection to Corpo Plaza'
         }

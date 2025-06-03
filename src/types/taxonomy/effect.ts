@@ -46,6 +46,9 @@ export interface AppliedEffect extends EffectSchema {
   ts: number;
 }
 
+/**
+ * A dictionary of effects applied to an entity, keyed by opaque local IDs.
+ */
 export type AppliedEffects = Partial<Record<string, AppliedEffect>>;
 
 /**

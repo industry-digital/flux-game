@@ -1,11 +1,14 @@
-import { Entity, EntityType } from '~/types/entity/entity';
 import { Taxonomy } from '~/types/taxonomy';
 import {
   ModifiableBoundedAttribute,
   NormalizedValueBetweenZeroAndOne,
   StatefulBoundedValue,
 } from '~/types/entity/attribute';
+import { SkillRequirements } from '~/types/requirement';
 
+/**
+ * The different types of items that can exist in the game
+ */
 export enum ItemSubtype {
   WEAPON = 'weapon',
   ARMOR = 'armor',
@@ -20,13 +23,13 @@ export enum ItemSubtype {
 }
 
 /**
- * Base attributes common to all items
+ * Common properties for all items
  */
-export interface ItemAttributes<Subtype extends ItemSubtype> {
+export interface ItemState {
   /**
    * The item's taxonomic classification
    */
-  type: Subtype;
+  subtype: ItemSubtype;
 
   /**
    * The item's condition, or durability.
@@ -75,16 +78,11 @@ export interface ContainerMixin {
     /**
      * Currently stored items
      */
-    items: Record<string, ItemAttributes<any>>;
+    items: Record<string, any>;
   };
 
   /**
    * Skill checks required to interact with the container
    */
-  checks: ContainerSkillChecks;
+  checks: SkillRequirements;
 }
-
-/**
- * Complete type for a basic item entity
- */
-export type Item<S extends ItemSubtype, A extends ItemAttributes<S>> = Entity<EntityType.ITEM, A>;

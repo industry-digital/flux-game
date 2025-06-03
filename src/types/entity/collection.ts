@@ -1,44 +1,40 @@
-import { Taxonomy } from '~/types/taxonomy';
-import { Entity, EntityType } from './entity';
-
-export type CollectionURN = Taxonomy.Collections;
-
-export enum CollectionType {
-  MAP = 'map',
-  LIST = 'list',
-  SET = 'set',
-}
-
-export interface MapCollectionAttributes<
-  K extends string = string,
-  I = any,
-> {
-  type: CollectionType.MAP;
-  items: Record<K, I>;
-}
-
-export interface ListCollectionAttributes<
-  K extends string = string,
-  I = any,
-> {
-  type: CollectionType.LIST;
-  items: Record<K, I>;
-}
-
-export type SetCollectionAttributes<K extends string = string> = MapCollectionAttributes<K, 1>;
-
-export type AllowedCollectionAttributes<
-  K extends string = string,
-  I = any,
-> = MapCollectionAttributes<K, I> | ListCollectionAttributes<K, I> | SetCollectionAttributes<K>;
+import { EntityType, BaseEntity } from './entity';
+import { EntityURN } from '~/types/taxonomy';
 
 /**
- * A Collection is a homogeneous or heterogeneous collection of entities.
- * Examples:
- * - items
- * - characters
- * - places
+ * Base type for all collections in our game world.
+ * This is an abstract type that should not be used directly.
+ * Instead, use one of the concrete collection types in the Collection union.
  */
-export type Collection<
-  A extends AllowedCollectionAttributes = AllowedCollectionAttributes
-> = Entity<EntityType, A>;
+export type AbstractCollection<T extends EntityType = EntityType> = BaseEntity<EntityType.COLLECTION> & {
+  /**
+   * The items in this collection, keyed by their URN.
+   * The URN type is constrained by the collection's type parameter.
+   */
+  items: Record<EntityURN<T>, 1>;
+};
+
+/**
+ * A Party is a collection of characters that can act as a group.
+ * Examples:
+ * - Adventuring party
+ * - Raid group
+ * - NPC faction members
+ */
+export type Party = AbstractCollection<EntityType.CHARACTER> & {
+  kind: 'party';
+};
+
+/**
+ * Union of all concrete collection types.
+ * Use this type when working with collections in a generic way.
+ */
+export type Collection = Party;
+
+/**
+ * Input type for creating a new Party, containing only the required fields
+ * that need to be provided when creating a Party.
+ */
+export type PartyInput = Omit<Party, keyof BaseEntity<EntityType.COLLECTION>> & {
+  kind: 'party';
+};

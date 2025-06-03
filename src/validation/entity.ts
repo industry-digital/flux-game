@@ -6,8 +6,10 @@ import {
   EmergentNarrative,
   SymbolicLink,
   Character,
-  Place
+  Place,
 } from '@flux';
+import { BaseEntity, ParsedURN } from '~/types/entity/entity';
+import { parseEntityUrn } from '~/lib/entity/urn';
 
 /**
  * Validator for the base Entity type
@@ -40,13 +42,14 @@ export const validateEmergentNarrative = typia.createValidate<EmergentNarrative>
  * const validateCharacter = createEntityValidator<CharacterAttributes>(EntityType.CHARACTER);
  * const validatePlace = createEntityValidator<PlaceAttributes>(EntityType.PLACE);
  */
-export function createEntityValidator<T extends EntityType, A extends object>(type: T): (entity: unknown) => entity is Entity<T, A> {
-  return (entity: unknown): entity is Entity<T, A> => {
-    if (!validateEntity(entity)) {
+export function createEntityValidator<T extends EntityType>(type: T): (entity: unknown) => entity is BaseEntity<T> {
+  return (entity: unknown): entity is BaseEntity<T> => {
+    if (!entity || typeof entity !== 'object') {
       return false;
     }
 
-    return (entity as Entity).type === type;
+    const maybeEntity = entity as BaseEntity<T>;
+    return maybeEntity.id?.type === type;
   };
 }
 
@@ -66,8 +69,8 @@ export const validatePlace = typia.createValidate<Place>();
  * @param entity The entity to check
  * @param type The expected entity type
  */
-export function isEntityOfType<T extends EntityType>(entity: Entity, type: T): entity is Entity<T> {
-  return entity.type === type;
+export function isEntityOfType<T extends EntityType>(entity: Entity, type: T): entity is BaseEntity<T> {
+  return entity.id?.type === type;
 }
 
 /**
@@ -102,17 +105,8 @@ export function hasRequiredEntityFields(obj: any): boolean {
 
 /**
  * Extracts entity type and ID from an EntityURN
+ * @deprecated Use parseEntityUrn from '~/lib/entity/urn' instead
  */
-export function parseEntityURN(urn: string): { namespace: string; type: string; id: string } | null {
-  const match = urn.match(/^([^:]+):([^:]+):(.+)$/);
-
-  if (!match) {
-    return null;
-  }
-
-  return {
-    namespace: match[1],
-    type: match[2],
-    id: match[3]
-  };
+export function parseEntityURN<T extends EntityType>(urn: string): ParsedURN<T> | null {
+  return parseEntityUrn(urn);
 }

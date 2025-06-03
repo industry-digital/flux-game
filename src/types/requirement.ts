@@ -9,7 +9,18 @@ export type RequirementType =
   | Taxonomy.Items
   | Taxonomy.Dimensions;
 
-/**
- * Represents an abstract set of "requirements" that must be met.
- */
-export type Requirements = Partial<Record<RequirementType, number>>;
+export type AbstractRequirements<T extends RequirementType> = Partial<Record<T, number>>;
+export type SkillRequirements = AbstractRequirements<Taxonomy.Skills>;
+export type AbilityRequirements = AbstractRequirements<Taxonomy.Abilities>;
+export type StatRequirements = AbstractRequirements<Taxonomy.Stats>;
+export type ManaRequirements = AbstractRequirements<Taxonomy.Mana>;
+export type DimensionRequirements = AbstractRequirements<Taxonomy.Dimensions>;
+export type ItemRequirements = AbstractRequirements<Taxonomy.Items>;
+
+export type Requirements =
+  | SkillRequirements
+  | AbilityRequirements
+  | StatRequirements
+  | ManaRequirements
+  | DimensionRequirements
+  | ItemRequirements;

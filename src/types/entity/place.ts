@@ -1,9 +1,30 @@
-import { Entity, EntityType } from './entity';
+import { EntityType, SymbolicLink, EmergentNarrative, BaseEntity, DescribableMixin } from './entity';
 import { EntityURN, PlaceURN } from '~/types/taxonomy';
 import { Direction } from '~/types/world/space';
 import { SpecialVisibility } from '~/types/world/visibility';
 
-export interface PlaceScopedHistoricalEvent {
+/**
+ * The fragments that comprise a Place's total data.
+ * Each value (except 'base') must exist as a field in the Place type.
+ */
+export enum PlaceFragmentName {
+  /**
+   * Core data: name, description, location, etc.
+   */
+  BASE = 'base',
+
+  /**
+   * The entities currently in this place
+   */
+  ENTITIES = 'entities',
+
+  /**
+   * Historical events that have occurred here
+   */
+  MEMORIES = 'memories'
+}
+
+export type PlaceScopedHistoricalEvent = {
   /**
    * The entity that caused or triggered the event
    */
@@ -16,18 +37,18 @@ export interface PlaceScopedHistoricalEvent {
    * The moment it happened
    */
   ts: number;
-}
+};
 
-export type PlaceEntityDescriptor<T extends EntityType = EntityType>  = {
+export type PlaceEntityDescriptor<T extends EntityType = EntityType> = {
   /**
    * The entity
    */
-  entity: Entity<T, any>;
+  entity: BaseEntity<T>;
   /**
    * The visibility of this entity to other entities.
    */
   visibility: SpecialVisibility | Partial<Record<EntityURN, 1>>;
-}
+};
 
 /**
  * An Exit is one-directional portal connects a Place to another, like a portal. If you need two connected Places to be
@@ -43,27 +64,64 @@ export type Exit = {
    * The destination of the exit. This is a URN-like string like `flux:place:world:nightcity:central-park`.
    */
   to: PlaceURN;
-}
+};
 
 export type Exits = Partial<Record<Direction, Exit>>;
 export type PlaceEntities = Partial<Record<EntityURN, PlaceEntityDescriptor>>;
 
 /**
- * This is the representation of a Place we store in the database.
- */
-export interface PlaceAttributes {
-  exits: Exits;
-  entities: PlaceEntities;
-  history: PlaceScopedHistoricalEvent[];
-}
-
-/**
  * A Place represents a physical location in our game world. There is always a MUD room (i.e. XMPP MUC chat room)
  * associated with a Place. It can also represent a larger area, such as a city or a region. Topology is entirely
- * determined by the natural containment hierarchy of Entities via `parentId`.
+ * determined by the natural containment hierarchy of Places via `parentId`.
  *
  * All Places must belong to a parent Place, except for the root of all Places, which is a well-known Place named `world`.
- * A fundamental truth to our world is that all Entities, including all Places, must be present in either `world` or
- * `nowhere`, which is also a well-known Place.
+ * A fundamental truth to our world is that all Places must be present in either `world` or `nowhere`, which is also
+ * a well-known Place.
  */
-export type Place = Entity<EntityType.PLACE, PlaceAttributes>;
+export type Place = BaseEntity<EntityType.PLACE> & DescribableMixin & {
+  /**
+   * The Place's location in the world
+   */
+  location?: PlaceURN;
+
+  /**
+   * For hierarchical containment
+   */
+  parent?: SymbolicLink;
+
+  /**
+   * If this place is "owned" by another entity
+   */
+  owner?: SymbolicLink;
+
+  /**
+   * The exits from this place to other places
+   */
+  exits: Exits;
+
+  /**
+   * The entities currently in this place.
+   * Maps to PlaceFragment.ENTITIES
+   */
+  entities: PlaceEntities;
+
+  /**
+   * Historical events that have occurred in this place.
+   * Maps to PlaceFragment.MEMORIES
+   */
+  memories: PlaceScopedHistoricalEvent[];
+};
+
+/**
+ * The input type for creating a new Place, containing only the required fields
+ * that need to be provided when creating a Place.
+ */
+export type PlaceInput = Omit<Place, keyof BaseEntity<EntityType.PLACE>> & {
+  name: string;
+  description: string | EmergentNarrative;
+  location?: PlaceURN;
+  owner?: SymbolicLink;
+  exits?: Exits;
+  entities?: PlaceEntities;
+  history?: PlaceScopedHistoricalEvent[];
+};

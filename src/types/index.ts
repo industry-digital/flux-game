@@ -12,6 +12,11 @@ export {
 export { ROOT_NAMESPACE } from './constants';
 
 export {
+  DamageType,
+  DamageSpecification,
+} from './damage';
+
+export {
   DieType,
   RollResult,
   RollSpecification
@@ -43,7 +48,6 @@ export {
 
 export {
   Collection,
-  CollectionURN,
 } from './entity/collection';
 
 export {
@@ -51,18 +55,26 @@ export {
   Entity,
   EntityType,
   SymbolicLink,
-  UUIDLike
+  UUIDLike,
+  BaseEntity,
+  DescribableMixin,
+  ParsedURN,
+  LocallyUniqueId,
+  parseURN,
+  formatURN,
 } from './entity/entity';
 
 export {
-  ItemAttributes,
+  ItemState,
+  ItemSubtype,
+  ContainerMixin,
+  StackableMixin,
+  ChargeableMixin,
 } from './entity/item';
 
 export {
   Exit,
   Place,
-  PlaceAttributes,
-  PlaceEntities,
   PlaceEntityDescriptor,
   PlaceScopedHistoricalEvent,
 } from './entity/place';
@@ -135,6 +147,14 @@ export {
 } from './requirement';
 
 export {
+  ContainerStrategy,
+  ContainerCapacitySpecification,
+  AbstractContainer,
+  Bundle,
+  ContainerSchema,
+} from './schema/container';
+
+export {
   SideEffect,
   SideEffectInput,
 } from './side-effect';
@@ -143,6 +163,7 @@ export {
   AbilityURN,
   ArmorURN,
   CharacterURN,
+  ConditionURN,
   DirectionURN,
   EffectURN,
   EntityURN,
@@ -153,6 +174,7 @@ export {
   RootNamespace,
   RootVocabulary,
   SkillURN,
+  StatURN,
   TAXONOMY,
   Taxonomy,
   TraitURN,
@@ -171,6 +193,8 @@ export {
   createArmorUrn,
   createDirectionUrn,
   createEffectUrn,
+  createStatUrn,
+  createConditionUrn,
 } from '~/lib/taxonomy';
 
 export {
@@ -192,3 +216,13 @@ export {
 export {
   SpecialVisibility,
 } from './world/visibility';
+
+export {
+  UnitOfMeasure,
+  UnitOfDistance,
+} from './world/measures';
+
+// Testing utilities
+export {
+  EntityTransformer,
+} from './testing';

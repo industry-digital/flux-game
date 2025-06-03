@@ -1,4 +1,6 @@
-import { Entity, Place, EntityURN, EntityType, PlaceEntities, PlaceEntityDescriptor, TransformerContext } from '@flux';
+import { Entity, Place, EntityURN, PlaceEntityDescriptor, TransformerContext } from '@flux';
+import { formatURN } from '~/types/entity/entity';
+import { SpecialVisibility } from '~/types/world/visibility';
 
 /**
  * Interface for entity-related operations
@@ -18,72 +20,67 @@ export interface EntityHook {
   getEntityOrFail: <T extends Entity>(id: string) => T;
 };
 
+type PlaceEntities = Partial<Record<EntityURN, PlaceEntityDescriptor>>;
+
 /**
  * Retrieves the entities present in a Place
  */
-export const getPlaceEntities = (place: Place): PlaceEntities => {
-  if (!place?.attributes?.entities) {
-    throw new Error('Place does not have an `entities` attribute');
+export const getPlaceEntities = (place: Place | undefined): PlaceEntities | undefined => {
+  if (!place?.entities) {
+    return undefined;
   }
-  return place.attributes.entities;
+
+  return place.entities;
 };
+
 export type PlaceEntitiesHook = {
   placeEntities: PlaceEntities;
-  getPlaceEntity: <T extends EntityType>(id: EntityURN) => PlaceEntityDescriptor<T> | undefined;
-  getPlaceEntityOrFail: <T extends EntityType>(id: EntityURN) => PlaceEntityDescriptor<T>;
-  putPlaceEntity: <T extends EntityType>(id: EntityURN, descriptor: PlaceEntityDescriptor<T>) => void;
-  deletePlaceEntity: (id: EntityURN) => void;
-  transferPlaceEntity: (id: EntityURN, destinationPlace: Place) => boolean;
+  addEntity: (entity: Entity) => void;
+  removeEntity: (entity: Entity) => void;
+  moveEntity: (entity: Entity, destination: Place) => void;
 };
 
 export const usePlaceEntities = (
   context: TransformerContext,
   place: Place,
 ): PlaceEntitiesHook => {
-  const placeEntities = getPlaceEntities(place);
+  const { world } = context;
+  const { places } = world;
 
-  const getPlaceEntity = <T extends EntityType>(id: EntityURN) => placeEntities[id] as PlaceEntityDescriptor<T> | undefined;
+  const placeEntities = getPlaceEntities(place) || {};
 
-  const getPlaceEntityOrFail = <T extends EntityType>(id: EntityURN) => {
-    const entity = getPlaceEntity<T>(id);
-    if (!entity) {
-      throw new Error(`Entity ${id} not found in place ${place.id}`);
+  const addEntity = (entity: Entity) => {
+    if (!place.entities) {
+      place.entities = {};
     }
-    return entity;
+    place.entities[formatURN(entity.id)] = {
+      entity,
+      visibility: SpecialVisibility.VISIBLE_TO_EVERYONE,
+    };
   };
 
-  const putPlaceEntity = <T extends EntityType>(id: EntityURN, descriptor: PlaceEntityDescriptor<T>) => {
-    placeEntities[id] = descriptor;
+  const removeEntity = (entity: Entity) => {
+    if (!place.entities) return;
+    delete place.entities[formatURN(entity.id)];
   };
 
-  const deletePlaceEntity = (id: EntityURN): void => {
-    if (placeEntities[id]) {
-      delete placeEntities[id];
-    }
-  };
-
-  const transferPlaceEntity = (id: EntityURN, destinationPlace: Place): boolean => {
-    const entityDescriptor = placeEntities[id];
-    if (!entityDescriptor) {
-      return false; // Entity not found in current place
+  const moveEntity = (entity: Entity, destination: Place) => {
+    if (!place.entities) return;
+    if (!destination.entities) {
+      destination.entities = {};
     }
 
-    // Remove from current place
-    delete placeEntities[id];
+    const descriptor = place.entities[formatURN(entity.id)];
+    if (!descriptor) return;
 
-    // Add to destination place
-    const destinationEntities = getPlaceEntities(destinationPlace);
-    destinationEntities[id] = entityDescriptor;
-
-    return true;
+    destination.entities[formatURN(entity.id)] = descriptor;
+    delete place.entities[formatURN(entity.id)];
   };
 
   return {
     placeEntities,
-    getPlaceEntity,
-    getPlaceEntityOrFail,
-    putPlaceEntity,
-    deletePlaceEntity,
-    transferPlaceEntity,
+    addEntity,
+    removeEntity,
+    moveEntity,
   };
 };

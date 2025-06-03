@@ -1,25 +1,58 @@
 import { Taxonomy, ItemURN } from '~/types/taxonomy';
 import { AppliedEffects } from '~/types/taxonomy/effect';
-import { EmergentNarrative, Entity, EntityType, SymbolicLink } from '~/types/entity/entity';
+import { EntityType, SymbolicLink, BaseEntity, DescribableMixin } from '~/types/entity/entity';
 import { SkillState } from '~/types/entity/skill';
-import { ItemAttributes } from '~/types/entity/item';
-import { AbilityState } from '~/types/entity/ability';
-import { InteractiveSessionState } from '~/types/entity/session';
+import { ItemState } from '~/types/entity/item';
+import { createStatUrn, createConditionUrn } from '~/lib/taxonomy';
 import {
   NormalizedValueBetweenZeroAndOne,
   ModifiableBoundedAttribute,
   ModifiableScalarAttribute,
   NormalizedBipolarValue,
 } from '~/types/entity/attribute';
+import { ParsedURN } from '~/types/entity/entity';
 
-export enum CharacterStatName {
+/**
+ * Well-known character conditions that are fundamental to the game system.
+ * These are a subset of all possible conditions (which are defined in the taxonomy).
+ * These represent the core conditions that have special meaning for game mechanics.
+ */
+export const WellKnownCharacterCondition = {
   /**
-   * Strength,. Physical power and raw force. Affects:
+   * Character is alive and able to act normally
+   */
+  ALIVE: createConditionUrn('state:alive'),
+
+  /**
+   * Character is alive but unable to take normal actions
+   * Examples: unconscious, paralyzed, stunned
+   */
+  INCAPACITATED: createConditionUrn('state:incapacitated'),
+
+  /**
+   * Character is dead and cannot act without external intervention
+   */
+  DEAD: createConditionUrn('state:dead'),
+} as const;
+
+/**
+ * Type alias for any valid character condition URN
+ */
+export type CharacterConditionURN = typeof WellKnownCharacterCondition[keyof typeof WellKnownCharacterCondition] | `flux:condition:${string}`;
+
+/**
+ * Well-known character stats that are fundamental to the game system.
+ * These are a subset of all possible stats (which are defined in the taxonomy).
+ * These represent the core stats that are always present and have special meaning.
+ */
+export const WellKnownCharacterStat = {
+  /**
+   * Strength. Physical power and raw force. Affects:
    * - Heavy weapon effectiveness
    * - Athletic feats requiring force
    * - Carrying capacity
    */
-  STR = 'str',
+  STR: createStatUrn('physical:strength'),
 
   /**
    * Dexterity. Fine motor control and precision. Affects:
@@ -27,15 +60,15 @@ export enum CharacterStatName {
    * - Delicate manual tasks
    * - Crafting quality
    */
-  DEX = 'dex',
+  DEX: createStatUrn('physical:dexterity'),
 
   /**
    * Agility. Speed, grace, and coordination. Affects:
    * - Movement speed and evasion
-   * - Initiative in combat
+   * - Initiative in combat, together with WIS
    * - Athletic feats requiring agility
    */
-  AGI = 'agi',
+  AGI: createStatUrn('physical:agility'),
 
   /**
    * Constitution. Physical resilience and endurance. Affects:
@@ -43,7 +76,7 @@ export enum CharacterStatName {
    * - Stamina and fatigue resistance
    * - Resistance to poison, disease, and physical afflictions
    */
-  CON = 'con',
+  CON: createStatUrn('physical:constitution'),
 
   /**
    * Intelligence. Reasoning ability and learning capacity. Affects:
@@ -51,15 +84,16 @@ export enum CharacterStatName {
    * - Complex abilities and higher learning
    * - Problem-solving and analysis
    */
-  INT = 'int',
+  INT: createStatUrn('mental:intelligence'),
 
   /**
    * Wisdom. Awareness, intuition, and mental fortitude. Affects:
+   * - Initiative in combat, together with Agility
    * - Detecting deception and hidden threats
    * - Resistance to fear, confusion, and mental effects
    * - Situational awareness and gut instincts
    */
-  WIS = 'wis',
+  WIS: createStatUrn('mental:wisdom'),
 
   /**
    * Presence. Force of personality and social influence. Affects:
@@ -67,7 +101,7 @@ export enum CharacterStatName {
    * - Leadership and group coordination
    * - Intimidation and commanding respect
    */
-  PRS = 'prs',
+  PRS: createStatUrn('social:presence'),
 
   /**
    * Luck. Fortune and supernatural favor. Affects:
@@ -75,12 +109,21 @@ export enum CharacterStatName {
    * - Rare item discovery and advantageous encounters
    * - Quest opportunities and serendipitous events
    */
-  LCK = 'lck',
-}
+  LCK: createStatUrn('supernatural:luck'),
+} as const;
 
-export type CharacterStats = Record<CharacterStatName, ModifiableScalarAttribute>;
+/**
+ * Type alias for any valid character stat URN
+ */
+export type CharacterStatURN = typeof WellKnownCharacterStat[keyof typeof WellKnownCharacterStat] | `flux:stat:${string}`;
+
+/**
+ * Map of character stats to their values
+ */
+export type CharacterStats = Partial<Record<CharacterStatURN, ModifiableScalarAttribute>>;
+
 export type EquipmentSlots = Partial<Record<ItemURN, 1>>;
-export type Equipment = Partial<Record<Taxonomy.Anatomy, EquipmentSlots>>; // maps slot -> Item EntityID
+export type Equipment = Partial<Record<Taxonomy.Anatomy, EquipmentSlots>>;
 export type Skills = Partial<Record<Taxonomy.Skills, SkillState>>;
 export type Membership = { role: string; ts: number; duration?: number };
 export type Memberships = Partial<Record<Taxonomy.Factions, Membership>>;
@@ -92,26 +135,20 @@ export type Subscriptions = Partial<Record<Taxonomy.Topics, 1>>;
 
 export type Inventory = {
   /**
-   * This value always reflects the total mass of all items in the inventory, in grams.
+   * Total mass of all items in the inventory, in grams
    */
   mass: number;
 
   /**
-   * A map of item IDs to their attributes. This includes all items in the character's inventory,
+   * Map of item IDs to their state
    */
-  items: Partial<Record<string, ItemAttributes<any>>>;
+  items: Partial<Record<string, ItemState>>;
 
   /**
-   * The last time the inventory was updated, expressed as milliseconds since the UNIX epoch
+   * Last inventory update timestamp
    */
   ts: number;
-}
-
-export enum CharacterCondition {
-  ALIVE = 'alive',
-  INCAPACITATED = 'incapacitated',
-  DEAD = 'dead',
-}
+};
 
 export type AppliedAnatomicalDamage = {
   /**
@@ -128,109 +165,137 @@ export type AppliedAnatomicalDamage = {
   effects: AppliedEffects;
 };
 
-export type CharacterAttributes = {
+/**
+ * The fragments that comprise a Character's total data.
+ * Each value (except 'base') must exist as a field in the Character type.
+ */
+export enum CharacterFragmentName {
   /**
-   * Character level
+   * Core data: name, description, location, etc.
    */
+  BASE = 'base',
+
+  /**
+   * Health, mana, injuries, and active effects
+   */
+  VITALS = 'vitals',
+
+  /**
+   * Items and equipment
+   */
+  INVENTORY = 'inventory',
+
+  /**
+   * Character skills
+   */
+  SKILLS = 'skills',
+
+  /**
+   * Character stats and traits
+   */
+  STATS = 'stats',
+
+  /**
+   * Social relationships and reputation
+   */
+  SOCIAL = 'social'
+}
+
+/**
+ * Character's vital statistics including health, mana, active effects and injuries
+ */
+export type CharacterVitalsFragment = {
   level: number;
-
-  /**
-   * If the character is a member of a party, this is a symbolic link to the party entity.
-   */
-  party?: SymbolicLink;
-
-  /**
-   * Health
-   */
-  hp: ModifiableBoundedAttribute;
-
-  /**
-   * Current mana
-   */
-  mana: ManaPools;
-
-  /**
-   * The character's current state of health, including injuries and other effects.
-   */
-  injuries: Injuries;
-
-  /**
-   * Mass of the character, in grams
-   */
-  mass: ModifiableScalarAttribute;
-
-  /**
-   * The current "condition" of the character
-   */
-  condition: CharacterCondition;
-
-  /**
-   * The innate characteristics of the character
-   */
   stats: CharacterStats;
-
-  /**
-   * What the character is currently wearing or wielding. This is a map of equipment slots to item IDs.
-   */
-  equipment: Equipment;
-
-  /**
-   * Traits are tags that flavor the Character.
-   */
-  traits: Traits;
-
-  /**
-   * The various skills the character has, and the level of experience in each.
-   */
-  skills: Skills;
-
-  /**
-   * The factions the character is a member of
-   */
-  memberships:  Memberships;
-
-  reputation: Reputation;
-
-  /**
-   * The character's pubsub subscriptions.
-   */
-  subscriptions: Subscriptions;
-
-  /**
-   * The character's origin story, which can change over time.
-   */
-  origin: string | EmergentNarrative;
-
-  /**
-   * Effects that are currently affecting the character.
-   */
+  hp: ModifiableBoundedAttribute;
+  mana: ManaPools;
+  injuries: Injuries;
+  condition: CharacterConditionURN;
   effects: AppliedEffects;
-
-  /**
-   * The character's personal effects, including equipped items, consumables, and other items.
-   * `equipment` only contains references to items in the `inventory.
-   */
-  inventory: Inventory;
-
-  /**
-   * The state of the various abilities the character has.
-   */
-  abilities: Partial<Record<Taxonomy.Abilities, AbilityState>>;
-
-  /**
-   * If this is present, the character is in an interactive session.
-   * In interactive session requires a character to make multiple decisions in a row within a bounded context.
-   */
-  session?: InteractiveSessionState;
-
-  /**
-   * Character's preferences
-   * - `flux:pref:pvp:allow`
-   * - `flux:pref:drag:allow`
-   */
-  preferences: Partial<Record<Taxonomy.Preferences, any>>;
 };
 
-export type Character = Entity<EntityType, CharacterAttributes>;
+/**
+ * Character's inventory including carried items and equipped gear
+ */
+export type CharacterInventoryFragment = {
+  mass: ModifiableScalarAttribute;
+  items: Inventory;
+  equipment: Equipment;
+};
 
-export type CharacterInput = Partial<Omit<Character, 'id' | 'type' | 'createdAt' | 'updatedAt' | 'version'>>;
+/**
+ * Character's social relationships and preferences
+ */
+export type CharacterSocialFragment = {
+  memberships: Memberships;
+  reputation: Reputation;
+  subscriptions: Subscriptions;
+};
+
+/**
+ * Character's learned skills and abilities
+ */
+export type CharacterSkillsFragment = Skills;
+
+/**
+ * Character preferences that control various gameplay and interaction settings
+ */
+export type CharacterPreferencesFragment = Partial<Record<Taxonomy.Preferences, any>>;
+
+/**
+ * Character attributes that encompass all the character's state
+ */
+export type CharacterAttributes = {
+  level: number;
+  condition: CharacterConditionURN;
+  hp: ModifiableBoundedAttribute;
+  mass: ModifiableScalarAttribute;
+  stats: CharacterStats;
+  mana: ManaPools;
+  injuries: Injuries;
+  equipment: Equipment;
+  traits: Traits;
+  skills: Skills;
+  memberships: Memberships;
+  reputation: Reputation;
+  subscriptions: Subscriptions;
+  effects: AppliedEffects;
+  inventory: Inventory;
+  abilities: Partial<Record<string, any>>;
+  preferences: CharacterPreferencesFragment;
+  origin?: string;
+};
+
+/**
+ * A Character represents an actor in the game world, whether controlled by a player or by the game system.
+ * Characters are the primary agents of change in the world, capable of taking actions, using items,
+ * and interacting with other entities.
+ */
+export type Character = BaseEntity<EntityType.CHARACTER> & DescribableMixin & {
+  /**
+   * The Character's current location in the world.
+   * Every character must be somewhere - even if it's in a special place like 'nowhere'.
+   */
+  location: ParsedURN<EntityType.PLACE>;
+
+  /**
+   * If the character is a member of a party.
+   * This must point to a collection of kind 'party'.
+   */
+  party?: SymbolicLink<EntityType.COLLECTION> & { kind: 'party' };
+
+  /**
+   * Character-specific attributes
+   */
+  attributes: CharacterAttributes;
+};
+
+/**
+ * The input type for creating a new Character, containing only the required fields
+ * that need to be provided when creating a Character.
+ */
+export type CharacterInput = Partial<Omit<Character, keyof BaseEntity<EntityType.CHARACTER>>>;
+
+// For backward compatibility
+export type CharacterStatName = keyof typeof WellKnownCharacterStat;
+export type CharacterCondition = keyof typeof WellKnownCharacterCondition;

@@ -1,7 +1,6 @@
 import * as typia from 'typia';
 import { createEntityValidator } from './entity';
 import {
-  PlaceAttributes,
   PlaceURN,
   PlaceEntityDescriptor,
   PlaceScopedHistoricalEvent,
@@ -12,19 +11,13 @@ import {
 /**
  * Validator for a complete Place entity
  */
-export const validatePlace = createEntityValidator<EntityType.PLACE, PlaceAttributes>(EntityType.PLACE);
+export const validatePlace = createEntityValidator(EntityType.PLACE);
 
 /**
  * Validator for PlaceURN
  * Validates that a string is a properly formatted Place identifier
  */
 export const validatePlaceURN = typia.createValidate<PlaceURN>();
-
-/**
- * Validator for PlaceAttributes
- * Validates the structure of Place-specific attributes
- */
-export const validatePlaceAttributes = typia.createValidate<PlaceAttributes>();
 
 /**
  * Validator for Exit

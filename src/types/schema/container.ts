@@ -1,4 +1,4 @@
-import { ItemAttributes, ItemSubtype } from '~/types/entity/item';
+import { ItemState } from '~/types/entity/item';
 import { DimensionURN } from '~/types/taxonomy';
 
 export enum ContainerStrategy {
@@ -28,7 +28,7 @@ export type ContainerCapacitySpecification = Record<DimensionURN, number>;
 
 export type AbstractContainer<
   S extends ContainerStrategy,
-> = ItemAttributes<ItemSubtype.CONTAINER> & {
+> = ItemState & {
   /**
    * The strategy used by the container
    */
@@ -40,3 +40,38 @@ export type AbstractContainer<
 };
 
 export type Bundle = AbstractContainer<ContainerStrategy.BUNDLE>;
+
+/**
+ * Schema for container items
+ */
+export type ContainerSchema = ItemState & {
+  /**
+   * The maximum weight this container can hold in grams
+   */
+  capacity: number;
+
+  /**
+   * The weight of the container itself in grams
+   */
+  weight: number;
+
+  /**
+   * Whether this container can be opened and closed
+   */
+  sealable: boolean;
+
+  /**
+   * Whether this container is currently sealed
+   */
+  sealed: boolean;
+
+  /**
+   * Whether this container is currently locked
+   */
+  locked: boolean;
+
+  /**
+   * The skill required to pick the lock on this container
+   */
+  lockDifficulty: number;
+};

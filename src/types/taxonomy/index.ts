@@ -45,6 +45,10 @@ export const TAXONOMY: FlatTaxonomy = {
       description: 'Character attributes and statistics',
       examples: ['flux:stat:str', 'flux:stat:agi']
     },
+    'condition': {
+      description: 'Character conditions and states',
+      examples: ['flux:condition:state:alive', 'flux:condition:state:dead']
+    },
     'item': {
       description: 'Objects that can be interacted with',
       examples: ['flux:item:weapon:sword', 'flux:item:consumable:potion']
@@ -101,14 +105,12 @@ export const TAXONOMY: FlatTaxonomy = {
       description: 'A group of related entities',
       examples: ['flux:collection:map:items', 'flux:collection:list:players']
     },
-
     'character:pc': {
       description: 'Player characters'
     },
     'character:npc': {
       description: 'Non-player characters'
     },
-
     'item:weapon': {
       description: 'Items used for combat'
     },
@@ -120,7 +122,7 @@ export const TAXONOMY: FlatTaxonomy = {
     },
     'item:container': {
       description: 'Items that can store other items'
-    },
+    }
   }
 };
 
@@ -244,6 +246,11 @@ export namespace Taxonomy {
    * The various ways to measure or quantify something in the game world.
    */
   export type Dimensions = TaxonomyURN<'dimension'>;
+
+  /**
+   * Character conditions and states
+   */
+  export type Conditions = TaxonomyURN<'condition'>;
 }
 
 export type EntityURN<T extends EntityType = EntityType> = `${RootNamespace}:${T}:${string}`;
@@ -262,3 +269,5 @@ export type ModifierURN = Taxonomy.Modifiers;
 export type TimerURN = Taxonomy.Timers;
 export type AmmoURN = Taxonomy.Ammo;
 export type DimensionURN = Taxonomy.Dimensions;
+export type StatURN = Taxonomy.Stats;
+export type ConditionURN = Taxonomy.Conditions;

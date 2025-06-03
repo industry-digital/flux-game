@@ -1,26 +1,24 @@
 import { createDirectionUrn, createPlaceUrn, createEntityUrn } from '~/lib/taxonomy';
 import { randomUUID } from '~/lib/uuid';
 import {
-  Character,
-  CharacterAttributes,
-  CharacterCondition,
-  DirectionURN,
+  Character, DirectionURN,
   Entity,
   EntityType,
   Exit,
   ModifiableBoundedAttribute,
   ModifiableScalarAttribute,
   Place,
-  PlaceAttributes,
   PlaceURN,
   Taxonomy,
-  UUIDLike,
+  UUIDLike
 } from '@flux';
+import { BaseEntity, parseURN, DescribableMixin } from '~/types/entity/entity';
+import { WellKnownCharacterCondition } from '~/types/entity/character';
 
 const identity = <T>(x: T): T => x;
 
 export const isCharacter = (character: Entity): character is Character => {
-  return character.type === EntityType.CHARACTER;
+  return character.id.type === EntityType.CHARACTER;
 };
 
 export const createModifiableScalarAttribute = (
@@ -35,105 +33,100 @@ export const createModifiableBoundedAttribute = (
   return transform({ natural: { current: 10, max: 10 } });
 };
 
-export type EntityCreator<T extends EntityType, A extends object> = (
-  entity: Entity<T, A>,
-) => Entity<T, A>;
+export type EntityCreator<T extends EntityType, E extends BaseEntity<T> & DescribableMixin> = (
+  entity: BaseEntity<T> & DescribableMixin,
+) => E;
 
 export type FactoryOptions = {
   now?: number;
   uuid?: () => UUIDLike;
 };
 
-export const createEntity = <T extends EntityType, A extends object>(
+export const createEntity = <T extends EntityType, E extends BaseEntity<T> & DescribableMixin>(
   type: T,
-  transform: EntityCreator<T, A> = identity,
+  transform: EntityCreator<T, E> = identity as EntityCreator<T, E>,
   { now = Date.now(), uuid = randomUUID }: FactoryOptions = {},
-): Entity<T, A> => {
-  const urn = createEntityUrn(type, uuid());
-  const defaults: Partial<Entity<T, A>> = {
-    id: urn,
-    type,
+): E => {
+  const id = uuid();
+  const urn = createEntityUrn(type, id);
+  const parsedUrn = parseURN(urn);
+  const defaults: BaseEntity<T> & DescribableMixin = {
+    id: parsedUrn,
+    ts: now,
+    version: 0,
     name: '',
-    description: '',
-    attributes: {} as A,
-    createdAt: now,
-    updatedAt: now,
-    version: 0
+    description: ''
   };
 
-  return transform(defaults as Entity<T, A>);
+  return transform(defaults);
 };
 
 export const createCharacter = (
-  transform: EntityCreator<EntityType.CHARACTER, CharacterAttributes> = identity,
+  transform: (char: Character) => Character = identity,
   options: FactoryOptions = {},
 ): Character => {
-  return createEntity(
+  const base = createEntity<EntityType.CHARACTER, Character>(
     EntityType.CHARACTER,
-    (entity) => transform({
-      ...entity,
-      attributes: {
-        level: 1,
-        condition: CharacterCondition.ALIVE,
-        hp: createModifiableBoundedAttribute(),
-        mana: {},
-        stats: {
-          str: createModifiableScalarAttribute(),
-          con: createModifiableScalarAttribute(),
-          agi: createModifiableScalarAttribute(),
-          dex: createModifiableScalarAttribute(),
-          int: createModifiableScalarAttribute(),
-          wis: createModifiableScalarAttribute(),
-          prs: createModifiableScalarAttribute(),
-          lck: createModifiableScalarAttribute(),
-        },
-        injuries: {},
-        mass: createModifiableScalarAttribute(attr => ({
-          ...attr,
-          natural: 70_000,
-        })),
-        origin: '',
-        equipment: {},
-        traits: {},
-        skills: {},
-        memberships: {},
-        subscriptions: {},
-        effects: {},
-        inventory: {
-          mass: 0,
-          ts: 0,
-          items: {},
-        },
-        abilities: {},
-        preferences: {},
-        reputation: {},
-      },
-    }),
-    options,
-  );
-};
-
-export const createPlace = (
-  transform: EntityCreator<EntityType.PLACE, PlaceAttributes> = identity,
-  options: FactoryOptions = {},
-): Place => {
-  return createEntity(
-    EntityType.PLACE,
     (entity) => {
-      return transform({
+      const char: Character = {
         ...entity,
-        id: entity.id,
+        location: parseURN(createPlaceUrn('nowhere')),
         attributes: {
-          exits: {},
-          entities: {},
-          history: []
-        }
-      });
+          level: 1,
+          condition: WellKnownCharacterCondition.ALIVE,
+          hp: createModifiableBoundedAttribute(),
+          mana: {},
+          stats: {},
+          injuries: {},
+          mass: createModifiableScalarAttribute(attr => ({
+            ...attr,
+            natural: 70_000,
+          })),
+          origin: '',
+          equipment: {},
+          traits: {},
+          skills: {},
+          memberships: {},
+          subscriptions: {},
+          effects: {},
+          inventory: {
+            mass: 0,
+            ts: 0,
+            items: {},
+          },
+          abilities: {},
+          preferences: {},
+          reputation: {},
+        },
+      };
+      return char;
     },
     options,
   );
+
+  return transform(base);
 };
 
+export const createPlace = (
+  transform: (place: Place) => Place = identity,
+  options: FactoryOptions = {},
+): Place => {
+  const base = createEntity<EntityType.PLACE, Place>(
+    EntityType.PLACE,
+    (entity) => {
+      const place: Place = {
+        ...entity,
+        exits: {},
+        entities: {},
+        memories: []
+      };
+      return place;
+    },
+    options,
+  );
+
+  return transform(base);
+};
 
 /**
  * Factory function to create an Exit with standard defaults
@@ -180,24 +173,20 @@ export const createPlaces = (
     placeDefinitions.map(placeDef => {
       const payload = createPlace(place => ({
         ...place,
-        id: createPlaceUrn(placeDef.id),
         name: placeDef.name || placeDef.id,
         description: placeDef.description || 'Lorem ipsum dolor sit amet',
-        attributes: {
-          exits: Object.fromEntries(
-            placeDef.edges.map(edge => [
-              directions[edge.direction as keyof typeof directions],
-              createExit(exit => ({
-                ...exit,
-                label: edge.label || `An exit to the ${edge.direction}`,
-                to: urns[edge.to]
-              }))
-            ])
-          ),
-          entities: {},
-          monsters: {},
-          history: [],
-        },
+        exits: Object.fromEntries(
+          placeDef.edges.map(edge => [
+            directions[edge.direction as keyof typeof directions],
+            createExit(exit => ({
+              ...exit,
+              label: edge.label || `An exit to the ${edge.direction}`,
+              to: urns[edge.to]
+            }))
+          ])
+        ),
+        entities: {},
+        memories: []
       }));
 
       return [placeDef.id, payload];
@@ -221,12 +210,102 @@ const DEFAULT_DIRECTIONS: Record<string, DirectionURN> = Object.fromEntries(
     }),
 );
 
+export type ValidationMode = 'graph' | 'single';
+
+export interface ValidationOptions {
+  mode?: ValidationMode;
+}
+
+/**
+ * Maps a direction to its opposite
+ */
+const OPPOSITE_DIRECTIONS: Record<string, string> = {
+  'north': 'south',
+  'south': 'north',
+  'east': 'west',
+  'west': 'east',
+  'northeast': 'southwest',
+  'southwest': 'northeast',
+  'northwest': 'southeast',
+  'southeast': 'northwest'
+};
+
+/**
+ * Validates that all places in the graph are properly connected with bidirectional edges
+ */
+const validateGraphConnectivity = (
+  placeDefinitions: PlaceDefinition[],
+  directions: Record<string, Taxonomy.Directions>
+): void => {
+  // Build a map of all edges for quick lookup
+  const edgeMap = new Map<string, Set<string>>();
+
+  // First pass: collect all edges
+  for (const place of placeDefinitions) {
+    const edges = place.edges ?? [];
+    if (!edgeMap.has(place.id)) {
+      edgeMap.set(place.id, new Set());
+    }
+
+    for (const edge of edges) {
+      // Store as "fromId:direction:toId"
+      edgeMap.get(place.id)!.add(`${edge.direction}:${edge.to}`);
+    }
+  }
+
+  // Second pass: verify reciprocal edges exist
+  for (const place of placeDefinitions) {
+    const edges = place.edges ?? [];
+    for (const edge of edges) {
+      const oppositeDirection = OPPOSITE_DIRECTIONS[edge.direction];
+      if (!oppositeDirection) {
+        throw new Error(`Invalid direction '${edge.direction}' in place '${place.id}' - no opposite direction defined`);
+      }
+
+      // Check if the destination has a reciprocal edge back
+      const destinationEdges = edgeMap.get(edge.to);
+      if (!destinationEdges?.has(`${oppositeDirection}:${place.id}`)) {
+        throw new Error(
+          `Missing reciprocal edge: place '${edge.to}' should have a '${oppositeDirection}' exit to '${place.id}'`
+        );
+      }
+    }
+  }
+};
+
+const validatePlaceDefinitions = (
+  placeDefinitions: PlaceDefinition[],
+  directions: Record<string, Taxonomy.Directions>,
+): void => {
+  const placeIds = new Set(placeDefinitions.map(place => place.id));
+
+  // First validate basic edge constraints
+  for (const place of placeDefinitions) {
+    const edges = place.edges ?? [];
+    for (const edge of edges) {
+      // Validate direction is valid
+      if (!directions[edge.direction as keyof typeof directions]) {
+        throw new Error(`Invalid direction '${edge.direction}' in place '${place.id}'`);
+      }
+
+      // Validate destination exists in graph
+      if (!placeIds.has(edge.to)) {
+        throw new Error(`Invalid edge in place '${place.id}': Destination '${edge.to}' is not defined in this graph`);
+      }
+    }
+  }
+
+  // Then validate graph connectivity
+  validateGraphConnectivity(placeDefinitions, directions);
+};
+
 /**
  * Creates a connected graph of places from place definitions
  */
 export const createPlaceGraph = (
   placeDefinitions: PlaceDefinition[],
   directions: Record<string, Taxonomy.Directions> = DEFAULT_DIRECTIONS,
+  options: ValidationOptions = { mode: 'graph' }
 ): PlaceGraph => {
   validatePlaceDefinitions(placeDefinitions, directions);
 
@@ -235,22 +314,4 @@ export const createPlaceGraph = (
   const places = createPlaces(placeDefinitions, directions, urns);
 
   return { places, urns };
-};
-
-const validatePlaceDefinitions = (
-  placeDefinitions: PlaceDefinition[],
-  directions: Record<string, Taxonomy.Directions>,
-): void => {
-  const placeIds = new Set(placeDefinitions.map(place => place.id));
-  for (const place of placeDefinitions) {
-    const edges = place.edges ?? [];
-    for (const edge of edges) {
-      if (!placeIds.has(edge.to)) {
-        throw new Error(`Invalid edge in place '${place.id}': Destination '${edge.to}' is not defined`);
-      }
-      if (!directions[edge.direction as keyof typeof directions]) {
-        throw new Error(`Invalid direction '${edge.direction}' in place '${place.id}'`);
-      }
-    }
-  }
 };

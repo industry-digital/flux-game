@@ -16,7 +16,7 @@ import {
 /**
  * Validator for a complete Character entity
  */
-export const validateCharacter = createEntityValidator<EntityType.CHARACTER, CharacterAttributes>(EntityType.CHARACTER);
+export const validateCharacter = createEntityValidator(EntityType.CHARACTER);
 
 /**
  * Validator for CharacterURN

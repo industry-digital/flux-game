@@ -15,6 +15,8 @@ import {
   TraitURN,
   WeaponURN,
   SkillURN,
+  StatURN,
+  ConditionURN,
 } from '@flux';
 
 // === Core URN Creation ===
@@ -22,12 +24,23 @@ import {
 export type TaxonomyURN<V extends RootVocabulary> = `${RootNamespace}:${V}:${string}`;
 
 /**
- * Creates a URN from a vocabulary and additional terms
+ * Creates a URN from a vocabulary and an array of terms
  */
-export const createTaxonomyUrn = <V extends RootVocabulary>(vocabulary: V, ...terms: string[]): TaxonomyURN<V> => {
+export function createTaxonomyUrn<V extends RootVocabulary>(vocabulary: V, terms: string[]): TaxonomyURN<V>;
+/**
+ * Creates a URN from a vocabulary and additional terms as variadic arguments
+ */
+export function createTaxonomyUrn<V extends RootVocabulary>(vocabulary: V, ...terms: string[]): TaxonomyURN<V>;
+/**
+ * Implementation of createTaxonomyUrn that handles both array and variadic terms
+ */
+export function createTaxonomyUrn<V extends RootVocabulary>(vocabulary: V, termsOrFirst: string[] | string, ...rest: string[]): TaxonomyURN<V> {
   if (!vocabulary) {
     throw new Error('Vocabulary is required to create a taxonomy URN');
   }
+
+  // Convert arguments to a single array of terms
+  const terms = Array.isArray(termsOrFirst) ? termsOrFirst : [termsOrFirst, ...rest];
 
   if (terms.length === 0) {
     throw new Error('At least one term is required to create a URN');
@@ -44,7 +57,7 @@ export const createTaxonomyUrn = <V extends RootVocabulary>(vocabulary: V, ...te
   }
 
   return `${ROOT_NAMESPACE}:${vocabulary}:${terms.join(':')}`;
-};
+}
 
 // === Entity URN Creators ===
 
@@ -63,6 +76,8 @@ export const createWeaponUrn = (...terms: string[]): WeaponURN => createTaxonomy
 export const createArmorUrn = (...terms: string[]): ArmorURN => createTaxonomyUrn('armor', ...terms);
 export const createDirectionUrn = (...terms: string[]): DirectionURN => createTaxonomyUrn('direction', ...terms);
 export const createEffectUrn = (...terms: string[]): EffectURN => createTaxonomyUrn('effect', ...terms);
+export const createStatUrn = (...terms: string[]): StatURN => createTaxonomyUrn('stat', ...terms);
+export const createConditionUrn = (...terms: string[]): ConditionURN => createTaxonomyUrn('condition', ...terms);
 
 // === URN Parsing ===
 
@@ -115,6 +130,23 @@ const findLongestValidTerm = (parts: string[]): string | null => {
 
 export const isRootVocabulary = (term: string): boolean => {
   return !term.includes(':') && term in TAXONOMY.terms;
+};
+
+/**
+ * Extracts the entity type from an EntityURN
+ * @param urn The URN to extract type from
+ * @returns The EntityType
+ * @throws If the URN format is invalid or type is not recognized
+ */
+export const getEntityType = (urn: EntityURN): EntityType => {
+  const [namespace, type] = urn.split(':');
+  if (namespace !== ROOT_NAMESPACE || !type) {
+    throw new Error(`Invalid URN format: ${urn}`);
+  }
+  if (!Object.values(EntityType).includes(type as EntityType)) {
+    throw new Error(`Unknown entity type: ${type}`);
+  }
+  return type as EntityType;
 };
 
 export const isUrnOfTerm = (urn: string, term: keyof typeof TAXONOMY.terms): boolean => {

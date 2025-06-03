@@ -1,4 +1,5 @@
-import { Direction, EventType, PlaceURN, TransformerContext } from '@flux';
+import { Direction, EventType, PlaceURN, TransformerContext, Character, EntityType } from '@flux';
+import { ParsedURN, formatURN } from '~/types/entity/entity';
 
 export type ActorMovementHook = {
   move: (direction: Direction) => MoveResult;
@@ -12,10 +13,10 @@ const createDummyActorMovementHook = (reason: string): ActorMovementHook => ({
   move: () => ({ success: false, reason }),
 });
 
-export const useActor = (context: TransformerContext) => {
+export const useActor = (context: TransformerContext): Character => {
   const { world, declareError } = context;
   const { self, actors } = world;
-  const actor = actors[self];
+  const actor = actors[self] as Character;
 
   if (!actor) {
     throw new Error('Actor not found in `actors` projection');
@@ -39,7 +40,7 @@ export const useActorMovement = (
     return createDummyActorMovementHook('Actor does not have a location');
   }
 
-  const origin = places[actor.location!];
+  const origin = places[formatURN(actor.location) as keyof typeof places];
   if (!origin) {
     return createDummyActorMovementHook('Actor `location` not found in `places`');
   }
@@ -50,8 +51,8 @@ export const useActorMovement = (
     declareEvent({
       type: EventType.ACTOR_MOVEMENT_DID_FAIL,
       payload: {
-        actor: actor.id,
-        origin: origin.id,
+        actor: formatURN(actor.id),
+        origin: formatURN(origin.id),
         direction,
         reason,
         message,
@@ -69,9 +70,9 @@ export const useActorMovement = (
     declareEvent({
       type: EventType.ACTOR_MOVEMENT_DID_SUCCEED,
       payload: {
-        actor: actor.id,
+        actor: formatURN(actor.id),
         direction,
-        origin: origin.id,
+        origin: formatURN(origin.id),
         destination,
       }
     });
@@ -80,7 +81,7 @@ export const useActorMovement = (
   };
 
   const move = (direction: Direction): MoveResult => {
-    const exit = origin.attributes.exits[direction];
+    const exit = origin.exits[direction];
     if (!exit) {
       return declareMovementFailure(direction, 'No exit in that direction');
     }
@@ -91,17 +92,17 @@ export const useActorMovement = (
     }
 
     // Now all we have to do is "transfer" actor's representation from the origin to the destination.
-    const descriptor = origin.attributes.entities[actor.id];
+    const descriptor = origin.entities[formatURN(actor.id)];
     if (!descriptor) {
       return declareMovementFailure(direction, 'Actor not found at `origin`');
     }
 
     // Transfer actor's descriptor from origin to destination
-    destination.attributes.entities[actor.id] = descriptor;
-    delete origin.attributes.entities[actor.id];
+    destination.entities[formatURN(actor.id)] = descriptor;
+    delete origin.entities[formatURN(actor.id)];
 
     // Update actor's location
-    actor.location = destination.id;
+    actor.location = destination.id as ParsedURN<EntityType.PLACE>;
 
     return declareMovementSuccess(direction, exit.to);
   };
