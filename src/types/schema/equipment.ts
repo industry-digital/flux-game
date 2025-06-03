@@ -1,12 +1,7 @@
 import { CharacterStatName } from '~/types/entity/character';
+import { Requirements } from '~/types/requirement';
 import { RootNamespace, Taxonomy } from '~/types/taxonomy';
 import { EffectSchema } from '~/types/taxonomy/effect';
-
-export type EquipmentRequirements = {
-  stats?: Partial<Record<CharacterStatName, number>>;
-  skills?: Record<Taxonomy.Skills, number>;
-  traits?: Record<Taxonomy.Traits, 1>;
-};
 
 export type IntrinsicEffects = Record<string, EffectSchema>;
 
@@ -42,7 +37,7 @@ export interface EquipmentMixin {
   /**
    * Requirements to equip this item (stats, skills, etc.)
    */
-  requirements?: EquipmentRequirements;
+  requirements?: Requirements;
 
   /**
    * Bonuses or penalties to stats, skills, or abilities.

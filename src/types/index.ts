@@ -109,12 +109,12 @@ export {
 } from './handler';
 
 export {
-  Command,
+  AbstractCommand as Command,
   CommandInput,
   CommandType,
   Intent,
   IntentInput,
-  KnownCommand,
+  Command as KnownCommand,
   isCommand,
   isIntent,
 } from './intent';

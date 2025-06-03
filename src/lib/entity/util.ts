@@ -243,7 +243,8 @@ const validatePlaceDefinitions = (
 ): void => {
   const placeIds = new Set(placeDefinitions.map(place => place.id));
   for (const place of placeDefinitions) {
-    for (const edge of place.edges) {
+    const edges = place.edges ?? [];
+    for (const edge of edges) {
       if (!placeIds.has(edge.to)) {
         throw new Error(`Invalid edge in place '${place.id}': Destination '${edge.to}' is not defined`);
       }

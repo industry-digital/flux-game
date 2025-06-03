@@ -12,12 +12,24 @@ const createDummyActorMovementHook = (reason: string): ActorMovementHook => ({
   move: () => ({ success: false, reason }),
 });
 
+export const useActor = (context: TransformerContext) => {
+  const { world, declareError } = context;
+  const { self, actors } = world;
+  const actor = actors[self];
+
+  if (!actor) {
+    throw new Error('Actor not found in `actors` projection');
+  }
+
+  return actor;
+};
+
 export const useActorMovement = (
   context: TransformerContext,
 ): ActorMovementHook => {
   const { world, declareError, declareEvent } = context;
-  const { self, actors, places } = world;
-  const actor = actors[self];
+  const { places } = world;
+  const actor = useActor(context);
 
   if (!actor) {
     return createDummyActorMovementHook('Actor not found in `actors` projection');

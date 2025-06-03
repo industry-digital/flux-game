@@ -1,5 +1,5 @@
 import { EmergentEvent, EmergentEventInput, EventType } from '~/types/event';
-import { Command, CommandType, Intent } from '~/types/intent';
+import { AbstractCommand, CommandType, Intent } from '~/types/intent';
 import { EntityURN, PlaceURN } from '~/types/taxonomy';
 import { Entity } from '~/types/entity/entity';
 import { Place } from '~/types/entity/place';
@@ -8,7 +8,7 @@ import { SideEffect, SideEffectInput } from '~/types/side-effect';
 /**
  * Union type of all allowed input types for the pipeline
  */
-export type AllowedInput = Command | Intent;
+export type AllowedInput = AbstractCommand | Intent;
 
 /**
  * For filter() and find() methods, this is a function that takes an EmergentEvent
@@ -156,12 +156,12 @@ export type PlannerContext<
  * `ACTOR_DID_MOVE`.
  */
 export type TransformerInterface<
-  I extends Command,
+  I extends AbstractCommand,
 > = {
   /**
    * The implementation should return `true` if the handler is interested in processing the input
    */
-  handles: (command: Command) => command is I;
+  handles: (command: AbstractCommand) => command is I;
 
   /**
    * Dependencies on other transformers that must run before this one
@@ -177,7 +177,7 @@ export type TransformerInterface<
 }
 
 export type TransformerImplementation<
-  I extends Command,
+  I extends AbstractCommand,
 > = new (...args: any[]) => TransformerInterface<I>;
 
 /**
@@ -189,12 +189,12 @@ export type PureReducer<C, I> = (context: C, input: I) => C;
 /**
  * A reducer that acts in the pure Transformation stage
  */
-export type Transformer<T extends CommandType, A extends Record<string, any>> = PureReducer<TransformerContext, Command<T, A>>;
+export type Transformer<T extends CommandType, A extends Record<string, any>> = PureReducer<TransformerContext, AbstractCommand<T, A>>;
 
 /**
  * Type guard for determining if a handler can process a specific input
  */
-export type InputTypeGuard<I extends Command, S extends I> = (input: I) => input is S;
+export type InputTypeGuard<I extends AbstractCommand, S extends I> = (input: I) => input is S;
 
 /**
  * A handler is just an object that associates a reducer-like function with its dependencies.
@@ -231,7 +231,7 @@ export type PureHandlerImplementation<
  * Type guard for Commands with specific type and arguments
  */
 export type CommandTypeGuard<T extends CommandType, A extends Record<string, any> = {}> =
-  InputTypeGuard<Command, Command<T, A>>;
+  InputTypeGuard<AbstractCommand, AbstractCommand<T, A>>;
 
 /**
  * Helper function to create a command type guard
@@ -239,7 +239,7 @@ export type CommandTypeGuard<T extends CommandType, A extends Record<string, any
 export function createCommandGuard<T extends CommandType, A extends Record<string, any> = {}>(
   type: T
 ): CommandTypeGuard<T, A> {
-  return (input: Command): input is Command<T, A> =>
+  return (input: AbstractCommand): input is AbstractCommand<T, A> =>
     'type' in input && input.type === type;
 }
 
@@ -247,9 +247,9 @@ export function createCommandGuard<T extends CommandType, A extends Record<strin
  * Type guard that checks if input is a validated Command of a specific type
  */
 export const isCommandOfType = <T extends CommandType, A extends Record<string, any> = Record<string, any>>(
-  input: Command,
+  input: AbstractCommand,
   type: T
-): input is Command<T, A> => {
+): input is AbstractCommand<T, A> => {
   return 'type' in input && input.__type === 'command' && input.type === type;
 };
 

@@ -1,5 +1,5 @@
 import { randomUUID } from '~/lib/uuid';
-import { Command, CommandType, Intent, NaturalLanguageAnalysis } from '~/types/intent';
+import { AbstractCommand, CommandType, Intent, NaturalLanguageAnalysis } from '~/types/intent';
 import { EntityURN } from '~/types/taxonomy';
 
 const identity = <I, O = I>(x: I): O => x as unknown as O;
@@ -34,34 +34,34 @@ export const createIntentFromText = (
   return transform(defaults as Intent) as Intent;
 };
 
-type CommandTransformer = Transformer<Command>;
+type CommandTransformer = Transformer<AbstractCommand>;
 
 export const createCommand = <T extends CommandType>(
   transform: CommandTransformer = identity,
   { now = Date.now(), uuid = randomUUID }: FactoryOptions = {},
-): Command <T> => {
-  const defaults: Partial<Command<T>> = {
+): AbstractCommand <T> => {
+  const defaults: Partial<AbstractCommand<T>> = {
     __type: 'command',
     id: uuid(),
     ts: now,
     args: {},
   };
-  return transform(defaults as Command<T>)  as Command<T>;
+  return transform(defaults as AbstractCommand<T>)  as AbstractCommand<T>;
 };
 
 export const createCommandFromIntent = <T extends CommandType>(
   intent: Intent,
   transform: CommandTransformer = identity,
   { now = Date.now(), uuid = randomUUID }: FactoryOptions = {},
-): Command<T> => {
-  const defaults: Partial<Command<T>> = {
+): AbstractCommand<T> => {
+  const defaults: Partial<AbstractCommand<T>> = {
     __type: 'command',
     id: intent.id,
     ts: now,
     actor: intent.actor,
   };
 
-  return transform(defaults as Command<T>) as Command<T>;
+  return transform(defaults as AbstractCommand<T>) as AbstractCommand<T>;
 };
 
 export const createNaturalLanguageAnalysis = (

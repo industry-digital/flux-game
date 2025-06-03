@@ -55,7 +55,7 @@ export type CommandInput<
  * A fully validated Command with guaranteed fields
  * Safe to execute without additional validation
  */
-export type Command<
+export type AbstractCommand<
   T extends CommandType = CommandType,
   A extends Record<string, any> = Record<string, any>
 > = InputMetadata & Omit<CommandInput<T, A>, 'id' | 'ts'> & {
@@ -127,7 +127,7 @@ export type Intent = InputMetadata & Omit<IntentInput, 'id' | 'ts' | 'nlp'> & {
 /**
  * Type guard to check if input has the command metadata type
  */
-export const isCommand = (input: unknown): input is Command => {
+export const isCommand = (input: unknown): input is AbstractCommand => {
   return (
     typeof input === 'object' &&
     input !== null &&
@@ -180,7 +180,7 @@ export const isCommandInput = (input: unknown): input is CommandInput => {
 export const isCommandOfType = <T extends CommandType, A extends Record<string, any> = Record<string, any>>(
   input: unknown,
   type: T
-): input is Command<T, A> => {
+): input is AbstractCommand<T, A> => {
   return isCommand(input) && input.type === type;
 };
 
@@ -188,9 +188,9 @@ export const isCommandOfType = <T extends CommandType, A extends Record<string, 
  * Type guard that checks if a validated Command is of a specific type
  */
 export const isValidatedCommandOfType = <T extends CommandType, A extends Record<string, any> = Record<string, any>>(
-  input: Command,
+  input: AbstractCommand,
   type: T
-): input is Command<T, A> => {
+): input is AbstractCommand<T, A> => {
   return input.type === type;
 };
 
@@ -200,7 +200,7 @@ export const isValidatedCommandOfType = <T extends CommandType, A extends Record
 export const createCommandTypeGuard = <T extends CommandType, A extends Record<string, any> = Record<string, any>>(
   type: T
 ) => {
-  return (input: unknown): input is Command<T, A> => {
+  return (input: unknown): input is AbstractCommand<T, A> => {
     return isCommandOfType(input, type);
   };
 };
@@ -211,12 +211,12 @@ export const createCommandTypeGuard = <T extends CommandType, A extends Record<s
 export const isMoveCommand = createCommandTypeGuard(CommandType.MOVE);
 
 // Or inline:
-export const isMoveCommandInline = (input: unknown): input is Command<CommandType.MOVE> => {
+export const isMoveCommandInline = (input: unknown): input is AbstractCommand<CommandType.MOVE> => {
   return isCommandOfType(input, CommandType.MOVE);
 };
 
-export type KnownCommand =
-| Command<CommandType.UNRESOLVED_COMMAND, any>
-| Command<CommandType.CREATE_PLACE, PlaceDefinition>
-| Command<CommandType.MOVE, MoveCommandArgs>
-| Command<CommandType.CREATE_CHARACTER, CharacterInput>;
+export type Command =
+| AbstractCommand<CommandType.UNRESOLVED_COMMAND, any>
+| AbstractCommand<CommandType.CREATE_PLACE, PlaceDefinition>
+| AbstractCommand<CommandType.MOVE, MoveCommandArgs>
+| AbstractCommand<CommandType.CREATE_CHARACTER, CharacterInput>;

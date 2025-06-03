@@ -5,9 +5,9 @@ export type UUIDLike = `${string}-${string}-${string}-${string}-${string}`;
 
 export enum EntityType {
   PLACE = 'place',
-  CHARACTER = 'character',
+  CHARACTER = 'char',
   ITEM = 'item',
-  COLLECTION = 'collection',
+  COLLECTION = 'coll',
 }
 
 /**

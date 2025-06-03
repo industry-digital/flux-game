@@ -48,4 +48,3 @@ Player B:
   ```text
   A points at a rocking chair in the corner, and it seems to be swaying gently, as if someone had just left it.
   ```
-

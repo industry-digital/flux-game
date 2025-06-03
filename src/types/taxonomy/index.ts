@@ -143,7 +143,7 @@ export namespace Taxonomy {
   /**
    * Characters of the game world
    */
-  export type Characters = TaxonomyURN<'character'>;
+  export type Characters = TaxonomyURN<'char'>;
 
   /**
    * Character stats
