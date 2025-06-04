@@ -3,7 +3,7 @@ import { AppliedEffects } from '~/types/taxonomy/effect';
 import { EntityType, BaseEntity, DescribableMixin, ParsedURN, ParsedURNInput, EmergentNarrative } from '~/types/entity/entity';
 import { SkillState, Specializations } from '~/types/entity/skill';
 import { ItemState } from '~/types/entity/item';
-import { createConditionUrn } from '~/lib/taxonomy';
+import { createConditionUrn, createStatUrn } from '~/lib/taxonomy';
 import {
   NormalizedValueBetweenZeroAndOne,
   ModifiableBoundedAttribute,
@@ -51,7 +51,7 @@ export const WellKnownCharacterStat = {
    * - Athletic feats requiring force
    * - Carrying capacity
    */
-  STR: 'str',
+  STR: createStatUrn('str'),
 
   /**
    * Dexterity. Fine motor control and precision. Affects:
@@ -59,7 +59,7 @@ export const WellKnownCharacterStat = {
    * - Delicate manual tasks
    * - Crafting quality
    */
-  DEX: 'dex',
+  DEX: createStatUrn('dex'),
 
   /**
    * Agility. Speed, grace, and coordination. Affects:
@@ -67,7 +67,7 @@ export const WellKnownCharacterStat = {
    * - Initiative in combat, together with WIS
    * - Athletic feats requiring agility
    */
-  AGI: 'agi',
+  AGI: createStatUrn('agi'),
 
   /**
    * Constitution. Physical resilience and endurance. Affects:
@@ -75,7 +75,7 @@ export const WellKnownCharacterStat = {
    * - Stamina and fatigue resistance
    * - Resistance to poison, disease, and physical afflictions
    */
-  CON: 'con',
+  CON: createStatUrn('con'),
 
   /**
    * Intelligence. Reasoning ability and learning capacity. Affects:
@@ -83,7 +83,7 @@ export const WellKnownCharacterStat = {
    * - Complex abilities and higher learning
    * - Problem-solving and analysis
    */
-  INT: 'int',
+  INT: createStatUrn('int'),
 
   /**
    * Wisdom. Awareness, intuition, and mental fortitude. Affects:
@@ -92,7 +92,7 @@ export const WellKnownCharacterStat = {
    * - Resistance to fear, confusion, and mental effects
    * - Situational awareness and gut instincts
    */
-  WIS: 'wis',
+  WIS: createStatUrn('wis'),
 
   /**
    * Presence. Force of personality and social influence. Affects:
@@ -100,7 +100,7 @@ export const WellKnownCharacterStat = {
    * - Leadership and group coordination
    * - Intimidation and commanding respect
    */
-  PRS: 'prs',
+  PRS: createStatUrn('prs'),
 
   /**
    * Luck. Fortune and supernatural favor. Affects:
@@ -108,7 +108,7 @@ export const WellKnownCharacterStat = {
    * - Rare item discovery and advantageous encounters
    * - Quest opportunities and serendipitous events
    */
-  LCK: 'lck',
+  LCK: createStatUrn('lck'),
 } as const;
 
 /**
