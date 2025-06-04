@@ -13,7 +13,6 @@ import {
   UUIDLike, CharacterInput
 } from '@flux';
 import { BaseEntity, parseURN, DescribableMixin } from '~/types/entity/entity';
-import { WellKnownCharacterCondition as WellKnownCharacterConditionType } from '~/types/entity/character';
 import { merge } from 'lodash';
 
 const identity = <T>(x: T): T => x;
@@ -69,7 +68,6 @@ export const createCharacterInput = (
     name: input.name,
     description: input.description,
     vitals: {
-      condition: WellKnownCharacterConditionType.ALIVE,
       hp: { natural: { current: 100, max: 100 } },
       stats: {},
       mana: {},
@@ -115,7 +113,6 @@ export const createCharacter = (
         description: characterInput.description,
         location: characterInput.location ? parseURN(characterInput.location.key as `flux:place:${string}`) : parseURN(createPlaceUrn('nowhere')),
         vitals: {
-          condition: WellKnownCharacterConditionType.ALIVE,
           hp: createModifiableBoundedAttribute(),
           stats: {},
           mana: {},

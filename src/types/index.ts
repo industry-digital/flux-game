@@ -36,7 +36,6 @@ export {
 export {
   Character,
   CharacterInput,
-  CharacterCondition,
   CharacterStatName,
   CharacterStats,
   Equipment,
@@ -200,7 +199,6 @@ export {
   createDirectionUrn,
   createEffectUrn,
   createStatUrn,
-  createConditionUrn,
 } from '~/lib/taxonomy';
 
 export {

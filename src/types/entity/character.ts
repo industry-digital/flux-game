@@ -3,41 +3,13 @@ import { AppliedEffects } from '~/types/taxonomy/effect';
 import { EntityType, BaseEntity, DescribableMixin, ParsedURN, ParsedURNInput, EmergentNarrative } from '~/types/entity/entity';
 import { SkillState, Specializations } from '~/types/entity/skill';
 import { ItemState } from '~/types/entity/item';
-import { createConditionUrn, createStatUrn } from '~/lib/taxonomy';
+import { createStatUrn } from '~/lib/taxonomy';
 import {
   NormalizedValueBetweenZeroAndOne,
   ModifiableBoundedAttribute,
   ModifiableScalarAttribute,
   NormalizedBipolarValue,
 } from '~/types/entity/attribute';
-
-/**
- * Well-known character conditions that are fundamental to the game system.
- * These are a subset of all possible conditions (which are defined in the taxonomy).
- * These represent the core conditions that have special meaning for game mechanics.
- */
-export const WellKnownCharacterCondition = {
-  /**
-   * Character is alive and able to act normally
-   */
-  ALIVE: createConditionUrn('state:alive'),
-
-  /**
-   * Character is alive but unable to take normal actions
-   * Examples: unconscious, paralyzed, stunned
-   */
-  INCAPACITATED: createConditionUrn('state:incapacitated'),
-
-  /**
-   * Character is dead and cannot act without external intervention
-   */
-  DEAD: createConditionUrn('state:dead'),
-} as const;
-
-/**
- * Type alias for any valid character condition URN
- */
-export type CharacterConditionURN = typeof WellKnownCharacterCondition[keyof typeof WellKnownCharacterCondition] | `flux:condition:${string}`;
 
 /**
  * Well-known character stats that are fundamental to the game system.
@@ -120,7 +92,6 @@ export type CharacterStatURN = typeof WellKnownCharacterStat[keyof typeof WellKn
  * Map of character stats to their values
  */
 export type CharacterStats = Partial<Record<CharacterStatURN, ModifiableScalarAttribute>>;
-
 export type EquipmentSlots = Partial<Record<ItemURN, 1>>;
 export type Equipment = Partial<Record<Taxonomy.Anatomy, EquipmentSlots>>;
 export type Skills = Partial<Record<Taxonomy.Skills, SkillState>>;
@@ -206,7 +177,6 @@ export enum CharacterFragmentName {
 export type CharacterVitalsFragment = {
   traits: Traits;
   stats: CharacterStats;
-  condition: CharacterConditionURN;
   hp: ModifiableBoundedAttribute;
   injuries: Injuries;
   mana: ManaPools;
@@ -302,4 +272,3 @@ export type CharacterInput = {
 
 // For backward compatibility
 export type CharacterStatName = keyof typeof WellKnownCharacterStat;
-export type CharacterCondition = keyof typeof WellKnownCharacterCondition;

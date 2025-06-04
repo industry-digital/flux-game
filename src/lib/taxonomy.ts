@@ -16,7 +16,6 @@ import {
   WeaponURN,
   SkillURN,
   StatURN,
-  ConditionURN,
 } from '@flux';
 
 // === Core URN Creation ===
@@ -77,7 +76,6 @@ export const createArmorUrn = (...terms: string[]): ArmorURN => createTaxonomyUr
 export const createDirectionUrn = (...terms: string[]): DirectionURN => createTaxonomyUrn('direction', ...terms);
 export const createEffectUrn = (...terms: string[]): EffectURN => createTaxonomyUrn('effect', ...terms);
 export const createStatUrn = (...terms: string[]): StatURN => createTaxonomyUrn('stat', ...terms);
-export const createConditionUrn = (...terms: string[]): ConditionURN => createTaxonomyUrn('condition', ...terms);
 
 // === URN Parsing ===
 
