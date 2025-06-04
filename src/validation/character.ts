@@ -1,7 +1,6 @@
 import * as typia from 'typia';
 import { createEntityValidator } from './entity';
 import {
-  CharacterAttributes,
   CharacterStats,
   CharacterStatName,
   CharacterURN,
@@ -22,11 +21,6 @@ export const validateCharacter = createEntityValidator(EntityType.CHARACTER);
  * Validator for CharacterURN
  */
 export const validateCharacterURN = typia.createValidate<CharacterURN>();
-
-/**
- * Validator for CharacterAttributes
- */
-export const validateCharacterAttributes = typia.createValidate<CharacterAttributes>();
 
 /**
  * Validator for CharacterStats

@@ -36,7 +36,6 @@ export {
 export {
   Character,
   CharacterInput,
-  CharacterAttributes,
   CharacterCondition,
   CharacterStatName,
   CharacterStats,
@@ -44,6 +43,12 @@ export {
   AppliedAnatomicalDamage as InjuryDescriptor,
   Inventory,
   Skills,
+  CharacterFragmentName,
+  CharacterVitalsFragment,
+  CharacterInventoryFragment,
+  CharacterSocialFragment,
+  CharacterProgressionFragment,
+  CharacterPreferencesFragment,
 } from './entity/character';
 
 export {
@@ -54,7 +59,6 @@ export {
   EmergentNarrative,
   Entity,
   EntityType,
-  SymbolicLink,
   UUIDLike,
   BaseEntity,
   DescribableMixin,
@@ -81,7 +85,9 @@ export {
 
 export {
   CharacterSkillRecord,
-  SkillState
+  SkillState,
+  SpecializationGroup,
+  Specializations,
 } from './entity/skill';
 
 export {

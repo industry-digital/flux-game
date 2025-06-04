@@ -10,10 +10,11 @@ import {
   Place,
   PlaceURN,
   Taxonomy,
-  UUIDLike
+  UUIDLike, CharacterInput
 } from '@flux';
 import { BaseEntity, parseURN, DescribableMixin } from '~/types/entity/entity';
-import { WellKnownCharacterCondition } from '~/types/entity/character';
+import { WellKnownCharacterCondition as WellKnownCharacterConditionType } from '~/types/entity/character';
+import { merge } from 'lodash';
 
 const identity = <T>(x: T): T => x;
 
@@ -61,50 +62,93 @@ export const createEntity = <T extends EntityType, E extends BaseEntity<T> & Des
   return transform(defaults);
 };
 
+export const createCharacterInput = (
+  input: Partial<CharacterInput> & Pick<CharacterInput, 'name' | 'description'>
+): CharacterInput => {
+  const defaults: CharacterInput = {
+    name: input.name,
+    description: input.description,
+    vitals: {
+      condition: WellKnownCharacterConditionType.ALIVE,
+      hp: { natural: { current: 100, max: 100 } },
+      stats: {},
+      mana: {},
+      injuries: {},
+      effects: {},
+      traits: {}
+    },
+    inventory: {
+      mass: 0,
+      items: {},
+      ts: Date.now(),
+      equipment: {}
+    },
+    social: {
+      memberships: {},
+      reputation: {},
+      subscriptions: {}
+    },
+    progression: {
+      skills: {},
+      specializations: {
+        primary: {},
+        secondary: {}
+      }
+    },
+    preferences: {}
+  };
+
+  return merge({}, defaults, input);
+};
+
 export const createCharacter = (
-  transform: (char: Character) => Character = identity,
+  input: Partial<CharacterInput> & Pick<CharacterInput, 'name' | 'description'>,
   options: FactoryOptions = {},
 ): Character => {
-  const base = createEntity<EntityType.CHARACTER, Character>(
+  const characterInput = createCharacterInput(input);
+
+  return createEntity<EntityType.CHARACTER, Character>(
     EntityType.CHARACTER,
     (entity) => {
-      const char: Character = {
-        ...entity,
-        location: parseURN(createPlaceUrn('nowhere')),
-        attributes: {
-          level: 1,
-          condition: WellKnownCharacterCondition.ALIVE,
+      const defaults: Partial<Character> = {
+        name: characterInput.name,
+        description: characterInput.description,
+        location: characterInput.location ? parseURN(characterInput.location.key as `flux:place:${string}`) : parseURN(createPlaceUrn('nowhere')),
+        vitals: {
+          condition: WellKnownCharacterConditionType.ALIVE,
           hp: createModifiableBoundedAttribute(),
-          mana: {},
           stats: {},
+          mana: {},
           injuries: {},
-          mass: createModifiableScalarAttribute(attr => ({
-            ...attr,
-            natural: 70_000,
-          })),
-          origin: '',
-          equipment: {},
-          traits: {},
-          skills: {},
-          memberships: {},
-          subscriptions: {},
           effects: {},
-          inventory: {
-            mass: 0,
-            ts: 0,
-            items: {},
-          },
-          abilities: {},
-          preferences: {},
-          reputation: {},
+          traits: {}
         },
+        inventory: {
+          mass: 0,
+          items: {},
+          ts: 0,
+          equipment: {}
+        },
+        social: {
+          memberships: {},
+          reputation: {},
+          subscriptions: {}
+        },
+        progression: {
+          level: { natural: 1 },
+          skills: {},
+          specializations: {
+            primary: {},
+            secondary: {},
+          }
+        },
+        preferences: {}
       };
-      return char;
+
+      return merge({}, entity, defaults, characterInput) as Character;
     },
     options,
   );
-
-  return transform(base);
 };
 
 export const createPlace = (

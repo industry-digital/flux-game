@@ -15,8 +15,7 @@ export enum EntityType {
 }
 
 /**
- * A mixin type that adds human-readable name and description fields to an entity.
- * This is commonly used with BaseEntity but can be used with any type.
+ * A mixin type that adds human-friendly `name` and `description` fields to an entity.
  */
 export type DescribableMixin = {
   /**
@@ -31,10 +30,11 @@ export type DescribableMixin = {
 };
 
 /**
- * Runtime representation of an EntityURN, parsed into its constituent parts for efficient access.
- * Example: "flux:place:world:nightcity" becomes { type: "place", key: "world:nightcity", path: ["world", "nightcity"] }
+ * A simplified version of ParsedURN used for entity creation/input.
+ * This contains just the minimum fields needed to identify an entity,
+ * before it's fully processed into a ParsedURN with path and URN string.
  */
-export type ParsedURN<T extends EntityType = EntityType> = {
+export type ParsedURNInput<T extends EntityType = EntityType> = {
   /**
    * The type of entity this URN refers to
    */
@@ -45,7 +45,13 @@ export type ParsedURN<T extends EntityType = EntityType> = {
    * For example, in "flux:place:world:nightcity", key would be "world:nightcity"
    */
   key: string;
+};
 
+/**
+ * Runtime representation of an EntityURN, parsed into its constituent parts for efficient access.
+ * Example: "flux:place:world:nightcity" becomes { type: "place", key: "world:nightcity", path: ["world", "nightcity"] }
+ */
+export type ParsedURN<T extends EntityType = EntityType> = ParsedURNInput<T> & {
   /**
    * The key split into its constituent parts.
    * For example, in "flux:place:world:nightcity", path would be ["world", "nightcity"]
@@ -113,11 +119,6 @@ export function formatURN<T extends EntityType>(parsed: ParsedURN<T>): EntityURN
 
   return createTaxonomyUrn(parsed.type, parsed.path);
 }
-
-/**
- * A reference to another entity, using the efficient runtime representation
- */
-export type SymbolicLink<T extends EntityType = EntityType> = ParsedURN<T>;
 
 /**
  * An EmergentNarrative is a description of a thing that evolves over time. We use LLMs to generate these.

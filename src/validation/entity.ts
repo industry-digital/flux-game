@@ -4,11 +4,11 @@ import {
   EntityType,
   EntityURN,
   EmergentNarrative,
-  SymbolicLink,
+  ParsedURN,
   Character,
   Place,
+  BaseEntity
 } from '@flux';
-import { BaseEntity, ParsedURN } from '~/types/entity/entity';
 import { parseEntityUrn } from '~/lib/entity/urn';
 
 /**
@@ -24,10 +24,10 @@ export const validateEntity = typia.createValidate<Entity>();
 export const validateEntityURN = typia.createValidate<EntityURN>();
 
 /**
- * Validator for SymbolicLink
- * Validates references to other entities
+ * Validator for ParsedURN
+ * @deprecated Use parseEntityUrn from '~/lib/entity/urn' instead
  */
-export const validateSymbolicLink = typia.createValidate<SymbolicLink>();
+export const validateParsedURN = typia.createValidate<ParsedURN>();
 
 /**
  * Validator for EmergentNarrative

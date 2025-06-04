@@ -1,16 +1,15 @@
 import { Taxonomy, ItemURN } from '~/types/taxonomy';
 import { AppliedEffects } from '~/types/taxonomy/effect';
-import { EntityType, SymbolicLink, BaseEntity, DescribableMixin } from '~/types/entity/entity';
-import { SkillState } from '~/types/entity/skill';
+import { EntityType, BaseEntity, DescribableMixin, ParsedURN, ParsedURNInput, EmergentNarrative } from '~/types/entity/entity';
+import { SkillState, Specializations } from '~/types/entity/skill';
 import { ItemState } from '~/types/entity/item';
-import { createStatUrn, createConditionUrn } from '~/lib/taxonomy';
+import { createConditionUrn } from '~/lib/taxonomy';
 import {
   NormalizedValueBetweenZeroAndOne,
   ModifiableBoundedAttribute,
   ModifiableScalarAttribute,
   NormalizedBipolarValue,
 } from '~/types/entity/attribute';
-import { ParsedURN } from '~/types/entity/entity';
 
 /**
  * Well-known character conditions that are fundamental to the game system.
@@ -52,7 +51,7 @@ export const WellKnownCharacterStat = {
    * - Athletic feats requiring force
    * - Carrying capacity
    */
-  STR: createStatUrn('physical:strength'),
+  STR: 'str',
 
   /**
    * Dexterity. Fine motor control and precision. Affects:
@@ -60,7 +59,7 @@ export const WellKnownCharacterStat = {
    * - Delicate manual tasks
    * - Crafting quality
    */
-  DEX: createStatUrn('physical:dexterity'),
+  DEX: 'dex',
 
   /**
    * Agility. Speed, grace, and coordination. Affects:
@@ -68,7 +67,7 @@ export const WellKnownCharacterStat = {
    * - Initiative in combat, together with WIS
    * - Athletic feats requiring agility
    */
-  AGI: createStatUrn('physical:agility'),
+  AGI: 'agi',
 
   /**
    * Constitution. Physical resilience and endurance. Affects:
@@ -76,7 +75,7 @@ export const WellKnownCharacterStat = {
    * - Stamina and fatigue resistance
    * - Resistance to poison, disease, and physical afflictions
    */
-  CON: createStatUrn('physical:constitution'),
+  CON: 'con',
 
   /**
    * Intelligence. Reasoning ability and learning capacity. Affects:
@@ -84,7 +83,7 @@ export const WellKnownCharacterStat = {
    * - Complex abilities and higher learning
    * - Problem-solving and analysis
    */
-  INT: createStatUrn('mental:intelligence'),
+  INT: 'int',
 
   /**
    * Wisdom. Awareness, intuition, and mental fortitude. Affects:
@@ -93,7 +92,7 @@ export const WellKnownCharacterStat = {
    * - Resistance to fear, confusion, and mental effects
    * - Situational awareness and gut instincts
    */
-  WIS: createStatUrn('mental:wisdom'),
+  WIS: 'wis',
 
   /**
    * Presence. Force of personality and social influence. Affects:
@@ -101,7 +100,7 @@ export const WellKnownCharacterStat = {
    * - Leadership and group coordination
    * - Intimidation and commanding respect
    */
-  PRS: createStatUrn('social:presence'),
+  PRS: 'prs',
 
   /**
    * Luck. Fortune and supernatural favor. Affects:
@@ -109,7 +108,7 @@ export const WellKnownCharacterStat = {
    * - Rare item discovery and advantageous encounters
    * - Quest opportunities and serendipitous events
    */
-  LCK: createStatUrn('supernatural:luck'),
+  LCK: 'lck',
 } as const;
 
 /**
@@ -205,21 +204,19 @@ export enum CharacterFragmentName {
  * Character's vital statistics including health, mana, active effects and injuries
  */
 export type CharacterVitalsFragment = {
-  level: number;
+  traits: Traits;
   stats: CharacterStats;
-  hp: ModifiableBoundedAttribute;
-  mana: ManaPools;
-  injuries: Injuries;
   condition: CharacterConditionURN;
+  hp: ModifiableBoundedAttribute;
+  injuries: Injuries;
+  mana: ManaPools;
   effects: AppliedEffects;
 };
 
 /**
  * Character's inventory including carried items and equipped gear
  */
-export type CharacterInventoryFragment = {
-  mass: ModifiableScalarAttribute;
-  items: Inventory;
+export type CharacterInventoryFragment = Inventory & {
   equipment: Equipment;
 };
 
@@ -233,38 +230,28 @@ export type CharacterSocialFragment = {
 };
 
 /**
- * Character's learned skills and abilities
+ * Tracks a character's skill development and specializations.
+ * This replaces the previous CharacterSkillsFragment with a more
+ * comprehensive progression tracking system.
  */
-export type CharacterSkillsFragment = Skills;
+export type CharacterProgressionFragment = {
+  level: ModifiableScalarAttribute;
+
+  /**
+   * The character's current skills and their states
+   */
+  skills: Skills;
+
+  /**
+   * The character's skill specializations
+   */
+  specializations: Specializations;
+};
 
 /**
  * Character preferences that control various gameplay and interaction settings
  */
 export type CharacterPreferencesFragment = Partial<Record<Taxonomy.Preferences, any>>;
-
-/**
- * Character attributes that encompass all the character's state
- */
-export type CharacterAttributes = {
-  level: number;
-  condition: CharacterConditionURN;
-  hp: ModifiableBoundedAttribute;
-  mass: ModifiableScalarAttribute;
-  stats: CharacterStats;
-  mana: ManaPools;
-  injuries: Injuries;
-  equipment: Equipment;
-  traits: Traits;
-  skills: Skills;
-  memberships: Memberships;
-  reputation: Reputation;
-  subscriptions: Subscriptions;
-  effects: AppliedEffects;
-  inventory: Inventory;
-  abilities: Partial<Record<string, any>>;
-  preferences: CharacterPreferencesFragment;
-  origin?: string;
-};
 
 /**
  * A Character represents an actor in the game world, whether controlled by a player or by the game system.
@@ -282,19 +269,36 @@ export type Character = BaseEntity<EntityType.CHARACTER> & DescribableMixin & {
    * If the character is a member of a party.
    * This must point to a collection of kind 'party'.
    */
-  party?: SymbolicLink<EntityType.COLLECTION> & { kind: 'party' };
+  party?: ParsedURN<EntityType.COLLECTION> & { kind: 'party' };
 
-  /**
-   * Character-specific attributes
-   */
-  attributes: CharacterAttributes;
+  vitals: CharacterVitalsFragment;
+  inventory: CharacterInventoryFragment;
+  social: CharacterSocialFragment;
+  progression: CharacterProgressionFragment
+  preferences: CharacterPreferencesFragment;
 };
 
 /**
  * The input type for creating a new Character, containing only the required fields
  * that need to be provided when creating a Character.
  */
-export type CharacterInput = Partial<Omit<Character, keyof BaseEntity<EntityType.CHARACTER>>>;
+export type CharacterInput = {
+  /**
+   * Basic character information
+   */
+  name: string;
+  description: string | EmergentNarrative;
+  location?: ParsedURNInput<EntityType.PLACE>;
+
+  /**
+   * Character fragments
+   */
+  vitals?: Partial<CharacterVitalsFragment>;
+  inventory?: Partial<CharacterInventoryFragment>;
+  social?: Partial<CharacterSocialFragment>;
+  progression?: Partial<CharacterProgressionFragment>;
+  preferences?: CharacterPreferencesFragment;
+};
 
 // For backward compatibility
 export type CharacterStatName = keyof typeof WellKnownCharacterStat;

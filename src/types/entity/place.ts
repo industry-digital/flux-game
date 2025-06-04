@@ -1,4 +1,4 @@
-import { EntityType, SymbolicLink, EmergentNarrative, BaseEntity, DescribableMixin } from './entity';
+import { EntityType, EmergentNarrative, BaseEntity, DescribableMixin, ParsedURN } from './entity';
 import { EntityURN, PlaceURN } from '~/types/taxonomy';
 import { Direction } from '~/types/world/space';
 import { SpecialVisibility } from '~/types/world/visibility';
@@ -87,12 +87,12 @@ export type Place = BaseEntity<EntityType.PLACE> & DescribableMixin & {
   /**
    * For hierarchical containment
    */
-  parent?: SymbolicLink;
+  parent?: ParsedURN;
 
   /**
    * If this place is "owned" by another entity
    */
-  owner?: SymbolicLink;
+  owner?: ParsedURN;
 
   /**
    * The exits from this place to other places
@@ -120,7 +120,7 @@ export type PlaceInput = Omit<Place, keyof BaseEntity<EntityType.PLACE>> & {
   name: string;
   description: string | EmergentNarrative;
   location?: PlaceURN;
-  owner?: SymbolicLink;
+  owner?: ParsedURN;
   exits?: Exits;
   entities?: PlaceEntities;
   history?: PlaceScopedHistoricalEvent[];
