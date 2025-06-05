@@ -1,5 +1,5 @@
-import { Entity, EntityType } from '~/types/entity/entity';
+import { AbstractEntity, EntityType } from './entity/entity';
 
-export type EntityTransformer = <T extends EntityType>(entity: Entity<T>) => Entity<T>
+export type EntityTransformer<T extends EntityType = EntityType> = (entity: AbstractEntity<T>) => AbstractEntity<T>;
 
 export const identity = <T>(x: T): T => x;

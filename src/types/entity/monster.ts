@@ -1,4 +1,5 @@
-import { EntityType, BaseEntity, ParsedURN } from './entity';
+import { AbstractEntity, EntityType } from './entity';
+import type { ParsedURN } from '~/lib/entity/urn';
 import { Character } from './character';
 
 /**
@@ -18,4 +19,4 @@ export type Monster = Omit<Character, 'id'> & {
  * The input type for creating a new Monster, containing only the required fields
  * that need to be provided when creating a Monster.
  */
-export type MonsterInput = Omit<Monster, keyof BaseEntity<EntityType.MONSTER>>;
+export type MonsterInput = Omit<Monster, keyof AbstractEntity<EntityType.MONSTER>>;

@@ -4,10 +4,10 @@ import {
   EntityType,
   EntityURN,
   EmergentNarrative,
-  ParsedURN,
+  SymbolicLink,
   Character,
   Place,
-  BaseEntity
+  AbstractEntity
 } from '@flux';
 import { parseEntityUrn } from '~/lib/entity/urn';
 
@@ -24,10 +24,9 @@ export const validateEntity = typia.createValidate<Entity>();
 export const validateEntityURN = typia.createValidate<EntityURN>();
 
 /**
- * Validator for ParsedURN
- * @deprecated Use parseEntityUrn from '~/lib/entity/urn' instead
+ * Validator for SymbolicLink
  */
-export const validateParsedURN = typia.createValidate<ParsedURN>();
+export const validateSymbolicLink = typia.createValidate<SymbolicLink<EntityType>>();
 
 /**
  * Validator for EmergentNarrative
@@ -42,14 +41,15 @@ export const validateEmergentNarrative = typia.createValidate<EmergentNarrative>
  * const validateCharacter = createEntityValidator<CharacterAttributes>(EntityType.CHARACTER);
  * const validatePlace = createEntityValidator<PlaceAttributes>(EntityType.PLACE);
  */
-export function createEntityValidator<T extends EntityType>(type: T): (entity: unknown) => entity is BaseEntity<T> {
-  return (entity: unknown): entity is BaseEntity<T> => {
+export function createEntityValidator<T extends EntityType>(type: T): (entity: unknown) => entity is AbstractEntity<T> {
+  return (entity: unknown): entity is AbstractEntity<T> => {
     if (!entity || typeof entity !== 'object') {
       return false;
     }
 
-    const maybeEntity = entity as BaseEntity<T>;
-    return maybeEntity.id?.type === type;
+    const maybeEntity = entity as AbstractEntity<T>;
+    const parsed = parseEntityUrn(maybeEntity.id);
+    return parsed?.type === type;
   };
 }
 
@@ -69,8 +69,9 @@ export const validatePlace = typia.createValidate<Place>();
  * @param entity The entity to check
  * @param type The expected entity type
  */
-export function isEntityOfType<T extends EntityType>(entity: Entity, type: T): entity is BaseEntity<T> {
-  return entity.id?.type === type;
+export function isEntityOfType<T extends EntityType>(entity: AbstractEntity<EntityType>, type: T): entity is AbstractEntity<T> {
+  const parsed = parseEntityUrn(entity.id);
+  return parsed?.type === type;
 }
 
 /**
@@ -104,9 +105,46 @@ export function hasRequiredEntityFields(obj: any): boolean {
 }
 
 /**
+ * Type guard to check if an entity is a Place
+ */
+export function isPlace(entity: AbstractEntity<EntityType>): entity is Place {
+  return isEntityOfType(entity, EntityType.PLACE);
+}
+
+/**
+ * Type guard to check if an entity is a Character
+ */
+export function isCharacter(entity: AbstractEntity<EntityType>): entity is Character {
+  return isEntityOfType(entity, EntityType.CHARACTER);
+}
+
+/**
+ * Type guard to check if a URN is a Place URN
+ */
+export function isPlaceUrn(urn: EntityURN): urn is EntityURN<EntityType.PLACE> {
+  const parsed = parseEntityUrn(urn);
+  return parsed?.type === EntityType.PLACE;
+}
+
+/**
+ * Type guard to check if a URN is a Character URN
+ */
+export function isCharacterUrn(urn: EntityURN): urn is EntityURN<EntityType.CHARACTER> {
+  const parsed = parseEntityUrn(urn);
+  return parsed?.type === EntityType.CHARACTER;
+}
+
+/**
  * Extracts entity type and ID from an EntityURN
  * @deprecated Use parseEntityUrn from '~/lib/entity/urn' instead
  */
-export function parseEntityURN<T extends EntityType>(urn: string): ParsedURN<T> | null {
-  return parseEntityUrn(urn);
+export function parseEntityURN<T extends EntityType>(urn: string): SymbolicLink<T> | null {
+  const parsed = parseEntityUrn<T>(urn);
+  if (!parsed) return null;
+
+  return {
+    type: parsed.type,
+    id: parsed.urn,
+    path: parsed.path
+  };
 }

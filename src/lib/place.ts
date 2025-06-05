@@ -1,5 +1,4 @@
 import { Entity, Place, EntityURN, PlaceEntityDescriptor, TransformerContext } from '@flux';
-import { formatURN } from '~/types/entity/entity';
 import { SpecialVisibility } from '~/types/world/visibility';
 
 /**
@@ -18,7 +17,7 @@ export interface EntityHook {
    * Get an entity by its ID, or throw an error if it doesn't exist.
    */
   getEntityOrFail: <T extends Entity>(id: string) => T;
-};
+}
 
 type PlaceEntities = Partial<Record<EntityURN, PlaceEntityDescriptor>>;
 
@@ -53,15 +52,14 @@ export const usePlaceEntities = (
     if (!place.entities) {
       place.entities = {};
     }
-    place.entities[formatURN(entity.id)] = {
+    place.entities[entity.id] = {
       entity,
       visibility: SpecialVisibility.VISIBLE_TO_EVERYONE,
     };
   };
 
   const removeEntity = (entity: Entity) => {
-    if (!place.entities) return;
-    delete place.entities[formatURN(entity.id)];
+    delete place.entities[entity.id];
   };
 
   const moveEntity = (entity: Entity, destination: Place) => {
@@ -70,11 +68,11 @@ export const usePlaceEntities = (
       destination.entities = {};
     }
 
-    const descriptor = place.entities[formatURN(entity.id)];
+    const descriptor = place.entities[entity.id];
     if (!descriptor) return;
 
-    destination.entities[formatURN(entity.id)] = descriptor;
-    delete place.entities[formatURN(entity.id)];
+    destination.entities[entity.id] = descriptor;
+    delete place.entities[entity.id];
   };
 
   return {

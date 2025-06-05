@@ -1,5 +1,5 @@
-import { Direction, EventType, PlaceURN, TransformerContext, Character, EntityType } from '@flux';
-import { ParsedURN, formatURN } from '~/types/entity/entity';
+import { Direction, EventType, PlaceURN, TransformerContext, Character, EntityType, SymbolicLink } from '@flux';
+import { createSymbolicLink } from '~/lib/entity/util';
 
 export type ActorMovementHook = {
   move: (direction: Direction) => MoveResult;
@@ -40,7 +40,7 @@ export const useActorMovement = (
     return createDummyActorMovementHook('Actor does not have a location');
   }
 
-  const origin = places[formatURN(actor.location) as keyof typeof places];
+  const origin = places[actor.location.id as keyof typeof places];
   if (!origin) {
     return createDummyActorMovementHook('Actor `location` not found in `places`');
   }
@@ -51,8 +51,8 @@ export const useActorMovement = (
     declareEvent({
       type: EventType.ACTOR_MOVEMENT_DID_FAIL,
       payload: {
-        actor: formatURN(actor.id),
-        origin: formatURN(origin.id),
+        actor: actor.id,
+        origin: origin.id,
         direction,
         reason,
         message,
@@ -70,9 +70,9 @@ export const useActorMovement = (
     declareEvent({
       type: EventType.ACTOR_MOVEMENT_DID_SUCCEED,
       payload: {
-        actor: formatURN(actor.id),
+        actor: actor.id,
         direction,
-        origin: formatURN(origin.id),
+        origin: origin.id,
         destination,
       }
     });
@@ -92,17 +92,17 @@ export const useActorMovement = (
     }
 
     // Now all we have to do is "transfer" actor's representation from the origin to the destination.
-    const descriptor = origin.entities[formatURN(actor.id)];
+    const descriptor = origin.entities[actor.id];
     if (!descriptor) {
       return declareMovementFailure(direction, 'Actor not found at `origin`');
     }
 
     // Transfer actor's descriptor from origin to destination
-    destination.entities[formatURN(actor.id)] = descriptor;
-    delete origin.entities[formatURN(actor.id)];
+    destination.entities[actor.id] = descriptor;
+    delete origin.entities[actor.id];
 
     // Update actor's location
-    actor.location = destination.id as ParsedURN<EntityType.PLACE>;
+    actor.location = createSymbolicLink(EntityType.PLACE, Array.from(destination.path)) as SymbolicLink<EntityType.PLACE>;
 
     return declareMovementSuccess(direction, exit.to);
   };

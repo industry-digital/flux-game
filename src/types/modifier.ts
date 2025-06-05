@@ -5,7 +5,7 @@ import { Taxonomy, Intrinsic, ModifierURN, EntityURN } from '~/types/taxonomy';
 export type ModifierBase = {
   /**
    * The type of the modifier.
-   * @example `flux:modifier:stat:dex`
+   * @example `${ROOT_NAMESPACE}:modifier:stat:dex`
    */
   type: ModifierURN;
 
@@ -56,7 +56,7 @@ export type ModifierOriginType =
 
 /**
  * Tracks what created a modifier and optionally which entity was responsible
- * @example { type: 'flux:ability:skill:firstaid', actor: 'flux:character:player123' }
+ * @example { type: '${ROOT_NAMESPACE}:ability:skill:firstaid', actor: '${ROOT_NAMESPACE}:character:player123' }
  * @example { type: 'intrinsic' } // Equipment bonus, no specific actor
  */
 export type ModifierOrigin = {
@@ -69,3 +69,18 @@ export type ModifierOrigin = {
  * The keys are opaque IDs.
  */
 export type Modifiers = Record<string, Modifier>;
+
+/**
+ * A modifier type is a URN that identifies what is being modified
+ * @example `${ROOT_NAMESPACE}:modifier:stat:dex`
+ */
+export type ModifierType = string;
+
+/**
+ * A modifier source is a URN that identifies what is causing the modification
+ * @example { type: '${ROOT_NAMESPACE}:ability:skill:firstaid', actor: '${ROOT_NAMESPACE}:character:player123' }
+ */
+export type ModifierSource = {
+  type: string;
+  actor?: string;
+};

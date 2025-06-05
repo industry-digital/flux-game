@@ -1,40 +1,39 @@
 import { createDirectionUrn, createPlaceUrn, createEntityUrn } from '~/lib/taxonomy';
 import { randomUUID } from '~/lib/uuid';
 import {
-  Character, DirectionURN,
-  Entity,
-  EntityType,
+  Character, DirectionURN, EntityType,
   Exit,
   ModifiableBoundedAttribute,
   ModifiableScalarAttribute,
   Place,
   PlaceURN,
   Taxonomy,
-  UUIDLike, CharacterInput
+  UUIDLike, CharacterInput,
+  RootNamespace
 } from '@flux';
-import { BaseEntity, parseURN, DescribableMixin } from '~/types/entity/entity';
+import { AbstractEntity, DescribableMixin, SymbolicLink } from '~/types/entity/entity';
 import { merge } from 'lodash';
 
 const identity = <T>(x: T): T => x;
 
-export const isCharacter = (character: Entity): character is Character => {
-  return character.id.type === EntityType.CHARACTER;
+export const isCharacter = (character: AbstractEntity<EntityType>): character is Character => {
+  return character.type === EntityType.CHARACTER;
 };
 
 export const createModifiableScalarAttribute = (
   transform: (attribute: ModifiableScalarAttribute) => ModifiableScalarAttribute = identity,
 ): ModifiableScalarAttribute => {
-  return transform({ natural: 10 });
+  return transform({ nat: 10 });
 };
 
 export const createModifiableBoundedAttribute = (
   transform: (attribute: ModifiableBoundedAttribute) => ModifiableBoundedAttribute = identity,
 ): ModifiableBoundedAttribute => {
-  return transform({ natural: { current: 10, max: 10 } });
+  return transform({ nat: { cur: 10, max: 10 } });
 };
 
-export type EntityCreator<T extends EntityType, E extends BaseEntity<T> & DescribableMixin> = (
-  entity: BaseEntity<T> & DescribableMixin,
+export type EntityCreator<T extends EntityType, E extends AbstractEntity<T> & DescribableMixin> = (
+  entity: AbstractEntity<T> & DescribableMixin,
 ) => E;
 
 export type FactoryOptions = {
@@ -42,18 +41,31 @@ export type FactoryOptions = {
   uuid?: () => UUIDLike;
 };
 
-export const createEntity = <T extends EntityType, E extends BaseEntity<T> & DescribableMixin>(
+/**
+ * Convert a URN string to a SymbolicLink
+ */
+export const createSymbolicLink = <T extends EntityType>(type: T, path: readonly string[]): SymbolicLink<T> => {
+  // Create a mutable copy of the path for use with createEntityUrn
+  const mutablePath = Array.from(path);
+  return {
+    type,
+    id: createEntityUrn(type, ...mutablePath),
+    path // Keep the original readonly path for the SymbolicLink
+  };
+};
+
+export const createEntity = <T extends EntityType, E extends AbstractEntity<T> & DescribableMixin>(
   type: T,
   transform: EntityCreator<T, E> = identity as EntityCreator<T, E>,
   { now = Date.now(), uuid = randomUUID }: FactoryOptions = {},
 ): E => {
   const id = uuid();
-  const urn = createEntityUrn(type, id);
-  const parsedUrn = parseURN(urn);
-  const defaults: BaseEntity<T> & DescribableMixin = {
-    id: parsedUrn,
-    ts: now,
-    version: 0,
+  const urn = createEntityUrn(type, id) as `${RootNamespace}:${T}:${string}`;
+  const path = [id];
+  const defaults: AbstractEntity<T> & DescribableMixin = {
+    type,
+    id: urn,
+    path,
     name: '',
     description: ''
   };
@@ -67,33 +79,7 @@ export const createCharacterInput = (
   const defaults: CharacterInput = {
     name: input.name,
     description: input.description,
-    vitals: {
-      hp: { natural: { current: 100, max: 100 } },
-      stats: {},
-      mana: {},
-      injuries: {},
-      effects: {},
-      traits: {}
-    },
-    inventory: {
-      mass: 0,
-      items: {},
-      ts: Date.now(),
-      equipment: {}
-    },
-    social: {
-      memberships: {},
-      reputation: {},
-      subscriptions: {}
-    },
-    progression: {
-      skills: {},
-      specializations: {
-        primary: {},
-        secondary: {}
-      }
-    },
-    preferences: {}
+    location: input.location
   };
 
   return merge({}, defaults, input);
@@ -111,35 +97,31 @@ export const createCharacter = (
       const defaults: Partial<Character> = {
         name: characterInput.name,
         description: characterInput.description,
-        location: characterInput.location ? parseURN(characterInput.location.key as `flux:place:${string}`) : parseURN(createPlaceUrn('nowhere')),
-        vitals: {
-          hp: createModifiableBoundedAttribute(),
-          stats: {},
-          mana: {},
-          injuries: {},
-          effects: {},
-          traits: {}
-        },
+        location: characterInput.location
+          ? createSymbolicLink(EntityType.PLACE, characterInput.location.split(':').slice(2)) as SymbolicLink<EntityType.PLACE>
+          : createSymbolicLink(EntityType.PLACE, ['nowhere']) as SymbolicLink<EntityType.PLACE>,
+        level: createModifiableScalarAttribute(),
+        hp: createModifiableBoundedAttribute(),
+        traits: {},
+        stats: {},
+        injuries: {},
+        mana: {},
+        effects: {},
         inventory: {
           mass: 0,
           items: {},
-          ts: 0,
-          equipment: {}
+          ts: Date.now()
         },
-        social: {
-          memberships: {},
-          reputation: {},
-          subscriptions: {}
+        equipment: {},
+        memberships: {},
+        reputation: {},
+        subscriptions: {},
+        skills: {},
+        specializations: {
+          primary: {},
+          secondary: {}
         },
-        progression: {
-          level: { natural: 1 },
-          skills: {},
-          specializations: {
-            primary: {},
-            secondary: {},
-          }
-        },
-        preferences: {}
+        prefs: {}
       };
 
       return merge({}, entity, defaults, characterInput) as Character;
@@ -155,13 +137,14 @@ export const createPlace = (
   const base = createEntity<EntityType.PLACE, Place>(
     EntityType.PLACE,
     (entity) => {
-      const place: Place = {
-        ...entity,
+      const defaults: Partial<Place> = {
+        name: entity.name || '',
+        description: entity.description || '',
         exits: {},
-        entities: {},
-        memories: []
+        entities: {}
       };
-      return place;
+
+      return merge({}, entity, defaults) as Place;
     },
     options,
   );
@@ -179,7 +162,7 @@ export const createExit = (
 ): Exit => {
   return transform({
     label: '',
-    to: createPlaceUrn(uuid()),
+    to: createPlaceUrn(uuid()) as `${RootNamespace}:${EntityType.PLACE}:${string}`,
   });
 };
 
@@ -306,53 +289,8 @@ const validateGraphConnectivity = (
       // Check if the destination has a reciprocal edge back
       const destinationEdges = edgeMap.get(edge.to);
       if (!destinationEdges?.has(`${oppositeDirection}:${place.id}`)) {
-        throw new Error(
-          `Missing reciprocal edge: place '${edge.to}' should have a '${oppositeDirection}' exit to '${place.id}'`
-        );
+        throw new Error(`Missing reciprocal edge: place '${edge.to}' should have a '${oppositeDirection}' exit to '${place.id}'`);
       }
     }
   }
-};
-
-const validatePlaceDefinitions = (
-  placeDefinitions: PlaceDefinition[],
-  directions: Record<string, Taxonomy.Directions>,
-): void => {
-  const placeIds = new Set(placeDefinitions.map(place => place.id));
-
-  // First validate basic edge constraints
-  for (const place of placeDefinitions) {
-    const edges = place.edges ?? [];
-    for (const edge of edges) {
-      // Validate direction is valid
-      if (!directions[edge.direction as keyof typeof directions]) {
-        throw new Error(`Invalid direction '${edge.direction}' in place '${place.id}'`);
-      }
-
-      // Validate destination exists in graph
-      if (!placeIds.has(edge.to)) {
-        throw new Error(`Invalid edge in place '${place.id}': Destination '${edge.to}' is not defined in this graph`);
-      }
-    }
-  }
-
-  // Then validate graph connectivity
-  validateGraphConnectivity(placeDefinitions, directions);
-};
-
-/**
- * Creates a connected graph of places from place definitions
- */
-export const createPlaceGraph = (
-  placeDefinitions: PlaceDefinition[],
-  directions: Record<string, Taxonomy.Directions> = DEFAULT_DIRECTIONS,
-  options: ValidationOptions = { mode: 'graph' }
-): PlaceGraph => {
-  validatePlaceDefinitions(placeDefinitions, directions);
-
-  const urnEntries = placeDefinitions.map(place => [place.id, createPlaceUrn(place.id) as PlaceURN])
-  const urns = Object.fromEntries(urnEntries);
-  const places = createPlaces(placeDefinitions, directions, urns);
-
-  return { places, urns };
 };

@@ -1,9 +1,9 @@
-import { ROOT_NAMESPACE } from '~/types/constants';
 import { EntityType } from '~/types/entity/entity';
 
-export type Intrinsic = 'intrinsic';
-
+export const ROOT_NAMESPACE = 'flux' as const;
 export type RootNamespace = typeof ROOT_NAMESPACE;
+
+export type Intrinsic = 'intrinsic';
 
 /**
  * The complete taxonomy registry with flat term structure
@@ -15,6 +15,7 @@ export type FlatTaxonomy = {
   // Flat list of all taxonomy terms
   terms: Record<string, TaxonomyTerm>;
 }
+
 /**
  * Represents a single taxonomy term
  */
@@ -29,107 +30,97 @@ export type TaxonomyTerm = {
 /**
  * The Flux taxonomy registry as a flat structure
  */
-export const TAXONOMY: FlatTaxonomy = {
+export const TAXONOMY = {
   namespace: ROOT_NAMESPACE,
   terms: {
-    'place': {
+    place: {
       description: 'A location in the game world',
-      examples: [
-        'flux:place:nightcity', 'flux:place:wasteland:north']
+      examples: ['flux:place:nightcity', 'flux:place:wasteland:north']
     },
-    'character': {
-      description: 'Entities with agency in the game world',
-      examples: ['flux:character:pc:123', 'flux:character:npc:vendor']
+    char: {
+      description: 'A character in the game world',
+      examples: ['flux:char:pc:123', 'flux:char:npc:vendor']
     },
-    'stat': {
-      description: 'Character attributes and statistics',
+    stat: {
+      description: 'A character or item statistic',
       examples: ['flux:stat:str', 'flux:stat:agi']
     },
-    'condition': {
-      description: 'Character conditions and states',
-      examples: ['flux:condition:state:alive', 'flux:condition:state:dead']
-    },
-    'item': {
-      description: 'Objects that can be interacted with',
+    item: {
+      description: 'An item that can be obtained and used',
       examples: ['flux:item:weapon:sword', 'flux:item:consumable:potion']
     },
-    'skill': {
-      description: 'Character abilities',
+    skill: {
+      description: 'A learnable ability or proficiency',
       examples: ['flux:skill:combat:melee', 'flux:skill:survival:stealth']
     },
-    'effect': {
-      description: 'Status effects and conditions',
+    effect: {
+      description: 'A temporary or permanent effect',
       examples: ['flux:effect:dot:burning', 'flux:effect:buff:haste']
     },
-    'direction': {
-      description: 'Directional indicators for navigation',
+    direction: {
+      description: 'A cardinal or relative direction',
       examples: ['flux:direction:north', 'flux:direction:up']
     },
-    'anatomy': {
-      description: 'Body parts and locations',
+    anatomy: {
+      description: 'Body parts and physical features',
       examples: ['flux:anatomy:human:arm:hand', 'flux:anatomy:dragon:wing']
     },
-    'damage': {
-      description: 'Types of damage',
+    damage: {
+      description: 'Types of damage that can be dealt',
       examples: ['flux:damage:physical:slash', 'flux:damage:elemental:fire']
     },
-    'faction': {
-      description: 'Political and social groups',
+    faction: {
+      description: 'Groups and organizations',
       examples: ['flux:faction:guild:thieves', 'flux:faction:kingdom:eldoria']
     },
-    'topic': {
-      description: 'Conversation topics',
+    topic: {
+      description: 'Conversation and quest topics',
       examples: ['flux:topic:quest:main', 'flux:topic:lore:history']
     },
-    'trait': {
-      description: 'Character traits and properties',
+    trait: {
+      description: 'Inherent characteristics',
       examples: ['flux:trait:ironborn', 'flux:trait:undead']
     },
-    'modifier': {
-      description: 'Stat modifiers and adjustments',
+    modifier: {
+      description: 'Things that modify other things',
       examples: ['flux:modifier:combat:flanking', 'flux:modifier:racial:furious']
     },
-    'mana': {
-      description: 'Energy types used for abilities',
+    mana: {
+      description: 'Types of magical energy',
       examples: ['flux:mana:fire', 'flux:mana:discipline']
     },
-    'ability': {
-      description: 'Special character abilities',
+    ability: {
+      description: 'Special actions that can be performed',
       examples: ['flux:ability:stealth:shadowmeld', 'flux:ability:magic:fireball']
     },
-    'pref': {
+    pref: {
       description: 'User preferences and settings',
       examples: ['flux:pref:pvp:allow', 'flux:pref:drag:disallow']
     },
-    'collection': {
-      description: 'A group of related entities',
-      examples: ['flux:collection:map:items', 'flux:collection:list:players']
+    group: {
+      description: 'Collections of related items',
+      examples: ['flux:group:map:items', 'flux:group:list:players']
     },
-    'character:pc': {
-      description: 'Player characters'
-    },
-    'character:npc': {
-      description: 'Non-player characters'
-    },
-    'item:weapon': {
+    weapon: {
       description: 'Items used for combat'
     },
-    'item:armor': {
+    armor: {
       description: 'Protective equipment'
     },
-    'item:consumable': {
-      description: 'Single-use items'
+    ammo: {
+      description: 'Ammunition and projectiles'
     },
-    'item:container': {
-      description: 'Items that can store other items'
+    timer: {
+      description: 'Time tracking and scheduling'
+    },
+    dimension: {
+      description: 'Measurement and quantification'
     }
   }
-};
+} as const;
 
 // Get all root vocabularies at compile time
-export type RootVocabulary = {
-  [K in keyof typeof TAXONOMY.terms]: K extends `${string}:${string}` ? never : K
-}[keyof typeof TAXONOMY.terms];
+export type RootVocabulary = keyof typeof TAXONOMY.terms;
 
 export type TaxonomyURN<
   Vocabulary extends RootVocabulary = RootVocabulary,
@@ -228,9 +219,9 @@ export namespace Taxonomy {
   export type Preferences = TaxonomyURN<'pref'>;
 
   /**
-   * Kinds of collections or groups of things
+   * Groups of things
    */
-  export type Collections = TaxonomyURN<'collection'>;
+  export type Groups = TaxonomyURN<'group'>;
 
   /**
    * Kinds of ammo
@@ -246,11 +237,6 @@ export namespace Taxonomy {
    * The various ways to measure or quantify something in the game world.
    */
   export type Dimensions = TaxonomyURN<'dimension'>;
-
-  /**
-   * Character conditions and states
-   */
-  export type Conditions = TaxonomyURN<'condition'>;
 }
 
 export type EntityURN<T extends EntityType = EntityType> = `${RootNamespace}:${T}:${string}`;
@@ -270,4 +256,4 @@ export type TimerURN = Taxonomy.Timers;
 export type AmmoURN = Taxonomy.Ammo;
 export type DimensionURN = Taxonomy.Dimensions;
 export type StatURN = Taxonomy.Stats;
-export type ConditionURN = Taxonomy.Conditions;
+export type GroupURN = Taxonomy.Groups;

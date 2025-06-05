@@ -1,8 +1,15 @@
-import { Entity, EntityType, EntityURN } from '@flux';
-import { ParsedURN } from '~/types/entity/entity';
+import { EntityType, EntityURN, ROOT_NAMESPACE } from '@flux';
+import { AbstractEntity } from '~/types/entity/entity';
+
+export type ParsedURN<T extends EntityType = EntityType> = {
+  type: T;
+  key: string;
+  path: string[];
+  urn: EntityURN<T>;
+};
 
 export const parseEntityUrn = <T extends EntityType = EntityType>(urn: string): ParsedURN<T> | null => {
-  const matches = urn.match(/^flux:([^:]+):(.+)$/);
+  const matches = urn.match(new RegExp(`^${ROOT_NAMESPACE}:([^:]+):(.+)$`));
   if (!matches) {
     return null;
   }
@@ -42,15 +49,15 @@ export const parseEntityUrnAs = <T extends EntityType>(urn: string, expectedType
   return parsed;
 };
 
-export const getEntityUrn = <T extends EntityType>(entity: Entity<T>): EntityURN<T> => {
-  return entity.id.urn;
+export const getEntityUrn = <T extends EntityType>(entity: AbstractEntity<T>): EntityURN<T> => {
+  return entity.id;
 };
 
-export const getEntityUrnOrFail = <T extends EntityType>(entity: Entity<T>): EntityURN<T> => {
+export const getEntityUrnOrFail = <T extends EntityType>(entity: AbstractEntity<T>): EntityURN<T> => {
   if (!entity.id) {
     throw new Error(`Entity missing ID: ${JSON.stringify(entity)}`);
   }
-  return entity.id.urn;
+  return entity.id;
 };
 
 // Type guard for runtime URN validation

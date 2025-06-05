@@ -1,6 +1,7 @@
-import { Taxonomy, ItemURN } from '~/types/taxonomy';
+import { Taxonomy, ItemURN, PlaceURN, RootNamespace } from '~/types/taxonomy';
 import { AppliedEffects } from '~/types/taxonomy/effect';
-import { EntityType, BaseEntity, DescribableMixin, ParsedURN, ParsedURNInput, EmergentNarrative } from '~/types/entity/entity';
+import { EntityType, EmergentNarrative, SymbolicLink, AbstractEntity, DescribableMixin } from '~/types/entity/entity';
+import { Party } from '~/types/entity/group';
 import { SkillState, Specializations } from '~/types/entity/skill';
 import { ItemState } from '~/types/entity/item';
 import { createStatUrn } from '~/lib/taxonomy';
@@ -86,7 +87,7 @@ export const WellKnownCharacterStat = {
 /**
  * Type alias for any valid character stat URN
  */
-export type CharacterStatURN = typeof WellKnownCharacterStat[keyof typeof WellKnownCharacterStat] | `flux:stat:${string}`;
+export type CharacterStatURN = typeof WellKnownCharacterStat[keyof typeof WellKnownCharacterStat] | `${RootNamespace}:stat:${string}`;
 
 /**
  * Map of character stats to their values
@@ -136,119 +137,6 @@ export type AppliedAnatomicalDamage = {
 };
 
 /**
- * The fragments that comprise a Character's total data.
- * Each value (except 'base') must exist as a field in the Character type.
- */
-export enum CharacterFragmentName {
-  /**
-   * Core data: name, description, location, etc.
-   */
-  BASE = 'base',
-
-  /**
-   * Health, mana, injuries, and active effects
-   */
-  VITALS = 'vitals',
-
-  /**
-   * Items and equipment
-   */
-  INVENTORY = 'inventory',
-
-  /**
-   * Character skills
-   */
-  SKILLS = 'skills',
-
-  /**
-   * Character stats and traits
-   */
-  STATS = 'stats',
-
-  /**
-   * Social relationships and reputation
-   */
-  SOCIAL = 'social'
-}
-
-/**
- * Character's vital statistics including health, mana, active effects and injuries
- */
-export type CharacterVitalsFragment = {
-  traits: Traits;
-  stats: CharacterStats;
-  hp: ModifiableBoundedAttribute;
-  injuries: Injuries;
-  mana: ManaPools;
-  effects: AppliedEffects;
-};
-
-/**
- * Character's inventory including carried items and equipped gear
- */
-export type CharacterInventoryFragment = Inventory & {
-  equipment: Equipment;
-};
-
-/**
- * Character's social relationships and preferences
- */
-export type CharacterSocialFragment = {
-  memberships: Memberships;
-  reputation: Reputation;
-  subscriptions: Subscriptions;
-};
-
-/**
- * Tracks a character's skill development and specializations.
- * This replaces the previous CharacterSkillsFragment with a more
- * comprehensive progression tracking system.
- */
-export type CharacterProgressionFragment = {
-  level: ModifiableScalarAttribute;
-
-  /**
-   * The character's current skills and their states
-   */
-  skills: Skills;
-
-  /**
-   * The character's skill specializations
-   */
-  specializations: Specializations;
-};
-
-/**
- * Character preferences that control various gameplay and interaction settings
- */
-export type CharacterPreferencesFragment = Partial<Record<Taxonomy.Preferences, any>>;
-
-/**
- * A Character represents an actor in the game world, whether controlled by a player or by the game system.
- * Characters are the primary agents of change in the world, capable of taking actions, using items,
- * and interacting with other entities.
- */
-export type Character = BaseEntity<EntityType.CHARACTER> & DescribableMixin & {
-  /**
-   * The Character's current location in the world.
-   * Every character must be somewhere - even if it's in a special place like 'nowhere'.
-   */
-  location: ParsedURN<EntityType.PLACE>;
-
-  /**
-   * If the character is a member of a party.
-   * This must point to a collection of kind 'party'.
-   */
-  party?: ParsedURN<EntityType.COLLECTION> & { kind: 'party' };
-
-  vitals: CharacterVitalsFragment;
-  inventory: CharacterInventoryFragment;
-  social: CharacterSocialFragment;
-  progression: CharacterProgressionFragment
-  preferences: CharacterPreferencesFragment;
-};
-
-/**
  * The input type for creating a new Character, containing only the required fields
  * that need to be provided when creating a Character.
  */
@@ -256,18 +144,40 @@ export type CharacterInput = {
   /**
    * Basic character information
    */
-  name: string;
-  description: string | EmergentNarrative;
-  location?: ParsedURNInput<EntityType.PLACE>;
+  name?: string;
+  description?: string | EmergentNarrative;
+  location?: PlaceURN;
+};
+
+export type Character =
+  & AbstractEntity<EntityType.CHARACTER>
+  & DescribableMixin
+  & {
 
   /**
-   * Character fragments
+   * Current location
    */
-  vitals?: Partial<CharacterVitalsFragment>;
-  inventory?: Partial<CharacterInventoryFragment>;
-  social?: Partial<CharacterSocialFragment>;
-  progression?: Partial<CharacterProgressionFragment>;
-  preferences?: CharacterPreferencesFragment;
+  location: SymbolicLink<EntityType.PLACE>;
+
+  /**
+   * Optional party membership
+   */
+  party?: Party;
+  level: ModifiableScalarAttribute;
+  hp: ModifiableBoundedAttribute;
+  traits: Traits;
+  stats: CharacterStats;
+  injuries: Injuries;
+  mana: ManaPools;
+  effects: AppliedEffects;
+  inventory: Inventory;
+  equipment: Equipment;
+  memberships: Memberships;
+  reputation: Reputation;
+  subscriptions: Subscriptions;
+  skills: Skills;
+  specializations: Specializations;
+  prefs: Partial<Record<Taxonomy.Preferences, unknown>>;
 };
 
 // For backward compatibility

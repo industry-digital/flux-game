@@ -42,30 +42,31 @@ export {
   AppliedAnatomicalDamage as InjuryDescriptor,
   Inventory,
   Skills,
-  CharacterFragmentName,
-  CharacterVitalsFragment,
-  CharacterInventoryFragment,
-  CharacterSocialFragment,
-  CharacterProgressionFragment,
-  CharacterPreferencesFragment,
 } from './entity/character';
 
 export {
-  Collection,
-} from './entity/collection';
+  Party,
+  Organization,
+  GroupType,
+  GroupSymbolicLink,
+  PartyRef,
+  OrganizationRef,
+} from './entity/group';
 
 export {
   EmergentNarrative,
-  Entity,
   EntityType,
   UUIDLike,
-  BaseEntity,
+  AbstractEntity,
   DescribableMixin,
-  ParsedURN,
   LocallyUniqueId,
-  parseURN,
-  formatURN,
+  Entity,
+  SymbolicLink,
 } from './entity/entity';
+
+export type {
+  ParsedURN
+} from '~/lib/entity/urn';
 
 export {
   ItemState,
@@ -79,7 +80,6 @@ export {
   Exit,
   Place,
   PlaceEntityDescriptor,
-  PlaceScopedHistoricalEvent,
 } from './entity/place';
 
 export {
@@ -88,6 +88,11 @@ export {
   SpecializationGroup,
   Specializations,
 } from './entity/skill';
+
+export {
+  Monster,
+  MonsterInput,
+} from './entity/monster';
 
 export {
   EmergentEvent,
@@ -151,6 +156,7 @@ export {
   Requirements,
 } from './requirement';
 
+// Schema exports
 export {
   ContainerStrategy,
   ContainerCapacitySpecification,
@@ -160,15 +166,36 @@ export {
 } from './schema/container';
 
 export {
+  AbilitySchema,
+  AbilityType,
+} from './schema/ability';
+
+export {
+  ArmorSchema,
+  ArmorComponentSpecification,
+} from './schema/armor';
+
+export {
+  WeaponSpecification,
+  WeaponAttackSpecification,
+  WeaponTimers,
+  WeaponRangeSpecification,
+} from './schema/weapon';
+
+export {
+  SkillSchema,
+} from './schema/skill';
+
+export {
   SideEffect,
   SideEffectInput,
 } from './side-effect';
 
+// Taxonomy exports
 export {
   AbilityURN,
   ArmorURN,
   CharacterURN,
-  ConditionURN,
   DirectionURN,
   EffectURN,
   EntityURN,
@@ -187,6 +214,27 @@ export {
 } from './taxonomy';
 
 export {
+  AnatomyUrn,
+  Anatomy,
+  HumanAnatomy,
+  HUMAN_ANATOMY,
+  createHumanAnatomyUrn,
+  createAnatomyUrn,
+} from './taxonomy/anatomy';
+
+export {
+  EffectSchema,
+  EffectOriginType,
+  EffectOrigin,
+  TaxonomyEffect,
+  AppliedEffects,
+  EffectCategory,
+  EFFECTS,
+  StatusEffect,
+  getEffectCategory,
+} from './taxonomy/effect';
+
+export {
   createEntityUrn,
   createPlaceUrn,
   createCharacterUrn,
@@ -201,6 +249,7 @@ export {
   createStatUrn,
 } from '~/lib/taxonomy';
 
+// World exports
 export {
   GOLDEN_RATIO,
 } from './world/constants';

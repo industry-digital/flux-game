@@ -12,10 +12,6 @@ Beyond mere change, "Flux" also conveys a sense of **ephemerality**. Moments, co
 
 ## Our First Principles
 
-Flux is not just a simulation. It is a **rebellion**.
-
-We are rebelling against what games have become: extractive, predictable, disposable.
-
 Flux is a return to the kind of worlds that once made us fall in love with games. The kind of game that we'd obsess over
 while lying in bed at night, dreaming about the next adventure. The kind of game that we'd play for years, and remember
 for decades.
@@ -52,8 +48,6 @@ These are our first principles. They are not negotiable.
 
 * Monetization is a side effect — a reward — for good stewardship of a living world that players cherish deeply.
 * We don’t cater to whales. In a healthy game world, whales don't exist.
-* Real-money transactions will happen — we don’t pretend they won’t. Rather than regulate them, we support them responsibly by putting soulbound artifacts on chain, and in return we will make a fair and equitable profit from the transaction that doesn't make people feel like they are being exploited.
-* We place limits on the number of soulbound artifacts on a per-account basis, so that no one can hoard them.
 
 ### 7. Immersion
 

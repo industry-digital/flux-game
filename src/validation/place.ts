@@ -3,10 +3,15 @@ import { createEntityValidator } from './entity';
 import {
   PlaceURN,
   PlaceEntityDescriptor,
-  PlaceScopedHistoricalEvent,
   Exit,
   EntityType,
+  Place,
+  EmergentEvent,
 } from '@flux';
+
+export type PlaceScopedHistoricalEvent = EmergentEvent & {
+  location: Place['id'];
+};
 
 /**
  * Validator for a complete Place entity

@@ -1,10 +1,15 @@
-import { CharacterStatName } from '~/types/entity/character';
 import { Requirements } from '~/types/requirement';
 import { RootNamespace, Taxonomy } from '~/types/taxonomy';
 import { EffectSchema } from '~/types/taxonomy/effect';
 
 export type IntrinsicEffects = Record<string, EffectSchema>;
 
+/**
+ * A coefficient type is a URN that identifies a skill, ability, or stat that can be modified by equipment
+ * @example
+ * - '${RootNamespace}:skill:stealth': 0.5 (50% penalty to stealth)
+ * - '${RootNamespace}:stat:spd': -2 (SPD)
+ */
 export type CoefficientType = `${RootNamespace}:skill:${string}` | `${RootNamespace}:ability:${string}` | `${RootNamespace}:stat:${string}`;
 
 /**

@@ -17,6 +17,40 @@ import {
   SkillURN,
   StatURN,
 } from '@flux';
+import { GroupURN } from '~/types/taxonomy';
+
+// === Configuration ===
+
+export type TaxonomyConfig = {
+  /**
+   * The root token for all places in the game world.
+   * All place URNs will be prefixed with this token unless they are special cases.
+   */
+  worldToken: string;
+
+  /**
+   * Special place tokens that should not be prefixed with the world token.
+   * For example: 'nowhere', 'void', etc.
+   */
+  specialPlaceTokens: string[];
+};
+
+export const DEFAULT_TAXONOMY_CONFIG: TaxonomyConfig = {
+  worldToken: 'world',
+  specialPlaceTokens: ['nowhere', 'world']
+};
+
+let currentConfig: TaxonomyConfig = DEFAULT_TAXONOMY_CONFIG;
+
+/**
+ * Configure the taxonomy system. This should be called early in the application lifecycle.
+ */
+export const configureTaxonomy = (config: Partial<TaxonomyConfig>) => {
+  currentConfig = {
+    ...DEFAULT_TAXONOMY_CONFIG,
+    ...config
+  };
+};
 
 // === Core URN Creation ===
 
@@ -61,12 +95,29 @@ export function createTaxonomyUrn<V extends RootVocabulary>(vocabulary: V, terms
 // === Entity URN Creators ===
 
 export const createEntityUrn = <T extends EntityType>(type: T, ...terms: string[]): EntityURN<T> => {
-  return createTaxonomyUrn(type, ...terms);
+  const vocabulary = type.toLowerCase() as RootVocabulary;
+  return createTaxonomyUrn(vocabulary, ...terms) as EntityURN<T>;
 };
 
 // === Specific URN Creators ===
-export const createPlaceUrn = (...terms: string[]): PlaceURN => createEntityUrn(EntityType.PLACE, ...terms);
-export const createCharacterUrn = (...terms: string[]): CharacterURN => createEntityUrn(EntityType.CHARACTER, ...terms);
+
+export const createPlaceUrn = (...terms: string[]): PlaceURN => {
+  if (terms.length === 0) {
+    throw new Error('At least one term is required to create a place URN');
+  }
+
+  // Skip world prefix for special cases
+  if (terms[0] === 'world' || terms[0] === 'nowhere') {
+    return createEntityUrn(EntityType.PLACE, ...terms);
+  }
+
+  // Always prefix with 'world'
+  return createEntityUrn(EntityType.PLACE, 'world', ...terms);
+};
+
+export const createGroupUrn = (...terms: string[]): GroupURN => createEntityUrn(EntityType.GROUP, ...terms);
+export const createCharacterUrn = (...terms: string[]): CharacterURN =>
+  createTaxonomyUrn('char', ...terms) as CharacterURN;
 export const createItemUrn = (...terms: string[]): ItemURN => createTaxonomyUrn('item', ...terms);
 export const createTraitUrn = (...terms: string[]): TraitURN => createTaxonomyUrn('trait', ...terms);
 export const createSkillUrn = (...terms: string[]): SkillURN => createTaxonomyUrn('skill', ...terms);
@@ -159,7 +210,7 @@ export const isUrnOfVocabulary = (urn: string, vocabulary: RootVocabulary): bool
 };
 
 export const isPlaceUrn = (urn: string): urn is PlaceURN => isUrnOfVocabulary(urn, 'place');
-export const isCharacterUrn = (urn: string): urn is CharacterURN => isUrnOfVocabulary(urn, 'character');
+export const isCharacterUrn = (urn: string): urn is CharacterURN => isUrnOfVocabulary(urn, 'char');
 export const isItemUrn = (urn: string): urn is ItemURN => isUrnOfVocabulary(urn, 'item');
 
 // === Pattern Matching ===

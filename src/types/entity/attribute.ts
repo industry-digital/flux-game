@@ -1,33 +1,77 @@
 import { Modifiers } from '~/types/modifier';
 
 type UnmodifiedScalarAttribute = {
-  natural: number;
+  /**
+   * Natural/base value before any modifications
+   */
+  nat: number;
 };
 
 type ModifiedScalarAttribute = UnmodifiedScalarAttribute & {
-  effective: number;
-  modifiers: Modifiers;
+  /**
+   * Effective value after all modifications
+   */
+  eff: number;
+
+  /**
+   * Active modifiers affecting this attribute
+   */
+  mods: Modifiers;
 };
 
-type BoundedValue = { current: number; max : number };
+type BoundedValue = {
+  /**
+   * Current value, constrained by max
+   */
+  cur: number;
+
+  /**
+   * Maximum allowed value
+   */
+  max: number;
+};
 
 type UnmodifiedBoundedAttribute = {
-  natural: BoundedValue;
+  /**
+   * Natural/base bounded value before modifications
+   */
+  nat: BoundedValue;
 };
 
 type ModifiedBoundedAttribute = UnmodifiedBoundedAttribute & {
-  effective: BoundedValue;
-  modifiers: Modifiers;
+  /**
+   * Effective bounded value after modifications
+   */
+  eff: BoundedValue;
+
+  /**
+   * Active modifiers affecting this bounded value
+   */
+  mods: Modifiers;
 };
 
 type UnmodifiedStatefulValueWithFloor = {
+  /**
+   * Minimum allowed value
+   */
   min: number;
-  current: number;
+
+  /**
+   * Current value, constrained by min
+   */
+  cur: number;
 };
 
 type UnmodifiedStatefulValueWithCeiling = {
+  /**
+   * Maximum allowed value
+   */
   max: number;
-  current: number;
+
+  /**
+   * Current value, constrained by max
+   */
+  cur: number;
 };
 
 /**

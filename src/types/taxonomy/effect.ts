@@ -34,7 +34,7 @@ export type EffectOrigin = {
 /**
  * An Effect is a temporary state or condition applied to an Entity.
  */
-export interface AppliedEffect extends EffectSchema {
+export interface TaxonomyEffect extends EffectSchema {
   /**
    * The source of the effect (an Entity, a skill, or 'intrinsic').
    */
@@ -49,7 +49,7 @@ export interface AppliedEffect extends EffectSchema {
 /**
  * A dictionary of effects applied to an entity, keyed by opaque local IDs.
  */
-export type AppliedEffects = Partial<Record<string, AppliedEffect>>;
+export type AppliedEffects = Partial<Record<string, TaxonomyEffect>>;
 
 /**
  * Core effect categories for our system

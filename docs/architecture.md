@@ -1,4 +1,33 @@
+# Flux Game Logic: Architectural Overview
+
+This document outlines the design of our game logic package, which provides a pure functional interface for building multiplayer text-based games (MUDs). The architecture guarantees that any command or batch of commands will complete in exactly three database round-trips, with O(log n) query performance characteristics.
+
+## Core Properties
+
+- **Three Round-Trip Guarantee**: Every command, from simple movement to complex combat, completes in exactly three database round-trips regardless of complexity
+- **Perfect Batching**: Processing 1000 commands requires the same three round-trips as processing one command
+- **Pure Functional Core**: All game logic is implemented as pure functions that transform world state projections
+- **Event Declaration**: Side effects are declared, not executed, enabling perfect batching and atomic processing
+- **Type Safety**: Comprehensive TypeScript types ensure correct command handling and state transformations
+
+## Writing Game Logic
+
+Game logic in Flux is written like console game development - pure functions that transform state and declare events:
+
+```typescript
+export const MoveCommandReducer: Transformer<CommandType.MOVE, MoveCommandArgs> = (context, command) => {
+  const { move } = useActorMovement(context);
+  const { direction } = command.args;
+  move(direction);
+  return context;
+};
+```
+
+The execution environment handles all performance concerns, allowing developers to focus purely on game mechanics and business logic.
+
 # Flux Simulation Project: Architectural Overview
+
+
 
 ## Introduction
 
