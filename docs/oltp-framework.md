@@ -30,13 +30,34 @@ This mathematical foundation enables:
 
 ### Three Round-Trip Guarantee
 
-Every transaction, regardless of complexity, completes in exactly three database round-trips:
+Every transaction, regardless of complexity, completes in exactly three database round-trips. This guarantee is enabled by a critical protocol requirement: all transactions must include their execution context up front.
+
+```typescript
+// Required context in every transaction
+interface TransactionContext {
+  actor: EntityURN;    // Who is performing the action
+  location: PlaceURN;  // Where the action is occurring
+}
+```
+
+With this context available immediately:
 
 1. **Negotiation** (optional): Intent resolution
-2. **Contextualization**: World state projection
-3. **Actuation**: Atomic state mutation
+   - Transform raw intents into well-formed commands
+   - Can load all resolution data in parallel
+   - Skipped for well-formed commands
 
-This guarantee holds even for batched operations, providing O(1) database interactions with O(log n) query performance characteristics.
+2. **Contextualization**: World state projection
+   - Load complete execution context in one query
+   - Perfect batching through composite keys
+   - No discovery round-trips needed
+
+3. **Actuation**: Atomic state mutation
+   - All changes committed in one transaction
+   - Strong consistency guarantees
+   - Lock-free through dotpath design
+
+This guarantee holds even for batched operations, providing O(1) database interactions with O(log n) query performance characteristics. By requiring context up front, we eliminate the need for discovery queries and can load all needed data efficiently.
 
 ### Lock-Free Concurrency through Dotpath Design
 

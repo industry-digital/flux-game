@@ -277,70 +277,61 @@ This approach significantly improves performance while maintaining our functiona
 
 Every world interaction flows through a deterministic five-stage pipeline with a **guaranteed maximum of 3 database round-trips** regardless of command complexity. Each stage is implemented as a Directed Acyclic Graph (DAG) of specialized handlers.
 
-```mermaid
-flowchart LR
-    A[Incoming Input] --> B{Input Type?}
-    B -->|Intent String| C[Negotiation<br/>Round-Trip 1]
-    B -->|Well-Formed Command| D[Contextualization<br/>Round-Trip 2]
-    C --> D
-    D --> E[Transformation<br/>Pure Computation]
-    E --> F[Planning<br/>Pure Computation]
-    F --> G[Actuation<br/>Round-Trip 3]
+### Protocol Requirements
 
-    classDef roundtrip fill:#ff9999,stroke:#333,stroke-width:2px
-    classDef pure fill:#99ff99,stroke:#333,stroke-width:2px
+All Intents and Commands MUST include:
+1. `actor: CharacterURN` - The entity initiating the action
+2. `location: PlaceURN` - The Place where the action originates
 
-    class C,D,G roundtrip
-    class E,F pure
+This requirement enables efficient processing by providing critical context up front, eliminating the need for additional round-trips to discover basic contextual information.
+
+```typescript
+// Example Intent with required fields
+{
+  "input": "give sword to Gandalf",
+  "actor": "flux:char:pc:123",
+  "location": "flux:place:tavern"
+}
+
+// Example Command with required fields
+{
+  "type": "TRADE",
+  "actor": "flux:char:pc:123",
+  "location": "flux:place:tavern",
+  "args": {
+    "item": "flux:item:weapon:sword:1",
+    "target": "flux:char:pc:gandalf:42"
+  }
+}
 ```
 
 ### The 3 Round-Trip Guarantee
 
 1. **Round-Trip 1 (Negotiation)**: *Optional* - Only if input contains raw Intents
    ```typescript
-   // Parse "go north" -> needs current location to resolve direction
-   const actor = await entityLoader.load(intent.actor);
-   const currentPlace = await entityLoader.load(actor.location);
+   // Since location is known, we can load all needed context in parallel
+   const worldData = await entityLoader.loadMany([
+     ['pl:tavern', 'entities'],  // To resolve "Gandalf"
+     ['ch:pc:123', 'inventory']  // To resolve "sword"
+   ]);
    ```
 
 2. **Round-Trip 2 (Contextualization)**: *Always* - Batch load world projection for all commands
    ```typescript
-   // Single command world projection
+   // Load complete world projection in one query
    const worldData = await entityLoader.loadMany([
-     ['ch:player-123', 'base'], ['ch:player-123', 'vitals'],
-     ['pl:tavern', 'base'], ['pl:tavern', 'entities']
+     ['ch:pc:123', 'base'], ['ch:pc:123', 'vitals'],
+     ['ch:pc:gandalf', 'base'], ['ch:pc:gandalf', 'inventory'],
+     ['pl:tavern', 'trade_rules']
    ]);
-
-   // Batch command mega projection (same single query pattern)
-   const megaProjection = await entityLoader.loadMany([
-     // All actors from all commands
-     ['ch:player-1', 'base'], ['ch:player-1', 'vitals'], ['ch:player-1', 'inventory'],
-     ['ch:player-2', 'base'], ['ch:player-2', 'vitals'],
-     ['ch:wizard', 'base'], ['ch:wizard', 'vitals'], ['ch:wizard', 'skills'],
-     // All places referenced
-     ['pl:battlefield', 'base'], ['pl:battlefield', 'entities'],
-     ['pl:shop', 'base'], ['pl:shop', 'entities'],
-     // All items, spells, NPCs referenced across all commands
-     ['ch:npc-merchant', 'base'], ['it:magic-sword', 'base'], ['sp:fireball', 'base']
-   ]); // STILL ONE QUERY with O(log n) performance characteristics
    ```
 
 3. **Round-Trip 3 (Actuation)**: *Always* - Atomic batch write of all mutations
    ```typescript
-   // Single command mutations
    await db.transaction(async tx => {
      await Promise.all(commandSideEffects.map(effect =>
        tx.execute(buildAtomicUpdate(effect))
      ));
-   });
-
-   // Batch command mutations (same transaction pattern)
-   await db.transaction(async tx => {
-     await Promise.all([
-       ...command1SideEffects,
-       ...command2SideEffects,
-       ...commandNSideEffects  // All mutations from all commands
-     ].map(effect => tx.execute(buildAtomicUpdate(effect))));
    });
    ```
 

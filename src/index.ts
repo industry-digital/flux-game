@@ -14,6 +14,16 @@ export {
   isValidEntityUrn,
 } from '~/lib/entity/urn';
 
+// Command type guards and utilities
+export {
+  isCommand,
+  isCommandInput,
+  isCommandOfType,
+  isValidatedCommandOfType,
+  createCommandTypeGuard,
+  ignoreFailedCommands,
+} from '~/types/intent';
+
 import { Command, PureHandlerImplementation, TransformerContext } from '@flux';
 import { MOVE } from '~/command/MOVE';
 import { safeTopologicalSort } from '~/lib/dag';

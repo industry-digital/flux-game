@@ -2,6 +2,7 @@ import { MoveCommandArgs } from '~/command/MOVE';
 import { PlaceDefinition } from '~/lib/entity/util';
 import { CharacterInput } from '~/types/entity/character';
 import { EntityURN } from '~/types/taxonomy';
+import { ExecutionError } from '~/types/handler';
 
 export type InputMetadata = { __type: 'command' | 'intent' };
 
@@ -73,6 +74,19 @@ export type AbstractCommand<
    * The entity that issued this command
    */
   actor: EntityURN;
+
+  /**
+   * Indicates if this command failed during execution.
+   * This allows the command to continue propagating through the pipeline
+   * while carrying its failure state.
+   */
+  failed?: boolean;
+
+  /**
+   * Errors encountered during execution, if any.
+   * Present when failed=true.
+   */
+  errors?: ExecutionError[];
 }
 
 /**
@@ -137,7 +151,9 @@ export const isCommand = (input: unknown): input is AbstractCommand => {
     'args' in input &&
     'id' in input &&
     'ts' in input &&
-    'actor' in input
+    'actor' in input &&
+    (!('failed' in input) || typeof (input as AbstractCommand).failed === 'boolean') &&
+    (!('errors' in input) || Array.isArray((input as AbstractCommand).errors))
   );
 };
 
@@ -220,3 +236,15 @@ export type Command =
 | AbstractCommand<CommandType.CREATE_PLACE, PlaceDefinition>
 | AbstractCommand<CommandType.MOVE, MoveCommandArgs>
 | AbstractCommand<CommandType.CREATE_CHARACTER, CharacterInput>;
+
+/**
+ * Higher-order function that wraps any command type guard to ignore failed commands.
+ * Useful when a handler only wants to process commands that haven't failed.
+ */
+export const ignoreFailedCommands = <T extends AbstractCommand>(
+  guard: (input: unknown) => input is T
+) => {
+  return (input: unknown): input is T => {
+    return guard(input) && !input.failed;
+  };
+};

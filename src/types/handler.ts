@@ -111,7 +111,11 @@ export type SideEffectDeclarationConsumer = {
 
 export type SideEffectDeclarationContainer = SideEffectDeclarationProducer & SideEffectDeclarationConsumer;
 
-export type PotentiallyImpure = {
+/**
+ * Potentailly impure operations that our pure reducers need to do their job.
+ * These are injected into the execution context so that pure stages can stay pure.
+ */
+export type PotentiallyImpureOperations = {
   /**
    * A function that returns a random value between 0 and 1, inclusive.
    */
@@ -130,25 +134,31 @@ export type PotentiallyImpure = {
 };
 
 /**
- *
+ * A consumer of world state that needs read access to the world projection
  */
-export type TransformerContext<
-  W extends WorldProjection = WorldProjection,
-> =
-  & PotentiallyImpure
+export type WorldProjectionConsumer<W extends WorldProjection = WorldProjection> = {
+  world: W;
+};
+
+/**
+ * Context during transformation stage
+ */
+export type TransformerContext<W extends WorldProjection = WorldProjection> =
+  & PotentiallyImpureOperations
   & ErrorDeclarationProducer
   & EventDeclarationProducer
-  & { world: W };
+  & WorldProjectionConsumer<W>;
 
-export type PlannerContext<
-  W extends WorldProjection = WorldProjection,
-> =
-  & PotentiallyImpure
+/**
+ * Context during planning stage
+ */
+export type PlannerContext<W extends WorldProjection = WorldProjection> =
+  & PotentiallyImpureOperations
   & ErrorDeclarationProducer
   & ErrorDeclarationConsumer
   & EventDeclarationConsumer
   & SideEffectDeclarationProducer
-  & { world: W };
+  & WorldProjectionConsumer<W>;
 
 /**
  * Interface for handlers that operate in the Transformation stage
