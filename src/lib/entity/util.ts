@@ -154,7 +154,6 @@ export const createPlace = (
 
 /**
  * Factory function to create an Exit with standard defaults
- * Follows the pattern of other entity creation functions
  */
 export const createExit = (
   transform: (exit: Exit) => Exit = identity,

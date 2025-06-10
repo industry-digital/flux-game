@@ -1,7 +1,7 @@
 import { MoveCommandArgs } from '~/command/MOVE';
 import { PlaceDefinition } from '~/lib/entity/util';
 import { CharacterInput } from '~/types/entity/character';
-import { EntityURN } from '~/types/taxonomy';
+import { EntityURN, PlaceURN } from '~/types/taxonomy';
 import { ExecutionError } from '~/types/handler';
 
 export type InputMetadata = { __type: 'command' | 'intent' };
@@ -50,6 +50,11 @@ export type CommandInput<
    * Command-specific arguments
    */
   args: A;
+
+  /**
+   * The actor's current location
+   */
+  location?: PlaceURN;
 }
 
 /**
@@ -66,14 +71,19 @@ export type AbstractCommand<
   id: string;
 
   /**
-   * The moment the command was created
+   * The moment the command was created; epoch milliseconds
    */
   ts: number;
 
   /**
-   * The entity that issued this command
+   * The world actor that issued this command
    */
   actor: EntityURN;
+
+  /**
+   * The location of the actor at the time the command was issued
+   */
+  location?: PlaceURN;
 
   /**
    * Indicates if this command failed during execution.
@@ -117,6 +127,11 @@ export type IntentInput = {
    * The entity that issued this intent
    */
   actor: EntityURN;
+
+  /**
+   * The location of the actor at the time the intent was issued
+   */
+  location?: PlaceURN;
 
   /**
    * The raw text input from the user

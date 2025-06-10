@@ -151,6 +151,7 @@ export type TransformerContext<W extends WorldProjection = WorldProjection> =
 
 /**
  * Context during planning stage
+ * @deprecated Moved to server package
  */
 export type PlannerContext<W extends WorldProjection = WorldProjection> =
   & PotentiallyImpureOperations
