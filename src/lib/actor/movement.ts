@@ -1,5 +1,5 @@
 import { Direction, EventType, PlaceURN, TransformerContext, Character, EntityType, SymbolicLink } from '@flux';
-import { createSymbolicLink } from '~/lib/entity/util';
+import { createSymbolicLink } from '~/worldkit/entity/util';
 
 export type ActorMovementHook = {
   move: (direction: Direction) => MoveResult;

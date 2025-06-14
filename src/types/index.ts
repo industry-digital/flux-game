@@ -66,7 +66,7 @@ export {
 
 export type {
   ParsedURN
-} from '~/lib/entity/urn';
+} from '~/lib/urn';
 
 export {
   ItemState,

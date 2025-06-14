@@ -1,35 +1,25 @@
 import { createDirectionUrn, createPlaceUrn, createEntityUrn } from '~/lib/taxonomy';
 import { randomUUID } from '~/lib/uuid';
 import {
-  Character, DirectionURN, EntityType,
+  Character,
+  DirectionURN,
+  EntityType,
   Exit,
-  ModifiableBoundedAttribute,
-  ModifiableScalarAttribute,
   Place,
   PlaceURN,
   Taxonomy,
-  UUIDLike, CharacterInput,
-  RootNamespace
+  UUIDLike,
+  CharacterInput,
+  RootNamespace,
 } from '@flux';
 import { AbstractEntity, DescribableMixin, SymbolicLink } from '~/types/entity/entity';
 import { merge } from 'lodash';
+import { createModifiableScalarAttribute, createModifiableBoundedAttribute } from './attribute';
 
 const identity = <T>(x: T): T => x;
 
 export const isCharacter = (character: AbstractEntity<EntityType>): character is Character => {
   return character.type === EntityType.CHARACTER;
-};
-
-export const createModifiableScalarAttribute = (
-  transform: (attribute: ModifiableScalarAttribute) => ModifiableScalarAttribute = identity,
-): ModifiableScalarAttribute => {
-  return transform({ nat: 10 });
-};
-
-export const createModifiableBoundedAttribute = (
-  transform: (attribute: ModifiableBoundedAttribute) => ModifiableBoundedAttribute = identity,
-): ModifiableBoundedAttribute => {
-  return transform({ nat: { cur: 10, max: 10 } });
 };
 
 export type EntityCreator<T extends EntityType, E extends AbstractEntity<T> & DescribableMixin> = (

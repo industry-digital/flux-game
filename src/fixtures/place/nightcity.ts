@@ -1,4 +1,4 @@
-import { PlaceDefinition } from '~/lib/entity/util';
+import { PlaceDefinition } from '~/worldkit/entity/util';
 
 const factory = (): PlaceDefinition[] => {
   return [

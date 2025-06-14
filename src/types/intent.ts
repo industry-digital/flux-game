@@ -1,5 +1,5 @@
 import { MoveCommandArgs } from '~/command/MOVE';
-import { PlaceDefinition } from '~/lib/entity/util';
+import { PlaceDefinition } from '~/worldkit/entity/util';
 import { CharacterInput } from '~/types/entity/character';
 import { EntityURN, PlaceURN } from '~/types/taxonomy';
 import { ExecutionError } from '~/types/handler';

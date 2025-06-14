@@ -1,5 +1,5 @@
 import { AbstractEntity, EntityType } from './entity';
-import type { ParsedURN } from '~/lib/entity/urn';
+import type { ParsedURN } from '~/lib/urn';
 import { Character } from './character';
 
 /**

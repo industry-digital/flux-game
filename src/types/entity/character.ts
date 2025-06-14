@@ -103,6 +103,7 @@ export type Traits = Partial<Record<Taxonomy.Traits, 1>>;
 export type Injuries = Partial<Record<Taxonomy.Anatomy, AppliedAnatomicalDamage>>;
 export type ManaPools = Partial<Record<Taxonomy.Mana, ModifiableBoundedAttribute>>;
 export type Subscriptions = Partial<Record<Taxonomy.Topics, 1>>;
+export type Wallet = Partial<Record<Taxonomy.Currency, number>>;
 
 export type Inventory = {
   /**
@@ -172,6 +173,7 @@ export type Character =
   effects: AppliedEffects;
   inventory: Inventory;
   equipment: Equipment;
+  wallet: Wallet;
   memberships: Memberships;
   reputation: Reputation;
   subscriptions: Subscriptions;

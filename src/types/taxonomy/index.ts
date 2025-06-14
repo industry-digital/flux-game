@@ -115,6 +115,10 @@ export const TAXONOMY = {
     },
     dimension: {
       description: 'Measurement and quantification'
+    },
+    currency: {
+      description: 'The various currencies in the game world',
+      examples: ['flux:currency:gold', 'flux:currency:silver']
     }
   }
 } as const;
@@ -237,6 +241,8 @@ export namespace Taxonomy {
    * The various ways to measure or quantify something in the game world.
    */
   export type Dimensions = TaxonomyURN<'dimension'>;
+
+  export type Currency = TaxonomyURN<'currency'>;
 }
 
 export type EntityURN<T extends EntityType = EntityType> = `${RootNamespace}:${T}:${string}`;

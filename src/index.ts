@@ -1,6 +1,6 @@
 export * from '@flux';
 export * from '~/lib/taxonomy';
-export * from '~/lib/entity/util';
+export * from '~/worldkit/entity/util';
 
 export { CreateCharacterCommand } from '~/command/CREATE_CHARACTER';
 export { CreatePlaceCommand } from '~/command/CREATE_PLACE';
@@ -12,7 +12,7 @@ export {
   getEntityUrn,
   getEntityUrnOrFail,
   isValidEntityUrn,
-} from '~/lib/entity/urn';
+} from '~/lib/urn';
 
 // Command type guards and utilities
 export {

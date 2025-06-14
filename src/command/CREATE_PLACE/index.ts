@@ -1,4 +1,4 @@
-import { PlaceDefinition } from '~/lib/entity/util';
+import { PlaceDefinition } from '~/worldkit/entity/util';
 import { CommandType, Command } from '@flux';
 
 export type CreatePlaceCommand = Command<CommandType.CREATE_PLACE, PlaceDefinition>;

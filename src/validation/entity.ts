@@ -9,7 +9,7 @@ import {
   Place,
   AbstractEntity
 } from '@flux';
-import { parseEntityUrn } from '~/lib/entity/urn';
+import { parseEntityUrn } from '~/lib/urn';
 
 /**
  * Validator for the base Entity type
