@@ -4,7 +4,6 @@ import { EntityType, EmergentNarrative, SymbolicLink, AbstractEntity, Describabl
 import { Party } from '~/types/entity/group';
 import { SkillState, Specializations } from '~/types/entity/skill';
 import { ItemState } from '~/types/entity/item';
-import { createStatUrn } from '~/lib/taxonomy';
 import {
   NormalizedValueBetweenZeroAndOne,
   ModifiableBoundedAttribute,
@@ -24,7 +23,7 @@ export const WellKnownCharacterStat = {
    * - Athletic feats requiring force
    * - Carrying capacity
    */
-  STR: createStatUrn('str'),
+  STR: 'str',
 
   /**
    * Dexterity. Fine motor control and precision. Affects:
@@ -32,7 +31,7 @@ export const WellKnownCharacterStat = {
    * - Delicate manual tasks
    * - Crafting quality
    */
-  DEX: createStatUrn('dex'),
+  DEX: 'dex',
 
   /**
    * Agility. Speed, grace, and coordination. Affects:
@@ -40,7 +39,7 @@ export const WellKnownCharacterStat = {
    * - Initiative in combat, together with WIS
    * - Athletic feats requiring agility
    */
-  AGI: createStatUrn('agi'),
+  AGI: 'agi',
 
   /**
    * Constitution. Physical resilience and endurance. Affects:
@@ -48,7 +47,7 @@ export const WellKnownCharacterStat = {
    * - Stamina and fatigue resistance
    * - Resistance to poison, disease, and physical afflictions
    */
-  CON: createStatUrn('con'),
+  CON: 'con',
 
   /**
    * Intelligence. Reasoning ability and learning capacity. Affects:
@@ -56,7 +55,7 @@ export const WellKnownCharacterStat = {
    * - Complex abilities and higher learning
    * - Problem-solving and analysis
    */
-  INT: createStatUrn('int'),
+  INT: 'int',
 
   /**
    * Wisdom. Awareness, intuition, and mental fortitude. Affects:
@@ -65,7 +64,7 @@ export const WellKnownCharacterStat = {
    * - Resistance to fear, confusion, and mental effects
    * - Situational awareness and gut instincts
    */
-  WIS: createStatUrn('wis'),
+  WIS: 'wis',
 
   /**
    * Presence. Force of personality and social influence. Affects:
@@ -73,7 +72,7 @@ export const WellKnownCharacterStat = {
    * - Leadership and group coordination
    * - Intimidation and commanding respect
    */
-  PRS: createStatUrn('prs'),
+  PRS: 'prs',
 
   /**
    * Luck. Fortune and supernatural favor. Affects:
@@ -81,18 +80,19 @@ export const WellKnownCharacterStat = {
    * - Rare item discovery and advantageous encounters
    * - Quest opportunities and serendipitous events
    */
-  LCK: createStatUrn('lck'),
+  LCK: 'lck',
 } as const;
 
 /**
  * Type alias for any valid character stat URN
+ * @deprecated Use the string literal type instead
  */
 export type CharacterStatURN = typeof WellKnownCharacterStat[keyof typeof WellKnownCharacterStat] | `${RootNamespace}:stat:${string}`;
 
 /**
  * Map of character stats to their values
  */
-export type CharacterStats = Partial<Record<CharacterStatURN, ModifiableScalarAttribute>>;
+export type CharacterStats = Partial<Record<CharacterStatName, ModifiableScalarAttribute>>;
 export type EquipmentSlots = Partial<Record<ItemURN, 1>>;
 export type Equipment = Partial<Record<Taxonomy.Anatomy, EquipmentSlots>>;
 export type Skills = Partial<Record<Taxonomy.Skills, SkillState>>;
