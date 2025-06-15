@@ -1,6 +1,6 @@
 import { RollSpecification } from '~/types/dice';
 import { NormalizedValueBetweenZeroAndOne } from '~/types/entity/attribute';
-import { CharacterStatName } from '~/types/entity/character';
+import { ActorStat } from '~/types/entity/actor';
 
 /**
  * Represents all possible damage types in the cyberpunk world.
@@ -8,11 +8,44 @@ import { CharacterStatName } from '~/types/entity/character';
  * and augmentation vulnerabilities.
  */
 export enum DamageType {
-  KINETIC = 'kinetic',
+  /**
+   * Relating to any kind of kinetic energy penetrators, including spears, bullets, and railguns
+   */
+  PIERCE = 'pierce',
+
+  /**
+   * Relating to any kind of slashing damage, including swords, knives, and claws
+   */
+  SLASH = 'slash',
+
+  /**
+   * Relating to any kind of blunt force, including hammers, clubs, and fists
+   */
+  IMPACT = 'impact',
+
+  /**
+   * Relating to explosive overpressure
+   */
   EXPLOSIVE = 'explosive',
+
+  /**
+   * Relating to temperature (e.g., heat, cold)
+   */
   THERMAL = 'thermal',
-  EM = 'em',
+
+  /**
+   * Relating to electromagnatic phenomena, such as EMP bombs and lasers
+   */
+  ELECTROMAGNETIC = 'electromagnetic',
+
+  /**
+   * Relating to chemical reactions (e.g., acid, poison)
+   */
   CHEMICAL = 'chemical',
+
+  /**
+   * Relating to biological effects (e.g., pathogens, disease)
+   */
   BIOLOGICAL = 'bio',
 }
 
@@ -23,7 +56,7 @@ export type DamageSpecification = {
   /**
    * The stat that the weapon scales with
    */
-  stat: CharacterStatName;
+  stat: keyof typeof ActorStat;
 
   /**
    * The base damage of the weapon

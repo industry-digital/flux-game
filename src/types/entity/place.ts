@@ -1,7 +1,9 @@
 import { EntityURN, PlaceURN, RootNamespace } from '~/types/taxonomy';
-import { EntityType, AbstractEntity, DescribableMixin } from './entity';
+import { EntityType, AbstractEntity, Describable } from './entity';
 import { Direction } from '~/types/world/space';
 import { SpecialVisibility } from '~/types/world/visibility';
+
+export type PlaceVisibilityRules = Record<EntityURN, 1>;
 
 /**
  * A reference to an Entity within a Place.
@@ -11,10 +13,28 @@ export type PlaceEntityDescriptor<T extends EntityType = EntityType> = {
    * The entity
    */
   entity: AbstractEntity<T>;
+
   /**
-   * The visibility of this entity to other entities.
+   * A record of the visibility of this entity to other entities in the same Place
    */
-  visibility: SpecialVisibility | Partial<Record<EntityURN<T>, 1>>;
+  visibility: SpecialVisibility | PlaceVisibilityRules;
+};
+
+export type ExitInput = {
+  /**
+   * The direction of the exit
+   */
+  direction: Direction;
+
+  /**
+   * Human-friendly string label for the exit
+   */
+  label?: string;
+
+  /**
+   * The destination of the exit. This is a URN-like string like `${RootNamespace}:place:world:nightcity:central-park`.
+   */
+  to?: PlaceURN;
 };
 
 /**
@@ -22,6 +42,11 @@ export type PlaceEntityDescriptor<T extends EntityType = EntityType> = {
  * traversable in either direction, you need an Exit in both Places, each pointing to the other.
  */
 export type Exit = {
+  /**
+   * The direction of the exit
+   */
+  direction: Direction;
+
   /**
    * Human-friendly string label for the exit
    */
@@ -41,10 +66,10 @@ export type PlaceEntities = Partial<Record<`${RootNamespace}:${EntityType}:${str
  * that need to be provided when creating a Place.
  */
 export type PlaceInput = {
+  id: PlaceURN;
   name?: string;
   description?: string;
-  exits?: Exits;
-  entities?: PlaceEntities;
+  exits?: ExitInput[];
 };
 
 /**
@@ -58,7 +83,7 @@ export type PlaceInput = {
  */
 export type Place =
   & AbstractEntity<EntityType.PLACE>
-  & DescribableMixin
+  & Describable
   & {
 
   /**

@@ -38,7 +38,7 @@ export type AbstractGroup<
 /**
  * A Party is a group of Characters that can travel as a single unit through the game world.
  */
-export type Party = AbstractGroup<EntityType.CHARACTER, GroupType.PARTY, 'members'>;
+export type Party = AbstractGroup<EntityType.ACTOR, GroupType.PARTY, 'members'>;
 export type PartyRef = GroupSymbolicLink<GroupType.PARTY>;
 export type PartyURN = `${RootNamespace}:${EntityType.GROUP}:${GroupType.PARTY}:${string}`;
 
@@ -48,7 +48,7 @@ export type PartyURN = `${RootNamespace}:${EntityType.GROUP}:${GroupType.PARTY}:
  * - Government or political entity
  * - Guild or faction
  */
-export type Organization = AbstractGroup<EntityType.CHARACTER, GroupType.ORGANIZATION, 'members'>;
+export type Organization = AbstractGroup<EntityType.ACTOR, GroupType.ORGANIZATION, 'members'>;
 export type OrganizationRef = GroupSymbolicLink<GroupType.ORGANIZATION>;
 export type OrganizationURN = `${RootNamespace}:${EntityType.GROUP}:${GroupType.ORGANIZATION}:${string}`;
 

@@ -3,7 +3,7 @@ import { Direction } from '~/types/world/space';
 
 export type EventPayload = Record<string, any>;
 
-export type AbstractEmergentEventInput<T extends EventType, P extends EventPayload = EventPayload> = {
+export type AbstractEmergentEventInput<T extends EventType, P extends EventPayload> = {
   /**
    * The unique identifier for this event.
    */
@@ -35,39 +35,87 @@ export type EmergentEvent = EmergentEventInput & {
   trace: string;
 }
 
-export enum EventType {
-  ACTOR_MOVEMENT_DID_SUCCEED = 'actor:move:success',
-  ACTOR_MOVEMENT_DID_FAIL = 'actor:move:failure',
-};
-
-type ActorEventPayloadBase = {
-  actor: EntityURN;
-};
-
-export type ActorMovementEventPayload = ActorEventPayloadBase & {
-  origin: PlaceURN;
-  direction: Direction;
-};
-
-export type ActorMovementDidFailEventPayload = ActorMovementEventPayload & {
+export type ErrorExplanation = {
   reason: string;
   message?: string;
 };
 
-export type ActorMovementDidSucceedEventPayload = ActorMovementEventPayload & {
-  destination: PlaceURN;
+export enum EventType {
+  PLACE_CREATION_DID_SUCCEED = 'place:creation:success',
+  PLACE_CREATION_DID_FAIL = 'place:creation:failure',
+  ACTOR_MOVEMENT_DID_SUCCEED = 'actor:move:success',
+  ACTOR_MOVEMENT_DID_FAIL = 'actor:move:failure',
+  ACTOR_CREATION_DID_SUCCEED  = 'actor:creation:success',
+  ACTOR_CREATION_DID_FAIL = 'actor:creation:failure',
 }
 
-export type ActorMovementDidFailEventInput = AbstractEmergentEventInput<
-  EventType.ACTOR_MOVEMENT_DID_FAIL,
-  ActorMovementDidFailEventPayload
->;
+export type PlaceEventPayloadBase = {
+  placeId: PlaceURN;
+};
 
-export type ActorMovementDidSucceedEventInput = AbstractEmergentEventInput<
-  EventType.ACTOR_MOVEMENT_DID_SUCCEED,
-  ActorMovementDidSucceedEventPayload
->;
+export type PlaceCreationDidSucceedInput =
+  & AbstractEmergentEventInput<
+    EventType.PLACE_CREATION_DID_SUCCEED,
+    PlaceEventPayloadBase
+  >;
 
+export type PlaceCreationDidFailInput =
+  & AbstractEmergentEventInput<
+    EventType.PLACE_CREATION_DID_FAIL,
+    PlaceEventPayloadBase & ErrorExplanation
+  >;
+
+export type PlaceCreationEventInput =
+  | PlaceCreationDidSucceedInput
+  | PlaceCreationDidFailInput;
+
+type ActorEventPayloadBase = {
+  actorId: EntityURN;
+};
+
+export type ActorCreationDidSucceedInput =
+  & AbstractEmergentEventInput<
+    EventType.ACTOR_CREATION_DID_SUCCEED,
+    ActorEventPayloadBase
+  >;
+
+export type ActorCreationDidFailInput =
+  & AbstractEmergentEventInput<
+    EventType.ACTOR_CREATION_DID_FAIL,
+    ActorEventPayloadBase & ErrorExplanation
+  >;
+
+export type ActorCreationEventInput =
+  | ActorCreationDidSucceedInput
+  | ActorCreationDidFailInput;
+
+export type ActorMovementEventPayload =
+  & ActorEventPayloadBase
+  & {
+    originId: PlaceURN;
+    direction: Direction;
+  };
+
+export type ActorMovementDidFailInput =
+  & AbstractEmergentEventInput<
+    EventType.ACTOR_MOVEMENT_DID_FAIL,
+    ActorMovementEventPayload & ErrorExplanation
+  >;
+
+export type ActorMovementDidSucceedInput =
+  & AbstractEmergentEventInput<
+    EventType.ACTOR_MOVEMENT_DID_SUCCEED,
+    ActorMovementEventPayload & { destinationId: PlaceURN }
+  >;
+
+// Union of all actor movement events
+export type ActorMovementEventInput =
+  | ActorMovementDidFailInput
+  | ActorMovementDidSucceedInput;
+
+
+// Union of all unions
 export type EmergentEventInput =
-  | ActorMovementDidFailEventInput
-  | ActorMovementDidSucceedEventInput;
+  | PlaceCreationEventInput
+  | ActorCreationEventInput
+  | ActorMovementEventInput;

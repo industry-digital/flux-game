@@ -1,6 +1,7 @@
 import { ScheduledDuration, SpecialDuration } from '~/types/world/time';
 import { Self } from '~/types/actor';
 import { Taxonomy, Intrinsic, ModifierURN, EntityURN } from '~/types/taxonomy';
+import { RollSpecification } from '~/types/dice';
 
 export type ModifierBase = {
   /**
@@ -16,8 +17,9 @@ export type ModifierBase = {
 
   /**
    * The value of the modifier. We make no assumptions about what the number means here.
+   * It could be a number, or a roll specification.
    */
-  value: number;
+  value: number | RollSpecification;
 };
 
 export type PermanentModifier = ModifierBase & {
@@ -31,6 +33,7 @@ export type PermanentModifier = ModifierBase & {
  * A modifier that has a duration that begins at a fixed moment in time.
  */
 export type TemporaryModifier =
+  & ModifierBase
   & Omit<PermanentModifier, 'duration'>
   & ScheduledDuration;
 

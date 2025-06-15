@@ -1,5 +1,4 @@
-import { Command, Requirements, RollResult } from '~/types';
-import { CharacterURN } from '~/types/taxonomy';
+import { Command, Requirements, RollResult, ActorURN } from '@flux';
 
 export enum TargetType {
   NONE = 'none',
@@ -43,13 +42,21 @@ export type CombatAction = {
 };
 
 export type Combatant = {
-  team: string;
-  character: CharacterURN;
+  /**
+   * The actor that is participating in the combat session
+   */
+  actorId: ActorURN;
+
   /**
    * The initiative roll of the combatant at the start of combat, if the actor was
    * present in the combat session at the start of combat.
    */
   initiative: RollResult;
+
+  /**
+   * The team that the combatant belongs to, if any
+   */
+  team?: string;
 };
 
 export type CombatantState = {

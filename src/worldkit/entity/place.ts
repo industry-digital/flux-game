@@ -1,14 +1,12 @@
-import { EntityType, Place, Exit, RootNamespace, PlaceURN } from '@flux';
+import { EntityType, Place, Exit, PlaceURN } from '@flux';
 import { createEntity, FactoryOptions } from './util';
-import { createPlaceUrn } from '~/lib/taxonomy';
-import { randomUUID } from '~/lib/uuid';
 import { merge } from 'lodash';
-import { PlaceInput } from '~/types/entity/place';
-import { createTranslationUrn, Translatable } from '~/i18n';
+import { ExitInput, PlaceInput } from '~/types/entity/place';
 
 const identity = <T>(x: T): T => x;
 
 export const createPlace = (
+  input: PlaceInput,
   transform: (place: Place) => Place = identity,
   options: FactoryOptions = {},
 ): Place => {
@@ -16,13 +14,14 @@ export const createPlace = (
     EntityType.PLACE,
     (entity) => {
       const defaults: Partial<Place> = {
+        id: entity.id,
         name: entity.name || '',
         description: entity.description || '',
         exits: {},
         entities: {}
       };
 
-      return merge({}, entity, defaults) as Place;
+      return merge({}, entity, defaults, input) as Place;
     },
     options,
   );
@@ -30,16 +29,21 @@ export const createPlace = (
   return transform(base);
 };
 
+export enum WellKnownPlace {
+  NOWHERE = 'flux:place:nowhere',
+}
+
 /**
  * Factory function to create an Exit with standard defaults
  */
 export const createExit = (
+  input: ExitInput,
   transform: (exit: Exit) => Exit = identity,
-  { uuid = randomUUID }: FactoryOptions = {},
 ): Exit => {
   return transform({
-    label: '',
-    to: createPlaceUrn(uuid()) as `${RootNamespace}:${EntityType.PLACE}:${string}`,
+    direction: input.direction,
+    label: input.label || '',
+    to: input.to || WellKnownPlace.NOWHERE,
   });
 };
 
@@ -53,17 +57,16 @@ export const createPlaces = (
 ): PlaceDictionary => {
   const out: PlaceDictionary = {};
 
-  inputs.forEach(input => {
-    const place = createPlace((defaults) => ({
-      ...defaults,
-      name: input.name ? createTranslationUrn(defaults.id, Translatable.NAME) : '',
-      description: input.description ? createTranslationUrn(defaults.id, Translatable.DESCRIPTION) : '',
-      exits: input.exits || {},
-      entities: input.entities || {}
-    }));
+  for (const input of inputs) {
+    const place = createPlace({
+      id: input.id,
+      name: input.name,
+      description: input.description,
+      exits: input.exits || [],
+    });
 
     out[place.id] = place;
-  });
+  }
 
   return out;
 };

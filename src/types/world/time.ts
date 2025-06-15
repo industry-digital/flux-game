@@ -30,7 +30,7 @@ export enum SpecialDuration {
  * A duration in the game world, expressed either as a quantity of a TimeUnit
  * (e.g. "5min" for 5 minutes) or as a SpecialDuration.
  */
-export type Duration = SpecialDuration | [number, TimeUnit];
+export type Duration = SpecialDuration | `${number}${TimeUnit}`;
 
 /**
  * A mixin for anything that has

@@ -1,8 +1,8 @@
-import { MoveCommandArgs } from '~/command/MOVE';
-import { PlaceDefinition } from '~/worldkit/entity/util';
-import { CharacterInput } from '~/types/entity/character';
-import { EntityURN, PlaceURN } from '~/types/taxonomy';
-import { ExecutionError } from '~/types/handler';
+import { MoveCommandArgs } from '~/command/MOVE/handler';
+import { PlaceInput } from '~/types/entity/place';
+import { ActorInput } from '~/types/entity/actor';
+import { ActorURN, EntityURN, PlaceURN } from '~/types/taxonomy';
+import { ExecutionError, InputTypeGuard } from '~/types/handler';
 
 export type InputMetadata = { __type: 'command' | 'intent' };
 
@@ -19,7 +19,7 @@ export enum CommandType {
    */
   UNRESOLVED_COMMAND = 'UNRESOLVED_COMMAND',
   CREATE_PLACE = 'CREATE_PLACE',
-  CREATE_CHARACTER = 'CREATE_CHARACTER',
+  CREATE_ACTOR = 'CREATE_ACTOR',
   MOVE = 'MOVE',
 }
 
@@ -35,6 +35,11 @@ export type CommandInput<
    * Globally unique identifier for the intent. This propagates through the system as `trace`.
    */
   id?: string;
+
+  /**
+   * The actor that issued this command
+   */
+  actor?: ActorURN;
 
   /**
    * Timestamp when the command was issued (milliseconds since epoch)
@@ -76,9 +81,13 @@ export type AbstractCommand<
   ts: number;
 
   /**
-   * The world actor that issued this command
+   * The world actor that issued the command.
+   * This is always populated if the command is issued by one of:
+   *   - a player character
+   *   - a non-player character
+   *  - a monster
    */
-  actor: EntityURN;
+  actor?: ActorURN;
 
   /**
    * The location of the actor at the time the command was issued
@@ -153,113 +162,15 @@ export type Intent = InputMetadata & Omit<IntentInput, 'id' | 'ts' | 'nlp'> & {
   nlp: NaturalLanguageAnalysis;
 };
 
-/**
- * Type guard to check if input has the command metadata type
- */
-export const isCommand = (input: unknown): input is AbstractCommand => {
-  return (
-    typeof input === 'object' &&
-    input !== null &&
-    '__type' in input &&
-    (input as InputMetadata).__type === 'command' &&
-    'type' in input &&
-    'args' in input &&
-    'id' in input &&
-    'ts' in input &&
-    'actor' in input &&
-    (!('failed' in input) || typeof (input as AbstractCommand).failed === 'boolean') &&
-    (!('errors' in input) || Array.isArray((input as AbstractCommand).errors))
-  );
-};
 
 /**
- * Type guard to check if input has the intent metadata type
+ * Type guard for Commands with specific type and arguments
  */
-export const isIntent = (input: unknown): input is Intent => {
-  return (
-    typeof input === 'object' &&
-    input !== null &&
-    '__type' in input &&
-    (input as InputMetadata).__type === 'intent' &&
-    'text' in input &&
-    'id' in input &&
-    'ts' in input &&
-    'actor' in input &&
-    (!('nlp' in input) || typeof (input as Intent).nlp === 'object')
-  );
-};
-
-/**
- * Type guard to check if input is a CommandInput (before validation)
- */
-export const isCommandInput = (input: unknown): input is CommandInput => {
-  return (
-    typeof input === 'object' &&
-    input !== null &&
-    'type' in input &&
-    'args' in input &&
-    typeof (input as CommandInput).args === 'object' &&
-    (input as CommandInput).args !== null &&
-    (!('id' in input) || typeof (input as CommandInput).id === 'string') &&
-    (!('ts' in input) || typeof (input as CommandInput).ts === 'number')
-  );
-};
-
-/**
- * Type guard for specific command types with full validation
- */
-export const isCommandOfType = <T extends CommandType, A extends Record<string, any> = Record<string, any>>(
-  input: unknown,
-  type: T
-): input is AbstractCommand<T, A> => {
-  return isCommand(input) && input.type === type;
-};
-
-/**
- * Type guard that checks if a validated Command is of a specific type
- */
-export const isValidatedCommandOfType = <T extends CommandType, A extends Record<string, any> = Record<string, any>>(
-  input: AbstractCommand,
-  type: T
-): input is AbstractCommand<T, A> => {
-  return input.type === type;
-};
-
-/**
- * Factory function to create type-specific command guards
- */
-export const createCommandTypeGuard = <T extends CommandType, A extends Record<string, any> = Record<string, any>>(
-  type: T
-) => {
-  return (input: unknown): input is AbstractCommand<T, A> => {
-    return isCommandOfType(input, type);
-  };
-};
-
-/**
- * Example usage with your MOVE command:
- */
-export const isMoveCommand = createCommandTypeGuard(CommandType.MOVE);
-
-// Or inline:
-export const isMoveCommandInline = (input: unknown): input is AbstractCommand<CommandType.MOVE> => {
-  return isCommandOfType(input, CommandType.MOVE);
-};
+export type CommandTypeGuard<T extends CommandType, A extends Record<string, any> = {}> =
+  InputTypeGuard<AbstractCommand, AbstractCommand<T, A>>;
 
 export type Command =
 | AbstractCommand<CommandType.UNRESOLVED_COMMAND, any>
-| AbstractCommand<CommandType.CREATE_PLACE, PlaceDefinition>
+| AbstractCommand<CommandType.CREATE_PLACE, PlaceInput>
 | AbstractCommand<CommandType.MOVE, MoveCommandArgs>
-| AbstractCommand<CommandType.CREATE_CHARACTER, CharacterInput>;
-
-/**
- * Higher-order function that wraps any command type guard to ignore failed commands.
- * Useful when a handler only wants to process commands that haven't failed.
- */
-export const ignoreFailedCommands = <T extends AbstractCommand>(
-  guard: (input: unknown) => input is T
-) => {
-  return (input: unknown): input is T => {
-    return guard(input) && !input.failed;
-  };
-};
+| AbstractCommand<CommandType.CREATE_ACTOR, ActorInput>;

@@ -2,7 +2,7 @@ import { Taxonomy, AmmoURN } from '~/types/taxonomy';
 import { EquipmentMixin } from '~/types/schema/equipment';
 import { ChargeableMixin } from '~/types/entity/item';
 import { Duration } from '~/types/world/time';
-import { CharacterStatName } from '~/types/entity/character';
+import { ActorStat } from '~/types/entity/actor';
 import { DamageSpecification } from '~/types/damage';
 import { UnitOfDistance } from '~/types/world/measures';
 import { } from '~/types/schema/equipment';
@@ -11,7 +11,7 @@ export type WeaponAttackSpecification = {
   /**
    * The stat that modifies the weapon's attack rolls
    */
-  stat: CharacterStatName;
+  stat: ActorStat;
 
   /**
    * The base attack value of the weapon. Dice rolls are added to this value.

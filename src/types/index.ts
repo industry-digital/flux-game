@@ -34,15 +34,16 @@ export {
 } from './entity/attribute';
 
 export {
-  Character,
-  CharacterInput,
-  CharacterStatName,
-  CharacterStats,
+  Actor,
+  ActorType,
+  ActorInput,
+  ActorStat,
+  ActorStats,
   Equipment,
   AppliedAnatomicalDamage as InjuryDescriptor,
   Inventory,
   Skills,
-} from './entity/character';
+} from './entity/actor';
 
 export {
   Party,
@@ -58,10 +59,11 @@ export {
   EntityType,
   UUIDLike,
   AbstractEntity,
-  DescribableMixin,
+  Describable as DescribableMixin,
   LocallyUniqueId,
   Entity,
   SymbolicLink,
+  Describable,
 } from './entity/entity';
 
 export type {
@@ -78,8 +80,11 @@ export {
 
 export {
   Exit,
+  ExitInput,
+  Exits,
   Place,
   PlaceEntityDescriptor,
+  PlaceInput,
 } from './entity/place';
 
 export {
@@ -88,11 +93,6 @@ export {
   SpecializationGroup,
   Specializations,
 } from './entity/skill';
-
-export {
-  Monster,
-  MonsterInput,
-} from './entity/monster';
 
 export {
   EmergentEvent,
@@ -104,7 +104,6 @@ export {
 export {
   AllowedInput,
   CombatProjectionMixin,
-  CommandTypeGuard,
   ErrorDeclarationConsumer,
   ErrorDeclarationProducer,
   EventDeclarationConsumer,
@@ -112,7 +111,6 @@ export {
   ExecutionError,
   InputTypeGuard,
   MinimalWorldProjection,
-  PlannerContext,
   PotentiallyImpureOperations,
   PureHandlerImplementation,
   PureHandlerInterface,
@@ -126,9 +124,7 @@ export {
   TransformerInterface,
   WorldProjection,
   WorldProjectionConsumer,
-  VendorProjectionMixin,
-  createCommandGuard,
-  isCommandOfType,
+  TradeProjectionMixin as VendorProjectionMixin,
 } from './handler';
 
 export {
@@ -138,8 +134,6 @@ export {
   Intent,
   IntentInput,
   Command as KnownCommand,
-  isCommand,
-  isIntent,
 } from './intent';
 
 export {
@@ -195,8 +189,8 @@ export {
 // Taxonomy exports
 export {
   AbilityURN,
+  ActorURN,
   ArmorURN,
-  CharacterURN,
   DirectionURN,
   EffectURN,
   EntityURN,
@@ -238,7 +232,6 @@ export {
 export {
   createEntityUrn,
   createPlaceUrn,
-  createCharacterUrn,
   createItemUrn,
   createTraitUrn,
   createSkillUrn,

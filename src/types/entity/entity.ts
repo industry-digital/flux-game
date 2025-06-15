@@ -1,4 +1,4 @@
-import { Character } from '~/types/entity/character';
+import { Actor } from '~/types/entity/actor';
 import { Place } from '~/types/entity/place';
 import { RootNamespace } from '~/types/taxonomy';
 
@@ -9,8 +9,7 @@ export type UUIDLike = `${string}-${string}-${string}-${string}-${string}`;
 
 export enum EntityType {
   PLACE = 'place',
-  CHARACTER = 'char',
-  MONSTER = 'monster',
+  ACTOR = 'actor',
   ITEM = 'item',
   GROUP = 'group',
 }
@@ -47,7 +46,7 @@ export type AbstractEntity<T extends EntityType> = SymbolicLink<T>;
 /**
  * A mixin type that adds human-friendly name and description fields to an entity.
  */
-export type DescribableMixin = {
+export type Describable = {
   /**
    * Name of the entity
    */
@@ -76,4 +75,7 @@ export type EmergentNarrative = {
   emergent?: string;
 };
 
-export type Entity = Character | Place;
+/**
+ * An entity is anything that can exist within
+ */
+export type Entity = Actor | Place;

@@ -2,8 +2,9 @@ import { Duration } from '~/types/world/time';
 import { Taxonomy, EffectURN, SkillURN } from '~/types/taxonomy';
 import { Requirements } from '~/types/requirement';
 import { TargetingSpecification } from '~/types/combat';
+import { EffectSchema } from '~/types/taxonomy/effect';
 
-export type AbilityEffects = Partial<Record<EffectURN, any>>;
+export type AbilityEffects = Partial<Record<EffectURN, EffectSchema>>;
 
 export enum AbilityType {
   /**
@@ -36,16 +37,11 @@ export type AbilityTimers = {
     cooldown: Duration;
 };
 
-export type AbilitySchema = {
-  /**
-   * The related Skill
-   */
-  skill: SkillURN;
-
+export type AbilityInContainment = {
   /**
    * Requirements for the ability to be used
    */
-  requirements: Requirements;
+  requirements?: Requirements;
 
   /**
    * The kind of ability this is
@@ -55,12 +51,12 @@ export type AbilitySchema = {
   /**
    * Targeting rules
    */
-  targeting: TargetingSpecification;
+  targeting?: TargetingSpecification;
 
   /**
    * Effects that are applied to the target when the ability is used
    */
-  effects: AbilityEffects;
+  effects: EffectSchema[];
 
   /**
    * Translation key for the ability name
@@ -71,4 +67,11 @@ export type AbilitySchema = {
    * Translation key for the ability description
    */
   description: string;
+};
+
+export type AbilitySchema = AbilityInContainment & {
+  /**
+   * The related Skill
+   */
+  skill: SkillURN;
 };

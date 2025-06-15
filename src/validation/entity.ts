@@ -5,7 +5,7 @@ import {
   EntityURN,
   EmergentNarrative,
   SymbolicLink,
-  Character,
+  Actor,
   Place,
   AbstractEntity
 } from '@flux';
@@ -56,7 +56,7 @@ export function createEntityValidator<T extends EntityType>(type: T): (entity: u
 /**
  * Validator for Character entities
  */
-export const validateCharacter = typia.createValidate<Character>();
+export const validateCharacter = typia.createValidate<Actor>();
 
 /**
  * Validator for Place entities
@@ -114,8 +114,8 @@ export function isPlace(entity: AbstractEntity<EntityType>): entity is Place {
 /**
  * Type guard to check if an entity is a Character
  */
-export function isCharacter(entity: AbstractEntity<EntityType>): entity is Character {
-  return isEntityOfType(entity, EntityType.CHARACTER);
+export function isCharacter(entity: AbstractEntity<EntityType>): entity is Actor {
+  return isEntityOfType(entity, EntityType.ACTOR);
 }
 
 /**
@@ -129,9 +129,9 @@ export function isPlaceUrn(urn: EntityURN): urn is EntityURN<EntityType.PLACE> {
 /**
  * Type guard to check if a URN is a Character URN
  */
-export function isCharacterUrn(urn: EntityURN): urn is EntityURN<EntityType.CHARACTER> {
+export function isCharacterUrn(urn: EntityURN): urn is EntityURN<EntityType.ACTOR> {
   const parsed = parseEntityUrn(urn);
-  return parsed?.type === EntityType.CHARACTER;
+  return parsed?.type === EntityType.ACTOR;
 }
 
 /**

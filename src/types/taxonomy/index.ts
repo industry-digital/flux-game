@@ -37,9 +37,9 @@ export const TAXONOMY = {
       description: 'A location in the game world',
       examples: ['flux:place:nightcity', 'flux:place:wasteland:north']
     },
-    char: {
-      description: 'A character in the game world',
-      examples: ['flux:char:pc:123', 'flux:char:npc:vendor']
+    actor: {
+      description: 'A character or monster in the game world',
+      examples: ['flux:actor:pc:123', 'flux:actor:npc:the-ice-cream-man']
     },
     stat: {
       description: 'A character or item statistic',
@@ -102,24 +102,33 @@ export const TAXONOMY = {
       examples: ['flux:group:map:items', 'flux:group:list:players']
     },
     weapon: {
-      description: 'Items used for combat'
+      description: 'Items used for combat',
+      examples: ['flux:weapon:sword:longsword', 'flux:weapon:gun:pistol:9mm'],
     },
     armor: {
-      description: 'Protective equipment'
+      description: 'Protective equipment',
+      examples: ['flux:armor:helmet:steel', 'flux:armor:gundam:exia:head'],
     },
     ammo: {
-      description: 'Ammunition and projectiles'
+      description: 'Ammunition and projectiles',
+      examples: ['flux:ammo:bullet:9mm', 'flux:ammo:missile:rocket'],
     },
     timer: {
-      description: 'Time tracking and scheduling'
+      description: 'Time tracking and scheduling',
+      examples: ['flux:timer:weapon:setup', 'flux:timer:combat:roundtime'],
     },
     dimension: {
-      description: 'Measurement and quantification'
+      description: 'Measurement and quantification',
+      examples: ['flux:dimension:weight', 'flux:dimension:volume'],
     },
     currency: {
       description: 'The various currencies in the game world',
-      examples: ['flux:currency:gold', 'flux:currency:silver']
-    }
+      examples: ['flux:currency:gold', 'flux:currency:silver'],
+    },
+    monster: {
+      description: 'A monster in the game world',
+      examples: ['flux:monster:goblin:blazor:elite', 'flux:monster:faction:arasaka:cybernetic:assassin'],
+    },
   }
 } as const;
 
@@ -138,12 +147,12 @@ export namespace Taxonomy {
   export type Places = TaxonomyURN<'place'>;
 
   /**
-   * Characters of the game world
+   * Actors of the game world
    */
-  export type Characters = TaxonomyURN<'char'>;
+  export type Actors = TaxonomyURN<'actor'>;
 
   /**
-   * Character stats
+   * Actor stats
    */
   export type Stats = TaxonomyURN<'stat'>;
 
@@ -198,7 +207,7 @@ export namespace Taxonomy {
   export type Topics = TaxonomyURN<'topic'>;
 
   /**
-   * The various kinds of traits that can be applied to characters or items
+   * The various kinds of traits that can be applied to actors or items
    */
   export type Traits = TaxonomyURN<'trait'>;
 
@@ -213,7 +222,7 @@ export namespace Taxonomy {
   export type Mana = TaxonomyURN<'mana'>;
 
   /**
-   * Special abilities that characters can use
+   * Special abilities that actors can use
    */
   export type Abilities = TaxonomyURN<'ability'>;
 
@@ -242,12 +251,16 @@ export namespace Taxonomy {
    */
   export type Dimensions = TaxonomyURN<'dimension'>;
 
+  /**
+   * The various currencies in the game world
+   */
   export type Currency = TaxonomyURN<'currency'>;
 }
 
 export type EntityURN<T extends EntityType = EntityType> = `${RootNamespace}:${T}:${string}`;
 export type PlaceURN = Taxonomy.Places;
-export type CharacterURN = Taxonomy.Characters;
+export type SystemActorURN = `flux:sys:${string}`;
+export type ActorURN = Taxonomy.Actors | SystemActorURN;
 export type TraitURN = Taxonomy.Traits;
 export type AbilityURN = Taxonomy.Abilities;
 export type SkillURN = Taxonomy.Skills;

@@ -1,36 +1,36 @@
 import * as typia from 'typia';
 import { createEntityValidator } from './entity';
 import {
-  CharacterStats,
-  CharacterStatName,
-  CharacterURN,
+  ActorStats,
+  ActorURN,
   Skills,
   InjuryDescriptor,
   Equipment,
   SkillState,
   EntityType,
   Inventory,
+  ActorStat,
 } from '@flux';
 
 /**
  * Validator for a complete Character entity
  */
-export const validateCharacter = createEntityValidator(EntityType.CHARACTER);
+export const validateActor = createEntityValidator(EntityType.ACTOR);
 
 /**
  * Validator for CharacterURN
  */
-export const validateCharacterURN = typia.createValidate<CharacterURN>();
+export const validateActorURN = typia.createValidate<ActorURN>();
 
 /**
  * Validator for CharacterStats
  */
-export const validateCharacterStats = typia.createValidate<CharacterStats>();
+export const validateActorStats = typia.createValidate<ActorStats>();
 
 /**
  * Validator for a single character stat
  */
-export const validateCharacterStatName = typia.createValidate<CharacterStatName>();
+export const validateActorStat = typia.createValidate<ActorStat>();
 
 /**
  * Validator for Skills collection

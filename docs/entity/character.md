@@ -469,3 +469,315 @@ Characters are stored as fragments in the database:
 - [`Skill`](./skill.md) - Character abilities and proficiencies
 - [`Effect`](./effect.md) - Temporary conditions affecting characters
 - [`Group`](./group.md) - Organizations characters can join
+
+## Complete Character Example
+
+Here is a fully-formed Character entity showing all properties with realistic values:
+
+```typescript
+const exampleCharacter: Character = {
+  // AbstractEntity properties
+  type: EntityType.CHARACTER,
+  id: 'flux:char:aria-shadowblade-7f3a9b2c',
+  path: ['aria-shadowblade-7f3a9b2c'],
+
+  // DescribableMixin properties
+  name: 'flux:i18n:char:aria-shadowblade-7f3a9b2c:name',
+  description: {
+    base: 'flux:i18n:char:aria-shadowblade-7f3a9b2c:description',
+    emergent: 'Recently returned from a dangerous mission in the Combat Zone, bearing new scars and a haunted look in her eyes. Her cybernetic arm gleams with fresh maintenance work.'
+  },
+
+  location: {
+    type: EntityType.PLACE,
+    id: 'flux:place:world:riverdale:library',
+    path: ['world', 'riverdale', 'library']
+  },
+
+  party: {
+    type: EntityType.COLLECTION,
+    id: 'flux:collection:D6nJUQrCaqNJ7razZmkzqZWV',
+    path: ['world', 'riverdale', 'library']
+  },
+
+  level: {
+    nat: 12
+  },
+
+  hp: {
+    nat: {
+      cur: 85,
+      max: 100
+    },
+    eff: {
+      cur: 85,
+      max: 110
+    },
+    mods: {
+      'cyberware-boost': {
+        type: 'flux:modifier:stat:hp',
+        origin: {
+          type: 'flux:item:cyberware:subdermal-armor'
+        },
+        value: 10,
+        duration: 'permanent'
+      }
+    }
+  },
+
+  traits: {
+    'flux:trait:personality:cautious': 1,
+    'flux:trait:background:street-kid': 1,
+    'flux:trait:augmentation:cybernetic-arm': 1
+  },
+
+  stats: {
+    STR: {
+      nat: 14,
+      eff: 16,
+      mods: {
+        'cybernetic-arm': {
+          type: 'flux:modifier:stat:str',
+          origin: {
+            type: 'flux:item:cyberware:cybernetic-arm'
+          },
+          value: 2,
+          duration: 'permanent'
+        }
+      }
+    },
+    DEX: {
+      nat: 18,
+      eff: 20,
+      mods: {
+        'neural-boost': {
+          type: 'flux:modifier:stat:dex',
+          origin: {
+            type: 'flux:item:cyberware:neural-boost'
+          },
+          value: 2,
+          duration: 'permanent'
+        }
+      }
+    },
+    AGI: { nat: 16 },
+    CON: { nat: 13 },
+    INT: { nat: 15 },
+    WIS: { nat: 17 },
+    PRS: { nat: 12 },
+    LCK: { nat: 14 }
+  },
+
+  injuries: {
+    'flux:anatomy:torso': {
+      integrity: 0.85,
+      effects: {
+        'old-gunshot-wound': {
+          type: 'flux:effect:injury:scar',
+          magnitude: -1,
+          duration: 'permanent',
+          source: 'flux:event:combat:gunshot',
+          applied: 1698234567000
+        }
+      }
+    }
+  },
+
+  mana: {
+    'flux:mana:neural': {
+      nat: {
+        cur: 45,
+        max: 50
+      }
+    },
+    'flux:mana:cyber': {
+      nat: {
+        cur: 30,
+        max: 35
+      }
+    }
+  },
+
+  effects: {
+    'combat-stim': {
+      type: 'flux:effect:buff:combat-stim',
+      magnitude: 3,
+      duration: {
+        start: 1698234567000,
+        end: 1698234867000
+      },
+      source: 'flux:item:consumable:combat-stim',
+      applied: 1698234567000
+    }
+  },
+
+  inventory: {
+    mass: 8750, // 8.75 kg in grams
+    items: {
+      'flux:item:weapon:smartgun-pistol': {
+        quantity: 1,
+        condition: 0.92,
+        ts: 1698234567000
+      },
+      'flux:item:consumable:health-stim': {
+        quantity: 3,
+        condition: 1.0,
+        ts: 1698234567000
+      },
+      'flux:item:consumable:combat-stim': {
+        quantity: 1,
+        condition: 1.0,
+        ts: 1698234567000
+      },
+      'flux:item:gear:hacking-deck': {
+        quantity: 1,
+        condition: 0.88,
+        ts: 1698234567000
+      },
+      'flux:item:currency:eurodollars': {
+        quantity: 2500,
+        condition: 1.0,
+        ts: 1698234567000
+      }
+    },
+    ts: 1698234567000
+  },
+
+  equipment: {
+    'flux:anatomy:hand:right': {
+      'flux:item:weapon:smartgun-pistol': 1
+    },
+    'flux:anatomy:torso': {
+      'flux:item:armor:armored-jacket': 1
+    },
+    'flux:anatomy:head': {
+      'flux:item:gear:tactical-goggles': 1
+    },
+    'flux:anatomy:arm:left': {
+      'flux:item:cyberware:cybernetic-arm': 1
+    }
+  },
+
+  wallet: {
+    'flux:currency:eurodollars': 2500,
+    'flux:currency:bitcoin': 0.15,
+    'flux:currency:street-cred': 750
+  },
+
+  memberships: {
+    'flux:faction:mercenaries:afterlife': {
+      role: 'veteran-merc',
+      ts: 1690234567000,
+      duration: undefined // permanent
+    },
+    'flux:faction:fixers:rogue-network': {
+      role: 'trusted-operative',
+      ts: 1692234567000
+    }
+  },
+
+  reputation: {
+    'flux:faction:corpo:arasaka': -0.7, // Hostile
+    'flux:faction:gang:maelstrom': 0.3,  // Neutral-friendly
+    'flux:faction:mercenaries:afterlife': 0.8, // Very friendly
+    'flux:faction:police:ncpd': -0.4 // Unfriendly
+  },
+
+  subscriptions: {
+    'flux:topic:combat:initiative': 1,
+    'flux:topic:social:reputation-change': 1,
+    'flux:topic:location:nightcity': 1
+  },
+
+  skills: {
+    'flux:skill:weapon:gun:pistol': {
+      xp: 15000,
+      pxp: 250,
+      conc: {
+        nat: {
+          cur: 80,
+          max: 100
+        }
+      },
+      ts: 1698234567000
+    },
+    'flux:skill:defense:evade': {
+      xp: 12000,
+      pxp: 180,
+      conc: {
+        nat: {
+          cur: 70,
+          max: 85
+        }
+      },
+      ts: 1698234567000
+    },
+    'flux:skill:knowledge:tech': {
+      xp: 8500,
+      pxp: 120,
+      conc: {
+        nat: {
+          cur: 60,
+          max: 75
+        }
+      },
+      ts: 1698234567000
+    },
+    'flux:skill:survival:stealth': {
+      xp: 11000,
+      pxp: 200,
+      conc: {
+        nat: {
+          cur: 75,
+          max: 90
+        }
+      },
+      ts: 1698234567000
+    },
+    'flux:skill:social:influence': {
+      xp: 6000,
+      pxp: 80,
+      conc: {
+        nat: {
+          cur: 45,
+          max: 60
+        }
+      },
+      ts: 1698234567000
+    }
+  },
+
+  specializations: {
+    primary: {
+      'flux:skill:weapon:gun:pistol': 1,
+      'flux:skill:survival:stealth': 1,
+      'flux:skill:defense:evade': 1
+    },
+    secondary: {
+      'flux:skill:knowledge:tech': 1,
+      'flux:skill:craft:tech': 1
+    }
+  },
+
+  prefs: {
+    'flux:pref:ui:combat-auto-target': true,
+    'flux:pref:ui:inventory-sort': 'by-type',
+    'flux:pref:gameplay:difficulty': 'normal',
+    'flux:pref:social:auto-decline-party-invites': false,
+    'flux:pref:audio:combat-music': true
+  }
+};
+```
+
+This example demonstrates:
+
+- **Complete Type Coverage**: Every property from the Character type definition
+- **Realistic Values**: Stats, skills, and equipment appropriate for a mid-level cyberpunk character
+- **Translation URNs**: Proper use of the translation system for names and descriptions
+- **Emergent Narrative**: Dynamic description that evolves with gameplay
+- **Complex Relationships**: Party membership, faction reputation, equipment slots
+- **Progression Systems**: Experience points, skill concentrations, specializations
+- **Cyberpunk Setting**: Appropriate items, factions, and augmentations
+- **Temporal Data**: Timestamps for inventory updates, effect applications, etc.
+- **Modifiers**: Equipment bonuses affecting stats and attributes
+- **Fragment-Ready*A skilled ranger from the northern forests, known for her tracking abilities.

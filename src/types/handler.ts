@@ -1,9 +1,9 @@
 import { EmergentEvent, EmergentEventInput, EventType } from '~/types/event';
 import { AbstractCommand, CommandType, Intent } from '~/types/intent';
-import { EntityURN, PlaceURN } from '~/types/taxonomy';
-import { Entity } from '~/types/entity/entity';
+import { ActorURN, PlaceURN } from '~/types/taxonomy';
 import { Place } from '~/types/entity/place';
 import { SideEffect, SideEffectInput } from '~/types/side-effect';
+import { Actor } from '~/types/entity/actor';
 
 /**
  * Union type of all allowed input types for the pipeline
@@ -20,8 +20,19 @@ type EventFilter = (event: EmergentEvent) => boolean;
  * This is the minimal set of properties that a world projection must have.
  */
 export type MinimalWorldProjection = {
-  self: EntityURN;
-  actors: Record<EntityURN, Entity>;
+  /**
+   * The self-referential entity URN of the actor that is currently executing the command.
+   */
+  self: ActorURN;
+
+  /**
+   * All actors that are contextually relevant to the current command
+   */
+  actors: Record<ActorURN, Actor>;
+
+  /**
+   * All places that are contextually relevant to the current command
+   */
   places: Record<PlaceURN, Place>;
 };
 
@@ -29,7 +40,7 @@ export type CombatProjectionMixin = {
   // add combat-specific fields
 };
 
-export type VendorProjectionMixin = {
+export type TradeProjectionMixin = {
   // add vendor-specific fields
 };
 
@@ -38,7 +49,7 @@ export type VendorProjectionMixin = {
 export type WorldProjection =
   | MinimalWorldProjection
   | MinimalWorldProjection & CombatProjectionMixin
-  | MinimalWorldProjection & VendorProjectionMixin;
+  | MinimalWorldProjection & TradeProjectionMixin;
 
 /**
  * An error that occurred during the execution of a command.
@@ -150,18 +161,6 @@ export type TransformerContext<W extends WorldProjection = WorldProjection> =
   & WorldProjectionConsumer<W>;
 
 /**
- * Context during planning stage
- * @deprecated Moved to server package
- */
-export type PlannerContext<W extends WorldProjection = WorldProjection> =
-  & PotentiallyImpureOperations
-  & ErrorDeclarationProducer
-  & ErrorDeclarationConsumer
-  & EventDeclarationConsumer
-  & SideEffectDeclarationProducer
-  & WorldProjectionConsumer<W>;
-
-/**
  * Interface for handlers that operate in the Transformation stage
  * These handlers immutably update the world state projection (an Immer draft), and declare emergent events like
  * `ACTOR_DID_MOVE`.
@@ -237,32 +236,6 @@ export type PureHandlerImplementation<
   C,
   I extends AllowedInput,
 > = new (...args: any[]) => PureHandlerInterface<C, I>;
-
-/**
- * Type guard for Commands with specific type and arguments
- */
-export type CommandTypeGuard<T extends CommandType, A extends Record<string, any> = {}> =
-  InputTypeGuard<AbstractCommand, AbstractCommand<T, A>>;
-
-/**
- * Helper function to create a command type guard
- */
-export function createCommandGuard<T extends CommandType, A extends Record<string, any> = {}>(
-  type: T
-): CommandTypeGuard<T, A> {
-  return (input: AbstractCommand): input is AbstractCommand<T, A> =>
-    'type' in input && input.type === type;
-}
-
-/**
- * Type guard that checks if input is a validated Command of a specific type
- */
-export const isCommandOfType = <T extends CommandType, A extends Record<string, any> = Record<string, any>>(
-  input: AbstractCommand,
-  type: T
-): input is AbstractCommand<T, A> => {
-  return 'type' in input && input.__type === 'command' && input.type === type;
-};
 
 /**
  * Type guard that ensures the input is an Intent

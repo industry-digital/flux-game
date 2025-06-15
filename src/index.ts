@@ -2,8 +2,8 @@ export * from '@flux';
 export * from '~/lib/taxonomy';
 export * from '~/worldkit/entity/util';
 
-export { CreateCharacterCommand } from '~/command/CREATE_CHARACTER';
-export { CreatePlaceCommand } from '~/command/CREATE_PLACE';
+export { CreateActorCommand } from '~/command/CREATE_ACTOR/handler';
+export { CreatePlaceCommand } from '~/command/CREATE_PLACE/handler';
 
 export {
   parseEntityUrn,
@@ -22,10 +22,10 @@ export {
   isValidatedCommandOfType,
   createCommandTypeGuard,
   ignoreFailedCommands,
-} from '~/types/intent';
+} from '~/lib/intent';
 
 import { Command, PureHandlerImplementation, TransformerContext } from '@flux';
-import { MOVE } from '~/command/MOVE';
+import { MOVE } from '~/command/MOVE/handler';
 import { safeTopologicalSort } from '~/lib/dag';
 
 /**

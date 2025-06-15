@@ -1,7 +1,6 @@
 import {
   AbilityURN,
   ArmorURN,
-  CharacterURN,
   DirectionURN,
   EffectURN,
   EntityType,
@@ -116,8 +115,6 @@ export const createPlaceUrn = (...terms: string[]): PlaceURN => {
 };
 
 export const createGroupUrn = (...terms: string[]): GroupURN => createEntityUrn(EntityType.GROUP, ...terms);
-export const createCharacterUrn = (...terms: string[]): CharacterURN =>
-  createTaxonomyUrn('char', ...terms) as CharacterURN;
 export const createItemUrn = (...terms: string[]): ItemURN => createTaxonomyUrn('item', ...terms);
 export const createTraitUrn = (...terms: string[]): TraitURN => createTaxonomyUrn('trait', ...terms);
 export const createSkillUrn = (...terms: string[]): SkillURN => createTaxonomyUrn('skill', ...terms);
@@ -210,7 +207,6 @@ export const isUrnOfVocabulary = (urn: string, vocabulary: RootVocabulary): bool
 };
 
 export const isPlaceUrn = (urn: string): urn is PlaceURN => isUrnOfVocabulary(urn, 'place');
-export const isCharacterUrn = (urn: string): urn is CharacterURN => isUrnOfVocabulary(urn, 'char');
 export const isItemUrn = (urn: string): urn is ItemURN => isUrnOfVocabulary(urn, 'item');
 
 // === Pattern Matching ===
