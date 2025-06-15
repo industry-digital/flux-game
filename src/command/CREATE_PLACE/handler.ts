@@ -30,7 +30,7 @@ export const createPlaceCommandReducer: PureReducer<TransformerContext, CreatePl
   return context;
 };
 
-export class CreatePlaceCommandHandler implements PureHandlerInterface<TransformerContext, CreatePlaceCommand> {
+export class CREATE_PLACE implements PureHandlerInterface<TransformerContext, CreatePlaceCommand> {
   reduce = createPlaceCommandReducer;
   dependencies = [];
   handles = (input: AllowedInput): input is CreatePlaceCommand => {

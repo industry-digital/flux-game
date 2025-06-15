@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import {
-  CreatePlaceCommandHandler,
+  CREATE_PLACE,
   CreatePlaceCommand,
   createPlaceCommandReducer
 } from './handler';
@@ -9,11 +9,11 @@ import { createEntityUrn, createPlaceUrn } from '~/lib/taxonomy';
 import { Direction } from '~/types/world/space';
 
 describe('CreatePlaceCommandHandler', () => {
-  let handler: CreatePlaceCommandHandler;
+  let handler: CREATE_PLACE;
   let mockContext: TransformerContext;
 
   beforeEach(() => {
-    handler = new CreatePlaceCommandHandler();
+    handler = new CREATE_PLACE();
 
     // Create mock context with clean world state
     mockContext = {

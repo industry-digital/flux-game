@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import {
-  CreateActorCommandHandler,
+  CREATE_ACTOR,
   CreateActorCommand,
   createActorCommandReducer
 } from './handler';
@@ -16,11 +16,11 @@ import { createEntityUrn } from '~/lib/taxonomy';
 import { ActorType } from '~/types/entity/actor';
 
 describe('CreateActorCommandHandler', () => {
-  let handler: CreateActorCommandHandler;
+  let handler: CREATE_ACTOR;
   let mockContext: TransformerContext;
 
   beforeEach(() => {
-    handler = new CreateActorCommandHandler();
+    handler = new CREATE_ACTOR();
 
     // Create mock context with clean world state
     mockContext = {

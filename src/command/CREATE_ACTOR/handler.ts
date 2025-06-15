@@ -35,7 +35,7 @@ export const createActorCommandReducer: PureReducer<TransformerContext, CreateAc
   return context;
 };
 
-export class CreateActorCommandHandler implements PureHandlerInterface<TransformerContext, CreateActorCommand> {
+export class CREATE_ACTOR implements PureHandlerInterface<TransformerContext, CreateActorCommand> {
   reduce = createActorCommandReducer;
   dependencies = [];
   handles = (input: AllowedInput): input is CreateActorCommand => {
