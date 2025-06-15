@@ -57,7 +57,6 @@ export const createCommand = <
 };
 
 export const createCommandFromIntent = <T extends CommandType>(
-  actor: ActorURN,
   intent: Intent,
   transform: CommandTransformer,
   { now = Date.now() }: FactoryOptions = {},
@@ -66,7 +65,7 @@ export const createCommandFromIntent = <T extends CommandType>(
     __type: 'command',
     id: intent.id,
     ts: now,
-    actor: actor,
+    actor: intent.actor as ActorURN,
   };
 
   return transform(defaults as AbstractCommand<T>) as AbstractCommand<T>;
