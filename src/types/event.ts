@@ -47,6 +47,8 @@ export enum EventType {
   ACTOR_MOVEMENT_DID_FAIL = 'actor:move:failure',
   ACTOR_CREATION_DID_SUCCEED  = 'actor:creation:success',
   ACTOR_CREATION_DID_FAIL = 'actor:creation:failure',
+  ACTOR_DID_MATERIALIZE = 'actor:materialized',
+  ACTOR_DID_DEMATERIALIZE = 'actor:dematerialized',
 }
 
 export type PlaceEventPayloadBase = {
@@ -113,9 +115,22 @@ export type ActorMovementEventInput =
   | ActorMovementDidFailInput
   | ActorMovementDidSucceedInput;
 
+export type ActorMaterializedEventInput =
+  & AbstractEmergentEventInput<
+    EventType.ACTOR_DID_MATERIALIZE,
+    ActorEventPayloadBase & { placeId: PlaceURN }
+  >;
+
+export type ActorDematerializedEventInput =
+  & AbstractEmergentEventInput<
+    EventType.ACTOR_DID_DEMATERIALIZE,
+    ActorEventPayloadBase & { placeId: PlaceURN }
+  >;
 
 // Union of all unions
 export type EmergentEventInput =
   | PlaceCreationEventInput
   | ActorCreationEventInput
-  | ActorMovementEventInput;
+  | ActorMovementEventInput
+  | ActorMaterializedEventInput
+  | ActorDematerializedEventInput;
