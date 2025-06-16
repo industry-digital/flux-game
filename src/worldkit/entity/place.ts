@@ -1,7 +1,7 @@
 import { EntityType, Place, Exit, PlaceURN } from '@flux';
 import { createEntity, FactoryOptions } from './util';
 import { merge } from 'lodash';
-import { ExitInput, PlaceInput } from '~/types/entity/place';
+import { ExitInput, Exits, PlaceInput } from '~/types/entity/place';
 
 const identity = <T>(x: T): T => x;
 
@@ -17,8 +17,12 @@ export const createPlace = (
         id: entity.id,
         name: entity.name || '',
         description: entity.description || '',
-        exits: {},
-        entities: {}
+        entities: {},
+        exits: (input.exits ?? []).reduce((acc, exitInput) => {
+          const exit = createExit(exitInput);
+          acc[exit.direction] = exit;
+          return acc;
+        }, {} as Exits),
       };
 
       return merge({}, entity, defaults, input) as Place;
