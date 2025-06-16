@@ -24,4 +24,6 @@ export const nightcityCharacters: ActorInput[] = [
   }
 ];
 
-export default nightcityCharacters;
+const factory = (): ActorInput[] => nightcityCharacters;
+
+export default factory;
