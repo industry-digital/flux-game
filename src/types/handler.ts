@@ -1,5 +1,5 @@
 import { EmergentEvent, EmergentEventInput, EventType } from '~/types/event';
-import { AbstractCommand, CommandType, Intent } from '~/types/intent';
+import { SystemCommand, CommandType, Intent, AnyCommand } from '~/types/intent';
 import { ActorURN, PlaceURN } from '~/types/taxonomy';
 import { Place } from '~/types/entity/place';
 import { SideEffect, SideEffectInput } from '~/types/side-effect';
@@ -8,7 +8,7 @@ import { Actor } from '~/types/entity/actor';
 /**
  * Union type of all allowed input types for the pipeline
  */
-export type AllowedInput = AbstractCommand | Intent;
+export type AllowedInput = SystemCommand | Intent;
 
 /**
  * For filter() and find() methods, this is a function that takes an EmergentEvent
@@ -20,11 +20,6 @@ type EventFilter = (event: EmergentEvent) => boolean;
  * This is the minimal set of properties that a world projection must have.
  */
 export type MinimalWorldProjection = {
-  /**
-   * The self-referential entity URN of the actor that is currently executing the command.
-   */
-  self: ActorURN;
-
   /**
    * All actors that are contextually relevant to the current command
    */
@@ -166,12 +161,12 @@ export type TransformerContext<W extends WorldProjection = WorldProjection> =
  * `ACTOR_DID_MOVE`.
  */
 export type TransformerInterface<
-  I extends AbstractCommand,
+  I extends SystemCommand,
 > = {
   /**
    * The implementation should return `true` if the handler is interested in processing the input
    */
-  handles: (command: AbstractCommand) => command is I;
+  handles: (command: SystemCommand) => command is I;
 
   /**
    * Dependencies on other transformers that must run before this one
@@ -187,7 +182,7 @@ export type TransformerInterface<
 }
 
 export type TransformerImplementation<
-  I extends AbstractCommand,
+  I extends SystemCommand,
 > = new (...args: any[]) => TransformerInterface<I>;
 
 /**
@@ -198,13 +193,19 @@ export type PureReducer<C, I> = (context: C, input: I) => C;
 
 /**
  * A reducer that acts in the pure Transformation stage
+ * @deprecated Use PureReducer<TransformerContext, AnyCommand<T, A>> instead for more flexibility
  */
-export type Transformer<T extends CommandType, A extends Record<string, any>> = PureReducer<TransformerContext, AbstractCommand<T, A>>;
+export type Transformer<T extends CommandType, A extends Record<string, any>> = PureReducer<TransformerContext, SystemCommand<T, A>>;
+
+/**
+ * A flexible command reducer that can handle both system and actor commands
+ */
+export type CommandReducer<T extends CommandType, A extends Record<string, any>> = PureReducer<TransformerContext, AnyCommand<T, A>>;
 
 /**
  * Type guard for determining if a handler can process a specific input
  */
-export type InputTypeGuard<I extends AbstractCommand, S extends I> = (input: I) => input is S;
+export type InputTypeGuard<I extends SystemCommand, S extends I> = (input: I) => input is S;
 
 /**
  * A handler is just an object that associates a reducer-like function with its dependencies.

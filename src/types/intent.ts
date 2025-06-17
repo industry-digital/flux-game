@@ -2,7 +2,7 @@ import { MoveCommandArgs } from '~/command/MOVE/handler';
 import { PlaceInput } from '~/types/entity/place';
 import { ActorInput } from '~/types/entity/actor';
 import { ActorURN, EntityURN, PlaceURN } from '~/types/taxonomy';
-import { ExecutionError, InputTypeGuard } from '~/types/handler';
+import { InputTypeGuard } from '~/types/handler';
 
 export type InputMetadata = { __type: 'command' | 'intent' };
 
@@ -39,14 +39,19 @@ export type CommandInput<
   id?: string;
 
   /**
+   * Timestamp when the command was issued (milliseconds since epoch)
+   */
+  ts?: number;
+
+  /**
    * The actor that issued this command
    */
   actor?: ActorURN;
 
   /**
-   * Timestamp when the command was issued (milliseconds since epoch)
+   * Optional, non-authoritative location of the actor at the time the command was issued.
    */
-  ts?: number;
+  location?: PlaceURN;
 
   /**
    * The specific type of command
@@ -57,58 +62,76 @@ export type CommandInput<
    * Command-specific arguments
    */
   args: A;
-
-  /**
-   * The actor's current location
-   */
-  location?: PlaceURN;
-}
+};
 
 /**
  * A fully validated Command with guaranteed fields
  * Safe to execute without additional validation
  */
-export type AbstractCommand<
+export type SystemCommand<
   T extends CommandType = CommandType,
   A extends Record<string, any> = Record<string, any>
-> = InputMetadata & Omit<CommandInput<T, A>, 'id' | 'ts'> & {
-  /**
-   * Guaranteed unique identifier
-   */
-  id: string;
+> =
+  & InputMetadata
+  & Omit<CommandInput<T, A>, 'id' | 'ts'>
+  & {
+    /**
+     * Guaranteed unique identifier
+     */
+    id: string;
 
-  /**
-   * The moment the command was created; epoch milliseconds
-   */
-  ts: number;
+    /**
+     * The moment the command was created; epoch milliseconds
+     */
+    ts: number;
+  };
 
-  /**
-   * The world actor that issued the command.
-   * This is always populated if the command is issued by one of:
-   *   - a player character
-   *   - a non-player character
-   *  - a monster
-   */
-  actor?: ActorURN;
+export type ActorCommandInput<
+  T extends CommandType,
+  A extends Record<string, any> = Record<string, any>
+> =
+  & CommandInput<T, A>
+  & {
 
-  /**
-   * The location of the actor at the time the command was issued
-   */
-  location?: PlaceURN;
+    /**
+     * The actor that issued this command
+     */
+    actor: ActorURN;
 
-  /**
-   * Indicates if this command failed during execution.
-   * This allows the command to continue propagating through the pipeline
-   * while carrying its failure state.
-   */
-  failed?: boolean;
+    /**
+     * The actor's current location
+     */
+    location?: PlaceURN;
+  };
 
-  /**
-   * Errors encountered during execution, if any.
-   * Present when failed=true.
-   */
-  errors?: ExecutionError[];
-}
+/**
+ * A command that is issued by an Actor (i.e., a player character, a non-player character, or a monster)
+ */
+export type ActorCommand<
+  T extends CommandType,
+  A extends Record<string, any> = Record<string, any>
+> =
+  & SystemCommand<T, A>
+  & {
+
+    /**
+     * The Actor that issued the command
+     * A player, NPC, or monster.
+     * @example `flux:actor:npc:owain-the-knight`
+     */
+    actor: ActorURN;
+
+    /**
+     * Optional, non-authoritative location of the actor at the time the command was issued.
+     * This parameter lets us fetch a place, and all actors within, in a single database roundtrip.
+     * It is very easy to verify whether the actor is telling the truth about their location. For example,
+     * the actor will not have a representation in the place that they claim to be in.
+     *
+     * command fails.
+     * @example `flux:place:the-breach:barricades:west-gate`
+     */
+    location?: PlaceURN;
+  };
 
 /**
  * Serializable NLP analysis results from processing the intent text
@@ -122,6 +145,7 @@ export type NaturalLanguageAnalysis = {
 /**
  * Input format for text-based intents from users
  * Represents natural language input before parsing
+ * An Intent *always* originates from an Actor and as such, always has an `actor` URN.
  */
 export type IntentInput = {
   /**
@@ -130,17 +154,12 @@ export type IntentInput = {
   id?: string;
 
   /**
-   * Optional timestamp when the intent was issued
-   */
-  ts?: number;
-
-  /**
    * The entity that issued this intent
    */
   actor: EntityURN;
 
   /**
-   * The location of the actor at the time the intent was issued
+   * Optional, non-authoritative location of the actor at the time the intent was issued.
    */
   location?: PlaceURN;
 
@@ -158,21 +177,50 @@ export type IntentInput = {
 /**
  * A fully validated Intent with guaranteed fields
  */
-export type Intent = InputMetadata & Omit<IntentInput, 'id' | 'ts' | 'nlp'> & {
-  id: string;
-  ts: number;
-  nlp: NaturalLanguageAnalysis;
-};
-
+export type Intent =
+  & InputMetadata
+  & Omit<IntentInput, 'id' | 'ts' | 'nlp'>
+  & {
+    id: string;
+    ts: number;
+    nlp: NaturalLanguageAnalysis;
+  };
 
 /**
  * Type guard for Commands with specific type and arguments
  */
-export type CommandTypeGuard<T extends CommandType, A extends Record<string, any> = {}> =
-  InputTypeGuard<AbstractCommand, AbstractCommand<T, A>>;
+export type SystemCommandTypeGuard<
+  T extends CommandType,
+  A extends Record<string, any> = Record<string, any>
+> =
+  InputTypeGuard<SystemCommand, SystemCommand<T, A>>;
+
+export type ActorCommandTypeGuard<
+  T extends CommandType,
+  A extends Record<string, any> = Record<string, any>
+> =
+  InputTypeGuard<ActorCommand<CommandType>, ActorCommand<T, A>>;
+
+/**
+ * Union type for any command - either system-issued or actor-issued
+ * This provides flexibility for handlers that can work with both types
+ */
+export type AnyCommand<
+  T extends CommandType = CommandType,
+  A extends Record<string, any> = Record<string, any>
+> = SystemCommand<T, A> | ActorCommand<T, A>;
+
+/**
+ * Type guard for any command (system or actor) with specific type and arguments
+ */
+export type AnyCommandTypeGuard<
+  T extends CommandType,
+  A extends Record<string, any> = Record<string, any>
+> =
+  InputTypeGuard<AnyCommand, AnyCommand<T, A>>;
 
 export type Command =
-| AbstractCommand<CommandType.UNRESOLVED_COMMAND, any>
-| AbstractCommand<CommandType.CREATE_PLACE, PlaceInput>
-| AbstractCommand<CommandType.MOVE, MoveCommandArgs>
-| AbstractCommand<CommandType.CREATE_ACTOR, ActorInput>;
+| SystemCommand<CommandType.CREATE_PLACE, PlaceInput>
+| SystemCommand<CommandType.CREATE_ACTOR, ActorInput>
+| ActorCommand<CommandType.UNRESOLVED_COMMAND>
+| ActorCommand<CommandType.MOVE, MoveCommandArgs>;

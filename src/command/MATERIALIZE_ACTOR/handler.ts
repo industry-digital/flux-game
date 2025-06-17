@@ -1,33 +1,37 @@
 import { isCommandOfType } from '~/lib/intent';
 import {
   CommandType,
-  Command,
   PureReducer,
   TransformerContext,
   PureHandlerInterface,
   AllowedInput,
   EventType,
   SpecialVisibility,
+  ActorCommand,
 } from '@flux';
 
-export type MaterializeActorCommand = Command<CommandType.MATERIALIZE_ACTOR>;
+export type MaterializeActorCommand = ActorCommand<CommandType.MATERIALIZE_ACTOR>;
 
 export const materializeActorCommandReducer: PureReducer<TransformerContext, MaterializeActorCommand> = (
   context,
   command,
 ) => {
   const { declareError, declareEvent } = context;
-  const { self, actors, places } = context.world;
-  const actor = actors[self];
+  const { actors, places } = context.world;
+  const actor = actors[command.actor];
 
   if (!actor) {
-    declareError('Actor not found in world projection');
+    declareError('Command `actor` not found in world projection');
     return context;
   }
 
   const place = places[actor.location.id];
 
-  place.entities[actor.id] = { entity: actor, visibility: SpecialVisibility.VISIBLE_TO_EVERYONE };
+  // Materialize the actor in its location
+  place.entities[actor.id] = {
+    entity: actor,
+    visibility: SpecialVisibility.VISIBLE_TO_EVERYONE,
+  };
 
   declareEvent({
     type: EventType.ACTOR_DID_MATERIALIZE,

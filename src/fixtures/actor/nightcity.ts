@@ -1,4 +1,5 @@
-import { ActorInput, createPlaceUrn, ActorType } from '@flux';
+import { ActorInput, ActorType } from '@flux';
+import { createPlaceUrn } from '~/lib/taxonomy';
 
 export const nightcityCharacters: ActorInput[] = [
   {

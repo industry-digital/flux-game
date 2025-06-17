@@ -5,7 +5,6 @@ import { Duration } from '~/types/world/time';
 import { ActorStat } from '~/types/entity/actor';
 import { DamageSpecification } from '~/types/damage';
 import { UnitOfDistance } from '~/types/world/measures';
-import { } from '~/types/schema/equipment';
 
 export type WeaponAttackSpecification = {
   /**
@@ -57,7 +56,7 @@ export type WeaponRangeSpecification = {
 /**
  * Complete attributes for a weapon item
  */
-export interface WeaponSpecification extends EquipmentMixin, Partial<ChargeableMixin> {
+export interface WeaponSchema extends EquipmentMixin, Partial<ChargeableMixin> {
 
   /**
    * The anatomical locations this item occupies while the weapon is equipped.

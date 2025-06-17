@@ -35,8 +35,9 @@ export const createActor = (
     EntityType.ACTOR,
     (entity) => {
       const defaults: Partial<Actor> = {
-        name: entity.name || '',
-        description: entity.description || '',
+        name: entity.name,
+        description: entity.description,
+        subtype: ActorType.NPC,
         location: createSymbolicLink(EntityType.PLACE, ['nowhere']) as SymbolicLink<EntityType.PLACE>,
         level: createModifiableScalarAttribute(),
         hp: createModifiableBoundedAttribute(),

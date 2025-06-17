@@ -1,23 +1,23 @@
 import { isCommandOfType } from '~/lib/intent';
 import {
   CommandType,
-  Command,
   PureReducer,
   TransformerContext,
   PureHandlerInterface,
   AllowedInput,
   EventType,
+  ActorCommand,
 } from '@flux';
 
-export type DematerializeActorCommand = Command<CommandType.DEMATERIALIZE_ACTOR>;
+export type DematerializeActorCommand = ActorCommand<CommandType.DEMATERIALIZE_ACTOR>;
 
 export const dematerializeActorCommandReducer: PureReducer<TransformerContext, DematerializeActorCommand> = (
   context,
   command,
 ) => {
   const { declareError, declareEvent } = context;
-  const { self, actors, places } = context.world;
-  const actor = actors[self];
+  const { actors, places } = context.world;
+  const actor = actors[command.actor];
 
   if (!actor) {
     declareError('Actor not found in world projection');
@@ -42,6 +42,6 @@ export class DEMATERIALIZE_ACTOR implements PureHandlerInterface<TransformerCont
   reduce = dematerializeActorCommandReducer;
   dependencies = [];
   handles = (input: AllowedInput): input is DematerializeActorCommand => {
-    return isCommandOfType<CommandType.MATERIALIZE_ACTOR>(input, CommandType.MATERIALIZE_ACTOR);
+    return isCommandOfType<CommandType.DEMATERIALIZE_ACTOR>(input, CommandType.DEMATERIALIZE_ACTOR);
   };
 };

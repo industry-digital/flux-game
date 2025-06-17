@@ -3,15 +3,15 @@ import { isCommandOfType } from '~/lib/intent';
 import {
   ActorInput,
   CommandType,
-  Command,
   EventType,
   PureReducer,
   TransformerContext,
   PureHandlerInterface,
   AllowedInput,
 } from '@flux';
+import { SystemCommand } from '~/types/intent';
 
-export type CreateActorCommand = Command<CommandType.CREATE_ACTOR, ActorInput>;
+export type CreateActorCommand = SystemCommand<CommandType.CREATE_ACTOR, ActorInput>;
 
 export const createActorCommandReducer: PureReducer<TransformerContext, CreateActorCommand> = (
   context,

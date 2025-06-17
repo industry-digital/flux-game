@@ -2,13 +2,16 @@ import { usePlaceEntities } from '~/lib/place';
 import { createSymbolicLink } from '~/worldkit/entity/util';
 import {
   CommandType,
-  Command,
-  TransformerInterface,
   Direction,
-  Transformer,
   EventType,
   EntityType,
   SymbolicLink,
+  PureReducer,
+  TransformerContext,
+  PureHandlerInterface,
+  AllowedInput,
+  ActorCommand,
+  Place,
 } from '@flux';
 import { isCommandOfType } from '~/lib/intent';
 
@@ -16,21 +19,21 @@ export type MoveCommandArgs = {
   direction: Direction;
 };
 
-export type MoveCommand = Command<CommandType.MOVE, MoveCommandArgs>;
+export type MoveCommand = ActorCommand<CommandType.MOVE, MoveCommandArgs>;
 
 /**
  * Reducer for MOVE commands
  * Handles actor movement between places using direct world state access
  */
-export const MoveCommandReducer: Transformer<CommandType.MOVE, MoveCommandArgs> = (context, command) => {
+export const actorMovementReducer: PureReducer<TransformerContext, MoveCommand> = (context, command) => {
   const { world, declareEvent, declareError } = context;
   const { direction } = command.args;
-  const { self, actors, places } = world;
+  const { actors, places } = world;
 
   const defaultErrorMessage = "You can't go that way.";
 
-  // Get the actor
-  const actor = actors[self];
+  // Get the current actor
+  const actor = actors[command.actor];
   if (!actor) {
     declareError('Actor not found in `actors` projection');
     return context;
@@ -42,20 +45,20 @@ export const MoveCommandReducer: Transformer<CommandType.MOVE, MoveCommandArgs> 
   }
 
   // Get current place
-  const currentPlace = places[actor.location.id];
-  if (!currentPlace) {
+  const origin: Place = places[actor.location.id];
+  if (!origin) {
     declareError('Actor `location` not found in `places` projection');
     return context;
   }
 
   // Check for exit in the specified direction
-  const exit = currentPlace.exits[direction];
+  const exit = origin.exits[direction];
   if (!exit) {
     declareEvent({
       type: EventType.ACTOR_MOVEMENT_DID_FAIL,
       payload: {
         actorId: actor.id,
-        originId: currentPlace.id,
+        originId: origin.id,
         direction,
         reason: 'There is no exit in the specified direction.',
         message: defaultErrorMessage,
@@ -71,7 +74,7 @@ export const MoveCommandReducer: Transformer<CommandType.MOVE, MoveCommandArgs> 
       type: EventType.ACTOR_MOVEMENT_DID_FAIL,
       payload: {
         actorId: actor.id,
-        originId: currentPlace.id,
+        originId: origin.id,
         direction,
         reason: 'Movement destination not found in `places` projection',
         message: defaultErrorMessage,
@@ -81,7 +84,7 @@ export const MoveCommandReducer: Transformer<CommandType.MOVE, MoveCommandArgs> 
   }
 
   // Use place hook to move the entity
-  const { moveEntity } = usePlaceEntities(context, currentPlace);
+  const { moveEntity } = usePlaceEntities(context, origin);
   const moveSuccess = moveEntity(actor, destination);
 
   if (!moveSuccess) {
@@ -89,7 +92,7 @@ export const MoveCommandReducer: Transformer<CommandType.MOVE, MoveCommandArgs> 
       type: EventType.ACTOR_MOVEMENT_DID_FAIL,
       payload: {
         actorId: actor.id,
-        originId: currentPlace.id,
+        originId: origin.id,
         direction,
         reason: 'Failed to move actor between places',
         message: defaultErrorMessage,
@@ -107,7 +110,7 @@ export const MoveCommandReducer: Transformer<CommandType.MOVE, MoveCommandArgs> 
     payload: {
       actorId: actor.id,
       direction,
-      originId: currentPlace.id,
+      originId: origin.id,
       destinationId: exit.to,
     }
   });
@@ -119,12 +122,10 @@ export const MoveCommandReducer: Transformer<CommandType.MOVE, MoveCommandArgs> 
  * Handler for MOVE commands
  * Processes an actor's movement in the world
  */
-export class MOVE implements TransformerInterface<
-  Command<CommandType.MOVE, MoveCommandArgs>
-> {
-  reduce = MoveCommandReducer;
+export class MOVE implements PureHandlerInterface<TransformerContext, MoveCommand> {
+  reduce = actorMovementReducer;
   dependencies = [];
-  handles = (input: Command): input is Command<CommandType.MOVE, MoveCommandArgs> => {
+  handles = (input: AllowedInput): input is MoveCommand => {
     return isCommandOfType(input, CommandType.MOVE);
   };
 }

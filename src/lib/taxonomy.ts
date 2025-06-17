@@ -3,7 +3,6 @@ import {
   ArmorURN,
   DirectionURN,
   EffectURN,
-  EntityType,
   EntityURN,
   ItemURN,
   PlaceURN,
@@ -15,8 +14,9 @@ import {
   WeaponURN,
   SkillURN,
   StatURN,
-} from '@flux';
-import { GroupURN } from '~/types/taxonomy';
+  GroupURN,
+} from '~/types/taxonomy';
+import { EntityType } from '~/types/entity/entity';
 
 // === Configuration ===
 

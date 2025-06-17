@@ -119,10 +119,7 @@ describe('CreatePlaceCommandHandler', () => {
       expect(mockContext.declareEvent).toHaveBeenCalledWith({
         type: EventType.PLACE_CREATION_DID_SUCCEED,
         payload: {
-          place: expect.objectContaining({
-            type: EntityType.PLACE,
-            name: 'Test Place'
-          })
+          placeId: createPlaceUrn('test', 'test-place'),
         }
       });
     });
@@ -205,11 +202,12 @@ describe('CreatePlaceCommandHandler', () => {
       };
 
       const result = createPlaceCommandReducer(mockContext, command);
-
       const placeIds = Object.keys(result.world.places);
       const place = result.world.places[placeIds[0] as keyof typeof result.world.places];
+
       expect(place.name).toBe('Central Plaza');
       expect(place.exits).toBeDefined();
+      // Exit inputs are an array, but the output is a map
       expect(place.exits[Direction.NORTH]).toBeDefined();
       expect(place.exits[Direction.NORTH]?.label).toBe('Northern District');
     });

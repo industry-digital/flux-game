@@ -1,4 +1,5 @@
-import { AbilityType, ActorStat, createEffectUrn, SkillSchema, SpecialDuration, TargetType } from '@flux';
+import { AbilityType, ActorStat, SkillSchema, SpecialDuration, TargetType } from '@flux';
+import { createEffectUrn } from '~/lib/taxonomy';
 
 const Evasion: SkillSchema = {
   id: 'flux:skill:combat:defense:evasion',

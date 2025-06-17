@@ -1,4 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { createEntityUrn } from '~/lib/taxonomy';
 import {
   CREATE_ACTOR,
   CreateActorCommand,
@@ -10,10 +11,10 @@ import {
   TransformerContext,
   EntityType,
   Actor,
-  ActorURN
+  ActorURN,
+  ActorType
 } from '@flux';
-import { createEntityUrn } from '~/lib/taxonomy';
-import { ActorType } from '~/types/entity/actor';
+import { createActorUrn } from '~/worldkit/entity/actor';
 
 describe('CreateActorCommandHandler', () => {
   let handler: CREATE_ACTOR;
@@ -111,8 +112,10 @@ describe('CreateActorCommandHandler', () => {
         id: 'test-command-id',
         ts: 1234567890,
         type: CommandType.CREATE_ACTOR,
-        actor: createEntityUrn(EntityType.ACTOR, 'test-actor'),
-        args: { name: 'Test Actor' }
+        args: {
+          id: createActorUrn(ActorType.PC, 'test-actor'),
+          name: 'Test Actor'
+        },
       };
 
       createActorCommandReducer(mockContext, command);
@@ -121,10 +124,7 @@ describe('CreateActorCommandHandler', () => {
       expect(mockContext.declareEvent).toHaveBeenCalledWith({
         type: EventType.ACTOR_CREATION_DID_SUCCEED,
         payload: {
-          actor: expect.objectContaining({
-            type: EntityType.ACTOR,
-            name: 'Test Actor'
-          })
+          actorId: createActorUrn(ActorType.PC, 'test-actor'),
         }
       });
     });
@@ -230,7 +230,6 @@ describe('CreateActorCommandHandler', () => {
         id: 'test-command-id',
         ts: 1234567890,
         type: CommandType.CREATE_ACTOR,
-        actor: createActorUrn(ActorType.PC, 'test-actor'),
         args: {
           name: 'Integration Test Actor',
           description: 'A character created during integration testing'

@@ -1,4 +1,4 @@
-import { Taxonomy, ItemURN, PlaceURN } from '~/types/taxonomy';
+import { Taxonomy, ItemURN, PlaceURN, ActorURN } from '~/types/taxonomy';
 import { AppliedEffects } from '~/types/taxonomy/effect';
 import { EntityType, SymbolicLink, AbstractEntity, Describable } from '~/types/entity/entity';
 import { SkillState, Specializations } from '~/types/entity/skill';
@@ -156,6 +156,7 @@ export type AppliedAnatomicalDamage = {
  * that need to be provided when creating an Actor.
  */
 export type ActorInput = {
+  id?: ActorURN;
   name?: string;
   description?: string;
   location?: PlaceURN;

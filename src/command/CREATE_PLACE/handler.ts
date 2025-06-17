@@ -3,15 +3,15 @@ import { PlaceInput } from '~/types';
 import { isCommandOfType } from '~/lib/intent';
 import {
   CommandType,
-  Command,
   PureReducer,
   TransformerContext,
   PureHandlerInterface,
   AllowedInput,
   EventType,
 } from '@flux';
+import { SystemCommand } from '~/types/intent';
 
-export type CreatePlaceCommand = Command<CommandType.CREATE_PLACE, PlaceInput>;
+export type CreatePlaceCommand = SystemCommand<CommandType.CREATE_PLACE, PlaceInput>;
 
 export const createPlaceCommandReducer: PureReducer<TransformerContext, CreatePlaceCommand> = (
   context,

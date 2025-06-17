@@ -13,19 +13,24 @@ export const createPlace = (
   const base = createEntity<EntityType.PLACE, Place>(
     EntityType.PLACE,
     (entity) => {
+      const exits = (input.exits ?? []).reduce((acc, exitInput) => {
+        const exit = createExit(exitInput);
+        acc[exit.direction] = exit;
+        return acc;
+      }, {} as Exits);
+
       const defaults: Partial<Place> = {
         id: entity.id,
         name: entity.name || '',
         description: entity.description || '',
         entities: {},
-        exits: (input.exits ?? []).reduce((acc, exitInput) => {
-          const exit = createExit(exitInput);
-          acc[exit.direction] = exit;
-          return acc;
-        }, {} as Exits),
+        exits,
       };
 
-      return merge({}, entity, defaults, input) as Place;
+      // Create a copy of input without the exits array to avoid overriding the transformed exits
+      const { exits: _, ...inputWithoutExits } = input;
+
+      return merge({}, entity, defaults, inputWithoutExits) as Place;
     },
     options,
   );

@@ -119,6 +119,7 @@ export {
   SideEffectDeclarationContainer,
   SideEffectDeclarationProducer,
   Transformer,
+  CommandReducer,
   TransformerContext,
   TransformerImplementation,
   TransformerInterface,
@@ -128,12 +129,17 @@ export {
 } from './handler';
 
 export {
-  AbstractCommand as Command,
+  SystemCommand as Command,
   CommandInput,
   CommandType,
   Intent,
   IntentInput,
   Command as KnownCommand,
+  AnyCommand,
+  AnyCommandTypeGuard,
+  ActorCommand,
+  ActorCommandTypeGuard,
+  SystemCommandTypeGuard,
 } from './intent';
 
 export {
@@ -171,7 +177,7 @@ export {
 } from './schema/armor';
 
 export {
-  WeaponSpecification,
+  WeaponSchema as WeaponSpecification,
   WeaponAttackSpecification,
   WeaponTimers,
   WeaponRangeSpecification,
@@ -228,20 +234,6 @@ export {
   StatusEffect,
   getEffectCategory,
 } from './taxonomy/effect';
-
-export {
-  createEntityUrn,
-  createPlaceUrn,
-  createItemUrn,
-  createTraitUrn,
-  createSkillUrn,
-  createAbilityUrn,
-  createWeaponUrn,
-  createArmorUrn,
-  createDirectionUrn,
-  createEffectUrn,
-  createStatUrn,
-} from '~/lib/taxonomy';
 
 // World exports
 export {

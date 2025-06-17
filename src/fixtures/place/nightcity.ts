@@ -1,4 +1,5 @@
-import { PlaceInput, Direction, createPlaceUrn } from '@flux';
+import { PlaceInput, Direction } from '@flux';
+import { createPlaceUrn } from '~/lib/taxonomy';
 
 const factory = (): PlaceInput[] => {
   return [

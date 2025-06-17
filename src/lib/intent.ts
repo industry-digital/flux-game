@@ -1,12 +1,23 @@
 import { randomUUID } from '~/lib/uuid';
-import { AbstractCommand, CommandInput, CommandType, CommandTypeGuard, InputMetadata, Intent, NaturalLanguageAnalysis } from '~/types/intent';
+import {
+  SystemCommand,
+  CommandInput,
+  CommandType,
+  SystemCommandTypeGuard,
+  InputMetadata,
+  Intent,
+  NaturalLanguageAnalysis,
+  ActorCommand,
+  AnyCommand,
+} from '~/types/intent';
 import { ActorURN, EntityURN } from '~/types/taxonomy';
+import { uniqid } from '~/lib/random';
 
 const identity = <I, O = I>(x: I): O => x as unknown as O;
 
 export type FactoryOptions = {
   now?: number;
-  uuid?: () => string;
+  generateUniqueId?: () => string;
 };
 
 type Transformer<I, O = I> = (input: I) => O;
@@ -18,13 +29,13 @@ export const createIntentFromText = (
   self: EntityURN,
   text: string,
   transform: IntentTransformer = identity,
-  { now = Date.now(), uuid = randomUUID }: FactoryOptions = {},
+  { now = Date.now(), generateUniqueId = uniqid }: FactoryOptions = {},
 ): Intent => {
   const nlpAnalysis = createNaturalLanguageAnalysis(nlp, text);
 
   const defaults: Partial<Intent> = {
     __type: 'intent',
-    id: uuid(),
+    id: generateUniqueId(),
     ts: now,
     actor: self,
     text,
@@ -34,7 +45,7 @@ export const createIntentFromText = (
   return transform(defaults as Intent) as Intent;
 };
 
-type CommandTransformer = Transformer<AbstractCommand>;
+type CommandTransformer = Transformer<AnyCommand>;
 
 export const createCommand = <
   T extends CommandType,
@@ -42,33 +53,46 @@ export const createCommand = <
 >(
   input: CommandInput<T, A>,
   transform: CommandTransformer = identity,
-  { now = Date.now(), uuid = randomUUID }: FactoryOptions = {},
-): AbstractCommand <T> => {
-  const defaults: AbstractCommand<T, A> = {
-    __type: 'command',
-    id: input.id || uuid(),
-    actor: input.actor,
-    type: input.type,
-    ts: input.ts || now,
-    args: input.args as A,
-  };
-
-  return transform(defaults as AbstractCommand<T, A>)  as AbstractCommand<T, A>;
+  { now = Date.now(), generateUniqueId: uuid = randomUUID }: FactoryOptions = {},
+): AnyCommand<T, A> => {
+  // Check if this should be an ActorCommand based on presence of actor field
+  if ('actor' in input && input.actor) {
+    const actorDefaults: ActorCommand<T, A> = {
+      __type: 'command',
+      id: input.id || uuid(),
+      actor: input.actor,
+      location: 'location' in input ? input.location : undefined,
+      type: input.type,
+      ts: input.ts || now,
+      args: input.args as A,
+    };
+    return transform(actorDefaults) as ActorCommand<T, A>;
+  } else {
+    const systemDefaults: SystemCommand<T, A> = {
+      __type: 'command',
+      id: input.id || uuid(),
+      type: input.type,
+      ts: input.ts || now,
+      args: input.args as A,
+    };
+    return transform(systemDefaults) as SystemCommand<T, A>;
+  }
 };
 
 export const createCommandFromIntent = <T extends CommandType>(
   intent: Intent,
   transform: CommandTransformer,
   { now = Date.now() }: FactoryOptions = {},
-): AbstractCommand<T> => {
-  const defaults: Partial<AbstractCommand<T>> = {
+): ActorCommand<T> => {
+  const defaults: Partial<ActorCommand<T>> = {
     __type: 'command',
     id: intent.id,
     ts: now,
     actor: intent.actor as ActorURN,
+    location: intent.location,
   };
 
-  return transform(defaults as AbstractCommand<T>) as AbstractCommand<T>;
+  return transform(defaults as ActorCommand<T>) as ActorCommand<T>;
 };
 
 export const createNaturalLanguageAnalysis = (
@@ -85,21 +109,9 @@ export const createNaturalLanguageAnalysis = (
 };
 
 /**
- * Higher-order function that wraps any command type guard to ignore failed commands.
- * Useful when a handler only wants to process commands that haven't failed.
- */
-export const ignoreFailedCommands = <T extends AbstractCommand>(
-  guard: (input: unknown) => input is T
-) => {
-  return (input: unknown): input is T => {
-    return guard(input) && !input.failed;
-  };
-};
-
-/**
  * Type guard to check if input has the command metadata type
  */
-export const isCommand = (input: unknown): input is AbstractCommand => {
+export const isCommand = (input: unknown): input is SystemCommand => {
   return (
     typeof input === 'object' &&
     input !== null &&
@@ -110,6 +122,10 @@ export const isCommand = (input: unknown): input is AbstractCommand => {
     'id' in input &&
     'ts' in input
   );
+};
+
+export const isActorCommand = (input: unknown): input is SystemCommand<CommandType.CREATE_ACTOR> => {
+  return isCommand(input) && typeof input.actor === 'string';
 };
 
 /**
@@ -151,7 +167,7 @@ export const isCommandInput = (input: unknown): input is CommandInput => {
 export const isCommandOfType = <T extends CommandType, A extends Record<string, any> = Record<string, any>>(
   input: unknown,
   type: T
-): input is AbstractCommand<T, A> => {
+): input is SystemCommand<T, A> => {
   return isCommand(input) && input.type === type;
 };
 
@@ -159,9 +175,9 @@ export const isCommandOfType = <T extends CommandType, A extends Record<string, 
  * Type guard that checks if a validated Command is of a specific type
  */
 export const isValidatedCommandOfType = <T extends CommandType, A extends Record<string, any> = Record<string, any>>(
-  input: AbstractCommand,
+  input: SystemCommand,
   type: T
-): input is AbstractCommand<T, A> => {
+): input is SystemCommand<T, A> => {
   return input.type === type;
 };
 
@@ -170,8 +186,8 @@ export const isValidatedCommandOfType = <T extends CommandType, A extends Record
  */
 export function createCommandGuard<T extends CommandType, A extends Record<string, any> = {}>(
   type: T
-): CommandTypeGuard<T, A> {
-  return (input: AbstractCommand): input is AbstractCommand<T, A> =>
+): SystemCommandTypeGuard<T, A> {
+  return (input: SystemCommand): input is SystemCommand<T, A> =>
     'type' in input && input.type === type;
 }
 
@@ -181,7 +197,7 @@ export function createCommandGuard<T extends CommandType, A extends Record<strin
 export const createCommandTypeGuard = <T extends CommandType, A extends Record<string, any> = Record<string, any>>(
   type: T
 ) => {
-  return (input: unknown): input is AbstractCommand<T, A> => {
+  return (input: unknown): input is SystemCommand<T, A> => {
     return isCommandOfType(input, type);
   };
 };
