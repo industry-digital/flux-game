@@ -18,18 +18,20 @@ export const createActorCommandReducer: PureReducer<TransformerContext, CreateAc
   command,
 ) => {
   const { actors } = context.world;
-  const character = createActor(command.args);
+  const actor = createActor(command.args);
 
-  if (actors[character.id]) {
-    context.declareError(`Character ${character.id} already exists in world projection`);
+  if (actors[actor.id]) {
+    context.declareError(`Actor ${actor.id} already exists in world projection`);
     return context;
   }
 
-  actors[character.id] = character;
+  actors[actor.id] = actor;
 
   context.declareEvent({
-    type: EventType.ACTOR_CREATION_DID_SUCCEED,
-    payload: { actorId: character.id },
+    type: EventType.ENTITY_CREATED,
+    payload: {
+      entityId: actor.id,
+    },
   });
 
   return context;

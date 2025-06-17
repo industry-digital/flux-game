@@ -122,9 +122,9 @@ describe('CreateActorCommandHandler', () => {
 
       expect(mockContext.declareEvent).toHaveBeenCalledTimes(1);
       expect(mockContext.declareEvent).toHaveBeenCalledWith({
-        type: EventType.ACTOR_CREATION_DID_SUCCEED,
+        type: EventType.ENTITY_CREATED,
         payload: {
-          actorId: createActorUrn(ActorType.PC, 'test-actor'),
+          entityId: createActorUrn(ActorType.PC, 'test-actor'),
         }
       });
     });
@@ -246,7 +246,10 @@ describe('CreateActorCommandHandler', () => {
       expect(Object.keys(result.world.actors)).toHaveLength(1);
       expect(mockContext.declareEvent).toHaveBeenCalledWith(
         expect.objectContaining({
-          type: EventType.ACTOR_CREATION_DID_SUCCEED
+          type: EventType.ENTITY_CREATED,
+          payload: {
+            entityId: expect.any(String),
+          }
         })
       );
     });

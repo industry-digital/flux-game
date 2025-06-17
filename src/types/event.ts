@@ -41,35 +41,33 @@ export type ErrorExplanation = {
 };
 
 export enum EventType {
-  PLACE_CREATION_DID_SUCCEED = 'place:creation:success',
-  PLACE_CREATION_DID_FAIL = 'place:creation:failure',
+  ENTITY_CREATED = 'entity:created',
+  ENTITY_UPDATED = 'entity:updated',
   ACTOR_MOVEMENT_DID_SUCCEED = 'actor:move:success',
   ACTOR_MOVEMENT_DID_FAIL = 'actor:move:failure',
-  ACTOR_CREATION_DID_SUCCEED  = 'actor:creation:success',
-  ACTOR_CREATION_DID_FAIL = 'actor:creation:failure',
   ACTOR_DID_MATERIALIZE = 'actor:materialized',
   ACTOR_DID_DEMATERIALIZE = 'actor:dematerialized',
 }
 
-export type PlaceEventPayloadBase = {
-  placeId: PlaceURN;
+export type EntityEventPayloadBase = {
+  entityId: EntityURN;
 };
 
-export type PlaceCreationDidSucceedInput =
+export type EntityCreatedInput =
   & AbstractEmergentEventInput<
-    EventType.PLACE_CREATION_DID_SUCCEED,
-    PlaceEventPayloadBase
+    EventType.ENTITY_CREATED,
+    EntityEventPayloadBase
   >;
 
-export type PlaceCreationDidFailInput =
+export type EntityUpdatedInput =
   & AbstractEmergentEventInput<
-    EventType.PLACE_CREATION_DID_FAIL,
-    PlaceEventPayloadBase & ErrorExplanation
+    EventType.ENTITY_UPDATED,
+    EntityEventPayloadBase
   >;
 
-export type PlaceCreationEventInput =
-  | PlaceCreationDidSucceedInput
-  | PlaceCreationDidFailInput;
+export type EntityEventInput =
+  | EntityCreatedInput
+  | EntityUpdatedInput;
 
 type ActorEventPayloadBase = {
   actorId: EntityURN;

@@ -23,8 +23,10 @@ export const createPlaceCommandReducer: PureReducer<TransformerContext, CreatePl
   places[place.id] = place;
 
   context.declareEvent({
-    type: EventType.PLACE_CREATION_DID_SUCCEED,
-    payload: { placeId: place.id },
+    type: EventType.ENTITY_CREATED,
+    payload: {
+      entityId: place.id,
+    },
   });
 
   return context;

@@ -117,9 +117,9 @@ describe('CreatePlaceCommandHandler', () => {
 
       expect(mockContext.declareEvent).toHaveBeenCalledTimes(1);
       expect(mockContext.declareEvent).toHaveBeenCalledWith({
-        type: EventType.PLACE_CREATION_DID_SUCCEED,
+        type: EventType.ENTITY_CREATED,
         payload: {
-          placeId: createPlaceUrn('test', 'test-place'),
+          entityId: createPlaceUrn('test', 'test-place'),
         }
       });
     });
@@ -257,7 +257,10 @@ describe('CreatePlaceCommandHandler', () => {
       expect(Object.keys(result.world.places)).toHaveLength(1);
       expect(mockContext.declareEvent).toHaveBeenCalledWith(
         expect.objectContaining({
-          type: EventType.PLACE_CREATION_DID_SUCCEED
+          type: EventType.ENTITY_CREATED,
+          payload: {
+            entityId: createPlaceUrn('test', 'integration-tavern'),
+          }
         })
       );
     });
