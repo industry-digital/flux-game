@@ -1,4 +1,4 @@
-import { EntityType, Place, Exit, PlaceURN } from '@flux';
+import { EntityType, Place, Exit, PlaceURN, Actor, PlaceEntityDescriptor, SpecialVisibility } from '@flux';
 import { createEntity, FactoryOptions } from './util';
 import { merge } from 'lodash';
 import { ExitInput, Exits, PlaceInput } from '~/types/entity/place';
@@ -73,4 +73,31 @@ export const createPlaces = (
   }
 
   return out;
+};
+
+export const addActorToPlace = (
+  actor: Actor,
+  place: Place,
+  visibility: PlaceEntityDescriptor['visibility'] = SpecialVisibility.VISIBLE_TO_EVERYONE,
+): Place => {
+  const descriptor: PlaceEntityDescriptor = {
+    entity: actor,
+    visibility,
+  };
+
+  return {
+    ...place,
+    entities: {
+      ...place.entities,
+      [actor.id]: descriptor,
+    },
+  };
+};
+
+export const removeActorFromPlace = (
+  actor: Actor,
+  place: Place,
+): Place => {
+  const { [actor.id]: _, ...rest } = place.entities;
+  return { ...place, entities: rest };
 };
