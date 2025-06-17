@@ -73,22 +73,6 @@ type ActorEventPayloadBase = {
   actorId: EntityURN;
 };
 
-export type ActorCreationDidSucceedInput =
-  & AbstractEmergentEventInput<
-    EventType.ACTOR_CREATION_DID_SUCCEED,
-    ActorEventPayloadBase
-  >;
-
-export type ActorCreationDidFailInput =
-  & AbstractEmergentEventInput<
-    EventType.ACTOR_CREATION_DID_FAIL,
-    ActorEventPayloadBase & ErrorExplanation
-  >;
-
-export type ActorCreationEventInput =
-  | ActorCreationDidSucceedInput
-  | ActorCreationDidFailInput;
-
 export type ActorMovementEventPayload =
   & ActorEventPayloadBase
   & {
@@ -127,8 +111,7 @@ export type ActorDematerializedEventInput =
 
 // Union of all unions
 export type EmergentEventInput =
-  | PlaceCreationEventInput
-  | ActorCreationEventInput
+  | EntityEventInput
   | ActorMovementEventInput
   | ActorMaterializedEventInput
   | ActorDematerializedEventInput;
