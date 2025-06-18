@@ -137,6 +137,11 @@ export type PotentiallyImpureOperations = {
    * or any string of sufficient entropy.
    */
   uniqid: () => string;
+
+  /**
+   * A function that logs a message to the console.
+   */
+  debug: (...args: any[]) => void;
 };
 
 /**

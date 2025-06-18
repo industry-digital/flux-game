@@ -31,6 +31,24 @@ export {
   MoveCommandArgs,
 } from '~/command';
 
+export {
+  validateActor,
+  validateActorURN,
+  validateActorStats,
+  validateSkills,
+  validateInjuryDescriptor,
+  validateEquipment,
+  validateSkillState,
+  validateInventory,
+  validateActorStat,
+} from '~/validation/actor';
+
+export {
+  validatePlace,
+  validatePlaceURN,
+  validateExit,
+} from '~/validation/place';
+
 import { PureHandlerImplementation, TransformerContext } from '@flux';
 import { safeTopologicalSort } from '~/lib/dag';
 

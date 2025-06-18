@@ -1,22 +1,10 @@
 import * as typia from 'typia';
-import { createEntityValidator } from './entity';
-import {
-  PlaceURN,
-  PlaceEntityDescriptor,
-  Exit,
-  EntityType,
-  Place,
-  EmergentEvent,
-} from '@flux';
-
-export type PlaceScopedHistoricalEvent = EmergentEvent & {
-  location: Place['id'];
-};
+import { PlaceURN, PlaceEntityDescriptor, Exit, Place } from '@flux';
 
 /**
  * Validator for a complete Place entity
  */
-export const validatePlace = createEntityValidator(EntityType.PLACE);
+export const validatePlace = typia.createValidate<Place>();
 
 /**
  * Validator for PlaceURN
@@ -35,9 +23,3 @@ export const validateExit = typia.createValidate<Exit>();
  * Validates entity descriptors within a Place
  */
 export const validatePlaceEntityDescriptor = typia.createValidate<PlaceEntityDescriptor>();
-
-/**
- * Validator for PlaceScopedHistoricalEvent
- * Validates historical events that occurred in a Place
- */
-export const validateHistoricalEvent = typia.createValidate<PlaceScopedHistoricalEvent>();

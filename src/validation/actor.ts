@@ -1,5 +1,4 @@
 import * as typia from 'typia';
-import { createEntityValidator } from './entity';
 import {
   ActorStats,
   ActorURN,
@@ -7,15 +6,15 @@ import {
   InjuryDescriptor,
   Equipment,
   SkillState,
-  EntityType,
   Inventory,
   ActorStat,
+  Actor,
 } from '@flux';
 
 /**
  * Validator for a complete Character entity
  */
-export const validateActor = createEntityValidator(EntityType.ACTOR);
+export const validateActor = typia.createValidate<Actor>();
 
 /**
  * Validator for CharacterURN
