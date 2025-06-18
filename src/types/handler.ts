@@ -86,6 +86,12 @@ export type EventDeclarationConsumer = {
   getDeclaredEvents(): EmergentEvent[];
 
   /**
+   * Get the list of emergent events matching a given type using a picomatch
+   * glob expressions.
+   */
+  getDeclaredEvents(pattern: string): EmergentEvent[];
+
+  /**
    * Return a count of the number of times the given event type has been declared.
    */
   countDeclaredEvents(type?: EventType, filter?: EventFilter): number;
@@ -113,6 +119,12 @@ export type SideEffectDeclarationConsumer = {
    * Get the list of side effects that have been declared as a result of handling the input.
    */
   getDeclaredSideEffects(): SideEffect[];
+
+  /**
+   * Get the list of side effects that have been declared as a result of handling the input.
+   * @param pattern - A glob pattern to filter the side effects by type.
+   */
+  getDeclaredSideEffects(pattern: string): SideEffect[];
 };
 
 export type SideEffectDeclarationContainer = SideEffectDeclarationProducer & SideEffectDeclarationConsumer;
