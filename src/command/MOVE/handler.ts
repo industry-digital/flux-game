@@ -1,5 +1,6 @@
 import { usePlaceEntities } from '~/lib/place';
 import { createSymbolicLink } from '~/worldkit/entity/util';
+import { isCommandOfType } from '~/lib/intent';
 import {
   CommandType,
   Direction,
@@ -13,7 +14,6 @@ import {
   ActorCommand,
   Place,
 } from '@flux';
-import { isCommandOfType } from '~/lib/intent';
 
 export type MoveCommandArgs = {
   direction: Direction;
@@ -29,8 +29,6 @@ export const actorMovementReducer: PureReducer<TransformerContext, MoveCommand> 
   const { world, declareEvent, declareError } = context;
   const { direction } = command.args;
   const { actors, places } = world;
-
-  const defaultErrorMessage = "You can't go that way.";
 
   // Get the current actor
   const actor = actors[command.actor];
@@ -54,64 +52,41 @@ export const actorMovementReducer: PureReducer<TransformerContext, MoveCommand> 
   // Check for exit in the specified direction
   const exit = origin.exits[direction];
   if (!exit) {
-    declareEvent({
-      type: EventType.ACTOR_MOVEMENT_DID_FAIL,
-      payload: {
-        actorId: actor.id,
-        originId: origin.id,
-        direction,
-        reason: 'There is no exit in the specified direction.',
-        message: defaultErrorMessage,
-      }
-    });
+    declareError('There is no exit in the specified direction.');
     return context;
   }
 
   // Get destination place
   const destination = places[exit.to];
   if (!destination) {
-    declareEvent({
-      type: EventType.ACTOR_MOVEMENT_DID_FAIL,
-      payload: {
-        actorId: actor.id,
-        originId: origin.id,
-        direction,
-        reason: 'Movement destination not found in `places` projection',
-        message: defaultErrorMessage,
-      }
-    });
+    declareError('Movement destination not found in `places` projection');
     return context;
   }
 
-  // Use place hook to move the entity
-  const { moveEntity } = usePlaceEntities(context, origin);
-  const moveSuccess = moveEntity(actor, destination);
+  const opposingExit = Object.values(destination.exits).find(exit => exit.to === origin.id);
+  if (!opposingExit) {
+    declareError('Opposing exit not found in `places` projection');
+    return context;
+  }
 
-  if (!moveSuccess) {
-    declareEvent({
-      type: EventType.ACTOR_MOVEMENT_DID_FAIL,
-      payload: {
-        actorId: actor.id,
-        originId: origin.id,
-        direction,
-        reason: 'Failed to move actor between places',
-        message: defaultErrorMessage,
-      }
-    });
+  const { moveEntity } = usePlaceEntities(context, origin);
+  const didMove = moveEntity(actor, destination);
+
+  if (!didMove) {
+    declareError('Failed to move actor between places');
     return context;
   }
 
   // Update actor's location
   actor.location = createSymbolicLink(EntityType.PLACE, Array.from(destination.path)) as SymbolicLink<EntityType.PLACE>;
 
-  // Declare successful movement
   declareEvent({
-    type: EventType.ACTOR_MOVEMENT_DID_SUCCEED,
+    type: EventType.ACTOR_DID_MOVE,
     payload: {
       actorId: actor.id,
-      direction,
       originId: origin.id,
       destinationId: exit.to,
+      direction: opposingExit.direction,
     }
   });
 

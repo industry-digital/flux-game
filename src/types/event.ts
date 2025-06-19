@@ -43,8 +43,7 @@ export type ErrorExplanation = {
 export enum EventType {
   ENTITY_CREATED = 'entity:created',
   ENTITY_UPDATED = 'entity:updated',
-  ACTOR_MOVEMENT_DID_SUCCEED = 'actor:move:success',
-  ACTOR_MOVEMENT_DID_FAIL = 'actor:move:failure',
+  ACTOR_DID_MOVE = 'actor:moved',
   ACTOR_DID_MATERIALIZE = 'actor:materialized',
   ACTOR_DID_DEMATERIALIZE = 'actor:dematerialized',
 }
@@ -73,29 +72,17 @@ type ActorEventPayloadBase = {
   actorId: EntityURN;
 };
 
-export type ActorMovementEventPayload =
-  & ActorEventPayloadBase
-  & {
-    originId: PlaceURN;
-    direction: Direction;
-  };
+export type ActorMovementEventPayload = ActorEventPayloadBase & {
+  originId: PlaceURN;
+  destinationId: PlaceURN;
+  direction: Direction;
+};
 
-export type ActorMovementDidFailInput =
-  & AbstractEmergentEventInput<
-    EventType.ACTOR_MOVEMENT_DID_FAIL,
-    ActorMovementEventPayload & ErrorExplanation
-  >;
-
-export type ActorMovementDidSucceedInput =
-  & AbstractEmergentEventInput<
-    EventType.ACTOR_MOVEMENT_DID_SUCCEED,
-    ActorMovementEventPayload & { destinationId: PlaceURN }
-  >;
-
-// Union of all actor movement events
 export type ActorMovementEventInput =
-  | ActorMovementDidFailInput
-  | ActorMovementDidSucceedInput;
+  & AbstractEmergentEventInput<
+    EventType.ACTOR_DID_MOVE,
+    ActorMovementEventPayload
+  >;
 
 export type ActorMaterializedEventInput =
   & AbstractEmergentEventInput<
@@ -112,6 +99,6 @@ export type ActorDematerializedEventInput =
 // Union of all unions
 export type EmergentEventInput =
   | EntityEventInput
-  | ActorMovementEventInput
   | ActorMaterializedEventInput
-  | ActorDematerializedEventInput;
+  | ActorDematerializedEventInput
+  | ActorMovementEventInput;
