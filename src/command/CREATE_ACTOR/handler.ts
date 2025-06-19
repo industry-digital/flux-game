@@ -3,7 +3,6 @@ import { isCommandOfType } from '~/lib/intent';
 import {
   ActorInput,
   CommandType,
-  EventType,
   PureReducer,
   TransformerContext,
   PureHandlerInterface,
@@ -25,14 +24,9 @@ export const createActorCommandReducer: PureReducer<TransformerContext, CreateAc
     return context;
   }
 
+  // All we have to do is add the new actor to `actors`
+  // The server will figure out the rest
   actors[actor.id] = actor;
-
-  context.declareEvent({
-    type: EventType.ENTITY_CREATED,
-    payload: {
-      entityId: actor.id,
-    },
-  });
 
   return context;
 };
