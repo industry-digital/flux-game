@@ -4,7 +4,7 @@ import {
   CreatePlaceCommand,
   createPlaceCommandReducer
 } from './handler';
-import { CommandType, EventType, TransformerContext, EntityType } from '@flux';
+import { CommandType, TransformerContext, EntityType } from '@flux';
 import { createEntityUrn, createPlaceUrn } from '~/lib/taxonomy';
 import { Direction } from '~/types/world/space';
 
@@ -99,29 +99,6 @@ describe('CreatePlaceCommandHandler', () => {
       expect(place.type).toBe(EntityType.PLACE);
       expect(place.name).toBe('The Rusty Dragon Tavern');
       expect(place.description).toBe('A cozy tavern filled with the warmth of hearth and good company');
-    });
-
-    it('should declare PLACE_CREATION_DID_SUCCEED event', () => {
-      const command: CreatePlaceCommand = {
-        __type: 'command',
-        id: 'test-command-id',
-        ts: 1234567890,
-        type: CommandType.CREATE_PLACE,
-        args: {
-          id: createPlaceUrn('test', 'test-place'),
-          name: 'Test Place'
-        }
-      };
-
-      createPlaceCommandReducer(mockContext, command);
-
-      expect(mockContext.declareEvent).toHaveBeenCalledTimes(1);
-      expect(mockContext.declareEvent).toHaveBeenCalledWith({
-        type: EventType.ENTITY_CREATED,
-        payload: {
-          entityId: createPlaceUrn('test', 'test-place'),
-        }
-      });
     });
 
     it('should preserve existing places in the world', () => {
@@ -255,14 +232,6 @@ describe('CreatePlaceCommandHandler', () => {
 
       // Verify the observable outcomes
       expect(Object.keys(result.world.places)).toHaveLength(1);
-      expect(mockContext.declareEvent).toHaveBeenCalledWith(
-        expect.objectContaining({
-          type: EventType.ENTITY_CREATED,
-          payload: {
-            entityId: createPlaceUrn('test', 'integration-tavern'),
-          }
-        })
-      );
     });
   });
 

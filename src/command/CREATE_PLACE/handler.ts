@@ -7,7 +7,6 @@ import {
   TransformerContext,
   PureHandlerInterface,
   AllowedInput,
-  EventType,
 } from '@flux';
 import { SystemCommand } from '~/types/intent';
 
@@ -20,14 +19,9 @@ export const createPlaceCommandReducer: PureReducer<TransformerContext, CreatePl
   const { places } = context.world;
   const place = createPlace(command.args);
 
+  // All we have to do is add the new place to `places`
+  // The server will figure out the rest
   places[place.id] = place;
-
-  context.declareEvent({
-    type: EventType.ENTITY_CREATED,
-    payload: {
-      entityId: place.id,
-    },
-  });
 
   return context;
 };

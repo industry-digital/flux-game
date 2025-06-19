@@ -5,16 +5,7 @@ import {
   CreateActorCommand,
   createActorCommandReducer
 } from './handler';
-import {
-  CommandType,
-  EventType,
-  TransformerContext,
-  EntityType,
-  Actor,
-  ActorURN,
-  ActorType
-} from '@flux';
-import { createActorUrn } from '~/worldkit/entity/actor';
+import { CommandType, TransformerContext, EntityType, Actor, ActorURN } from '@flux';
 
 describe('CreateActorCommandHandler', () => {
   let handler: CREATE_ACTOR;
@@ -104,29 +95,6 @@ describe('CreateActorCommandHandler', () => {
       expect(character.type).toBe(EntityType.ACTOR);
       expect(character.name).toBe('Aria Blackwood');
       expect(character.description).toBe('A skilled ranger from the northern forests');
-    });
-
-    it('should declare ACTOR_CREATION_DID_SUCCEED event', () => {
-      const command: CreateActorCommand = {
-        __type: 'command',
-        id: 'test-command-id',
-        ts: 1234567890,
-        type: CommandType.CREATE_ACTOR,
-        args: {
-          id: createActorUrn(ActorType.PC, 'test-actor'),
-          name: 'Test Actor'
-        },
-      };
-
-      createActorCommandReducer(mockContext, command);
-
-      expect(mockContext.declareEvent).toHaveBeenCalledTimes(1);
-      expect(mockContext.declareEvent).toHaveBeenCalledWith({
-        type: EventType.ENTITY_CREATED,
-        payload: {
-          entityId: createActorUrn(ActorType.PC, 'test-actor'),
-        }
-      });
     });
 
     it('should preserve existing actors in the world', () => {
@@ -244,14 +212,6 @@ describe('CreateActorCommandHandler', () => {
 
       // Verify the observable outcomes
       expect(Object.keys(result.world.actors)).toHaveLength(1);
-      expect(mockContext.declareEvent).toHaveBeenCalledWith(
-        expect.objectContaining({
-          type: EventType.ENTITY_CREATED,
-          payload: {
-            entityId: expect.any(String),
-          }
-        })
-      );
     });
   });
 

@@ -41,8 +41,6 @@ export type ErrorExplanation = {
 };
 
 export enum EventType {
-  ENTITY_CREATED = 'entity:created',
-  ENTITY_UPDATED = 'entity:updated',
   ACTOR_DID_MOVE = 'actor:moved',
   ACTOR_DID_MATERIALIZE = 'actor:materialized',
   ACTOR_DID_DEMATERIALIZE = 'actor:dematerialized',
@@ -51,22 +49,6 @@ export enum EventType {
 export type EntityEventPayloadBase = {
   entityId: EntityURN;
 };
-
-export type EntityCreatedInput =
-  & AbstractEmergentEventInput<
-    EventType.ENTITY_CREATED,
-    EntityEventPayloadBase
-  >;
-
-export type EntityUpdatedInput =
-  & AbstractEmergentEventInput<
-    EventType.ENTITY_UPDATED,
-    EntityEventPayloadBase
-  >;
-
-export type EntityEventInput =
-  | EntityCreatedInput
-  | EntityUpdatedInput;
 
 type ActorEventPayloadBase = {
   actorId: EntityURN;
@@ -98,7 +80,6 @@ export type ActorDematerializedEventInput =
 
 // Union of all unions
 export type EmergentEventInput =
-  | EntityEventInput
   | ActorMaterializedEventInput
   | ActorDematerializedEventInput
   | ActorMovementEventInput;
