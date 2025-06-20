@@ -7,10 +7,13 @@ import {
   AllowedInput,
   EventType,
   SpecialVisibility,
-  ActorCommand,
+  ActorURN,
 } from '@flux';
+import { SystemCommand } from '~/types/intent';
 
-export type MaterializeActorCommand = ActorCommand<CommandType.MATERIALIZE_ACTOR>;
+export type MaterializeActorCommand = SystemCommand<CommandType.MATERIALIZE_ACTOR, {
+  actorId: ActorURN;
+}>;
 
 export const materializeActorCommandReducer: PureReducer<TransformerContext, MaterializeActorCommand> = (
   context,
@@ -18,16 +21,16 @@ export const materializeActorCommandReducer: PureReducer<TransformerContext, Mat
 ) => {
   const { declareError, declareEvent } = context;
   const { actors, places } = context.world;
-  const actor = actors[command.actor];
+  const actor = actors[command.args.actorId];
 
   if (!actor) {
-    declareError('Command `actor` not found in world projection');
+    declareError('Actor not found in `actors` projection. Did you remember to load it?');
     return context;
   }
 
   const place = places[actor.location.id];
 
-  // Materialize the actor in its location
+  // Materialize the actor in its current location
   place.entities[actor.id] = {
     entity: actor,
     visibility: SpecialVisibility.VISIBLE_TO_EVERYONE,

@@ -3,6 +3,8 @@ import { PlaceInput } from '~/types/entity/place';
 import { ActorInput } from '~/types/entity/actor';
 import { ActorURN, EntityURN, PlaceURN } from '~/types/taxonomy';
 import { InputTypeGuard } from '~/types/handler';
+import { MaterializeActorCommand } from '~/command/MATERIALIZE_ACTOR/handler';
+import { DematerializeActorCommand } from '~/command/DEMATERIALIZE_ACTOR/handler';
 
 export type InputMetadata = { __type: 'command' | 'intent' };
 
@@ -222,5 +224,7 @@ export type AnyCommandTypeGuard<
 export type Command =
 | SystemCommand<CommandType.CREATE_PLACE, PlaceInput>
 | SystemCommand<CommandType.CREATE_ACTOR, ActorInput>
+| MaterializeActorCommand
+| DematerializeActorCommand
 | ActorCommand<CommandType.UNRESOLVED_COMMAND>
 | ActorCommand<CommandType.MOVE, MoveCommandArgs>;

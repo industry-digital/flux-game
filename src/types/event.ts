@@ -1,5 +1,4 @@
 import { EntityURN, PlaceURN } from '~/types/taxonomy';
-import { Direction } from '~/types/world/space';
 
 export type EventPayload = Record<string, any>;
 
@@ -57,7 +56,6 @@ type ActorEventPayloadBase = {
 export type ActorMovementEventPayload = ActorEventPayloadBase & {
   originId: PlaceURN;
   destinationId: PlaceURN;
-  direction: Direction;
 };
 
 export type ActorMovementEventInput =

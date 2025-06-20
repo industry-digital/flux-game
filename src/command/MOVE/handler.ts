@@ -86,7 +86,6 @@ export const actorMovementReducer: PureReducer<TransformerContext, MoveCommand> 
       actorId: actor.id,
       originId: origin.id,
       destinationId: exit.to,
-      direction: opposingExit.direction,
     }
   });
 

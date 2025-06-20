@@ -6,10 +6,13 @@ import {
   PureHandlerInterface,
   AllowedInput,
   EventType,
-  ActorCommand,
+  ActorURN,
 } from '@flux';
+import { SystemCommand } from '~/types/intent';
 
-export type DematerializeActorCommand = ActorCommand<CommandType.DEMATERIALIZE_ACTOR>;
+export type DematerializeActorCommand = SystemCommand<CommandType.DEMATERIALIZE_ACTOR, {
+  actorId: ActorURN;
+}>;
 
 export const dematerializeActorCommandReducer: PureReducer<TransformerContext, DematerializeActorCommand> = (
   context,
@@ -17,7 +20,7 @@ export const dematerializeActorCommandReducer: PureReducer<TransformerContext, D
 ) => {
   const { declareError, declareEvent } = context;
   const { actors, places } = context.world;
-  const actor = actors[command.actor];
+  const actor = actors[command.args.actorId];
 
   if (!actor) {
     declareError('Actor not found in world projection');
@@ -25,6 +28,12 @@ export const dematerializeActorCommandReducer: PureReducer<TransformerContext, D
   }
 
   const place = places[actor.location.id];
+  if (!place) {
+    declareError('Place not found in `places` projection. Did you remember to load it?');
+    return context;
+  }
+
+  // Remove the actor from the place
   delete place.entities[actor.id];
 
   declareEvent({
