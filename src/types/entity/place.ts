@@ -6,13 +6,9 @@ import { SpecialVisibility } from '~/types/world/visibility';
 export type PlaceVisibilityRules = Record<EntityURN, 1>;
 
 /**
- * A reference to an Entity within a Place.
+ * A description of an entity within a Place
  */
-export type PlaceEntityDescriptor<T extends EntityType = EntityType> = {
-  /**
-   * The entity
-   */
-  entity: AbstractEntity<T>;
+export type PlaceEntityDescriptor = {
 
   /**
    * A record of the visibility of this entity to other entities in the same Place

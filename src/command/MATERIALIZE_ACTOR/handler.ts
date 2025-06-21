@@ -31,8 +31,9 @@ export const materializeActorCommandReducer: PureReducer<TransformerContext, Mat
   const place = places[actor.location.id];
 
   // Materialize the actor in its current location
-  place.entities[actor.id] = {
-    entity: actor,
+  place.entities[actor.id] =  {
+    // TODO: Need to handle visibility properly.
+    // What if the actor materialized while hidden, for example?
     visibility: SpecialVisibility.VISIBLE_TO_EVERYONE,
   };
 

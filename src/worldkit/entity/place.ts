@@ -85,16 +85,11 @@ export const addActorToPlace = (
   place: Place,
   visibility: PlaceEntityDescriptor['visibility'] = SpecialVisibility.VISIBLE_TO_EVERYONE,
 ): Place => {
-  const descriptor: PlaceEntityDescriptor = {
-    entity: actor,
-    visibility,
-  };
-
   return {
     ...place,
     entities: {
       ...place.entities,
-      [actor.id]: descriptor,
+      [actor.id]: { visibility },
     },
   };
 };

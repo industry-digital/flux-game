@@ -124,7 +124,7 @@ export const usePlaceEntities = (
         place.entities = {};
       }
 
-      place.entities[entity.id] = { entity, visibility };
+      place.entities[entity.id] = { visibility };
       return true;
     } catch (error) {
       context.declareError(`Failed to add entity '${entity.id}' to place: ${error}`);
