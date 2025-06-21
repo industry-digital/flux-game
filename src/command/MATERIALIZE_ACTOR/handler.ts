@@ -21,21 +21,21 @@ export const materializeActorCommandReducer: PureReducer<TransformerContext, Mat
 ) => {
   const { declareError, declareEvent } = context;
   const { actors, places } = context.world;
-  const actor = actors[command.args.actorId];
 
+  const actor = actors[command.args.actorId];
   if (!actor) {
     declareError('Actor not found in `actors` projection. Did you remember to load it?');
     return context;
   }
 
   const place = places[actor.location.id];
+  if (!place) {
+    declareError('Place not found in `places` projection. Did you remember to load it?');
+    return context;
+  }
 
-  // Materialize the actor in its current location
-  place.entities[actor.id] =  {
-    // TODO: Need to handle visibility properly.
-    // What if the actor materialized while hidden, for example?
-    visibility: SpecialVisibility.VISIBLE_TO_EVERYONE,
-  };
+  // Materialize the actor in its current location using Immer-compatible utility
+  place.entities[actor.id] = { visibility: SpecialVisibility.VISIBLE_TO_EVERYONE };
 
   declareEvent({
     type: EventType.ACTOR_DID_MATERIALIZE,
