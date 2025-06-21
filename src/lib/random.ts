@@ -91,8 +91,10 @@ const getMaxValidValue = (charset: string): number => {
 };
 
 const uniqidImpl = (
-  length: number = 16,
-  charset = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789',
+  // For base 36, this is 124 bits of entropy
+  length: number = 24,
+  // Base36: digits + lowercase letters; this avoids case-sensitivity issues with XMPP JIDs
+  charset = 'abcdefghijklmnopqrstuvwxyz0123456789',
   byteProvider: ByteProvider = new DirectByteProvider()
 ): string => {
   if (length <= 0) {
@@ -132,7 +134,7 @@ const uniqidImpl = (
  * where many IDs are generated in succession
  */
 export const createPooledUniqid = (
-  poolSize = 1024,
+  poolSize = 4_096,
   randomBytesStrategy?: RandomBytesStrategy
 ) => {
   const pool = new BytePool(poolSize, randomBytesStrategy);
