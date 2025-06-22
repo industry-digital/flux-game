@@ -77,6 +77,6 @@ export const createActor = (
   return transform(defaults);
 };
 
-export const createActorUrn = (subtype: ActorType, ...terms: string[]): ActorURN => {
-  return createEntityUrn(EntityType.ACTOR, subtype, ...terms) as ActorURN;
+export const createActorUrn = (...terms: string[]): ActorURN => {
+  return createEntityUrn(EntityType.ACTOR, ...terms) as ActorURN;
 };
