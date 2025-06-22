@@ -3,7 +3,6 @@ import { createSymbolicLink } from '~/worldkit/entity/util';
 import { isCommandOfType } from '~/lib/intent';
 import {
   CommandType,
-  Direction,
   EventType,
   EntityType,
   SymbolicLink,
@@ -13,10 +12,11 @@ import {
   AllowedInput,
   ActorCommand,
   Place,
+  PlaceURN,
 } from '@flux';
 
 export type MoveCommandArgs = {
-  direction: Direction;
+  dest: PlaceURN;
 };
 
 export type MoveCommand = ActorCommand<CommandType.MOVE, MoveCommandArgs>;
@@ -27,45 +27,40 @@ export type MoveCommand = ActorCommand<CommandType.MOVE, MoveCommandArgs>;
  */
 export const actorMovementReducer: PureReducer<TransformerContext, MoveCommand> = (context, command) => {
   const { world, declareEvent, declareError } = context;
-  const { direction } = command.args;
+  const { dest } = command.args;
   const { actors, places } = world;
 
-  // Get the current actor
+  // Ensure actor exists
   const actor = actors[command.actor];
   if (!actor) {
     declareError('Actor not found in `actors` projection');
     return context;
   }
 
+  // Ensure actor has a location
   if (!actor.location) {
     declareError('Actor does not have a `location`');
     return context;
   }
 
-  // Get current place
+  // Ensure movement origin is a valid place
   const origin: Place = places[actor.location.id];
   if (!origin) {
     declareError('Actor `location` not found in `places` projection');
     return context;
   }
 
-  // Check for exit in the specified direction
-  const exit = origin.exits[direction];
+  // Ensure an exit connects origin to destination
+  const exit = Object.values(origin.exits).find(exit => exit.to === dest);
   if (!exit) {
-    declareError('There is no exit in the specified direction.');
+    declareError('There is no exit that connects the origin and destination.');
     return context;
   }
 
-  // Get destination place
-  const destination = places[exit.to];
+  // Ensure destination is a valid place
+  const destination = places[dest];
   if (!destination) {
     declareError('Movement destination not found in `places` projection');
-    return context;
-  }
-
-  const opposingExit = Object.values(destination.exits).find(exit => exit.to === origin.id);
-  if (!opposingExit) {
-    declareError('Opposing exit not found in `places` projection');
     return context;
   }
 
@@ -85,7 +80,7 @@ export const actorMovementReducer: PureReducer<TransformerContext, MoveCommand> 
     payload: {
       actorId: actor.id,
       originId: origin.id,
-      destinationId: exit.to,
+      destinationId: destination.id,
     }
   });
 
