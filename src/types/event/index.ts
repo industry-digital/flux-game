@@ -5,7 +5,7 @@ export type EventType = any;
 
 export type EventPayload = Record<string, any>;
 
-export type EmergentEventInput<T extends EventType, P extends EventPayload = EventPayload> = {
+export type WorldEventInput<T extends EventType, P extends EventPayload = EventPayload> = {
   /**
    * The unique identifier for this event.
    */
@@ -29,9 +29,9 @@ export type EmergentEventInput<T extends EventType, P extends EventPayload = Eve
 };
 
 /**
- * An EmergentEvent is an event that is generated as a result of processing a command.
+ * An WorldEvent is an event that is generated as a result of processing a command.
  */
-export type EmergentEvent<T extends EventType = EventType, P extends EventPayload = EventPayload> = EmergentEventInput<T, P> & {
+export type WorldEvent<T extends EventType = EventType, P extends EventPayload = EventPayload> = WorldEventInput<T, P> & {
   id: string;
   ts: number;
   trace: string;

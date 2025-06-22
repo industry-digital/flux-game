@@ -1,8 +1,7 @@
-import { EmergentEvent, EmergentEventInput, EventType } from '~/types/event';
+import { WorldEvent, WorldEventInput, EventType } from '~/types/event';
 import { SystemCommand, CommandType, Intent, AnyCommand } from '~/types/intent';
 import { ActorURN, PlaceURN } from '~/types/taxonomy';
 import { Place } from '~/types/entity/place';
-import { SideEffect, SideEffectInput } from '~/types/side-effect';
 import { Actor } from '~/types/entity/actor';
 
 /**
@@ -11,10 +10,10 @@ import { Actor } from '~/types/entity/actor';
 export type AllowedInput = SystemCommand | Intent;
 
 /**
- * For filter() and find() methods, this is a function that takes an EmergentEvent
+ * For filter() and find() methods, this is a function that takes an WorldEvent
  * and returns a boolean indicating whether the event matches the filter criteria.
  */
-type EventFilter = (event: EmergentEvent) => boolean;
+type EventFilter = (event: WorldEvent) => boolean;
 
 /**
  * This is the minimal set of properties that a world projection must have.
@@ -83,13 +82,13 @@ export type EventDeclarationConsumer = {
   /**
    * Get the list of emergent events that have been declared as a result of handling the input.
    */
-  getDeclaredEvents(): EmergentEvent[];
+  getDeclaredEvents(): WorldEvent[];
 
   /**
    * Get the list of emergent events matching a given type using a picomatch
    * glob expressions.
    */
-  getDeclaredEvents(pattern: string): EmergentEvent[];
+  getDeclaredEvents(pattern: string): WorldEvent[];
 
   /**
    * Return a count of the number of times the given event type has been declared.
@@ -104,31 +103,8 @@ export type EventDeclarationProducer = {
   /**
    * Declare an emergent event to be emitted in response to the input.
    */
-  declareEvent(input: EmergentEventInput): void;
+  declareEvent(input: WorldEventInput): void;
 };
-
-export type SideEffectDeclarationProducer = {
-  /**
-   * Declare a side effect to be emitted in response to the input.
-   */
-  declareSideEffect(input: SideEffectInput): void;
-};
-
-export type SideEffectDeclarationConsumer = {
-  /**
-   * Get the list of side effects that have been declared as a result of handling the input.
-   */
-  getDeclaredSideEffects(): SideEffect[];
-
-  /**
-   * Get the list of side effects that have been declared as a result of handling the input.
-   * @param pattern - A glob pattern to filter the side effects by type.
-   */
-  getDeclaredSideEffects(pattern: string): SideEffect[];
-};
-
-export type SideEffectDeclarationContainer = SideEffectDeclarationProducer & SideEffectDeclarationConsumer;
-
 /**
  * Potentailly impure operations that our pure reducers need to do their job.
  * These are injected into the execution context so that pure stages can stay pure.

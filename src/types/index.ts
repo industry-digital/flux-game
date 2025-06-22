@@ -95,8 +95,8 @@ export {
 } from './entity/skill';
 
 export {
-  EmergentEvent,
-  EmergentEventInput,
+  WorldEvent,
+  WorldEventInput,
   EventPayload,
   EventType,
 } from './event';
@@ -115,9 +115,6 @@ export {
   PureHandlerImplementation,
   PureHandlerInterface,
   PureReducer,
-  SideEffectDeclarationConsumer,
-  SideEffectDeclarationContainer,
-  SideEffectDeclarationProducer,
   Transformer,
   CommandReducer,
   TransformerContext,
@@ -186,11 +183,6 @@ export {
 export {
   SkillSchema,
 } from './schema/skill';
-
-export {
-  SideEffect,
-  SideEffectInput,
-} from './side-effect';
 
 // Taxonomy exports
 export {
@@ -265,3 +257,8 @@ export {
 export {
   EntityTransformer,
 } from './testing';
+
+export {
+  EnrichedWorldEvent,
+  WorldEventMessageDictionary,
+} from './client';

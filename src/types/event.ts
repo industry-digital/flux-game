@@ -2,7 +2,7 @@ import { EntityURN, PlaceURN } from '~/types/taxonomy';
 
 export type EventPayload = Record<string, any>;
 
-export type AbstractEmergentEventInput<T extends EventType, P extends EventPayload> = {
+export type AbstractWorldEventInput<T extends EventType, P extends EventPayload> = {
   /**
    * The unique identifier for this event.
    */
@@ -26,9 +26,9 @@ export type AbstractEmergentEventInput<T extends EventType, P extends EventPaylo
 };
 
 /**
- * An EmergentEvent is an event that is generated as a result of processing a command.
+ * An WorldEvent is an event that is generated as a result of processing a command.
  */
-export type EmergentEvent = EmergentEventInput & {
+export type WorldEvent = WorldEventInput & {
   id: string;
   ts: number;
   trace: string;
@@ -59,25 +59,25 @@ export type ActorMovementEventPayload = ActorEventPayloadBase & {
 };
 
 export type ActorMovementEventInput =
-  & AbstractEmergentEventInput<
+  & AbstractWorldEventInput<
     EventType.ACTOR_DID_MOVE,
     ActorMovementEventPayload
   >;
 
 export type ActorMaterializedEventInput =
-  & AbstractEmergentEventInput<
+  & AbstractWorldEventInput<
     EventType.ACTOR_DID_MATERIALIZE,
     ActorEventPayloadBase & { placeId: PlaceURN }
   >;
 
 export type ActorDematerializedEventInput =
-  & AbstractEmergentEventInput<
+  & AbstractWorldEventInput<
     EventType.ACTOR_DID_DEMATERIALIZE,
     ActorEventPayloadBase & { placeId: PlaceURN }
   >;
 
 // Union of all unions
-export type EmergentEventInput =
+export type WorldEventInput =
   | ActorMaterializedEventInput
   | ActorDematerializedEventInput
   | ActorMovementEventInput;
