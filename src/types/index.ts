@@ -99,6 +99,16 @@ export {
   WorldEventInput,
   EventPayload,
   EventType,
+  ActorDidMove,
+  ActorDidMoveInput,
+  ActorDidArrive,
+  ActorDidArriveInput,
+  ActorDidLeave,
+  ActorDidLeaveInput,
+  ActorDidMaterialize,
+  ActorDidMaterializeInput,
+  ActorDidDematerialize,
+  ActorDidDematerializeInput,
 } from './event';
 
 export {

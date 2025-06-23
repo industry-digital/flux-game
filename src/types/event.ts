@@ -47,51 +47,60 @@ export enum EventType {
   ACTOR_DID_DEMATERIALIZE = 'actor:dematerialized',
 }
 
-export type EntityEventPayloadBase = {
-  entityId: EntityURN;
-};
-
 type ActorEventPayloadBase = {
   actorId: EntityURN;
 };
 
-export type ActorMovementEventPayload = ActorEventPayloadBase & {
-  originId: PlaceURN;
-  destinationId: PlaceURN;
-};
-
-export type ActorMovementEventInput =
-  & AbstractWorldEventInput<
-    EventType.ACTOR_DID_MOVE,
-    ActorMovementEventPayload
-  >;
-
-export type ActorDidArriveEventInput =
-  & AbstractWorldEventInput<
-    EventType.ACTOR_DID_ARRIVE,
-    ActorMovementEventPayload
-  >;
-
-export type ActorDidLeaveEventInput =
-  & AbstractWorldEventInput<
-    EventType.ACTOR_DID_LEAVE,
-    ActorMovementEventPayload
-  >;
-
-export type ActorMaterializedEventInput =
+export type ActorDidMaterializeInput =
   & AbstractWorldEventInput<
     EventType.ACTOR_DID_MATERIALIZE,
     ActorEventPayloadBase & { placeId: PlaceURN }
   >;
 
-export type ActorDematerializedEventInput =
+export type ActorDidDematerializeInput =
   & AbstractWorldEventInput<
     EventType.ACTOR_DID_DEMATERIALIZE,
     ActorEventPayloadBase & { placeId: PlaceURN }
   >;
+export type ActorMovementEventPayload = ActorEventPayloadBase & {
+  originId: PlaceURN;
+  destinationId: PlaceURN;
+};
+
+export type ActorDidMoveInput =
+  & AbstractWorldEventInput<
+    EventType.ACTOR_DID_MOVE,
+    ActorMovementEventPayload
+  >;
+
+export type ActorDidArriveInput =
+  & AbstractWorldEventInput<
+    EventType.ACTOR_DID_ARRIVE,
+    ActorMovementEventPayload
+  >;
+
+export type ActorDidLeaveInput =
+  & AbstractWorldEventInput<
+    EventType.ACTOR_DID_LEAVE,
+    ActorMovementEventPayload
+  >;
 
 // Union of all unions
 export type WorldEventInput =
-  | ActorMaterializedEventInput
-  | ActorDematerializedEventInput
-  | ActorMovementEventInput;
+  | ActorDidMaterializeInput
+  | ActorDidDematerializeInput
+  | ActorDidMoveInput
+  | ActorDidArriveInput
+  | ActorDidLeaveInput;
+
+export type EventBase = {
+  id: string;
+  ts: number;
+  trace: string;
+};
+
+export type ActorDidMaterialize = EventBase & ActorDidMaterializeInput;
+export type ActorDidDematerialize = EventBase & ActorDidDematerializeInput;
+export type ActorDidMove = EventBase & ActorDidMoveInput;
+export type ActorDidArrive = EventBase & ActorDidArriveInput;
+export type ActorDidLeave = EventBase & ActorDidLeaveInput;
