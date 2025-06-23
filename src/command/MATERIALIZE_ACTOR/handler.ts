@@ -8,7 +8,6 @@ import {
   EventType,
   SpecialVisibility,
   ActorURN,
-  ActorDidMaterializeInput,
 } from '@flux';
 import { SystemCommand } from '~/types/intent';
 
@@ -20,10 +19,8 @@ export const materializeActorCommandReducer: PureReducer<TransformerContext, Mat
   context,
   command,
 ) => {
-  const { declareError, declareEvent, debug } = context;
+  const { declareError, declareEvent } = context;
   const { actors, places } = context.world;
-
-  debug(`MATERIALIZE_ACTOR transformation: Processing command ${command.id}`);
 
   const actor = actors[command.args.actorId];
   if (!actor) {
@@ -40,16 +37,13 @@ export const materializeActorCommandReducer: PureReducer<TransformerContext, Mat
   // Materialize the actor in its current location using Immer-compatible utility
   place.entities[actor.id] = { visibility: SpecialVisibility.VISIBLE_TO_EVERYONE };
 
-  const eventInput: ActorDidMaterializeInput = {
+  declareEvent({
     type: EventType.ACTOR_DID_MATERIALIZE,
     actor: actor.id,
     location: place.id,
     payload: {},
     trace: command.id,
-  };
-
-  debug(`MATERIALIZE_ACTOR transformation: Declaring event with trace=${command.id}:`, JSON.stringify(eventInput));
-  declareEvent(eventInput);
+  });
 
   return context;
 };
