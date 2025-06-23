@@ -1,3 +1,5 @@
+import { ActorURN, PlaceURN } from '~/types/taxonomy';
+
 /**
  * Override this with an enum in your local codebase via declaration merging.
  */
@@ -22,6 +24,17 @@ export type WorldEventInput<T extends EventType, P extends EventPayload = EventP
    * The type of the event.
    */
   type: T;
+
+  /**
+   * The actor that triggered the event, if any.
+   */
+  actor?: ActorURN;
+
+  /**
+   * Where the event took place, if any.
+   */
+  location?: PlaceURN;
+
   /**
    * The payload of the event.
    */
