@@ -1,12 +1,12 @@
 import { isCommandOfType } from '~/lib/intent';
 import {
-  CommandType,
-  PureReducer,
-  TransformerContext,
-  PureHandlerInterface,
-  AllowedInput,
-  EventType,
-  ActorURN,
+    CommandType,
+    PureReducer,
+    TransformerContext,
+    PureHandlerInterface,
+    AllowedInput,
+    EventType,
+    ActorURN,
 } from '@flux';
 import { SystemCommand } from '~/types/intent';
 
@@ -41,6 +41,7 @@ export const dematerializeActorCommandReducer: PureReducer<TransformerContext, D
     actor: actor.id,
     location: place.id,
     payload: {},
+    trace: command.id,
   });
 
   return context;

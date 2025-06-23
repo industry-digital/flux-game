@@ -2,17 +2,17 @@ import { usePlaceEntities } from '~/lib/place';
 import { createSymbolicLink } from '~/worldkit/entity/util';
 import { isCommandOfType } from '~/lib/intent';
 import {
-  CommandType,
-  EventType,
-  EntityType,
-  SymbolicLink,
-  PureReducer,
-  TransformerContext,
-  PureHandlerInterface,
-  AllowedInput,
-  ActorCommand,
-  Place,
-  PlaceURN,
+    CommandType,
+    EventType,
+    EntityType,
+    SymbolicLink,
+    PureReducer,
+    TransformerContext,
+    PureHandlerInterface,
+    AllowedInput,
+    ActorCommand,
+    Place,
+    PlaceURN,
 } from '@flux';
 
 export type MoveCommandArgs = {
@@ -80,8 +80,9 @@ export const actorMovementReducer: PureReducer<TransformerContext, MoveCommand> 
     actor: actor.id,
     location: origin.id,
     payload: {
-      destination: destination.id,
-    }
+      destination: destination.id
+    },
+    trace: command.id,
   });
 
   return context;

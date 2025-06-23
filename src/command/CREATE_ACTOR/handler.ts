@@ -1,13 +1,13 @@
 import { createActor } from '~/worldkit/entity/actor';
 import { isCommandOfType } from '~/lib/intent';
 import {
-  ActorInput,
-  CommandType,
-  PureReducer,
-  TransformerContext,
-  PureHandlerInterface,
-  AllowedInput,
-  EventType,
+    ActorInput,
+    CommandType,
+    PureReducer,
+    TransformerContext,
+    PureHandlerInterface,
+    AllowedInput,
+    EventType,
 } from '@flux';
 import { SystemCommand } from '~/types/intent';
 
@@ -35,6 +35,7 @@ export const createActorCommandReducer: PureReducer<TransformerContext, CreateAc
     actor: actor.id,
     location: actor.location.id,
     payload: {},
+    trace: command.id,
   });
 
   return context;

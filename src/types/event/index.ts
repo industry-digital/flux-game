@@ -15,7 +15,7 @@ export type WorldEventInput<T extends EventType, P extends EventPayload = EventP
   /**
    * The Intent or Command that triggered this event.
    */
-  trace?: string;
+  trace: string;
   /**
    * The moment in time when the event occurred, expressed as milliseconds since the Unix epoch
    */

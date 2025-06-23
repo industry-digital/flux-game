@@ -11,7 +11,7 @@ export type AbstractWorldEventInput<T extends EventType, P extends EventPayload>
   /**
    * Identfies Intent or Command that triggered this event.
    */
-  trace?: string;
+  trace: string;
 
   /**
    * The moment the event occurred, expressed as milliseconds since the Unix epoch

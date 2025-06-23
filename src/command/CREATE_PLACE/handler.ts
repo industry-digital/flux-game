@@ -2,11 +2,11 @@ import { createPlace } from '~/worldkit/entity/place';
 import { EventType, PlaceInput } from '~/types';
 import { isCommandOfType } from '~/lib/intent';
 import {
-  CommandType,
-  PureReducer,
-  TransformerContext,
-  PureHandlerInterface,
-  AllowedInput,
+    CommandType,
+    PureReducer,
+    TransformerContext,
+    PureHandlerInterface,
+    AllowedInput,
 } from '@flux';
 import { SystemCommand } from '~/types/intent';
 
@@ -28,6 +28,7 @@ export const createPlaceCommandReducer: PureReducer<TransformerContext, CreatePl
     type: EventType.PLACE_WAS_CREATED,
     location: place.id,
     payload: {},
+    trace: command.id,
   });
 
   return context;
