@@ -91,6 +91,11 @@ export type EventDeclarationConsumer = {
   getDeclaredEvents(pattern: string): WorldEvent[];
 
   /**
+   * Get the list of emergent events that have been declared by a specific command.
+   */
+  getDeclaredEventsByCommand(commandId: string): WorldEvent[];
+
+  /**
    * Return a count of the number of times the given event type has been declared.
    */
   countDeclaredEvents(type?: EventType, filter?: EventFilter): number;
@@ -105,6 +110,7 @@ export type EventDeclarationProducer = {
    */
   declareEvent(input: WorldEventInput): void;
 };
+
 /**
  * Potentailly impure operations that our pure reducers need to do their job.
  * These are injected into the execution context so that pure stages can stay pure.

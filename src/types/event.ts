@@ -41,6 +41,8 @@ export type ErrorExplanation = {
 
 export enum EventType {
   ACTOR_DID_MOVE = 'actor:moved',
+  ACTOR_DID_ARRIVE = 'actor:arrived',
+  ACTOR_DID_LEAVE = 'actor:left',
   ACTOR_DID_MATERIALIZE = 'actor:materialized',
   ACTOR_DID_DEMATERIALIZE = 'actor:dematerialized',
 }
@@ -61,6 +63,18 @@ export type ActorMovementEventPayload = ActorEventPayloadBase & {
 export type ActorMovementEventInput =
   & AbstractWorldEventInput<
     EventType.ACTOR_DID_MOVE,
+    ActorMovementEventPayload
+  >;
+
+export type ActorDidArriveEventInput =
+  & AbstractWorldEventInput<
+    EventType.ACTOR_DID_ARRIVE,
+    ActorMovementEventPayload
+  >;
+
+export type ActorDidLeaveEventInput =
+  & AbstractWorldEventInput<
+    EventType.ACTOR_DID_LEAVE,
     ActorMovementEventPayload
   >;
 
