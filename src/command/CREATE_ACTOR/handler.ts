@@ -7,6 +7,7 @@ import {
   TransformerContext,
   PureHandlerInterface,
   AllowedInput,
+  EventType,
 } from '@flux';
 import { SystemCommand } from '~/types/intent';
 
@@ -16,6 +17,7 @@ export const createActorCommandReducer: PureReducer<TransformerContext, CreateAc
   context,
   command,
 ) => {
+  const { declareEvent } = context;
   const { actors } = context.world;
   const actor = createActor(command.args);
 
@@ -24,9 +26,16 @@ export const createActorCommandReducer: PureReducer<TransformerContext, CreateAc
     return context;
   }
 
-  // All we have to do is add the new actor to `actors`
-  // The server will figure out the rest
+  // All we have to do is add the new actor to `actors` projection
+  // The server will understand that this is a new actor
   actors[actor.id] = actor;
+
+  declareEvent({
+    type: EventType.ACTOR_WAS_CREATED,
+    actor: actor.id,
+    location: actor.location.id,
+    payload: {},
+  });
 
   return context;
 };

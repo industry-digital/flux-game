@@ -1,5 +1,5 @@
 import { createPlace } from '~/worldkit/entity/place';
-import { PlaceInput } from '~/types';
+import { EventType, PlaceInput } from '~/types';
 import { isCommandOfType } from '~/lib/intent';
 import {
   CommandType,
@@ -16,12 +16,19 @@ export const createPlaceCommandReducer: PureReducer<TransformerContext, CreatePl
   context,
   command,
 ) => {
+  const { declareEvent } = context;
   const { places } = context.world;
   const place = createPlace(command.args);
 
   // All we have to do is add the new place to `places`
   // The server will figure out the rest
   places[place.id] = place;
+
+  declareEvent({
+    type: EventType.PLACE_WAS_CREATED,
+    location: place.id,
+    payload: {},
+  });
 
   return context;
 };

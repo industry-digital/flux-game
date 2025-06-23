@@ -39,10 +39,9 @@ export const materializeActorCommandReducer: PureReducer<TransformerContext, Mat
 
   declareEvent({
     type: EventType.ACTOR_DID_MATERIALIZE,
-    payload: {
-      actorId: actor.id,
-      placeId: place.id,
-    },
+    actor: actor.id,
+    location: place.id,
+    payload: {},
   });
 
   return context;

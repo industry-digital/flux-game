@@ -50,17 +50,17 @@ export const actorMovementReducer: PureReducer<TransformerContext, MoveCommand> 
     return context;
   }
 
-  // Ensure an exit connects origin to destination
-  const exit = Object.values(origin.exits).find(exit => exit.to === dest);
-  if (!exit) {
-    declareError('There is no exit that connects the origin and destination.');
-    return context;
-  }
-
   // Ensure destination is a valid place
   const destination = places[dest];
   if (!destination) {
     declareError('Movement destination not found in `places` projection');
+    return context;
+  }
+
+  // Ensure an exit connects origin to destination
+  const exit = Object.values(origin.exits).find(exit => exit.to === dest);
+  if (!exit) {
+    declareError('There is no exit that connects the origin and destination.');
     return context;
   }
 
@@ -77,10 +77,10 @@ export const actorMovementReducer: PureReducer<TransformerContext, MoveCommand> 
 
   declareEvent({
     type: EventType.ACTOR_DID_MOVE,
+    actor: actor.id,
+    location: origin.id,
     payload: {
-      actorId: actor.id,
-      originId: origin.id,
-      destinationId: destination.id,
+      destination: destination.id,
     }
   });
 

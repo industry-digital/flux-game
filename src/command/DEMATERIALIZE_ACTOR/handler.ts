@@ -38,10 +38,9 @@ export const dematerializeActorCommandReducer: PureReducer<TransformerContext, D
 
   declareEvent({
     type: EventType.ACTOR_DID_DEMATERIALIZE,
-    payload: {
-      actorId: actor.id,
-      placeId: place.id,
-    },
+    actor: actor.id,
+    location: place.id,
+    payload: {},
   });
 
   return context;
