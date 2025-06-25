@@ -491,13 +491,13 @@ const exampleCharacter: Character = {
   location: {
     type: EntityType.PLACE,
     id: 'flux:place:world:riverdale:library',
-    path: ['world', 'riverdale', 'library']
+    path: ['place', 'world', 'riverdale', 'library']
   },
 
   party: {
     type: EntityType.COLLECTION,
     id: 'flux:collection:D6nJUQrCaqNJ7razZmkzqZWV',
-    path: ['world', 'riverdale', 'library']
+    path: ['collection', 'D6nJUQrCaqNJ7razZmkzqZWV']
   },
 
   level: {

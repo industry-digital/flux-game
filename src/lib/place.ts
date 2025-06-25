@@ -117,14 +117,14 @@ export const usePlaceEntities = (
 
   const addEntity = (
     entity: Entity,
-    visibility: PlaceEntityDescriptor['visibility'] = SpecialVisibility.VISIBLE_TO_EVERYONE,
+    visibility: PlaceEntityDescriptor['vis'] = SpecialVisibility.VISIBLE_TO_EVERYONE,
   ): boolean => {
     try {
       if (!place.entities) {
         place.entities = {};
       }
 
-      place.entities[entity.id] = { visibility };
+      place.entities[entity.id] = { vis: visibility };
       return true;
     } catch (error) {
       context.declareError(`Failed to add entity '${entity.id}' to place: ${error}`);
@@ -179,7 +179,7 @@ export const usePlaceEntities = (
 
     return Object.fromEntries(
       Object.entries(place.entities).filter(([_, descriptor]) =>
-        descriptor?.visibility === SpecialVisibility.VISIBLE_TO_EVERYONE
+        descriptor?.vis === SpecialVisibility.VISIBLE_TO_EVERYONE
       )
     );
   };

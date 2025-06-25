@@ -1,10 +1,10 @@
 import { WorldEvent } from '~/types/event';
 
-export type WorldEventMessageDictionary = {
+export type WorldEventNarrativeDictionary = {
   /**
    * What happened, from the actor's point of view
    */
-  actor: string;
+  self: string;
 
   /**
    * What happened from an observer's point of view
@@ -15,5 +15,5 @@ export type WorldEventMessageDictionary = {
 export type EnrichedWorldEvent =
   & WorldEvent
   & {
-    messages: WorldEventMessageDictionary;
+    narrative: WorldEventNarrativeDictionary;
   };

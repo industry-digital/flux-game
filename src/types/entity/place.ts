@@ -13,7 +13,7 @@ export type PlaceEntityDescriptor = {
   /**
    * A record of the visibility of this entity to other entities in the same Place
    */
-  visibility: SpecialVisibility | PlaceVisibilityRules;
+  vis: SpecialVisibility | PlaceVisibilityRules;
 };
 
 export type ExitInput = {

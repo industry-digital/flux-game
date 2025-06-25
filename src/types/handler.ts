@@ -16,16 +16,16 @@ export type AllowedInput = SystemCommand | Intent;
 type EventFilter = (event: WorldEvent) => boolean;
 
 /**
- * This is the minimal set of properties that a world projection must have.
+ * This is the absolute minimum set of properties that all world projections must have.
  */
 export type MinimalWorldProjection = {
   /**
-   * All actors that are contextually relevant to the current command
+   * All contextually relevant Actors
    */
   actors: Record<ActorURN, Actor>;
 
   /**
-   * All places that are contextually relevant to the current command
+   * All contextually relevant Places
    */
   places: Record<PlaceURN, Place>;
 };

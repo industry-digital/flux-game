@@ -83,13 +83,13 @@ export const createPlaces = (
 export const addActorToPlace = (
   actor: Actor,
   place: Place,
-  visibility: PlaceEntityDescriptor['visibility'] = SpecialVisibility.VISIBLE_TO_EVERYONE,
+  visibility: PlaceEntityDescriptor['vis'] = SpecialVisibility.VISIBLE_TO_EVERYONE,
 ): Place => {
   return {
     ...place,
     entities: {
       ...place.entities,
-      [actor.id]: { visibility },
+      [actor.id]: { vis: visibility },
     },
   };
 };

@@ -36,7 +36,7 @@ export type AbstractWorldEventInput<T extends EventType, P extends EventPayload>
   /**
    * The payload of the event.
    */
-  payload?: P;
+  payload: P;
 };
 
 /**
@@ -46,7 +46,7 @@ export type WorldEvent = WorldEventInput & {
   id: string;
   ts: number;
   trace: string;
-}
+};
 
 export type ErrorExplanation = {
   reason: string;

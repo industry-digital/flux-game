@@ -270,5 +270,5 @@ export {
 
 export {
   EnrichedWorldEvent,
-  WorldEventMessageDictionary,
+  WorldEventNarrativeDictionary,
 } from './client';

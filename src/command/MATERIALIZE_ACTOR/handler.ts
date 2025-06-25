@@ -1,13 +1,13 @@
 import { isCommandOfType } from '~/lib/intent';
 import {
-  CommandType,
-  PureReducer,
-  TransformerContext,
-  PureHandlerInterface,
-  AllowedInput,
-  EventType,
-  SpecialVisibility,
-  ActorURN,
+    CommandType,
+    PureReducer,
+    TransformerContext,
+    PureHandlerInterface,
+    AllowedInput,
+    EventType,
+    SpecialVisibility,
+    ActorURN,
 } from '@flux';
 import { SystemCommand } from '~/types/intent';
 
@@ -35,7 +35,7 @@ export const materializeActorCommandReducer: PureReducer<TransformerContext, Mat
   }
 
   // Materialize the actor in its current location using Immer-compatible utility
-  place.entities[actor.id] = { visibility: SpecialVisibility.VISIBLE_TO_EVERYONE };
+  place.entities[actor.id] = { vis: SpecialVisibility.VISIBLE_TO_EVERYONE };
 
   declareEvent({
     type: EventType.ACTOR_DID_MATERIALIZE,
