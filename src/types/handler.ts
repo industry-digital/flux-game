@@ -113,7 +113,7 @@ export type EventDeclarationProducer = {
 
 /**
  * Potentailly impure operations that our pure reducers need to do their job.
- * These are injected into the execution context so that pure stages can stay pure.
+ * These are injected into the execution context so that pure reducers can stay pure.
  */
 export type PotentiallyImpureOperations = {
   /**

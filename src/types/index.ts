@@ -272,3 +272,10 @@ export {
   EnrichedWorldEvent,
   WorldEventNarrativeDictionary,
 } from './client';
+
+export {
+  AbstractFact,
+  Fact,
+  KindOfFact,
+  PerspectiveBasedText,
+} from './fact';
