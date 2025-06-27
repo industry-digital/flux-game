@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { renderPlaceSummary, PlaceSummaryInput } from './place';
+import { renderPlaceSummary, PlaceTemplateProps } from './place';
 import { Place } from '~/types/entity/place';
 import { Direction } from '~/types/world/space';
 import { createPlace } from '~/worldkit/entity/place';
@@ -169,7 +169,7 @@ Moss-covered signposts point in each direction, their carved runes barely legibl
         description: 'A test location for type checking',
         exits: [],
       });
-      const input: PlaceSummaryInput = { place };
+      const input: PlaceTemplateProps = { place };
 
       // This test mainly ensures type compatibility
       const result = renderPlaceSummary(input);
@@ -247,6 +247,198 @@ Moss-covered signposts point in each direction, their carved runes barely legibl
 
       expect(result).toContain('- up: spiral staircase');
       expect(result).toContain('- southeast: garden gate');
+    });
+  });
+
+  describe('performance', () => {
+    it('should render place summaries at high throughput', () => {
+      const place = createPlace({
+        id: 'flux:place:test:performance-test',
+        name: 'Performance Test Location',
+        description: 'A complex location for testing rendering performance.',
+        exits: [
+          {
+            direction: Direction.NORTH,
+            label: 'northern corridor',
+            to: 'flux:place:test:north',
+          },
+          {
+            direction: Direction.SOUTH,
+            label: 'southern passage',
+            to: 'flux:place:test:south',
+          },
+          {
+            direction: Direction.EAST,
+            label: 'eastern chamber',
+            to: 'flux:place:test:east',
+          },
+          {
+            direction: Direction.WEST,
+            label: 'western alcove',
+            to: 'flux:place:test:west',
+          },
+        ],
+      });
+
+      const iterations = 100_000;
+      const startTime = performance.now();
+
+      for (let i = 0; i < iterations; i++) {
+        renderPlaceSummary({ place });
+      }
+
+      const endTime = performance.now();
+      const duration = endTime - startTime;
+      const rendersPerSecond = Math.round((iterations / duration) * 1000);
+
+      console.log(`\n🚀 Template Performance Results:`);
+      console.log(`   Iterations: ${iterations.toLocaleString()}`);
+      console.log(`   Duration: ${duration.toFixed(2)}ms`);
+      console.log(`   Renders/sec: ${rendersPerSecond.toLocaleString()}`);
+      console.log(`   Avg render time: ${(duration / iterations * 1000).toFixed(3)}μs\n`);
+
+      // We are only interested in the log output
+      expect(true).toBe(true);
+    });
+
+    it('should render complex emergent narrative at high throughput', () => {
+      const place: Place = {
+        ...createPlace({
+          id: 'flux:place:test:complex-performance',
+          name: 'Complex Emergent Narrative Location',
+          description: 'A base description for performance testing.',
+          exits: [
+            {
+              direction: Direction.NORTHEAST,
+              label: 'winding path through ancient ruins',
+              to: 'flux:place:ruins:entrance',
+            },
+            {
+              direction: Direction.SOUTHWEST,
+              label: 'narrow bridge over rushing water',
+              to: 'flux:place:river:crossing',
+            },
+            {
+              direction: Direction.UP,
+              label: 'rope ladder to elevated platform',
+              to: 'flux:place:platform:main',
+            },
+            {
+              direction: Direction.DOWN,
+              label: 'stone steps descending into darkness',
+              to: 'flux:place:depths:entrance',
+            },
+          ],
+        }),
+        description: {
+          base: 'A base description for performance testing.',
+          emergent: 'Complex emergent narrative describing dynamic environmental conditions, weather patterns, and atmospheric details that change over time.',
+        },
+      };
+
+      const iterations = 100_000;
+      const startTime = performance.now();
+
+      for (let i = 0; i < iterations; i++) {
+        renderPlaceSummary({ place });
+      }
+
+      const endTime = performance.now();
+      const duration = endTime - startTime;
+      const rendersPerSecond = Math.round((iterations / duration) * 1000);
+
+      console.log(`\n⚡ Complex Template Performance Results:`);
+      console.log(`   Iterations: ${iterations.toLocaleString()}`);
+      console.log(`   Duration: ${duration.toFixed(2)}ms`);
+      console.log(`   Renders/sec: ${rendersPerSecond.toLocaleString()}`);
+      console.log(`   Avg render time: ${(duration / iterations * 1000).toFixed(3)}μs\n`);
+
+      // We are only interested in the performance output
+      expect(true).toBe(true);
+    });
+
+    it('should measure hot performance after V8 optimization', () => {
+      const place: Place = {
+        ...createPlace({
+          id: 'flux:place:test:hot-performance',
+          name: 'Hot Performance Test Location',
+          description: 'Multi-exit location with emergent narrative for hot performance testing.',
+          exits: [
+            {
+              direction: Direction.NORTH,
+              label: 'grand marble staircase leading upward',
+              to: 'flux:place:palace:upper',
+            },
+            {
+              direction: Direction.SOUTH,
+              label: 'weathered stone path winding downward',
+              to: 'flux:place:dungeon:entrance',
+            },
+            {
+              direction: Direction.EAST,
+              label: 'ornate golden doorway with intricate carvings',
+              to: 'flux:place:treasury:main',
+            },
+            {
+              direction: Direction.WEST,
+              label: 'simple wooden door marked with ancient runes',
+              to: 'flux:place:library:archives',
+            },
+            {
+              direction: Direction.NORTHEAST,
+              label: 'narrow spiral staircase disappearing into shadows',
+              to: 'flux:place:tower:secret',
+            },
+          ],
+        }),
+        description: {
+          base: 'A magnificent hall with soaring ceilings and polished marble floors.',
+          emergent: 'Sunlight streams through stained glass windows, casting rainbow patterns across the stone walls. The air carries the faint scent of ancient incense and distant music.',
+        },
+      };
+
+      // V8 Warm-up Phase: Run enough iterations to trigger optimization
+      console.log(`\n🔥 V8 Warm-up Phase:`);
+      const warmupIterations = 100_000;
+      const warmupStart = performance.now();
+
+      for (let i = 0; i < warmupIterations; i++) {
+        renderPlaceSummary({ place });
+      }
+
+      const warmupEnd = performance.now();
+      const warmupDuration = warmupEnd - warmupStart;
+      const warmupRPS = Math.round((warmupIterations / warmupDuration) * 1000);
+
+      console.log(`   Warm-up iterations: ${warmupIterations.toLocaleString()}`);
+      console.log(`   Warm-up duration: ${warmupDuration.toFixed(2)}ms`);
+      console.log(`   Warm-up RPS: ${warmupRPS.toLocaleString()}`);
+
+      // Hot Performance Phase: Measure optimized performance
+      console.log(`\n🚀 Hot Performance Measurement:`);
+      const hotIterations = 100_000;
+      const hotStart = performance.now();
+
+      for (let i = 0; i < hotIterations; i++) {
+        renderPlaceSummary({ place });
+      }
+
+      const hotEnd = performance.now();
+      const hotDuration = hotEnd - hotStart;
+      const hotRPS = Math.round((hotIterations / hotDuration) * 1000);
+      const avgRenderTime = (hotDuration / hotIterations * 1000);
+
+      console.log(`   Hot iterations: ${hotIterations.toLocaleString()}`);
+      console.log (`   Hot duration: ${hotDuration.toFixed(2)}ms`);
+      console.log(`   Hot renders/sec: ${hotRPS.toLocaleString()}`);
+      console.log(`   Avg render time: ${avgRenderTime.toFixed(3)}μs`);
+
+      // Performance improvement calculation
+      const improvement = ((hotRPS - warmupRPS) / warmupRPS * 100).toFixed(1);
+      console.log(`   V8 optimization gain: +${improvement}%\n`);
+
+      // We are only interested in the log output
+      expect(true).toBe(true);
     });
   });
 });

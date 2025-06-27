@@ -5,20 +5,20 @@ import picomatch from 'picomatch';
 /**
  * Return a picomatch function that matches the given subpattern.
  */
-const createAnatomyMatcher = (subpattern: string) => picomatch(`${ROOT_NAMESPACE}:anatomy:${subpattern}`);
+const createAnatomyMatcher = (subpattern: string) => picomatch(`${ROOT_NAMESPACE}:anatomy:**:${subpattern}:**`);
 
-const isHead = createAnatomyMatcher(`**:head:**`);
-const isNeck = createAnatomyMatcher(`**:neck:**`);
-const isLeft = createAnatomyMatcher(`**:left:**`);
-const isEye = createAnatomyMatcher(`**:eye:**`);
-const isEar = createAnatomyMatcher(`**:ear:**`);
-const isArm = createAnatomyMatcher(`**:arm:**`);
-const isShoulder = createAnatomyMatcher(`**:shoulder:**`);
-const isElbow = createAnatomyMatcher(`**:elbow:**`);
-const isHand = createAnatomyMatcher(`**:hand:**`);
-const isLeg = createAnatomyMatcher(`**:leg:**`);
-const isKnee = createAnatomyMatcher(`**:knee:**`);
-const isFoot = createAnatomyMatcher(`**:foot:**`);
+const isHead = createAnatomyMatcher('head');
+const isNeck = createAnatomyMatcher('neck');
+const isLeft = createAnatomyMatcher('left');
+const isEye = createAnatomyMatcher('eye');
+const isEar = createAnatomyMatcher('ear');
+const isArm = createAnatomyMatcher('arm');
+const isShoulder = createAnatomyMatcher('shoulder');
+const isElbow = createAnatomyMatcher('elbow');
+const isHand = createAnatomyMatcher('hand');
+const isLeg = createAnatomyMatcher('leg');
+const isKnee = createAnatomyMatcher('knee');
+const isFoot = createAnatomyMatcher('foot');
 
 type PartMatcher = [name: string, bilateral: boolean, match: (urn: string) => boolean];
 

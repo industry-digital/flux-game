@@ -1,6 +1,10 @@
 import { Template } from "~/types/template";
-import { ActorSummary } from "~/worldkit/view/actor";
+import { ActorSummaryLike } from "~/worldkit/view/actor";
 
-export const renderActorSummary: Template<ActorSummary> = (actor) => {
+export type ActorSummaryProps = {
+  actor: ActorSummaryLike;
+};
+
+export const renderActorSummary: Template<ActorSummaryProps> = ({ actor }) => {
   return `${actor.name}\n${actor.description}`;
 };
