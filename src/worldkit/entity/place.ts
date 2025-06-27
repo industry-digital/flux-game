@@ -1,4 +1,4 @@
-import { EntityType, Place, Exit, PlaceURN, Actor, PlaceEntityDescriptor, SpecialVisibility } from '@flux';
+import { EntityType, Place, Exit, PlaceURN, Actor, PlaceEntityDescriptor, SpecialVisibility, Direction } from '@flux';
 import { createEntity, FactoryOptions } from './util';
 import { merge } from 'lodash';
 import { ExitInput, Exits, PlaceInput } from '~/types/entity/place';
@@ -100,4 +100,18 @@ export const removeActorFromPlace = (
 ): Place => {
   const { [actor.id]: _, ...rest } = place.entities;
   return { ...place, entities: rest };
+};
+
+export const getExitDirection = (
+  exitsAtOrigin: Exits,
+  destination: PlaceURN
+): Direction => {
+  const entries = Object.entries(exitsAtOrigin) as [Direction, Exit][];
+  for (const [direction, exit] of entries) {
+    if (exit.to === destination) {
+      return direction;
+    }
+  }
+
+  return Direction.UNKNOWN;
 };

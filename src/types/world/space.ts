@@ -15,6 +15,7 @@ export enum Direction {
   BACKWARD = 'backward',
   LEFT = 'left',
   RIGHT = 'right',
+  UNKNOWN = 'unknown',
 }
 
 export enum WellKnownPlaceName {

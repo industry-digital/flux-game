@@ -1,6 +1,6 @@
 export * from '@flux';
 export * from '~/lib/taxonomy';
-export * from '~/worldkit/entity/util';
+export * from '~/worldkit/entity';
 export * from '~/worldkit/view';
 export * from '~/template';
 
