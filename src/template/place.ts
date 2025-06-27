@@ -1,13 +1,16 @@
 import { Template } from "~/types/template";
-import { PlaceSummary } from "~/worldkit/view/place";
+import { PlaceSummaryLike } from "~/worldkit/view/place";
 
-export const renderExits: Template<PlaceSummary> = (place) => {
+export type PlaceTemplateProps = { place: PlaceSummaryLike };
+export type PlaceTemplate = Template<PlaceTemplateProps>;
+
+export const renderExits: PlaceTemplate = ({ place }) => {
   return Object.entries(place.exits).map(([direction, exit]) => {
     return `- ${direction}: ${exit.label}`;
   }).join('\n');
 };
 
-export const renderPlaceDescription = (place: PlaceSummary) => {
+export const renderPlaceDescription: PlaceTemplate = ({ place }) => {
   if (typeof place.description === 'string') {
     return place.description;
   }
@@ -16,12 +19,9 @@ export const renderPlaceDescription = (place: PlaceSummary) => {
   return `${base}\n${emergent}`;
 };
 
-export type PlaceSummaryInput = {
-  place: PlaceSummary;
-};
+export const renderPlaceSummary: PlaceTemplate = (props) => {
+  const description = renderPlaceDescription(props);
+  const exits = renderExits(props);
 
-export const renderPlaceSummary: Template<PlaceSummaryInput> = ({ place }) => {
-  const description = renderPlaceDescription(place);
-  const exits = renderExits(place);
-  return `${place.name}\n${description}\n\n${exits}`;
+  return `${props.place.name}\n${description}\n\n${exits}`;
 };

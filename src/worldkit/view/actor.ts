@@ -5,7 +5,9 @@ export type ActorSummary = {
   description: Actor['description'];
 };
 
-export const createActorSummary = <ActorLike extends ActorSummary>(actor: ActorLike): ActorSummary => {
+export type ActorSummaryLike<T extends ActorSummary = ActorSummary> = T;
+
+export const createActorSummary = (actor: ActorSummaryLike): ActorSummary => {
   return {
     name: actor.name,
     description: actor.description,

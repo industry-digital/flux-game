@@ -1,12 +1,8 @@
 export * from '@flux';
 export * from '~/lib/taxonomy';
 export * from '~/worldkit/entity/util';
-export * from '~/worldkit/view/actor';
-export * from '~/worldkit/view/place';
-
-export {
-  Template,
-} from '~/types/template';
+export * from '~/worldkit/view';
+export * from '~/template';
 
 export {
   parseEntityUrn,
@@ -27,13 +23,6 @@ export {
   createCommandTypeGuard,
 } from '~/lib/intent';
 
-export {
-  renderActorSummary,
-} from '~/template/actor';
-
-export {
-  renderPlaceSummary,
-} from '~/template/place';
 
 // Export command types
 export {
@@ -63,9 +52,10 @@ export {
   validateExit,
 } from '~/validation/place';
 
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
 import { PureHandlerImplementation, TransformerContext } from '@flux';
 import { safeTopologicalSort } from '~/lib/dag';
-
 import { MOVE } from '~/command/MOVE/handler';
 import { CREATE_ACTOR } from '~/command/CREATE_ACTOR/handler';
 import { CREATE_PLACE } from '~/command/CREATE_PLACE/handler';

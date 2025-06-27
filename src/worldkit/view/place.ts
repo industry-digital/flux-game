@@ -6,7 +6,9 @@ export type PlaceSummary = {
   exits: Place['exits'];
 };
 
-export const createPlaceSummary = (place: Place): PlaceSummary => {
+export type PlaceSummaryLike<T extends PlaceSummary = PlaceSummary> = T;
+
+export const createPlaceSummary = (place: PlaceSummaryLike): PlaceSummary => {
   return {
     name: place.name,
     description: place.description,
