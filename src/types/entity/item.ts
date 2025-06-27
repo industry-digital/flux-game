@@ -1,15 +1,14 @@
-import { Taxonomy } from '~/types/taxonomy';
 import {
   ModifiableBoundedAttribute,
   NormalizedValueBetweenZeroAndOne,
   StatefulBoundedValue,
 } from '~/types/entity/attribute';
-import { SkillRequirements } from '~/types/requirement';
+import { AbstractEntity, EntityType, Nameable } from '~/types/entity/entity';
 
 /**
  * The different types of items that can exist in the game
  */
-export enum ItemSubtype {
+export enum ItemType {
   WEAPON = 'weapon',
   ARMOR = 'armor',
   CONSUMABLE = 'consumable',
@@ -19,17 +18,12 @@ export enum ItemSubtype {
   MODIFICATION = 'mod',
   TOOL = 'tool',
   DEVICE = 'device',
-  VEHICLE = 'vehicle',
 }
 
 /**
  * Common properties for all items
  */
 export interface ItemState {
-  /**
-   * The item's taxonomic classification
-   */
-  subtype: ItemSubtype;
 
   /**
    * The item's condition, or durability.
@@ -58,10 +52,6 @@ export type ChargeableMixin = {
   charges: StatefulBoundedValue;
 };
 
-export type ContainerSkillChecks = {
-  [key in Taxonomy.Skills]?: number;
-};
-
 /**
  * Mixin for container items that can hold other items
  */
@@ -78,11 +68,29 @@ export interface ContainerMixin {
     /**
      * Currently stored items
      */
-    items: Record<string, any>;
+    items: Record<string, Item>;
   };
-
-  /**
-   * Skill checks required to interact with the container
-   */
-  checks: SkillRequirements;
 }
+
+export type AbstractItem<TItemType extends ItemType> =
+& AbstractEntity<EntityType.ITEM>
+& Nameable
+& {
+  /**
+   * The item's taxonomic classification
+   */
+  subtype: TItemType;
+};
+
+export type Consumable = AbstractItem<ItemType.CONSUMABLE> & StackableMixin;
+export type Resource = AbstractItem<ItemType.RESOURCE> & StackableMixin;
+export type Ammo = AbstractItem<ItemType.AMMO> & StackableMixin;
+export type Container = AbstractItem<ItemType.CONTAINER> & ContainerMixin;
+export type Modification = AbstractItem<ItemType.MODIFICATION> & StackableMixin;
+export type Tool = AbstractItem<ItemType.TOOL> & StackableMixin;
+export type Device = AbstractItem<ItemType.DEVICE> & ChargeableMixin;
+export type Weapon = AbstractItem<ItemType.WEAPON> & StackableMixin;
+export type Armor = AbstractItem<ItemType.ARMOR> & StackableMixin;
+
+// Union of all possible item types
+export type Item = Consumable | Resource | Ammo | Container | Modification | Tool | Device | Weapon | Armor;

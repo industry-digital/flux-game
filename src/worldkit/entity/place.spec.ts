@@ -4,6 +4,7 @@ import { Direction } from '~/types/world/space';
 import { EntityType } from '~/types/entity/entity';
 import { createPlaceUrn } from '~/lib/taxonomy';
 import { PlaceInput, ExitInput } from '~/types/entity/place';
+import { SpecialVisibility } from '~/types/world/visibility';
 
 describe('createPlace', () => {
   describe('basic place creation', () => {
@@ -318,7 +319,7 @@ describe('addActorToPlace', () => {
     const updatedPlace = addActorToPlace(actor, place);
 
     expect(updatedPlace.entities['flux:actor:test-character']).toBeDefined();
-         expect(updatedPlace.entities['flux:actor:test-character']?.entity).toBe(actor);
+    expect(updatedPlace.entities['flux:actor:test-character']?.vis).toBe(SpecialVisibility.VISIBLE_TO_EVERYONE);
   });
 });
 

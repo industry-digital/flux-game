@@ -1,6 +1,12 @@
 export * from '@flux';
 export * from '~/lib/taxonomy';
 export * from '~/worldkit/entity/util';
+export * from '~/worldkit/view/actor';
+export * from '~/worldkit/view/place';
+
+export {
+  Template,
+} from '~/types/template';
 
 export {
   parseEntityUrn,
@@ -20,6 +26,14 @@ export {
   isValidatedCommandOfType,
   createCommandTypeGuard,
 } from '~/lib/intent';
+
+export {
+  renderActorSummary,
+} from '~/template/actor';
+
+export {
+  renderPlaceSummary,
+} from '~/template/place';
 
 // Export command types
 export {

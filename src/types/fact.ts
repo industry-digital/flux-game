@@ -1,6 +1,6 @@
-export enum KindOfFact {
+export enum FactType {
   /**
-   * A view of something that exists in the world
+   * A full or partial view of an Entity that exists in the world
    */
   VIEW = 'view',
 
@@ -10,23 +10,23 @@ export enum KindOfFact {
   EVENT = 'event',
 
   /**
-   * Facts about the simulation infrastructure, such as maintenance notifications.
+   * Facts about concerns outside of the simulation, such as maintenance notifications.
    */
   SYSTEM = 'system',
 }
 
-export type PerspectiveBasedText = {
-  actor: string;
-  observer: string;
-};
-
-export type AbstractFact<Kind extends KindOfFact, Subject> = {
-  kind: Kind;
+export type AbstractFact<
+  Type extends FactType,
+  Text = string,
+  Subject = any,
+> = {
+  type: Type;
   subject: Subject;
-  text: string | PerspectiveBasedText;
+  text: Text;
 };
 
-export type Fact<Subject = any> =
-  | AbstractFact<KindOfFact.VIEW, Subject>
-  | AbstractFact<KindOfFact.EVENT, Subject>
-  | AbstractFact<KindOfFact.SYSTEM, Subject>;
+// Union of all possible facts
+export type Fact =
+  | AbstractFact<FactType.EVENT, { actor: string; observer?: string }>
+  | AbstractFact<FactType.VIEW>
+  | AbstractFact<FactType.SYSTEM>;

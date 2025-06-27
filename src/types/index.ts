@@ -55,6 +55,17 @@ export {
 } from './entity/group';
 
 export {
+  ItemType,
+  Container,
+  Modification,
+  Device,
+  Weapon,
+  Armor,
+  Item,
+  AbstractItem,
+} from './entity/item';
+
+export {
   EmergentNarrative,
   EntityType,
   UUIDLike,
@@ -72,7 +83,7 @@ export type {
 
 export {
   ItemState,
-  ItemSubtype,
+  ItemType as ItemSubtype,
   ContainerMixin,
   StackableMixin,
   ChargeableMixin,
@@ -276,6 +287,9 @@ export {
 export {
   AbstractFact,
   Fact,
-  KindOfFact,
-  PerspectiveBasedText,
+  FactType,
 } from './fact';
+
+export {
+  Template,
+} from './template';

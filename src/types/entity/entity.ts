@@ -43,15 +43,17 @@ export type SymbolicLink<T extends EntityType> = {
  */
 export type AbstractEntity<T extends EntityType> = SymbolicLink<T>;
 
-/**
- * A mixin type that adds human-friendly name and description fields to an entity.
- */
-export type Describable = {
+export type Nameable = {
   /**
    * Name of the entity
    */
   name: string;
+};
 
+/**
+ * A mixin type that adds human-friendly name and description fields to an entity.
+ */
+export type Describable = Nameable & {
   /**
    * Description of the entity
    */
