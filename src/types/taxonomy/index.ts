@@ -276,3 +276,4 @@ export type AmmoURN = Taxonomy.Ammo;
 export type DimensionURN = Taxonomy.Dimensions;
 export type StatURN = Taxonomy.Stats;
 export type GroupURN = Taxonomy.Groups;
+export type TopicURN = Taxonomy.Topics;

@@ -223,6 +223,7 @@ export {
   StatURN,
   TAXONOMY,
   Taxonomy,
+  TopicURN,
   TraitURN,
   WeaponURN,
 } from './taxonomy';
