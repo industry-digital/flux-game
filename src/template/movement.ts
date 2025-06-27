@@ -1,16 +1,22 @@
-import { Direction, Template } from '@flux';
+import { Direction, Template, WorldEventMessageDictionary } from '@flux';
 import { ActorSummaryLike } from '~/worldkit/view/actor';
 
 export type ActorMovementProps = {
   actor: ActorSummaryLike;
   direction: Direction;
+  perspective: keyof WorldEventMessageDictionary;
 };
 
-export const renderActorDidDepart: Template<ActorMovementProps> = ({ actor, direction }) => {
-  return `${actor.name} moves ${direction}.`;
+export const renderActorDidDepart: Template<ActorMovementProps> = ({ actor, direction, perspective }) => {
+  const subject = perspective === 'actor' ? actor.name : 'You';
+  const verb = perspective === 'actor' ? 'moves' : 'move';
+  return `${subject} ${verb} ${direction}.`;
 };
 
-export const renderActorDidArrive: Template<ActorMovementProps> = ({ actor, direction }) => {
+export const renderActorDidArrive: Template<ActorMovementProps> = ({ actor, direction, perspective }) => {
+  const subject = perspective === 'actor' ? actor.name : 'You';
+  const verb = perspective === 'actor' ? 'arrives' : 'arrive';
+
   switch (direction) {
     case Direction.NORTH:
     case Direction.SOUTH:
@@ -20,12 +26,12 @@ export const renderActorDidArrive: Template<ActorMovementProps> = ({ actor, dire
     case Direction.SOUTHEAST:
     case Direction.SOUTHWEST:
     case Direction.NORTHWEST:
-      return `${actor.name} arrives from the ${direction}.`;
+      return `${subject} ${verb} from the ${direction}.`;
     case Direction.UP:
-      return `${actor.name} arrives from above.`;
+      return `${subject} ${verb} from above.`;
     case Direction.DOWN:
-      return `${actor.name} arrives from below.`;
+      return `${subject} ${verb} from below.`;
     default:
-      return `${actor.name} arrives.`;
+      return `${subject} ${verb}.`;
   }
 };

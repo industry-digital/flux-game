@@ -289,6 +289,7 @@ export {
   AbstractFact,
   Fact,
   FactType,
+  WorldEventMessageDictionary,
 } from './fact';
 
 export {

@@ -25,8 +25,13 @@ export type AbstractFact<
   text: Text;
 };
 
+export type WorldEventMessageDictionary = {
+  observer: string;
+  actor?: string;
+};
+
 // Union of all possible facts
 export type Fact =
-  | AbstractFact<FactType.EVENT, { actor: string; observer?: string }>
+  | AbstractFact<FactType.EVENT, WorldEventMessageDictionary>
   | AbstractFact<FactType.VIEW>
   | AbstractFact<FactType.SYSTEM>;
