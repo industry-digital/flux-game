@@ -9,7 +9,7 @@ export const createActorDidDepartEvent = (input: ActorDidMove): ActorDidDepart =
     id: uniqid(8),
     ts: input.ts,
     trace: input.trace,
-    type: EventType.ACTOR_DID_LEAVE,
+    type: EventType.ACTOR_DID_DEPART,
     actor: input.actor,
     location: origin,
     payload: { destination },
