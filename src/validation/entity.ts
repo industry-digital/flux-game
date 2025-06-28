@@ -1,5 +1,5 @@
 import * as typia from 'typia';
-import { Entity, EntityType, EntityURN, EmergentNarrative, SymbolicLink } from '@flux';
+import { Entity, EntityURN, EmergentNarrative } from '@flux';
 
 /**
  * Validator for the base Entity type
@@ -12,11 +12,6 @@ export const validateEntity = typia.createValidate<Entity>();
  * Checks if a string is a properly formatted entity identifier
  */
 export const validateEntityURN = typia.createValidate<EntityURN>();
-
-/**
- * Validator for SymbolicLink
- */
-export const validateSymbolicLink = typia.createValidate<SymbolicLink<EntityType>>();
 
 /**
  * Validator for EmergentNarrative

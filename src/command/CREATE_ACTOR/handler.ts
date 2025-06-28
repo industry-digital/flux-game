@@ -32,7 +32,7 @@ export const createActorCommandReducer: PureReducer<TransformerContext, CreateAc
   declareEvent({
     type: EventType.ACTOR_WAS_CREATED,
     actor: actor.id,
-    location: actor.location.id,
+    location: actor.location,
     payload: {},
     trace: command.id,
   });

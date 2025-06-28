@@ -73,7 +73,6 @@ export {
   Describable as DescribableMixin,
   LocallyUniqueId,
   Entity,
-  SymbolicLink,
   Describable,
 } from './entity/entity';
 

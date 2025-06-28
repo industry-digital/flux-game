@@ -1,9 +1,7 @@
-import { createSymbolicLink } from '~/worldkit/entity/util';
 import { isCommandOfType } from '~/lib/intent';
 import {
   CommandType,
   EventType,
-  EntityType,
   PureReducer,
   TransformerContext,
   PureHandlerInterface,
@@ -12,6 +10,7 @@ import {
   Place,
   PlaceURN,
   SpecialVisibility,
+  Exit,
 } from '@flux';
 
 export type MoveCommandArgs = {
@@ -43,31 +42,32 @@ export const actorMovementReducer: PureReducer<TransformerContext, MoveCommand> 
   }
 
   // Ensure movement origin is a valid place
-  const origin: Place = places[actor.location.id];
+  const origin: Place = places[actor.location];
   if (!origin) {
     declareError('Actor `location` not found in `places` projection');
     return context;
   }
 
   // Ensure destination is a valid place
-  const destination = places[dest];
+  const destination: Place = places[dest];
   if (!destination) {
     declareError('Movement destination not found in `places` projection');
     return context;
   }
 
   // Ensure an Exit connects origin to destination
-  const exit = Object.values(origin.exits).find(exit => exit.to === dest);
+  const exit: Exit = Object.values(origin.exits).find(exit => exit.to === dest)!;
   if (!exit) {
     declareError('There is no exit that connects the origin and destination.');
     return context;
   }
 
   // Move actor from origin to destination
-  // First check if actor is actually in the origin place
+  // First check if actor is actually in origin
   if (!origin.entities?.[actor.id]) {
+    // Just declare an error, but don't return.
+    // We want to move the actor to the destination even if they are not in the origin.
     declareError('Actor not found in origin place entities');
-    return context;
   }
 
   // Get the actor's descriptor from the origin place
@@ -83,7 +83,7 @@ export const actorMovementReducer: PureReducer<TransformerContext, MoveCommand> 
   delete origin.entities[actor.id];
 
   // Update actor's location
-  actor.location = createSymbolicLink(EntityType.PLACE, destination.path);
+  actor.location = destination.id;
 
   declareEvent({
     type: EventType.ACTOR_DID_MOVE,

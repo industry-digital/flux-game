@@ -27,7 +27,7 @@ export const dematerializeActorCommandReducer: PureReducer<TransformerContext, D
     return context;
   }
 
-  const place = places[actor.location.id];
+  const place = places[actor.location];
   if (!place) {
     declareError('Place not found in `places` projection. Did you remember to load it?');
     return context;

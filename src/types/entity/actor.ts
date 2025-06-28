@@ -1,6 +1,6 @@
-import { Taxonomy, ItemURN, PlaceURN, ActorURN } from '~/types/taxonomy';
+import { Taxonomy, ItemURN, PlaceURN, ActorURN, GroupURN } from '~/types/taxonomy';
 import { AppliedEffects } from '~/types/taxonomy/effect';
-import { EntityType, SymbolicLink, AbstractEntity, Describable } from '~/types/entity/entity';
+import { EntityType, AbstractEntity, Describable } from '~/types/entity/entity';
 import { SkillState, Specializations } from '~/types/entity/skill';
 import { ItemState } from '~/types/entity/item';
 import {
@@ -9,7 +9,6 @@ import {
   ModifiableScalarAttribute,
   NormalizedBipolarValue,
 } from '~/types/entity/attribute';
-import { GroupSymbolicLink, GroupType } from '~/types/entity/group';
 
 /**
  * The kinds of actors in the simulation
@@ -177,17 +176,17 @@ export type Actor =
    * Actor subtype; for discriminating between different types of actors when we need to
    * Examples: `pc`, `npc`, `monster`
    */
-  subtype: ActorType;
+  kind: ActorType;
 
   /**
    * Current location
    */
-  location: SymbolicLink<EntityType.PLACE>;
+  location: PlaceURN;
 
   /**
    * Optional party membership; places this actor in a party with other actors
    */
-  party?: GroupSymbolicLink<GroupType.PARTY>;
+  party?: GroupURN;
 
   /**
    * Character level. e.g., "You are a 5th level barbarian."

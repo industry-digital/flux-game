@@ -1,17 +1,17 @@
-import { createEntity, FactoryOptions, createSymbolicLink } from './util';
+import { createEntity, FactoryOptions } from './util';
 import { createModifiableScalarAttribute, createModifiableBoundedAttribute } from './attribute';
 import { merge } from 'lodash';
 import { createEntityUrn, isUrnOfVocabulary } from '~/lib/taxonomy';
 import {
-  AbstractEntity,
-  Actor,
-  ActorInput,
-  ActorStat,
-  ActorType,
-  ActorURN,
-  EntityType,
-  SymbolicLink,
+    AbstractEntity,
+    Actor,
+    ActorInput,
+    ActorStat,
+    ActorType,
+    ActorURN,
+    EntityType,
 } from '@flux';
+import { WellKnownPlace } from '~/worldkit/entity/place';
 
 const identity = <T>(x: T): T => x;
 
@@ -37,8 +37,8 @@ export const createActor = (
       const defaults: Partial<Actor> = {
         name: entity.name,
         description: entity.description,
-        subtype: ActorType.NPC,
-        location: createSymbolicLink(EntityType.PLACE, ['nowhere']) as SymbolicLink<EntityType.PLACE>,
+        kind: ActorType.NPC,
+        location: WellKnownPlace.NOWHERE,
         level: createModifiableScalarAttribute(),
         hp: createModifiableBoundedAttribute(),
         traits: {},

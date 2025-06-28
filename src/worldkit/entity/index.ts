@@ -27,6 +27,6 @@ export {
 // Entity utilities
 export {
   createEntity,
-  createSymbolicLink
 } from './util';
+
 export type { EntityCreator, FactoryOptions } from './util';

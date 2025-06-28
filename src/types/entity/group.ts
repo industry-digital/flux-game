@@ -1,4 +1,4 @@
-import { EntityType, AbstractEntity, SymbolicLink } from './entity';
+import { EntityType, AbstractEntity } from './entity';
 import { EntityURN, RootNamespace } from '~/types/taxonomy';
 
 /**
@@ -13,7 +13,7 @@ export enum GroupType {
  * A symbolic link to a group with additional type information
  */
 export type GroupSymbolicLink<G extends GroupType> =
-  & SymbolicLink<EntityType.GROUP>
+  & AbstractEntity<EntityType.GROUP>
   & {
     /**
      * The specific type of group

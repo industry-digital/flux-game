@@ -15,12 +15,9 @@ export enum EntityType {
 }
 
 /**
- * A lightweight reference to an entity, containing just enough information to locate it.
- * Like a symbolic link in a filesystem, this provides a way to reference entities without
- * carrying their full state.
+ * The minimal set of fields that all in-game entities must have.
  */
-export type SymbolicLink<T extends EntityType> = {
-
+export type AbstractEntity<T extends EntityType> = {
   /**
    * The canonical URN of the entity
    */
@@ -30,18 +27,7 @@ export type SymbolicLink<T extends EntityType> = {
    * The type of entity being referenced
    */
   readonly type: T;
-
-  /**
-   * The path components that identify the entity
-   * This is simply a decomposition of the URN into its components, minus `T` and the namespace.
-   */
-  readonly path: readonly string[];
 };
-
-/**
- * The minimal set of fields that all in-game entities must have.
- */
-export type AbstractEntity<T extends EntityType> = SymbolicLink<T>;
 
 export type Nameable = {
   /**
