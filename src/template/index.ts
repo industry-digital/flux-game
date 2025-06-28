@@ -11,3 +11,7 @@ export { renderActorSummary } from './actor';
 
 // Anatomy templates
 export { renderHumanoidAnatomicalPart } from './anatomy';
+
+// Materialization templates
+export type { ActorMaterializationProps } from './materialization';
+export { renderActorDidMaterialize, renderActorDidDematerialize } from './materialization';
