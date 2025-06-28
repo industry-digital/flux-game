@@ -1,93 +1,57 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect } from 'vitest';
 import {
-  CREATE_PLACE,
-  CreatePlaceCommand,
-  createPlaceCommandReducer
+    CREATE_PLACE,
+    CreatePlaceCommand,
+    createPlaceCommandReducer
 } from './handler';
-import { CommandType, TransformerContext, EntityType } from '@flux';
-import { createEntityUrn, createPlaceUrn } from '~/lib/taxonomy';
+import { CommandType, EntityType } from '@flux';
+import { createPlaceUrn } from '~/lib/taxonomy';
 import { Direction } from '~/types/world/space';
+import {
+    createTransformerContext,
+    createCommand,
+    createWorld
+} from '~/testing';
 
 describe('CreatePlaceCommandHandler', () => {
-  let handler: CREATE_PLACE;
-  let mockContext: TransformerContext;
-
-  beforeEach(() => {
-    handler = new CREATE_PLACE();
-
-    // Create mock context with clean world state
-    mockContext = {
-      world: {
-        self: createEntityUrn(EntityType.ACTOR, 'test-actor'),
-        actors: {},
-        places: {}
-      },
-      random: vi.fn(() => 0.5),
-      timestamp: vi.fn(() => 1234567890),
-      uniqid: vi.fn(() => 'test-unique-id'),
-      declareEvent: vi.fn(),
-      declareError: vi.fn()
-    } as unknown as TransformerContext;
-  });
+  const handler = new CREATE_PLACE();
 
   describe('handles method', () => {
     it('should return true for CREATE_PLACE commands', () => {
-      const command: CreatePlaceCommand = {
-        __type: 'command',
-        id: 'test-command-id',
-        ts: 1234567890,
-        type: CommandType.CREATE_PLACE,
+      const command = createCommand(CommandType.CREATE_PLACE, {
         args: {
           id: createPlaceUrn('breach', 'warrens'),
           name: 'The Warrens',
           description: 'The Warrens are a collection of small, cramped apartments and shanties that are home to the city\'s poorest and most desperate.',
         }
-      };
+      });
 
-      const result = handler.handles(command);
-      expect(result).toBe(true);
+      expect(handler.handles(command)).toBe(true);
     });
 
     it('should return false for non-CREATE_PLACE commands', () => {
-      const command = {
-        __type: 'command',
-        id: 'test-command-id',
-        ts: 1234567890,
-        type: CommandType.CREATE_ACTOR,
-        actor: createEntityUrn(EntityType.ACTOR, 'test-actor'),
-        args: {}
-      } as any;
-
-      const result = handler.handles(command);
-      expect(result).toBe(false);
+      const command = createCommand(CommandType.CREATE_ACTOR);
+      expect(handler.handles(command)).toBe(false);
     });
 
     it('should return false for non-command inputs', () => {
-      const intent = {
-        __type: 'intent',
-        text: 'create place tavern'
-      };
-
-      const result = handler.handles(intent as any);
-      expect(result).toBe(false);
+      const intent = { __type: 'intent', text: 'create place tavern' };
+      expect(handler.handles(intent as any)).toBe(false);
     });
   });
 
   describe('reducer behavior', () => {
     it('should add a new place to world.places', () => {
-      const command: CreatePlaceCommand = {
-        __type: 'command',
-        id: 'test-command-id',
-        ts: 1234567890,
-        type: CommandType.CREATE_PLACE,
+      const context = createTransformerContext();
+      const command = createCommand(CommandType.CREATE_PLACE, {
         args: {
           id: createPlaceUrn('test', 'rusty-dragon-tavern'),
           name: 'The Rusty Dragon Tavern',
           description: 'A cozy tavern filled with the warmth of hearth and good company'
         }
-      };
+      });
 
-      const result = createPlaceCommandReducer(mockContext, command);
+      const result = createPlaceCommandReducer(context, command as CreatePlaceCommand);
 
       // Should have exactly one place in the world
       const placeIds = Object.keys(result.world.places);
@@ -102,27 +66,27 @@ describe('CreatePlaceCommandHandler', () => {
     });
 
     it('should preserve existing places in the world', () => {
-      // Add an existing place to the world
       const existingPlaceId = 'flux:place:world:existing';
       const existingPlace = {
         id: existingPlaceId,
         type: EntityType.PLACE,
         name: 'Existing Place'
       };
-      mockContext.world.places[existingPlaceId] = existingPlace as any;
 
-      const command: CreatePlaceCommand = {
-        __type: 'command',
-        id: 'test-command-id',
-        ts: 1234567890,
-        type: CommandType.CREATE_PLACE,
+      const context = createTransformerContext({
+        world: createWorld({
+          places: { [existingPlaceId]: existingPlace as any }
+        })
+      });
+
+      const command = createCommand(CommandType.CREATE_PLACE, {
         args: {
           id: createPlaceUrn('test', 'new-place'),
           name: 'New Place'
         }
-      };
+      });
 
-      const result = createPlaceCommandReducer(mockContext, command);
+      const result = createPlaceCommandReducer(context, command as CreatePlaceCommand);
 
       // Should have both places
       expect(Object.keys(result.world.places)).toHaveLength(2);
@@ -135,17 +99,14 @@ describe('CreatePlaceCommandHandler', () => {
     });
 
     it('should handle minimal place input', () => {
-      const command: CreatePlaceCommand = {
-        __type: 'command',
-        id: 'test-command-id',
-        ts: 1234567890,
-        type: CommandType.CREATE_PLACE,
+      const context = createTransformerContext();
+      const command = createCommand(CommandType.CREATE_PLACE, {
         args: {
           id: createPlaceUrn('test', 'minimal-place')
         }
-      };
+      });
 
-      const result = createPlaceCommandReducer(mockContext, command);
+      const result = createPlaceCommandReducer(context, command as CreatePlaceCommand);
 
       const placeIds = Object.keys(result.world.places);
       expect(placeIds).toHaveLength(1);
@@ -159,11 +120,8 @@ describe('CreatePlaceCommandHandler', () => {
     });
 
     it('should create place with exits', () => {
-      const command: CreatePlaceCommand = {
-        __type: 'command',
-        id: 'test-command-id',
-        ts: 1234567890,
-        type: CommandType.CREATE_PLACE,
+      const context = createTransformerContext();
+      const command = createCommand(CommandType.CREATE_PLACE, {
         args: {
           id: createPlaceUrn('test', 'central-plaza'),
           name: 'Central Plaza',
@@ -176,9 +134,9 @@ describe('CreatePlaceCommandHandler', () => {
             }
           ]
         }
-      };
+      });
 
-      const result = createPlaceCommandReducer(mockContext, command);
+      const result = createPlaceCommandReducer(context, command as CreatePlaceCommand);
       const placeIds = Object.keys(result.world.places);
       const place = result.world.places[placeIds[0] as keyof typeof result.world.places];
 
@@ -190,20 +148,16 @@ describe('CreatePlaceCommandHandler', () => {
     });
 
     it('should return the updated context', () => {
-      const command: CreatePlaceCommand = {
-        __type: 'command',
-        id: 'test-command-id',
-        ts: 1234567890,
-        type: CommandType.CREATE_PLACE,
+      const context = createTransformerContext();
+      const command = createCommand(CommandType.CREATE_PLACE, {
         args: {
           id: createPlaceUrn('test', 'test-place'),
           name: 'Test Place'
         }
-      };
+      });
 
-      const result = createPlaceCommandReducer(mockContext, command);
+      const result = createPlaceCommandReducer(context, command as CreatePlaceCommand);
 
-      // Should return the context (possibly modified)
       expect(result).toBeDefined();
       expect(result.world).toBeDefined();
       expect(result.world.places).toBeDefined();
@@ -212,23 +166,20 @@ describe('CreatePlaceCommandHandler', () => {
 
   describe('handler integration', () => {
     it('should process a command end-to-end', () => {
-      const command: CreatePlaceCommand = {
-        __type: 'command',
-        id: 'test-command-id',
-        ts: 1234567890,
-        type: CommandType.CREATE_PLACE,
+      const context = createTransformerContext();
+      const command = createCommand(CommandType.CREATE_PLACE, {
         args: {
-          id: createPlaceUrn('test', 'integration-tavern'),
-          name: 'Integration Test Tavern',
-          description: 'A tavern created during integration testing'
+          id: createPlaceUrn('test', 'integration-place'),
+          name: 'Integration Test Place',
+          description: 'A place created during integration testing'
         }
-      };
+      });
 
       // Handler should recognize the command
       expect(handler.handles(command)).toBe(true);
 
       // Handler should process the command successfully
-      const result = handler.reduce(mockContext, command);
+      const result = handler.reduce(context, command as CreatePlaceCommand);
 
       // Verify the observable outcomes
       expect(Object.keys(result.world.places)).toHaveLength(1);

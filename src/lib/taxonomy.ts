@@ -105,13 +105,7 @@ export const createPlaceUrn = (...terms: string[]): PlaceURN => {
     throw new Error('At least one term is required to create a place URN');
   }
 
-  // Skip world prefix for special cases
-  if (terms[0] === 'world' || terms[0] === 'nowhere') {
-    return createEntityUrn(EntityType.PLACE, ...terms);
-  }
-
-  // Always prefix with 'world'
-  return createEntityUrn(EntityType.PLACE, 'world', ...terms);
+  return createEntityUrn(EntityType.PLACE, ...terms);
 };
 
 export const createGroupUrn = (...terms: string[]): GroupURN => createEntityUrn(EntityType.GROUP, ...terms);
@@ -264,6 +258,20 @@ export const findMatchingUrns = (urns: string[], pattern: UrnPattern): string[] 
 };
 
 // === Utility Functions ===
+
+/**
+ * Extracts path components from a URN
+ * @param urn The URN to extract path from (e.g., "flux:place:test:tavern")
+ * @returns Array of path components (e.g., ["test", "tavern"])
+ */
+export const extractPathFromUrn = (urn: string): string[] => {
+  const parts = urn.split(':');
+  if (parts.length < 3) {
+    throw new Error(`Invalid URN format: ${urn}`);
+  }
+  // Skip namespace (flux) and type (place/actor/etc), return rest as path
+  return parts.slice(2);
+};
 
 export const getRootVocabularies = (): string[] =>
   Object.keys(TAXONOMY.terms).filter(key => !key.includes(':'));

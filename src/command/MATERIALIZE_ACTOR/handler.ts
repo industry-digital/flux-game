@@ -1,15 +1,15 @@
 import { isCommandOfType } from '~/lib/intent';
-import {
-    CommandType,
-    PureReducer,
-    TransformerContext,
-    PureHandlerInterface,
-    AllowedInput,
-    EventType,
-    SpecialVisibility,
-    ActorURN,
-} from '@flux';
 import { SystemCommand } from '~/types/intent';
+import {
+  CommandType,
+  PureReducer,
+  TransformerContext,
+  PureHandlerInterface,
+  AllowedInput,
+  EventType,
+  SpecialVisibility,
+  ActorURN,
+} from '@flux';
 
 export type MaterializeActorCommand = SystemCommand<CommandType.MATERIALIZE_ACTOR, {
   actorId: ActorURN;
@@ -34,7 +34,8 @@ export const materializeActorCommandReducer: PureReducer<TransformerContext, Mat
     return context;
   }
 
-  // Materialize the actor in its current location using Immer-compatible utility
+  // This materializes the actor in its current location
+  // FIXME: How do we handle the case where the actor is in stealth? What should be the actor's visibility then?
   place.entities[actor.id] = { vis: SpecialVisibility.VISIBLE_TO_EVERYONE };
 
   declareEvent({

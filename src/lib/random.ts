@@ -134,7 +134,7 @@ const uniqidImpl = (
  * where many IDs are generated in succession
  */
 export const createPooledUniqid = (
-  poolSize = 4_096,
+  poolSize = 8_192,
   randomBytesStrategy?: RandomBytesStrategy
 ) => {
   const pool = new BytePool(poolSize, randomBytesStrategy);
@@ -146,7 +146,7 @@ export const createPooledUniqid = (
  * Highly efficient for generating many IDs in succession because of the way it uses a byte pool,
  * reducing the frequency of system calls to generate random bytes.
  */
-export const uniqid = createPooledUniqid(4096);
+export const uniqid = createPooledUniqid();
 
 // Export types for external use
 export type { ByteProvider, RandomBytesStrategy };

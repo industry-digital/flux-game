@@ -1,18 +1,17 @@
-import { usePlaceEntities } from '~/lib/place';
 import { createSymbolicLink } from '~/worldkit/entity/util';
 import { isCommandOfType } from '~/lib/intent';
 import {
-    CommandType,
-    EventType,
-    EntityType,
-    SymbolicLink,
-    PureReducer,
-    TransformerContext,
-    PureHandlerInterface,
-    AllowedInput,
-    ActorCommand,
-    Place,
-    PlaceURN,
+  CommandType,
+  EventType,
+  EntityType,
+  PureReducer,
+  TransformerContext,
+  PureHandlerInterface,
+  AllowedInput,
+  ActorCommand,
+  Place,
+  PlaceURN,
+  SpecialVisibility,
 } from '@flux';
 
 export type MoveCommandArgs = {
@@ -57,30 +56,41 @@ export const actorMovementReducer: PureReducer<TransformerContext, MoveCommand> 
     return context;
   }
 
-  // Ensure an exit connects origin to destination
+  // Ensure an Exit connects origin to destination
   const exit = Object.values(origin.exits).find(exit => exit.to === dest);
   if (!exit) {
     declareError('There is no exit that connects the origin and destination.');
     return context;
   }
 
-  const { moveEntity } = usePlaceEntities(context, origin);
-  const didMove = moveEntity(actor, destination);
-
-  if (!didMove) {
-    declareError('Failed to move actor between places');
+  // Move actor from origin to destination
+  // First check if actor is actually in the origin place
+  if (!origin.entities?.[actor.id]) {
+    declareError('Actor not found in origin place entities');
     return context;
   }
 
+  // Get the actor's descriptor from the origin place
+  const actorDescriptor = origin.entities[actor.id] ?? { vis: SpecialVisibility.VISIBLE_TO_EVERYONE };
+
+  // Ensure destination has an entities object
+  if (!destination.entities) {
+    destination.entities = {};
+  }
+
+  // Move the actor by adding to destination and removing from origin
+  destination.entities[actor.id] = actorDescriptor;
+  delete origin.entities[actor.id];
+
   // Update actor's location
-  actor.location = createSymbolicLink(EntityType.PLACE, Array.from(destination.path)) as SymbolicLink<EntityType.PLACE>;
+  actor.location = createSymbolicLink(EntityType.PLACE, destination.path);
 
   declareEvent({
     type: EventType.ACTOR_DID_MOVE,
     actor: actor.id,
     location: origin.id,
     payload: {
-      destination: destination.id
+      destination: destination.id,
     },
     trace: command.id,
   });

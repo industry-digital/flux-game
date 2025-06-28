@@ -1,12 +1,12 @@
 import { isCommandOfType } from '~/lib/intent';
 import {
-    CommandType,
-    PureReducer,
-    TransformerContext,
-    PureHandlerInterface,
-    AllowedInput,
-    EventType,
-    ActorURN,
+  CommandType,
+  PureReducer,
+  TransformerContext,
+  PureHandlerInterface,
+  AllowedInput,
+  EventType,
+  ActorURN,
 } from '@flux';
 import { SystemCommand } from '~/types/intent';
 

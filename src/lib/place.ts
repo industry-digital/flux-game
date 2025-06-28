@@ -159,6 +159,7 @@ export const usePlaceEntities = (
       const descriptor = place.entities[entity.id];
       destination.entities[entity.id] = descriptor;
       delete place.entities[entity.id];
+
       return true;
     } catch (error) {
       context.declareError(`Failed to move entity '${entity.id}' to destination: ${error}`);

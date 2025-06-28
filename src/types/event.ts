@@ -79,8 +79,8 @@ export type ActorDidDematerialize = EventBase & ActorDidDematerializeInput;
 export type ActorDidMoveInput = RequiresActor & AbstractWorldEventInput<EventType.ACTOR_DID_MOVE, { destination: PlaceURN }>;
 export type ActorDidMove = EventBase & ActorDidMoveInput;
 
-export type ActorDidLeaveInput = RequiresActor & AbstractWorldEventInput<EventType.ACTOR_DID_LEAVE, { destination: PlaceURN }>;
-export type ActorDidLeave = EventBase & ActorDidLeaveInput;
+export type ActorDidDepartInput = RequiresActor & AbstractWorldEventInput<EventType.ACTOR_DID_LEAVE, { destination: PlaceURN }>;
+export type ActorDidDepart = EventBase & ActorDidDepartInput;
 
 export type ActorDidArriveInput = RequiresActor & AbstractWorldEventInput<EventType.ACTOR_DID_ARRIVE, { origin: PlaceURN }>;
 export type ActorDidArrive = EventBase & ActorDidArriveInput;
@@ -92,8 +92,7 @@ export type WorldEventInput =
   | ActorDidDematerializeInput
   | ActorDidMoveInput
   | ActorDidArriveInput
-  | ActorDidLeaveInput
-
+  | ActorDidDepartInput
 
 export type EventBase = {
   id: string;

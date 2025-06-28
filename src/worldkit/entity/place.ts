@@ -1,5 +1,6 @@
 import { EntityType, Place, Exit, PlaceURN, Actor, PlaceEntityDescriptor, SpecialVisibility, Direction } from '@flux';
 import { createEntity, FactoryOptions } from './util';
+import { extractPathFromUrn } from '~/lib/taxonomy';
 import { merge } from 'lodash';
 import { ExitInput, Exits, PlaceInput } from '~/types/entity/place';
 
@@ -30,7 +31,12 @@ export const createPlace = (
       // Create a copy of input without the exits array to avoid overriding the transformed exits
       const { exits: _, ...inputWithoutExits } = input;
 
-      return merge({}, entity, defaults, inputWithoutExits) as Place;
+      const result = merge({}, entity, defaults, inputWithoutExits) as Place;
+
+      // Derive correct path from input id if provided
+      return input.id && input.id !== entity.id
+        ? { ...result, path: extractPathFromUrn(input.id) }
+        : result;
     },
     options,
   );

@@ -2,6 +2,7 @@ export * from '@flux';
 export * from '~/lib/taxonomy';
 export * from '~/worldkit/entity';
 export * from '~/worldkit/view';
+export * from '~/worldkit/event';
 export * from '~/template';
 
 export {

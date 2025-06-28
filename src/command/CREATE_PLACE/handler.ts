@@ -2,11 +2,11 @@ import { createPlace } from '~/worldkit/entity/place';
 import { EventType, PlaceInput } from '~/types';
 import { isCommandOfType } from '~/lib/intent';
 import {
-    CommandType,
-    PureReducer,
-    TransformerContext,
-    PureHandlerInterface,
-    AllowedInput,
+  CommandType,
+  PureReducer,
+  TransformerContext,
+  PureHandlerInterface,
+  AllowedInput,
 } from '@flux';
 import { SystemCommand } from '~/types/intent';
 

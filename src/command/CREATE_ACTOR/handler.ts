@@ -1,13 +1,13 @@
 import { createActor } from '~/worldkit/entity/actor';
 import { isCommandOfType } from '~/lib/intent';
 import {
-    ActorInput,
-    CommandType,
-    PureReducer,
-    TransformerContext,
-    PureHandlerInterface,
-    AllowedInput,
-    EventType,
+  ActorInput,
+  CommandType,
+  PureReducer,
+  TransformerContext,
+  PureHandlerInterface,
+  AllowedInput,
+  EventType,
 } from '@flux';
 import { SystemCommand } from '~/types/intent';
 
@@ -17,17 +17,16 @@ export const createActorCommandReducer: PureReducer<TransformerContext, CreateAc
   context,
   command,
 ) => {
-  const { declareEvent } = context;
+  const { declareEvent, declareError } = context;
   const { actors } = context.world;
   const actor = createActor(command.args);
 
   if (actors[actor.id]) {
-    context.declareError(`Actor ${actor.id} already exists in world projection`);
+    declareError(`Actor ${actor.id} already exists in world projection`);
     return context;
   }
 
-  // All we have to do is add the new actor to `actors` projection
-  // The server will understand that this is a new actor
+  // Add the new actor to the world projection
   actors[actor.id] = actor;
 
   declareEvent({

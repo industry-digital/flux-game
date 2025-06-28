@@ -15,7 +15,7 @@ describe('createPlace', () => {
 
       const place = createPlace(input);
 
-      expect(place.id).toBe('flux:place:world:test:tavern');
+      expect(place.id).toBe('flux:place:test:tavern');
       expect(place.type).toBe(EntityType.PLACE);
       expect(place.name).toBe('');
       expect(place.description).toBe('');
@@ -32,7 +32,7 @@ describe('createPlace', () => {
 
       const place = createPlace(input);
 
-      expect(place.id).toBe('flux:place:world:test:inn');
+      expect(place.id).toBe('flux:place:test:inn');
       expect(place.name).toBe('The Golden Griffin Inn');
       expect(place.description).toBe('A warm and welcoming inn with comfortable rooms and hearty meals.');
       expect(place.exits).toEqual({});
@@ -226,7 +226,7 @@ describe('createPlace', () => {
 
       const place = createPlace(input, undefined, options);
 
-      expect(place.id).toBe('flux:place:world:test:options-test');
+      expect(place.id).toBe('flux:place:test:options-test');
     });
   });
 });
@@ -291,10 +291,10 @@ describe('createPlaces', () => {
     const places = createPlaces(inputs);
 
     expect(Object.keys(places)).toHaveLength(2);
-    expect(places['flux:place:world:test:place1']).toBeDefined();
-    expect(places['flux:place:world:test:place1'].name).toBe('Place One');
-    expect(places['flux:place:world:test:place2']).toBeDefined();
-    expect(places['flux:place:world:test:place2'].name).toBe('Place Two');
+    expect(places['flux:place:test:place1']).toBeDefined();
+    expect(places['flux:place:test:place1'].name).toBe('Place One');
+    expect(places['flux:place:test:place2']).toBeDefined();
+    expect(places['flux:place:test:place2'].name).toBe('Place Two');
   });
 
   it('should handle empty inputs array', () => {
