@@ -62,21 +62,11 @@ export const actorMovementReducer: PureReducer<TransformerContext, MoveCommand> 
     return context;
   }
 
-  // Move actor from origin to destination
-  // First check if actor is actually in origin
-  if (!origin.entities?.[actor.id]) {
-    // Just declare an error, but don't return.
-    // We want to move the actor to the destination even if they are not in the origin.
-    declareError('Actor not found in origin place entities');
-  }
-
   // Get the actor's descriptor from the origin place
   const actorDescriptor = origin.entities[actor.id] ?? { vis: SpecialVisibility.VISIBLE_TO_EVERYONE };
 
   // Ensure destination has an entities object
-  if (!destination.entities) {
-    destination.entities = {};
-  }
+  destination.entities ??= {};
 
   // Move the actor by adding to destination and removing from origin
   destination.entities[actor.id] = actorDescriptor;

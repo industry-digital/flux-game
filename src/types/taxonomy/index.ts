@@ -129,6 +129,10 @@ export const TAXONOMY = {
       description: 'A monster in the game world',
       examples: ['flux:monster:goblin:blazor:elite', 'flux:monster:faction:arasaka:cybernetic:assassin'],
     },
+    resource: {
+      description: 'A resource that can be obtained and used',
+      examples: ['flux:resource:wood:oak', 'flux:resource:ore:iron'],
+    },
   }
 } as const;
 
@@ -255,6 +259,11 @@ export namespace Taxonomy {
    * The various currencies in the game world
    */
   export type Currency = TaxonomyURN<'currency'>;
+
+  /**
+   * The various resources in the game world
+   */
+  export type Resources = TaxonomyURN<'resource'>;
 }
 
 export type EntityURN<T extends EntityType = EntityType> = `${RootNamespace}:${T}:${string}`;
@@ -277,3 +286,4 @@ export type DimensionURN = Taxonomy.Dimensions;
 export type StatURN = Taxonomy.Stats;
 export type GroupURN = Taxonomy.Groups;
 export type TopicURN = Taxonomy.Topics;
+export type ResourceURN = Taxonomy.Resources;

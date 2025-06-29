@@ -2,6 +2,7 @@ import { EntityURN, PlaceURN, RootNamespace } from '~/types/taxonomy';
 import { EntityType, AbstractEntity, Describable } from './entity';
 import { Direction } from '~/types/world/space';
 import { SpecialVisibility } from '~/types/world/visibility';
+import { ResourceGenerator } from './resource';
 
 export type PlaceVisibilityRules = Record<EntityURN, 1>;
 
@@ -80,6 +81,7 @@ export type PlaceInput = {
 export type Place =
   & AbstractEntity<EntityType.PLACE>
   & Describable
+  & Partial<ResourceGenerator>
   & {
 
   /**

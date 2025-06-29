@@ -216,6 +216,7 @@ export {
   ItemURN,
   ModifierURN,
   PlaceURN,
+  ResourceURN,
   RootNamespace,
   RootVocabulary,
   SkillURN,

@@ -4,7 +4,7 @@ import {
   MoveCommand,
   actorMovementReducer
 } from './handler';
-import { CommandType, EntityType, SpecialVisibility } from '@flux';
+import { CommandType, SpecialVisibility } from '@flux';
 import { createPlaceUrn } from '~/lib/taxonomy';
 import { Direction } from '~/types/world/space';
 import {
@@ -46,7 +46,7 @@ describe('MoveCommandHandler', () => {
 
             const actor = createTestActor({
         name: 'Test Actor',
-        location: { id: originId, type: 'place' as any, path: ['world', 'test', 'tavern'] }
+        location: originId
       });
 
       const origin = createTestPlace({
@@ -91,7 +91,7 @@ describe('MoveCommandHandler', () => {
       expect(result.world.places[destId].entities[actor.id]).toBeDefined();
 
       // Actor location should be updated
-      expect(result.world.actors[actor.id].location.id).toBe(destId);
+      expect(result.world.actors[actor.id].location).toBe(destId);
     });
 
     it('should declare ACTOR_DID_MOVE event', () => {
@@ -99,7 +99,7 @@ describe('MoveCommandHandler', () => {
       const destId = createPlaceUrn('test', 'street');
 
       const actor = createTestActor({
-        location: { id: originId }
+        location: originId
       });
 
       const origin = createTestPlace({
@@ -188,7 +188,7 @@ describe('MoveCommandHandler', () => {
 
     it('should handle origin place not found error', () => {
       const actor = createTestActor({
-        location: { id: 'flux:place:test:nonexistent' }
+        location: 'flux:place:test:nonexistent'
       });
 
       const context = createTransformerContext({
@@ -214,7 +214,7 @@ describe('MoveCommandHandler', () => {
     it('should handle destination place not found error', () => {
       const originId = createPlaceUrn('test', 'tavern');
       const actor = createTestActor({
-        location: { id: originId }
+        location: originId
       });
 
       const origin = createTestPlace({
@@ -248,7 +248,7 @@ describe('MoveCommandHandler', () => {
       const destId = createPlaceUrn('test', 'unreachable');
 
       const actor = createTestActor({
-        location: { id: originId }
+        location: originId
       });
 
       const origin = createTestPlace({
@@ -296,7 +296,7 @@ describe('MoveCommandHandler', () => {
       const destId = createPlaceUrn('test', 'street');
 
       const actor = createTestActor({
-        location: { id: originId, type: EntityType.PLACE, path: ['world', 'test', 'tavern'] }
+        location: originId
       });
 
       const origin = createTestPlace({
@@ -337,7 +337,7 @@ describe('MoveCommandHandler', () => {
       // Verify the observable outcomes
       expect(result.world.places[originId].entities[actor.id]).toBeUndefined();
       expect(result.world.places[destId].entities[actor.id]).toBeDefined();
-      expect(result.world.actors[actor.id].location.id).toBe(destId);
+      expect(result.world.actors[actor.id].location).toBe(destId);
     });
   });
 
