@@ -116,7 +116,7 @@ export const useMockConnectedWorld = (config?: {
   customActors.forEach(actor => {
     const actorWithLocation = actorLocation ? {
       ...actor,
-      location: { id: actorLocation }
+      location: actorLocation
     } : actor;
 
     actors[actor.id] = actorWithLocation as Actor;

@@ -40,7 +40,7 @@ describe('DematerializeActorCommandHandler', () => {
     it('should remove actor from place entities', () => {
       const actor = createTestActor({
         name: 'Test Actor',
-        location: { id: 'flux:place:test:tavern' }
+        location: 'flux:place:test:tavern'
       });
 
       const place = createTestPlace({
@@ -74,7 +74,7 @@ describe('DematerializeActorCommandHandler', () => {
 
     it('should declare ACTOR_DID_DEMATERIALIZE event', () => {
       const actor = createTestActor({
-        location: { id: 'flux:place:test:tavern' }
+        location: 'flux:place:test:tavern'
       });
 
       const place = createTestPlace({
@@ -124,7 +124,7 @@ describe('DematerializeActorCommandHandler', () => {
 
     it('should handle place not found error', () => {
       const actor = createTestActor({
-        location: { id: 'flux:place:test:nonexistent' }
+        location: 'flux:place:test:nonexistent'
       });
 
       const context = createTransformerContext({
@@ -150,7 +150,7 @@ describe('DematerializeActorCommandHandler', () => {
   describe('handler integration', () => {
     it('should process a command end-to-end', () => {
       const actor = createTestActor({
-        location: { id: 'flux:place:test:tavern' }
+        location: 'flux:place:test:tavern'
       });
 
       const place = createTestPlace({

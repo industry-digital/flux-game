@@ -1,16 +1,16 @@
 import { describe, it, expect } from 'vitest';
 import {
-    MATERIALIZE_ACTOR,
-    MaterializeActorCommand,
-    materializeActorCommandReducer
+  MATERIALIZE_ACTOR,
+  MaterializeActorCommand,
+  materializeActorCommandReducer
 } from './handler';
 import { CommandType, SpecialVisibility } from '@flux';
 import {
-    createTransformerContext,
-    createCommand,
-    createTestActor,
-    createTestPlace,
-    createWorld
+  createTransformerContext,
+  createCommand,
+  createTestActor,
+  createTestPlace,
+  createWorld
 } from '~/testing';
 
 describe('MaterializeActorCommandHandler', () => {
@@ -40,11 +40,11 @@ describe('MaterializeActorCommandHandler', () => {
     it('should add actor to place entities', () => {
       const actor = createTestActor({
         name: 'Test Actor',
-        location: { id: 'flux:place:test:tavern' }
+        location: 'flux:place:test:tavern'
       });
 
       const place = createTestPlace({
-        id: 'flux:place:test:tavern',
+        id: actor.location,
         name: 'Test Tavern',
         entities: {} // No actors initially
       });
@@ -65,7 +65,7 @@ describe('MaterializeActorCommandHandler', () => {
       // Actor should be added to place entities
       const updatedPlace = result.world.places[place.id];
       expect(updatedPlace.entities[actor.id]).toBeDefined();
-      expect(updatedPlace.entities[actor.id].vis).toBe(SpecialVisibility.VISIBLE_TO_EVERYONE);
+      expect(updatedPlace.entities[actor.id]?.vis).toBe(SpecialVisibility.VISIBLE_TO_EVERYONE);
 
       // Actor should still exist in world
       expect(result.world.actors[actor.id]).toBeDefined();
@@ -73,7 +73,7 @@ describe('MaterializeActorCommandHandler', () => {
 
     it('should declare ACTOR_DID_MATERIALIZE event', () => {
       const actor = createTestActor({
-        location: { id: 'flux:place:test:tavern' }
+        location: 'flux:place:test:tavern'
       });
 
       const place = createTestPlace({
@@ -121,7 +121,7 @@ describe('MaterializeActorCommandHandler', () => {
 
     it('should handle place not found error', () => {
       const actor = createTestActor({
-        location: { id: 'flux:place:test:nonexistent' }
+        location: 'flux:place:test:nonexistent'
       });
 
       const context = createTransformerContext({
@@ -145,7 +145,7 @@ describe('MaterializeActorCommandHandler', () => {
 
     it('should overwrite existing entity visibility', () => {
       const actor = createTestActor({
-        location: { id: 'flux:place:test:tavern' }
+        location: 'flux:place:test:tavern'
       });
 
       const place = createTestPlace({
@@ -170,14 +170,14 @@ describe('MaterializeActorCommandHandler', () => {
 
       // Actor should now be visible
       const updatedPlace = result.world.places[place.id];
-      expect(updatedPlace.entities[actor.id].vis).toBe(SpecialVisibility.VISIBLE_TO_EVERYONE);
+      expect(updatedPlace.entities[actor.id]?.vis).toBe(SpecialVisibility.VISIBLE_TO_EVERYONE);
     });
   });
 
   describe('handler integration', () => {
     it('should process a command end-to-end', () => {
       const actor = createTestActor({
-        location: { id: 'flux:place:test:tavern' }
+        location: 'flux:place:test:tavern'
       });
 
       const place = createTestPlace({
@@ -204,7 +204,7 @@ describe('MaterializeActorCommandHandler', () => {
 
       // Verify the observable outcomes
       expect(result.world.places[place.id].entities[actor.id]).toBeDefined();
-      expect(result.world.places[place.id].entities[actor.id].vis).toBe(SpecialVisibility.VISIBLE_TO_EVERYONE);
+      expect(result.world.places[place.id].entities[actor.id]?.vis).toBe(SpecialVisibility.VISIBLE_TO_EVERYONE);
     });
   });
 

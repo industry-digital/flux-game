@@ -12,16 +12,37 @@ export const normalizePlaceDescription = (description: string | EmergentNarrativ
   return description;
 };
 
-export const renderExits: PlaceTemplate = ({ place }) => {
-  return Object.entries(place.exits).map(([direction, exit]) => {
-    return `- ${direction}: ${exit.label}`;
-  }).join('\n');
+export const renderExitDirection: Template<{ direction: string; exit: { label: string } }> = ({ direction, exit }) => {
+  // Capitalize the first letter of the direction
+  const capitalizedDirection = direction.charAt(0).toUpperCase() + direction.slice(1);
+
+  // Try to extract destination from action description
+  // Look for text after the last "to " in the label
+  const toIndex = exit.label.lastIndexOf(' to ');
+  const destination = toIndex !== -1 ? exit.label.substring(toIndex + 4) : exit.label;
+
+  return `${capitalizedDirection} to ${destination}`;
 };
 
-export const renderPlaceDescription: PlaceTemplate = ({ place }) => {
+export const renderExits: PlaceTemplate = ({ place }) => {
+  const exitEntries = Object.entries(place.exits);
+
+  if (exitEntries.length === 0) {
+    return 'Exits: None';
+  }
+
+  const exitDescriptions = exitEntries.map(([direction, exit]) => {
+    return renderExitDirection({ direction, exit });
+  });
+
+  return `Exits: ${exitDescriptions.join(', ')}`;
+};
+
+export const renderPlaceDescription: PlaceTemplate = (props: PlaceTemplateProps) => {
+  const { place } = props;
   const { base, emergent } = normalizePlaceDescription(place.description);
-  const exits = renderExits({ place });
-  return `${base}\n${emergent}\n${exits}`;
+  const exits = renderExits(props);
+  return `${place.name}\n${base}\n${emergent}\n${exits}`;
 };
 
 /**

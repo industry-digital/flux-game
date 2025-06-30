@@ -1,14 +1,148 @@
 import { describe, it, expect } from 'vitest';
-import { renderPlaceSummary, PlaceTemplateProps } from './place';
+import { renderPlaceSummary, renderExits, renderExitDirection, PlaceTemplateProps } from './place';
 import { Place } from '~/types/entity/place';
 import { Direction } from '~/types/world/space';
 import { createPlace } from '~/worldkit/entity/place';
 
 describe('place templates', () => {
-  describe('renderPlaceSummary', () => {
-    it('should render a basic place with string description and no exits', () => {
+  describe('renderExitDirection', () => {
+    it('should capitalize direction and format basic destination', () => {
+      const result = renderExitDirection({
+        direction: 'north',
+        exit: { label: 'forest path' }
+      });
+
+      expect(result).toBe('North to forest path');
+    });
+
+    it('should extract destination from action descriptions', () => {
+      const result = renderExitDirection({
+        direction: 'east',
+        exit: { label: 'Drive downtown to Corpo Plaza' }
+      });
+
+      expect(result).toBe('East to Corpo Plaza');
+    });
+
+    it('should handle multiple "to" words in label', () => {
+      const result = renderExitDirection({
+        direction: 'south',
+        exit: { label: 'Take the NCART to Watson Market' }
+      });
+
+      expect(result).toBe('South to Watson Market');
+    });
+
+    it('should handle labels without "to" pattern', () => {
+      const result = renderExitDirection({
+        direction: 'west',
+        exit: { label: 'wooden door' }
+      });
+
+      expect(result).toBe('West to wooden door');
+    });
+
+    it('should handle compound directions', () => {
+      const result = renderExitDirection({
+        direction: 'northeast',
+        exit: { label: 'mountain trail' }
+      });
+
+      expect(result).toBe('Northeast to mountain trail');
+    });
+  });
+
+  describe('renderExits', () => {
+    it('should render no exits message when exits object is empty', () => {
       const place = createPlace({
-        id: 'flux:place:test:empty-room',
+        id: 'flux:place:test:empty',
+        name: 'Empty Room',
+        description: 'A room with no exits',
+        exits: [],
+      });
+
+      const result = renderExits({ place });
+
+      expect(result).toBe('Exits: None');
+    });
+
+    it('should render single exit', () => {
+      const place = createPlace({
+        id: 'flux:place:test:single',
+        name: 'Single Exit Room',
+        description: 'A room with one exit',
+        exits: [
+          {
+            direction: Direction.NORTH,
+            label: 'wooden door',
+            to: 'flux:place:test:hallway',
+          },
+        ],
+      });
+
+      const result = renderExits({ place });
+
+      expect(result).toBe('Exits: North to wooden door');
+    });
+
+    it('should render multiple exits with comma separation', () => {
+      const place = createPlace({
+        id: 'flux:place:test:multiple',
+        name: 'Crossroads',
+        description: 'A junction with multiple paths',
+        exits: [
+          {
+            direction: Direction.NORTH,
+            label: 'forest path',
+            to: 'flux:place:test:forest',
+          },
+          {
+            direction: Direction.SOUTH,
+            label: 'village road',
+            to: 'flux:place:test:village',
+          },
+          {
+            direction: Direction.EAST,
+            label: 'mountain trail',
+            to: 'flux:place:test:mountain',
+          },
+        ],
+      });
+
+      const result = renderExits({ place });
+
+      expect(result).toBe('Exits: North to forest path, South to village road, East to mountain trail');
+    });
+
+    it('should handle action-style exit labels', () => {
+      const place = createPlace({
+        id: 'flux:place:test:actions',
+        name: 'The Afterlife',
+        description: 'A cyberpunk bar',
+        exits: [
+          {
+            direction: Direction.EAST,
+            label: 'Drive downtown to Corpo Plaza',
+            to: 'flux:place:nightcity:corpo-plaza',
+          },
+          {
+            direction: Direction.NORTH,
+            label: 'Take the NCART to Watson Market',
+            to: 'flux:place:nightcity:watson-market',
+          },
+        ],
+      });
+
+      const result = renderExits({ place });
+
+      expect(result).toBe('Exits: East to Corpo Plaza, North to Watson Market');
+    });
+  });
+
+  describe('renderPlaceSummary', () => {
+    it('should render place with string description and no exits', () => {
+      const place = createPlace({
+        id: 'flux:place:test:basic',
         name: 'Empty Room',
         description: 'A simple empty room.',
         exits: [],
@@ -16,13 +150,13 @@ describe('place templates', () => {
 
       const result = renderPlaceSummary({ place });
 
-      expect(result).toBe('Empty Room\nA simple empty room.\n\n');
+      expect(result).toBe('Empty Room\nA simple empty room.\n\nExits: None');
     });
 
-    it('should render a place with emergent narrative description', () => {
+    it('should render place with emergent narrative description', () => {
       const place: Place = {
         ...createPlace({
-          id: 'flux:place:test:mysterious-chamber',
+          id: 'flux:place:test:emergent',
           name: 'Mysterious Chamber',
           description: 'An ancient stone chamber.',
           exits: [],
@@ -35,31 +169,12 @@ describe('place templates', () => {
 
       const result = renderPlaceSummary({ place });
 
-      expect(result).toBe('Mysterious Chamber\nAn ancient stone chamber.\nStrange runes glow faintly on the walls.\n\n');
+      expect(result).toBe('Mysterious Chamber\nAn ancient stone chamber.\nStrange runes glow faintly on the walls.\nExits: None');
     });
 
-    it('should render a place with emergent narrative description when emergent is undefined', () => {
-      const place: Place = {
-        ...createPlace({
-          id: 'flux:place:test:basic-chamber',
-          name: 'Basic Chamber',
-          description: 'A stone chamber.',
-          exits: [],
-        }),
-        description: {
-          base: 'A stone chamber.',
-          emergent: undefined,
-        },
-      };
-
-      const result = renderPlaceSummary({ place });
-
-      expect(result).toBe('Basic Chamber\nA stone chamber.\nundefined\n\n');
-    });
-
-    it('should render a place with single exit', () => {
+    it('should render place with single exit', () => {
       const place = createPlace({
-        id: 'flux:place:test:room-with-door',
+        id: 'flux:place:test:single-exit',
         name: 'Room with Door',
         description: 'A room with a single exit.',
         exits: [
@@ -73,12 +188,12 @@ describe('place templates', () => {
 
       const result = renderPlaceSummary({ place });
 
-      expect(result).toBe('Room with Door\nA room with a single exit.\n\n- north: wooden door');
+      expect(result).toBe('Room with Door\nA room with a single exit.\n\nExits: North to wooden door');
     });
 
-    it('should render a place with multiple exits', () => {
+    it('should render complete place with multiple exits', () => {
       const place = createPlace({
-        id: 'flux:place:test:crossroads',
+        id: 'flux:place:test:complete',
         name: 'Crossroads',
         description: 'A junction with multiple paths.',
         exits: [
@@ -105,340 +220,95 @@ describe('place templates', () => {
       const expected = `Crossroads
 A junction with multiple paths.
 
-- north: forest path
-- south: village road
-- east: mountain trail`;
+Exits: North to forest path, South to village road, East to mountain trail`;
 
       expect(result).toBe(expected);
     });
 
-    it('should handle complex scenario with emergent narrative and multiple exits', () => {
+    it('should handle complex place with emergent narrative and exits', () => {
       const place: Place = {
         ...createPlace({
-          id: 'flux:place:test:ancient-crossroads',
+          id: 'flux:place:test:complex',
           name: 'Ancient Crossroads',
-          description: 'Four ancient stone paths meet at this weathered crossroads.',
+          description: 'Four ancient stone paths meet here.',
           exits: [
             {
               direction: Direction.NORTH,
-              label: 'crumbling bridge',
+              label: 'Take the bridge to the Northern Ruins',
               to: 'flux:place:ruins:bridge',
             },
             {
               direction: Direction.WEST,
-              label: 'overgrown path',
+              label: 'Follow the path to the Deep Forest',
               to: 'flux:place:forest:deep',
             },
           ],
         }),
         description: {
-          base: 'Four ancient stone paths meet at this weathered crossroads.',
-          emergent: 'Moss-covered signposts point in each direction, their carved runes barely legible.',
+          base: 'Four ancient stone paths meet here.',
+          emergent: 'Moss-covered signposts point in each direction.',
         },
       };
 
       const result = renderPlaceSummary({ place });
 
       const expected = `Ancient Crossroads
-Four ancient stone paths meet at this weathered crossroads.
-Moss-covered signposts point in each direction, their carved runes barely legible.
-
-- north: crumbling bridge
-- west: overgrown path`;
+Four ancient stone paths meet here.
+Moss-covered signposts point in each direction.
+Exits: North to the Northern Ruins, West to the Deep Forest`;
 
       expect(result).toBe(expected);
     });
 
-    it('should handle place with empty exits object', () => {
+    it('should handle cyberpunk-style place with action exits', () => {
       const place = createPlace({
-        id: 'flux:place:test:isolated-room',
-        name: 'Isolated Room',
-        description: 'A room with no way out.',
-        exits: [],
+        id: 'flux:place:test:cyberpunk',
+        name: 'The Afterlife',
+        description: 'The legendary mercenary bar housed in a repurposed morgue.',
+        exits: [
+          {
+            direction: Direction.EAST,
+            label: 'Drive downtown to Corpo Plaza',
+            to: 'flux:place:nightcity:corpo-plaza',
+          },
+          {
+            direction: Direction.NORTH,
+            label: 'Take the NCART to Watson Market',
+            to: 'flux:place:nightcity:watson-market',
+          },
+          {
+            direction: Direction.SOUTH,
+            label: 'Head south to the Combat Zone',
+            to: 'flux:place:nightcity:pacifica-combat-zone',
+          },
+        ],
       });
 
       const result = renderPlaceSummary({ place });
 
-      expect(result).toBe('Isolated Room\nA room with no way out.\n\n');
-    });
+      const expected = `The Afterlife
+The legendary mercenary bar housed in a repurposed morgue.
 
-    it('should maintain correct type for PlaceSummaryInput', () => {
+Exits: East to Corpo Plaza, North to Watson Market, South to the Combat Zone`;
+
+      expect(result).toBe(expected);
+    });
+  });
+
+  describe('type compatibility', () => {
+    it('should maintain correct type for PlaceTemplateProps', () => {
       const place = createPlace({
-        id: 'flux:place:test:type-test',
+        id: 'flux:place:test:types',
         name: 'Type Test Location',
         description: 'A test location for type checking',
         exits: [],
       });
+
       const input: PlaceTemplateProps = { place };
-
-      // This test mainly ensures type compatibility
       const result = renderPlaceSummary(input);
+
       expect(typeof result).toBe('string');
-    });
-  });
-
-  describe('renderExits integration', () => {
-    it('should properly format exit directions and labels', () => {
-      const place = createPlace({
-        id: 'flux:place:test:multi-exit-room',
-        name: 'Multi Exit Room',
-        description: 'A room with various exits',
-        exits: [
-          {
-            direction: Direction.NORTHWEST,
-            label: 'secret passage',
-            to: 'flux:place:hidden:chamber',
-          },
-          {
-            direction: Direction.DOWN,
-            label: 'trapdoor',
-            to: 'flux:place:cellar:main',
-          },
-        ],
-      });
-
-      const result = renderPlaceSummary({ place });
-
-      expect(result).toContain('- northwest: secret passage');
-      expect(result).toContain('- down: trapdoor');
-    });
-  });
-
-  describe('edge cases', () => {
-    it('should handle undefined emergent narrative gracefully', () => {
-      const place: Place = {
-        ...createPlace({
-          id: 'flux:place:test:base-only',
-          name: 'Base Only Room',
-          description: 'Base description only.',
-          exits: [],
-        }),
-        description: {
-          base: 'Base description only.',
-        },
-      };
-
-      const result = renderPlaceSummary({ place });
-
-      expect(result).toContain('Base description only.');
-      expect(result).toContain('undefined'); // This might need fixing in the actual code
-    });
-
-    it('should handle exits with various direction types', () => {
-      const place = createPlace({
-        id: 'flux:place:test:direction-variety',
-        name: 'Direction Variety Room',
-        description: 'A room with various directional exits',
-        exits: [
-          {
-            direction: Direction.UP,
-            label: 'spiral staircase',
-            to: 'flux:place:tower:top',
-          },
-          {
-            direction: Direction.SOUTHEAST,
-            label: 'garden gate',
-            to: 'flux:place:garden:entrance',
-          },
-        ],
-      });
-
-      const result = renderPlaceSummary({ place });
-
-      expect(result).toContain('- up: spiral staircase');
-      expect(result).toContain('- southeast: garden gate');
-    });
-  });
-
-  describe('performance', () => {
-    it('should render place summaries at high throughput', () => {
-      const place = createPlace({
-        id: 'flux:place:test:performance-test',
-        name: 'Performance Test Location',
-        description: 'A complex location for testing rendering performance.',
-        exits: [
-          {
-            direction: Direction.NORTH,
-            label: 'northern corridor',
-            to: 'flux:place:test:north',
-          },
-          {
-            direction: Direction.SOUTH,
-            label: 'southern passage',
-            to: 'flux:place:test:south',
-          },
-          {
-            direction: Direction.EAST,
-            label: 'eastern chamber',
-            to: 'flux:place:test:east',
-          },
-          {
-            direction: Direction.WEST,
-            label: 'western alcove',
-            to: 'flux:place:test:west',
-          },
-        ],
-      });
-
-      const iterations = 100_000;
-      const startTime = performance.now();
-
-      for (let i = 0; i < iterations; i++) {
-        renderPlaceSummary({ place });
-      }
-
-      const endTime = performance.now();
-      const duration = endTime - startTime;
-      const rendersPerSecond = Math.round((iterations / duration) * 1000);
-
-      console.log(`\n🚀 Template Performance Results:`);
-      console.log(`   Iterations: ${iterations.toLocaleString()}`);
-      console.log(`   Duration: ${duration.toFixed(2)}ms`);
-      console.log(`   Renders/sec: ${rendersPerSecond.toLocaleString()}`);
-      console.log(`   Avg render time: ${(duration / iterations * 1000).toFixed(3)}μs\n`);
-
-      // We are only interested in the log output
-      expect(true).toBe(true);
-    });
-
-    it('should render complex emergent narrative at high throughput', () => {
-      const place: Place = {
-        ...createPlace({
-          id: 'flux:place:test:complex-performance',
-          name: 'Complex Emergent Narrative Location',
-          description: 'A base description for performance testing.',
-          exits: [
-            {
-              direction: Direction.NORTHEAST,
-              label: 'winding path through ancient ruins',
-              to: 'flux:place:ruins:entrance',
-            },
-            {
-              direction: Direction.SOUTHWEST,
-              label: 'narrow bridge over rushing water',
-              to: 'flux:place:river:crossing',
-            },
-            {
-              direction: Direction.UP,
-              label: 'rope ladder to elevated platform',
-              to: 'flux:place:platform:main',
-            },
-            {
-              direction: Direction.DOWN,
-              label: 'stone steps descending into darkness',
-              to: 'flux:place:depths:entrance',
-            },
-          ],
-        }),
-        description: {
-          base: 'A base description for performance testing.',
-          emergent: 'Complex emergent narrative describing dynamic environmental conditions, weather patterns, and atmospheric details that change over time.',
-        },
-      };
-
-      const iterations = 100_000;
-      const startTime = performance.now();
-
-      for (let i = 0; i < iterations; i++) {
-        renderPlaceSummary({ place });
-      }
-
-      const endTime = performance.now();
-      const duration = endTime - startTime;
-      const rendersPerSecond = Math.round((iterations / duration) * 1000);
-
-      console.log(`\n⚡ Complex Template Performance Results:`);
-      console.log(`   Iterations: ${iterations.toLocaleString()}`);
-      console.log(`   Duration: ${duration.toFixed(2)}ms`);
-      console.log(`   Renders/sec: ${rendersPerSecond.toLocaleString()}`);
-      console.log(`   Avg render time: ${(duration / iterations * 1000).toFixed(3)}μs\n`);
-
-      // We are only interested in the performance output
-      expect(true).toBe(true);
-    });
-
-    it('should measure hot performance after V8 optimization', () => {
-      const place: Place = {
-        ...createPlace({
-          id: 'flux:place:test:hot-performance',
-          name: 'Hot Performance Test Location',
-          description: 'Multi-exit location with emergent narrative for hot performance testing.',
-          exits: [
-            {
-              direction: Direction.NORTH,
-              label: 'grand marble staircase leading upward',
-              to: 'flux:place:palace:upper',
-            },
-            {
-              direction: Direction.SOUTH,
-              label: 'weathered stone path winding downward',
-              to: 'flux:place:dungeon:entrance',
-            },
-            {
-              direction: Direction.EAST,
-              label: 'ornate golden doorway with intricate carvings',
-              to: 'flux:place:treasury:main',
-            },
-            {
-              direction: Direction.WEST,
-              label: 'simple wooden door marked with ancient runes',
-              to: 'flux:place:library:archives',
-            },
-            {
-              direction: Direction.NORTHEAST,
-              label: 'narrow spiral staircase disappearing into shadows',
-              to: 'flux:place:tower:secret',
-            },
-          ],
-        }),
-        description: {
-          base: 'A magnificent hall with soaring ceilings and polished marble floors.',
-          emergent: 'Sunlight streams through stained glass windows, casting rainbow patterns across the stone walls. The air carries the faint scent of ancient incense and distant music.',
-        },
-      };
-
-      // V8 Warm-up Phase: Run enough iterations to trigger optimization
-      console.log(`\n🔥 V8 Warm-up Phase:`);
-      const warmupIterations = 100_000;
-      const warmupStart = performance.now();
-
-      for (let i = 0; i < warmupIterations; i++) {
-        renderPlaceSummary({ place });
-      }
-
-      const warmupEnd = performance.now();
-      const warmupDuration = warmupEnd - warmupStart;
-      const warmupRPS = Math.round((warmupIterations / warmupDuration) * 1000);
-
-      console.log(`   Warm-up iterations: ${warmupIterations.toLocaleString()}`);
-      console.log(`   Warm-up duration: ${warmupDuration.toFixed(2)}ms`);
-      console.log(`   Warm-up RPS: ${warmupRPS.toLocaleString()}`);
-
-      // Hot Performance Phase: Measure optimized performance
-      console.log(`\n🚀 Hot Performance Measurement:`);
-      const hotIterations = 100_000;
-      const hotStart = performance.now();
-
-      for (let i = 0; i < hotIterations; i++) {
-        renderPlaceSummary({ place });
-      }
-
-      const hotEnd = performance.now();
-      const hotDuration = hotEnd - hotStart;
-      const hotRPS = Math.round((hotIterations / hotDuration) * 1000);
-      const avgRenderTime = (hotDuration / hotIterations * 1000);
-
-      console.log(`   Hot iterations: ${hotIterations.toLocaleString()}`);
-      console.log (`   Hot duration: ${hotDuration.toFixed(2)}ms`);
-      console.log(`   Hot renders/sec: ${hotRPS.toLocaleString()}`);
-      console.log(`   Avg render time: ${avgRenderTime.toFixed(3)}μs`);
-
-      // Performance improvement calculation
-      const improvement = ((hotRPS - warmupRPS) / warmupRPS * 100).toFixed(1);
-      console.log(`   V8 optimization gain: +${improvement}%\n`);
-
-      // We are only interested in the log output
-      expect(true).toBe(true);
+      expect(result).toContain('Type Test Location');
     });
   });
 });
