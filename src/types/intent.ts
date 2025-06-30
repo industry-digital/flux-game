@@ -169,16 +169,12 @@ export type IntentInput = {
    * The raw text input from the user
    */
   text: string;
-
-  /**
-   * Optional NLP analysis results from processing the text
-   */
-  nlp?: NaturalLanguageAnalysis;
 };
 
 /**
- * A fully validated Intent with guaranteed fields
- */
+ * A fully validated Intent with  /**
+   * Optional NLP analysis results from processing the text
+   */
 export type Intent =
   & InputMetadata
   & Omit<IntentInput, 'id' | 'ts' | 'nlp'>
