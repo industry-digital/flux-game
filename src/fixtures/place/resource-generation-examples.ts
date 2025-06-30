@@ -20,7 +20,7 @@ export const enchantedForest: Place = {
       uom: 'flux:dimension:mass:kg',
       available: 50,
       capacity: 200,
-      rate: {
+      production: {
         quantity: 5,
         period: '1h'
       },
@@ -32,7 +32,7 @@ export const enchantedForest: Place = {
       uom: 'flux:dimension:mass:kg',
       available: 20,
       capacity: 100,
-      rate: {
+      production: {
         quantity: 8,
         period: '1h'
       },
@@ -58,7 +58,7 @@ export const crystallineMine: Place = {
       uom: 'flux:dimension:mass',
       available: 100,
       capacity: 500,
-      rate: {
+      production: {
         quantity: 10,
         period: '4h'
       },
@@ -70,7 +70,7 @@ export const crystallineMine: Place = {
       uom: 'flux:dimension:each',
       available: 5,
       capacity: 20,
-      rate: {
+      production: {
         quantity: 1,
         period: '1day'
       },
@@ -96,7 +96,7 @@ export const sunnyFarm: Place = {
       uom: 'flux:dimension:mass',
       available: 75,
       capacity: 300,
-      rate: {
+      production: {
         quantity: 15,
         period: '6h'
       },

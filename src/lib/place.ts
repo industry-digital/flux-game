@@ -1,8 +1,9 @@
 import { Entity, Place, EntityURN, PlaceEntityDescriptor, TransformerContext, PlaceURN } from '@flux';
 import { SpecialVisibility } from '~/types/world/visibility';
-import { GeneratedResource, ResourceGenerator } from '~/types/entity/resource';
+import { ResourceNode, ResourceGenerator } from '~/types/entity/resource';
 import { ResourceURN } from '~/types/taxonomy';
 import { Duration, TimeUnit } from '~/types/world/time';
+import { Monster, ResourceNeed } from '~/types/entity/actor';
 
 /**
  * Interface for entity-related operations
@@ -211,7 +212,7 @@ export const usePlaceEntities = (
  * This follows the event-driven pattern - resources only update when checked/accessed
  */
 export const calculateResourceGeneration = (
-  resource: GeneratedResource<ResourceURN>,
+  resource: ResourceNode<ResourceURN>,
   currentTime: number
 ): number => {
   const timeSinceLastUpdate = currentTime - resource.ts;
@@ -221,8 +222,8 @@ export const calculateResourceGeneration = (
   }
 
   // Convert generation rate to per-millisecond
-  const generationRatePerMs = convertDurationToMilliseconds(resource.rate.period);
-  const baseGeneration = (resource.rate.quantity * timeSinceLastUpdate) / generationRatePerMs;
+  const generationRatePerMs = convertDurationToMilliseconds(resource.production.period);
+  const baseGeneration = (resource.production.quantity * timeSinceLastUpdate) / generationRatePerMs;
 
   // Ensure we don't exceed capacity or go below zero
   const currentAvailable = resource.available;
@@ -244,7 +245,7 @@ export const updateResourceGeneration = <T extends ResourceGenerator>(
 
   Object.entries(updatedResources).forEach(([resourceURN, resource]) => {
     const generation = calculateResourceGeneration(
-      resource as GeneratedResource<ResourceURN>,
+      resource as ResourceNode<ResourceURN>,
       currentTime
     );
 
@@ -252,7 +253,7 @@ export const updateResourceGeneration = <T extends ResourceGenerator>(
       ...resource,
       available: resource.available + generation,
       ts: currentTime
-    } as GeneratedResource<ResourceURN>;
+    } as ResourceNode<ResourceURN>;
   });
 
   return {
@@ -392,4 +393,219 @@ export const harvestResourceFromPlace = (
     updatedPlace: { ...place, resources: result.updatedEntity.resources },
     harvestedAmount: result.harvestedAmount
   };
+};
+
+/**
+ * Monster Resource Need Evaluation System
+ *
+ * These functions integrate monster resource needs with place resource generation
+ */
+
+/**
+ * Evaluate a monster's resource needs against available resources in their current location
+ * Returns which needs are in scarcity, abundance, or satisfied states
+ */
+export const evaluateMonsterResourceNeeds = (
+  monster: Monster,
+  place: Place,
+  currentTime: number = Date.now()
+): ResourceNeedEvaluation => {
+  // First update place resources to current time (event-driven)
+  const updatedPlace = updatePlaceResourceGeneration(place, currentTime);
+
+  const evaluation: ResourceNeedEvaluation = {
+    scarcity: [],
+    abundance: [],
+    satisfied: [],
+    unavailable: []
+  };
+
+    // Evaluate each resource need
+  Object.entries(monster.needs.resources).forEach(([resourceURN, need]) => {
+    const typedResourceURN = resourceURN as ResourceURN;
+    const typedNeed = need as ResourceNeed;
+    const placeResource = updatedPlace.resources?.[typedResourceURN];
+
+    if (!placeResource) {
+      evaluation.unavailable.push({
+        resourceURN: typedResourceURN,
+        need: typedNeed,
+        available: 0,
+        required: typedNeed.scarcityThreshold
+      });
+      return;
+    }
+
+    const available = placeResource.available;
+
+    if (available < typedNeed.scarcityThreshold) {
+      evaluation.scarcity.push({
+        resourceURN: typedResourceURN,
+        need: typedNeed,
+        available,
+        required: typedNeed.scarcityThreshold
+      });
+    } else if (available > typedNeed.abundanceThreshold) {
+      evaluation.abundance.push({
+        resourceURN: typedResourceURN,
+        need: typedNeed,
+        available,
+        required: typedNeed.abundanceThreshold
+      });
+    } else {
+      evaluation.satisfied.push({
+        resourceURN: typedResourceURN,
+        need: typedNeed,
+        available,
+        required: available
+      });
+    }
+  });
+
+  return evaluation;
+};
+
+/**
+ * Simulate a monster consuming resources from a place based on their needs
+ * Returns updated place and monster, plus consumption details
+ */
+export const processMonsterResourceConsumption = (
+  monster: Monster,
+  place: Place,
+  timePeriodMs: number,
+  currentTime: number = Date.now()
+): MonsterConsumptionResult => {
+  // Update place resources first
+  let updatedPlace = updatePlaceResourceGeneration(place, currentTime);
+  const consumptionLog: ResourceConsumption[] = [];
+
+    // Process each resource need
+  Object.entries(monster.needs.resources).forEach(([resourceURN, need]) => {
+    const typedResourceURN = resourceURN as ResourceURN;
+    const typedNeed = need as ResourceNeed;
+
+    // Calculate consumption for this time period
+    const periodDurationMs = convertDurationToMilliseconds(typedNeed.consumption.period);
+    const consumptionAmount = (typedNeed.consumption.quantity * timePeriodMs) / periodDurationMs;
+
+    if (consumptionAmount <= 0) return;
+
+    // Try to consume from place
+    const harvestResult = harvestResourceFromPlace(
+      updatedPlace,
+      typedResourceURN,
+      consumptionAmount,
+      currentTime
+    );
+
+    updatedPlace = harvestResult.updatedPlace;
+
+    consumptionLog.push({
+      resourceURN: typedResourceURN,
+      requested: consumptionAmount,
+      consumed: harvestResult.harvestedAmount,
+      deficit: consumptionAmount - harvestResult.harvestedAmount
+    });
+  });
+
+  return {
+    updatedPlace,
+    updatedMonster: monster, // Monster state doesn't change in this simple model
+    consumptions: consumptionLog,
+    evaluation: evaluateMonsterResourceNeeds(monster, updatedPlace, currentTime)
+  };
+};
+
+/**
+ * Determine what behavioral actions a monster should take based on resource evaluation
+ * This uses the monster's behavioral configuration to decide actions
+ */
+export const determineMonsterBehavioralActions = (
+  monster: Monster,
+  evaluation: ResourceNeedEvaluation,
+  random: () => number = Math.random
+): MonsterBehavioralActions => {
+  const actions: MonsterBehavioralActions = {
+    resourceCompetition: false,
+    fleeToSearch: false,
+    conservationMode: false,
+    becomeGuardian: false,
+    becomeDormant: false,
+    consumptionMultiplier: 1.0
+  };
+
+  // Process scarcity behaviors
+  if (evaluation.scarcity.length > 0 || evaluation.unavailable.length > 0) {
+    const scarcityBehavior = monster.behaviors.resourceScarcity;
+
+    if (random() < scarcityBehavior.aggressiveCompetition) {
+      actions.resourceCompetition = true;
+    }
+
+    if (random() < scarcityBehavior.fleeToSearch) {
+      actions.fleeToSearch = true;
+    }
+
+    if (random() < scarcityBehavior.conservationMode) {
+      actions.conservationMode = true;
+    }
+  }
+
+  // Process abundance behaviors
+  if (evaluation.abundance.length > 0) {
+    const abundanceBehavior = monster.behaviors.resourceAbundance;
+
+    if (random() < abundanceBehavior.becomeGuardian) {
+      actions.becomeGuardian = true;
+    }
+
+    if (random() < abundanceBehavior.becomeDormant) {
+      actions.becomeDormant = true;
+    }
+
+    actions.consumptionMultiplier = abundanceBehavior.consumptionMultiplier;
+  }
+
+  return actions;
+};
+
+/**
+ * Type definitions for monster-resource interactions
+ */
+
+export type ResourceNeedEvaluation = {
+  scarcity: ResourceNeedState[];
+  abundance: ResourceNeedState[];
+  satisfied: ResourceNeedState[];
+  unavailable: ResourceNeedState[];
+};
+
+export type ResourceNeedState = {
+  resourceURN: ResourceURN;
+  need: ResourceNeed;
+  available: number;
+  required: number;
+};
+
+export type ResourceConsumption = {
+  resourceURN: ResourceURN;
+  requested: number;
+  consumed: number;
+  deficit: number;
+};
+
+export type MonsterConsumptionResult = {
+  updatedPlace: Place;
+  updatedMonster: Monster;
+  consumptions: ResourceConsumption[];
+  evaluation: ResourceNeedEvaluation;
+};
+
+export type MonsterBehavioralActions = {
+  resourceCompetition: boolean;
+  fleeToSearch: boolean;
+  conservationMode: boolean;
+  becomeGuardian: boolean;
+  becomeDormant: boolean;
+  consumptionMultiplier: number;
 };

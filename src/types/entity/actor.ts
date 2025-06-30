@@ -1,4 +1,4 @@
-import { Taxonomy, ItemURN, PlaceURN, ActorURN, GroupURN } from '~/types/taxonomy';
+import { Taxonomy, ItemURN, PlaceURN, ActorURN, GroupURN, ResourceURN } from '~/types/taxonomy';
 import { AppliedEffects } from '~/types/taxonomy/effect';
 import { EntityType, AbstractEntity, Describable } from '~/types/entity/entity';
 import { SkillState, Specializations } from '~/types/entity/skill';
@@ -9,6 +9,7 @@ import {
   ModifiableScalarAttribute,
   NormalizedBipolarValue,
 } from '~/types/entity/attribute';
+import { ConsumptionRate } from '~/types/entity/resource';
 
 /**
  * The kinds of actors in the simulation
@@ -260,4 +261,112 @@ export type Actor =
    * The subset of skills that the actor has specialized
    */
   specializations: Specializations;
+};
+
+export type Autonomous = {
+  needs: Needs;
+  behaviors: Behaviors;
+};
+
+/**
+ * Resource-based needs that drive monster behavior
+ * Needs are evaluated against available resources in the monster's current location
+ */
+export type Needs = {
+  /**
+   * Resources this monster requires, mapped to consumption rates and thresholds
+   */
+  resources: Partial<Record<ResourceURN, ResourceNeed>>;
+};
+
+export type BehaviorThresholds = {
+  scarcity: NormalizedValueBetweenZeroAndOne;
+  abundance: NormalizedValueBetweenZeroAndOne;
+};
+
+export type SearchParameters  = {
+  /**
+   * How far the monster will travel to find this resource (in place-hops)
+   */
+  radius: number;
+};
+
+/**
+ * A specific resource need with consumption patterns and behavioral thresholds
+ */
+export type ResourceNeed = {
+  /**
+   * How much of this resource the monster consumes per time period
+   */
+  consumption: ConsumptionRate;
+
+  /**
+   * Behavioral thresholds for resource scarcity and abundance
+   */
+  thresholds: BehaviorThresholds;
+
+  /**
+   * How the monster will search for this resource
+   */
+  search: SearchParameters;
+};
+
+/**
+ * Behavioral responses to resource availability
+ * These define what actions monsters take when resource needs are triggered
+ */
+export type Behaviors = {
+  /**
+   * Actions taken when resources are scarce in current location
+   */
+  resourceScarcity: ResourceScarcityBehavior;
+
+  /**
+   * Actions taken when resources are abundant in current location
+   */
+  resourceAbundance: ResourceAbundanceBehavior;
+};
+
+/**
+ * What the monster does when resources become scarce
+ */
+export type ResourceScarcityBehavior = {
+  /**
+   * Probability of aggressive resource competition (0-1)
+   */
+  aggressiveCompetition: NormalizedValueBetweenZeroAndOne;
+
+  /**
+   * Probability of fleeing to find resources elsewhere (0-1)
+   */
+  fleeToSearch: NormalizedValueBetweenZeroAndOne;
+
+  /**
+   * Probability of entering conservation mode (reduced activity) (0-1)
+   */
+  conservationMode: NormalizedValueBetweenZeroAndOne;
+};
+
+/**
+ * What the monster does when resources are abundant
+ */
+export type ResourceAbundanceBehavior = {
+  /**
+   * Probability of becoming territorial/protective of the abundance (0-1)
+   */
+  becomeGuardian: NormalizedValueBetweenZeroAndOne;
+
+  /**
+   * How much to consume when resources are plentiful (multiplier)
+   */
+  consumptionMultiplier: number;
+
+  /**
+   * Probability of becoming docile/less aggressive (0-1)
+   */
+  becomeDormant: NormalizedValueBetweenZeroAndOne;
+};
+
+export type Monster = Autonomous & Actor & {
+  kind: ActorType.MONSTER;
 };

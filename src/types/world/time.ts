@@ -27,6 +27,25 @@ export enum SpecialDuration {
 }
 
 /**
+ * Common time periods expressed as milliseconds for resource generation,
+ * cooldowns, and other timing calculations where performance matters.
+ */
+export enum WellKnownDuration {
+  MILLISECOND = 1,
+  SECOND = 1_000,
+  MINUTE = 60 * 1_000,
+  HOUR = 60 * 60 * 1_000,
+  DAY = 24 * 60 * 60 * 1_000,
+  WEEK = 7 * 24 * 60 * 60 * 1_000,
+
+  // Combat and short-term durations
+  COMBAT_TURN = 6 * 1_000, // 6 seconds per combat turn
+  SHORT_COOLDOWN = 10 * 1_000, // 10 seconds
+  MEDIUM_COOLDOWN = 30 * 1_000, // 30 seconds
+  LONG_COOLDOWN = 5 * 60 * 1_000, // 5 minutes
+}
+
+/**
  * A duration in the game world, expressed either as a quantity of a TimeUnit
  * (e.g. "5min" for 5 minutes) or as a SpecialDuration.
  */
@@ -46,3 +65,7 @@ export type ScheduledDuration = {
    */
   ts: number; // The moment the modifier was applied, expressed as milliseconds since the UNIX epoch
 }
+
+// Time in the simulation progresses twice as fast as real time.
+// So every human day is two days in the simulation.
+export const GLOBAL_TIME_SCALE = 2.0;
