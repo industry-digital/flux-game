@@ -79,7 +79,7 @@ describe('MoveCommandHandler', () => {
 
       const command = createCommand(CommandType.MOVE, {
         actor: actor.id,
-        args: { dest: destId }
+        args: { destination: destId }
       });
 
       const result = actorMovementReducer(context, command as MoveCommand);
@@ -128,7 +128,7 @@ describe('MoveCommandHandler', () => {
 
       const command = createCommand(CommandType.MOVE, {
         actor: actor.id,
-        args: { dest: destId }
+        args: { destination: destId }
       });
 
       actorMovementReducer(context, command as MoveCommand);
@@ -149,7 +149,7 @@ describe('MoveCommandHandler', () => {
       const context = createTransformerContext();
       const command = createCommand(CommandType.MOVE, {
         actor: 'flux:actor:test:nonexistent' as any,
-        args: { dest: 'flux:place:test:destination' as any }
+        args: { destination: 'flux:place:test:destination' as any }
       });
 
       const result = actorMovementReducer(context, command as MoveCommand);
@@ -174,7 +174,7 @@ describe('MoveCommandHandler', () => {
 
       const command = createCommand(CommandType.MOVE, {
         actor: actor.id,
-        args: { dest: 'flux:place:test:destination' as any }
+        args: { destination: 'flux:place:test:destination' }
       });
 
       const result = actorMovementReducer(context, command as MoveCommand);
@@ -199,7 +199,7 @@ describe('MoveCommandHandler', () => {
 
       const command = createCommand(CommandType.MOVE, {
         actor: actor.id,
-        args: { dest: 'flux:place:test:destination' as any }
+        args: { destination: 'flux:place:test:destination'  }
       });
 
       const result = actorMovementReducer(context, command as MoveCommand);
@@ -231,7 +231,7 @@ describe('MoveCommandHandler', () => {
 
       const command = createCommand(CommandType.MOVE, {
         actor: actor.id,
-        args: { dest: 'flux:place:test:nonexistent' as any }
+        args: { destination: 'flux:place:test:nonexistent'  }
       });
 
       const result = actorMovementReducer(context, command as MoveCommand);
@@ -277,7 +277,7 @@ describe('MoveCommandHandler', () => {
 
       const command = createCommand(CommandType.MOVE, {
         actor: actor.id,
-        args: { dest: destId }
+        args: { destination: destId }
       });
 
       const result = actorMovementReducer(context, command as MoveCommand);
@@ -325,7 +325,7 @@ describe('MoveCommandHandler', () => {
 
       const command = createCommand(CommandType.MOVE, {
         actor: actor.id,
-        args: { dest: destId }
+        args: { destination: destId }
       });
 
       // Handler should recognize the command

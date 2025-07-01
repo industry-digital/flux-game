@@ -1,8 +1,11 @@
+import { WorldEvent } from '~/types/event';
+import { PlaceSummary } from '~/worldkit/view';
+
 export enum FactType {
   /**
    * The actor's current location in the world
    */
-  LOCATION = 'location',
+  ACTOR_LOCATION = 'actor:location',
 
   /**
    * A full or partial view of an Entity that exists in the world
@@ -22,8 +25,8 @@ export enum FactType {
 
 export type AbstractFact<
   Type extends FactType,
-  Text = string,
   Subject = any,
+  Text = string,
 > = {
   type: Type;
   subject: Subject;
@@ -37,7 +40,7 @@ export type WorldEventMessageDictionary = {
 
 // Union of all possible facts
 export type Fact =
-  | AbstractFact<FactType.LOCATION>
-  | AbstractFact<FactType.EVENT, WorldEventMessageDictionary>
+  | AbstractFact<FactType.ACTOR_LOCATION, PlaceSummary>
+  | AbstractFact<FactType.EVENT, WorldEvent, WorldEventMessageDictionary>
   | AbstractFact<FactType.VIEW>
   | AbstractFact<FactType.SYSTEM>;

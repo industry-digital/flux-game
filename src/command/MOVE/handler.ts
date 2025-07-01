@@ -14,7 +14,7 @@ import {
 } from '@flux';
 
 export type MoveCommandArgs = {
-  dest: PlaceURN;
+  destination: PlaceURN;
 };
 
 export type MoveCommand = ActorCommand<CommandType.MOVE, MoveCommandArgs>;
@@ -25,7 +25,6 @@ export type MoveCommand = ActorCommand<CommandType.MOVE, MoveCommandArgs>;
  */
 export const actorMovementReducer: PureReducer<TransformerContext, MoveCommand> = (context, command) => {
   const { world, declareEvent, declareError } = context;
-  const { dest } = command.args;
   const { actors, places } = world;
 
   // Ensure actor exists
@@ -49,14 +48,14 @@ export const actorMovementReducer: PureReducer<TransformerContext, MoveCommand> 
   }
 
   // Ensure destination is a valid place
-  const destination: Place = places[dest];
+  const destination: Place = places[command.args.destination];
   if (!destination) {
     declareError('Movement destination not found in `places` projection');
     return context;
   }
 
   // Ensure an Exit connects origin to destination
-  const exit: Exit = Object.values(origin.exits).find(exit => exit.to === dest)!;
+  const exit: Exit = Object.values(origin.exits).find(exit => exit.to === destination.id)!;
   if (!exit) {
     declareError('There is no exit that connects the origin and destination.');
     return context;
