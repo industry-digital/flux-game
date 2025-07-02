@@ -1,7 +1,7 @@
 import { MoveCommandArgs } from '~/command/MOVE/handler';
 import { PlaceInput } from '~/types/entity/place';
 import { ActorInput } from '~/types/entity/actor';
-import { ActorURN, EntityURN, PlaceURN } from '~/types/taxonomy';
+import { ActorURN, PlaceURN } from '~/types/taxonomy';
 import { InputTypeGuard } from '~/types/handler';
 import { MaterializeActorCommand } from '~/command/MATERIALIZE_ACTOR/handler';
 import { DematerializeActorCommand } from '~/command/DEMATERIALIZE_ACTOR/handler';
@@ -134,55 +134,6 @@ export type ActorCommand<
      * @example `flux:place:the-breach:barricades:west-gate`
      */
     location?: PlaceURN;
-  };
-
-/**
- * Serializable NLP analysis results from processing the intent text
- */
-export type NaturalLanguageAnalysis = {
-  verbs: string[];
-  nouns: string[];
-  adjectives: string[];
-};
-
-/**
- * Input format for text-based intents from users
- * Represents natural language input before parsing
- * An Intent *always* originates from an Actor and as such, always has an `actor` URN.
- */
-export type IntentInput = {
-  /**
-   * Globally unique identifier for the intent. This propagates through the system as `trace`.
-   */
-  id?: string;
-
-  /**
-   * The entity that issued this intent
-   */
-  actor: EntityURN;
-
-  /**
-   * Optional, non-authoritative location of the actor at the time the intent was issued.
-   */
-  location?: PlaceURN;
-
-  /**
-   * The raw text input from the user
-   */
-  text: string;
-};
-
-/**
- * A fully validated Intent with  /**
-   * Optional NLP analysis results from processing the text
-   */
-export type Intent =
-  & InputMetadata
-  & Omit<IntentInput, 'id' | 'ts' | 'nlp'>
-  & {
-    id: string;
-    ts: number;
-    nlp: NaturalLanguageAnalysis;
   };
 
 /**

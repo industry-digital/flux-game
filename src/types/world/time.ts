@@ -66,6 +66,6 @@ export type ScheduledDuration = {
   ts: number; // The moment the modifier was applied, expressed as milliseconds since the UNIX epoch
 }
 
-// Time in the simulation progresses twice as fast as real time.
-// So every human day is two days in the simulation.
-export const GLOBAL_TIME_SCALE = 2.0;
+// Time in the simulation progresses at the same rate as real time.
+// So every human day is 1 day in the simulation.
+export const GLOBAL_TIME_SCALE = 1.0;

@@ -146,12 +146,10 @@ export {
 } from './handler';
 
 export {
-  SystemCommand as Command,
+  SystemCommand,
   CommandInput,
   CommandType,
-  Intent,
-  IntentInput,
-  Command as KnownCommand,
+  Command,
   AnyCommand,
   AnyCommandTypeGuard,
   ActorCommand,
@@ -160,9 +158,7 @@ export {
 } from './intent';
 
 export {
-  createIntentFromText,
   createCommand,
-  createCommandFromIntent,
 } from '~/lib/intent';
 
 export {

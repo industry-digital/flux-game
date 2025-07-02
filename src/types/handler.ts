@@ -93,7 +93,7 @@ export type EventDeclarationConsumer = {
   /**
    * Get the list of emergent events that have been declared by a specific command.
    */
-  getDeclaredEventsByCommand(commandId: string): WorldEvent[];
+  getDeclaredEventsByCommand<TEventType extends WorldEvent = WorldEvent>(commandId: string): TEventType[];
 
   /**
    * Return a count of the number of times the given event type has been declared.

@@ -71,7 +71,7 @@ export type ActorDidMaterialize = EventBase & ActorDidMaterializeInput;
 export type ActorDidDematerializeInput = RequiresActor & AbstractWorldEventInput<EventType.ACTOR_DID_DEMATERIALIZE, {}>;
 export type ActorDidDematerialize = EventBase & ActorDidDematerializeInput;
 export type ActorDidMoveInput = RequiresActor & AbstractWorldEventInput<EventType.ACTOR_DID_MOVE, { destination: PlaceURN }>;
-export type ActorDidMove = EventBase & ActorDidMoveInput;
+export type ActorDidMove = RequiresActor & EventBase & ActorDidMoveInput;
 export type ActorDidDepartInput = RequiresActor & AbstractWorldEventInput<EventType.ACTOR_DID_DEPART, { destination: PlaceURN }>;
 export type ActorDidDepart = EventBase & AbstractWorldEventInput<EventType.ACTOR_DID_DEPART, {}>;
 export type ActorDidArriveInput = RequiresActor & AbstractWorldEventInput<EventType.ACTOR_DID_ARRIVE, { origin: PlaceURN }>;
@@ -89,7 +89,7 @@ export type WorldEventInput =
 /**
  * An WorldEvent is an event that is generated as a result of processing a command.
  */
-export type WorldEvent = WorldEventInput & {
+export type WorldEvent = Omit<WorldEventInput, 'id' | 'ts' | 'trace'> & {
   id: string;
   ts: number;
   trace: string;

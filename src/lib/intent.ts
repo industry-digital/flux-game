@@ -5,13 +5,9 @@ import {
   CommandType,
   SystemCommandTypeGuard,
   InputMetadata,
-  Intent,
-  NaturalLanguageAnalysis,
   ActorCommand,
   AnyCommand,
 } from '~/types/intent';
-import { ActorURN, EntityURN } from '~/types/taxonomy';
-import { uniqid } from '~/lib/random';
 
 const identity = <I, O = I>(x: I): O => x as unknown as O;
 
@@ -21,30 +17,6 @@ export type FactoryOptions = {
 };
 
 type Transformer<I, O = I> = (input: I) => O;
-
-type IntentTransformer = Transformer<Intent>;
-
-export const createIntentFromText = (
-  nlp: (text: string) => any,
-  self: EntityURN,
-  text: string,
-  transform: IntentTransformer = identity,
-  { now = Date.now(), generateUniqueId = uniqid }: FactoryOptions = {},
-): Intent => {
-  const nlpAnalysis = createNaturalLanguageAnalysis(nlp, text);
-
-  const defaults: Partial<Intent> = {
-    __type: 'intent',
-    id: generateUniqueId(),
-    ts: now,
-    actor: self,
-    text,
-    nlp: nlpAnalysis,
-  };
-
-  return transform(defaults as Intent) as Intent;
-};
-
 type CommandTransformer = Transformer<AnyCommand>;
 
 export const createCommand = <
@@ -79,35 +51,6 @@ export const createCommand = <
   }
 };
 
-export const createCommandFromIntent = <T extends CommandType>(
-  intent: Intent,
-  transform: CommandTransformer,
-  { now = Date.now() }: FactoryOptions = {},
-): ActorCommand<T> => {
-  const defaults: Partial<ActorCommand<T>> = {
-    __type: 'command',
-    id: intent.id,
-    ts: now,
-    actor: intent.actor as ActorURN,
-    location: intent.location,
-  };
-
-  return transform(defaults as ActorCommand<T>) as ActorCommand<T>;
-};
-
-export const createNaturalLanguageAnalysis = (
-  nlp: (text: string) => any,
-  text: string
-): NaturalLanguageAnalysis => {
-  const doc = nlp(text);
-
-  return {
-    verbs: doc.verbs().out('array'),
-    nouns: doc.nouns().out('array'),
-    adjectives: doc.adjectives().out('array'),
-  };
-};
-
 /**
  * Type guard to check if input has the command metadata type
  */
@@ -126,23 +69,6 @@ export const isCommand = (input: unknown): input is SystemCommand => {
 
 export const isActorCommand = (input: unknown): input is SystemCommand<CommandType.CREATE_ACTOR> => {
   return isCommand(input) && typeof input.actor === 'string';
-};
-
-/**
- * Type guard to check if input has the intent metadata type
- */
-export const isIntent = (input: unknown): input is Intent => {
-  return (
-    typeof input === 'object' &&
-    input !== null &&
-    '__type' in input &&
-    (input as InputMetadata).__type === 'intent' &&
-    'text' in input &&
-    'id' in input &&
-    'ts' in input &&
-    'actor' in input &&
-    (!('nlp' in input) || typeof (input as Intent).nlp === 'object')
-  );
 };
 
 /**

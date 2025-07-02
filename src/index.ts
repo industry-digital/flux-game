@@ -16,7 +16,6 @@ export {
 
 // Command type guards and utilities
 export {
-  isIntent,
   isCommand,
   isCommandInput,
   isCommandOfType,
