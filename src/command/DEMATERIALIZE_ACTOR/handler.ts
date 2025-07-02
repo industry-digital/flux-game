@@ -1,10 +1,10 @@
 import { isCommandOfType } from '~/lib/intent';
 import {
+  Command,
   CommandType,
   PureReducer,
   TransformerContext,
   PureHandlerInterface,
-  AllowedInput,
   EventType,
   ActorURN,
 } from '@flux';
@@ -50,7 +50,10 @@ export const dematerializeActorCommandReducer: PureReducer<TransformerContext, D
 export class DEMATERIALIZE_ACTOR implements PureHandlerInterface<TransformerContext, DematerializeActorCommand> {
   reduce = dematerializeActorCommandReducer;
   dependencies = [];
-  handles = (input: AllowedInput): input is DematerializeActorCommand => {
-    return isCommandOfType<CommandType.DEMATERIALIZE_ACTOR>(input, CommandType.DEMATERIALIZE_ACTOR);
+  handles = (command: Command): command is DematerializeActorCommand => {
+    return isCommandOfType<CommandType.DEMATERIALIZE_ACTOR, { actorId: ActorURN } >(
+      command,
+      CommandType.DEMATERIALIZE_ACTOR,
+    );
   };
 };

@@ -6,10 +6,9 @@ import {
   PureReducer,
   TransformerContext,
   PureHandlerInterface,
-  AllowedInput,
   EventType,
 } from '@flux';
-import { SystemCommand } from '~/types/intent';
+import { Command, SystemCommand } from '~/types/intent';
 
 export type CreateActorCommand = SystemCommand<CommandType.CREATE_ACTOR, ActorInput>;
 
@@ -43,7 +42,7 @@ export const createActorCommandReducer: PureReducer<TransformerContext, CreateAc
 export class CREATE_ACTOR implements PureHandlerInterface<TransformerContext, CreateActorCommand> {
   reduce = createActorCommandReducer;
   dependencies = [];
-  handles = (input: AllowedInput): input is CreateActorCommand => {
-    return isCommandOfType<CommandType.CREATE_ACTOR, ActorInput>(input, CommandType.CREATE_ACTOR);
+  handles = (command: Command): command is CreateActorCommand => {
+    return isCommandOfType<CommandType.CREATE_ACTOR, ActorInput>(command, CommandType.CREATE_ACTOR);
   };
 };

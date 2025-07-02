@@ -1,11 +1,11 @@
 import { isCommandOfType } from '~/lib/intent';
 import {
+  Command,
   CommandType,
   EventType,
   PureReducer,
   TransformerContext,
   PureHandlerInterface,
-  AllowedInput,
   ActorCommand,
   Place,
   PlaceURN,
@@ -94,7 +94,7 @@ export const actorMovementReducer: PureReducer<TransformerContext, MoveCommand> 
 export class MOVE implements PureHandlerInterface<TransformerContext, MoveCommand> {
   reduce = actorMovementReducer;
   dependencies = [];
-  handles = (input: AllowedInput): input is MoveCommand => {
-    return isCommandOfType(input, CommandType.MOVE);
+  handles = (command: Command): command is MoveCommand => {
+    return isCommandOfType<CommandType.MOVE, MoveCommandArgs>(command, CommandType.MOVE);
   };
 }

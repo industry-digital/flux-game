@@ -122,7 +122,6 @@ export {
 } from './event';
 
 export {
-  AllowedInput,
   CombatProjectionMixin,
   ErrorDeclarationConsumer,
   ErrorDeclarationProducer,

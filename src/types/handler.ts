@@ -1,13 +1,8 @@
 import { WorldEvent, WorldEventInput, EventType } from '~/types/event';
-import { SystemCommand, CommandType, Intent, AnyCommand } from '~/types/intent';
+import { SystemCommand, CommandType, AnyCommand, Command } from '~/types/intent';
 import { ActorURN, PlaceURN } from '~/types/taxonomy';
 import { Place } from '~/types/entity/place';
 import { Actor } from '~/types/entity/actor';
-
-/**
- * Union type of all allowed input types for the pipeline
- */
-export type AllowedInput = SystemCommand | Intent;
 
 /**
  * For filter() and find() methods, this is a function that takes an WorldEvent
@@ -214,12 +209,12 @@ export type InputTypeGuard<I extends SystemCommand, S extends I> = (input: I) =>
  */
 export type PureHandlerInterface<
   C,
-  I extends AllowedInput,
+  I extends Command
 > = {
   /**
    * The implementation should return `true` if the handler is interested in processing the input
    */
-  handles: (input: AllowedInput) => input is I;
+  handles: (input: Command) => input is I;
 
   /**
    * Dependencies on other handlers that must run before this one.
@@ -234,12 +229,5 @@ export type PureHandlerInterface<
 
 export type PureHandlerImplementation<
   C,
-  I extends AllowedInput,
+  I extends Command,
 > = new (...args: any[]) => PureHandlerInterface<C, I>;
-
-/**
- * Type guard that ensures the input is an Intent
- */
-export const isIntent = (input: AllowedInput): input is Intent => {
-  return 'type' in input && input.__type === 'intent';
-};

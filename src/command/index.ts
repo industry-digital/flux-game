@@ -1,6 +1,4 @@
-import { CommandType, AnyCommand, AnyCommandTypeGuard, AllowedInput as BaseAllowedInput } from '@flux';
-
-export type AllowedInput = BaseAllowedInput;
+import { CommandType, AnyCommand, AnyCommandTypeGuard } from '@flux';
 
 /**
  * A utility type for creating command type guards
@@ -15,8 +13,9 @@ export type CommandTypeGuard<T extends CommandType, A extends Record<string, any
 export function createCommandGuard<T extends CommandType, A extends Record<string, any> = Record<string, any>>(
   type: T
 ): CommandTypeGuard<T, A> {
-  return (input: AllowedInput): input is AnyCommand<T, A> =>
-    'type' in input && input.type === type && input.__type === 'command';
+  return (input: any): input is AnyCommand<T, A> => {
+    return input?.__type === 'command' && input.type === type;
+  };
 }
 
 // Re-export command handlers

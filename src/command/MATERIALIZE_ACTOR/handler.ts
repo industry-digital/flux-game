@@ -1,11 +1,11 @@
 import { isCommandOfType } from '~/lib/intent';
 import { SystemCommand } from '~/types/intent';
 import {
+  Command,
   CommandType,
   PureReducer,
   TransformerContext,
   PureHandlerInterface,
-  AllowedInput,
   EventType,
   SpecialVisibility,
   ActorURN,
@@ -52,7 +52,10 @@ export const materializeActorCommandReducer: PureReducer<TransformerContext, Mat
 export class MATERIALIZE_ACTOR implements PureHandlerInterface<TransformerContext, MaterializeActorCommand> {
   reduce = materializeActorCommandReducer;
   dependencies = [];
-  handles = (input: AllowedInput): input is MaterializeActorCommand => {
-    return isCommandOfType<CommandType.MATERIALIZE_ACTOR>(input, CommandType.MATERIALIZE_ACTOR);
+  handles = (command: Command): command is MaterializeActorCommand => {
+    return isCommandOfType<CommandType.MATERIALIZE_ACTOR, { actorId: ActorURN }>(
+      command,
+      CommandType.MATERIALIZE_ACTOR,
+    );
   };
 };
