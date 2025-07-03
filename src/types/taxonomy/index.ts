@@ -133,6 +133,14 @@ export const TAXONOMY = {
       description: 'A resource that can be obtained and used',
       examples: ['flux:resource:wood:oak', 'flux:resource:ore:iron'],
     },
+    climate: {
+      description: 'Climate classification and weather patterns',
+      examples: ['flux:climate:temperate:oceanic', 'flux:climate:arid:desert', 'flux:climate:polar:tundra']
+    },
+    geo: {
+      description: 'Geographic and topographic features',
+      examples: ['flux:geo:biome:forest', 'flux:geo:elevation:mountain', 'flux:geo:terrain:rocky']
+    }
   }
 } as const;
 
@@ -264,6 +272,16 @@ export namespace Taxonomy {
    * The various resources in the game world
    */
   export type Resources = TaxonomyURN<'resource'>;
+
+  /**
+   * Climate classifications and weather patterns
+   */
+  export type Climate = TaxonomyURN<'climate'>;
+
+  /**
+   * Geographic and topographic features
+   */
+  export type Geography = TaxonomyURN<'geo'>;
 }
 
 export type EntityURN<T extends EntityType = EntityType> = `${RootNamespace}:${T}:${string}`;
@@ -287,3 +305,5 @@ export type StatURN = Taxonomy.Stats;
 export type GroupURN = Taxonomy.Groups;
 export type TopicURN = Taxonomy.Topics;
 export type ResourceURN = Taxonomy.Resources;
+export type ClimateURN = Taxonomy.Climate;
+export type GeographyURN = Taxonomy.Geography;

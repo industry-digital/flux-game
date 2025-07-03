@@ -3,6 +3,7 @@ import { EntityType, AbstractEntity, Describable } from './entity';
 import { Direction } from '~/types/world/space';
 import { SpecialVisibility } from '~/types/world/visibility';
 import { ResourceGenerator } from './resource';
+import { UnitOfMeasure } from '~/types/world/measures';
 
 export type PlaceVisibilityRules = Record<EntityURN, 1>;
 
@@ -93,4 +94,55 @@ export type Place =
    * Entities currently in this place
    */
   entities: PlaceEntities;
+};
+
+
+export enum ClimateType {
+  TUNDRA = 'tundra',
+  STEPPE = 'steppe',
+  TEMPERATE = 'temperate',
+  ARID = 'arid',
+  TROPICAL = 'tropical',
+  SUBARID = 'subarid',
+  SUBTROPICAL = 'subtropical',
+};
+
+export type ClimateParameter<U extends UnitOfMeasure> = {
+  uom: U;
+  min: number;
+  max: number;
+};
+
+export type ClimateProfile = {
+  type: ClimateType;
+
+  /**
+   * The temperature range in degrees Celsius
+   */
+  temperature: ClimateParameter<UnitOfMeasure.TEMPERATURE_CELSIUS>;
+
+  /**
+   * Humidity range in percent
+   */
+  humidity: ClimateParameter<UnitOfMeasure.PERCENTAGE>;
+
+  /**
+   * Wind speed range in meters per second
+   */
+  wind: ClimateParameter<UnitOfMeasure.VELOCITY_METERS_PER_SECOND>;
+
+  /**
+   * Cloud cover range in percent
+   */
+  clouds: ClimateParameter<UnitOfMeasure.PERCENTAGE>;
+
+  /**
+   * Visibility range in meters
+   */
+  visibility: ClimateParameter<UnitOfMeasure.DISTANCE_METERS>;
+
+  /**
+   * The tendency for weather to change unpredictably
+   */
+  volatility: ClimateParameter<UnitOfMeasure.PERCENTAGE>;
 };

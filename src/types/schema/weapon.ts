@@ -4,7 +4,7 @@ import { ChargeableMixin } from '~/types/entity/item';
 import { Duration } from '~/types/world/time';
 import { ActorStat } from '~/types/entity/actor';
 import { DamageSpecification } from '~/types/damage';
-import { UnitOfDistance } from '~/types/world/measures';
+import { UnitOfMeasure } from '~/types/world/measures';
 
 export type WeaponAttackSpecification = {
   /**
@@ -47,10 +47,10 @@ export type WeaponTimers = {
 }
 
 export type WeaponRangeSpecification = {
-  optimal: | [number, UnitOfDistance];
-  falloff?: [number, UnitOfDistance];
-  min?: [number, UnitOfDistance];
-  max?: [number, UnitOfDistance];
+  optimal: | [number, UnitOfMeasure];
+  falloff?: [number, UnitOfMeasure];
+  min?: [number, UnitOfMeasure];
+  max?: [number, UnitOfMeasure];
 }
 
 /**

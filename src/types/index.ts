@@ -267,7 +267,6 @@ export {
 
 export {
   UnitOfMeasure,
-  UnitOfDistance,
 } from './world/measures';
 
 // Testing utilities
