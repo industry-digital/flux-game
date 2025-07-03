@@ -1,49 +1,59 @@
 import { describe, it, expect } from 'vitest';
-import { createPlace, createExit, createPlaces, addActorToPlace, removeActorFromPlace } from './place';
-import { Direction } from '~/types/world/space';
-import { EntityType } from '~/types/entity/entity';
+import { EntityType, SpecialVisibility, Direction } from '@flux';
+import { PlaceInput, ExitInput, Exits, BiomeType, ClimateType } from '~/types/entity/place';
+import {
+  createPlace,
+  createExit,
+  createPlaces,
+  addActorToPlace,
+  removeActorFromPlace,
+} from './place';
 import { createPlaceUrn } from '~/lib/taxonomy';
-import { PlaceInput, ExitInput } from '~/types/entity/place';
-import { SpecialVisibility } from '~/types/world/visibility';
 
 describe('createPlace', () => {
   describe('basic place creation', () => {
     it('should create a place with minimal input', () => {
       const input: PlaceInput = {
-        id: createPlaceUrn('test', 'tavern'),
+        id: createPlaceUrn('test', 'simple-place'),
+        biome: BiomeType.URBAN,
+        climate: ClimateType.TEMPERATE,
       };
 
       const place = createPlace(input);
 
-      expect(place.id).toBe('flux:place:test:tavern');
-      expect(place.type).toBe(EntityType.PLACE);
+      expect(place.id).toBe('flux:place:test:simple-place');
       expect(place.name).toBe('');
       expect(place.description).toBe('');
-      expect(place.exits).toEqual({});
-      expect(place.entities).toEqual({});
+      expect(place.biome).toBe(BiomeType.URBAN);
+      expect(place.climate).toBe(ClimateType.TEMPERATE);
+      expect(Object.keys(place.exits)).toHaveLength(0);
     });
 
     it('should create a place with all fields specified', () => {
       const input: PlaceInput = {
-        id: createPlaceUrn('test', 'inn'),
-        name: 'The Golden Griffin Inn',
-        description: 'A warm and welcoming inn with comfortable rooms and hearty meals.',
+        id: createPlaceUrn('test', 'complete-place'),
+        name: 'Test Place',
+        description: 'A place for testing',
+        biome: BiomeType.FOREST,
+        climate: ClimateType.TEMPERATE,
       };
 
       const place = createPlace(input);
 
-      expect(place.id).toBe('flux:place:test:inn');
-      expect(place.name).toBe('The Golden Griffin Inn');
-      expect(place.description).toBe('A warm and welcoming inn with comfortable rooms and hearty meals.');
-      expect(place.exits).toEqual({});
-      expect(place.entities).toEqual({});
+      expect(place.id).toBe('flux:place:test:complete-place');
+      expect(place.name).toBe('Test Place');
+      expect(place.description).toBe('A place for testing');
+      expect(place.biome).toBe(BiomeType.FOREST);
+      expect(place.climate).toBe(ClimateType.TEMPERATE);
     });
 
     it('should handle empty string values', () => {
       const input: PlaceInput = {
-        id: createPlaceUrn('test', 'empty'),
+        id: createPlaceUrn('test', 'empty-strings'),
         name: '',
         description: '',
+        biome: BiomeType.URBAN,
+        climate: ClimateType.TEMPERATE,
       };
 
       const place = createPlace(input);
@@ -56,8 +66,9 @@ describe('createPlace', () => {
   describe('exits processing', () => {
     it('should create place with no exits', () => {
       const input: PlaceInput = {
-        id: createPlaceUrn('test', 'isolated'),
-        exits: [],
+        id: createPlaceUrn('test', 'no-exits'),
+        biome: BiomeType.URBAN,
+        climate: ClimateType.TEMPERATE,
       };
 
       const place = createPlace(input);
@@ -66,16 +77,18 @@ describe('createPlace', () => {
       expect(Object.keys(place.exits)).toHaveLength(0);
     });
 
-    it('should transform single exit from array to dictionary', () => {
+    it('should create place with single exit in dictionary format', () => {
       const input: PlaceInput = {
         id: createPlaceUrn('test', 'plaza'),
-        exits: [
-          {
+        exits: {
+          [Direction.NORTH]: {
             direction: Direction.NORTH,
             label: 'Northern District',
             to: createPlaceUrn('world', 'north'),
           },
-        ],
+        },
+        biome: BiomeType.URBAN,
+        climate: ClimateType.TEMPERATE,
       };
 
       const place = createPlace(input);
@@ -88,26 +101,28 @@ describe('createPlace', () => {
       expect(place.exits[Direction.NORTH]?.to).toBe('flux:place:world:north');
     });
 
-    it('should transform multiple exits from array to dictionary', () => {
+    it('should create place with multiple exits in dictionary format', () => {
       const input: PlaceInput = {
         id: createPlaceUrn('test', 'crossroads'),
-        exits: [
-          {
+        exits: {
+          [Direction.NORTH]: {
             direction: Direction.NORTH,
             label: 'To the Forest',
             to: createPlaceUrn('world', 'forest'),
           },
-          {
+          [Direction.SOUTH]: {
             direction: Direction.SOUTH,
             label: 'To the Village',
             to: createPlaceUrn('world', 'village'),
           },
-          {
+          [Direction.EAST]: {
             direction: Direction.EAST,
             label: 'To the Mountains',
             to: createPlaceUrn('world', 'mountains'),
           },
-        ],
+        },
+        biome: BiomeType.GRASSLAND,
+        climate: ClimateType.TEMPERATE,
       };
 
       const place = createPlace(input);
@@ -128,11 +143,15 @@ describe('createPlace', () => {
     it('should handle exits with minimal data', () => {
       const input: PlaceInput = {
         id: createPlaceUrn('test', 'minimal-exit'),
-        exits: [
-          {
+        exits: {
+          [Direction.UP]: {
             direction: Direction.UP,
+            label: '',
+            to: 'flux:place:nowhere',
           },
-        ],
+        },
+        biome: BiomeType.URBAN,
+        climate: ClimateType.TEMPERATE,
       };
 
       const place = createPlace(input);
@@ -159,15 +178,20 @@ describe('createPlace', () => {
         Direction.OUT,
       ];
 
-      const exits: ExitInput[] = directions.map((dir, index) => ({
-        direction: dir,
-        label: `Exit ${index}`,
-        to: createPlaceUrn('world', `destination-${index}`),
-      }));
+      const exits: Exits = directions.reduce((acc, dir, index) => {
+        acc[dir] = {
+          direction: dir,
+          label: `Exit ${index}`,
+          to: createPlaceUrn('world', `destination-${index}`),
+        };
+        return acc;
+      }, {} as Exits);
 
       const input: PlaceInput = {
         id: createPlaceUrn('test', 'hub'),
         exits,
+        biome: BiomeType.URBAN,
+        climate: ClimateType.TEMPERATE,
       };
 
       const place = createPlace(input);

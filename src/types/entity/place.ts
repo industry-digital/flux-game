@@ -125,7 +125,7 @@ export type PlaceInput = {
   id: PlaceURN;
   name?: string;
   description?: string;
-  exits?: Exits | ExitInput[];  // Support both dictionary and array formats
+  exits?: Exits;
   biome: BiomeType;
   climate: ClimateType;
 } & Partial<ResourceGenerator>;

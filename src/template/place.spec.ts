@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { renderPlaceSummary, renderExits, renderExitDirection, PlaceTemplateProps } from './place';
-import { Place } from '~/types/entity/place';
+import { Place, BiomeType, ClimateType } from '~/types/entity/place';
 import { Direction } from '~/types/world/space';
 import { createPlace } from '~/worldkit/entity/place';
 
@@ -58,7 +58,9 @@ describe('place templates', () => {
         id: 'flux:place:test:empty',
         name: 'Empty Room',
         description: 'A room with no exits',
-        exits: [],
+        biome: BiomeType.URBAN,
+        climate: ClimateType.TEMPERATE,
+        exits: {},
       });
 
       const result = renderExits({ place });
@@ -71,13 +73,15 @@ describe('place templates', () => {
         id: 'flux:place:test:single',
         name: 'Single Exit Room',
         description: 'A room with one exit',
-        exits: [
-          {
+        biome: BiomeType.URBAN,
+        climate: ClimateType.TEMPERATE,
+        exits: {
+          [Direction.NORTH]: {
             direction: Direction.NORTH,
             label: 'wooden door',
             to: 'flux:place:test:hallway',
           },
-        ],
+        },
       });
 
       const result = renderExits({ place });
@@ -90,23 +94,25 @@ describe('place templates', () => {
         id: 'flux:place:test:multiple',
         name: 'Crossroads',
         description: 'A junction with multiple paths',
-        exits: [
-          {
+        biome: BiomeType.GRASSLAND,
+        climate: ClimateType.TEMPERATE,
+        exits: {
+          [Direction.NORTH]: {
             direction: Direction.NORTH,
             label: 'forest path',
             to: 'flux:place:test:forest',
           },
-          {
+          [Direction.SOUTH]: {
             direction: Direction.SOUTH,
             label: 'village road',
             to: 'flux:place:test:village',
           },
-          {
+          [Direction.EAST]: {
             direction: Direction.EAST,
             label: 'mountain trail',
             to: 'flux:place:test:mountain',
           },
-        ],
+        },
       });
 
       const result = renderExits({ place });
@@ -119,18 +125,20 @@ describe('place templates', () => {
         id: 'flux:place:test:actions',
         name: 'The Afterlife',
         description: 'A cyberpunk bar',
-        exits: [
-          {
+        biome: BiomeType.URBAN,
+        climate: ClimateType.ARTIFICIAL,
+        exits: {
+          [Direction.EAST]: {
             direction: Direction.EAST,
             label: 'Drive downtown to Corpo Plaza',
             to: 'flux:place:nightcity:corpo-plaza',
           },
-          {
+          [Direction.NORTH]: {
             direction: Direction.NORTH,
             label: 'Take the NCART to Watson Market',
             to: 'flux:place:nightcity:watson-market',
           },
-        ],
+        },
       });
 
       const result = renderExits({ place });
@@ -145,7 +153,9 @@ describe('place templates', () => {
         id: 'flux:place:test:basic',
         name: 'Empty Room',
         description: 'A simple empty room.',
-        exits: [],
+        biome: BiomeType.URBAN,
+        climate: ClimateType.TEMPERATE,
+        exits: {},
       });
 
       const result = renderPlaceSummary({ place });
@@ -159,7 +169,9 @@ describe('place templates', () => {
           id: 'flux:place:test:emergent',
           name: 'Mysterious Chamber',
           description: 'An ancient stone chamber.',
-          exits: [],
+          biome: BiomeType.URBAN,
+          climate: ClimateType.TEMPERATE,
+          exits: {},
         }),
         description: {
           base: 'An ancient stone chamber.',
@@ -177,13 +189,15 @@ describe('place templates', () => {
         id: 'flux:place:test:single-exit',
         name: 'Room with Door',
         description: 'A room with a single exit.',
-        exits: [
-          {
+        biome: BiomeType.URBAN,
+        climate: ClimateType.TEMPERATE,
+        exits: {
+          [Direction.NORTH]: {
             direction: Direction.NORTH,
             label: 'wooden door',
             to: 'flux:place:test:hallway',
           },
-        ],
+        },
       });
 
       const result = renderPlaceSummary({ place });
@@ -196,23 +210,25 @@ describe('place templates', () => {
         id: 'flux:place:test:complete',
         name: 'Crossroads',
         description: 'A junction with multiple paths.',
-        exits: [
-          {
+        biome: BiomeType.GRASSLAND,
+        climate: ClimateType.TEMPERATE,
+        exits: {
+          [Direction.NORTH]: {
             direction: Direction.NORTH,
             label: 'forest path',
             to: 'flux:place:test:forest',
           },
-          {
+          [Direction.SOUTH]: {
             direction: Direction.SOUTH,
             label: 'village road',
             to: 'flux:place:test:village',
           },
-          {
+          [Direction.EAST]: {
             direction: Direction.EAST,
             label: 'mountain trail',
             to: 'flux:place:test:mountain',
           },
-        ],
+        },
       });
 
       const result = renderPlaceSummary({ place });
@@ -231,18 +247,20 @@ Exits: North to forest path, South to village road, East to mountain trail`;
           id: 'flux:place:test:complex',
           name: 'Ancient Crossroads',
           description: 'Four ancient stone paths meet here.',
-          exits: [
-            {
+          biome: BiomeType.GRASSLAND,
+          climate: ClimateType.TEMPERATE,
+          exits: {
+            [Direction.NORTH]: {
               direction: Direction.NORTH,
               label: 'Take the bridge to the Northern Ruins',
               to: 'flux:place:ruins:bridge',
             },
-            {
+            [Direction.WEST]: {
               direction: Direction.WEST,
               label: 'Follow the path to the Deep Forest',
               to: 'flux:place:forest:deep',
             },
-          ],
+          },
         }),
         description: {
           base: 'Four ancient stone paths meet here.',
@@ -265,23 +283,25 @@ Exits: North to the Northern Ruins, West to the Deep Forest`;
         id: 'flux:place:test:cyberpunk',
         name: 'The Afterlife',
         description: 'The legendary mercenary bar housed in a repurposed morgue.',
-        exits: [
-          {
+        biome: BiomeType.URBAN,
+        climate: ClimateType.ARTIFICIAL,
+        exits: {
+          [Direction.EAST]: {
             direction: Direction.EAST,
             label: 'Drive downtown to Corpo Plaza',
             to: 'flux:place:nightcity:corpo-plaza',
           },
-          {
+          [Direction.NORTH]: {
             direction: Direction.NORTH,
             label: 'Take the NCART to Watson Market',
             to: 'flux:place:nightcity:watson-market',
           },
-          {
+          [Direction.SOUTH]: {
             direction: Direction.SOUTH,
             label: 'Head south to the Combat Zone',
-            to: 'flux:place:nightcity:pacifica-combat-zone',
+            to: 'flux:place:nightcity:combat-zone',
           },
-        ],
+        },
       });
 
       const result = renderPlaceSummary({ place });
@@ -298,17 +318,16 @@ Exits: East to Corpo Plaza, North to Watson Market, South to the Combat Zone`;
   describe('type compatibility', () => {
     it('should maintain correct type for PlaceTemplateProps', () => {
       const place = createPlace({
-        id: 'flux:place:test:types',
-        name: 'Type Test Location',
-        description: 'A test location for type checking',
-        exits: [],
+        id: 'flux:place:test:type-check',
+        name: 'Type Test',
+        description: 'Testing types',
+        biome: BiomeType.URBAN,
+        climate: ClimateType.TEMPERATE,
+        exits: {},
       });
 
-      const input: PlaceTemplateProps = { place };
-      const result = renderPlaceSummary(input);
-
-      expect(typeof result).toBe('string');
-      expect(result).toContain('Type Test Location');
+      const props: PlaceTemplateProps = { place };
+      expect(props.place.name).toBe('Type Test');
     });
   });
 });

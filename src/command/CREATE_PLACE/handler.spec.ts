@@ -1,16 +1,16 @@
 import { describe, it, expect } from 'vitest';
 import {
-    CREATE_PLACE,
-    CreatePlaceCommand,
-    createPlaceCommandReducer
+  CREATE_PLACE,
+  CreatePlaceCommand,
+  createPlaceCommandReducer
 } from './handler';
 import { CommandType, EntityType } from '@flux';
 import { createPlaceUrn } from '~/lib/taxonomy';
 import { Direction } from '~/types/world/space';
 import {
-    createTransformerContext,
-    createCommand,
-    createWorld
+  createTransformerContext,
+  createCommand,
+  createWorld
 } from '~/testing';
 
 describe('CreatePlaceCommandHandler', () => {
@@ -126,13 +126,15 @@ describe('CreatePlaceCommandHandler', () => {
           id: createPlaceUrn('test', 'central-plaza'),
           name: 'Central Plaza',
           description: 'A bustling central area',
-          exits: [
-            {
+          biome: 'urban' as any,
+          climate: 'temperate' as any,
+          exits: {
+            [Direction.NORTH]: {
               direction: Direction.NORTH,
               label: 'Northern District',
               to: createPlaceUrn('world', 'north')
             }
-          ]
+          }
         }
       });
 
@@ -142,7 +144,7 @@ describe('CreatePlaceCommandHandler', () => {
 
       expect(place.name).toBe('Central Plaza');
       expect(place.exits).toBeDefined();
-      // Exit inputs are an array, but the output is a map
+      // Exit inputs are now a dictionary, and the output is also a dictionary
       expect(place.exits[Direction.NORTH]).toBeDefined();
       expect(place.exits[Direction.NORTH]?.label).toBe('Northern District');
     });
