@@ -137,9 +137,9 @@ export const TAXONOMY = {
       description: 'Climate classification and weather patterns',
       examples: ['flux:climate:temperate:oceanic', 'flux:climate:arid:desert', 'flux:climate:polar:tundra']
     },
-    geo: {
-      description: 'Geographic and topographic features',
-      examples: ['flux:geo:biome:forest', 'flux:geo:elevation:mountain', 'flux:geo:terrain:rocky']
+    eco: {
+      description: 'Ecosystems and environments',
+      examples: ['flux:eco:forest:temperate', 'flux:eco:desert:arid', 'flux:eco:tundra:polar']
     }
   }
 } as const;
@@ -281,7 +281,7 @@ export namespace Taxonomy {
   /**
    * Geographic and topographic features
    */
-  export type Geography = TaxonomyURN<'geo'>;
+  export type Ecosystems = TaxonomyURN<'eco'>;
 }
 
 export type EntityURN<T extends EntityType = EntityType> = `${RootNamespace}:${T}:${string}`;
@@ -306,4 +306,4 @@ export type GroupURN = Taxonomy.Groups;
 export type TopicURN = Taxonomy.Topics;
 export type ResourceURN = Taxonomy.Resources;
 export type ClimateURN = Taxonomy.Climate;
-export type GeographyURN = Taxonomy.Geography;
+export type EcosystemURN = Taxonomy.Ecosystems;

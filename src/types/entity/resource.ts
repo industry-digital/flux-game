@@ -64,17 +64,24 @@ export type ResourceNode = AbstractResource & {
    * Generation rate per time unit
    */
   production: ProductionRate;
+};
 
+export type ResourceGenerationState = {
   /**
-   * When this resource was last updated (for calculating accumulated generation)
-   * Milliseconds since epoch
+   * When the resources were last updated
    */
   ts: number;
+
+  /**
+   * The resources that are being generated
+   */
+  nodes: Partial<Record<ResourceURN, ResourceNode>>;
 };
 
 export type ResourceGenerator = {
+
   /**
    * The various resource generation policies
    */
-  resources: Partial<Record<ResourceURN, ResourceNode>>;
+  resources: ResourceGenerationState;
 };
