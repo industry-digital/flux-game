@@ -14,11 +14,20 @@ export const createPlace = (
   const base = createEntity<EntityType.PLACE, Place>(
     EntityType.PLACE,
     (entity) => {
-      const exits = (input.exits ?? []).reduce((acc, exitInput) => {
-        const exit = createExit(exitInput);
-        acc[exit.direction] = exit;
-        return acc;
-      }, {} as Exits);
+      // Handle both array and dictionary formats for exits
+      let exits: Exits = {};
+
+      if (Array.isArray(input.exits)) {
+        // Convert array format to dictionary format for backward compatibility
+        exits = (input.exits as ExitInput[]).reduce((acc, exitInput) => {
+          const exit = createExit(exitInput);
+          acc[exit.direction] = exit;
+          return acc;
+        }, {} as Exits);
+      } else {
+        // Use dictionary format directly
+        exits = input.exits || {};
+      }
 
       const defaults: Partial<Place> = {
         id: entity.id,
@@ -28,7 +37,7 @@ export const createPlace = (
         exits,
       };
 
-      // Create a copy of input without the exits array to avoid overriding the transformed exits
+      // Create a copy of input without the exits to avoid any conflicts
       const { exits: _, ...inputWithoutExits } = input;
 
       const result = merge({}, entity, defaults, inputWithoutExits) as Place;
@@ -73,13 +82,7 @@ export const createPlaces = (
   const out: PlaceDictionary = {};
 
   for (const input of inputs) {
-    const place = createPlace({
-      id: input.id,
-      name: input.name,
-      description: input.description,
-      exits: input.exits || [],
-    });
-
+    const place = createPlace(input);
     out[place.id] = place;
   }
 

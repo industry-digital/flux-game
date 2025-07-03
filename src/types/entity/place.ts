@@ -3,7 +3,6 @@ import { EntityType, AbstractEntity, Describable } from './entity';
 import { Direction } from '~/types/world/space';
 import { SpecialVisibility } from '~/types/world/visibility';
 import { ResourceGenerator } from './resource';
-import { UnitOfMeasure } from '~/types/world/measures';
 
 export type PlaceVisibilityRules = Record<EntityURN, 1>;
 
@@ -57,7 +56,66 @@ export type Exit = {
 };
 
 export type Exits = Partial<Record<Direction, Exit>>;
+export type ExitInputs = Partial<Record<Direction, ExitInput>>;
 export type PlaceEntities = Partial<Record<`${RootNamespace}:${EntityType}:${string}`, PlaceEntityDescriptor>>;
+
+export enum ClimateType {
+  // Temperature-based classifications
+  TROPICAL = 'tropical',                    // Hot year-round
+  TEMPERATE = 'temperate',                  // Moderate temperatures, distinct seasons
+  CONTINENTAL = 'continental',              // Large temperature variations, cold winters
+  POLAR = 'polar',                         // Extremely cold year-round
+  ALPINE = 'alpine',                       // Cold, high altitude conditions
+
+  // Precipitation-based classifications
+  HUMID = 'humid',                         // High precipitation year-round
+  ARID = 'arid',                           // Low precipitation
+  MONSOON = 'monsoon',                     // Seasonal heavy rains
+  MEDITERRANEAN = 'mediterranean',          // Dry summers, wet winters
+  OCEANIC = 'oceanic',                     // Maritime influence
+
+  // Special climates
+  ARTIFICIAL = 'artificial',               // Magically/technologically controlled
+}
+
+export enum BiomeType {
+  // Forest biomes
+  RAINFOREST = 'rainforest',
+  FOREST = 'forest',
+  BOREAL = 'boreal',
+
+  // Grassland biomes
+  SAVANNA = 'savanna',
+  GRASSLAND = 'grassland',
+  PRAIRIE = 'prairie',
+  STEPPE = 'steppe',
+
+  // Desert biomes
+  DESERT = 'desert',
+  SCRUBLAND = 'scrubland',
+
+  // Wetland biomes
+  SWAMP = 'swamp',
+  MARSH = 'marsh',
+  MANGROVE = 'mangrove',
+
+  // Polar/Alpine biomes
+  TUNDRA = 'tundra',
+  MEADOW = 'meadow',
+  ICE = 'ice',
+
+  // Aquatic biomes
+  FRESHWATER = 'freshwater',
+  MARINE = 'marine',
+  COASTAL = 'coastal',
+  REEF = 'reef',
+
+  // Special biomes
+  URBAN = 'urban',
+  AGRICULTURAL = 'agricultural',
+  ARTIFICIAL = 'artificial',
+  MAGICAL = 'magical',
+}
 
 /**
  * The input type for creating a new Place, containing only the required fields
@@ -67,8 +125,10 @@ export type PlaceInput = {
   id: PlaceURN;
   name?: string;
   description?: string;
-  exits?: ExitInput[];
-};
+  exits?: Exits | ExitInput[];  // Support both dictionary and array formats
+  biome: BiomeType;
+  climate: ClimateType;
+} & Partial<ResourceGenerator>;
 
 /**
  * A Place represents a physical location in our game world. There is always a MUD room (i.e. XMPP MUC chat room)
@@ -82,7 +142,7 @@ export type PlaceInput = {
 export type Place =
   & AbstractEntity<EntityType.PLACE>
   & Describable
-  & Partial<ResourceGenerator>
+  & ResourceGenerator
   & {
 
   /**
@@ -94,55 +154,7 @@ export type Place =
    * Entities currently in this place
    */
   entities: PlaceEntities;
-};
 
-
-export enum ClimateType {
-  TUNDRA = 'tundra',
-  STEPPE = 'steppe',
-  TEMPERATE = 'temperate',
-  ARID = 'arid',
-  TROPICAL = 'tropical',
-  SUBARID = 'subarid',
-  SUBTROPICAL = 'subtropical',
-};
-
-export type ClimateParameter<U extends UnitOfMeasure> = {
-  uom: U;
-  min: number;
-  max: number;
-};
-
-export type ClimateProfile = {
-  type: ClimateType;
-
-  /**
-   * The temperature range in degrees Celsius
-   */
-  temperature: ClimateParameter<UnitOfMeasure.TEMPERATURE_CELSIUS>;
-
-  /**
-   * Humidity range in percent
-   */
-  humidity: ClimateParameter<UnitOfMeasure.PERCENTAGE>;
-
-  /**
-   * Wind speed range in meters per second
-   */
-  wind: ClimateParameter<UnitOfMeasure.VELOCITY_METERS_PER_SECOND>;
-
-  /**
-   * Cloud cover range in percent
-   */
-  clouds: ClimateParameter<UnitOfMeasure.PERCENTAGE>;
-
-  /**
-   * Visibility range in meters
-   */
-  visibility: ClimateParameter<UnitOfMeasure.DISTANCE_METERS>;
-
-  /**
-   * The tendency for weather to change unpredictably
-   */
-  volatility: ClimateParameter<UnitOfMeasure.PERCENTAGE>;
+  biome: BiomeType;
+  climate: ClimateType;
 };

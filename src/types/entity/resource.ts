@@ -2,12 +2,7 @@ import { ResourceURN } from "@flux";
 import { DimensionURN } from '~/types/taxonomy';
 import { WellKnownDuration } from '~/types/world/time';
 
-export type AbstractResource<ResourceType extends ResourceURN> = {
-
-  /**
-   * The type of resource
-   */
-  type: ResourceType;
+export type AbstractResource = {
 
   /**
    * The unit of measure for the resource
@@ -49,7 +44,7 @@ export type ConsumptionRate = ProductionRate;
 /**
  * A resource that can be generated over time
  */
-export type ResourceNode<ResourceType extends ResourceURN> = AbstractResource<ResourceType> & {
+export type ResourceNode = AbstractResource & {
   /**
    * Unit of measure for the resource
    */
@@ -59,7 +54,6 @@ export type ResourceNode<ResourceType extends ResourceURN> = AbstractResource<Re
    * Current quantity of the resource available
    */
   available: number;
-
 
   /**
    * Maximum quantity that can be accumulated
@@ -82,5 +76,5 @@ export type ResourceGenerator = {
   /**
    * The various resource generation policies
    */
-  resources: Record<ResourceURN, ResourceNode<ResourceURN>>;
+  resources: Partial<Record<ResourceURN, ResourceNode>>;
 };
