@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { renderPlaceSummary, renderExits, renderExitDirection, PlaceTemplateProps } from './place';
-import { Place, BiomeType, ClimateType } from '~/types/entity/place';
+import { Place } from '~/types/entity/place';
 import { Direction } from '~/types/world/space';
 import { createPlace } from '~/worldkit/entity/place';
 
@@ -58,8 +58,6 @@ describe('place templates', () => {
         id: 'flux:place:test:empty',
         name: 'Empty Room',
         description: 'A room with no exits',
-        biome: BiomeType.URBAN,
-        climate: ClimateType.TEMPERATE,
         exits: {},
       });
 
@@ -73,8 +71,6 @@ describe('place templates', () => {
         id: 'flux:place:test:single',
         name: 'Single Exit Room',
         description: 'A room with one exit',
-        biome: BiomeType.URBAN,
-        climate: ClimateType.TEMPERATE,
         exits: {
           [Direction.NORTH]: {
             direction: Direction.NORTH,
@@ -94,8 +90,6 @@ describe('place templates', () => {
         id: 'flux:place:test:multiple',
         name: 'Crossroads',
         description: 'A junction with multiple paths',
-        biome: BiomeType.GRASSLAND,
-        climate: ClimateType.TEMPERATE,
         exits: {
           [Direction.NORTH]: {
             direction: Direction.NORTH,
@@ -125,8 +119,6 @@ describe('place templates', () => {
         id: 'flux:place:test:actions',
         name: 'The Afterlife',
         description: 'A cyberpunk bar',
-        biome: BiomeType.URBAN,
-        climate: ClimateType.ARTIFICIAL,
         exits: {
           [Direction.EAST]: {
             direction: Direction.EAST,
@@ -153,8 +145,6 @@ describe('place templates', () => {
         id: 'flux:place:test:basic',
         name: 'Empty Room',
         description: 'A simple empty room.',
-        biome: BiomeType.URBAN,
-        climate: ClimateType.TEMPERATE,
         exits: {},
       });
 
@@ -169,8 +159,6 @@ describe('place templates', () => {
           id: 'flux:place:test:emergent',
           name: 'Mysterious Chamber',
           description: 'An ancient stone chamber.',
-          biome: BiomeType.URBAN,
-          climate: ClimateType.TEMPERATE,
           exits: {},
         }),
         description: {
@@ -189,8 +177,6 @@ describe('place templates', () => {
         id: 'flux:place:test:single-exit',
         name: 'Room with Door',
         description: 'A room with a single exit.',
-        biome: BiomeType.URBAN,
-        climate: ClimateType.TEMPERATE,
         exits: {
           [Direction.NORTH]: {
             direction: Direction.NORTH,
@@ -210,8 +196,6 @@ describe('place templates', () => {
         id: 'flux:place:test:complete',
         name: 'Crossroads',
         description: 'A junction with multiple paths.',
-        biome: BiomeType.GRASSLAND,
-        climate: ClimateType.TEMPERATE,
         exits: {
           [Direction.NORTH]: {
             direction: Direction.NORTH,
@@ -247,8 +231,6 @@ Exits: North to forest path, South to village road, East to mountain trail`;
           id: 'flux:place:test:complex',
           name: 'Ancient Crossroads',
           description: 'Four ancient stone paths meet here.',
-          biome: BiomeType.GRASSLAND,
-          climate: ClimateType.TEMPERATE,
           exits: {
             [Direction.NORTH]: {
               direction: Direction.NORTH,
@@ -283,8 +265,6 @@ Exits: North to the Northern Ruins, West to the Deep Forest`;
         id: 'flux:place:test:cyberpunk',
         name: 'The Afterlife',
         description: 'The legendary mercenary bar housed in a repurposed morgue.',
-        biome: BiomeType.URBAN,
-        climate: ClimateType.ARTIFICIAL,
         exits: {
           [Direction.EAST]: {
             direction: Direction.EAST,
@@ -321,8 +301,6 @@ Exits: East to Corpo Plaza, North to Watson Market, South to the Combat Zone`;
         id: 'flux:place:test:type-check',
         name: 'Type Test',
         description: 'Testing types',
-        biome: BiomeType.URBAN,
-        climate: ClimateType.TEMPERATE,
         exits: {},
       });
 

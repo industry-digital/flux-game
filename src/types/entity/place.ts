@@ -1,4 +1,4 @@
-import { EntityURN, PlaceURN, RootNamespace } from '~/types/taxonomy';
+import { EcosystemURN, EntityURN, PlaceURN, RootNamespace } from '~/types/taxonomy';
 import { EntityType, AbstractEntity, Describable } from './entity';
 import { Direction } from '~/types/world/space';
 import { SpecialVisibility } from '~/types/world/visibility';
@@ -59,64 +59,6 @@ export type Exits = Partial<Record<Direction, Exit>>;
 export type ExitInputs = Partial<Record<Direction, ExitInput>>;
 export type PlaceEntities = Partial<Record<`${RootNamespace}:${EntityType}:${string}`, PlaceEntityDescriptor>>;
 
-export enum ClimateType {
-  // Temperature-based classifications
-  TROPICAL = 'tropical',                    // Hot year-round
-  TEMPERATE = 'temperate',                  // Moderate temperatures, distinct seasons
-  CONTINENTAL = 'continental',              // Large temperature variations, cold winters
-  POLAR = 'polar',                         // Extremely cold year-round
-  ALPINE = 'alpine',                       // Cold, high altitude conditions
-
-  // Precipitation-based classifications
-  HUMID = 'humid',                         // High precipitation year-round
-  ARID = 'arid',                           // Low precipitation
-  MONSOON = 'monsoon',                     // Seasonal heavy rains
-  MEDITERRANEAN = 'mediterranean',          // Dry summers, wet winters
-  OCEANIC = 'oceanic',                     // Maritime influence
-
-  // Special climates
-  ARTIFICIAL = 'artificial',               // Magically/technologically controlled
-}
-
-export enum BiomeType {
-  // Forest biomes
-  RAINFOREST = 'rainforest',
-  FOREST = 'forest',
-  BOREAL = 'boreal',
-
-  // Grassland biomes
-  SAVANNA = 'savanna',
-  GRASSLAND = 'grassland',
-  PRAIRIE = 'prairie',
-  STEPPE = 'steppe',
-
-  // Desert biomes
-  DESERT = 'desert',
-  SCRUBLAND = 'scrubland',
-
-  // Wetland biomes
-  SWAMP = 'swamp',
-  MARSH = 'marsh',
-  MANGROVE = 'mangrove',
-
-  // Polar/Alpine biomes
-  TUNDRA = 'tundra',
-  MEADOW = 'meadow',
-  ICE = 'ice',
-
-  // Aquatic biomes
-  FRESHWATER = 'freshwater',
-  MARINE = 'marine',
-  COASTAL = 'coastal',
-  REEF = 'reef',
-
-  // Special biomes
-  URBAN = 'urban',
-  AGRICULTURAL = 'agricultural',
-  ARTIFICIAL = 'artificial',
-  MAGICAL = 'magical',
-}
-
 /**
  * The input type for creating a new Place, containing only the required fields
  * that need to be provided when creating a Place.
@@ -126,9 +68,36 @@ export type PlaceInput = {
   name?: string;
   description?: string;
   exits?: Exits;
-  biome: BiomeType;
-  climate: ClimateType;
 } & Partial<ResourceGenerator>;
+
+export type Weather = {
+  /**
+   * The temperature in degrees Celsius
+   */
+  temperature: number;
+
+  /**
+   * Instantaneous precipitation rate, expressed as mm/day
+   */
+  precipitation: number;
+
+  /**
+   * The atmospheric pressure in hectopascals (hPa)
+   */
+  pressure: number;
+
+  /**
+   * The last time the weather was updated, in milliseconds since the Unix epoch
+   */
+  ts: number;
+};
+
+export type EcologicalProfile= {
+  ecosystem: EcosystemURN;
+  precipitation: [number, number];
+  temperature: [number, number];
+  pressure: [number, number];
+};
 
 /**
  * A Place represents a physical location in our game world. There is always a MUD room (i.e. XMPP MUC chat room)
@@ -155,6 +124,16 @@ export type Place =
    */
   entities: PlaceEntities;
 
-  biome: BiomeType;
-  climate: ClimateType;
+  /**
+   * The ecological profile of this place
+   * - Biome
+   * - Climate
+   * - Generalized weather behavior over macro time scales
+   */
+  ecology: EcologicalProfile;
+
+  /**
+   * The current weather conditions in this place
+   */
+  weather: Weather;
 };

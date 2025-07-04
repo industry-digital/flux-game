@@ -1,10 +1,10 @@
-import { MoveCommandArgs } from '~/command/MOVE/handler';
-import { PlaceInput } from '~/types/entity/place';
-import { ActorInput } from '~/types/entity/actor';
 import { ActorURN, PlaceURN } from '~/types/taxonomy';
 import { InputTypeGuard } from '~/types/handler';
+import { MoveCommand } from '~/command/MOVE/handler';
 import { MaterializeActorCommand } from '~/command/MATERIALIZE_ACTOR/handler';
 import { DematerializeActorCommand } from '~/command/DEMATERIALIZE_ACTOR/handler';
+import { MutateWeatherCommand } from '~/command/MUTATE_WEATHER/handler';
+import { CreateActorCommand, CreatePlaceCommand } from '~/command';
 
 export type InputMetadata = { __type: 'command' | 'intent' };
 
@@ -19,13 +19,13 @@ export enum CommandType {
    * If an Intent cannot be converted to an actual Command, we still pass this UNRESOLVED_COMMAND
    * through the pipeline so that all stages have an opportunity to act.
    */
-  UNRESOLVED_COMMAND = 'UNRESOLVED_COMMAND',
   CREATE_PLACE = 'CREATE_PLACE',
   CREATE_ACTOR = 'CREATE_ACTOR',
   MOVE = 'MOVE',
   MATERIALIZE_ACTOR = 'MATERIALIZE_ACTOR',
   DEMATERIALIZE_ACTOR = 'DEMATERIALIZE_ACTOR',
   HOWL = 'HOWL',
+  MUTATE_WEATHER = 'MUTATE_WEATHER',
 }
 
 /**
@@ -170,9 +170,9 @@ export type AnyCommandTypeGuard<
   InputTypeGuard<AnyCommand, AnyCommand<T, A>>;
 
 export type Command =
-| SystemCommand<CommandType.CREATE_PLACE, PlaceInput>
-| SystemCommand<CommandType.CREATE_ACTOR, ActorInput>
+| MoveCommand
+| MutateWeatherCommand
+| CreatePlaceCommand
+| CreateActorCommand
 | MaterializeActorCommand
 | DematerializeActorCommand
-| ActorCommand<CommandType.UNRESOLVED_COMMAND>
-| ActorCommand<CommandType.MOVE, MoveCommandArgs>;

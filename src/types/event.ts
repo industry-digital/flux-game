@@ -1,3 +1,4 @@
+import { Weather } from '~/types/entity/place';
 import { ActorURN, PlaceURN } from '~/types/taxonomy';
 
 export type EventPayload = Record<string, any>;
@@ -52,6 +53,7 @@ export enum EventType {
   ACTOR_DID_DEPART = 'actor:departed',
   ACTOR_DID_MATERIALIZE = 'actor:materialized',
   ACTOR_DID_DEMATERIALIZE = 'actor:dematerialized',
+  WEATHER_DID_CHANGE = 'place:weather:changed',
 }
 
 export type RequiresActor = {
@@ -76,6 +78,8 @@ export type ActorDidDepartInput = RequiresActor & AbstractWorldEventInput<EventT
 export type ActorDidDepart = EventBase & AbstractWorldEventInput<EventType.ACTOR_DID_DEPART, {}>;
 export type ActorDidArriveInput = RequiresActor & AbstractWorldEventInput<EventType.ACTOR_DID_ARRIVE, { origin: PlaceURN }>;
 export type ActorDidArrive = EventBase & ActorDidArriveInput;
+export type WeatherDidChangeInput = AbstractWorldEventInput<EventType.WEATHER_DID_CHANGE, { from: Weather | null, to: Weather }>;
+export type WeatherDidChange = EventBase & WeatherDidChangeInput;
 
 export type WorldEventInput =
   | ActorWasCreatedInput
@@ -85,9 +89,10 @@ export type WorldEventInput =
   | ActorDidMoveInput
   | ActorDidArriveInput
   | ActorDidDepartInput
+  | WeatherDidChangeInput;
 
 /**
- * An WorldEvent is an event that is generated as a result of processing a command.
+ * WorldEvent is an event that is generated as a result of processing a command.
  */
 export type WorldEvent = Omit<WorldEventInput, 'id' | 'ts' | 'trace'> & {
   id: string;

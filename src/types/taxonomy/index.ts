@@ -133,13 +133,13 @@ export const TAXONOMY = {
       description: 'A resource that can be obtained and used',
       examples: ['flux:resource:wood:oak', 'flux:resource:ore:iron'],
     },
-    climate: {
-      description: 'Climate classification and weather patterns',
-      examples: ['flux:climate:temperate:oceanic', 'flux:climate:arid:desert', 'flux:climate:polar:tundra']
-    },
     eco: {
       description: 'Ecosystems and environments',
       examples: ['flux:eco:forest:temperate', 'flux:eco:desert:arid', 'flux:eco:tundra:polar']
+    },
+    geo: {
+      description: 'Geographic features',
+      examples: ['flux:geo:mountain', 'flux:geo:water:lake']
     }
   }
 } as const;
@@ -274,11 +274,6 @@ export namespace Taxonomy {
   export type Resources = TaxonomyURN<'resource'>;
 
   /**
-   * Climate classifications and weather patterns
-   */
-  export type Climate = TaxonomyURN<'climate'>;
-
-  /**
    * Geographic and topographic features
    */
   export type Ecosystems = TaxonomyURN<'eco'>;
@@ -305,5 +300,4 @@ export type StatURN = Taxonomy.Stats;
 export type GroupURN = Taxonomy.Groups;
 export type TopicURN = Taxonomy.Topics;
 export type ResourceURN = Taxonomy.Resources;
-export type ClimateURN = Taxonomy.Climate;
 export type EcosystemURN = Taxonomy.Ecosystems;

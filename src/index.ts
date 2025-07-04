@@ -61,6 +61,7 @@ import { CREATE_ACTOR } from '~/command/CREATE_ACTOR/handler';
 import { CREATE_PLACE } from '~/command/CREATE_PLACE/handler';
 import { MATERIALIZE_ACTOR } from '~/command/MATERIALIZE_ACTOR/handler';
 import { DEMATERIALIZE_ACTOR } from '~/command/DEMATERIALIZE_ACTOR/handler';
+import { MUTATE_WEATHER } from '~/command/MUTATE_WEATHER/handler';
 
 /**
  * The Flux World Server literally spreads this array into the Transformation stage.
@@ -75,6 +76,7 @@ export const PURE_GAME_LOGIC_HANDLERS: PureHandlerImplementation<TransformerCont
     CREATE_PLACE,
     MATERIALIZE_ACTOR,
     DEMATERIALIZE_ACTOR,
+    MUTATE_WEATHER,
   ],
   (Handler) => Handler.prototype.dependencies ?? [],
 );

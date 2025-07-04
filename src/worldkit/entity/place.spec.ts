@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { EntityType, SpecialVisibility, Direction } from '@flux';
-import { PlaceInput, ExitInput, Exits, BiomeType, ClimateType } from '~/types/entity/place';
+import { PlaceInput, ExitInput, Exits } from '~/types/entity/place';
 import {
   createPlace,
   createExit,
@@ -15,8 +15,6 @@ describe('createPlace', () => {
     it('should create a place with minimal input', () => {
       const input: PlaceInput = {
         id: createPlaceUrn('test', 'simple-place'),
-        biome: BiomeType.URBAN,
-        climate: ClimateType.TEMPERATE,
       };
 
       const place = createPlace(input);
@@ -24,8 +22,6 @@ describe('createPlace', () => {
       expect(place.id).toBe('flux:place:test:simple-place');
       expect(place.name).toBe('');
       expect(place.description).toBe('');
-      expect(place.biome).toBe(BiomeType.URBAN);
-      expect(place.climate).toBe(ClimateType.TEMPERATE);
       expect(Object.keys(place.exits)).toHaveLength(0);
     });
 
@@ -34,8 +30,6 @@ describe('createPlace', () => {
         id: createPlaceUrn('test', 'complete-place'),
         name: 'Test Place',
         description: 'A place for testing',
-        biome: BiomeType.FOREST,
-        climate: ClimateType.TEMPERATE,
       };
 
       const place = createPlace(input);
@@ -43,8 +37,6 @@ describe('createPlace', () => {
       expect(place.id).toBe('flux:place:test:complete-place');
       expect(place.name).toBe('Test Place');
       expect(place.description).toBe('A place for testing');
-      expect(place.biome).toBe(BiomeType.FOREST);
-      expect(place.climate).toBe(ClimateType.TEMPERATE);
     });
 
     it('should handle empty string values', () => {
@@ -52,8 +44,6 @@ describe('createPlace', () => {
         id: createPlaceUrn('test', 'empty-strings'),
         name: '',
         description: '',
-        biome: BiomeType.URBAN,
-        climate: ClimateType.TEMPERATE,
       };
 
       const place = createPlace(input);
@@ -67,8 +57,6 @@ describe('createPlace', () => {
     it('should create place with no exits', () => {
       const input: PlaceInput = {
         id: createPlaceUrn('test', 'no-exits'),
-        biome: BiomeType.URBAN,
-        climate: ClimateType.TEMPERATE,
       };
 
       const place = createPlace(input);
@@ -87,8 +75,6 @@ describe('createPlace', () => {
             to: createPlaceUrn('world', 'north'),
           },
         },
-        biome: BiomeType.URBAN,
-        climate: ClimateType.TEMPERATE,
       };
 
       const place = createPlace(input);
@@ -121,8 +107,6 @@ describe('createPlace', () => {
             to: createPlaceUrn('world', 'mountains'),
           },
         },
-        biome: BiomeType.GRASSLAND,
-        climate: ClimateType.TEMPERATE,
       };
 
       const place = createPlace(input);
@@ -150,8 +134,6 @@ describe('createPlace', () => {
             to: 'flux:place:nowhere',
           },
         },
-        biome: BiomeType.URBAN,
-        climate: ClimateType.TEMPERATE,
       };
 
       const place = createPlace(input);
@@ -190,8 +172,6 @@ describe('createPlace', () => {
       const input: PlaceInput = {
         id: createPlaceUrn('test', 'hub'),
         exits,
-        biome: BiomeType.URBAN,
-        climate: ClimateType.TEMPERATE,
       };
 
       const place = createPlace(input);

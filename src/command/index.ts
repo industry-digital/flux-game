@@ -20,7 +20,8 @@ export function createCommandGuard<T extends CommandType, A extends Record<strin
 
 // Re-export command handlers
 export { MOVE, MoveCommand, MoveCommandArgs } from './MOVE/handler';
-export { CREATE_ACTOR, CreateActorCommand } from './CREATE_ACTOR/handler';
-export { CREATE_PLACE, CreatePlaceCommand } from './CREATE_PLACE/handler';
+export { CREATE_ACTOR, CreateActorCommand as CreateActorCommand } from './CREATE_ACTOR/handler';
+export { CREATE_PLACE, CreatePlaceCommand as CreatePlaceCommand } from './CREATE_PLACE/handler';
 export { MATERIALIZE_ACTOR, MaterializeActorCommand } from './MATERIALIZE_ACTOR/handler';
 export { DEMATERIALIZE_ACTOR, DematerializeActorCommand } from './DEMATERIALIZE_ACTOR/handler';
+export { MUTATE_WEATHER, MutateWeatherCommand } from './MUTATE_WEATHER/handler';

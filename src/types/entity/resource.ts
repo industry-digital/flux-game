@@ -66,7 +66,7 @@ export type ResourceNode = AbstractResource & {
   production: ProductionRate;
 };
 
-export type ResourceGenerationState = {
+export type ResourceNodes = {
   /**
    * When the resources were last updated
    */
@@ -83,5 +83,5 @@ export type ResourceGenerator = {
   /**
    * The various resource generation policies
    */
-  resources: ResourceGenerationState;
+  resources: ResourceNodes;
 };
