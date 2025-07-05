@@ -71,21 +71,42 @@ export type PlaceInput = {
 } & Partial<ResourceGenerator>;
 
 export type Weather = {
+  // FUNDAMENTAL INPUTS (sources of truth)
   /**
    * The temperature in degrees Celsius
    */
   temperature: number;
 
   /**
-   * Instantaneous precipitation rate, expressed as mm/day
-   */
-  precipitation: number;
-
-  /**
    * The atmospheric pressure in hectopascals (hPa)
    */
   pressure: number;
 
+  /**
+   * The relative humidity as a percentage (0-100)
+   */
+  humidity: number;
+
+  // DERIVED OUTPUTS (computed from inputs)
+  /**
+   * Instantaneous precipitation rate, expressed as mm/day
+   * Computed from temperature, pressure, and humidity
+   */
+  precipitation: number;
+
+  /**
+   * Photosynthetic Photon Flux Density in μmol photons m⁻² s⁻¹
+   * Computed from cloud cover and solar geometry
+   */
+  ppfd: number;
+
+  /**
+   * Cloud coverage as a percentage (0-100)
+   * Computed from humidity, pressure, and temperature
+   */
+  clouds: number;
+
+  // METADATA
   /**
    * The last time the weather was updated, in milliseconds since the Unix epoch
    */

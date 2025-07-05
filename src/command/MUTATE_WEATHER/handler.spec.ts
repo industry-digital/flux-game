@@ -2,17 +2,17 @@ import { describe, it, expect, beforeEach } from 'vitest';
 import { mutateWeatherReducer, MUTATE_WEATHER, MutateWeatherCommand } from './handler';
 import { Weather } from '~/types/entity/place';
 import {
-  TransformerContext,
-  CommandType,
-  EventType,
-  PlaceURN,
-  Command
+    TransformerContext,
+    CommandType,
+    EventType,
+    PlaceURN,
+    Command
 } from '@flux';
 import {
-  createCommand,
-  createTransformerContext,
-  createTestPlace,
-  createHandlerTest
+    createCommand,
+    createTransformerContext,
+    createTestPlace,
+    createHandlerTest
 } from '~/testing';
 
 describe('MUTATE_WEATHER Handler', () => {
@@ -24,9 +24,15 @@ describe('MUTATE_WEATHER Handler', () => {
   beforeEach(() => {
     // Setup mock weather data
     mockWeather = {
+      // Fundamental inputs
       temperature: 25,
-      precipitation: 10,
       pressure: 1013,
+      humidity: 65,
+      // Derived outputs
+      precipitation: 10,
+      ppfd: 1800,
+      clouds: 35,
+      // Metadata
       ts: Date.now()
     };
 
@@ -34,9 +40,15 @@ describe('MUTATE_WEATHER Handler', () => {
     mockPlace = createTestPlace({
       id: 'flux:place:test-location' as PlaceURN,
       weather: {
+        // Fundamental inputs
         temperature: 20,
-        precipitation: 5,
         pressure: 1010,
+        humidity: 70,
+        // Derived outputs
+        precipitation: 5,
+        ppfd: 1200,
+        clouds: 50,
+        // Metadata
         ts: Date.now() - 3600000 // 1 hour ago
       }
     });
@@ -143,9 +155,15 @@ describe('MUTATE_WEATHER Handler', () => {
     describe('Edge Cases', () => {
       it('should handle extreme weather values', () => {
         const extremeWeather: Weather = {
+          // Fundamental inputs
           temperature: -50,
-          precipitation: 1000,
           pressure: 800,
+          humidity: 95,
+          // Derived outputs
+          precipitation: 1000,
+          ppfd: 0,
+          clouds: 100,
+          // Metadata
           ts: 0
         };
 
@@ -172,9 +190,15 @@ describe('MUTATE_WEATHER Handler', () => {
 
       it('should handle weather with decimal values', () => {
         const preciseWeather: Weather = {
+          // Fundamental inputs
           temperature: 23.7,
-          precipitation: 15.3,
           pressure: 1013.25,
+          humidity: 67.5,
+          // Derived outputs
+          precipitation: 15.3,
+          ppfd: 1650.8,
+          clouds: 42.3,
+          // Metadata
           ts: 1234567890.123
         };
 
@@ -346,8 +370,16 @@ describe('MUTATE_WEATHER Handler', () => {
 
   describe('Integration Scenarios', () => {
     it('should handle rapid weather changes', () => {
-      const weather1: Weather = { temperature: 10, precipitation: 0, pressure: 1020, ts: 1000 };
-      const weather2: Weather = { temperature: 30, precipitation: 50, pressure: 980, ts: 2000 };
+            const weather1: Weather = {
+        temperature: 10, pressure: 1020, humidity: 40,
+        precipitation: 0, ppfd: 800, clouds: 20,
+        ts: 1000
+      };
+      const weather2: Weather = {
+        temperature: 30, pressure: 980, humidity: 85,
+        precipitation: 50, ppfd: 500, clouds: 90,
+        ts: 2000
+      };
 
       const command1 = createCommand(CommandType.MUTATE_WEATHER, {
         id: 'test-command-1',
@@ -374,7 +406,11 @@ describe('MUTATE_WEATHER Handler', () => {
 
     it('should handle multiple places with different weather', () => {
       const place2 = createTestPlace({ id: 'flux:place:desert' as PlaceURN });
-      const weather2: Weather = { temperature: 40, precipitation: 0, pressure: 1000, ts: 3000 };
+            const weather2: Weather = {
+        temperature: 40, pressure: 1000, humidity: 15,
+        precipitation: 0, ppfd: 2200, clouds: 5,
+        ts: 3000
+      };
 
       const multiPlaceContext = createTransformerContext({
         world: {

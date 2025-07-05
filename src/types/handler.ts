@@ -212,9 +212,10 @@ export type PureHandlerInterface<
   I extends Command
 > = {
   /**
-   * The implementation should return `true` if the handler is interested in processing the input
+   * The implementation should return `true` if the handler is interested in processing the input.
+   * Following Postel's Law: be liberal in what you accept, conservative in what you send.
    */
-  handles: (input: Command) => input is I;
+  handles: (input: any) => input is I;
 
   /**
    * Dependencies on other handlers that must run before this one.
