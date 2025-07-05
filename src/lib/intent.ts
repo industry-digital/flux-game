@@ -7,6 +7,7 @@ import {
   InputMetadata,
   ActorCommand,
   AnyCommand,
+  Command,
 } from '~/types/intent';
 
 const identity = <I, O = I>(x: I): O => x as unknown as O;
@@ -54,7 +55,7 @@ export const createCommand = <
 /**
  * Type guard to check if input has the command metadata type
  */
-export const isCommand = (input: unknown): input is SystemCommand => {
+export const isCommand = (input: unknown): input is Command => {
   return (
     typeof input === 'object' &&
     input !== null &&
