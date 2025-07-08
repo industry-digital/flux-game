@@ -115,9 +115,9 @@ export type Weather = {
 
 export type EcologicalProfile= {
   ecosystem: EcosystemURN;
-  precipitation: [number, number];
   temperature: [number, number];
   pressure: [number, number];
+  humidity: [number, number];
 };
 
 /**
@@ -147,9 +147,8 @@ export type Place =
 
   /**
    * The ecological profile of this place
-   * - Biome
-   * - Climate
-   * - Generalized weather behavior over macro time scales
+   * - Biome + Climate = EcosystemURN
+   * - Bounds for temperature, pressure and humidity
    */
   ecology: EcologicalProfile;
 
