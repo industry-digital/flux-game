@@ -18,7 +18,8 @@
  */
 
 import { Place, PlaceURN, EntityType } from '~/types/index';
-import { Weather } from '~/types/entity/place';
+import { Weather, Exit } from '~/types/entity/place';
+import { Direction } from '~/types/world/space';
 import {
   WorldGenerationConfig,
   GeneratedWorld,
@@ -392,6 +393,202 @@ export function clearWorldGenCaches(): void {
 }
 
 /**
+ * Calculate direction from one point to another
+ */
+function calculateDirection(fromX: number, fromY: number, toX: number, toY: number): Direction {
+  const dx = toX - fromX;
+  const dy = toY - fromY;
+  const angle = Math.atan2(dy, dx) * 180 / Math.PI;
+
+  // Normalize angle to 0-360 degrees
+  const normalizedAngle = (angle + 360) % 360;
+
+  // Convert to 8-direction compass
+  if (normalizedAngle >= 337.5 || normalizedAngle < 22.5) {
+    return Direction.EAST;
+  } else if (normalizedAngle >= 22.5 && normalizedAngle < 67.5) {
+    return Direction.NORTHEAST;
+  } else if (normalizedAngle >= 67.5 && normalizedAngle < 112.5) {
+    return Direction.NORTH;
+  } else if (normalizedAngle >= 112.5 && normalizedAngle < 157.5) {
+    return Direction.NORTHWEST;
+  } else if (normalizedAngle >= 157.5 && normalizedAngle < 202.5) {
+    return Direction.WEST;
+  } else if (normalizedAngle >= 202.5 && normalizedAngle < 247.5) {
+    return Direction.SOUTHWEST;
+  } else if (normalizedAngle >= 247.5 && normalizedAngle < 292.5) {
+    return Direction.SOUTH;
+  } else {
+    return Direction.SOUTHEAST;
+  }
+}
+
+/**
+ * Get opposite direction for reciprocal exits
+ */
+function getOppositeDirection(direction: Direction): Direction {
+  const opposites: Record<Direction, Direction> = {
+    [Direction.NORTH]: Direction.SOUTH,
+    [Direction.SOUTH]: Direction.NORTH,
+    [Direction.EAST]: Direction.WEST,
+    [Direction.WEST]: Direction.EAST,
+    [Direction.NORTHEAST]: Direction.SOUTHWEST,
+    [Direction.SOUTHWEST]: Direction.NORTHEAST,
+    [Direction.NORTHWEST]: Direction.SOUTHEAST,
+    [Direction.SOUTHEAST]: Direction.NORTHWEST,
+    [Direction.UP]: Direction.DOWN,
+    [Direction.DOWN]: Direction.UP,
+    [Direction.IN]: Direction.OUT,
+    [Direction.OUT]: Direction.IN,
+    [Direction.FORWARD]: Direction.BACKWARD,
+    [Direction.BACKWARD]: Direction.FORWARD,
+    [Direction.LEFT]: Direction.RIGHT,
+    [Direction.RIGHT]: Direction.LEFT,
+    [Direction.UNKNOWN]: Direction.UNKNOWN
+  };
+
+  return opposites[direction];
+}
+
+/**
+ * Generate meaningful exit label based on destination
+ */
+function generateExitLabel(direction: Direction, destination: GAEAPlace): string {
+  const ecosystemType = destination.ecology.ecosystem.split(':')[2];
+  const baseLabel = `${ecosystemType} area`;
+
+  // Add descriptive elements based on topology zone
+  const zoneDescriptor = destination.topology_zone === 'plateau'
+    ? 'sanctuary'
+    : destination.topology_zone === 'mountain_ring'
+      ? 'highlands'
+      : 'territory';
+
+  return `${baseLabel} ${zoneDescriptor}`;
+}
+
+/**
+ * Optimized exit generation using spatial hashing - O(N) average case
+ */
+function generateExitsOptimized(places: GAEAPlace[], config: WorldGenerationConfig): void {
+  const maxConnectionDistance = 2.0; // km
+  const maxExitsPerPlace = 6;
+  const gridCellSize = maxConnectionDistance; // 2km cells
+
+  // Spatial grid for O(1) lookup
+  const spatialGrid = new Map<string, GAEAPlace[]>();
+  const placePositions = new Map<string, [number, number]>();
+
+  // Helper function to get grid cell key
+  const getGridKey = (x: number, y: number): string => {
+    const gridX = Math.floor(x / gridCellSize);
+    const gridY = Math.floor(y / gridCellSize);
+    return `${gridX},${gridY}`;
+  };
+
+  // Helper function to get all adjacent cell keys (including current cell)
+  const getAdjacentKeys = (x: number, y: number): string[] => {
+    const centerX = Math.floor(x / gridCellSize);
+    const centerY = Math.floor(y / gridCellSize);
+    const keys: string[] = [];
+
+    // Check 3x3 grid around the center cell
+    for (let dx = -1; dx <= 1; dx++) {
+      for (let dy = -1; dy <= 1; dy++) {
+        keys.push(`${centerX + dx},${centerY + dy}`);
+      }
+    }
+    return keys;
+  };
+
+  // Step 1: Calculate positions and populate spatial grid
+  for (const place of places) {
+    const centerX = config.topology.central_plateau.center[0];
+    const centerY = config.topology.central_plateau.center[1];
+    const distance = place.distance_from_center * config.topology.ecosystem_slices.outer_radius;
+
+    const angle = place.ecosystem_slice_id !== undefined
+      ? (place.ecosystem_slice_id / config.topology.ecosystem_slices.slice_count) * 2 * Math.PI
+      : Math.random() * 2 * Math.PI;
+
+    const x = centerX + distance * Math.cos(angle);
+    const y = centerY + distance * Math.sin(angle);
+
+    placePositions.set(place.id, [x, y]);
+
+    // Add to spatial grid
+    const gridKey = getGridKey(x, y);
+    if (!spatialGrid.has(gridKey)) {
+      spatialGrid.set(gridKey, []);
+    }
+    spatialGrid.get(gridKey)!.push(place);
+  }
+
+  // Step 2: Generate exits using spatial grid lookup
+  for (const fromPlace of places) {
+    const fromPos = placePositions.get(fromPlace.id)!;
+    const [fromX, fromY] = fromPos;
+
+    const nearbyPlaces: Array<{ place: GAEAPlace; distance: number; direction: Direction }> = [];
+
+    // Only check places in adjacent grid cells (9 cells max)
+    const adjacentKeys = getAdjacentKeys(fromX, fromY);
+
+    for (const gridKey of adjacentKeys) {
+      const cellPlaces = spatialGrid.get(gridKey);
+      if (!cellPlaces) continue;
+
+      for (const toPlace of cellPlaces) {
+        if (fromPlace.id === toPlace.id) continue;
+
+        const toPos = placePositions.get(toPlace.id)!;
+        const [toX, toY] = toPos;
+
+        const distance = Math.sqrt((toX - fromX) ** 2 + (toY - fromY) ** 2);
+
+        if (distance <= maxConnectionDistance) {
+          const direction = calculateDirection(fromX, fromY, toX, toY);
+          nearbyPlaces.push({ place: toPlace, distance, direction });
+        }
+      }
+    }
+
+    // Sort by distance and limit connections
+    nearbyPlaces.sort((a, b) => a.distance - b.distance);
+    const connectionsToMake = nearbyPlaces.slice(0, maxExitsPerPlace);
+
+    // Create exits in both directions
+    for (const { place: toPlace, direction } of connectionsToMake) {
+      const oppositeDirection = getOppositeDirection(direction);
+
+      // Create exit from fromPlace to toPlace
+      const exitLabel = generateExitLabel(direction, toPlace);
+      const exit: Exit = {
+        direction,
+        label: exitLabel,
+        to: toPlace.id
+      };
+
+      if (!fromPlace.exits[direction as keyof typeof fromPlace.exits]) {
+        fromPlace.exits[direction as keyof typeof fromPlace.exits] = exit;
+      }
+
+      // Create reciprocal exit from toPlace to fromPlace
+      const reciprocalLabel = generateExitLabel(oppositeDirection, fromPlace);
+      const reciprocalExit: Exit = {
+        direction: oppositeDirection,
+        label: reciprocalLabel,
+        to: fromPlace.id
+      };
+
+      if (!toPlace.exits[oppositeDirection as keyof typeof toPlace.exits]) {
+        toPlace.exits[oppositeDirection as keyof typeof toPlace.exits] = reciprocalExit;
+      }
+    }
+  }
+}
+
+/**
  * Optimized world generation with combined data collection
  */
 function generateWorldData(config: WorldGenerationConfig, options: Required<WorldGenOptions>): {
@@ -523,6 +720,9 @@ export function generateWorld(
 
   // Generate all world data in a single optimized pass
   const { places, infectionZones, worshipperTerritories } = generateWorldData(config, opts);
+
+  // Generate exits for all places
+  generateExitsOptimized(places, config);
 
   return {
     places,

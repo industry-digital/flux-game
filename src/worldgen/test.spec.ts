@@ -498,4 +498,154 @@ describe('World Generation Input/Output Tests', () => {
       expect(uniqueTemperatures.size).toBeGreaterThanOrEqual(2);
     });
   });
+
+  describe('Exit Generation', () => {
+    it('should generate reciprocal exits between places', () => {
+      const testConfig = {
+        ...DEFAULT_WORLD_CONFIG,
+        place_density: 0.05, // Reduced from 0.5 - still enough places to test exits
+        random_seed: 123
+      };
+
+      const world = generateWorld(testConfig);
+
+      // Check that we have places
+      expect(world.places.length).toBeGreaterThan(0);
+
+      // Check exit generation
+      let totalExits = 0;
+      let placesWithExits = 0;
+      let reciprocalConnections = 0;
+
+      for (const place of world.places) {
+        const exitCount = Object.keys(place.exits).length;
+        totalExits += exitCount;
+
+        if (exitCount > 0) {
+          placesWithExits++;
+        }
+
+        // Check for reciprocal exits
+        for (const [direction, exit] of Object.entries(place.exits)) {
+          const typedExit = exit as any;
+          // Find the destination place
+          const destinationPlace = world.places.find(p => p.id === typedExit.to);
+          if (destinationPlace) {
+            // Check if destination has reciprocal exit back to this place
+            const reciprocalExits = Object.values(destinationPlace.exits).filter(e => (e as any).to === place.id);
+            if (reciprocalExits.length > 0) {
+              reciprocalConnections++;
+            }
+          }
+        }
+      }
+
+      // Assertions
+      expect(totalExits).toBeGreaterThan(0);
+      expect(placesWithExits).toBeGreaterThan(0);
+      expect(reciprocalConnections).toBeGreaterThan(0);
+    });
+
+    it('should generate meaningful exit labels', () => {
+      const testConfig = {
+        ...DEFAULT_WORLD_CONFIG,
+        place_density: 0.03, // Reduced from 0.3
+        random_seed: 456
+      };
+
+      const world = generateWorld(testConfig);
+
+      // Find a place with exits
+      const placeWithExits = world.places.find(p => Object.keys(p.exits).length > 0);
+      expect(placeWithExits).toBeDefined();
+
+      if (placeWithExits) {
+        for (const [direction, exit] of Object.entries(placeWithExits.exits)) {
+          const typedExit = exit as any;
+
+          // Exit should have proper structure
+          expect(typedExit.direction).toBe(direction);
+          expect(typedExit.label).toBeDefined();
+          expect(typedExit.label.length).toBeGreaterThan(0);
+          expect(typedExit.to).toBeDefined();
+
+          // Label should contain meaningful descriptors
+          expect(typedExit.label).toMatch(/(area|territory|sanctuary|highlands)/);
+        }
+      }
+    });
+
+    it('should create proper directional exits', () => {
+      const testConfig = {
+        ...DEFAULT_WORLD_CONFIG,
+        place_density: 0.04, // Reduced from 0.4
+        random_seed: 789
+      };
+
+      const world = generateWorld(testConfig);
+
+      // Verify exits use proper directions
+      const validDirections = ['north', 'south', 'east', 'west', 'northeast', 'northwest', 'southeast', 'southwest'];
+
+      for (const place of world.places) {
+        for (const [direction, exit] of Object.entries(place.exits)) {
+          expect(validDirections).toContain(direction);
+          expect((exit as any).direction).toBe(direction);
+        }
+      }
+    });
+
+    it('should demonstrate O(N) performance scaling', () => {
+      // Test different world sizes to show linear scaling
+      const testSizes = [
+        { density: 0.01, expectedTime: 200 },  // ~100 places
+        { density: 0.03, expectedTime: 600 },  // ~300 places
+        { density: 0.05, expectedTime: 1000 }, // ~500 places
+      ];
+
+      const timings: Array<{ places: number; time: number; timePerPlace: number }> = [];
+
+      for (const testSize of testSizes) {
+        const config = {
+          ...DEFAULT_WORLD_CONFIG,
+          place_density: testSize.density,
+          random_seed: 42
+        };
+
+        const startTime = performance.now();
+        const world = generateWorld(config);
+        const endTime = performance.now();
+
+        const executionTime = endTime - startTime;
+        const timePerPlace = executionTime / world.places.length;
+
+        timings.push({
+          places: world.places.length,
+          time: executionTime,
+          timePerPlace
+        });
+
+        // Verify the world was generated correctly
+        expect(world.places.length).toBeGreaterThan(0);
+        expect(executionTime).toBeLessThan(testSize.expectedTime);
+      }
+
+      // With O(N) complexity, time per place should remain roughly constant
+      // Allow for some variance due to system overhead
+      const timePerPlaceVariance = timings.map(t => t.timePerPlace);
+      const minTimePerPlace = Math.min(...timePerPlaceVariance);
+      const maxTimePerPlace = Math.max(...timePerPlaceVariance);
+
+      // The ratio should be reasonable (not growing quadratically)
+      // Allow for some variance due to system overhead and GC
+      expect(maxTimePerPlace / minTimePerPlace).toBeLessThan(4.0);
+
+      // Log performance metrics for analysis
+      console.log('Exit Generation Performance (O(N) Spatial Hashing):');
+      timings.forEach(timing => {
+        console.log(`  ${timing.places} places: ${timing.time.toFixed(2)}ms (${timing.timePerPlace.toFixed(4)}ms per place)`);
+      });
+    });
+  });
+
 });
