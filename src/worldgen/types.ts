@@ -90,6 +90,7 @@ export type GAEAPlace = Place & {
   topology_zone: 'plateau' | 'mountain_ring' | 'ecosystem_slice' | 'periphery';
   distance_from_center: number;       // 0.0 (center) to 1.0 (edge)
   ecosystem_slice_id?: number;        // Which ecosystem slice (if applicable)
+  coordinates: [number, number];      // Original X,Y coordinates from grid generation
 };
 
 // World generation result
