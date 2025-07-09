@@ -4,6 +4,7 @@ export * from '~/worldkit/entity';
 export * from '~/worldkit/view';
 export * from '~/worldkit/event';
 export * from '~/template';
+export * from '~/worldgen';
 
 export {
   parseEntityUrn,

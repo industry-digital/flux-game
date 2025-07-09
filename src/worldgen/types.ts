@@ -273,19 +273,4 @@ export const DEFAULT_WORLD_TOPOLOGY: WorldTopology = {
   }
 };
 
-// Default world generation configuration
-export const DEFAULT_WORLD_CONFIG: WorldGenerationConfig = {
-  topology: DEFAULT_WORLD_TOPOLOGY,
-  ecosystem_distribution: {
-    [EcosystemName.FOREST_TEMPERATE]: 0.30,     // 108° slice
-    [EcosystemName.GRASSLAND_TEMPERATE]: 0.30,  // 108° slice
-    [EcosystemName.GRASSLAND_ARID]: 0.20,       // 72° slice
-    [EcosystemName.MOUNTAIN_ALPINE]: 0.19,      // 68° slice
-    [EcosystemName.MOUNTAIN_FOREST]: 0.01       // Mountain ring only
-  },
-  gaea_intensity: 0.7,               // High G.A.E.A. management
-  fungal_spread_factor: 0.8,         // Aggressive fungal cultivation
-  worshipper_density: 0.5,           // Moderate worshipper population
-  place_density: 0.04,               // ~1000 places in 25.6km radius world
-  random_seed: 42                    // Deterministic seed
-};
+// Default world generation configuration is exported from index.ts to avoid conflicts
