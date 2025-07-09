@@ -15,21 +15,48 @@ for (const density of densities) {
 
   const config = {
     topology: {
-      central_plateau: { center: [0, 0] as [number, number], radius: 6.4, elevation: 2000 },
-      mountain_ring: { inner_radius: 6.4, outer_radius: 10.2, elevation_range: [2500, 4000] as [number, number] },
-      ecosystem_slices: { slice_count: 3, outer_radius: 25.6, elevation_range: [500, 1500] as [number, number] }
+      central_crater: { center: [0, 0] as [number, number], radius: 6.4, elevation: -200 },
+      mountain_ring: { inner_radius: 6.4, outer_radius: 10.2, elevation_range: [1200, 2000] as [number, number] },
+      ecosystem_slices: { slice_count: 3, outer_radius: 25.6, elevation_range: [300, 1000] as [number, number] }
     },
     ecosystem_distribution: {
-      'flux:eco:forest:temperate': 0.40,
-      'flux:eco:grassland:temperate': 0.30,
-      'flux:eco:grassland:arid': 0.05,
-      'flux:eco:mountain:alpine': 0.15,
-      'flux:eco:mountain:forest': 0.10
+      'flux:eco:forest:coniferous': 0.40,
+      'flux:eco:grassland:subtropical': 0.30,
+      'flux:eco:wetland:tropical': 0.05,
+      'flux:eco:forest:montane': 0.15,
+      'flux:eco:mountain:alpine': 0.10,
+      'flux:eco:marsh:tropical': 0.00
     },
     gaea_intensity: 0.8,
     fungal_spread_factor: 0.6,
     worshipper_density: 0.3,
     place_density: density,
+    connectivity: {
+      max_exits_per_place: 6,
+      connection_distance_factor: 1.5,
+      connection_density: 1.0,
+      prefer_same_zone: true,
+      ecosystem_edge_targets: {
+        'flux:eco:forest:coniferous': 1.8,
+        'flux:eco:grassland:subtropical': 3.2,
+        'flux:eco:wetland:tropical': 2.2,
+        'flux:eco:forest:montane': 1.4,
+        'flux:eco:mountain:alpine': 1.0,
+        'flux:eco:marsh:tropical': 2.8,
+      },
+      boundary_detection_threshold: 0.05,
+      fractal_trails: {
+        enabled: true,
+        trail_count: 3,
+        branching_factor: 2.0,
+        branching_angle: Math.PI / 3,
+        max_depth: 4,
+        segment_length: 3.0,
+        length_variation: 0.4,
+        trail_width: 2.0,
+        decay_factor: 0.7,
+      }
+    },
     random_seed: 42
   };
 

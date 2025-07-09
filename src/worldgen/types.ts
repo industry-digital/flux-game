@@ -8,11 +8,12 @@ import { EcologicalProfile } from '~/types/entity/place';
 
 // Ecosystem URNs following existing taxonomy system
 export enum EcosystemName {
+  FOREST_MONTANE = 'flux:eco:forest:montane',
   MOUNTAIN_ALPINE = 'flux:eco:mountain:alpine',
-  MOUNTAIN_FOREST = 'flux:eco:mountain:forest',
-  GRASSLAND_TEMPERATE = 'flux:eco:grassland:temperate',
-  GRASSLAND_ARID = 'flux:eco:grassland:arid',
-  FOREST_TEMPERATE = 'flux:eco:forest:temperate',
+  GRASSLAND_SUBTROPICAL = 'flux:eco:grassland:subtropical',
+  WETLAND_TROPICAL = 'flux:eco:wetland:tropical',
+  FOREST_CONIFEROUS = 'flux:eco:forest:coniferous',
+  MARSH_TROPICAL = 'flux:eco:marsh:tropical',
 }
 
 // Injected dependencies for pure world generation
@@ -50,17 +51,17 @@ export type WorshipperTerritorialBehavior = {
   fungal_immunity: boolean;            // Immune to further Cordyceps infection
 };
 
-// Hub-and-spoke topology structure
+// Hub-and-spoke crater topology structure
 export type WorldTopology = {
-  central_plateau: {
+  central_crater: {
     center: [number, number];          // World center coordinates
-    radius: number;                    // Plateau radius in km
-    elevation: number;                 // Elevation in meters
+    radius: number;                    // Crater radius in km
+    elevation: number;                 // Elevation in meters (negative = below sea level)
   };
   mountain_ring: {
-    inner_radius: number;              // Mountain ring inner boundary
+    inner_radius: number;              // Mountain ring inner boundary (crater rim)
     outer_radius: number;              // Mountain ring outer boundary
-    elevation_range: [number, number]; // Min/max elevation
+    elevation_range: [number, number]; // Min/max elevation (crater walls)
   };
   ecosystem_slices: {
     slice_count: number;               // Number of ecosystem slices
@@ -79,6 +80,27 @@ export type WorldGenerationConfig = {
   fungal_spread_factor: number;       // Base infection risk multiplier
   worshipper_density: number;         // Base worshipper population density
   place_density: number;              // Places per square km
+  connectivity: {
+    max_exits_per_place: number;      // Maximum number of exits per place (default: 6)
+    connection_distance_factor: number; // Distance multiplier for connections (default: 1.5)
+    connection_density: number;       // Overall connectivity density 0-1 (default: 1.0)
+    prefer_same_zone: boolean;        // Whether to prefer connections within same topology zone
+    ecosystem_edge_targets: {         // Target average edges per ecosystem (excluding boundary nodes)
+      [key in EcosystemName]?: number;
+    };
+    boundary_detection_threshold: number; // Distance from world edge to consider "boundary" (default: 0.05 = 5% of radius)
+    fractal_trails: {                 // Fractal trail network configuration
+      enabled: boolean;               // Whether to generate fractal trails
+      trail_count: number;            // Number of main trails from mountain passes
+      branching_factor: number;       // Average number of branches per trail segment (1.5-3.0)
+      branching_angle: number;        // Max angle deviation for branches (in radians)
+      max_depth: number;              // Maximum trail branching depth
+      segment_length: number;         // Base length of trail segments
+      length_variation: number;       // Random variation in segment length (0-1)
+      trail_width: number;            // Connection radius around trail path
+      decay_factor: number;           // How much branching reduces with distance (0-1)
+    };
+  };
   random_seed: number;                // For deterministic generation
 };
 
@@ -87,10 +109,11 @@ export type GAEAPlace = Place & {
   gaea_management: GaeaManagementProfile;
   cordyceps_habitat: CordycepsHabitat;
   worshipper_behavior: WorshipperTerritorialBehavior;
-  topology_zone: 'plateau' | 'mountain_ring' | 'ecosystem_slice' | 'periphery';
+  topology_zone: 'crater' | 'mountain_ring' | 'ecosystem_slice' | 'periphery';
   distance_from_center: number;       // 0.0 (center) to 1.0 (edge)
   ecosystem_slice_id?: number;        // Which ecosystem slice (if applicable)
   coordinates: [number, number];      // Original X,Y coordinates from grid generation
+  trail_territory_id?: string;       // Trail territory assignment for fractal trails
 };
 
 // World generation result
@@ -108,83 +131,99 @@ export type GeneratedWorld = {
     behavior_profile: keyof typeof WORSHIPPER_BEHAVIOR_PROFILES;
   }[];
   config: WorldGenerationConfig;
+  trail_network?: FractalTrailNetwork;  // Optional fractal trail network
 };
 
 // Ecosystem schema definitions
 export const ECOSYSTEM_PROFILES: Record<EcosystemName, EcologicalProfile> = {
-  [EcosystemName.FOREST_TEMPERATE]: {
-    ecosystem: 'flux:eco:forest:temperate',
-    temperature: [8.0, 28.0],          // Cool to warm temperate forest
+  [EcosystemName.FOREST_CONIFEROUS]: {
+    ecosystem: 'flux:eco:forest:coniferous',
+    temperature: [5.0, 22.0],          // Cool coniferous forest (Mesozoic climate)
     pressure: [1000.0, 1020.0],        // Standard atmospheric pressure
-    humidity: [60.0, 95.0]             // High humidity (forest conditions)
+    humidity: [60.0, 85.0]             // Moderate humidity (coniferous adaptations)
   },
-  [EcosystemName.GRASSLAND_TEMPERATE]: {
-    ecosystem: 'flux:eco:grassland:temperate',
-    temperature: [12.0, 32.0],         // Warm temperate grassland
+  [EcosystemName.GRASSLAND_SUBTROPICAL]: {
+    ecosystem: 'flux:eco:grassland:subtropical',
+    temperature: [18.0, 38.0],         // Warm subtropical grassland (Mesozoic warmth)
     pressure: [1005.0, 1023.0],        // Slightly elevated pressure
-    humidity: [40.0, 60.0]             // Moderate humidity
+    humidity: [50.0, 75.0]             // Higher humidity than modern temperate
   },
-  [EcosystemName.GRASSLAND_ARID]: {
-    ecosystem: 'flux:eco:grassland:arid',
-    temperature: [18.0, 45.0],         // Hot arid grassland
-    pressure: [1010.0, 1025.0],        // High pressure (dry conditions)
-    humidity: [15.0, 35.0]             // Low humidity (arid conditions)
+  [EcosystemName.WETLAND_TROPICAL]: {
+    ecosystem: 'flux:eco:wetland:tropical',
+    temperature: [22.0, 36.0],         // Warm tropical wetland (Mesozoic warmth)
+    pressure: [1005.0, 1020.0],        // Standard atmospheric pressure
+    humidity: [80.0, 100.0]            // Very high humidity (tropical wetland)
   },
-  [EcosystemName.MOUNTAIN_ALPINE]: {
-    ecosystem: 'flux:eco:mountain:alpine',
-    temperature: [5.0, 25.0],          // Cool alpine conditions
-    pressure: [950.0, 1000.0],         // Low pressure (high altitude)
-    humidity: [50.0, 90.0]             // Variable humidity (orographic effects)
-  },
-  [EcosystemName.MOUNTAIN_FOREST]: {
-    ecosystem: 'flux:eco:mountain:forest',
+  [EcosystemName.FOREST_MONTANE]: {
+    ecosystem: 'flux:eco:forest:montane',
     temperature: [-5.0, 18.0],         // Cooler than lowland forest (altitude effect)
     pressure: [900.0, 980.0],          // Low pressure (high altitude)
     humidity: [70.0, 95.0]             // High humidity (forest + orographic precipitation)
+  },
+
+  [EcosystemName.MOUNTAIN_ALPINE]: {
+    ecosystem: 'flux:eco:mountain:alpine',
+    temperature: [-10.0, 15.0],        // Cold alpine conditions (high altitude)
+    pressure: [850.0, 920.0],          // Very low pressure (highest altitude)
+    humidity: [30.0, 60.0]             // Low humidity (alpine conditions)
+  },
+  [EcosystemName.MARSH_TROPICAL]: {
+    ecosystem: 'flux:eco:marsh:tropical',
+    temperature: [18.0, 32.0],         // Warm tropical marsh climate
+    pressure: [1020.0, 1040.0],        // Higher pressure (below sea level)
+    humidity: [85.0, 100.0]            // Very high humidity (marshland)
   }
 };
 
 // G.A.E.A. management profiles for each ecosystem
 export const GAEA_MANAGEMENT_PROFILES: Record<EcosystemName, GaeaManagementProfile> = {
-  [EcosystemName.FOREST_TEMPERATE]: {
-    optimization_level: 0.8,           // High biodiversity priority
-    apex_predator_density: 0.7,       // Pack hunters in understory
-    resource_concentration: 0.6,      // Medicinal plant cultivation
-    fungal_cultivation_intensity: 0.9, // Maximum spore cultivation
-    territorial_stability: 0.6,       // Seasonal boundary flexibility
-    worshipper_presence: 0.8          // High infection conversion rate
+  [EcosystemName.FOREST_CONIFEROUS]: {
+    optimization_level: 0.7,           // Moderate-high coniferous management
+    apex_predator_density: 0.6,       // Coordinated hunters in conifer understory
+    resource_concentration: 0.5,      // Resin and cone cultivation
+    fungal_cultivation_intensity: 0.8, // High spore cultivation (conifer substrate)
+    territorial_stability: 0.7,       // Stable coniferous boundaries
+    worshipper_presence: 0.7          // High infection conversion rate
   },
-  [EcosystemName.GRASSLAND_TEMPERATE]: {
+  [EcosystemName.GRASSLAND_SUBTROPICAL]: {
     optimization_level: 0.4,           // Moderate ecosystem management
     apex_predator_density: 0.3,       // Individual territorial hunters
     resource_concentration: 0.4,      // Grain and mineral optimization
-    fungal_cultivation_intensity: 0.2, // Limited fungal presence
+    fungal_cultivation_intensity: 0.3, // Higher fungal presence (warmer, more humid)
     territorial_stability: 0.4,       // Moderate boundary flexibility
-    worshipper_presence: 0.3          // Lower infection rates
+    worshipper_presence: 0.4          // Higher infection rates (warmer climate)
   },
-  [EcosystemName.GRASSLAND_ARID]: {
-    optimization_level: 0.2,           // Minimal ecosystem management
-    apex_predator_density: 0.1,       // Sparse predator presence
-    resource_concentration: 0.2,      // Limited resource optimization
-    fungal_cultivation_intensity: 0.1, // Very limited fungal presence
-    territorial_stability: 0.2,       // High boundary flexibility
-    worshipper_presence: 0.1          // Very low infection rates
+  [EcosystemName.WETLAND_TROPICAL]: {
+    optimization_level: 0.6,           // Moderate-high ecosystem management (water control)
+    apex_predator_density: 0.8,       // High predator density (aquatic and terrestrial)
+    resource_concentration: 0.5,      // Aquatic resource optimization
+    fungal_cultivation_intensity: 0.6, // Higher fungal presence (tropical moisture)
+    territorial_stability: 0.5,       // Moderate boundary flexibility (seasonal flooding)
+    worshipper_presence: 0.5          // Higher infection rates (tropical conditions)
   },
-  [EcosystemName.MOUNTAIN_ALPINE]: {
-    optimization_level: 0.9,           // Strategic territorial control
-    apex_predator_density: 0.9,       // Massive individual predators
-    resource_concentration: 0.8,      // Rare mineral concentration
-    fungal_cultivation_intensity: 0.7, // Cave spore chambers
-    territorial_stability: 0.8,       // Rigid boundary control
-    worshipper_presence: 0.6          // Moderate infection levels
-  },
-  [EcosystemName.MOUNTAIN_FOREST]: {
+  [EcosystemName.FOREST_MONTANE]: {
     optimization_level: 0.7,           // Strategic fungal cultivation
     apex_predator_density: 0.5,       // Coordinated predator integration
     resource_concentration: 0.6,      // Dense fungal cultivation
     fungal_cultivation_intensity: 0.9, // Maximum spore density
     territorial_stability: 0.7,       // Seasonal boundary flexibility
     worshipper_presence: 0.5          // Moderate infection levels
+  },
+  [EcosystemName.MOUNTAIN_ALPINE]: {
+    optimization_level: 0.3,           // Minimal ecosystem management (harsh conditions)
+    apex_predator_density: 0.2,       // Few predators survive alpine conditions
+    resource_concentration: 0.2,      // Limited resources (rocky terrain)
+    fungal_cultivation_intensity: 0.1, // Very limited fungal presence (cold, dry)
+    territorial_stability: 0.8,       // Stable boundaries (harsh natural barriers)
+    worshipper_presence: 0.1          // Very low infection rates (inhospitable)
+  },
+  [EcosystemName.MARSH_TROPICAL]: {
+    optimization_level: 0.6,           // Moderate management (ancient tropical marsh)
+    apex_predator_density: 0.4,       // Moderate predators (amphibious hunters)
+    resource_concentration: 0.8,      // Rich cycad cultivation and marsh resources
+    fungal_cultivation_intensity: 0.9, // Maximum spore cultivation (wet, organic-rich)
+    territorial_stability: 0.8,       // Stable marsh boundaries
+    worshipper_presence: 0.3          // Moderate infection rates (marsh accessibility)
   }
 };
 
@@ -255,17 +294,46 @@ export const WORSHIPPER_BEHAVIOR_PROFILES = {
   }
 } as const;
 
-// Default world topology (hub-and-spoke structure)
+// Trail system types
+export interface TrailSegment {
+  id: string;
+  position: [number, number];
+  direction: number;              // Radians
+  length: number;
+  parentId?: string;             // For branching hierarchy
+  trailSystemId: string;         // Which mountain pass this belongs to
+  depth: number;                 // Branching depth (0 = main trunk)
+  ecosystem: EcosystemName;      // Ecosystem at this segment
+}
+
+export interface TrailSystem {
+  id: string;
+  mountainPass: [number, number];
+  passAngle: number;
+  segments: TrailSegment[];
+  territory: [number, number][];  // Territorial boundary points
+}
+
+export interface FractalTrailNetwork {
+  trailSystems: TrailSystem[];
+  allSegments: TrailSegment[];
+  intersectionPoints: Array<{
+    position: [number, number];
+    connectingSegments: [string, string];
+  }>;
+}
+
+// Default world topology (hub-and-spoke crater structure)
 export const DEFAULT_WORLD_TOPOLOGY: WorldTopology = {
-  central_plateau: {
+  central_crater: {
     center: [0, 0],
     radius: 6.4,                      // 6.4km radius (San Francisco-sized)
-    elevation: 1500                   // 1500m elevation
+    elevation: -200                   // 200m below sea level (ancient impact crater)
   },
   mountain_ring: {
-    inner_radius: 6.4,                // Starts at plateau boundary
+    inner_radius: 6.4,                // Starts at crater rim
     outer_radius: 10.2,               // 10.2km from center
-    elevation_range: [1000, 1400]     // 1000-1400m varied peaks and valleys
+    elevation_range: [1200, 2000]     // 1200-2000m crater walls (high elevation)
   },
   ecosystem_slices: {
     slice_count: 3,                   // Three ecosystem slices for launch
