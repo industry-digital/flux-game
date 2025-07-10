@@ -4,6 +4,8 @@
     "node_modules",
     "dist",
     "scripts",
-    "**/*.spec.ts"
+    "**/*.spec.ts",
+    "**/*.test.ts",
+    "src/worldgen/test.ts"
   ]
 }
