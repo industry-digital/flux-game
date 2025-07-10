@@ -524,7 +524,8 @@ function applyEcosystemConnectivityRules(
   // Phase 1: Add proximity connections for open terrain
   if (connectivityConfig.addProximityConnections) {
     const eligiblePlaces = getEligibleConnectionPlaces(ecosystem, placesByEcosystem);
-    addProximityConnections(ecosystemPlaces, connectivityConfig.connectionRange, eligiblePlaces);
+    const allPlaces = Object.values(placesByEcosystem).flat();
+    addProximityConnections(ecosystemPlaces, connectivityConfig.connectionRange, allPlaces, eligiblePlaces);
   }
 
   // Phase 2: Selectively remove connections for difficult terrain
@@ -570,6 +571,7 @@ function getEligibleConnectionPlaces(
 
 /**
  * Get connectivity configuration for each ecosystem type
+ * connectionRange is now measured in graph hops, not geographic distance
  */
 function getEcosystemConnectivityConfig(ecosystem: EcosystemName): {
   targetConnectionsPerPlace: number;
@@ -580,37 +582,37 @@ function getEcosystemConnectivityConfig(ecosystem: EcosystemName): {
   const configs = {
     [EcosystemName.GRASSLAND_TEMPERATE]: {
       targetConnectionsPerPlace: 3.0,
-      connectionRange: 180,
+      connectionRange: 3, // 3 hops: creates shortcuts across open terrain
       addProximityConnections: true,
       removeConnections: false
     },
     [EcosystemName.STEPPE_ARID]: {
       targetConnectionsPerPlace: 3.0,
-      connectionRange: 170,
+      connectionRange: 3, // 3 hops: wide open spaces allow long-range connections
       addProximityConnections: true,
       removeConnections: false
     },
     [EcosystemName.FOREST_TEMPERATE]: {
       targetConnectionsPerPlace: 2.2,
-      connectionRange: 120,
+      connectionRange: 2, // 2 hops: trails exist but trees limit visibility
       addProximityConnections: true,
       removeConnections: true
     },
     [EcosystemName.MARSH_TROPICAL]: {
       targetConnectionsPerPlace: 1.8,
-      connectionRange: 100,
+      connectionRange: 1, // 1 hop: difficult terrain limits new connections
       addProximityConnections: false,
       removeConnections: true
     },
     [EcosystemName.MOUNTAIN_ARID]: {
       targetConnectionsPerPlace: 1.4,
-      connectionRange: 60,
+      connectionRange: 1, // 1 hop: rugged terrain severely limits passage
       addProximityConnections: false,
       removeConnections: true
     },
     [EcosystemName.JUNGLE_TROPICAL]: {
       targetConnectionsPerPlace: 2.0,
-      connectionRange: 110,
+      connectionRange: 2, // 2 hops: some paths through dense vegetation
       addProximityConnections: true,
       removeConnections: true
     }
@@ -621,15 +623,14 @@ function getEcosystemConnectivityConfig(ecosystem: EcosystemName): {
 
 /**
  * Add proximity-based connections for open terrain ecosystems
+ * Now uses graph distance (hops) instead of geographic distance
  */
-function addProximityConnections(ecosystemPlaces: Place[], maxRange: number, allPlaces: Place[]): void {
+function addProximityConnections(ecosystemPlaces: Place[], maxHops: number, allPlaces: Place[], eligiblePlaces: Place[]): void {
   let connectionsAdded = 0;
 
   ecosystemPlaces.forEach(place => {
-    const placePosition = extractPlaceCoordinates(place);
-
-    // Find nearby places within the ecosystem's connection range
-    const nearbyPlaces = findNearbyPlaces(place, allPlaces, maxRange);
+    // Find nearby places within the ecosystem's hop range
+    const nearbyPlaces = findNearbyPlaces(place, allPlaces, maxHops, eligiblePlaces);
 
     nearbyPlaces.forEach(nearbyPlace => {
       if (!hasExistingConnection(place, nearbyPlace)) {
@@ -667,35 +668,40 @@ function removeExcessConnections(ecosystemPlaces: Place[], targetConnectionsPerP
 }
 
 /**
- * Extract coordinates from place ID (flux:place:vertex_X where vertex had x,y coordinates)
+ * Find places within graph hop distance (relationship distance)
+ * This creates realistic connections by following existing paths
  */
-function extractPlaceCoordinates(place: Place): { x: number; y: number } {
-  // For now, use a hash of the place ID to generate pseudo-coordinates
-  // In a real implementation, we'd store coordinates in the Place object
-  const idHash = place.id.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
-  return {
-    x: (idHash * 73) % 1000,
-    y: (idHash * 37) % 600
-  };
-}
+function findNearbyPlaces(place: Place, allPlaces: Place[], maxHops: number, eligiblePlaces: Place[]): Place[] {
+  // BFS to find places within hop distance
+  const visited = new Set<string>();
+  const queue: Array<{place: Place, hops: number}> = [];
+  const reachablePlaces: Place[] = [];
 
-/**
- * Find places within connection range
- */
-function findNearbyPlaces(place: Place, allPlaces: Place[], maxRange: number): Place[] {
-  const placePos = extractPlaceCoordinates(place);
+  queue.push({place: place, hops: 0});
+  visited.add(place.id);
 
-  return allPlaces
-    .filter(otherPlace => otherPlace.id !== place.id)
-    .filter(otherPlace => {
-      const otherPos = extractPlaceCoordinates(otherPlace);
-      const distance = Math.sqrt(
-        Math.pow(otherPos.x - placePos.x, 2) +
-        Math.pow(otherPos.y - placePos.y, 2)
-      );
-      return distance <= maxRange;
-    })
-    .slice(0, 3); // Limit to 3 nearby places to prevent over-connection
+  while (queue.length > 0) {
+    const {place: currentPlace, hops} = queue.shift()!;
+
+    // If we're within hop range and this place is eligible, add it
+    if (hops > 0 && hops <= maxHops && eligiblePlaces.includes(currentPlace)) {
+      reachablePlaces.push(currentPlace);
+    }
+
+    // Continue searching if we haven't exceeded max hops
+    if (hops < maxHops) {
+      // Follow existing connections
+      Object.values(currentPlace.exits).forEach(exit => {
+        const connectedPlace = allPlaces.find(p => p.id === exit.to);
+        if (connectedPlace && !visited.has(connectedPlace.id)) {
+          visited.add(connectedPlace.id);
+          queue.push({place: connectedPlace, hops: hops + 1});
+        }
+      });
+    }
+  }
+
+  return reachablePlaces.slice(0, 3); // Limit to 3 connections to prevent over-connectivity
 }
 
 /**
