@@ -6,19 +6,20 @@
 import { Place } from '~/types/entity/place';
 import { EntityType } from '~/types/entity/entity';
 import {
-    LichtenbergVertex,
-    LichtenbergConnection,
-    LichtenbergFigure,
-    LichtenbergConfig,
-    generateLichtenbergFigure
+  LichtenbergVertex,
+  LichtenbergConnection,
+  LichtenbergFigure,
+  LichtenbergConfig,
+  generateLichtenbergFigure
 } from '../lib/fractal/lichtenberg';
 import {
-    WorldGenerationConfig,
-    WorldGenerationResult,
-    EcosystemName,
-    ECOSYSTEM_PROFILES,
-    WorldVertex
+  WorldGenerationConfig,
+  WorldGenerationResult,
+  EcosystemName,
+  ECOSYSTEM_PROFILES,
+  WorldVertex
 } from './types';
+import { Direction, PlaceURN } from '~/types';
 
 /**
  * Main world generation function
@@ -37,8 +38,14 @@ export function generateWorld(config: WorldGenerationConfig): WorldGenerationRes
   // 4. Convert to full Place objects
   const places = createPlacesFromVertices(worldVertices);
 
-  // 5. Calculate connection statistics
-  const connections = calculateConnectionStats(connectedFigure.connections);
+  // 5. Populate exits from connections
+  populatePlaceExits(places, connectedFigure.connections);
+
+  // 6. Adjust connectivity based on ecosystem characteristics
+  adjustEcosystemConnectivity(places);
+
+  // 7. Calculate connection statistics
+  const connections = calculateConnectionStats(places);
 
   return {
     places,
@@ -170,7 +177,12 @@ function connectEcosystemFigures(
     allConnections.push({
       from: eastmostWest.id,
       to: westmostEast.id,
-      length: distance
+      length: distance,
+      artificial: true, // Mark as artificial inter-ecosystem connection
+      ecosystemTransition: {
+        from: westEcosystem.ecosystem,
+        to: eastEcosystem.ecosystem
+      }
     });
   }
 
@@ -381,14 +393,419 @@ function generatePlaceDescription(ecosystem: EcosystemName): string {
   return descriptions[ecosystem];
 }
 
+
+
 /**
- * Calculate connection statistics
+ * Populate Place exits from Lichtenberg connections
+ * Converts geometric connections between vertices into navigable exits between places
  */
-function calculateConnectionStats(connections: any[]): { reciprocal: number; total: number } {
-  // For now, assume all connections are reciprocal (bidirectional)
-  // In a real implementation, we'd analyze the graph topology
+function populatePlaceExits(places: Place[], connections: LichtenbergConnection[]): void {
+  // Create a map from vertex ID to place for quick lookup
+  const placeMap = new Map<string, Place>();
+  places.forEach(place => {
+    // Extract vertex ID from place ID (flux:place:vertex_123 -> vertex_123)
+    const vertexId = place.id.replace('flux:place:', '');
+    placeMap.set(vertexId, place);
+  });
+
+  // Available directions for connections (excluding UP/DOWN for ground-level connections)
+  const connectionDirections = [
+    Direction.NORTH,
+    Direction.SOUTH,
+    Direction.EAST,
+    Direction.WEST,
+    Direction.NORTHEAST,
+    Direction.NORTHWEST,
+    Direction.SOUTHEAST,
+    Direction.SOUTHWEST,
+  ];
+
+  // Convert each connection into bidirectional exits
+  connections.forEach((connection, index) => {
+    const fromPlace = placeMap.get(connection.from);
+    const toPlace = placeMap.get(connection.to);
+
+    if (fromPlace && toPlace) {
+      // Use available directions, cycling through them
+      const directionIndex = index % connectionDirections.length;
+      const exitDirection = connectionDirections[directionIndex];
+
+      // Find reverse direction
+      const reverseDirectionMap: Record<Direction, Direction> = {
+        [Direction.NORTH]: Direction.SOUTH,
+        [Direction.SOUTH]: Direction.NORTH,
+        [Direction.EAST]: Direction.WEST,
+        [Direction.WEST]: Direction.EAST,
+        [Direction.NORTHEAST]: Direction.SOUTHWEST,
+        [Direction.SOUTHWEST]: Direction.NORTHEAST,
+        [Direction.NORTHWEST]: Direction.SOUTHEAST,
+        [Direction.SOUTHEAST]: Direction.NORTHWEST,
+        [Direction.UP]: Direction.DOWN,
+        [Direction.DOWN]: Direction.UP,
+        [Direction.IN]: Direction.OUT,
+        [Direction.OUT]: Direction.IN,
+        [Direction.FORWARD]: Direction.BACKWARD,
+        [Direction.BACKWARD]: Direction.FORWARD,
+        [Direction.LEFT]: Direction.RIGHT,
+        [Direction.RIGHT]: Direction.LEFT,
+        [Direction.UNKNOWN]: Direction.UNKNOWN,
+      };
+
+      const reverseDirection = reverseDirectionMap[exitDirection];
+
+      // Create exit from fromPlace to toPlace
+      fromPlace.exits[exitDirection] = {
+        direction: exitDirection,
+        label: `Path to ${toPlace.name}`,
+        to: toPlace.id as PlaceURN
+      };
+
+      // Create reverse exit from toPlace to fromPlace
+      toPlace.exits[reverseDirection] = {
+        direction: reverseDirection,
+        label: `Path to ${fromPlace.name}`,
+        to: fromPlace.id as PlaceURN
+      };
+    }
+  });
+
+  console.log(`Populated exits for ${places.length} places from ${connections.length} connections`);
+}
+
+/**
+ * Adjust ecosystem-specific connectivity patterns
+ * Implements hybrid approach: additive for open terrain, selective removal for difficult terrain
+ */
+function adjustEcosystemConnectivity(places: Place[]): void {
+  console.log('Adjusting ecosystem-specific connectivity...');
+
+  // Group places by ecosystem for processing
+  const placesByEcosystem = groupPlacesByEcosystem(places);
+
+  // Apply ecosystem-specific adjustments
+  Object.entries(placesByEcosystem).forEach(([ecosystem, ecosystemPlaces]) => {
+    const ecosystemName = ecosystem as EcosystemName;
+    applyEcosystemConnectivityRules(ecosystemPlaces, ecosystemName, placesByEcosystem);
+  });
+
+  const finalConnectionCount = countTotalConnections(places);
+  console.log(`Connectivity adjustment complete. Final connections: ${finalConnectionCount}`);
+}
+
+/**
+ * Group places by their ecosystem for targeted processing
+ */
+function groupPlacesByEcosystem(places: Place[]): Record<string, Place[]> {
+  const grouped: Record<string, Place[]> = {};
+
+  places.forEach(place => {
+    const ecosystem = place.ecology.ecosystem;
+    if (!grouped[ecosystem]) {
+      grouped[ecosystem] = [];
+    }
+    grouped[ecosystem].push(place);
+  });
+
+  return grouped;
+}
+
+/**
+ * Apply connectivity rules specific to each ecosystem type
+ */
+function applyEcosystemConnectivityRules(
+  ecosystemPlaces: Place[],
+  ecosystem: EcosystemName,
+  placesByEcosystem: Record<string, Place[]>
+): void {
+  const connectivityConfig = getEcosystemConnectivityConfig(ecosystem);
+
+  console.log(`Adjusting ${ecosystem}: ${ecosystemPlaces.length} places, target ~${connectivityConfig.targetConnectionsPerPlace} connections/place`);
+
+  // Phase 1: Add proximity connections for open terrain
+  if (connectivityConfig.addProximityConnections) {
+    const eligiblePlaces = getEligibleConnectionPlaces(ecosystem, placesByEcosystem);
+    addProximityConnections(ecosystemPlaces, connectivityConfig.connectionRange, eligiblePlaces);
+  }
+
+  // Phase 2: Selectively remove connections for difficult terrain
+  if (connectivityConfig.removeConnections) {
+    removeExcessConnections(ecosystemPlaces, connectivityConfig.targetConnectionsPerPlace);
+  }
+}
+
+/**
+ * Get eligible places for connection based on ecosystem adjacency
+ */
+function getEligibleConnectionPlaces(
+  ecosystem: EcosystemName,
+  placesByEcosystem: Record<string, Place[]>
+): Place[] {
+  const eligiblePlaces: Place[] = [];
+
+  // Always include places from the same ecosystem
+  const sameEcosystemPlaces = placesByEcosystem[ecosystem] || [];
+  eligiblePlaces.push(...sameEcosystemPlaces);
+
+  // Define ecosystem adjacency (based on the 5-band layout: Steppe, Grassland, Forest, Mountain, Jungle)
+  const adjacencyMap: Record<EcosystemName, EcosystemName[]> = {
+    [EcosystemName.STEPPE_ARID]: [EcosystemName.GRASSLAND_TEMPERATE],
+    [EcosystemName.GRASSLAND_TEMPERATE]: [EcosystemName.STEPPE_ARID, EcosystemName.FOREST_TEMPERATE],
+    [EcosystemName.FOREST_TEMPERATE]: [EcosystemName.GRASSLAND_TEMPERATE, EcosystemName.MOUNTAIN_ARID],
+    [EcosystemName.MOUNTAIN_ARID]: [EcosystemName.FOREST_TEMPERATE, EcosystemName.JUNGLE_TROPICAL],
+    [EcosystemName.JUNGLE_TROPICAL]: [EcosystemName.MOUNTAIN_ARID, EcosystemName.MARSH_TROPICAL],
+    [EcosystemName.MARSH_TROPICAL]: [EcosystemName.JUNGLE_TROPICAL] // Marsh is dithered within jungle
+  };
+
+  // Add places from adjacent ecosystems (but limit to prevent over-connection)
+  const adjacentEcosystems = adjacencyMap[ecosystem] || [];
+  adjacentEcosystems.forEach(adjacentEcosystem => {
+    const adjacentPlaces = placesByEcosystem[adjacentEcosystem] || [];
+    // Only add a subset of adjacent places to prevent over-connection
+    const maxAdjacentConnections = Math.min(5, adjacentPlaces.length);
+    eligiblePlaces.push(...adjacentPlaces.slice(0, maxAdjacentConnections));
+  });
+
+  return eligiblePlaces;
+}
+
+/**
+ * Get connectivity configuration for each ecosystem type
+ */
+function getEcosystemConnectivityConfig(ecosystem: EcosystemName): {
+  targetConnectionsPerPlace: number;
+  connectionRange: number;
+  addProximityConnections: boolean;
+  removeConnections: boolean;
+} {
+  const configs = {
+    [EcosystemName.GRASSLAND_TEMPERATE]: {
+      targetConnectionsPerPlace: 3.0,
+      connectionRange: 180,
+      addProximityConnections: true,
+      removeConnections: false
+    },
+    [EcosystemName.STEPPE_ARID]: {
+      targetConnectionsPerPlace: 3.0,
+      connectionRange: 170,
+      addProximityConnections: true,
+      removeConnections: false
+    },
+    [EcosystemName.FOREST_TEMPERATE]: {
+      targetConnectionsPerPlace: 2.2,
+      connectionRange: 120,
+      addProximityConnections: true,
+      removeConnections: true
+    },
+    [EcosystemName.MARSH_TROPICAL]: {
+      targetConnectionsPerPlace: 1.8,
+      connectionRange: 100,
+      addProximityConnections: false,
+      removeConnections: true
+    },
+    [EcosystemName.MOUNTAIN_ARID]: {
+      targetConnectionsPerPlace: 1.4,
+      connectionRange: 60,
+      addProximityConnections: false,
+      removeConnections: true
+    },
+    [EcosystemName.JUNGLE_TROPICAL]: {
+      targetConnectionsPerPlace: 2.0,
+      connectionRange: 110,
+      addProximityConnections: true,
+      removeConnections: true
+    }
+  };
+
+  return configs[ecosystem] || configs[EcosystemName.GRASSLAND_TEMPERATE];
+}
+
+/**
+ * Add proximity-based connections for open terrain ecosystems
+ */
+function addProximityConnections(ecosystemPlaces: Place[], maxRange: number, allPlaces: Place[]): void {
+  let connectionsAdded = 0;
+
+  ecosystemPlaces.forEach(place => {
+    const placePosition = extractPlaceCoordinates(place);
+
+    // Find nearby places within the ecosystem's connection range
+    const nearbyPlaces = findNearbyPlaces(place, allPlaces, maxRange);
+
+    nearbyPlaces.forEach(nearbyPlace => {
+      if (!hasExistingConnection(place, nearbyPlace)) {
+        createBidirectionalConnection(place, nearbyPlace);
+        connectionsAdded++;
+      }
+    });
+  });
+
+  if (connectionsAdded > 0) {
+    console.log(`  Added ${connectionsAdded} proximity connections`);
+  }
+}
+
+/**
+ * Remove excess connections to achieve target connectivity for difficult terrain
+ */
+function removeExcessConnections(ecosystemPlaces: Place[], targetConnectionsPerPlace: number): void {
+  let connectionsRemoved = 0;
+
+  ecosystemPlaces.forEach(place => {
+    const currentConnections = Object.keys(place.exits).length;
+    const excessConnections = currentConnections - targetConnectionsPerPlace;
+
+    if (excessConnections > 0) {
+      const connectionsToRemove = Math.floor(excessConnections);
+      removeRandomConnections(place, connectionsToRemove);
+      connectionsRemoved += connectionsToRemove;
+    }
+  });
+
+  if (connectionsRemoved > 0) {
+    console.log(`  Removed ${connectionsRemoved} excess connections`);
+  }
+}
+
+/**
+ * Extract coordinates from place ID (flux:place:vertex_X where vertex had x,y coordinates)
+ */
+function extractPlaceCoordinates(place: Place): { x: number; y: number } {
+  // For now, use a hash of the place ID to generate pseudo-coordinates
+  // In a real implementation, we'd store coordinates in the Place object
+  const idHash = place.id.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
   return {
-    reciprocal: connections.length,
-    total: connections.length
+    x: (idHash * 73) % 1000,
+    y: (idHash * 37) % 600
+  };
+}
+
+/**
+ * Find places within connection range
+ */
+function findNearbyPlaces(place: Place, allPlaces: Place[], maxRange: number): Place[] {
+  const placePos = extractPlaceCoordinates(place);
+
+  return allPlaces
+    .filter(otherPlace => otherPlace.id !== place.id)
+    .filter(otherPlace => {
+      const otherPos = extractPlaceCoordinates(otherPlace);
+      const distance = Math.sqrt(
+        Math.pow(otherPos.x - placePos.x, 2) +
+        Math.pow(otherPos.y - placePos.y, 2)
+      );
+      return distance <= maxRange;
+    })
+    .slice(0, 3); // Limit to 3 nearby places to prevent over-connection
+}
+
+/**
+ * Check if two places already have a connection
+ */
+function hasExistingConnection(place1: Place, place2: Place): boolean {
+  return Object.values(place1.exits).some(exit => exit.to === place2.id);
+}
+
+/**
+ * Create bidirectional connection between two places
+ */
+function createBidirectionalConnection(place1: Place, place2: Place): void {
+  // Find available directions
+  const availableDirections = [
+    Direction.NORTH, Direction.SOUTH, Direction.EAST, Direction.WEST,
+    Direction.NORTHEAST, Direction.NORTHWEST, Direction.SOUTHEAST, Direction.SOUTHWEST
+  ];
+
+  const usedDirections1 = Object.keys(place1.exits) as Direction[];
+  const usedDirections2 = Object.keys(place2.exits) as Direction[];
+
+  const availableForPlace1 = availableDirections.filter(dir => !usedDirections1.includes(dir));
+  const availableForPlace2 = availableDirections.filter(dir => !usedDirections2.includes(dir));
+
+  if (availableForPlace1.length > 0 && availableForPlace2.length > 0) {
+    const direction1 = availableForPlace1[0];
+    const direction2 = getOppositeDirection(direction1);
+
+    if (availableForPlace2.includes(direction2)) {
+      place1.exits[direction1] = {
+        direction: direction1,
+        label: `Path to ${place2.name}`,
+        to: place2.id as PlaceURN
+      };
+
+      place2.exits[direction2] = {
+        direction: direction2,
+        label: `Path to ${place1.name}`,
+        to: place1.id as PlaceURN
+      };
+    }
+  }
+}
+
+/**
+ * Get opposite direction for bidirectional connections
+ */
+function getOppositeDirection(direction: Direction): Direction {
+  const opposites: Record<Direction, Direction> = {
+    [Direction.NORTH]: Direction.SOUTH,
+    [Direction.SOUTH]: Direction.NORTH,
+    [Direction.EAST]: Direction.WEST,
+    [Direction.WEST]: Direction.EAST,
+    [Direction.NORTHEAST]: Direction.SOUTHWEST,
+    [Direction.SOUTHWEST]: Direction.NORTHEAST,
+    [Direction.NORTHWEST]: Direction.SOUTHEAST,
+    [Direction.SOUTHEAST]: Direction.NORTHWEST,
+    [Direction.UP]: Direction.DOWN,
+    [Direction.DOWN]: Direction.UP,
+    [Direction.IN]: Direction.OUT,
+    [Direction.OUT]: Direction.IN,
+    [Direction.FORWARD]: Direction.BACKWARD,
+    [Direction.BACKWARD]: Direction.FORWARD,
+    [Direction.LEFT]: Direction.RIGHT,
+    [Direction.RIGHT]: Direction.LEFT,
+    [Direction.UNKNOWN]: Direction.UNKNOWN,
+  };
+
+  return opposites[direction] || Direction.UNKNOWN;
+}
+
+/**
+ * Remove random connections from a place while preserving graph connectivity
+ */
+function removeRandomConnections(place: Place, count: number): void {
+  const exitDirections = Object.keys(place.exits) as Direction[];
+
+  // Ensure we don't remove ALL connections (preserve at least 1 for connectivity)
+  const maxRemovable = Math.max(0, exitDirections.length - 1);
+  const toRemove = Math.min(count, maxRemovable);
+
+  for (let i = 0; i < toRemove; i++) {
+    if (exitDirections.length > 1) {
+      const randomIndex = Math.floor(Math.random() * exitDirections.length);
+      const directionToRemove = exitDirections.splice(randomIndex, 1)[0];
+
+      // Remove the exit
+      delete place.exits[directionToRemove];
+    }
+  }
+}
+
+/**
+ * Count total connections across all places
+ */
+function countTotalConnections(places: Place[]): number {
+  return places.reduce((total, place) => total + Object.keys(place.exits).length, 0);
+}
+
+/**
+ * Calculate connection statistics from places (updated signature)
+ */
+function calculateConnectionStats(places: Place[]): { reciprocal: number; total: number } {
+  const totalConnections = countTotalConnections(places);
+
+  // For now, assume all connections are reciprocal (bidirectional)
+  // In a real implementation, we'd analyze actual bidirectionality
+  return {
+    reciprocal: Math.floor(totalConnections / 2), // Each bidirectional connection counts as 2 exits
+    total: totalConnections
   };
 }

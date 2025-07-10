@@ -16,11 +16,6 @@ export type LichtenbergConnection = {
   from: string;
   to: string;
   length: number;
-  artificial?: boolean;  // Mark artificial inter-ecosystem connections
-  ecosystemTransition?: {
-    from: string;
-    to: string;
-  };
 };
 
 export type LichtenbergFigure = {
