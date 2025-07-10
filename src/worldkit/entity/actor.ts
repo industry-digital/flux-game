@@ -1,6 +1,6 @@
 import { createEntity, FactoryOptions } from './util';
 import { createModifiableScalarAttribute, createModifiableBoundedAttribute } from './attribute';
-import { merge } from 'lodash';
+import lodash from 'lodash';
 import { createEntityUrn, isUrnOfVocabulary } from '~/lib/taxonomy';
 import {
     AbstractEntity,
@@ -12,6 +12,8 @@ import {
     EntityType,
 } from '@flux';
 import { WellKnownPlace } from '~/worldkit/entity/place';
+
+const { merge } = lodash;
 
 const identity = <T>(x: T): T => x;
 

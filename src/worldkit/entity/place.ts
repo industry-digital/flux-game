@@ -1,8 +1,10 @@
 import { EntityType, Place, Exit, PlaceURN, Actor, PlaceEntityDescriptor, SpecialVisibility, Direction } from '@flux';
 import { createEntity, FactoryOptions } from './util';
 import { extractPathFromUrn } from '~/lib/taxonomy';
-import { merge } from 'lodash';
 import { ExitInput, Exits, PlaceInput } from '~/types/entity/place';
+import lodash from 'lodash';
+
+const { merge } = lodash;
 
 const identity = <T>(x: T): T => x;
 
