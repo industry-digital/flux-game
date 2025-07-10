@@ -7,6 +7,8 @@ import { Place } from '~/types/entity/place';
 import { EntityType } from '~/types/entity/entity';
 import {
   LichtenbergVertex,
+  LichtenbergConnection,
+  LichtenbergFigure,
   LichtenbergConfig,
   generateLichtenbergFigure
 } from '../lib/fractal/lichtenberg';
@@ -20,23 +22,23 @@ import {
 
 /**
  * Main world generation function
- * Generates world using pure Lichtenberg figures, then maps to world concepts
+ * Generates world using multiple Lichtenberg figures (one per ecosystem), then connects them
  */
 export function generateWorld(config: WorldGenerationConfig): WorldGenerationResult {
-  // 1. Convert world config to pure geometric Lichtenberg config
-  const geometricConfig = createGeometricConfig(config);
+  // 1. Generate Lichtenberg figures for each ecosystem band
+  const ecosystemFigures = generateEcosystemFigures(config);
 
-  // 2. Generate pure Lichtenberg figure
-  const lichtenbergFigure = generateLichtenbergFigure(geometricConfig);
+  // 2. Connect adjacent ecosystem figures
+  const connectedFigure = connectEcosystemFigures(ecosystemFigures, config);
 
-  // 3. Map vertices to ecosystems based on geography.md
-  const worldVertices = mapVerticesToEcosystems(lichtenbergFigure.vertices, geometricConfig);
+  // 3. Map vertices to ecosystems based on their origin band
+  const worldVertices = mapVerticesToEcosystems(connectedFigure.vertices, connectedFigure.config);
 
   // 4. Convert to full Place objects
   const places = createPlacesFromVertices(worldVertices);
 
   // 5. Calculate connection statistics
-  const connections = calculateConnectionStats(lichtenbergFigure.connections);
+  const connections = calculateConnectionStats(connectedFigure.connections);
 
   return {
     places,
@@ -44,6 +46,164 @@ export function generateWorld(config: WorldGenerationConfig): WorldGenerationRes
     config
   };
 }
+
+/**
+ * Generate separate Lichtenberg figures for each ecosystem band
+ */
+function generateEcosystemFigures(config: WorldGenerationConfig): EcosystemFigure[] {
+  const worldWidth = 1000;
+  const worldHeight = worldWidth / config.worldAspectRatio;
+  const bandWidth = worldWidth / 5; // 5 ecosystem bands
+
+  const ecosystemBands = [
+    EcosystemName.STEPPE_ARID,
+    EcosystemName.GRASSLAND_TEMPERATE,
+    EcosystemName.FOREST_TEMPERATE,
+    EcosystemName.MOUNTAIN_ARID,
+    EcosystemName.JUNGLE_TROPICAL
+  ];
+
+  let globalVertexCounter = 0;
+
+  return ecosystemBands.map((ecosystem, index) => {
+    const startX = index * bandWidth;
+    const endX = (index + 1) * bandWidth;
+
+    // Each ecosystem gets roughly equal share of total places
+    const targetPlaces = Math.floor(config.minPlaces / 5);
+    const maxPlaces = Math.floor((config.maxPlaces || config.minPlaces * 2) / 5);
+
+        const lichtenbergConfig: LichtenbergConfig = {
+      startX: 0, // Start at beginning of band
+      startY: worldHeight / 2,
+      width: bandWidth,
+      height: worldHeight,
+      branchingFactor: 0.8, // Higher branching for more places
+      branchingAngle: Math.PI / 2,
+      stepSize: 60, // Smaller steps for more density
+      maxDepth: 20, // Higher depth for more coverage
+      eastwardBias: 0.7,
+      verticalBias: 0.0,
+      seed: 42 + index, // Different seed per ecosystem
+      startingVertexId: globalVertexCounter, // Ensure unique IDs across ecosystems
+
+      minVertices: Math.max(3, targetPlaces), // Ensure minimum places per ecosystem
+      maxVertices: Math.max(maxPlaces, 15), // Ensure reasonable maximum
+
+      sparking: {
+        enabled: true,
+        probability: 0.6,
+        maxSparkDepth: 3,
+        sparkingConditions: {
+          boundaryPoints: [],
+          randomSparking: true
+        },
+        fishSpineBias: 0.7
+      }
+    };
+
+    const figure = generateLichtenbergFigure(lichtenbergConfig);
+
+    // Update global counter for next ecosystem
+    globalVertexCounter += figure.vertices.length;
+
+    // Offset vertices to absolute world coordinates
+    const offsetVertices = figure.vertices.map((vertex: LichtenbergVertex) => ({
+      ...vertex,
+      x: vertex.x + startX,
+      ecosystem
+    }));
+
+    return {
+      ecosystem,
+      figure: {
+        vertices: offsetVertices,
+        connections: figure.connections
+      },
+      bandStart: startX,
+      bandEnd: endX,
+      config: lichtenbergConfig
+    };
+  });
+}
+
+/**
+ * Connect adjacent ecosystem figures by linking easternmost vertices to westernmost vertices
+ */
+function connectEcosystemFigures(
+  ecosystemFigures: EcosystemFigure[],
+  config: WorldGenerationConfig
+): { vertices: LichtenbergVertex[]; connections: LichtenbergConnection[]; config: LichtenbergConfig } {
+  let allVertices: LichtenbergVertex[] = [];
+  let allConnections: LichtenbergConnection[] = [];
+
+  // Collect all vertices and connections from individual figures
+  // IDs are already unique thanks to startingVertexId parameter
+  ecosystemFigures.forEach(ecosystemFigure => {
+    allVertices.push(...ecosystemFigure.figure.vertices);
+    allConnections.push(...ecosystemFigure.figure.connections);
+  });
+
+  // Connect adjacent ecosystems
+  for (let i = 0; i < ecosystemFigures.length - 1; i++) {
+    const westEcosystem = ecosystemFigures[i];
+    const eastEcosystem = ecosystemFigures[i + 1];
+
+    // Find easternmost vertex in west ecosystem
+    const eastmostWest = westEcosystem.figure.vertices.reduce((eastmost: any, vertex: any) =>
+      vertex.x > eastmost.x ? vertex : eastmost
+    );
+
+    // Find westernmost vertex in east ecosystem
+    const westmostEast = eastEcosystem.figure.vertices.reduce((westmost: any, vertex: any) =>
+      vertex.x < westmost.x ? vertex : westmost
+    );
+
+    // Create connection between ecosystems
+    const connectionId = `connection_${eastmostWest.id}_${westmostEast.id}`;
+    const distance = Math.sqrt(
+      Math.pow(westmostEast.x - eastmostWest.x, 2) +
+      Math.pow(westmostEast.y - eastmostWest.y, 2)
+    );
+
+    allConnections.push({
+      from: eastmostWest.id,
+      to: westmostEast.id,
+      length: distance
+    });
+  }
+
+  // Create a combined config for the result
+  const combinedConfig: LichtenbergConfig = {
+    startX: 0,
+    startY: 500,
+    width: 1000,
+    height: 1000 / config.worldAspectRatio,
+    branchingFactor: 0.7,
+    branchingAngle: Math.PI / 3,
+    stepSize: 80,
+    maxDepth: 15,
+    eastwardBias: 0.8,
+    seed: 42,
+    minVertices: config.minPlaces,
+    maxVertices: config.maxPlaces
+  };
+
+  return {
+    vertices: allVertices,
+    connections: allConnections,
+    config: combinedConfig
+  };
+}
+
+// Type for ecosystem-specific figures
+type EcosystemFigure = {
+  ecosystem: EcosystemName;
+  figure: LichtenbergFigure;
+  bandStart: number;
+  bandEnd: number;
+  config: LichtenbergConfig;
+};
 
 /**
  * Convert WorldGenerationConfig to pure geometric LichtenbergConfig

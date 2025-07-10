@@ -35,6 +35,7 @@ export type LichtenbergConfig = {
   eastwardBias: number;       // Bias toward eastward propagation (0-1)
   verticalBias?: number;      // Bias toward vertical directions (0-1)
   seed?: number;              // Random seed for deterministic generation
+  startingVertexId?: number;  // Starting vertex ID counter (default: 0)
 
   // Vertex constraints (soft limits)
   minVertices?: number;       // Target minimum vertices (soft guidance)
@@ -206,7 +207,7 @@ export function generateOptimizedLichtenbergFigure(
   }
 
   // Start with the initial vertex
-  let vertexCounter = 0;
+  let vertexCounter = config.startingVertexId || 0;
   const startVertex: LichtenbergVertex = {
     x: config.startX,
     y: config.startY,
