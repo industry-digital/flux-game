@@ -1093,7 +1093,10 @@ export function generateWorld(
 }
 
 /**
- * Generate world data using trail-based territories
+ * Generate world data using hub-and-spoke territories only
+ * Places are generated ONLY in:
+ * 1. Concentric hub rings (crater, forest, mountain)
+ * 2. Along dendritic trail networks (spokes)
  */
 function generateWorldDataWithTrails(
   config: WorldGenerationConfig,
@@ -1102,32 +1105,160 @@ function generateWorldDataWithTrails(
 ): {
   places: GAEAPlace[];
 } {
-  const worldRadius = config.topology.ecosystem_slices.outer_radius;
-  const gridSpacing = 1.0 / Math.sqrt(config.place_density);
+  const places: GAEAPlace[] = [];
+  let placeIndex = 0;
 
-  // Generate only valid grid points (eliminates filtering step)
-  const validPoints = generateValidGridPoints(worldRadius, gridSpacing, config.topology.central_crater.center);
+  // 1. Generate places in concentric hub rings
+  const hubPlaces = generateHubRingPlaces(config, options, placeIndex);
+  places.push(...hubPlaces);
+  placeIndex += hubPlaces.length;
 
-  // Generate places for each valid point with trail territory assignment
-  const places: GAEAPlace[] = validPoints.map(([x, y], index) => {
-    const place = generateGAEAPlace(x, y, config, options, index);
-
-    // Assign trail territory based on proximity to trail network
-    const trailTerritoryId = assignPlaceToTrailTerritory(place, trailNetwork);
-
-    // Update ecosystem based on trail territory
-    const distance = calculateDistanceFromCenter(x, y, config.topology.central_crater.center);
-    const zone = getTopologyZone(distance, config.topology);
-    const ecosystem = getEcosystemType(zone, config, distance, trailTerritoryId);
-
-    return {
-      ...place,
-      trail_territory_id: trailTerritoryId,
-      ecology: ECOSYSTEM_PROFILES[ecosystem]
-    };
-  });
+  // 2. Generate places along trail networks (spokes)
+  const spokePlaces = generateSpokeTrailPlaces(config, options, trailNetwork, placeIndex);
+  places.push(...spokePlaces);
 
   return { places };
+}
+
+/**
+ * Generate places in concentric hub rings only
+ */
+function generateHubRingPlaces(
+  config: WorldGenerationConfig,
+  options: Required<WorldGenOptions>,
+  startIndex: number
+): GAEAPlace[] {
+  const places: GAEAPlace[] = [];
+  const center = config.topology.central_crater.center;
+  const craterRadius = config.topology.central_crater.radius;
+  const mountainInnerRadius = config.topology.mountain_ring.inner_radius;
+  const mountainOuterRadius = config.topology.mountain_ring.outer_radius;
+
+  let placeIndex = startIndex;
+
+  // Calculate place density for rings
+  const ringDensity = config.place_density * 0.5; // Moderate density in hub
+  const spacing = 1.0 / Math.sqrt(ringDensity);
+
+  // Ring 1: Crater center (marsh:tropical)
+  const craterPlaceCount = Math.max(8, Math.floor(Math.PI * craterRadius * craterRadius * ringDensity));
+  for (let i = 0; i < craterPlaceCount; i++) {
+    const angle = (i / craterPlaceCount) * 2 * Math.PI + options.random() * 0.3;
+    const radius = options.random() * craterRadius;
+    const x = center[0] + Math.cos(angle) * radius;
+    const y = center[1] + Math.sin(angle) * radius;
+
+    const place = generateGAEAPlace(x, y, config, options, placeIndex++);
+    // Override ecosystem for hub
+    place.ecology = ECOSYSTEM_PROFILES[config.hub_ecosystems.crater];
+    places.push(place);
+  }
+
+  // Ring 2: Forest ring (forest:coniferous)
+  const forestArea = Math.PI * (mountainInnerRadius * mountainInnerRadius - craterRadius * craterRadius);
+  const forestPlaceCount = Math.max(12, Math.floor(forestArea * ringDensity));
+  for (let i = 0; i < forestPlaceCount; i++) {
+    const angle = (i / forestPlaceCount) * 2 * Math.PI + options.random() * 0.2;
+    const minRadius = craterRadius + spacing * 0.5;
+    const maxRadius = mountainInnerRadius - spacing * 0.5;
+    const radius = minRadius + options.random() * (maxRadius - minRadius);
+    const x = center[0] + Math.cos(angle) * radius;
+    const y = center[1] + Math.sin(angle) * radius;
+
+    const place = generateGAEAPlace(x, y, config, options, placeIndex++);
+    // Override ecosystem for hub
+    place.ecology = ECOSYSTEM_PROFILES[config.hub_ecosystems.forest_ring];
+    places.push(place);
+  }
+
+  // Ring 3: Mountain ring (forest:montane)
+  const mountainArea = Math.PI * (mountainOuterRadius * mountainOuterRadius - mountainInnerRadius * mountainInnerRadius);
+  const mountainPlaceCount = Math.max(16, Math.floor(mountainArea * ringDensity));
+  for (let i = 0; i < mountainPlaceCount; i++) {
+    const angle = (i / mountainPlaceCount) * 2 * Math.PI + options.random() * 0.15;
+    const minRadius = mountainInnerRadius + spacing * 0.5;
+    const maxRadius = mountainOuterRadius - spacing * 0.5;
+    const radius = minRadius + options.random() * (maxRadius - minRadius);
+    const x = center[0] + Math.cos(angle) * radius;
+    const y = center[1] + Math.sin(angle) * radius;
+
+    const place = generateGAEAPlace(x, y, config, options, placeIndex++);
+    // Override ecosystem for hub
+    place.ecology = ECOSYSTEM_PROFILES[config.hub_ecosystems.mountain_ring];
+    places.push(place);
+  }
+
+  return places;
+}
+
+/**
+ * Generate places along trail networks only (spokes)
+ */
+function generateSpokeTrailPlaces(
+  config: WorldGenerationConfig,
+  options: Required<WorldGenOptions>,
+  trailNetwork: FractalTrailNetwork,
+  startIndex: number
+): GAEAPlace[] {
+  const places: GAEAPlace[] = [];
+  let placeIndex = startIndex;
+
+  // Generate places along each trail system
+  for (const trailSystem of trailNetwork.trailSystems) {
+    const spokeEcosystem = getSpokeEcosystemForTrailSystem(trailSystem, config);
+
+    // Generate places along trail segments
+    for (const segment of trailSystem.segments) {
+      // Place density along trails (higher density for main branches)
+      const segmentDensity = config.place_density * (1.0 / (1.0 + segment.depth * 0.3));
+      const spacing = 1.0 / Math.sqrt(segmentDensity);
+
+      // Generate 1-3 places per segment based on length
+      const placesPerSegment = Math.max(1, Math.floor(segment.length / spacing));
+
+      for (let i = 0; i < placesPerSegment; i++) {
+        // Scatter places slightly around the segment position
+        const offsetRadius = spacing * 0.3;
+        const offsetAngle = options.random() * 2 * Math.PI;
+        const offsetDistance = options.random() * offsetRadius;
+
+        const x = segment.position[0] + Math.cos(offsetAngle) * offsetDistance;
+        const y = segment.position[1] + Math.sin(offsetAngle) * offsetDistance;
+
+        const place = generateGAEAPlace(x, y, config, options, placeIndex++);
+
+        // Set trail territory and ecosystem
+        place.trail_territory_id = trailSystem.id;
+        place.ecology = ECOSYSTEM_PROFILES[spokeEcosystem];
+
+        places.push(place);
+      }
+    }
+  }
+
+  return places;
+}
+
+/**
+ * Get the appropriate spoke ecosystem for a trail system
+ */
+function getSpokeEcosystemForTrailSystem(
+  trailSystem: TrailSystem,
+  config: WorldGenerationConfig
+): EcosystemName {
+  // Map trail system to spoke ecosystem based on pass angle
+  const passAngle = trailSystem.passAngle;
+
+  // Normalize angle to 0-360 degrees
+  const angleDegrees = ((passAngle * 180 / Math.PI) + 360) % 360;
+
+  if (angleDegrees < 60 || angleDegrees >= 300) {
+    return config.spoke_ecosystems.pass_0;      // 0° ± 60°
+  } else if (angleDegrees >= 60 && angleDegrees < 180) {
+    return config.spoke_ecosystems.pass_120;    // 120° ± 60°
+  } else {
+    return config.spoke_ecosystems.pass_240;    // 240° ± 60°
+  }
 }
 
 /**
