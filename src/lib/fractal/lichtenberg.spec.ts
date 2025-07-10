@@ -5,8 +5,8 @@
 
 import { describe, it, expect } from 'vitest';
 import {
-  generateLichtenbergFigure,
-  LichtenbergConfig
+    generateLichtenbergFigure,
+    LichtenbergConfig
 } from './lichtenberg';
 
 describe('Lichtenberg Figure Generation', () => {

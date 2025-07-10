@@ -24,12 +24,13 @@ export type WorldGenerationConfig = {
   lichtenberg: {
     minVertices: number;     // Minimum number of vertices in the Lichtenberg figure
     maxChainLength: number;  // Maximum length of any single chain/branch
-  };
+    };
 }
 
 // World generation result from .cursorrules.md
 export type WorldGenerationResult = {
   places: Place[];
+  vertices: WorldVertex[];  // Preserve original vertex coordinates for visualization
   connections: {
     reciprocal: number;
     total: number;

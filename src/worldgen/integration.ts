@@ -6,18 +6,18 @@
 import { Place } from '~/types/entity/place';
 import { EntityType } from '~/types/entity/entity';
 import {
-  LichtenbergVertex,
-  LichtenbergConnection,
-  LichtenbergFigure,
-  LichtenbergConfig,
-  generateLichtenbergFigure
+    LichtenbergVertex,
+    LichtenbergConnection,
+    LichtenbergFigure,
+    LichtenbergConfig,
+    generateLichtenbergFigure
 } from '../lib/fractal/lichtenberg';
 import {
-  WorldGenerationConfig,
-  WorldGenerationResult,
-  EcosystemName,
-  ECOSYSTEM_PROFILES,
-  WorldVertex
+    WorldGenerationConfig,
+    WorldGenerationResult,
+    EcosystemName,
+    ECOSYSTEM_PROFILES,
+    WorldVertex
 } from './types';
 
 /**
@@ -42,6 +42,7 @@ export function generateWorld(config: WorldGenerationConfig): WorldGenerationRes
 
   return {
     places,
+    vertices: worldVertices, // Include original vertex coordinates for visualization
     connections,
     config
   };
