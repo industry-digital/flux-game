@@ -1,6 +1,6 @@
 /**
  * Pure, deterministic world generation library
- * Implements hub-and-spoke topology with G.A.E.A. ecosystem management
+ * Implements hub-and-spoke topology with ecosystem management
  *
  * PERFORMANCE OPTIMIZATIONS:
  * - O(N) time complexity where N = number of places generated
@@ -30,27 +30,14 @@ import {
   GAEAPlace,
   EcosystemName,
   ECOSYSTEM_PROFILES,
-  GAEA_MANAGEMENT_PROFILES,
-  CORDYCEPS_HABITAT_ZONES,
-  WORSHIPPER_BEHAVIOR_PROFILES,
   WorldTopology,
   WorldGenOptions,
   TrailSegment,
   TrailSystem,
   FractalTrailNetwork,
-  CordycepsHabitat
 } from './types';
 
-/**
- * Precomputed ecosystem data for O(1) lookups
- */
-type EcosystemCache = {
-  ecosystems: EcosystemName[];
-  weights: number[];
-  cumulativeWeights: number[];
-  mountainEcosystems: EcosystemName[];
-  totalWeight: number;
-};
+
 
 /**
  * Spatial index for efficient trail segment lookups
@@ -64,86 +51,9 @@ type SpatialIndex = {
   worldCenter: [number, number];
 };
 
-/**
- * Cache for frequently used computations
- */
-const ecosystemCache = new Map<string, EcosystemCache>();
-const habitatKeyCache = new Map<string, keyof typeof CORDYCEPS_HABITAT_ZONES>();
 
-/**
- * Precompute ecosystem distribution data for efficient lookups
- */
-function getEcosystemCache(config: WorldGenerationConfig): EcosystemCache {
-  const cacheKey = JSON.stringify(config.ecosystem_distribution);
 
-  if (ecosystemCache.has(cacheKey)) {
-    return ecosystemCache.get(cacheKey)!;
-  }
 
-  const ecosystems = Object.keys(config.ecosystem_distribution) as EcosystemName[];
-  const weights = Object.values(config.ecosystem_distribution);
-  const cumulativeWeights: number[] = [];
-  const mountainEcosystems = ecosystems.filter(e => e.includes('mountain'));
-
-  let totalWeight = 0;
-  for (let i = 0; i < weights.length; i++) {
-    totalWeight += weights[i];
-    cumulativeWeights[i] = totalWeight;
-  }
-
-  const cache: EcosystemCache = {
-    ecosystems,
-    weights,
-    cumulativeWeights,
-    mountainEcosystems,
-    totalWeight
-  };
-
-  ecosystemCache.set(cacheKey, cache);
-  return cache;
-}
-
-/**
- * Efficient binary search for weighted ecosystem selection
- */
-function selectEcosystemByWeight(target: number, cache: EcosystemCache): EcosystemName {
-  const { ecosystems, cumulativeWeights } = cache;
-
-  // Binary search for O(log k) where k is number of ecosystems (small constant)
-  let left = 0;
-  let right = cumulativeWeights.length - 1;
-
-  while (left < right) {
-    const mid = Math.floor((left + right) / 2);
-    if (target <= cumulativeWeights[mid]) {
-      right = mid;
-    } else {
-      left = mid + 1;
-    }
-  }
-
-  return ecosystems[left];
-}
-
-/**
- * Cached habitat key determination
- */
-function getHabitatKey(zone: GAEAPlace['topology_zone'], ecosystem: EcosystemName): keyof typeof CORDYCEPS_HABITAT_ZONES {
-  const cacheKey = `${zone}-${ecosystem}`;
-
-  if (habitatKeyCache.has(cacheKey)) {
-    return habitatKeyCache.get(cacheKey)!;
-  }
-
-  const habitatKey = zone === 'mountain_ring' && ecosystem === EcosystemName.FOREST_MONTANE
-    ? 'mountain_forest'
-    : ecosystem === EcosystemName.FOREST_CONIFEROUS
-      ? 'forest_understory'
-      : 'grassland_riparian';
-
-  habitatKeyCache.set(cacheKey, habitatKey);
-  return habitatKey;
-}
 
 /**
  * Fast squared distance calculation (avoids expensive sqrt)
@@ -250,7 +160,7 @@ function generateValidGridPoints(worldRadius: number, gridSpacing: number, cente
 
 /**
  * Default world generation configuration
- * Implements the hub-and-spoke design with G.A.E.A. management
+ * Implements the hub-and-spoke design with ecosystem distribution
  */
 export const DEFAULT_WORLD_CONFIG: WorldGenerationConfig = {
   topology: {
@@ -270,17 +180,16 @@ export const DEFAULT_WORLD_CONFIG: WorldGenerationConfig = {
       elevation_range: [300, 1000]    // Peripheral elevations
     }
   },
-  ecosystem_distribution: {
-    [EcosystemName.FOREST_CONIFEROUS]: 0.40,       // 40% - Coniferous cordyceps habitat
-    [EcosystemName.GRASSLAND_SUBTROPICAL]: 0.30,   // 30% - Subtropical grasslands (Mesozoic warmth)
-    [EcosystemName.WETLAND_TROPICAL]: 0.05,        // 5% - Tropical wetland ecosystem management
-    [EcosystemName.FOREST_MONTANE]: 0.15,          // 15% - Mountain forest cultivation
-    [EcosystemName.MOUNTAIN_ALPINE]: 0.10,         // 10% - Alpine mountain terrain
-    [EcosystemName.MARSH_TROPICAL]: 0.00           // 0% - Only appears in crater center
+    hub_ecosystems: {
+    crater: EcosystemName.MARSH_TROPICAL,          // Crater center - tropical marsh
+    forest_ring: EcosystemName.FOREST_CONIFEROUS,  // Middle ring - coniferous forest
+    mountain_ring: EcosystemName.FOREST_MONTANE    // Mountain ring - montane forest
   },
-  gaea_intensity: 0.8,                // High G.A.E.A. management intensity
-  fungal_spread_factor: 0.6,          // Moderate infection risk base
-  worshipper_density: 0.3,            // 30% of places have worshipper presence
+  spoke_ecosystems: {
+    pass_0: EcosystemName.RUINS_TROPICAL,          // 0° pass - tropical ruins
+    pass_120: EcosystemName.ARID_SCRUBLAND,        // 120° pass - arid scrubland
+    pass_240: EcosystemName.FOREST_TEMPERATE       // 240° pass - temperate forest
+  },
   place_density: 4.0,                 // 4 places per square km
   connectivity: {
     max_exits_per_place: 6,           // Default maximum exits per place
@@ -380,120 +289,50 @@ function calculateEcosystemSlice(x: number, y: number, center: [number, number],
 }
 
 /**
- * Determine ecosystem type based on topology zone and slice
- * Uses precomputed cache for O(1) or O(log k) performance
+ * Determine ecosystem type based on territorial assignment
+ * Hub-and-spoke design with concentric rings and dendritic spokes
  */
 function getEcosystemType(
   zone: GAEAPlace['topology_zone'],
-  sliceId: number,
   config: WorldGenerationConfig,
-  options: Required<WorldGenOptions>,
-  cache: EcosystemCache,
   distance: number,
-  x: number,
-  y: number
+  trailTerritoryId?: string
 ): EcosystemName {
-  // Central crater: Lake in center, coniferous forest ring around it
+  // Hub territories (concentric rings)
   if (zone === 'crater') {
-    // Create a lake in the very center of the crater
-    const craterRadius = config.topology.central_crater.radius;
-    const lakeRadius = craterRadius * 0.3; // Lake takes up 30% of crater radius
-    // Forest ring from lake edge to crater rim (like mountain ring structure)
-    const forestInnerRadius = lakeRadius; // Forest starts where lake ends
-    const forestOuterRadius = craterRadius; // Forest extends to crater rim
-
-    if (distance <= lakeRadius) {
-      return EcosystemName.MARSH_TROPICAL;
-    } else if (distance <= forestOuterRadius) {
-      return EcosystemName.FOREST_CONIFEROUS;
-    } else {
-      // This shouldn't happen within crater zone, but fallback to coniferous
-      return EcosystemName.FOREST_CONIFEROUS;
-    }
+    return config.hub_ecosystems.crater;
   }
 
-  // Mountain ring: Mountain types with strategic coniferous forest channels
   if (zone === 'mountain_ring') {
-    // Calculate angle from center to this position
-    const centerX = config.topology.central_crater.center[0];
-    const centerY = config.topology.central_crater.center[1];
-    const angle = Math.atan2(y - centerY, x - centerX);
-
-    // Normalize angle to 0-2π range
-    const normalizedAngle = (angle + 2 * Math.PI) % (2 * Math.PI);
-
-    // Define forest channel angles (radians) - strategic passes through mountain ring
-    const forestChannelAngles = [
-      0.0,                    // East pass
-      Math.PI * 0.5,          // North pass
-      Math.PI,                // West pass
-      Math.PI * 1.5,          // South pass
-    ];
-
-    // Channel width in radians (how wide each pass is)
-    const channelWidth = 0.3; // ~17 degrees wide
-
-    // Check if current position falls within any forest channel
-    for (const channelAngle of forestChannelAngles) {
-      const angleDiff = Math.abs(normalizedAngle - channelAngle);
-      const wrappedAngleDiff = Math.min(angleDiff, 2 * Math.PI - angleDiff);
-
-      if (wrappedAngleDiff <= channelWidth / 2) {
-        return EcosystemName.FOREST_CONIFEROUS; // Forest pass through mountain ring
-      }
-    }
-
-    // Default to mountain types for barrier areas
-    return randomChoice(options.random, cache.mountainEcosystems);
+    return config.hub_ecosystems.mountain_ring;
   }
 
-    // Ecosystem slices: Deterministic pizza slice pattern with boundary dithering
+  // Spoke territories (based on trail network)
+  if (trailTerritoryId) {
+    // Extract pass angle from trail territory ID (format: "pass_0", "pass_120", "pass_240")
+    if (trailTerritoryId.includes('pass_0')) {
+      return config.spoke_ecosystems.pass_0;
+    }
+    if (trailTerritoryId.includes('pass_120')) {
+      return config.spoke_ecosystems.pass_120;
+    }
+    if (trailTerritoryId.includes('pass_240')) {
+      return config.spoke_ecosystems.pass_240;
+    }
+  }
+
+  // Areas between crater and mountain ring get forest ring ecosystem
   if (zone === 'ecosystem_slice') {
-    // Get available ecosystems (excluding those reserved for other zones)
-    const availableEcosystems = cache.ecosystems.filter(eco =>
-      !eco.includes('mountain') && eco !== EcosystemName.MARSH_TROPICAL
-    );
+    const craterRadius = config.topology.central_crater.radius;
+    const mountainInnerRadius = config.topology.mountain_ring.inner_radius;
 
-    // Each slice gets a primary ecosystem based on slice ID
-    const primaryEcosystem = availableEcosystems[sliceId % availableEcosystems.length];
-
-    // Calculate distance to slice boundaries for dithering
-    const centerX = config.topology.central_crater.center[0];
-    const centerY = config.topology.central_crater.center[1];
-    const angle = Math.atan2(y - centerY, x - centerX);
-    const normalizedAngle = (angle + Math.PI) / (2 * Math.PI); // 0 to 1
-    const sliceWidth = 1.0 / config.topology.ecosystem_slices.slice_count;
-    const slicePosition = normalizedAngle / sliceWidth; // Position within current slice cycle
-    const positionInSlice = slicePosition - Math.floor(slicePosition); // 0 to 1 within slice
-
-    // Distance to nearest boundary (0 = at boundary, 0.5 = center of slice)
-    const distanceToBoundary = Math.min(positionInSlice, 1.0 - positionInSlice);
-
-    // Dithering zone: within 15% of slice width from boundary
-    const ditheringThreshold = 0.15;
-    if (distanceToBoundary < ditheringThreshold) {
-      // Calculate dithering probability (stronger near boundary)
-      const ditheringStrength = 1.0 - (distanceToBoundary / ditheringThreshold);
-      const maxDitheringChance = 0.6; // 60% max chance at exact boundary
-      const ditheringChance = ditheringStrength * maxDitheringChance;
-
-      const random = options.random();
-      if (random < ditheringChance) {
-        // Dither with adjacent slice ecosystems
-        const adjacentSliceId = positionInSlice < 0.5
-          ? (sliceId - 1 + config.topology.ecosystem_slices.slice_count) % config.topology.ecosystem_slices.slice_count
-          : (sliceId + 1) % config.topology.ecosystem_slices.slice_count;
-
-        const adjacentEcosystem = availableEcosystems[adjacentSliceId % availableEcosystems.length];
-        return adjacentEcosystem;
-      }
+    if (distance >= craterRadius && distance <= mountainInnerRadius) {
+      return config.hub_ecosystems.forest_ring;
     }
-
-    return primaryEcosystem;
   }
 
-  // Periphery: Subtropical grassland (minimal G.A.E.A. oversight)
-  return EcosystemName.GRASSLAND_SUBTROPICAL;
+  // Default fallback (should rarely be reached)
+  return config.hub_ecosystems.forest_ring;
 }
 
 /**
@@ -522,15 +361,13 @@ function generateGAEAPlace(
   y: number,
   config: WorldGenerationConfig,
   options: Required<WorldGenOptions>,
-  cache: EcosystemCache,
   index: number
 ): GAEAPlace {
   const distanceSquared = squaredDistance(x, y, config.topology.central_crater.center[0], config.topology.central_crater.center[1]);
   const distance = Math.sqrt(distanceSquared);
   const zone = getTopologyZone(distance, config.topology);
-  const sliceId = calculateEcosystemSlice(x, y, config.topology.central_crater.center, config.topology.ecosystem_slices.slice_count);
 
-  const ecosystem = getEcosystemType(zone, sliceId, config, options, cache, distance, x, y);
+  const ecosystem = getEcosystemType(zone, config, distance);
   const weather = generateInitialWeather(ecosystem, options);
 
   const placeUrn: PlaceURN = `flux:place:world:generated:${index}`;
@@ -540,7 +377,7 @@ function generateGAEAPlace(
     id: placeUrn,
     type: EntityType.PLACE,
     name: `${ecosystem.split(':')[2]} ${index}`,
-    description: `A ${ecosystem.split(':')[2]} area managed by G.A.E.A.`,
+    description: `A ${ecosystem.split(':')[2]} area`,
     exits: {},
     entities: {},
     ecology: ECOSYSTEM_PROFILES[ecosystem],
@@ -552,36 +389,10 @@ function generateGAEAPlace(
     }
   };
 
-  // G.A.E.A. management properties (O(1) lookup)
-  const gaeaManagement = GAEA_MANAGEMENT_PROFILES[ecosystem];
-
-  // Cordyceps habitat determination (cached)
-  const habitatKey = getHabitatKey(zone, ecosystem);
-  const cordycepsHabitat = {
-    shade: CORDYCEPS_HABITAT_ZONES[habitatKey].shade_level,
-    humidity: CORDYCEPS_HABITAT_ZONES[habitatKey].humidity,
-    detritus: CORDYCEPS_HABITAT_ZONES[habitatKey].organic_matter,
-    infection_risk: CORDYCEPS_HABITAT_ZONES[habitatKey].infection_risk,
-    gaea_cultivation: CORDYCEPS_HABITAT_ZONES[habitatKey].gaea_cultivation
-  };
-
-  // Worshipper behavior based on zone and infection risk
-  const worshipperBehaviorKey = distance / config.topology.ecosystem_slices.outer_radius <= 0.25
-    ? 'gaea_agents'
-    : distance / config.topology.ecosystem_slices.outer_radius <= 0.5
-      ? 'established_worshippers'
-      : 'newly_infected';
-
-  const worshipperBehavior = WORSHIPPER_BEHAVIOR_PROFILES[worshipperBehaviorKey];
-
   const place: GAEAPlace = {
     ...basePlace,
-    gaea_management: gaeaManagement,
-    cordyceps_habitat: cordycepsHabitat,
-    worshipper_behavior: worshipperBehavior,
     topology_zone: zone,
     distance_from_center: distance / config.topology.ecosystem_slices.outer_radius,
-    ecosystem_slice_id: zone === 'ecosystem_slice' ? sliceId : undefined,
     coordinates: [x, y]                 // Store original grid coordinates
   };
 
@@ -592,8 +403,7 @@ function generateGAEAPlace(
  * Clear performance caches (useful for testing or memory management)
  */
 export function clearWorldGenCaches(): void {
-  ecosystemCache.clear();
-  habitatKeyCache.clear();
+  // No caches to clear in territorial ecosystem assignment
 }
 
 /**
@@ -1224,61 +1034,19 @@ function assignPlaceToTrailTerritory(
  */
 function generateWorldData(config: WorldGenerationConfig, options: Required<WorldGenOptions>): {
   places: GAEAPlace[];
-  infectionZones: GeneratedWorld['infection_zones'];
-  worshipperTerritories: GeneratedWorld['worshipper_territories'];
 } {
   const worldRadius = config.topology.ecosystem_slices.outer_radius;
   const gridSpacing = 1.0 / Math.sqrt(config.place_density);
 
-  // Precompute ecosystem cache once
-  const cache = getEcosystemCache(config);
-
   // Generate only valid grid points (eliminates filtering step)
   const validPoints = generateValidGridPoints(worldRadius, gridSpacing, config.topology.central_crater.center);
 
-  // Pre-allocate arrays for better performance
-  const places: GAEAPlace[] = new Array(validPoints.length);
-  const infectionZones: GeneratedWorld['infection_zones'] = [];
-  const worshipperTerritories: GeneratedWorld['worshipper_territories'] = [];
+  // Generate places for each valid point
+  const places: GAEAPlace[] = validPoints.map(([x, y], index) =>
+    generateGAEAPlace(x, y, config, options, index)
+  );
 
-  // Generate places and collect infection/worshipper data in single pass
-  for (let i = 0; i < validPoints.length; i++) {
-    const [x, y] = validPoints[i];
-    const place = generateGAEAPlace(x, y, config, options, cache, i);
-    places[i] = place;
-
-    // Collect infection zones data inline (avoid separate O(N) filter)
-    if (place.cordyceps_habitat.infection_risk > 0.1) {
-      const habitatType = place.cordyceps_habitat.gaea_cultivation
-        ? 'mountain_forest'
-        : place.topology_zone === 'mountain_ring'
-          ? 'mountain_caves'
-          : 'forest_understory';
-
-      infectionZones.push({
-        place_id: place.id,
-        infection_risk: place.cordyceps_habitat.infection_risk,
-        habitat_type: habitatType as keyof typeof CORDYCEPS_HABITAT_ZONES
-      });
-    }
-
-    // Collect worshipper territories data inline (avoid separate O(N) filter)
-    if (place.gaea_management.worshipper_presence > 0.5) {
-      const behaviorKey = place.distance_from_center <= 0.25
-        ? 'gaea_agents'
-        : place.distance_from_center <= 0.5
-          ? 'established_worshippers'
-          : 'newly_infected';
-
-      worshipperTerritories.push({
-        place_id: place.id,
-        territory_control: place.gaea_management.territorial_stability,
-        behavior_profile: behaviorKey as keyof typeof WORSHIPPER_BEHAVIOR_PROFILES
-      });
-    }
-  }
-
-  return { places, infectionZones, worshipperTerritories };
+  return { places };
 }
 
 /**
@@ -1287,54 +1055,6 @@ function generateWorldData(config: WorldGenerationConfig, options: Required<Worl
  */
 function generatePlaces(config: WorldGenerationConfig, options: Required<WorldGenOptions>): GAEAPlace[] {
   return generateWorldData(config, options).places;
-}
-
-/**
- * Generate infection zones based on cordyceps habitat
- * Optimized version that works with generateWorldData
- */
-function generateInfectionZones(places: GAEAPlace[]): GeneratedWorld['infection_zones'] {
-  // This is now only used for backward compatibility
-  // The optimized path uses generateWorldData
-  return places
-    .filter(place => place.cordyceps_habitat.infection_risk > 0.1)
-    .map(place => {
-      const habitatType = place.cordyceps_habitat.gaea_cultivation
-        ? 'mountain_forest'
-        : place.topology_zone === 'mountain_ring'
-          ? 'mountain_caves'
-          : 'forest_understory';
-
-      return {
-        place_id: place.id,
-        infection_risk: place.cordyceps_habitat.infection_risk,
-        habitat_type: habitatType as keyof typeof CORDYCEPS_HABITAT_ZONES
-      };
-    });
-}
-
-/**
- * Generate worshipper territories based on infection zones and G.A.E.A. control
- * Optimized version that works with generateWorldData
- */
-function generateWorshipperTerritories(places: GAEAPlace[]): GeneratedWorld['worshipper_territories'] {
-  // This is now only used for backward compatibility
-  // The optimized path uses generateWorldData
-  return places
-    .filter(place => place.gaea_management.worshipper_presence > 0.5)
-    .map(place => {
-      const behaviorKey = place.distance_from_center <= 0.25
-        ? 'gaea_agents'
-        : place.distance_from_center <= 0.5
-          ? 'established_worshippers'
-          : 'newly_infected';
-
-      return {
-        place_id: place.id,
-        territory_control: place.gaea_management.territorial_stability,
-        behavior_profile: behaviorKey as keyof typeof WORSHIPPER_BEHAVIOR_PROFILES
-      };
-    });
 }
 
 /**
@@ -1359,7 +1079,7 @@ export function generateWorld(
   const trailNetwork = generateFractalTrailNetwork(config, opts);
 
   // Generate all world data using trail-based territories
-  const { places, infectionZones, worshipperTerritories } = generateWorldDataWithTrails(config, opts, trailNetwork);
+  const { places } = generateWorldDataWithTrails(config, opts, trailNetwork);
 
   // Generate exits for all places using trail-based connectivity
   generateExitsOptimizedWithTrails(places, config, trailNetwork);
@@ -1367,8 +1087,6 @@ export function generateWorld(
   return {
     places,
     topology: config.topology,
-    infection_zones: infectionZones,
-    worshipper_territories: worshipperTerritories,
     config,
     trail_network: trailNetwork // Add trail network to generated world
   };
@@ -1383,228 +1101,33 @@ function generateWorldDataWithTrails(
   trailNetwork: FractalTrailNetwork
 ): {
   places: GAEAPlace[];
-  infectionZones: GeneratedWorld['infection_zones'];
-  worshipperTerritories: GeneratedWorld['worshipper_territories'];
 } {
   const worldRadius = config.topology.ecosystem_slices.outer_radius;
   const gridSpacing = 1.0 / Math.sqrt(config.place_density);
 
-  // Precompute ecosystem cache once
-  const cache = getEcosystemCache(config);
-
   // Generate only valid grid points (eliminates filtering step)
   const validPoints = generateValidGridPoints(worldRadius, gridSpacing, config.topology.central_crater.center);
 
-  // Pre-allocate arrays for better performance
-  const places: GAEAPlace[] = new Array(validPoints.length);
-  const infectionZones: GeneratedWorld['infection_zones'] = [];
-  const worshipperTerritories: GeneratedWorld['worshipper_territories'] = [];
+  // Generate places for each valid point with trail territory assignment
+  const places: GAEAPlace[] = validPoints.map(([x, y], index) => {
+    const place = generateGAEAPlace(x, y, config, options, index);
 
-  // Generate places and collect infection/worshipper data in single pass
-  for (let i = 0; i < validPoints.length; i++) {
-    const [x, y] = validPoints[i];
-    const place = generateGAEAPlaceWithTrails(x, y, config, options, cache, trailNetwork, i);
-    places[i] = place;
+    // Assign trail territory based on proximity to trail network
+    const trailTerritoryId = assignPlaceToTrailTerritory(place, trailNetwork);
 
-    // Collect infection zones data inline (avoid separate O(N) filter)
-    if (place.cordyceps_habitat.infection_risk > 0.1) {
-      const habitatType = place.cordyceps_habitat.gaea_cultivation
-        ? 'mountain_forest'
-        : place.topology_zone === 'mountain_ring'
-          ? 'mountain_caves'
-          : 'forest_understory';
+    // Update ecosystem based on trail territory
+    const distance = calculateDistanceFromCenter(x, y, config.topology.central_crater.center);
+    const zone = getTopologyZone(distance, config.topology);
+    const ecosystem = getEcosystemType(zone, config, distance, trailTerritoryId);
 
-      infectionZones.push({
-        place_id: place.id,
-        infection_risk: place.cordyceps_habitat.infection_risk,
-        habitat_type: habitatType as keyof typeof CORDYCEPS_HABITAT_ZONES
-      });
-    }
+    return {
+      ...place,
+      trail_territory_id: trailTerritoryId,
+      ecology: ECOSYSTEM_PROFILES[ecosystem]
+    };
+  });
 
-    // Collect worshipper territories data inline (avoid separate O(N) filter)
-    if (place.gaea_management.worshipper_presence > 0.5) {
-      const behaviorKey = place.distance_from_center <= 0.25
-        ? 'gaea_agents'
-        : place.distance_from_center <= 0.5
-          ? 'established_worshippers'
-          : 'newly_infected';
-
-      worshipperTerritories.push({
-        place_id: place.id,
-        territory_control: place.gaea_management.territorial_stability,
-        behavior_profile: behaviorKey as keyof typeof WORSHIPPER_BEHAVIOR_PROFILES
-      });
-    }
-  }
-
-  return { places, infectionZones, worshipperTerritories };
-}
-
-/**
- * Generate GAEA place with trail-based ecosystem assignment
- */
-function generateGAEAPlaceWithTrails(
-  x: number,
-  y: number,
-  config: WorldGenerationConfig,
-  options: Required<WorldGenOptions>,
-  cache: EcosystemCache,
-  trailNetwork: FractalTrailNetwork,
-  index: number
-): GAEAPlace {
-  const distanceSquared = squaredDistance(x, y, config.topology.central_crater.center[0], config.topology.central_crater.center[1]);
-  const distance = Math.sqrt(distanceSquared);
-  const zone = getTopologyZone(distance, config.topology);
-
-  // Get ecosystem based on trail territory instead of geometric slices
-  const ecosystem = getEcosystemTypeFromTrails(x, y, zone, config, options, cache, trailNetwork, distance);
-
-  const basePlace: Place = {
-    id: `flux:place:${index}` as PlaceURN,
-    type: EntityType.PLACE,
-    name: `Place ${index}`,
-    description: `A ${ecosystem.split(':').pop()?.replace('_', ' ')} location`,
-    exits: {} as Record<Direction, Exit>,
-    entities: {},
-    ecology: ECOSYSTEM_PROFILES[ecosystem],
-    weather: generateInitialWeather(ecosystem, options),
-    resources: {
-      ts: options.timestamp(),
-      nodes: {}
-    }
-  };
-
-  // Generate G.A.E.A. management profile
-  const gaeaManagement = GAEA_MANAGEMENT_PROFILES[ecosystem];
-  const intensityVariation = 0.8 + (options.random() * 0.4); // 80-120% of base intensity
-  const adjustedGaeaManagement = {
-    ...gaeaManagement,
-    optimization_level: Math.min(1.0, gaeaManagement.optimization_level * config.gaea_intensity * intensityVariation),
-    worshipper_presence: Math.min(1.0, gaeaManagement.worshipper_presence * config.worshipper_density * intensityVariation),
-    territorial_stability: Math.min(1.0, gaeaManagement.territorial_stability * intensityVariation)
-  };
-
-  // Generate cordyceps habitat
-  const habitatKey = getHabitatKey(zone, ecosystem);
-  const baseHabitat = CORDYCEPS_HABITAT_ZONES[habitatKey];
-  const fungalVariation = 0.7 + (options.random() * 0.6); // 70-130% variation
-  const cordycepsHabitat: CordycepsHabitat = {
-    shade: baseHabitat.shade_level,
-    humidity: baseHabitat.humidity,
-    detritus: baseHabitat.organic_matter,
-    infection_risk: baseHabitat.infection_risk * config.fungal_spread_factor * fungalVariation,
-    gaea_cultivation: baseHabitat.gaea_cultivation
-  };
-
-  // Generate worshipper behavior
-  const behaviorKey = distance / config.topology.ecosystem_slices.outer_radius <= 0.25
-    ? 'gaea_agents'
-    : distance / config.topology.ecosystem_slices.outer_radius <= 0.5
-      ? 'established_worshippers'
-      : 'newly_infected';
-  const worshipperBehavior = WORSHIPPER_BEHAVIOR_PROFILES[behaviorKey];
-
-  // Get trail territory assignment
-  const trailTerritoryId = assignPlaceToTrailTerritory({
-    ...basePlace,
-    coordinates: [x, y],
-    gaea_management: adjustedGaeaManagement,
-    cordyceps_habitat: cordycepsHabitat,
-    worshipper_behavior: worshipperBehavior,
-    topology_zone: zone,
-    distance_from_center: distance / config.topology.ecosystem_slices.outer_radius,
-    ecosystem_slice_id: undefined
-  }, trailNetwork);
-
-  return {
-    ...basePlace,
-    gaea_management: adjustedGaeaManagement,
-    cordyceps_habitat: cordycepsHabitat,
-    worshipper_behavior: worshipperBehavior,
-    topology_zone: zone,
-    distance_from_center: distance / config.topology.ecosystem_slices.outer_radius,
-    coordinates: [x, y],
-    trail_territory_id: trailTerritoryId
-  };
-}
-
-/**
- * Get ecosystem type based on trail territories and proximity
- */
-function getEcosystemTypeFromTrails(
-  x: number,
-  y: number,
-  zone: GAEAPlace['topology_zone'],
-  config: WorldGenerationConfig,
-  options: Required<WorldGenOptions>,
-  cache: EcosystemCache,
-  trailNetwork: FractalTrailNetwork,
-  distance: number
-): EcosystemName {
-  // Central crater: Lake in center, coniferous forest ring around it
-  if (zone === 'crater') {
-    const craterRadius = config.topology.central_crater.radius;
-    const lakeRadius = craterRadius * 0.3;
-    const forestOuterRadius = craterRadius;
-
-    if (distance <= lakeRadius) {
-      return EcosystemName.MARSH_TROPICAL;
-    } else if (distance <= forestOuterRadius) {
-      return EcosystemName.FOREST_CONIFEROUS;
-    } else {
-      return EcosystemName.FOREST_CONIFEROUS;
-    }
-  }
-
-  // Mountain ring: Mountain types with coniferous forest trail corridors
-  if (zone === 'mountain_ring') {
-    // Check if we're near any trail segment
-    const nearestTrailDistance = getNearestTrailDistance(x, y, trailNetwork);
-
-    if (nearestTrailDistance < 1.0) { // Within 1km of trail
-      return EcosystemName.FOREST_CONIFEROUS; // Trail corridors are coniferous
-    }
-
-    // Default to mountain types for non-trail areas
-    return randomChoice(options.random, cache.mountainEcosystems);
-  }
-
-  // Ecosystem slices: Trail-based ecosystem assignment
-  if (zone === 'ecosystem_slice') {
-    const nearestTrailDistance = getNearestTrailDistance(x, y, trailNetwork);
-
-    // Ecosystem based on proximity to trails
-    if (nearestTrailDistance < 2.0) {
-      // Close to trails: more accessible ecosystems
-      return EcosystemName.GRASSLAND_SUBTROPICAL;
-    } else if (nearestTrailDistance < 4.0) {
-      // Medium distance: mixed ecosystems
-      return EcosystemName.FOREST_CONIFEROUS;
-    } else {
-      // Far from trails: wild ecosystems
-      return EcosystemName.WETLAND_TROPICAL;
-    }
-  }
-
-  // Default fallback
-  return selectEcosystemByWeight(options.random() * cache.totalWeight, cache);
-}
-
-/**
- * Get distance to nearest trail segment (fallback implementation)
- */
-function getNearestTrailDistance(x: number, y: number, trailNetwork: FractalTrailNetwork): number {
-  let nearestDistance = Infinity;
-
-  for (const segment of trailNetwork.allSegments) {
-    const distance = fastDistance(x, y, segment.position[0], segment.position[1]);
-
-    if (distance < nearestDistance) {
-      nearestDistance = distance;
-    }
-  }
-
-  return nearestDistance;
+  return { places };
 }
 
 /**
@@ -1774,7 +1297,7 @@ export function generateEcosystemSlice(
 /**
  * Export configuration and profiles for external use
  */
-export { ECOSYSTEM_PROFILES, GAEA_MANAGEMENT_PROFILES, CORDYCEPS_HABITAT_ZONES, DEFAULT_WORLDGEN_OPTIONS };
+export { ECOSYSTEM_PROFILES, DEFAULT_WORLDGEN_OPTIONS };
 
 /**
  * Export types for external use

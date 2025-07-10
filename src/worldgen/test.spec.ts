@@ -4,7 +4,13 @@
  */
 
 import { describe, it, expect } from 'vitest';
-import { generateWorld, generateEcosystemSlice, EcosystemName, DEFAULT_WORLD_CONFIG, clearWorldGenCaches } from './index';
+import {
+  generateWorld,
+  generateEcosystemSlice,
+  DEFAULT_WORLD_CONFIG,
+  clearWorldGenCaches,
+} from './index';
+import { Direction } from '../types/world/space';
 
 // Test helper functions for spatial indexing (we'll access these via the generated world data)
 function testSquaredDistance(x1: number, y1: number, x2: number, y2: number): number {
@@ -396,8 +402,11 @@ describe('Performance Optimization Tests', () => {
 
         // Check that exits point to same relative targets
         for (const direction of exits1) {
-          const exit1 = place1.exits[direction];
-          const exit2 = place2.exits[direction];
+          const exit1 = place1.exits[direction as Direction];
+          const exit2 = place2.exits[direction as Direction];
+
+          // Skip if either exit is undefined
+          if (!exit1 || !exit2) continue;
 
           // Find relative position of target in respective arrays
           const targetIndex1 = world1.places.findIndex(p => p.id === exit1.to);
@@ -712,28 +721,30 @@ describe('World Generation Input/Output Tests', () => {
       // Should have at least one ecosystem represented
       expect(ecosystemCounts.size).toBeGreaterThan(0);
 
-      // Should follow distribution roughly (within factor of 3 for small worlds)
-      const distribution = DEFAULT_WORLD_CONFIG.ecosystem_distribution;
-      const expectedCounts = Object.entries(distribution)
-        .map(([ecosystem, weight]) => [ecosystem, weight * world.places.length] as [string, number]);
+      // Should follow territorial distribution (hub-and-spoke design)
+      // In hub-and-spoke, we expect to see the hub and spoke ecosystems
+      const expectedHubEcosystems = Object.values(DEFAULT_WORLD_CONFIG.hub_ecosystems);
+      const expectedSpokeEcosystems = Object.values(DEFAULT_WORLD_CONFIG.spoke_ecosystems);
+      const allExpectedEcosystems = [...expectedHubEcosystems, ...expectedSpokeEcosystems];
 
       // For very small worlds, just check that we have some ecosystems
       if (world.places.length < 50) {
         // Just verify we have at least one ecosystem and it's valid
         expect(ecosystemCounts.size).toBeGreaterThan(0);
 
-        // Verify all ecosystems are valid
+        // Verify all ecosystems are from our expected set
         for (const ecosystem of ecosystemCounts.keys()) {
-          expect(Object.keys(distribution)).toContain(ecosystem);
+          expect(allExpectedEcosystems).toContain(ecosystem);
         }
       } else {
-        // For larger worlds, check distribution more strictly
-        for (const [ecosystem, expectedCount] of expectedCounts) {
-          const actualCount = ecosystemCounts.get(ecosystem) || 0;
-          if (expectedCount > 1) { // Only check if we expect more than 1
-            expect(actualCount).toBeGreaterThan(0);
+        // For larger worlds, check that we have some representation of hub ecosystems
+        let hubEcosystemsFound = 0;
+        for (const ecosystem of expectedHubEcosystems) {
+          if (ecosystemCounts.has(ecosystem)) {
+            hubEcosystemsFound++;
           }
         }
+        expect(hubEcosystemsFound).toBeGreaterThan(0);
       }
     });
   });
@@ -750,15 +761,14 @@ describe('World Generation Input/Output Tests', () => {
         expect(place.id).toBeDefined();
         expect(typeof place.id).toBe('string');
         expect(place.ecology?.ecosystem).toBeDefined();
-        expect(place.gaea_management).toBeDefined();
-        expect(place.cordyceps_habitat).toBeDefined();
+        expect(place.topology_zone).toBeDefined();
+        expect(place.distance_from_center).toBeDefined();
+        expect(place.coordinates).toBeDefined();
+        expect(place.coordinates).toHaveLength(2);
 
         // Validate numeric ranges
-        const mgmt = place.gaea_management;
-        expect(mgmt.optimization_level).toBeGreaterThanOrEqual(0);
-        expect(mgmt.optimization_level).toBeLessThanOrEqual(1);
-        expect(mgmt.fungal_cultivation_intensity).toBeGreaterThanOrEqual(0);
-        expect(mgmt.fungal_cultivation_intensity).toBeLessThanOrEqual(1);
+        expect(place.distance_from_center).toBeGreaterThanOrEqual(0);
+        expect(place.distance_from_center).toBeLessThanOrEqual(1);
       }
     });
 
@@ -805,22 +815,27 @@ describe('World Generation Input/Output Tests', () => {
       }
     };
 
-    // Helper to generate random valid ecosystem distribution
-    function generateRandomEcosystemDistribution(): Record<EcosystemName, number> {
-      const weights = [0.1, 0.2, 0.3, 0.4, 0.5, 0.1].map(() => Math.random() * 0.5 + 0.1); // 0.1 to 0.6
-      const total = weights.reduce((sum, w) => sum + w, 0);
-
-      // Normalize to sum to 1.0
-      const normalized = weights.map(w => w / total);
+    // Helper to generate random valid hub and spoke ecosystems
+    function generateRandomHubSpokeEcosystems(): { hub_ecosystems: any; spoke_ecosystems: any } {
+      // Get all ecosystem names from the DEFAULT_WORLD_CONFIG
+      const allEcosystems = [
+        ...Object.values(DEFAULT_WORLD_CONFIG.hub_ecosystems),
+        ...Object.values(DEFAULT_WORLD_CONFIG.spoke_ecosystems)
+      ];
+      const shuffled = [...allEcosystems].sort(() => Math.random() - 0.5);
 
       return {
-        'flux:eco:forest:coniferous': normalized[0],
-        'flux:eco:grassland:subtropical': normalized[1],
-        'flux:eco:wetland:tropical': normalized[2],
-        'flux:eco:forest:montane': normalized[3],
-        'flux:eco:mountain:alpine': normalized[4],
-        'flux:eco:marsh:tropical': normalized[5]
-      } as Record<EcosystemName, number>;
+        hub_ecosystems: {
+          crater: shuffled[0],
+          forest_ring: shuffled[1],
+          mountain_ring: shuffled[2]
+        },
+        spoke_ecosystems: {
+          pass_0: shuffled[3],
+          pass_120: shuffled[4],
+          pass_240: shuffled[5]
+        }
+      };
     }
 
     // Helper to generate random valid topology (smaller for speed)
@@ -873,12 +888,11 @@ describe('World Generation Input/Output Tests', () => {
     it('should handle random valid configurations without failing', () => {
       // Reduced from 20 to 8 iterations for speed
       for (let i = 0; i < 8; i++) {
+        const ecosystems = generateRandomHubSpokeEcosystems();
         const randomConfig = {
           topology: generateRandomTopology(),
-          ecosystem_distribution: generateRandomEcosystemDistribution(),
-          gaea_intensity: Math.random(),
-          fungal_spread_factor: Math.random(),
-          worshipper_density: Math.random(),
+          hub_ecosystems: ecosystems.hub_ecosystems,
+          spoke_ecosystems: ecosystems.spoke_ecosystems,
           place_density: Math.random() * 0.02 + 0.005, // Smaller range: 0.005-0.025
           connectivity: {
             ...DEFAULT_WORLD_CONFIG.connectivity,
@@ -957,10 +971,8 @@ describe('World Generation Input/Output Tests', () => {
       for (let i = 0; i < 3; i++) {
         const config = {
           topology: generateRandomTopology(),
-          ecosystem_distribution: generateRandomEcosystemDistribution(),
-          gaea_intensity: Math.random(),
-          fungal_spread_factor: Math.random(),
-          worshipper_density: Math.random(),
+          hub_ecosystems: generateRandomHubSpokeEcosystems().hub_ecosystems,
+          spoke_ecosystems: generateRandomHubSpokeEcosystems().spoke_ecosystems,
           place_density: Math.random() * 0.03 + 0.01, // Smaller worlds
           connectivity: {
             ...DEFAULT_WORLD_CONFIG.connectivity,

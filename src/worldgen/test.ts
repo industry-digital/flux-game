@@ -51,10 +51,7 @@ function testSeedVariation(): void {
   const firstPlace2 = world2.places[0];
 
   // At minimum, some property should differ
-  const propertiesMatch =
-    firstPlace1.ecology.ecosystem === firstPlace2.ecology.ecosystem &&
-    firstPlace1.gaea_management.optimization_level === firstPlace2.gaea_management.optimization_level &&
-    firstPlace1.cordyceps_habitat.infection_risk === firstPlace2.cordyceps_habitat.infection_risk;
+  const propertiesMatch = firstPlace1.ecology.ecosystem === firstPlace2.ecology.ecosystem;
 
   if (propertiesMatch) {
     throw new Error('Different seeds produced identical first places - insufficient variation');
@@ -80,24 +77,6 @@ function testValidStructure(): void {
 
     if (!place.ecology || !place.ecology.ecosystem) {
       throw new Error(`Place ${place.id} missing ecology.ecosystem`);
-    }
-
-    if (!place.gaea_management) {
-      throw new Error(`Place ${place.id} missing gaea_management`);
-    }
-
-    if (!place.cordyceps_habitat) {
-      throw new Error(`Place ${place.id} missing cordyceps_habitat`);
-    }
-
-    // Validate numeric ranges
-    const mgmt = place.gaea_management;
-    if (mgmt.optimization_level < 0 || mgmt.optimization_level > 1) {
-      throw new Error(`Invalid optimization_level: ${mgmt.optimization_level}`);
-    }
-
-    if (mgmt.fungal_cultivation_intensity < 0 || mgmt.fungal_cultivation_intensity > 1) {
-      throw new Error(`Invalid fungal_cultivation_intensity: ${mgmt.fungal_cultivation_intensity}`);
     }
   }
 }
