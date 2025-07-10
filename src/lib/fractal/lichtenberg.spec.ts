@@ -332,6 +332,77 @@ describe('Realistic Lichtenberg Figure Generation', () => {
       }
     });
 
+    it('should ensure all nodes are reachable from the root', () => {
+      const config = {
+        ...basicConfig,
+        branchingFactor: 0.8,
+        maxDepth: 4,
+        maxVertices: 25,
+        stepSize: 20,
+        seed: 3004 // Explicit seed for deterministic behavior
+      };
+      const figure = generateLichtenbergFigure(config);
+
+      // If we only have one vertex, it's trivially reachable
+      if (figure.vertices.length <= 1) {
+        expect(figure.vertices.length).toBe(1);
+        return;
+      }
+
+      // Build adjacency map from connections
+      const adjacencyMap = new Map<string, Set<string>>();
+
+      // Initialize all vertices in the adjacency map
+      for (const vertex of figure.vertices) {
+        adjacencyMap.set(vertex.id, new Set());
+      }
+
+      // Add edges (bidirectional since we want to check reachability)
+      for (const connection of figure.connections) {
+        const fromSet = adjacencyMap.get(connection.from);
+        const toSet = adjacencyMap.get(connection.to);
+
+        if (fromSet && toSet) {
+          fromSet.add(connection.to);
+          toSet.add(connection.from);
+        }
+      }
+
+      // Perform BFS from the root vertex (vertex_0)
+      const rootId = 'vertex_0';
+      const visited = new Set<string>();
+      const queue = [rootId];
+      visited.add(rootId);
+
+      while (queue.length > 0) {
+        const currentId = queue.shift()!;
+        const neighbors = adjacencyMap.get(currentId);
+
+        if (neighbors) {
+          for (const neighborId of neighbors) {
+            if (!visited.has(neighborId)) {
+              visited.add(neighborId);
+              queue.push(neighborId);
+            }
+          }
+        }
+      }
+
+      // All vertices should be reachable from the root
+      const allVertexIds = new Set(figure.vertices.map(v => v.id));
+      const unreachableVertices = Array.from(allVertexIds).filter(id => !visited.has(id));
+
+      if (unreachableVertices.length > 0) {
+        console.error('Unreachable vertices found:', unreachableVertices);
+        console.error('Total vertices:', figure.vertices.length);
+        console.error('Reachable vertices:', visited.size);
+        console.error('Connections:', figure.connections.length);
+      }
+
+      expect(unreachableVertices).toEqual([]);
+      expect(visited.size).toBe(figure.vertices.length);
+    });
+
     it('should maintain proper parent-child relationships', () => {
       const config = {
         ...basicConfig,

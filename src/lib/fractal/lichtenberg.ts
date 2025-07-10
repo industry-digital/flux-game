@@ -289,6 +289,36 @@ class ElectricalField {
       const channel: Array<{ x: number; y: number }> = [];
       let currentHash: string | null = terminalHash;
 
+      // Check if this terminal can reach the root
+      let canReachRoot = false;
+      let testHash: string | null = terminalHash;
+      const pathToRoot = new Set<string>();
+
+      while (testHash) {
+        const node = this.source.get(testHash);
+        if (!node) break;
+
+        if (pathToRoot.has(testHash)) {
+          // Circular reference - this should not happen but handle it
+          break;
+        }
+        pathToRoot.add(testHash);
+
+        if (node.parent === null) {
+          // Found root
+          canReachRoot = true;
+          break;
+        }
+
+        testHash = node.parent;
+      }
+
+      // Only include terminals that can reach the root
+      if (!canReachRoot) {
+        continue;
+      }
+
+      // Build the channel
       while (currentHash && !visited.has(currentHash)) {
         const node = this.source.get(currentHash);
         if (!node) break;
@@ -423,6 +453,62 @@ function generateRealisticLichtenbergFigure(
         to: toVertex,
         length: length
       });
+    }
+  }
+
+  // CRITICAL FIX: Ensure all vertices are in the same connected component
+  // If we have disconnected vertices, only keep the largest connected component
+  if (vertices.length > 1 && connections.length > 0) {
+    // Find connected components
+    const adjacencyMap = new Map<string, Set<string>>();
+
+    // Initialize all vertices
+    for (const vertex of vertices) {
+      adjacencyMap.set(vertex.id, new Set());
+    }
+
+    // Add connections (bidirectional)
+    for (const connection of connections) {
+      const fromSet = adjacencyMap.get(connection.from);
+      const toSet = adjacencyMap.get(connection.to);
+
+      if (fromSet && toSet) {
+        fromSet.add(connection.to);
+        toSet.add(connection.from);
+      }
+    }
+
+    // Find the largest connected component starting from vertex_0
+    const rootVertex = vertices.find(v => v.id === 'vertex_0');
+    if (rootVertex) {
+      const visited = new Set<string>();
+      const queue = [rootVertex.id];
+      visited.add(rootVertex.id);
+
+      while (queue.length > 0) {
+        const currentId = queue.shift()!;
+        const neighbors = adjacencyMap.get(currentId);
+
+        if (neighbors) {
+          for (const neighborId of neighbors) {
+            if (!visited.has(neighborId)) {
+              visited.add(neighborId);
+              queue.push(neighborId);
+            }
+          }
+        }
+      }
+
+      // Filter vertices and connections to only include reachable ones
+      const reachableVertices = vertices.filter(v => visited.has(v.id));
+      const reachableConnections = connections.filter(c =>
+        visited.has(c.from) && visited.has(c.to)
+      );
+
+      return {
+        vertices: reachableVertices,
+        connections: reachableConnections
+      };
     }
   }
 
