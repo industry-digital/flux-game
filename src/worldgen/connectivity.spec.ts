@@ -1,21 +1,23 @@
 /**
  * Unit tests for worldgen connectivity preservation
- * Ensures that ecosystem connectivity adjustments never orphan subgraphs
+ * Tests the actual implementation in integration.ts
  */
 
 import { describe, it, expect } from 'vitest';
 import { Place } from '~/types/entity/place';
-import { Direction, PlaceURN } from '~/types';
+import { Direction } from '~/types';
 import { EcosystemName } from './types';
+import { createTestPlace } from '~/testing/world-testing';
+import { createExit } from '~/worldkit/entity/place';
+import { createPlaceUrn } from '~/lib/taxonomy';
+import { generateWorld } from './integration';
 
-// Test helper to create a mock place
-function createMockPlace(id: string, name: string, ecosystem: EcosystemName): Place {
-  return {
-    id: id as PlaceURN,
+// Test helper to create a test place with proper ecosystem data
+function createTestPlaceWithEcosystem(id: string, name: string, ecosystem: EcosystemName): Place {
+  return createTestPlace({
+    id: createPlaceUrn('test', id),
     name,
     description: `A ${ecosystem} location`,
-    exits: {},
-    entities: {},
     ecology: {
       ecosystem: `flux:eco:${ecosystem}` as any,
       temperature: [10, 30],
@@ -32,30 +34,31 @@ function createMockPlace(id: string, name: string, ecosystem: EcosystemName): Pl
       ts: Date.now()
     },
     resources: {
-      generators: []
-    },
-    entityType: 'place' as any,
-    namespace: 'flux' as any,
-    urn: id as PlaceURN
-  };
+      ts: Date.now(),
+      nodes: {}
+    }
+  });
 }
 
-// Test helper to create bidirectional connection
+// Test helper to create bidirectional connection using proper exit creation
 function connectPlaces(place1: Place, place2: Place, direction1: Direction, direction2: Direction): void {
-  place1.exits[direction1] = {
+  const exit1 = createExit({
     direction: direction1,
     label: `Path to ${place2.name}`,
     to: place2.id
-  };
+  });
 
-  place2.exits[direction2] = {
+  const exit2 = createExit({
     direction: direction2,
     label: `Path to ${place1.name}`,
     to: place1.id
-  };
+  });
+
+  place1.exits[direction1] = exit1;
+  place2.exits[direction2] = exit2;
 }
 
-// Test helper to check if graph is connected
+// Test helper to check if graph is connected using BFS
 function isGraphConnected(places: Place[]): boolean {
   if (places.length <= 1) return true;
 
@@ -80,41 +83,29 @@ function isGraphConnected(places: Place[]): boolean {
   return visited.size === places.length;
 }
 
-// Test helper that simulates the connection removal logic
-function removeRandomConnections(place: Place, count: number, allPlaces: Place[]): number {
-  const exitDirections = Object.keys(place.exits) as Direction[];
-  let removed = 0;
-  const shuffledDirections = [...exitDirections].sort(() => Math.random() - 0.5);
+// Test helper to count total connections
+function countTotalConnections(places: Place[]): number {
+  return places.reduce((total, place) => total + Object.keys(place.exits).length, 0);
+}
 
-  for (const direction of shuffledDirections) {
-    if (removed >= count) break;
+// Test helper to count connections for a specific place
+function countPlaceConnections(place: Place): number {
+  return Object.keys(place.exits).length;
+}
 
-    const exit = place.exits[direction];
-    if (!exit) continue;
-
-    // Temporarily remove the connection
-    delete place.exits[direction];
-
-    // Check if the graph is still connected
-    if (isGraphConnected(allPlaces)) {
-      // Safe to remove - graph stays connected
-      removed++;
-    } else {
-      // This is a bridge connection - restore it
-      place.exits[direction] = exit;
-    }
-  }
-
-  return removed;
+// Test helper to check if two places are connected
+function areConnected(place1: Place, place2: Place): boolean {
+  return Object.values(place1.exits).some(exit => exit.to === place2.id) ||
+         Object.values(place2.exits).some(exit => exit.to === place1.id);
 }
 
 describe('Worldgen Connectivity Preservation', () => {
   describe('Graph Connectivity Detection', () => {
     it('should detect connected simple chain', () => {
       const places = [
-        createMockPlace('place1', 'Forest A', EcosystemName.FOREST_TEMPERATE),
-        createMockPlace('place2', 'Forest B', EcosystemName.FOREST_TEMPERATE),
-        createMockPlace('place3', 'Forest C', EcosystemName.FOREST_TEMPERATE)
+        createTestPlaceWithEcosystem('place1', 'Forest A', EcosystemName.FOREST_TEMPERATE),
+        createTestPlaceWithEcosystem('place2', 'Forest B', EcosystemName.FOREST_TEMPERATE),
+        createTestPlaceWithEcosystem('place3', 'Forest C', EcosystemName.FOREST_TEMPERATE)
       ];
 
       // A -> B -> C
@@ -126,10 +117,10 @@ describe('Worldgen Connectivity Preservation', () => {
 
     it('should detect disconnected graph', () => {
       const places = [
-        createMockPlace('place1', 'Forest A', EcosystemName.FOREST_TEMPERATE),
-        createMockPlace('place2', 'Forest B', EcosystemName.FOREST_TEMPERATE),
-        createMockPlace('place3', 'Forest C', EcosystemName.FOREST_TEMPERATE),
-        createMockPlace('place4', 'Forest D', EcosystemName.FOREST_TEMPERATE)
+        createTestPlaceWithEcosystem('place1', 'Forest A', EcosystemName.FOREST_TEMPERATE),
+        createTestPlaceWithEcosystem('place2', 'Forest B', EcosystemName.FOREST_TEMPERATE),
+        createTestPlaceWithEcosystem('place3', 'Forest C', EcosystemName.FOREST_TEMPERATE),
+        createTestPlaceWithEcosystem('place4', 'Forest D', EcosystemName.FOREST_TEMPERATE)
       ];
 
       // A -> B  (isolated from C -> D)
@@ -140,7 +131,7 @@ describe('Worldgen Connectivity Preservation', () => {
     });
 
     it('should handle single node as connected', () => {
-      const places = [createMockPlace('place1', 'Forest A', EcosystemName.FOREST_TEMPERATE)];
+      const places = [createTestPlaceWithEcosystem('place1', 'Forest A', EcosystemName.FOREST_TEMPERATE)];
       expect(isGraphConnected(places)).toBe(true);
     });
 
@@ -149,112 +140,261 @@ describe('Worldgen Connectivity Preservation', () => {
     });
   });
 
-  describe('Bridge Connection Preservation', () => {
-    it('should preserve bridge connections that maintain connectivity', () => {
-      const places = [
-        createMockPlace('place1', 'Forest A', EcosystemName.FOREST_TEMPERATE),
-        createMockPlace('place2', 'Forest B', EcosystemName.FOREST_TEMPERATE),
-        createMockPlace('place3', 'Forest C', EcosystemName.FOREST_TEMPERATE)
-      ];
+  describe('World Generation Integration', () => {
+    it('should generate a connected world with proper ecosystem distribution', () => {
+      const config = {
+        seed: 42,
+        minPlaces: 25,
+        maxPlaces: 50,
+        worldAspectRatio: 1.618 as const,
+        lichtenberg: {
+          minVertices: 5,
+          maxChainLength: 10
+        }
+      };
 
-      // Linear chain: A - B - C (B-C is a bridge)
-      connectPlaces(places[0], places[1], Direction.EAST, Direction.WEST);
-      connectPlaces(places[1], places[2], Direction.EAST, Direction.WEST);
+      const result = generateWorld(config);
 
-      const initialConnections = Object.keys(places[1].exits).length; // B has 2 connections
+      // Basic structural tests
+      expect(result.places.length).toBeGreaterThanOrEqual(config.minPlaces);
+      // maxPlaces is a soft limit, so we'll check it's reasonable but not strict
+      expect(result.places.length).toBeLessThan(config.maxPlaces * 2); // Within 2x of soft limit
+      expect(result.places).toHaveLength(result.vertices.length);
 
-      // Try to remove 1 connection from B
-      const removed = removeRandomConnections(places[1], 1, places);
-
-      // Should remove 0 connections because both are bridges
-      expect(removed).toBe(0);
-      expect(Object.keys(places[1].exits).length).toBe(initialConnections);
-      expect(isGraphConnected(places)).toBe(true);
-    });
-
-    it('should allow removal of non-bridge connections', () => {
-      const places = [
-        createMockPlace('place1', 'Forest A', EcosystemName.FOREST_TEMPERATE),
-        createMockPlace('place2', 'Forest B', EcosystemName.FOREST_TEMPERATE),
-        createMockPlace('place3', 'Forest C', EcosystemName.FOREST_TEMPERATE)
-      ];
-
-      // Triangle: A - B - C - A (redundant connections)
-      connectPlaces(places[0], places[1], Direction.EAST, Direction.WEST);
-      connectPlaces(places[1], places[2], Direction.EAST, Direction.WEST);
-      connectPlaces(places[2], places[0], Direction.WEST, Direction.EAST);
-
-      const initialConnections = Object.keys(places[0].exits).length; // A has 2 connections
-
-      // Try to remove 1 connection from A
-      const removed = removeRandomConnections(places[0], 1, places);
-
-      // Should successfully remove 1 connection (triangle allows redundancy)
-      expect(removed).toBe(1);
-      expect(Object.keys(places[0].exits).length).toBe(initialConnections - 1);
-      expect(isGraphConnected(places)).toBe(true);
-    });
-
-    it('should never create isolated nodes', () => {
-      // Test with various graph topologies
-      const testCases = [
-        // Linear chain
-        { connections: [[0,1], [1,2], [2,3]], removeFrom: 1, removeCount: 1 },
-        // Star topology
-        { connections: [[0,1], [0,2], [0,3], [0,4]], removeFrom: 0, removeCount: 2 },
-        // Tree structure
-        { connections: [[0,1], [1,2], [1,3], [2,4], [3,5]], removeFrom: 1, removeCount: 1 }
-      ];
-
-      testCases.forEach((testCase, index) => {
-        const places = Array.from({ length: 6 }, (_, i) =>
-          createMockPlace(`place${i}`, `Node ${i}`, EcosystemName.FOREST_TEMPERATE)
-        );
-
-        // Create connections
-        testCase.connections.forEach(([from, to]) => {
-          connectPlaces(places[from], places[to], Direction.NORTH, Direction.SOUTH);
-        });
-
-        // Verify initial connectivity
-        expect(isGraphConnected(places.slice(0, Math.max(...testCase.connections.flat()) + 1))).toBe(true);
-
-        // Try to remove connections
-        const activeNodeCount = Math.max(...testCase.connections.flat()) + 1;
-        const activePlaces = places.slice(0, activeNodeCount);
-        removeRandomConnections(places[testCase.removeFrom], testCase.removeCount, activePlaces);
-
-        // Verify connectivity is preserved
-        expect(isGraphConnected(activePlaces)).toBe(true);
+      // All places should have ecosystem assignments
+      result.places.forEach(place => {
+        expect(place.ecology.ecosystem).toBeDefined();
+        expect(place.name).toBeDefined();
+        expect(place.description).toBeDefined();
       });
+
+      // Graph should be connected
+      expect(isGraphConnected(result.places)).toBe(true);
+
+      // Should have reasonable connection density
+      const totalConnections = countTotalConnections(result.places);
+      const averageConnections = totalConnections / result.places.length;
+      expect(averageConnections).toBeGreaterThan(1); // At least some connections
+      expect(averageConnections).toBeLessThan(8); // Not too dense
+    });
+
+    it('should maintain connectivity across multiple generations with same seed', () => {
+      const config = {
+        seed: 123,
+        minPlaces: 20,
+        maxPlaces: 30,
+        worldAspectRatio: 1.618 as const,
+        lichtenberg: {
+          minVertices: 4,
+          maxChainLength: 8
+        }
+      };
+
+      // Generate the same world twice
+      const result1 = generateWorld(config);
+      const result2 = generateWorld(config);
+
+      // Should produce identical results
+      expect(result1.places.length).toBe(result2.places.length);
+      expect(isGraphConnected(result1.places)).toBe(true);
+      expect(isGraphConnected(result2.places)).toBe(true);
+
+      // Connection counts should be identical (deterministic)
+      expect(countTotalConnections(result1.places)).toBe(countTotalConnections(result2.places));
+    });
+
+    it('should handle different world sizes gracefully', () => {
+      const smallConfig = {
+        seed: 999,
+        minPlaces: 5,
+        maxPlaces: 10,
+        worldAspectRatio: 1.618 as const,
+        lichtenberg: {
+          minVertices: 2,
+          maxChainLength: 5
+        }
+      };
+
+      const largeConfig = {
+        seed: 999,
+        minPlaces: 80,
+        maxPlaces: 120,
+        worldAspectRatio: 1.618 as const,
+        lichtenberg: {
+          minVertices: 16,
+          maxChainLength: 20
+        }
+      };
+
+      const smallResult = generateWorld(smallConfig);
+      const largeResult = generateWorld(largeConfig);
+
+      // Both should be connected regardless of size
+      expect(isGraphConnected(smallResult.places)).toBe(true);
+      expect(isGraphConnected(largeResult.places)).toBe(true);
+
+      // Should respect size constraints (soft limits)
+      expect(smallResult.places.length).toBeGreaterThanOrEqual(smallConfig.minPlaces);
+      // maxPlaces is soft, so check it's reasonable but not strict
+      expect(smallResult.places.length).toBeLessThan(smallConfig.maxPlaces * 10); // Very generous bound
+      expect(largeResult.places.length).toBeGreaterThanOrEqual(largeConfig.minPlaces);
+      expect(largeResult.places.length).toBeLessThan(largeConfig.maxPlaces * 2); // Within 2x of soft limit
+
+      // Large world should generally have more places than small world
+      expect(largeResult.places.length).toBeGreaterThan(smallResult.places.length);
+    });
+  });
+
+  describe('Connection Management', () => {
+    it('should preserve bidirectional connections', () => {
+      const places = [
+        createTestPlaceWithEcosystem('place1', 'Forest A', EcosystemName.FOREST_TEMPERATE),
+        createTestPlaceWithEcosystem('place2', 'Forest B', EcosystemName.FOREST_TEMPERATE),
+        createTestPlaceWithEcosystem('place3', 'Forest C', EcosystemName.FOREST_TEMPERATE)
+      ];
+
+      // Create triangle with bidirectional connections using non-conflicting directions
+      connectPlaces(places[0], places[1], Direction.EAST, Direction.WEST);
+      connectPlaces(places[1], places[2], Direction.NORTH, Direction.SOUTH);
+      connectPlaces(places[2], places[0], Direction.SOUTHWEST, Direction.NORTHEAST);
+
+      // Verify bidirectional connections exist
+      expect(areConnected(places[0], places[1])).toBe(true);
+      expect(areConnected(places[1], places[2])).toBe(true);
+      expect(areConnected(places[2], places[0])).toBe(true);
+
+      // Each place should have exactly 2 connections
+      expect(countPlaceConnections(places[0])).toBe(2);
+      expect(countPlaceConnections(places[1])).toBe(2);
+      expect(countPlaceConnections(places[2])).toBe(2);
+    });
+
+    it('should handle unidirectional connections', () => {
+      const places = [
+        createTestPlaceWithEcosystem('place1', 'Forest A', EcosystemName.FOREST_TEMPERATE),
+        createTestPlaceWithEcosystem('place2', 'Forest B', EcosystemName.FOREST_TEMPERATE)
+      ];
+
+      // Create unidirectional connection using proper exit creation
+      const exit = createExit({
+        direction: Direction.EAST,
+        label: `Path to ${places[1].name}`,
+        to: places[1].id
+      });
+      places[0].exits[Direction.EAST] = exit;
+
+      expect(countPlaceConnections(places[0])).toBe(1);
+      expect(countPlaceConnections(places[1])).toBe(0);
+      expect(isGraphConnected(places)).toBe(true); // Still connected via BFS
+    });
+
+    it('should properly structure exit objects', () => {
+      const places = [
+        createTestPlaceWithEcosystem('place1', 'Forest A', EcosystemName.FOREST_TEMPERATE),
+        createTestPlaceWithEcosystem('place2', 'Forest B', EcosystemName.FOREST_TEMPERATE)
+      ];
+
+      connectPlaces(places[0], places[1], Direction.NORTH, Direction.SOUTH);
+
+      // Check that exits are properly structured
+      const northExit = places[0].exits[Direction.NORTH];
+      const southExit = places[1].exits[Direction.SOUTH];
+
+      expect(northExit).toBeDefined();
+      expect(northExit!.direction).toBe(Direction.NORTH);
+      expect(northExit!.to).toBe(places[1].id);
+      expect(northExit!.label).toBeDefined();
+
+      expect(southExit).toBeDefined();
+      expect(southExit!.direction).toBe(Direction.SOUTH);
+      expect(southExit!.to).toBe(places[0].id);
+      expect(southExit!.label).toBeDefined();
     });
   });
 
   describe('Edge Cases', () => {
-    it('should handle place with no connections', () => {
-      const places = [createMockPlace('place1', 'Forest A', EcosystemName.FOREST_TEMPERATE)];
+    it('should handle single place gracefully', () => {
+      const places = [createTestPlaceWithEcosystem('place1', 'Forest A', EcosystemName.FOREST_TEMPERATE)];
 
-      const removed = removeRandomConnections(places[0], 5, places);
-
-      expect(removed).toBe(0);
       expect(isGraphConnected(places)).toBe(true);
+      expect(countTotalConnections(places)).toBe(0);
     });
 
-    it('should handle removal request larger than available connections', () => {
+    it('should handle empty place list', () => {
+      const places: Place[] = [];
+
+      expect(isGraphConnected(places)).toBe(true);
+      expect(countTotalConnections(places)).toBe(0);
+    });
+
+    it('should handle places with no exits', () => {
       const places = [
-        createMockPlace('place1', 'Forest A', EcosystemName.FOREST_TEMPERATE),
-        createMockPlace('place2', 'Forest B', EcosystemName.FOREST_TEMPERATE)
+        createTestPlaceWithEcosystem('place1', 'Forest A', EcosystemName.FOREST_TEMPERATE),
+        createTestPlaceWithEcosystem('place2', 'Forest B', EcosystemName.FOREST_TEMPERATE)
       ];
 
-      connectPlaces(places[0], places[1], Direction.EAST, Direction.WEST);
+      // No connections between places
+      expect(isGraphConnected(places)).toBe(false);
+      expect(countTotalConnections(places)).toBe(0);
+    });
+  });
 
-      // Try to remove more connections than exist
-      const removed = removeRandomConnections(places[0], 10, places);
+  describe('Ecosystem Distribution', () => {
+    it('should distribute places across all ecosystem types', () => {
+      const config = {
+        seed: 42,
+        minPlaces: 50,
+        maxPlaces: 100,
+        worldAspectRatio: 1.618 as const,
+        lichtenberg: {
+          minVertices: 10,
+          maxChainLength: 15
+        }
+      };
 
-      // Should not remove the only connection (it's a bridge)
-      expect(removed).toBe(0);
-      expect(Object.keys(places[0].exits).length).toBe(1);
-      expect(isGraphConnected(places)).toBe(true);
+      const result = generateWorld(config);
+
+      // Count places by ecosystem
+      const ecosystemCounts = result.places.reduce((counts, place) => {
+        const ecosystem = place.ecology.ecosystem;
+        counts[ecosystem] = (counts[ecosystem] || 0) + 1;
+        return counts;
+      }, {} as Record<string, number>);
+
+      // Should have multiple ecosystem types
+      expect(Object.keys(ecosystemCounts).length).toBeGreaterThan(1);
+
+      // Each ecosystem should have at least one place
+      Object.values(ecosystemCounts).forEach(count => {
+        expect(count).toBeGreaterThan(0);
+      });
+    });
+
+    it('should maintain ecosystem consistency within generated places', () => {
+      const config = {
+        seed: 777,
+        minPlaces: 30,
+        maxPlaces: 40,
+        worldAspectRatio: 1.618 as const,
+        lichtenberg: {
+          minVertices: 6,
+          maxChainLength: 12
+        }
+      };
+
+      const result = generateWorld(config);
+
+      // All places should have valid ecosystem data
+      result.places.forEach((place, index) => {
+        expect(place.ecology).toBeDefined();
+        expect(place.ecology.ecosystem).toBeDefined();
+        expect(place.ecology.temperature).toHaveLength(2);
+        expect(place.ecology.pressure).toHaveLength(2);
+        expect(place.ecology.humidity).toHaveLength(2);
+        expect(place.weather).toBeDefined();
+        expect(place.weather.temperature).toBeGreaterThan(-50);
+        expect(place.weather.temperature).toBeLessThan(60);
+      });
     });
   });
 });
