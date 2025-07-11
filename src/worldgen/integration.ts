@@ -530,7 +530,8 @@ function applyEcosystemConnectivityRules(
 
   // Phase 2: Selectively remove connections for difficult terrain
   if (connectivityConfig.removeConnections) {
-    removeExcessConnections(ecosystemPlaces, connectivityConfig.targetConnectionsPerPlace);
+    const allPlaces = Object.values(placesByEcosystem).flat();
+    removeExcessConnections(ecosystemPlaces, connectivityConfig.targetConnectionsPerPlace, allPlaces);
   }
 }
 
@@ -648,8 +649,9 @@ function addProximityConnections(ecosystemPlaces: Place[], maxHops: number, allP
 /**
  * Remove excess connections to achieve target connectivity for difficult terrain
  */
-function removeExcessConnections(ecosystemPlaces: Place[], targetConnectionsPerPlace: number): void {
+function removeExcessConnections(ecosystemPlaces: Place[], targetConnectionsPerPlace: number, allPlaces: Place[]): void {
   let connectionsRemoved = 0;
+  let connectionsPreserved = 0;
 
   ecosystemPlaces.forEach(place => {
     const currentConnections = Object.keys(place.exits).length;
@@ -657,13 +659,21 @@ function removeExcessConnections(ecosystemPlaces: Place[], targetConnectionsPerP
 
     if (excessConnections > 0) {
       const connectionsToRemove = Math.floor(excessConnections);
-      removeRandomConnections(place, connectionsToRemove);
-      connectionsRemoved += connectionsToRemove;
+      const initialConnections = currentConnections;
+
+      removeRandomConnections(place, connectionsToRemove, allPlaces);
+
+      const finalConnections = Object.keys(place.exits).length;
+      const actuallyRemoved = initialConnections - finalConnections;
+      const preserved = connectionsToRemove - actuallyRemoved;
+
+      connectionsRemoved += actuallyRemoved;
+      connectionsPreserved += preserved;
     }
   });
 
-  if (connectionsRemoved > 0) {
-    console.log(`  Removed ${connectionsRemoved} excess connections`);
+  if (connectionsRemoved > 0 || connectionsPreserved > 0) {
+    console.log(`  Removed ${connectionsRemoved} excess connections, preserved ${connectionsPreserved} bridge connections`);
   }
 }
 
@@ -775,22 +785,78 @@ function getOppositeDirection(direction: Direction): Direction {
 }
 
 /**
- * Remove random connections from a place while preserving graph connectivity
+ * Check if the entire graph remains connected using BFS
  */
-function removeRandomConnections(place: Place, count: number): void {
+function isGraphConnected(places: Place[]): boolean {
+  if (places.length <= 1) return true;
+
+  // Start BFS from the first place
+  const visited = new Set<string>();
+  const queue = [places[0].id];
+  visited.add(places[0].id);
+
+  while (queue.length > 0) {
+    const currentId = queue.shift()!;
+    const currentPlace = places.find(p => p.id === currentId);
+
+    if (currentPlace) {
+      // Follow all exits from this place
+      Object.values(currentPlace.exits).forEach(exit => {
+        if (!visited.has(exit.to)) {
+          visited.add(exit.to);
+          queue.push(exit.to);
+        }
+      });
+    }
+  }
+
+  // All places should be reachable
+  return visited.size === places.length;
+}
+
+/**
+ * Remove random connections from a place while preserving GLOBAL graph connectivity
+ */
+function removeRandomConnections(place: Place, count: number, allPlaces?: Place[]): void {
   const exitDirections = Object.keys(place.exits) as Direction[];
 
-  // Ensure we don't remove ALL connections (preserve at least 1 for connectivity)
-  const maxRemovable = Math.max(0, exitDirections.length - 1);
-  const toRemove = Math.min(count, maxRemovable);
+  // If we don't have access to all places, fall back to local connectivity preservation
+  if (!allPlaces) {
+    const maxRemovable = Math.max(0, exitDirections.length - 1);
+    const toRemove = Math.min(count, maxRemovable);
 
-  for (let i = 0; i < toRemove; i++) {
-    if (exitDirections.length > 1) {
-      const randomIndex = Math.floor(Math.random() * exitDirections.length);
-      const directionToRemove = exitDirections.splice(randomIndex, 1)[0];
+    for (let i = 0; i < toRemove; i++) {
+      if (exitDirections.length > 1) {
+        const randomIndex = Math.floor(Math.random() * exitDirections.length);
+        const directionToRemove = exitDirections.splice(randomIndex, 1)[0];
+        delete place.exits[directionToRemove];
+      }
+    }
+    return;
+  }
 
-      // Remove the exit
-      delete place.exits[directionToRemove];
+  // Global connectivity preservation: only remove non-bridge connections
+  let removed = 0;
+  const shuffledDirections = [...exitDirections].sort(() => Math.random() - 0.5);
+
+  for (const direction of shuffledDirections) {
+    if (removed >= count) break;
+
+    // Temporarily remove the connection
+    const exit = place.exits[direction];
+    if (!exit) continue;
+
+    delete place.exits[direction];
+
+    // Check if the graph is still connected
+    if (isGraphConnected(allPlaces)) {
+      // Safe to remove - graph stays connected
+      removed++;
+      console.log(`  Safely removed connection ${place.name} → ${direction}`);
+    } else {
+      // This is a bridge connection - restore it
+      place.exits[direction] = exit;
+      console.log(`  Preserved bridge connection ${place.name} → ${direction}`);
     }
   }
 }
