@@ -26,3 +26,5 @@ node_modules
 *.swo
 
 .DS_Store
+
+*.pdf

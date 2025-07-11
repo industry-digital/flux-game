@@ -65,7 +65,8 @@ Cognitive centaurs don't **design** architectures—they **discover** them throu
 1. Start with a fundamental constraint (e.g., "functions must be pure")
 2. Follow the mathematical implications: Pure functions → No side effects → All data loaded upfront
 3. Continue the chain: All data upfront → Single query → Single table design
-4. Keep following: Single table → Simple protocol → O(1) scaling
+4. Keep following: Single table → Simple Query Protocol
+5. Keep following: Simple Query Protocol → O(1) scaling
 
 This can be expressed as a constraint chain:
 
