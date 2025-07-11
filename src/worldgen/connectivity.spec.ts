@@ -4,8 +4,8 @@
  */
 
 import { describe, it, expect } from 'vitest';
-import { Place } from '~/types';
-import { Direction } from '~/types/world/space';
+import { Place } from '~/types/entity/place';
+import { Direction, PlaceURN } from '~/types';
 import { EcosystemName } from './types';
 
 // Test helper to create a mock place

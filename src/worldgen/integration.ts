@@ -22,10 +22,43 @@ import {
 import { Direction, PlaceURN } from '~/types';
 
 /**
+ * Simple seeded random number generator using Linear Congruential Generator
+ * This ensures deterministic behavior across test runs
+ */
+class SeededRandom {
+  private seed: number;
+
+  constructor(seed: number) {
+    this.seed = seed;
+  }
+
+  next(): number {
+    this.seed = (this.seed * 1664525 + 1013904223) % 0x100000000;
+    return this.seed / 0x100000000;
+  }
+
+  nextInt(max: number): number {
+    return Math.floor(this.next() * max);
+  }
+
+  shuffle<T>(array: T[]): T[] {
+    const result = [...array];
+    for (let i = result.length - 1; i > 0; i--) {
+      const j = this.nextInt(i + 1);
+      [result[i], result[j]] = [result[j], result[i]];
+    }
+    return result;
+  }
+}
+
+/**
  * Main world generation function
  * Generates world using multiple Lichtenberg figures (one per ecosystem), then connects them
  */
 export function generateWorld(config: WorldGenerationConfig): WorldGenerationResult {
+  // Create seeded random generator for deterministic behavior
+  const seededRandom = new SeededRandom(config.seed || 42);
+
   // 1. Generate Lichtenberg figures for each ecosystem band
   const ecosystemFigures = generateEcosystemFigures(config);
 
@@ -42,9 +75,12 @@ export function generateWorld(config: WorldGenerationConfig): WorldGenerationRes
   populatePlaceExits(places, connectedFigure.connections);
 
   // 6. Adjust connectivity based on ecosystem characteristics
-  adjustEcosystemConnectivity(places);
+  adjustEcosystemConnectivity(places, seededRandom);
 
-  // 7. Calculate connection statistics
+  // 7. Ensure global connectivity after all adjustments
+  ensureGlobalConnectivity(places, seededRandom);
+
+  // 8. Calculate connection statistics
   const connections = calculateConnectionStats(places);
 
   return {
@@ -437,9 +473,9 @@ function populatePlaceExits(places: Place[], connections: LichtenbergConnection[
         [Direction.EAST]: Direction.WEST,
         [Direction.WEST]: Direction.EAST,
         [Direction.NORTHEAST]: Direction.SOUTHWEST,
-        [Direction.SOUTHWEST]: Direction.NORTHEAST,
         [Direction.NORTHWEST]: Direction.SOUTHEAST,
         [Direction.SOUTHEAST]: Direction.NORTHWEST,
+        [Direction.SOUTHWEST]: Direction.NORTHEAST,
         [Direction.UP]: Direction.DOWN,
         [Direction.DOWN]: Direction.UP,
         [Direction.IN]: Direction.OUT,
@@ -476,7 +512,7 @@ function populatePlaceExits(places: Place[], connections: LichtenbergConnection[
  * Adjust ecosystem-specific connectivity patterns
  * Implements hybrid approach: additive for open terrain, selective removal for difficult terrain
  */
-function adjustEcosystemConnectivity(places: Place[]): void {
+function adjustEcosystemConnectivity(places: Place[], seededRandom: SeededRandom): void {
   console.log('Adjusting ecosystem-specific connectivity...');
 
   // Group places by ecosystem for processing
@@ -485,7 +521,7 @@ function adjustEcosystemConnectivity(places: Place[]): void {
   // Apply ecosystem-specific adjustments
   Object.entries(placesByEcosystem).forEach(([ecosystem, ecosystemPlaces]) => {
     const ecosystemName = ecosystem as EcosystemName;
-    applyEcosystemConnectivityRules(ecosystemPlaces, ecosystemName, placesByEcosystem);
+    applyEcosystemConnectivityRules(ecosystemPlaces, ecosystemName, placesByEcosystem, seededRandom);
   });
 
   const finalConnectionCount = countTotalConnections(places);
@@ -515,7 +551,8 @@ function groupPlacesByEcosystem(places: Place[]): Record<string, Place[]> {
 function applyEcosystemConnectivityRules(
   ecosystemPlaces: Place[],
   ecosystem: EcosystemName,
-  placesByEcosystem: Record<string, Place[]>
+  placesByEcosystem: Record<string, Place[]>,
+  seededRandom: SeededRandom
 ): void {
   const connectivityConfig = getEcosystemConnectivityConfig(ecosystem);
 
@@ -525,13 +562,13 @@ function applyEcosystemConnectivityRules(
   if (connectivityConfig.addProximityConnections) {
     const eligiblePlaces = getEligibleConnectionPlaces(ecosystem, placesByEcosystem);
     const allPlaces = Object.values(placesByEcosystem).flat();
-    addProximityConnections(ecosystemPlaces, connectivityConfig.connectionRange, allPlaces, eligiblePlaces);
+    addProximityConnections(ecosystemPlaces, connectivityConfig.connectionRange, allPlaces, eligiblePlaces, seededRandom);
   }
 
   // Phase 2: Selectively remove connections for difficult terrain
   if (connectivityConfig.removeConnections) {
     const allPlaces = Object.values(placesByEcosystem).flat();
-    removeExcessConnections(ecosystemPlaces, connectivityConfig.targetConnectionsPerPlace, allPlaces);
+    removeExcessConnections(ecosystemPlaces, connectivityConfig.targetConnectionsPerPlace, allPlaces, seededRandom);
   }
 }
 
@@ -626,17 +663,18 @@ function getEcosystemConnectivityConfig(ecosystem: EcosystemName): {
  * Add proximity-based connections for open terrain ecosystems
  * Now uses graph distance (hops) instead of geographic distance
  */
-function addProximityConnections(ecosystemPlaces: Place[], maxHops: number, allPlaces: Place[], eligiblePlaces: Place[]): void {
+function addProximityConnections(ecosystemPlaces: Place[], maxHops: number, allPlaces: Place[], eligiblePlaces: Place[], seededRandom: SeededRandom): void {
   let connectionsAdded = 0;
 
   ecosystemPlaces.forEach(place => {
     // Find nearby places within the ecosystem's hop range
-    const nearbyPlaces = findNearbyPlaces(place, allPlaces, maxHops, eligiblePlaces);
+    const nearbyPlaces = findNearbyPlaces(place, allPlaces, maxHops, eligiblePlaces, seededRandom);
 
     nearbyPlaces.forEach(nearbyPlace => {
       if (!hasExistingConnection(place, nearbyPlace)) {
-        createBidirectionalConnection(place, nearbyPlace);
-        connectionsAdded++;
+        if (createBidirectionalConnection(place, nearbyPlace, seededRandom)) {
+          connectionsAdded++;
+        }
       }
     });
   });
@@ -649,7 +687,7 @@ function addProximityConnections(ecosystemPlaces: Place[], maxHops: number, allP
 /**
  * Remove excess connections to achieve target connectivity for difficult terrain
  */
-function removeExcessConnections(ecosystemPlaces: Place[], targetConnectionsPerPlace: number, allPlaces: Place[]): void {
+function removeExcessConnections(ecosystemPlaces: Place[], targetConnectionsPerPlace: number, allPlaces: Place[], seededRandom: SeededRandom): void {
   let connectionsRemoved = 0;
   let connectionsPreserved = 0;
 
@@ -661,7 +699,7 @@ function removeExcessConnections(ecosystemPlaces: Place[], targetConnectionsPerP
       const connectionsToRemove = Math.floor(excessConnections);
       const initialConnections = currentConnections;
 
-      removeRandomConnections(place, connectionsToRemove, allPlaces);
+      removeRandomConnections(place, connectionsToRemove, allPlaces, seededRandom);
 
       const finalConnections = Object.keys(place.exits).length;
       const actuallyRemoved = initialConnections - finalConnections;
@@ -681,7 +719,7 @@ function removeExcessConnections(ecosystemPlaces: Place[], targetConnectionsPerP
  * Find places within graph hop distance (relationship distance)
  * This creates realistic connections by following existing paths
  */
-function findNearbyPlaces(place: Place, allPlaces: Place[], maxHops: number, eligiblePlaces: Place[]): Place[] {
+function findNearbyPlaces(place: Place, allPlaces: Place[], maxHops: number, eligiblePlaces: Place[], seededRandom: SeededRandom): Place[] {
   // BFS to find places within hop distance
   const visited = new Set<string>();
   const queue: Array<{place: Place, hops: number}> = [];
@@ -711,7 +749,7 @@ function findNearbyPlaces(place: Place, allPlaces: Place[], maxHops: number, eli
     }
   }
 
-  return reachablePlaces.slice(0, 3); // Limit to 3 connections to prevent over-connectivity
+  return seededRandom.shuffle(reachablePlaces).slice(0, 3); // Limit to 3 connections to prevent over-connectivity
 }
 
 /**
@@ -724,7 +762,13 @@ function hasExistingConnection(place1: Place, place2: Place): boolean {
 /**
  * Create bidirectional connection between two places
  */
-function createBidirectionalConnection(place1: Place, place2: Place): void {
+function createBidirectionalConnection(place1: Place, place2: Place, seededRandom: SeededRandom): boolean {
+  // Check if already connected
+  if (hasExistingConnection(place1, place2)) {
+    console.log(`  ⚠️  ${place1.name} and ${place2.name} are already connected`);
+    return false;
+  }
+
   // Find available directions
   const availableDirections = [
     Direction.NORTH, Direction.SOUTH, Direction.EAST, Direction.WEST,
@@ -737,8 +781,10 @@ function createBidirectionalConnection(place1: Place, place2: Place): void {
   const availableForPlace1 = availableDirections.filter(dir => !usedDirections1.includes(dir));
   const availableForPlace2 = availableDirections.filter(dir => !usedDirections2.includes(dir));
 
+  console.log(`  📍 Connecting ${place1.name} (${availableForPlace1.length} free dirs) ↔ ${place2.name} (${availableForPlace2.length} free dirs)`);
+
   if (availableForPlace1.length > 0 && availableForPlace2.length > 0) {
-    const direction1 = availableForPlace1[0];
+    const direction1 = availableForPlace1[seededRandom.nextInt(availableForPlace1.length)];
     const direction2 = getOppositeDirection(direction1);
 
     if (availableForPlace2.includes(direction2)) {
@@ -753,8 +799,17 @@ function createBidirectionalConnection(place1: Place, place2: Place): void {
         label: `Path to ${place1.name}`,
         to: place1.id as PlaceURN
       };
+
+      console.log(`  ✅ Connected ${place1.name} → ${direction1} → ${place2.name} → ${direction2}`);
+      return true;
+    } else {
+      console.log(`  ❌ Direction ${direction2} not available for ${place2.name}`);
     }
+  } else {
+    console.log(`  ❌ No available directions for connection`);
   }
+
+  return false;
 }
 
 /**
@@ -767,9 +822,9 @@ function getOppositeDirection(direction: Direction): Direction {
     [Direction.EAST]: Direction.WEST,
     [Direction.WEST]: Direction.EAST,
     [Direction.NORTHEAST]: Direction.SOUTHWEST,
-    [Direction.SOUTHWEST]: Direction.NORTHEAST,
     [Direction.NORTHWEST]: Direction.SOUTHEAST,
     [Direction.SOUTHEAST]: Direction.NORTHWEST,
+    [Direction.SOUTHWEST]: Direction.NORTHEAST,
     [Direction.UP]: Direction.DOWN,
     [Direction.DOWN]: Direction.UP,
     [Direction.IN]: Direction.OUT,
@@ -815,9 +870,69 @@ function isGraphConnected(places: Place[]): boolean {
 }
 
 /**
+ * Find all bridge edges in the graph using Tarjan's algorithm
+ */
+function findBridges(places: Place[]): Set<string> {
+  const bridges = new Set<string>();
+  const visited = new Set<string>();
+  const discoveryTime = new Map<string, number>();
+  const lowTime = new Map<string, number>();
+  const parent = new Map<string, string>();
+  let time = 0;
+
+  // Build adjacency list
+  const adj = new Map<string, string[]>();
+  for (const place of places) {
+    adj.set(place.id, []);
+  }
+
+  for (const place of places) {
+    Object.values(place.exits).forEach(exit => {
+      adj.get(place.id)?.push(exit.to);
+    });
+  }
+
+  function bridgeUtil(u: string): void {
+    visited.add(u);
+    discoveryTime.set(u, time);
+    lowTime.set(u, time);
+    time++;
+
+    const neighbors = adj.get(u) || [];
+    for (const v of neighbors) {
+      if (!visited.has(v)) {
+        parent.set(v, u);
+        bridgeUtil(v);
+
+        // Check if the subtree rooted at v has a connection to ancestors of u
+        lowTime.set(u, Math.min(lowTime.get(u)!, lowTime.get(v)!));
+
+        // If the lowest vertex reachable from subtree under v is below u in DFS tree, then u-v is a bridge
+        if (lowTime.get(v)! > discoveryTime.get(u)!) {
+          bridges.add(`${u}-${v}`);
+          bridges.add(`${v}-${u}`); // Bidirectional
+        }
+      } else if (v !== parent.get(u)) {
+        // Back edge
+        lowTime.set(u, Math.min(lowTime.get(u)!, discoveryTime.get(v)!));
+      }
+    }
+  }
+
+  // Call the recursive helper function for all vertices
+  for (const place of places) {
+    if (!visited.has(place.id)) {
+      bridgeUtil(place.id);
+    }
+  }
+
+  return bridges;
+}
+
+/**
  * Remove random connections from a place while preserving GLOBAL graph connectivity
  */
-function removeRandomConnections(place: Place, count: number, allPlaces?: Place[]): void {
+function removeRandomConnections(place: Place, count: number, allPlaces?: Place[], seededRandom: SeededRandom = new SeededRandom(42)): void {
   const exitDirections = Object.keys(place.exits) as Direction[];
 
   // If we don't have access to all places, fall back to local connectivity preservation
@@ -827,7 +942,7 @@ function removeRandomConnections(place: Place, count: number, allPlaces?: Place[
 
     for (let i = 0; i < toRemove; i++) {
       if (exitDirections.length > 1) {
-        const randomIndex = Math.floor(Math.random() * exitDirections.length);
+        const randomIndex = seededRandom.nextInt(exitDirections.length);
         const directionToRemove = exitDirections.splice(randomIndex, 1)[0];
         delete place.exits[directionToRemove];
       }
@@ -835,29 +950,44 @@ function removeRandomConnections(place: Place, count: number, allPlaces?: Place[
     return;
   }
 
-  // Global connectivity preservation: only remove non-bridge connections
+  // Single-pass bridge detection for efficiency
+  const bridges = findBridges(allPlaces);
+
+  // Only remove non-bridge connections
   let removed = 0;
-  const shuffledDirections = [...exitDirections].sort(() => Math.random() - 0.5);
+  const shuffledDirections = seededRandom.shuffle([...exitDirections]);
 
   for (const direction of shuffledDirections) {
     if (removed >= count) break;
 
-    // Temporarily remove the connection
     const exit = place.exits[direction];
     if (!exit) continue;
 
+    // Check if this edge is a bridge
+    const edgeKey = `${place.id}-${exit.to}`;
+    if (bridges.has(edgeKey)) {
+      console.log(`  Preserved bridge connection ${place.name} → ${direction}`);
+      continue;
+    }
+
+    // Safe to remove - not a bridge
+    // CRITICAL: Remove connection from BOTH sides to maintain bidirectionality
     delete place.exits[direction];
 
-    // Check if the graph is still connected
-    if (isGraphConnected(allPlaces)) {
-      // Safe to remove - graph stays connected
-      removed++;
-      console.log(`  Safely removed connection ${place.name} → ${direction}`);
-    } else {
-      // This is a bridge connection - restore it
-      place.exits[direction] = exit;
-      console.log(`  Preserved bridge connection ${place.name} → ${direction}`);
+    // Find and remove the reverse connection
+    const targetPlace = allPlaces.find(p => p.id === exit.to);
+    if (targetPlace) {
+      const reverseDirection = getOppositeDirection(direction);
+      if (targetPlace.exits[reverseDirection] && targetPlace.exits[reverseDirection].to === place.id) {
+        delete targetPlace.exits[reverseDirection];
+        console.log(`  Safely removed bidirectional connection ${place.name} ↔ ${targetPlace.name}`);
+      } else {
+        console.log(`  Removed unidirectional connection ${place.name} → ${direction}`);
+      }
     }
+
+    removed++;
+    console.log(`  Safely removed connection ${place.name} → ${direction}`);
   }
 }
 
@@ -866,6 +996,124 @@ function removeRandomConnections(place: Place, count: number, allPlaces?: Place[
  */
 function countTotalConnections(places: Place[]): number {
   return places.reduce((total, place) => total + Object.keys(place.exits).length, 0);
+}
+
+/**
+ * Ensure global connectivity by reconnecting disconnected components
+ */
+function ensureGlobalConnectivity(places: Place[], seededRandom: SeededRandom): void {
+  let attempts = 0;
+  const maxAttempts = 20;
+
+  while (!isGraphConnected(places) && attempts < maxAttempts) {
+    attempts++;
+    console.log(`⚠️  Graph connectivity broken - repair attempt ${attempts}...`);
+
+    // Find all disconnected components
+    const components: Place[][] = [];
+    const visited = new Set<string>();
+
+    for (const place of places) {
+      if (!visited.has(place.id)) {
+        const component: Place[] = [];
+        const queue = [place];
+
+        while (queue.length > 0) {
+          const current = queue.shift()!;
+          if (visited.has(current.id)) continue;
+
+          visited.add(current.id);
+          component.push(current);
+
+          Object.values(current.exits).forEach(exit => {
+            const connectedPlace = places.find(p => p.id === exit.to);
+            if (connectedPlace && !visited.has(connectedPlace.id)) {
+              queue.push(connectedPlace);
+            }
+          });
+        }
+
+        components.push(component);
+      }
+    }
+
+    console.log(`Found ${components.length} disconnected components`);
+
+    if (components.length <= 1) {
+      console.log('✅ Global connectivity achieved');
+      break;
+    }
+
+    // Connect the largest component to the next largest
+    components.sort((a, b) => b.length - a.length);
+    const largestComponent = components[0];
+    const nextComponent = components[1];
+
+    // Find the closest places between these two components
+    let minDistance = Infinity;
+    let bestConnection: [Place, Place] | null = null;
+
+    for (const place1 of largestComponent) {
+      for (const place2 of nextComponent) {
+        // Use a simple heuristic based on place ID numbers
+        const id1 = parseInt(place1.id.split('_')[1] || '0');
+        const id2 = parseInt(place2.id.split('_')[1] || '0');
+        const distance = Math.abs(id1 - id2);
+
+        if (distance < minDistance) {
+          minDistance = distance;
+          bestConnection = [place1, place2];
+        }
+      }
+    }
+
+    if (bestConnection) {
+      const [place1, place2] = bestConnection;
+      const success = createBidirectionalConnection(place1, place2, seededRandom);
+      if (success) {
+        console.log(`🔗 Connected ${largestComponent.length} places to ${nextComponent.length} places via ${place1.name} ↔ ${place2.name}`);
+
+        // Verify connection was actually created
+        const place1ExitCount = Object.keys(place1.exits).length;
+        const place2ExitCount = Object.keys(place2.exits).length;
+        console.log(`  📊 ${place1.name} now has ${place1ExitCount} exits, ${place2.name} now has ${place2ExitCount} exits`);
+      } else {
+        // Try other connection pairs from these components
+        let alternativeFound = false;
+        for (const alt1 of largestComponent) {
+          for (const alt2 of nextComponent) {
+            if ((alt1 !== place1 || alt2 !== place2) && createBidirectionalConnection(alt1, alt2, seededRandom)) {
+              console.log(`🔗 Connected ${largestComponent.length} places to ${nextComponent.length} places via ${alt1.name} ↔ ${alt2.name} (alternative)`);
+
+              // Verify alternative connection was actually created
+              const alt1ExitCount = Object.keys(alt1.exits).length;
+              const alt2ExitCount = Object.keys(alt2.exits).length;
+              console.log(`  📊 ${alt1.name} now has ${alt1ExitCount} exits, ${alt2.name} now has ${alt2ExitCount} exits`);
+
+              alternativeFound = true;
+              break;
+            }
+          }
+          if (alternativeFound) break;
+        }
+
+        if (!alternativeFound) {
+          console.error('❌ Could not establish any connection between components');
+          break;
+        }
+      }
+    } else {
+      console.error('❌ Could not find connection points between components');
+      break;
+    }
+  }
+
+  // Final verification
+  if (isGraphConnected(places)) {
+    console.log('✅ Global connectivity restored');
+  } else {
+    console.error(`❌ Failed to restore global connectivity after ${attempts} attempts`);
+  }
 }
 
 /**

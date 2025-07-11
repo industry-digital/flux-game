@@ -78,6 +78,45 @@ describe('World Generation Integration', () => {
       expect(world.connections.total).toBeGreaterThanOrEqual(0);
       expect(world.connections.reciprocal).toBeGreaterThanOrEqual(0);
     });
+
+    it('should ensure all places remain reachable after ecosystem connectivity adjustments', () => {
+      const world = generateWorld(basicConfig);
+
+      // Verify we have multiple places
+      expect(world.places.length).toBeGreaterThan(1);
+
+      // Test connectivity using BFS traversal
+      const visited = new Set<string>();
+      const queue = [world.places[0].id];
+      visited.add(world.places[0].id);
+
+      while (queue.length > 0) {
+        const currentId = queue.shift()!;
+        const currentPlace = world.places.find(p => p.id === currentId);
+
+        if (currentPlace) {
+          // Follow all exits from this place
+          Object.values(currentPlace.exits).forEach(exit => {
+            if (!visited.has(exit.to)) {
+              visited.add(exit.to);
+              queue.push(exit.to);
+            }
+          });
+        }
+      }
+
+      // All places should be reachable from any starting place
+      const unreachablePlaces = world.places.filter(place => !visited.has(place.id));
+
+      if (unreachablePlaces.length > 0) {
+        console.error('Unreachable places found:', unreachablePlaces.map(p => p.id));
+        console.error('Total places:', world.places.length);
+        console.error('Reachable places:', visited.size);
+      }
+
+      expect(unreachablePlaces).toEqual([]);
+      expect(visited.size).toBe(world.places.length);
+    });
   });
 
   describe('Deterministic Behavior', () => {
@@ -231,8 +270,8 @@ describe('World Generation Integration', () => {
       expect(world.places.length).toBeGreaterThanOrEqual(10);
     });
 
-         it('should handle maximum configuration', () => {
-       const maxConfig: WorldGenerationConfig = {
+    it('should handle maximum configuration', () => {
+    const maxConfig: WorldGenerationConfig = {
          minPlaces: 20,
          maxPlaces: 50,
          worldAspectRatio: 1.618,

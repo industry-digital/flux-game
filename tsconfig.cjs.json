@@ -5,5 +5,9 @@
     "outDir": "./dist/cjs",
     "declaration": false,
     "declarationMap": false
-  }
+  },
+  "exclude": [
+    "**/*.spec.ts",
+    "**/*.test.ts"
+  ]
 }

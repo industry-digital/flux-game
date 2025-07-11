@@ -10,12 +10,8 @@
     "skipLibCheck": true,
     "baseUrl": ".",
     "paths": {
-      "~/*": [
-        "src/*"
-      ],
-      "@flux": [
-        "src/types/index.ts"
-      ]
+      "~/*": ["src/*"],
+      "@flux": ["src/types/index.ts"]
     },
     "plugins": [
       {
@@ -32,7 +28,6 @@
     "node_modules",
     "dist",
     "scripts",
-    "**/*.spec.ts",
     "**/*.test.ts"
   ]
 }

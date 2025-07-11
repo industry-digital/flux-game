@@ -21,6 +21,7 @@ export type WorldGenerationConfig = {
   minPlaces: number;
   maxPlaces?: number;
   worldAspectRatio: 1.618; // The ratio of the world's length to its width
+  seed?: number;           // Optional seed for deterministic generation
   lichtenberg: {
     minVertices: number;     // Minimum number of vertices in the Lichtenberg figure
     maxChainLength: number;  // Maximum length of any single chain/branch

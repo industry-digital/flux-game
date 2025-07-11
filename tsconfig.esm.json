@@ -7,5 +7,9 @@
     "outDir": "./dist/esm",
     "declaration": false,
     "declarationMap": false
-  }
+  },
+  "exclude": [
+    "**/*.spec.ts",
+    "**/*.test.ts"
+  ]
 }
