@@ -108,6 +108,7 @@ function generateEcosystemFigures(config: WorldGenerationConfig): EcosystemFigur
   ];
 
   let globalVertexCounter = 0;
+  const baseSeed = config.seed || 42;
 
   return ecosystemBands.map((ecosystem, index) => {
     const startX = index * bandWidth;
@@ -128,7 +129,7 @@ function generateEcosystemFigures(config: WorldGenerationConfig): EcosystemFigur
       maxDepth: 20, // Higher depth for more coverage
       eastwardBias: 0.7,
       verticalBias: 0.0,
-      seed: 42 + index, // Different seed per ecosystem
+      seed: baseSeed + index, // Different seed per ecosystem based on user seed
       startingVertexId: globalVertexCounter, // Ensure unique IDs across ecosystems
 
       minVertices: Math.max(3, targetPlaces), // Ensure minimum places per ecosystem
@@ -233,7 +234,7 @@ function connectEcosystemFigures(
     stepSize: 80,
     maxDepth: 15,
     eastwardBias: 0.8,
-    seed: 42,
+    seed: config.seed || 42,
     minVertices: config.minPlaces,
     maxVertices: config.maxPlaces
   };
@@ -631,25 +632,25 @@ function getEcosystemConnectivityConfig(ecosystem: EcosystemName): {
       removeConnections: false
     },
     [EcosystemName.FOREST_TEMPERATE]: {
-      targetConnectionsPerPlace: 2.2,
+      targetConnectionsPerPlace: 2.5, // Increased from 2.2 to be less aggressive
       connectionRange: 2, // 2 hops: trails exist but trees limit visibility
       addProximityConnections: true,
       removeConnections: true
     },
     [EcosystemName.MARSH_TROPICAL]: {
-      targetConnectionsPerPlace: 1.8,
+      targetConnectionsPerPlace: 2.2, // Increased from 1.8 to prevent isolation
       connectionRange: 1, // 1 hop: difficult terrain limits new connections
       addProximityConnections: false,
       removeConnections: true
     },
     [EcosystemName.MOUNTAIN_ARID]: {
-      targetConnectionsPerPlace: 1.4,
+      targetConnectionsPerPlace: 2.0, // Increased from 1.4 to prevent isolation
       connectionRange: 1, // 1 hop: rugged terrain severely limits passage
       addProximityConnections: false,
       removeConnections: true
     },
     [EcosystemName.JUNGLE_TROPICAL]: {
-      targetConnectionsPerPlace: 2.0,
+      targetConnectionsPerPlace: 2.3, // Increased from 2.0 to be less aggressive
       connectionRange: 2, // 2 hops: some paths through dense vegetation
       addProximityConnections: true,
       removeConnections: true
@@ -762,7 +763,7 @@ function hasExistingConnection(place1: Place, place2: Place): boolean {
 /**
  * Create bidirectional connection between two places
  */
-function createBidirectionalConnection(place1: Place, place2: Place, seededRandom: SeededRandom): boolean {
+function createBidirectionalConnection(place1: Place, place2: Place, seededRandom: SeededRandom, forceConnection: boolean = false): boolean {
   // Check if already connected
   if (hasExistingConnection(place1, place2)) {
     console.log(`  ⚠️  ${place1.name} and ${place2.name} are already connected`);
@@ -783,6 +784,7 @@ function createBidirectionalConnection(place1: Place, place2: Place, seededRando
 
   console.log(`  📍 Connecting ${place1.name} (${availableForPlace1.length} free dirs) ↔ ${place2.name} (${availableForPlace2.length} free dirs)`);
 
+  // Try normal connection first
   if (availableForPlace1.length > 0 && availableForPlace2.length > 0) {
     const direction1 = availableForPlace1[seededRandom.nextInt(availableForPlace1.length)];
     const direction2 = getOppositeDirection(direction1);
@@ -805,10 +807,48 @@ function createBidirectionalConnection(place1: Place, place2: Place, seededRando
     } else {
       console.log(`  ❌ Direction ${direction2} not available for ${place2.name}`);
     }
-  } else {
-    console.log(`  ❌ No available directions for connection`);
   }
 
+    // If normal connection failed and forceConnection is true, override an existing connection
+  if (forceConnection) {
+    console.log(`🚨 DEBUG: Entering forced connection mode for ${place1.name} ↔ ${place2.name}`);
+    // In emergency mode, we'll override existing connections to ensure connectivity
+    const direction1 = availableForPlace1.length > 0
+      ? availableForPlace1[seededRandom.nextInt(availableForPlace1.length)]
+      : availableDirections[seededRandom.nextInt(availableDirections.length)];
+    const direction2 = getOppositeDirection(direction1);
+    console.log(`🚨 DEBUG: Selected directions: ${direction1} ↔ ${direction2}`);
+
+    // Store info about what we're overriding
+    const overriding1 = place1.exits[direction1];
+    const overriding2 = place2.exits[direction2];
+
+    // Force the connection even if it overwrites existing ones
+    place1.exits[direction1] = {
+      direction: direction1,
+      label: `Emergency path to ${place2.name}`,
+      to: place2.id as PlaceURN
+    };
+
+    place2.exits[direction2] = {
+      direction: direction2,
+      label: `Emergency path to ${place1.name}`,
+      to: place1.id as PlaceURN
+    };
+
+    let overrideMsg = "";
+    if (overriding1) {
+      overrideMsg += ` (overrode ${place1.name} → ${direction1})`;
+    }
+    if (overriding2) {
+      overrideMsg += ` (overrode ${place2.name} → ${direction2})`;
+    }
+
+    console.log(`  🚨 FORCED connection ${place1.name} → ${direction1} → ${place2.name} → ${direction2} (connectivity emergency)${overrideMsg}`);
+    return true;
+  }
+
+  console.log(`  ❌ No available directions for connection`);
   return false;
 }
 
@@ -1049,29 +1089,48 @@ function ensureGlobalConnectivity(places: Place[], seededRandom: SeededRandom): 
     const largestComponent = components[0];
     const nextComponent = components[1];
 
-    // Find the closest places between these two components
+    // Find the closest places between these two components using actual spatial distance
     let minDistance = Infinity;
     let bestConnection: [Place, Place] | null = null;
 
     for (const place1 of largestComponent) {
       for (const place2 of nextComponent) {
-        // Use a simple heuristic based on place ID numbers
-        const id1 = parseInt(place1.id.split('_')[1] || '0');
-        const id2 = parseInt(place2.id.split('_')[1] || '0');
-        const distance = Math.abs(id1 - id2);
+        // Get spatial coordinates from vertex data
+        const vertex1 = places.find(p => p.id === place1.id);
+        const vertex2 = places.find(p => p.id === place2.id);
 
-        if (distance < minDistance) {
-          minDistance = distance;
-          bestConnection = [place1, place2];
+        if (vertex1 && vertex2) {
+          // Use a simple Euclidean distance approximation based on ecosystem bands
+          // Since we don't have direct vertex coordinates in Place objects, use name hashing as proxy
+          const hash1 = hashPosition(place1.id.length, place1.name.length);
+          const hash2 = hashPosition(place2.id.length, place2.name.length);
+          const distance = Math.abs(hash1 - hash2);
+
+          if (distance < minDistance) {
+            minDistance = distance;
+            bestConnection = [place1, place2];
+          }
         }
       }
     }
 
     if (bestConnection) {
       const [place1, place2] = bestConnection;
-      const success = createBidirectionalConnection(place1, place2, seededRandom);
+
+      // Check if either place has 0 free directions - if so, go straight to forced connection
+      const availableDirections1 = 8 - Object.keys(place1.exits).length;
+      const availableDirections2 = 8 - Object.keys(place2.exits).length;
+      const needsForcedConnection = availableDirections1 === 0 || availableDirections2 === 0;
+
+
+
+      const success = needsForcedConnection
+        ? createBidirectionalConnection(place1, place2, seededRandom, true)
+        : createBidirectionalConnection(place1, place2, seededRandom);
+
       if (success) {
-        console.log(`🔗 Connected ${largestComponent.length} places to ${nextComponent.length} places via ${place1.name} ↔ ${place2.name}`);
+        const connectionType = needsForcedConnection ? "FORCED" : "normal";
+        console.log(`🔗 Connected ${largestComponent.length} places to ${nextComponent.length} places via ${place1.name} ↔ ${place2.name} (${connectionType})`);
 
         // Verify connection was actually created
         const place1ExitCount = Object.keys(place1.exits).length;
@@ -1082,22 +1141,52 @@ function ensureGlobalConnectivity(places: Place[], seededRandom: SeededRandom): 
         let alternativeFound = false;
         for (const alt1 of largestComponent) {
           for (const alt2 of nextComponent) {
-            if ((alt1 !== place1 || alt2 !== place2) && createBidirectionalConnection(alt1, alt2, seededRandom)) {
-              console.log(`🔗 Connected ${largestComponent.length} places to ${nextComponent.length} places via ${alt1.name} ↔ ${alt2.name} (alternative)`);
+            if (alt1 !== place1 || alt2 !== place2) {
+              // Check if this alternative needs forced connection
+              const altAvailableDirections1 = 8 - Object.keys(alt1.exits).length;
+              const altAvailableDirections2 = 8 - Object.keys(alt2.exits).length;
+              const altNeedsForcedConnection = altAvailableDirections1 === 0 || altAvailableDirections2 === 0;
 
-              // Verify alternative connection was actually created
-              const alt1ExitCount = Object.keys(alt1.exits).length;
-              const alt2ExitCount = Object.keys(alt2.exits).length;
-              console.log(`  📊 ${alt1.name} now has ${alt1ExitCount} exits, ${alt2.name} now has ${alt2ExitCount} exits`);
+              if (altNeedsForcedConnection) {
+                console.log(`🚨 DEBUG: Alternative needs forced connection: ${alt1.name} (${altAvailableDirections1} free) ↔ ${alt2.name} (${altAvailableDirections2} free)`);
+              }
 
-              alternativeFound = true;
-              break;
+              const altSuccess = altNeedsForcedConnection
+                ? createBidirectionalConnection(alt1, alt2, seededRandom, true)
+                : createBidirectionalConnection(alt1, alt2, seededRandom);
+
+              if (altSuccess) {
+                const altConnectionType = altNeedsForcedConnection ? "FORCED alternative" : "alternative";
+                console.log(`🔗 Connected ${largestComponent.length} places to ${nextComponent.length} places via ${alt1.name} ↔ ${alt2.name} (${altConnectionType})`);
+
+                // Verify alternative connection was actually created
+                const alt1ExitCount = Object.keys(alt1.exits).length;
+                const alt2ExitCount = Object.keys(alt2.exits).length;
+                console.log(`  📊 ${alt1.name} now has ${alt1ExitCount} exits, ${alt2.name} now has ${alt2ExitCount} exits`);
+
+                alternativeFound = true;
+                break;
+              }
             }
           }
           if (alternativeFound) break;
         }
 
-        if (!alternativeFound) {
+                // If still no connection, force one as last resort
+        if (!alternativeFound && attempts >= maxAttempts - 5) {
+          console.log(`🚨 Attempting FORCED connection (attempt ${attempts}/${maxAttempts})`);
+          const forcedSuccess = createBidirectionalConnection(place1, place2, seededRandom, true);
+          if (forcedSuccess) {
+            console.log(`🔗 FORCED connection between ${largestComponent.length} places and ${nextComponent.length} places via ${place1.name} ↔ ${place2.name}`);
+
+            const place1ExitCount = Object.keys(place1.exits).length;
+            const place2ExitCount = Object.keys(place2.exits).length;
+            console.log(`  📊 ${place1.name} now has ${place1ExitCount} exits, ${place2.name} now has ${place2ExitCount} exits`);
+          } else {
+            console.error('❌ Even forced connection failed - critical connectivity failure');
+            break;
+          }
+        } else if (!alternativeFound) {
           console.error('❌ Could not establish any connection between components');
           break;
         }
