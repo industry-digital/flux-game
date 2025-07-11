@@ -148,6 +148,9 @@ export const createPooledUniqid = (
  */
 export const uniqid = createPooledUniqid();
 
+// Base62 charset: digits + lowercase + uppercase letters
+export const BASE62_CHARSET = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
+
 // Export types for external use
 export type { ByteProvider, RandomBytesStrategy };
 

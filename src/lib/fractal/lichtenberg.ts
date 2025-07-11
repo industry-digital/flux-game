@@ -5,7 +5,8 @@
  * Guarantees connectivity (no orphaned subgraphs) and minimum number of vertices
  */
 
-// Core types for Lichtenberg figure generation
+import { uniqid, BASE62_CHARSET } from '../random';
+
 export type LichtenbergVertex = {
   x: number;
   y: number;
@@ -41,7 +42,6 @@ export type LichtenbergConfig = {
   eastwardBias: number;       // Bias toward eastward propagation (0-1)
   verticalBias?: number;      // Bias toward vertical directions (0-1)
   seed?: number;              // Random seed for deterministic generation
-  startingVertexId?: number;  // Starting vertex ID counter (default: 0)
 
   // Vertex constraints (soft limits)
   minVertices?: number;       // Target minimum vertices (soft guidance)
@@ -63,6 +63,57 @@ export type LichtenbergConfig = {
 // Dependency injection interface for random generation
 export interface RandomGenerator {
   random(): number;
+}
+
+// Vertex ID generator with collision detection
+class VertexIdGenerator {
+  private readonly usedIds = new Set<string>();
+  private readonly rng?: RandomGenerator;
+
+  constructor(seed?: number) {
+    if (seed !== undefined) {
+      this.rng = createSeededRNG(seed);
+    }
+  }
+
+  generateId(): string {
+    const maxAttempts = 100; // Prevent infinite loops in case of hash collision
+
+    for (let attempt = 0; attempt < maxAttempts; attempt++) {
+      let id: string;
+
+      if (this.rng) {
+        // Deterministic mode: use seeded RNG to generate base62 IDs
+        id = this.generateSeededBase62Id();
+      } else {
+        // Random mode: use crypto random
+        id = uniqid(8, BASE62_CHARSET);
+      }
+
+      if (!this.usedIds.has(id)) {
+        this.usedIds.add(id);
+        return id;
+      }
+    }
+
+    throw new Error(`Unable to generate unique vertex ID after ${maxAttempts} attempts`);
+  }
+
+  private generateSeededBase62Id(): string {
+    const chars = BASE62_CHARSET;
+    let result = '';
+
+    for (let i = 0; i < 8; i++) {
+      const randomIndex = Math.floor(this.rng!.random() * chars.length);
+      result += chars[randomIndex];
+    }
+
+    return result;
+  }
+
+  clear(): void {
+    this.usedIds.clear();
+  }
 }
 
 // Cell represents a position in the electrical field
@@ -396,18 +447,9 @@ function extendFromTerminals(
   // Create multiple small growths from each terminal
   const newGrowths: LichtenbergFigure[] = [];
 
-  for (let i = 0; i < Math.min(terminals.length, 5); i++) { // Limit to 5 terminals to avoid explosion
+  for (let i = 0; i < terminals.length; i++) {
     const terminal = terminals[i];
-
-    // Create a small localized config around this terminal
-    const localConfig: LichtenbergConfig = {
-      ...config,
-      startX: terminal.x,
-      startY: terminal.y,
-      seed: seed + i,
-      minVertices: Math.min(50, Math.floor(config.minVertices! / terminals.length)), // Small growth per terminal
-      maxVertices: 100 // Keep individual growths small
-    };
+    const localConfig = createConfigFromComponent(config, [terminal], seed + i);
 
     // Generate small growth from this terminal
     const growth = generateRealisticLichtenbergFigure(localConfig, seed + i);
@@ -415,7 +457,7 @@ function extendFromTerminals(
   }
 
   // Merge all growths with the existing component
-  return mergeComponents(existingComponent, newGrowths, config.startingVertexId || 0, terminals);
+  return mergeComponents(existingComponent, newGrowths, terminals, seed + terminals.length);
 }
 
 // Merge multiple Lichtenberg figures into one, updating vertex IDs to avoid conflicts
@@ -423,13 +465,14 @@ function extendFromTerminals(
 function mergeComponents(
   existingComponent: LichtenbergFigure,
   newGrowths: LichtenbergFigure[],
-  startingVertexId: number,
-  terminals: LichtenbergVertex[]
+  terminals: LichtenbergVertex[],
+  seed?: number
 ): LichtenbergFigure {
   const allVertices: LichtenbergVertex[] = [...existingComponent.vertices];
   const allConnections: LichtenbergConnection[] = [...existingComponent.connections];
 
-  let nextVertexId = startingVertexId + existingComponent.vertices.length;
+  // Create a shared vertex ID generator for this merge operation
+  const vertexIdGenerator = new VertexIdGenerator(seed);
 
   for (let i = 0; i < newGrowths.length; i++) {
     const growth = newGrowths[i];
@@ -440,7 +483,7 @@ function mergeComponents(
 
     // Add vertices with new IDs
     for (const vertex of growth.vertices) {
-      const newId = `vertex_${nextVertexId++}`;
+      const newId = vertexIdGenerator.generateId();
       vertexIdMap.set(vertex.id, newId);
 
       allVertices.push({
@@ -485,15 +528,15 @@ function mergeComponents(
         }
       }
 
-                      // Create connection between terminal and closest vertex in new growth
-        const closestVertexNewId = vertexIdMap.get(closestVertex.id);
-        if (closestVertexNewId) {
-                    allConnections.push({
-            from: terminal.id,
-            to: closestVertexNewId,
-            length: minDistance
-          });
-        }
+      // Create connection between terminal and closest vertex in new growth
+      const closestVertexNewId = vertexIdMap.get(closestVertex.id);
+      if (closestVertexNewId) {
+        allConnections.push({
+          from: terminal.id,
+          to: closestVertexNewId,
+          length: minDistance
+        });
+      }
     }
   }
 
@@ -534,16 +577,16 @@ function generateWithConnectivityRefinement(
 }
 
 // Helper functions for iterative refinement
-function extractVerticesFromChannels(channels: Array<Array<{ x: number; y: number }>>, startingVertexId: number): LichtenbergVertex[] {
+function extractVerticesFromChannels(channels: Array<Array<{ x: number; y: number }>>, seed?: number): LichtenbergVertex[] {
   const vertices: LichtenbergVertex[] = [];
   const vertexMap = new Map<string, string>();
-  let vertexCounter = startingVertexId;
+  const vertexIdGenerator = new VertexIdGenerator(seed);
 
   for (const channel of channels) {
     for (const point of channel) {
       const key = `${Math.floor(point.x * 100) / 100}_${Math.floor(point.y * 100) / 100}`;
       if (!vertexMap.has(key)) {
-        const vertexId = `vertex_${vertexCounter++}`;
+        const vertexId = vertexIdGenerator.generateId();
         vertices.push({
           x: point.x,
           y: point.y,
@@ -831,19 +874,25 @@ function generateRealisticLichtenbergFigure(
   const connections: LichtenbergConnection[] = [];
   const vertexMap = new Map<string, string>(); // position -> vertex ID
 
-  let vertexCounter = config.startingVertexId || 0;
+  // Create vertex ID generator for this figure, using the same seed for determinism
+  const vertexIdGenerator = new VertexIdGenerator(seed);
 
   function getOrCreateVertex(x: number, y: number): string {
-    const key = `${Math.floor(x * 100) / 100}_${Math.floor(y * 100) / 100}`;
+    // CRITICAL FIX: Clamp final vertex positions to stay within bounds
+    // This prevents jitter from pushing vertices outside the electrical field bounds
+    const clampedX = Math.max(0, Math.min(config.width - 1, x));
+    const clampedY = Math.max(0, Math.min(config.height - 1, y));
+
+    const key = `${Math.floor(clampedX * 100) / 100}_${Math.floor(clampedY * 100) / 100}`;
 
     if (vertexMap.has(key)) {
       return vertexMap.get(key)!;
     }
 
-    const vertexId = `vertex_${vertexCounter++}`;
+    const vertexId = vertexIdGenerator.generateId();
     vertices.push({
-      x: x,
-      y: y,
+      x: clampedX,
+      y: clampedY,
       id: vertexId
     });
     vertexMap.set(key, vertexId);
@@ -899,8 +948,9 @@ function generateRealisticLichtenbergFigure(
       }
     }
 
-    // Find the largest connected component starting from vertex_0
-    const rootVertex = vertices.find(v => v.id === 'vertex_0');
+    // Find the largest connected component starting from any vertex
+    // (we can't assume vertex_0 exists anymore with random IDs)
+    const rootVertex = vertices[0];
     if (rootVertex) {
       const visited = new Set<string>();
       const queue = [rootVertex.id];

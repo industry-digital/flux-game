@@ -217,12 +217,12 @@ describe('World Generation Integration', () => {
     });
 
          it('should generate proper URN format for place IDs', () => {
-       const world = generateWorld(basicConfig);
+        const world = generateWorld(basicConfig);
 
-       for (const place of world.places) {
-         expect(place.id).toMatch(/^flux:place:vertex_\d+$/);
-       }
-     });
+        for (const place of world.places) {
+          expect(place.id).toMatch(/^flux:place:[A-Za-z0-9]{8}$/);
+        }
+      });
 
     it('should generate weather data for all places', () => {
       const world = generateWorld(basicConfig);

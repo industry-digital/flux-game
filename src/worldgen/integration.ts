@@ -115,6 +115,8 @@ export function generateWorld(config: WorldGenerationConfig): WorldGenerationRes
     // Quick connectivity check for each ecosystem figure
     const components = getConnectedComponentsFromGraph(figure.figure.vertices, figure.figure.connections);
     console.log(`  → ${components.length} connected components (should be 1)`);
+
+
   });
 
   // Step 2: Connect ecosystem figures (inter-ecosystem connections)
@@ -125,6 +127,8 @@ export function generateWorld(config: WorldGenerationConfig): WorldGenerationRes
   console.log(`Total vertices: ${vertices.length}, Total connections: ${connections.length}`);
   const components = getConnectedComponentsFromGraph(vertices, connections);
   console.log(`Connected components: ${components.length} (should be 1 after inter-ecosystem bridging)`);
+
+
 
   // Step 3: Map vertices to ecosystems and create world vertices
   console.time('Step 3: Map vertices to ecosystems');
@@ -194,35 +198,43 @@ interface EcosystemProjectionConfig {
 /**
  * Get projection configuration for each ecosystem type
  */
-function getEcosystemProjectionConfig(ecosystem: EcosystemName): EcosystemProjectionConfig {
-  const configs = {
+function getEcosystemProjectionConfig(ecosystem: EcosystemName, worldSize: number = 1000): EcosystemProjectionConfig {
+  // Scale collision thresholds based on world size for better adaptability
+  const sizeScaling = Math.sqrt(worldSize / 1000);
+
+  const baseConfigs = {
     [EcosystemName.STEPPE_ARID]: {
       projections: [0.6, 0.4], // 2 projections: 60% primary, 40% secondary
-      collisionThreshold: 80 // Large threshold for high connectivity
+      baseThreshold: 80 // Base threshold for high connectivity
     },
     [EcosystemName.GRASSLAND_TEMPERATE]: {
       projections: [0.7, 0.3], // 2 projections: 70% primary, 30% secondary
-      collisionThreshold: 70 // Medium-high threshold
+      baseThreshold: 70 // Base medium-high threshold
     },
     [EcosystemName.FOREST_TEMPERATE]: {
       projections: [0.8, 0.2], // 2 projections: 80% primary, 20% secondary
-      collisionThreshold: 50 // Threshold will be scaled proportionally with eastward stretching
+      baseThreshold: 50 // Base threshold (will be scaled proportionally with eastward stretching)
     },
     [EcosystemName.MOUNTAIN_ARID]: {
       projections: [1.0], // Single projection for difficult terrain
-      collisionThreshold: 0 // No collision detection needed
+      baseThreshold: 0 // No collision detection needed
     },
     [EcosystemName.JUNGLE_TROPICAL]: {
       projections: [0.75, 0.25], // 2 projections: 75% primary, 25% secondary
-      collisionThreshold: 40 // Small threshold for dense vegetation
+      baseThreshold: 40 // Base threshold for dense vegetation
     },
     [EcosystemName.MARSH_TROPICAL]: {
       projections: [1.0], // Single projection for treacherous terrain
-      collisionThreshold: 0 // No collision detection needed
+      baseThreshold: 0 // No collision detection needed
     }
   };
 
-  return configs[ecosystem] || configs[EcosystemName.GRASSLAND_TEMPERATE];
+  const config = baseConfigs[ecosystem] || baseConfigs[EcosystemName.GRASSLAND_TEMPERATE];
+
+  return {
+    projections: config.projections,
+    collisionThreshold: config.baseThreshold > 0 ? Math.max(10, config.baseThreshold * sizeScaling) : 0
+  };
 }
 
 /**
@@ -254,7 +266,8 @@ function mergeProjectionsWithCollisionDetection(
   if (collisionThreshold > 0) {
     const mergerConnections = detectCollisionsAndCreateConnections(
       allVertices,
-      collisionThreshold
+      collisionThreshold,
+      true // Merging mode: prioritize connectivity over performance
     );
     allConnections.push(...mergerConnections);
   }
@@ -266,21 +279,83 @@ function mergeProjectionsWithCollisionDetection(
 }
 
 /**
+ * Calculate world statistics for adaptive behavior
+ */
+function calculateWorldStats(vertices: LichtenbergVertex[]): { density: number; bounds: { minX: number; maxX: number; minY: number; maxY: number } } {
+  if (vertices.length === 0) {
+    return { density: 0, bounds: { minX: 0, maxX: 0, minY: 0, maxY: 0 } };
+  }
+
+  const bounds = {
+    minX: Math.min(...vertices.map(v => v.x)),
+    maxX: Math.max(...vertices.map(v => v.x)),
+    minY: Math.min(...vertices.map(v => v.y)),
+    maxY: Math.max(...vertices.map(v => v.y))
+  };
+
+  const area = (bounds.maxX - bounds.minX) * (bounds.maxY - bounds.minY);
+  const density = area > 0 ? vertices.length / area : 0;
+
+  return { density, bounds };
+}
+
+/**
+ * Calculate adaptive connection limits based on world characteristics
+ */
+function calculateConnectionLimits(vertexCount: number, density: number): { maxConnectionsPerVertex: number; targetConnectionRatio: number } {
+  // Base connection limit (minimum viable connectivity)
+  const baseLimit = 4;
+
+  // Scale with world size (larger worlds can handle more connections)
+  const sizeScaling = Math.min(2, Math.log10(vertexCount) / 2);
+
+  // Scale with density (denser worlds need fewer connections per vertex)
+  const densityScaling = density > 0 ? Math.max(0.5, 1 / Math.sqrt(density * 1000)) : 1;
+
+  const maxConnectionsPerVertex = Math.ceil(baseLimit * sizeScaling * densityScaling);
+  const targetConnectionRatio = Math.min(0.8, 0.3 + (vertexCount / 1000) * 0.2);
+
+  return { maxConnectionsPerVertex, targetConnectionRatio };
+}
+
+/**
+ * Calculate optimal grid size for spatial partitioning
+ */
+function calculateOptimalGridSize(threshold: number, density: number): number {
+  // Base grid size proportional to collision threshold
+  const baseSize = threshold * 1.2;
+
+  // Adjust based on density (higher density = smaller grids for better partitioning)
+  const densityAdjustment = density > 0 ? Math.max(0.8, 1 / Math.sqrt(density * 100)) : 1;
+
+  return baseSize * densityAdjustment;
+}
+
+/**
  * Detect collisions between vertices and create merger connections
- * Optimized version using spatial partitioning and connection limits
+ * Adaptive version that scales with world size and density
+ * @param vertices - Array of vertices to check for collisions
+ * @param threshold - Distance threshold for collision detection
+ * @param mergingMode - If true, prioritize connectivity over performance (for projection merging)
  */
 function detectCollisionsAndCreateConnections(
   vertices: LichtenbergVertex[],
-  threshold: number
+  threshold: number,
+  mergingMode: boolean = false
 ): LichtenbergConnection[] {
   const connections: LichtenbergConnection[] = [];
 
-  // Limit connections per vertex to avoid excessive connectivity
-  const maxConnectionsPerVertex = 8; // Each vertex can have at most 8 connections
+  // Calculate world characteristics for adaptive behavior
+  const worldStats = calculateWorldStats(vertices);
+
+      // Adaptive connection limits based on world density and size
+  const connectionConfig = mergingMode
+    ? { maxConnectionsPerVertex: 6, targetConnectionRatio: 0.3 } // Conservative limits even during merging to preserve structure
+    : calculateConnectionLimits(vertices.length, worldStats.density);
   const vertexConnectionCount = new Map<string, number>();
 
-  // Use spatial partitioning for efficient collision detection
-  const gridSize = threshold * 1.5; // Grid cell size
+  // Adaptive grid sizing based on threshold and world density
+  const gridSize = calculateOptimalGridSize(threshold, worldStats.density);
   const grid = new Map<string, LichtenbergVertex[]>();
 
   // Populate the grid
@@ -308,7 +383,7 @@ function detectCollisionsAndCreateConnections(
         // Skip if either vertex already has too many connections
         const count1 = vertexConnectionCount.get(vertex1.id) || 0;
         const count2 = vertexConnectionCount.get(vertex2.id) || 0;
-        if (count1 >= maxConnectionsPerVertex || count2 >= maxConnectionsPerVertex) {
+        if (count1 >= connectionConfig.maxConnectionsPerVertex || count2 >= connectionConfig.maxConnectionsPerVertex) {
           continue;
         }
 
@@ -354,7 +429,7 @@ function detectCollisionsAndCreateConnections(
             // Skip if either vertex already has too many connections
             const count1 = vertexConnectionCount.get(vertex1.id) || 0;
             const count2 = vertexConnectionCount.get(vertex2.id) || 0;
-            if (count1 >= maxConnectionsPerVertex || count2 >= maxConnectionsPerVertex) {
+            if (count1 >= connectionConfig.maxConnectionsPerVertex || count2 >= connectionConfig.maxConnectionsPerVertex) {
               continue;
             }
 
@@ -440,7 +515,6 @@ function generateEcosystemFigures(config: WorldGenerationConfig): EcosystemFigur
     EcosystemName.JUNGLE_TROPICAL
   ];
 
-  let globalVertexCounter = 0;
   const baseSeed = config.seed || 42;
 
   return ecosystemBands.map((ecosystem, index) => {
@@ -452,7 +526,7 @@ function generateEcosystemFigures(config: WorldGenerationConfig): EcosystemFigur
     const maxPlaces = Math.floor((config.maxPlaces || config.minPlaces * 2) / 5);
 
     // Get multi-projection configuration for this ecosystem
-    const projectionConfig = getEcosystemProjectionConfig(ecosystem);
+    const projectionConfig = getEcosystemProjectionConfig(ecosystem, worldWidth);
     const projections: LichtenbergFigure[] = [];
     let adjustedCollisionThreshold = projectionConfig.collisionThreshold;
 
@@ -462,36 +536,35 @@ function generateEcosystemFigures(config: WorldGenerationConfig): EcosystemFigur
       const projectionPlaces = Math.floor(targetPlaces * projectionRatio);
       const projectionMaxPlaces = Math.floor(maxPlaces * projectionRatio);
 
-      const lichtenbergConfig: LichtenbergConfig = {
-        startX: 0, // Start at beginning of band
-        startY: worldHeight / 2,
-        width: bandWidth,
-        height: worldHeight,
-        branchingFactor: 0.8, // Higher branching for more places
-        branchingAngle: Math.PI / 2,
-        stepSize: 60, // Smaller steps for more density
-        maxDepth: 20, // Higher depth for more coverage
-        eastwardBias: 0.7,
-        verticalBias: 0.0,
-        seed: baseSeed + index + (projIndex * 1000), // Different seed per projection
-        startingVertexId: globalVertexCounter, // Ensure unique IDs across ecosystems
+        const lichtenbergConfig: LichtenbergConfig = {
+      startX: 0, // Start at beginning of band
+      startY: worldHeight / 2,
+      width: bandWidth,
+      height: worldHeight,
+      branchingFactor: 0.8, // Higher branching for more places
+      branchingAngle: Math.PI / 2,
+      stepSize: 60, // Smaller steps for more density
+      maxDepth: 20, // Higher depth for more coverage
+      eastwardBias: 0.7,
+      verticalBias: 0.0,
+      seed: baseSeed + index + (projIndex * 1000), // Different seed per projection
 
-        minVertices: Math.max(3, projectionPlaces), // Ensure minimum places per projection
-        maxVertices: Math.max(projectionMaxPlaces, 15), // Ensure reasonable maximum
+      minVertices: Math.max(3, projectionPlaces), // Ensure minimum places per projection
+      maxVertices: Math.max(projectionMaxPlaces, 15), // Ensure reasonable maximum
 
-        sparking: {
-          enabled: true,
-          probability: 0.6,
-          maxSparkDepth: 3,
-          sparkingConditions: {
-            boundaryPoints: [],
-            randomSparking: true
-          },
-          fishSpineBias: 0.7
-        }
-      };
+      sparking: {
+        enabled: true,
+        probability: 0.6,
+        maxSparkDepth: 3,
+        sparkingConditions: {
+          boundaryPoints: [],
+          randomSparking: true
+        },
+        fishSpineBias: 0.7
+      }
+    };
 
-      const figure = generateLichtenbergFigure(lichtenbergConfig);
+    const figure = generateLichtenbergFigure(lichtenbergConfig);
 
       // Apply eastward stretching transformation to first projection only
       if (projIndex === 0) {
@@ -500,9 +573,6 @@ function generateEcosystemFigures(config: WorldGenerationConfig): EcosystemFigur
       }
 
       projections.push(figure);
-
-      // Update global counter for next projection
-      globalVertexCounter += figure.vertices.length;
     }
 
     // Merge projections with intelligent collision detection using the adjusted threshold
@@ -510,9 +580,6 @@ function generateEcosystemFigures(config: WorldGenerationConfig): EcosystemFigur
       projections,
       adjustedCollisionThreshold
     );
-
-    // Global counter was already updated when individual projections were generated
-    // No need to update it again since merge function doesn't re-number
 
     // Offset vertices to absolute world coordinates
     const offsetVertices = mergedFigure.vertices.map((vertex: LichtenbergVertex) => ({
@@ -541,7 +608,6 @@ function generateEcosystemFigures(config: WorldGenerationConfig): EcosystemFigur
         eastwardBias: 0.7,
         verticalBias: 0.0,
         seed: baseSeed + index,
-        startingVertexId: globalVertexCounter - mergedFigure.vertices.length,
         minVertices: Math.max(3, targetPlaces),
         maxVertices: Math.max(maxPlaces, 15)
       }
@@ -583,35 +649,47 @@ function connectEcosystemFigures(
   let allConnections: LichtenbergConnection[] = [];
 
   // Collect all vertices and connections from individual figures
-  // IDs are already unique thanks to startingVertexId parameter
+  // IDs are already unique thanks to base62 random ID generation
   ecosystemFigures.forEach(ecosystemFigure => {
     allVertices.push(...ecosystemFigure.figure.vertices);
     allConnections.push(...ecosystemFigure.figure.connections);
   });
 
-  // Connect adjacent ecosystems
+  // Connect adjacent ecosystems with robust multi-component bridging
   for (let i = 0; i < ecosystemFigures.length - 1; i++) {
     const westEcosystem = ecosystemFigures[i];
     const eastEcosystem = ecosystemFigures[i + 1];
 
-    // Find easternmost vertex in west ecosystem
-    const eastmostWest = westEcosystem.figure.vertices.reduce((eastmost: any, vertex: any) =>
+    // Get all connected components in both ecosystems
+    const westComponents = getConnectedComponentsFromGraph(westEcosystem.figure.vertices, westEcosystem.figure.connections);
+    const eastComponents = getConnectedComponentsFromGraph(eastEcosystem.figure.vertices, eastEcosystem.figure.connections);
+
+    // Connect multiple components for robust inter-ecosystem bridging
+    const connectionCount = Math.max(1, Math.min(westComponents.length, eastComponents.length));
+
+    for (let compIndex = 0; compIndex < connectionCount; compIndex++) {
+      const westComponent = westComponents[compIndex % westComponents.length];
+      const eastComponent = eastComponents[compIndex % eastComponents.length];
+
+      // Find best vertices to connect between components
+      const eastmostWest = westComponent.reduce((eastmost: any, vertex: any) =>
       vertex.x > eastmost.x ? vertex : eastmost
     );
 
-    // Find origin vertex in east ecosystem (closest to the band start position)
-    const originEast = findOriginVertex(eastEcosystem);
-
-    // Create bidirectional connection between ecosystems
-    const distance = Math.sqrt(
-      Math.pow(originEast.x - eastmostWest.x, 2) +
-      Math.pow(originEast.y - eastmostWest.y, 2)
+      const westmostEast = eastComponent.reduce((westmost: any, vertex: any) =>
+      vertex.x < westmost.x ? vertex : westmost
     );
 
-    // Connection from west ecosystem's easternmost to east ecosystem's origin
+      // Create bidirectional connection between ecosystems
+    const distance = Math.sqrt(
+      Math.pow(westmostEast.x - eastmostWest.x, 2) +
+      Math.pow(westmostEast.y - eastmostWest.y, 2)
+    );
+
+      // Connection from west component's easternmost to east component's westernmost
     allConnections.push({
       from: eastmostWest.id,
-      to: originEast.id,
+      to: westmostEast.id,
       length: distance,
       artificial: true, // Mark as artificial inter-ecosystem connection
       ecosystemTransition: {
@@ -620,19 +698,18 @@ function connectEcosystemFigures(
       }
     });
 
-    // Reciprocal connection from east ecosystem's origin to west ecosystem's easternmost
-    allConnections.push({
-      from: originEast.id,
-      to: eastmostWest.id,
-      length: distance,
-      artificial: true, // Mark as artificial inter-ecosystem connection
-      ecosystemTransition: {
-        from: eastEcosystem.ecosystem,
-        to: westEcosystem.ecosystem
-      }
-    });
-
-
+      // Reciprocal connection from east component's westernmost to west component's easternmost
+      allConnections.push({
+        from: westmostEast.id,
+        to: eastmostWest.id,
+        length: distance,
+        artificial: true, // Mark as artificial inter-ecosystem connection
+        ecosystemTransition: {
+          from: eastEcosystem.ecosystem,
+          to: westEcosystem.ecosystem
+        }
+      });
+    }
   }
 
   // Create a combined config for the result
@@ -873,6 +950,8 @@ function populatePlaceExits(places: Place[], connections: LichtenbergConnection[
   let skipped = 0;
   let missingPlaces = 0;
   let overflowHandled = 0;
+  let directFailures = 0;
+  let overflowFailures = 0;
 
   // Sort connections by priority (ecosystem transitions first to preserve inter-ecosystem connectivity)
   const sortedConnections = connections.sort((a, b) => {
@@ -884,7 +963,13 @@ function populatePlaceExits(places: Place[], connections: LichtenbergConnection[
   // Pre-compute relay places by ecosystem to avoid repeated filtering
   const relayPlacesByEcosystem = computeRelayPlacesByEcosystem(places);
 
-  // Convert each connection into bidirectional exits
+  // TWO-PHASE APPROACH: Ensure every place gets at least 1 exit before saturation
+
+  // Phase 1: Connect isolated places (priority to places with 0 exits)
+  console.log(`  Phase 1: Ensuring minimum connectivity...`);
+  let phase1Successful = 0;
+  const placesProcessedInPhase1 = new Set<string>();
+
   sortedConnections.forEach((connection) => {
     const fromPlace = placeMap.get(connection.from);
     const toPlace = placeMap.get(connection.to);
@@ -894,11 +979,52 @@ function populatePlaceExits(places: Place[], connections: LichtenbergConnection[
       return;
     }
 
-    // Try direct connection first
-    if (createDirectConnection(fromPlace, toPlace, connectionDirections)) {
-      successful++;
+    // Phase 1: Only connect if at least one place has 0 exits
+    const fromExits = Object.keys(fromPlace.exits).length;
+    const toExits = Object.keys(toPlace.exits).length;
+
+    if (fromExits === 0 || toExits === 0) {
+      // Try direct connection first
+      if (createDirectConnection(fromPlace, toPlace, connectionDirections)) {
+        phase1Successful++;
+        return;
+      }
+
+      // For isolated places, try harder with overflow handling
+      if (handleConnectionOverflow(fromPlace, toPlace, relayPlacesByEcosystem, connectionDirections)) {
+        phase1Successful++;
+        return;
+      }
+    }
+  });
+
+  console.log(`  Phase 1 complete: ${phase1Successful} connections created for isolated places`);
+
+  // Phase 2: Fill remaining capacity (regular connection processing)
+  console.log(`  Phase 2: Filling remaining capacity...`);
+  let phase2Successful = 0;
+
+  sortedConnections.forEach((connection) => {
+    const fromPlace = placeMap.get(connection.from);
+    const toPlace = placeMap.get(connection.to);
+
+    if (!fromPlace || !toPlace) {
+      return; // Already counted in Phase 1
+    }
+
+    // Skip if already connected in Phase 1
+    if (hasExistingConnection(fromPlace, toPlace)) {
       return;
     }
+
+    // Try direct connection first
+    if (createDirectConnection(fromPlace, toPlace, connectionDirections)) {
+      phase2Successful++;
+      return;
+    }
+
+    // Direct connection failed
+    directFailures++;
 
     // For overflow handling, only try for ecosystem transitions or if we haven't exceeded quota
     const isImportantConnection = connection.ecosystemTransition || overflowHandled < 1000;
@@ -908,12 +1034,50 @@ function populatePlaceExits(places: Place[], connections: LichtenbergConnection[
       return;
     }
 
+    // Track if overflow was attempted but failed
+    if (isImportantConnection) {
+      overflowFailures++;
+    }
+
     // If both failed, skip this connection
     skipped++;
   });
 
+  successful = phase1Successful + phase2Successful;
+  console.log(`  Phase 2 complete: ${phase2Successful} additional connections created`);
+
   console.log(`Populated exits for ${places.length} places from ${connections.length} connections`);
   console.log(`  Successful: ${successful}, Overflow handled: ${overflowHandled}, Skipped: ${skipped}, Missing places: ${missingPlaces}`);
+  console.log(`  Failure breakdown: Direct failures: ${directFailures}, Overflow failures: ${overflowFailures}`);
+
+  // Debug: Count places with different exit counts
+  const exitCounts = new Map<number, number>();
+  places.forEach(place => {
+    const exitCount = Object.keys(place.exits).length;
+    exitCounts.set(exitCount, (exitCounts.get(exitCount) || 0) + 1);
+  });
+
+  console.log(`  Exit distribution:`);
+  Array.from(exitCounts.entries())
+    .sort((a, b) => a[0] - b[0])
+    .forEach(([exitCount, placeCount]) => {
+      console.log(`    ${exitCount} exits: ${placeCount} places`);
+    });
+
+  // Debug: Show which places have no exits
+  const placesWithNoExits = places.filter(place => Object.keys(place.exits).length === 0);
+  if (placesWithNoExits.length > 0) {
+    console.log(`  Places with NO exits (${placesWithNoExits.length}):`, placesWithNoExits.slice(0, 5).map(p => p.id));
+
+    // Debug: Quick check if isolated places have connections in the data
+    const isolatedVertexIds = placesWithNoExits.slice(0, 3).map(place => place.id.replace('flux:place:', ''));
+    console.log(`  Sample isolated places connection counts:`);
+    isolatedVertexIds.forEach(vertexId => {
+      const connectionsFrom = connections.filter(c => c.from === vertexId).length;
+      const connectionsTo = connections.filter(c => c.to === vertexId).length;
+      console.log(`    ${vertexId}: ${connectionsFrom} out, ${connectionsTo} in`);
+    });
+  }
 }
 
 /**
@@ -1046,24 +1210,24 @@ function canCreateConnection(place1: Place, place2: Place, connectionDirections:
  */
 function getOppositeDirection(direction: Direction): Direction {
   const opposites: Record<Direction, Direction> = {
-    [Direction.NORTH]: Direction.SOUTH,
-    [Direction.SOUTH]: Direction.NORTH,
-    [Direction.EAST]: Direction.WEST,
-    [Direction.WEST]: Direction.EAST,
-    [Direction.NORTHEAST]: Direction.SOUTHWEST,
-    [Direction.NORTHWEST]: Direction.SOUTHEAST,
-    [Direction.SOUTHEAST]: Direction.NORTHWEST,
-    [Direction.SOUTHWEST]: Direction.NORTHEAST,
-    [Direction.UP]: Direction.DOWN,
-    [Direction.DOWN]: Direction.UP,
-    [Direction.IN]: Direction.OUT,
-    [Direction.OUT]: Direction.IN,
-    [Direction.FORWARD]: Direction.BACKWARD,
-    [Direction.BACKWARD]: Direction.FORWARD,
-    [Direction.LEFT]: Direction.RIGHT,
-    [Direction.RIGHT]: Direction.LEFT,
-    [Direction.UNKNOWN]: Direction.UNKNOWN,
-  };
+        [Direction.NORTH]: Direction.SOUTH,
+        [Direction.SOUTH]: Direction.NORTH,
+        [Direction.EAST]: Direction.WEST,
+        [Direction.WEST]: Direction.EAST,
+        [Direction.NORTHEAST]: Direction.SOUTHWEST,
+        [Direction.NORTHWEST]: Direction.SOUTHEAST,
+        [Direction.SOUTHEAST]: Direction.NORTHWEST,
+        [Direction.SOUTHWEST]: Direction.NORTHEAST,
+        [Direction.UP]: Direction.DOWN,
+        [Direction.DOWN]: Direction.UP,
+        [Direction.IN]: Direction.OUT,
+        [Direction.OUT]: Direction.IN,
+        [Direction.FORWARD]: Direction.BACKWARD,
+        [Direction.BACKWARD]: Direction.FORWARD,
+        [Direction.LEFT]: Direction.RIGHT,
+        [Direction.RIGHT]: Direction.LEFT,
+        [Direction.UNKNOWN]: Direction.UNKNOWN,
+      };
 
   return opposites[direction] || Direction.UNKNOWN;
 }
@@ -1276,8 +1440,8 @@ function addProximityConnections(ecosystemPlaces: Place[], maxHops: number, allP
           connectionsAdded++;
           connectionsForThisPlace++;
         }
+        }
       }
-    }
   });
 
   if (connectionsAdded > 0) {
@@ -1460,36 +1624,6 @@ function createBidirectionalConnection(place1: Place, place2: Place, seededRando
 
 
 /**
- * Check if the entire graph remains connected using BFS
- */
-function isGraphConnected(places: Place[]): boolean {
-  if (places.length <= 1) return true;
-
-  // Start BFS from the first place
-  const visited = new Set<string>();
-  const queue = [places[0].id];
-  visited.add(places[0].id);
-
-  while (queue.length > 0) {
-    const currentId = queue.shift()!;
-    const currentPlace = places.find(p => p.id === currentId);
-
-    if (currentPlace) {
-      // Follow all exits from this place
-      Object.values(currentPlace.exits).forEach(exit => {
-        if (!visited.has(exit.to)) {
-          visited.add(exit.to);
-          queue.push(exit.to);
-        }
-      });
-    }
-  }
-
-  // All places should be reachable
-  return visited.size === places.length;
-}
-
-/**
  * Ensure the entire world graph is connected by bridging disconnected components
  */
 function ensureGlobalConnectivity(places: Place[], seededRandom: SeededRandom): void {
@@ -1634,17 +1768,17 @@ function createBidirectionalConnectionOptimized(place1: Place, place2: Place, se
  * Get all connected components in the graph
  */
 export function getConnectedComponents(places: Place[]): Place[][] {
-  const visited = new Set<string>();
+    const visited = new Set<string>();
   const components: Place[][] = [];
 
-  for (const place of places) {
+    for (const place of places) {
     if (visited.has(place.id)) continue;
 
-    const component: Place[] = [];
+        const component: Place[] = [];
     const queue = [place.id];
     visited.add(place.id);
 
-    while (queue.length > 0) {
+        while (queue.length > 0) {
       const currentId = queue.shift()!;
       const currentPlace = places.find(p => p.id === currentId);
 
@@ -1659,9 +1793,9 @@ export function getConnectedComponents(places: Place[]): Place[][] {
           }
         });
       }
-    }
+        }
 
-    components.push(component);
+        components.push(component);
   }
 
   return components;

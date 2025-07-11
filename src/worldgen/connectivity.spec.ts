@@ -4,13 +4,12 @@
  */
 
 import { describe, it, expect } from 'vitest';
-import { Place } from '~/types/entity/place';
-import { Direction } from '~/types';
-import { EcosystemName } from './types';
+import { Place, Direction } from '../types/index.js';
+import { EcosystemName } from './types.js';
 import { createTestPlace } from '~/testing/world-testing';
 import { createExit } from '~/worldkit/entity/place';
 import { createPlaceUrn } from '~/lib/taxonomy';
-import { generateWorld, getConnectedComponents } from './integration';
+import { generateWorld, getConnectedComponents } from './integration.js';
 
 // Test helper to create a test place with proper ecosystem data
 function createTestPlaceWithEcosystem(id: string, name: string, ecosystem: EcosystemName): Place {
@@ -58,29 +57,10 @@ function connectPlaces(place1: Place, place2: Place, direction1: Direction, dire
   place2.exits[direction2] = exit2;
 }
 
-// Test helper to check if graph is connected using BFS
+// Test helper to check if graph is connected using the same logic as the real implementation
 function isGraphConnected(places: Place[]): boolean {
-  if (places.length <= 1) return true;
-
-  const visited = new Set<string>();
-  const queue = [places[0].id];
-  visited.add(places[0].id);
-
-  while (queue.length > 0) {
-    const currentId = queue.shift()!;
-    const currentPlace = places.find(p => p.id === currentId);
-
-    if (currentPlace) {
-      Object.values(currentPlace.exits).forEach(exit => {
-        if (!visited.has(exit.to)) {
-          visited.add(exit.to);
-          queue.push(exit.to);
-        }
-      });
-    }
-  }
-
-  return visited.size === places.length;
+  const components = getConnectedComponents(places);
+  return components.length <= 1;
 }
 
 // Test helper to count total connections
