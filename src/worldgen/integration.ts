@@ -100,10 +100,15 @@ function getConnectedComponentsFromGraph(vertices: LichtenbergVertex[], connecti
 }
 
 export function generateWorld(config: WorldGenerationConfig): WorldGenerationResult {
+  const startTime = performance.now();
+  console.time('generateWorld');
+
   const seededRandom = new SeededRandom(config.seed || 42);
 
   // Step 1: Generate ecosystem figures (should each be connected)
+  console.time('Step 1: Generate ecosystem figures');
   const ecosystemFigures = generateEcosystemFigures(config);
+  console.timeEnd('Step 1: Generate ecosystem figures');
   console.log(`\n=== STEP 1: Generated ${ecosystemFigures.length} ecosystem figures ===`);
   ecosystemFigures.forEach(figure => {
     console.log(`${figure.ecosystem}: ${figure.figure.vertices.length} vertices, ${figure.figure.connections.length} connections`);
@@ -113,38 +118,50 @@ export function generateWorld(config: WorldGenerationConfig): WorldGenerationRes
   });
 
   // Step 2: Connect ecosystem figures (inter-ecosystem connections)
+  console.time('Step 2: Connect ecosystem figures');
   const { vertices, connections, config: geometricConfig } = connectEcosystemFigures(ecosystemFigures, config);
+  console.timeEnd('Step 2: Connect ecosystem figures');
   console.log(`\n=== STEP 2: After inter-ecosystem connections ===`);
   console.log(`Total vertices: ${vertices.length}, Total connections: ${connections.length}`);
   const components = getConnectedComponentsFromGraph(vertices, connections);
   console.log(`Connected components: ${components.length} (should be 1 after inter-ecosystem bridging)`);
 
   // Step 3: Map vertices to ecosystems and create world vertices
+  console.time('Step 3: Map vertices to ecosystems');
   const worldVertices = mapVerticesToEcosystems(vertices, geometricConfig);
+  console.timeEnd('Step 3: Map vertices to ecosystems');
   console.log(`\n=== STEP 3: Mapped to world vertices ===`);
   console.log(`World vertices: ${worldVertices.length}`);
 
   // Step 4: Create places from vertices
+  console.time('Step 4: Create places');
   const places = createPlacesFromVertices(worldVertices);
+  console.timeEnd('Step 4: Create places');
   console.log(`\n=== STEP 4: Created places ===`);
   console.log(`Places created: ${places.length}`);
 
   // Step 5: Populate place exits from connections
+  console.time('Step 5: Populate place exits');
   populatePlaceExits(places, connections);
+  console.timeEnd('Step 5: Populate place exits');
   console.log(`\n=== STEP 5: After populating exits from ${connections.length} connections ===`);
   const connectionCount = countTotalConnections(places);
   console.log(`Places with exits populated: ${places.filter(p => Object.keys(p.exits).length > 0).length}/${places.length}`);
   console.log(`Total exit connections: ${connectionCount}`);
 
   // Check connectivity after basic setup
+  console.time('Connectivity check');
   const basicComponents = getConnectedComponents(places);
+  console.timeEnd('Connectivity check');
   console.log(`Connected components after basic setup: ${basicComponents.length} (should be 1)`);
   if (basicComponents.length > 1) {
     console.log(`Component sizes: [${basicComponents.map(c => c.length).join(', ')}]`);
   }
 
   // Step 6: Adjust ecosystem connectivity
+  console.time('Step 6: Adjust ecosystem connectivity');
   adjustEcosystemConnectivity(places, seededRandom);
+  console.timeEnd('Step 6: Adjust ecosystem connectivity');
 
   // Final statistics
   const stats = calculateConnectionStats(places);
@@ -153,6 +170,10 @@ export function generateWorld(config: WorldGenerationConfig): WorldGenerationRes
   console.log(`Final connections: ${stats.total} total, ${stats.reciprocal} reciprocal`);
   const finalComponents = getConnectedComponents(places);
   console.log(`Final connected components: ${finalComponents.length}`);
+
+  const totalTime = performance.now() - startTime;
+  console.timeEnd('generateWorld');
+  console.log(`Total generation time: ${totalTime.toFixed(2)}ms`);
 
   return {
     places,
@@ -246,52 +267,128 @@ function mergeProjectionsWithCollisionDetection(
 
 /**
  * Detect collisions between vertices and create merger connections
+ * Optimized version using spatial partitioning and connection limits
  */
 function detectCollisionsAndCreateConnections(
   vertices: LichtenbergVertex[],
   threshold: number
 ): LichtenbergConnection[] {
   const connections: LichtenbergConnection[] = [];
-  const processed = new Set<string>();
 
-  for (let i = 0; i < vertices.length; i++) {
-    for (let j = i + 1; j < vertices.length; j++) {
-      const vertex1 = vertices[i];
-      const vertex2 = vertices[j];
+  // Limit connections per vertex to avoid excessive connectivity
+  const maxConnectionsPerVertex = 8; // Each vertex can have at most 8 connections
+  const vertexConnectionCount = new Map<string, number>();
 
-      // Skip if we've already processed this pair
-      const pairKey = `${vertex1.id}-${vertex2.id}`;
-      if (processed.has(pairKey)) continue;
+  // Use spatial partitioning for efficient collision detection
+  const gridSize = threshold * 1.5; // Grid cell size
+  const grid = new Map<string, LichtenbergVertex[]>();
 
-      // Calculate distance
-      const distance = Math.sqrt(
-        Math.pow(vertex2.x - vertex1.x, 2) +
-        Math.pow(vertex2.y - vertex1.y, 2)
-      );
+  // Populate the grid
+  vertices.forEach(vertex => {
+    const gridX = Math.floor(vertex.x / gridSize);
+    const gridY = Math.floor(vertex.y / gridSize);
+    const gridKey = `${gridX},${gridY}`;
 
-            // Create bidirectional connection if within threshold
-      if (distance <= threshold) {
-        // Connection from vertex1 to vertex2
-        connections.push({
-          from: vertex1.id,
-          to: vertex2.id,
-          length: distance,
-          artificial: true // Mark as artificial merger connection
-        });
+    if (!grid.has(gridKey)) {
+      grid.set(gridKey, []);
+    }
+    grid.get(gridKey)!.push(vertex);
+  });
 
-        // Reciprocal connection from vertex2 to vertex1
-        connections.push({
-          from: vertex2.id,
-          to: vertex1.id,
-          length: distance,
-          artificial: true // Mark as artificial merger connection
-        });
+  // Process each grid cell
+  grid.forEach((cellVertices, cellKey) => {
+    const [gridX, gridY] = cellKey.split(',').map(Number);
 
-        processed.add(pairKey);
-        processed.add(`${vertex2.id}-${vertex1.id}`);
+    // Check within the same cell
+    for (let i = 0; i < cellVertices.length; i++) {
+      for (let j = i + 1; j < cellVertices.length; j++) {
+        const vertex1 = cellVertices[i];
+        const vertex2 = cellVertices[j];
+
+        // Skip if either vertex already has too many connections
+        const count1 = vertexConnectionCount.get(vertex1.id) || 0;
+        const count2 = vertexConnectionCount.get(vertex2.id) || 0;
+        if (count1 >= maxConnectionsPerVertex || count2 >= maxConnectionsPerVertex) {
+          continue;
+        }
+
+        const distance = Math.sqrt(
+          Math.pow(vertex2.x - vertex1.x, 2) +
+          Math.pow(vertex2.y - vertex1.y, 2)
+        );
+
+        if (distance <= threshold) {
+          // Connection from vertex1 to vertex2
+          connections.push({
+            from: vertex1.id,
+            to: vertex2.id,
+            length: distance,
+            artificial: true // Mark as artificial merger connection
+          });
+
+          // Reciprocal connection from vertex2 to vertex1
+          connections.push({
+            from: vertex2.id,
+            to: vertex1.id,
+            length: distance,
+            artificial: true // Mark as artificial merger connection
+          });
+
+          // Update connection counts
+          vertexConnectionCount.set(vertex1.id, count1 + 1);
+          vertexConnectionCount.set(vertex2.id, count2 + 1);
+        }
       }
     }
-  }
+
+    // Check adjacent cells (only right and down to avoid duplicate checks)
+    const adjacentOffsets = [[1, 0], [0, 1], [1, 1], [1, -1]];
+
+    for (const [dx, dy] of adjacentOffsets) {
+      const adjKey = `${gridX + dx},${gridY + dy}`;
+      const adjVertices = grid.get(adjKey);
+
+      if (adjVertices) {
+        for (const vertex1 of cellVertices) {
+          for (const vertex2 of adjVertices) {
+            // Skip if either vertex already has too many connections
+            const count1 = vertexConnectionCount.get(vertex1.id) || 0;
+            const count2 = vertexConnectionCount.get(vertex2.id) || 0;
+            if (count1 >= maxConnectionsPerVertex || count2 >= maxConnectionsPerVertex) {
+              continue;
+            }
+
+            const distance = Math.sqrt(
+              Math.pow(vertex2.x - vertex1.x, 2) +
+              Math.pow(vertex2.y - vertex1.y, 2)
+            );
+
+            if (distance <= threshold) {
+              // Connection from vertex1 to vertex2
+              connections.push({
+                from: vertex1.id,
+                to: vertex2.id,
+                length: distance,
+                artificial: true // Mark as artificial merger connection
+              });
+
+              // Reciprocal connection from vertex2 to vertex1
+              connections.push({
+                from: vertex2.id,
+                to: vertex1.id,
+                length: distance,
+                artificial: true // Mark as artificial merger connection
+              });
+
+              // Update connection counts
+              vertexConnectionCount.set(vertex1.id, count1 + 1);
+              vertexConnectionCount.set(vertex2.id, count2 + 1);
+            }
+          }
+        }
+      }
+    }
+  });
 
   return connections;
 }
