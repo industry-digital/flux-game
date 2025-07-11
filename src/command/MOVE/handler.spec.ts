@@ -1,18 +1,19 @@
 import { describe, it, expect } from 'vitest';
 import {
-  MOVE,
-  MoveCommand,
-  actorMovementReducer
+    MOVE,
+    MoveCommand,
+    actorMovementReducer
 } from './handler';
-import { CommandType, SpecialVisibility } from '@flux';
+import { CommandType } from '~/types/intent';
+import { SpecialVisibility } from '~/types/world/visibility';
 import { createPlaceUrn } from '~/lib/taxonomy';
 import { Direction } from '~/types/world/space';
 import {
-  createTransformerContext,
-  createCommand,
-  createTestActor,
-  createTestPlace,
-  createWorld
+    createTransformerContext,
+    createCommand,
+    createTestActor,
+    createTestPlace,
+    createWorld
 } from '~/testing';
 
 describe('MoveCommandHandler', () => {

@@ -1,13 +1,15 @@
 import { isCommandOfType } from '~/lib/intent';
 import {
-  Command,
-  CommandType,
-  PureReducer,
-  TransformerContext,
-  PureHandlerInterface,
-  EventType,
-  ActorURN,
-} from '@flux';
+    Command,
+    CommandType,
+} from '~/types/intent';
+import {
+    PureReducer,
+    TransformerContext,
+    PureHandlerInterface,
+} from '~/types/handler';
+import { EventType } from '~/types/event';
+import { ActorURN } from '~/types/taxonomy';
 import { SystemCommand } from '~/types/intent';
 
 export type DematerializeActorCommand = SystemCommand<CommandType.DEMATERIALIZE_ACTOR, {

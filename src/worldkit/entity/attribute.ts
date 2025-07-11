@@ -1,4 +1,4 @@
-import { ModifiableBoundedAttribute, ModifiableScalarAttribute } from "@flux";
+import { ModifiableBoundedAttribute, ModifiableScalarAttribute } from "~/types/entity/attribute";
 
 const identity = <T>(x: T): T => x;
 

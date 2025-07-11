@@ -1,16 +1,17 @@
 import { describe, it, expect } from 'vitest';
 import {
-  CREATE_PLACE,
-  CreatePlaceCommand,
-  createPlaceCommandReducer
+    CREATE_PLACE,
+    CreatePlaceCommand,
+    createPlaceCommandReducer
 } from './handler';
-import { CommandType, EntityType } from '@flux';
+import { CommandType } from '~/types/intent';
+import { EntityType } from '~/types/entity/entity';
 import { createPlaceUrn } from '~/lib/taxonomy';
 import { Direction } from '~/types/world/space';
 import {
-  createTransformerContext,
-  createCommand,
-  createWorld
+    createTransformerContext,
+    createCommand,
+    createWorld
 } from '~/testing';
 
 describe('CreatePlaceCommandHandler', () => {

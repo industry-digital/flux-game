@@ -1,5 +1,6 @@
 import * as typia from 'typia';
-import { PlaceURN, PlaceEntityDescriptor, Exit, Place } from '@flux';
+import { PlaceURN } from '~/types/taxonomy';
+import { PlaceEntityDescriptor, Exit, Place } from '~/types/entity/place';
 
 /**
  * Validator for a complete Place entity

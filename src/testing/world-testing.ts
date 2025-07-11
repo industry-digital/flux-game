@@ -1,4 +1,6 @@
-import { Actor, Place, ActorURN, PlaceURN } from '@flux';
+import { Actor } from '~/types/entity/actor';
+import { Place } from '~/types/entity/place';
+import { ActorURN, PlaceURN } from '~/types/taxonomy';
 import { createPlaceUrn } from '~/lib/taxonomy';
 import { createActor } from '~/worldkit/entity/actor';
 import { createPlace } from '~/worldkit/entity/place';

@@ -1,4 +1,5 @@
-import { EntityType, EntityURN, ROOT_NAMESPACE } from '@flux';
+import { EntityType } from '~/types/entity/entity';
+import { EntityURN, ROOT_NAMESPACE } from '~/types/taxonomy';
 import { AbstractEntity } from '~/types/entity/entity';
 
 export type ParsedURN<T extends EntityType = EntityType> = {

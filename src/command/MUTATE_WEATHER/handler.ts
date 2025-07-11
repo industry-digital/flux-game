@@ -1,15 +1,17 @@
 import { isCommandOfType } from '~/lib/intent';
 import { Weather } from '~/types/entity/place';
 import {
-  Command,
-  CommandType,
-  PureReducer,
-  TransformerContext,
-  PureHandlerInterface,
-  SystemCommand,
-  PlaceURN,
-  EventType,
-} from '@flux';
+    Command,
+    CommandType,
+    SystemCommand,
+} from '~/types/intent';
+import {
+    PureReducer,
+    TransformerContext,
+    PureHandlerInterface,
+} from '~/types/handler';
+import { PlaceURN } from '~/types/taxonomy';
+import { EventType } from '~/types/event';
 
 export type MutateWeatherArgs = {
   placeId: PlaceURN;

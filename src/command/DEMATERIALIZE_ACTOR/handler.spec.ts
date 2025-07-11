@@ -1,16 +1,17 @@
 import { describe, it, expect } from 'vitest';
 import {
-  DEMATERIALIZE_ACTOR,
-  DematerializeActorCommand,
-  dematerializeActorCommandReducer
+    DEMATERIALIZE_ACTOR,
+    DematerializeActorCommand,
+    dematerializeActorCommandReducer
 } from './handler';
-import { CommandType, SpecialVisibility } from '@flux';
+import { CommandType } from '~/types/intent';
+import { SpecialVisibility } from '~/types/world/visibility';
 import {
-  createTransformerContext,
-  createCommand,
-  createTestActor,
-  createTestPlace,
-  createWorld
+    createTransformerContext,
+    createCommand,
+    createTestActor,
+    createTestPlace,
+    createWorld
 } from '~/testing';
 
 describe('DematerializeActorCommandHandler', () => {

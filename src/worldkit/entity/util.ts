@@ -1,6 +1,7 @@
 import { createEntityUrn } from '~/lib/taxonomy';
 import { uniqid } from '~/lib/random';
-import { EntityType, RootNamespace, AbstractEntity, Describable } from '@flux';
+import { EntityType, AbstractEntity, Describable } from '~/types/entity/entity';
+import { RootNamespace } from '~/types/taxonomy';
 
 const identity = <T>(x: T): T => x;
 

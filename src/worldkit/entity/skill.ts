@@ -1,4 +1,8 @@
-import { AbilityType, ActorStat, SkillSchema, SpecialDuration, TargetType } from '@flux';
+import { AbilityType } from '~/types/schema/ability';
+import { ActorStat } from '~/types/entity/actor';
+import { SkillSchema } from '~/types/schema/skill';
+import { SpecialDuration } from '~/types/world/time';
+import { TargetType } from '~/types/combat';
 import { createEffectUrn } from '~/lib/taxonomy';
 
 const Evasion: SkillSchema = {

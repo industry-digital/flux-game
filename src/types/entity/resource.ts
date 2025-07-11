@@ -1,4 +1,4 @@
-import { ResourceURN } from "@flux";
+import { ResourceURN } from '~/types/taxonomy';
 import { DimensionURN } from '~/types/taxonomy';
 import { WellKnownDuration } from '~/types/world/time';
 

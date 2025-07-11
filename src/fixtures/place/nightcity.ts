@@ -1,4 +1,5 @@
-import { PlaceInput, Direction } from '@flux';
+import { PlaceInput } from '~/types/entity/place';
+import { Direction } from '~/types/world/space';
 import { createPlaceUrn } from '~/lib/taxonomy';
 
 const factory = (): PlaceInput[] => {

@@ -1,4 +1,5 @@
-import { CommandType, EntityType } from '@flux';
+import { CommandType } from '~/types/intent';
+import { EntityType } from '~/types/entity/entity';
 import { SystemCommand } from '~/types/intent';
 import { createEntityUrn } from '~/lib/taxonomy';
 

@@ -1,4 +1,6 @@
-import { Direction, Template, WorldEventMessageDictionary } from '@flux';
+import { Direction } from '~/types/world/space';
+import { Template } from '~/types/template';
+import { WorldEventMessageDictionary } from '~/types/fact';
 import { ActorSummaryLike } from '~/worldkit/view/actor';
 
 export type ActorMovementProps = {

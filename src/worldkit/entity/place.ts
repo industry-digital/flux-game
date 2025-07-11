@@ -1,4 +1,9 @@
-import { EntityType, Place, Exit, PlaceURN, Actor, PlaceEntityDescriptor, SpecialVisibility, Direction } from '@flux';
+import { EntityType } from '~/types/entity/entity';
+import { Place, Exit, PlaceEntityDescriptor } from '~/types/entity/place';
+import { PlaceURN } from '~/types/taxonomy';
+import { Actor } from '~/types/entity/actor';
+import { SpecialVisibility } from '~/types/world/visibility';
+import { Direction } from '~/types/world/space';
 import { createEntity, FactoryOptions } from './util';
 import { extractPathFromUrn } from '~/lib/taxonomy';
 import { ExitInput, Exits, PlaceInput } from '~/types/entity/place';

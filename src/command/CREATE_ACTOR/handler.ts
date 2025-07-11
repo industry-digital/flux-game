@@ -1,13 +1,13 @@
 import { createActor } from '~/worldkit/entity/actor';
 import { isCommandOfType } from '~/lib/intent';
+import { ActorInput } from '~/types/entity/actor';
+import { CommandType } from '~/types/intent';
 import {
-  ActorInput,
-  CommandType,
-  PureReducer,
-  TransformerContext,
-  PureHandlerInterface,
-  EventType,
-} from '@flux';
+    PureReducer,
+    TransformerContext,
+    PureHandlerInterface,
+} from '~/types/handler';
+import { EventType } from '~/types/event';
 import { Command, SystemCommand } from '~/types/intent';
 
 export type CreateActorCommand = SystemCommand<CommandType.CREATE_ACTOR, ActorInput>;

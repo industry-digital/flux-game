@@ -1,4 +1,5 @@
-import { ActorDidMove, ActorDidArrive, PlaceURN, ActorDidDepart, EventType } from '@flux';
+import { ActorDidMove, ActorDidArrive, ActorDidDepart, EventType } from '~/types/event';
+import { PlaceURN } from '~/types/taxonomy';
 import { uniqid } from '~/lib/random';
 
 export const createActorDidDepartEvent = (input: ActorDidMove): ActorDidDepart => {

@@ -1,11 +1,14 @@
 import { describe, it, expect } from 'vitest';
 import { CREATE_ACTOR, createActorCommandReducer, CreateActorCommand } from './handler';
-import { EntityType, Actor, ActorURN, CommandType } from '@flux';
+import { EntityType } from '~/types/entity/entity';
+import { Actor } from '~/types/entity/actor';
+import { ActorURN } from '~/types/taxonomy';
+import { CommandType } from '~/types/intent';
 import {
-  createTransformerContext,
-  createCommand,
-  createTestActor,
-  createWorld
+    createTransformerContext,
+    createCommand,
+    createTestActor,
+    createWorld
 } from '~/testing';
 
 describe('CreateActorCommandHandler', () => {

@@ -1,9 +1,9 @@
 import * as typia from 'typia';
 import {
-  ModifiableScalarAttribute,
-  ModifiableBoundedAttribute,
-  NormalizedValueBetweenZeroAndOne,
-} from '@flux';
+    ModifiableScalarAttribute,
+    ModifiableBoundedAttribute,
+    NormalizedValueBetweenZeroAndOne,
+} from '~/types/entity/attribute';
 
 /**
  * Validator for ModifiableScalarAttribute

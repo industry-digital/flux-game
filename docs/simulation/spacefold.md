@@ -1,6 +1,6 @@
 # Spacefolding Technology: Extending the Philosophy of Emergent Simulation
 
-> "Well, now. Going to be a long trip."
+> *Well, now. Going to be a long trip.*
 > — Captain Henry J. Gloval, upon learning the SDF-1's fold system had vanished
 > *Robotech Episode 3: "Space Fold"*
 

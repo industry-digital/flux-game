@@ -1,4 +1,4 @@
-import { CommandType, AnyCommand, AnyCommandTypeGuard } from '@flux';
+import { CommandType, AnyCommand, AnyCommandTypeGuard } from '~/types/intent';
 
 /**
  * A utility type for creating command type guards

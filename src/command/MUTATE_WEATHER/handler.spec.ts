@@ -1,13 +1,10 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import { mutateWeatherReducer, MUTATE_WEATHER, MutateWeatherCommand } from './handler';
 import { Weather } from '~/types/entity/place';
-import {
-    TransformerContext,
-    CommandType,
-    EventType,
-    PlaceURN,
-    Command
-} from '@flux';
+import { TransformerContext } from '~/types/handler';
+import { CommandType, Command } from '~/types/intent';
+import { EventType } from '~/types/event';
+import { PlaceURN } from '~/types/taxonomy';
 import {
     createCommand,
     createTransformerContext,

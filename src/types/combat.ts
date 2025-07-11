@@ -1,4 +1,7 @@
-import { Command, Requirements, RollResult, ActorURN } from '@flux';
+import { Command } from '~/types/intent';
+import { Requirements } from '~/types/requirement';
+import { RollResult } from '~/types/dice';
+import { ActorURN } from '~/types/taxonomy';
 
 export enum TargetType {
   NONE = 'none',

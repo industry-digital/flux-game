@@ -1,15 +1,15 @@
 import * as typia from 'typia';
 import {
   ActorStats,
-  ActorURN,
-  Skills,
-  InjuryDescriptor,
+  AppliedAnatomicalDamage as InjuryDescriptor,
   Equipment,
-  SkillState,
   Inventory,
   ActorStat,
   Actor,
-} from '@flux';
+  Skills,
+} from '~/types/entity/actor';
+import { ActorURN } from '~/types/taxonomy';
+import { SkillState } from '~/types/entity/skill';
 
 /**
  * Validator for a complete Character entity

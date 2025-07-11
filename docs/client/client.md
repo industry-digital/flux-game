@@ -90,33 +90,6 @@ its wounded shoulder.
 
 ### E-Book Mode: Literary Immersion
 
-**The Reading View** - Default experience designed for narrative immersion:
-```
-┌─────────────────────────────────────────────────────────────────────────┐
-│                                                                         │
-│    ┌─────────────────────────────────────────────────────────────┐    │
-│    │                                                             │    │
-│    │  The sun climbs toward its zenith as you emerge from        │    │
-│    │  the shadowed alleyway into the bustling marketplace.       │    │
-│    │  Merchants call out their wares while children dart         │    │
-│    │  between the stalls. The air carries the mingled scents     │    │
-│    │  of spices, fresh bread, and the distant sea.               │    │
-│    │                                                             │    │
-│    │  > You say, "Good morning, baker."                          │    │
-│    │                                                             │    │
-│    │  The baker looks up from his work, flour dusting his        │    │
-│    │  weathered hands. "Ah, a traveler! Welcome to our          │    │
-│    │  humble market. The bread is fresh from the ovens."         │    │
-│    │                                                             │    │
-│    │  ▊                                                          │    │
-│    │                                                             │    │
-│    └─────────────────────────────────────────────────────────────┘    │
-│                                                                         │
-│  [Status: Healthy] [Location: Millhaven Market] [Time: Mid-morning]    │
-│                                                                         │
-└─────────────────────────────────────────────────────────────────────────┘
-```
-
 **E-Book Mode Features:**
 - **Central text column** with 4-6em margins on each side
 - **Subtle status bar** at bottom with essential information
@@ -127,31 +100,6 @@ its wounded shoulder.
 - **Immersive narrative** with client-side enrichment
 
 ### Terminal Compatibility Mode: Classic MUD Experience
-
-**The Terminal View** - Traditional interface for MUD veterans and efficiency-focused players:
-```
-┌─────────────────────────────────────────────────────────────────────────┐
-│ The Prancing Pony                                                      │
-│ A cozy tavern with wooden tables and flickering candles. The air is    │
-│ thick with the scent of ale and conversation.                          │
-│                                                                         │
-│ Exits: north to Main Street, east to Kitchen                           │
-│                                                                         │
-│ Gandalf is here.                                                        │
-│ A gleaming sword lies on the bar.                                       │
-│                                                                         │
-│ > say Good morning, baker                                               │
-│ You say, "Good morning, baker."                                         │
-│                                                                         │
-│ The baker looks up from his work, flour dusting his weathered hands.   │
-│ The baker says, "Ah, a traveler! Welcome to our humble market. The     │
-│ bread is fresh from the ovens."                                         │
-│                                                                         │
-│ > ▊                                                                     │
-│                                                                         │
-│ [HP: 100/100] [MP: 50/50] [Location: Millhaven Market] [10:23 AM]      │
-└─────────────────────────────────────────────────────────────────────────┘
-```
 
 **Terminal Compatibility Mode Features:**
 

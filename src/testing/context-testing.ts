@@ -1,5 +1,5 @@
 import { vi } from 'vitest';
-import { PotentiallyImpureOperations, TransformerContext } from '@flux';
+import { PotentiallyImpureOperations, TransformerContext } from '~/types/handler';
 
 /**
  * Factory function for creating mock TransformerContext with sensible defaults

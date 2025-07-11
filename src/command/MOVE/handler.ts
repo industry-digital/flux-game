@@ -1,17 +1,18 @@
 import { isCommandOfType } from '~/lib/intent';
 import {
-  Command,
-  CommandType,
-  EventType,
-  PureReducer,
-  TransformerContext,
-  PureHandlerInterface,
-  ActorCommand,
-  Place,
-  PlaceURN,
-  SpecialVisibility,
-  Exit,
-} from '@flux';
+    Command,
+    CommandType,
+    ActorCommand,
+} from '~/types/intent';
+import { EventType } from '~/types/event';
+import {
+    PureReducer,
+    TransformerContext,
+    PureHandlerInterface,
+} from '~/types/handler';
+import { Place, Exit } from '~/types/entity/place';
+import { PlaceURN } from '~/types/taxonomy';
+import { SpecialVisibility } from '~/types/world/visibility';
 
 export type MoveCommandArgs = {
   destination: PlaceURN;

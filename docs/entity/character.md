@@ -127,7 +127,7 @@ type CharacterInput = {
 ### Creating Character Fixtures
 
 ```typescript
-import { CharacterInput } from '@flux';
+import { CharacterInput } from '~/types/entity/actor';
 import { createCharacterInput } from '~/worldkit/entity/character';
 
 const tavernNPCsFixture = (): CharacterInput[] => {
@@ -259,7 +259,7 @@ character.equipment = {
 
 ```typescript
 import { createSymbolicLink } from '~/worldkit/entity/util';
-import { EntityType } from '@flux';
+import { EntityType } from '~/types/entity/entity';
 
 // Characters have a location that references a Place
 character.location = createSymbolicLink(

@@ -1,12 +1,14 @@
 import { describe, it, expect } from 'vitest';
-import { EntityType, SpecialVisibility, Direction } from '@flux';
+import { EntityType } from '~/types/entity/entity';
+import { SpecialVisibility } from '~/types/world/visibility';
+import { Direction } from '~/types/world/space';
 import { PlaceInput, ExitInput, Exits } from '~/types/entity/place';
 import {
-  createPlace,
-  createExit,
-  createPlaces,
-  addActorToPlace,
-  removeActorFromPlace,
+    createPlace,
+    createExit,
+    createPlaces,
+    addActorToPlace,
+    removeActorFromPlace,
 } from './place';
 import { createPlaceUrn } from '~/lib/taxonomy';
 

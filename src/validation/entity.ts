@@ -1,5 +1,6 @@
 import * as typia from 'typia';
-import { Entity, EntityURN, EmergentNarrative } from '@flux';
+import { Entity, EmergentNarrative } from '~/types/entity/entity';
+import { EntityURN } from '~/types/taxonomy';
 
 /**
  * Validator for the base Entity type
