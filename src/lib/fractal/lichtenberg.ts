@@ -846,15 +846,15 @@ function generateRealisticLichtenbergFigure(
   let iterations = 0;
   while (field.getSourceCells().length < maxVertices && iterations < maxIterations) {
     // Normal growth while we have frontier and haven't finished
-    while (field.hasFrontier() && !field.isFinished() &&
-           field.getSourceCells().length < maxVertices &&
-           iterations < maxIterations) {
+  while (field.hasFrontier() && !field.isFinished() &&
+         field.getSourceCells().length < maxVertices &&
+         iterations < maxIterations) {
 
-      const sample = field.sampleSourceFrontier(samplingPower, rng);
-      if (!sample) break;
+    const sample = field.sampleSourceFrontier(samplingPower, rng);
+    if (!sample) break;
 
-      field.addSource(sample.cell, sample.parent, rng);
-      iterations++;
+    field.addSource(sample.cell, sample.parent, rng);
+    iterations++;
     }
 
     // If we haven't reached minVertices, try re-sparking

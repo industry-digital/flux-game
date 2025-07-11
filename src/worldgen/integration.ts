@@ -6,18 +6,18 @@
 import { Place } from '~/types/entity/place';
 import { EntityType } from '~/types/entity/entity';
 import {
-  LichtenbergVertex,
-  LichtenbergConnection,
-  LichtenbergFigure,
-  LichtenbergConfig,
-  generateLichtenbergFigure
+    LichtenbergVertex,
+    LichtenbergConnection,
+    LichtenbergFigure,
+    LichtenbergConfig,
+    generateLichtenbergFigure
 } from '../lib/fractal/lichtenberg';
 import {
-  WorldGenerationConfig,
-  WorldGenerationResult,
-  EcosystemName,
-  ECOSYSTEM_PROFILES,
-  WorldVertex
+    WorldGenerationConfig,
+    WorldGenerationResult,
+    EcosystemName,
+    ECOSYSTEM_PROFILES,
+    WorldVertex
 } from './types';
 import { Direction, PlaceURN } from '~/types';
 
@@ -204,24 +204,24 @@ function getEcosystemProjectionConfig(ecosystem: EcosystemName, worldSize: numbe
 
   const baseConfigs = {
     [EcosystemName.STEPPE_ARID]: {
-      projections: [0.6, 0.4], // 2 projections: 60% primary, 40% secondary
-      baseThreshold: 80 // Base threshold for high connectivity
+      projections: [0.6, 0.4], // Balanced dual projection
+      baseThreshold: 15 // Reduced from 80 - keep connections local within bands
     },
     [EcosystemName.GRASSLAND_TEMPERATE]: {
-      projections: [0.7, 0.3], // 2 projections: 70% primary, 30% secondary
-      baseThreshold: 70 // Base medium-high threshold
+      projections: [0.7, 0.3], // Dominant main projection
+      baseThreshold: 12 // Reduced from 70 - keep connections local within bands
     },
     [EcosystemName.FOREST_TEMPERATE]: {
-      projections: [0.8, 0.2], // 2 projections: 80% primary, 20% secondary
-      baseThreshold: 50 // Base threshold (will be scaled proportionally with eastward stretching)
+      projections: [0.8, 0.2], // Strong main projection for canopy effect
+      baseThreshold: 10 // Reduced from 50 - keep connections local within bands
     },
     [EcosystemName.MOUNTAIN_ARID]: {
-      projections: [1.0], // Single projection for difficult terrain
+      projections: [1.0], // Single projection for sparse terrain
       baseThreshold: 0 // No collision detection needed
     },
     [EcosystemName.JUNGLE_TROPICAL]: {
-      projections: [0.75, 0.25], // 2 projections: 75% primary, 25% secondary
-      baseThreshold: 40 // Base threshold for dense vegetation
+      projections: [0.6, 0.4], // Balanced for dense undergrowth
+      baseThreshold: 8 // Reduced from 40 - keep connections local within bands
     },
     [EcosystemName.MARSH_TROPICAL]: {
       projections: [1.0], // Single projection for treacherous terrain
