@@ -3,12 +3,11 @@
 ## Weapons
 
 ```
-weapon:melee:slash
-weapon:melee:crush
-weapon:melee:pierce
-weapon:ranged:bow
+weapon:martial:melee:1h
+weapon:martial:melee:2h
+weapon:martia:ranged:bow
 weapon:ranged:thrown
-weapon:ranged:firearm
+weapon:ranged:gun:
 weapon:energy
 weapon:explosive
 ```
@@ -46,11 +45,10 @@ cognitive:synthesis
 
 ```
 survival:stealth
-survival:trickery
-survival:recon
 survival:cooking
 survival:skinning
 survival:fishing
+survival:foraging
 ```
 
 ## Athletics

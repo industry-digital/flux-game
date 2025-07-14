@@ -1,9 +1,5 @@
 # Flux Skill Learning System Summary
 
-## Core Principles
-
-The Flux skill learning system separates **skill usage** from **skill learning**. Skills always function regardless of character level, focus state, or available focus. Learning, however, is enhanced by entering a focused state of concentration that accelerates skill development.
-
 ## Post-Collapse Mesozoic Skill Categories
 
 The skill system reflects the unique challenges of survival in a world where apex predators control territories, AI systems require maintenance, and human communities depend on tactical resource extraction and fragmented knowledge preservation.

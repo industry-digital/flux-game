@@ -8,6 +8,8 @@ This document describes the various skills that actors can learn in our simulati
 
 ### Martial Weapons `flux:skill:weapon:martial`
 
+Martial weapons are traditional weapons found in the Old World, like swords, hammers, spears, and bows.
+
 - `melee:1h` - Any melee weapon can be used effectively with one hand
 - `melee:2h` - Any melee weapon that must be used with two hands
 - `ranged:1h` - Any ranged weapon that can be fired with one hand
@@ -15,29 +17,37 @@ This document describes the various skills that actors can learn in our simulati
 
 ### Tech Weapons `flux:skill:weapon:tech`
 
+Tech weapons are modern weapons found in the New World, like ballistic weapons, kinetic weapons, and thermal weapons.
+
 - `ballistic:1h` - Ballistic weapons that can be fired with one hand, such as pistols, submachine guns
 - `ballistic:2h` - Ballistic weapons that must be fired with two hands, such as rifles, machine guns
 - `explosive:1h` - Any explosive weapon that can be "fired" with one hand, such as grenades
 - `explosive:2h` - Any explosive weapon that must be "fired" with two hands, such as rocket launchers, missile launchers, etc.
-- `kinetic:2h` - Gauss flechette cannons
 - `thermal:2h` - Thermal weapons, such as flamethrowers, etc.
+- `kinetic:2h` - Railguns, Gauss cannons, etc.
 
-### Defense `flux:skill:defense`
+## Combat `flux:skill:combat`
 
-- `martial` - Defensive tranining against martial weapons
+- `tactics:offense` - Offensive tactics, strategy, etc.
+- `tactics:defense` - Defensive tactics, strategy, etc.
+
+### Specialized Offense `flux:skill:offense:*`
+
+- `martial` - Offensive training against martial weapons
+- `tech` - Offensive training against tech weapons
+
+### Specialized Defense `flux:skill:defense:*`
+
+- `martial` - Defensive training against martial weapons
 - `tech` - Defensive tranining against tech weapons
-- `evasion` - Evade attacks
 
 ### Specialized Defense `flux:skill:defense:*`
 
 ### Animal Husbandry `flux:skill:animal`
 
-- `dinosaur` - Handling dinosaurs, taming them, etc.
-
-### Armor `flux:skill:armor`
-
-- `conventional`
-- `tech`
+- `dinosaur`
+- `mammal`
+- `insect`
 
 ### Science `flux:skill:science`
 
