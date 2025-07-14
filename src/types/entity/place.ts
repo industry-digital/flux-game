@@ -156,4 +156,9 @@ export type Place =
    * The current weather conditions in this place
    */
   weather: Weather;
+
+  /**
+   * The coordinates of this place on a Cartesian grid
+   */
+  coordinates: [number, number];
 };
