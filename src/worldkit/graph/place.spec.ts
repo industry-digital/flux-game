@@ -6,7 +6,7 @@ import { EntityType } from '~/types/entity/entity';
 import { Direction } from '~/types/world/space';
 
 // Helper function to create test Place objects with all required properties
-function createTestPlace(overrides: Partial<Place> = {}): Place {
+function createTestPlace(overrides: any = {}): Place {
   return {
     id: 'flux:place:test' as PlaceURN,
     name: 'Test Place',
@@ -118,7 +118,13 @@ describe('PlaceGraph', () => {
 
     beforeEach(() => {
       const places: Place[] = [
-        createTestPlace({ id: 'flux:place:test1', exits: { north: { to: 'flux:place:test2' }, east: { to: 'flux:place:test3' } } }),
+        createTestPlace({
+          id: 'flux:place:test1',
+          exits: {
+            north: createExit(Direction.NORTH, 'flux:place:test2' as PlaceURN),
+            east: createExit(Direction.EAST, 'flux:place:test3' as PlaceURN)
+          }
+        }),
         createTestPlace({ id: 'flux:place:test2', exits: {} }),
         createTestPlace({ id: 'flux:place:test3', exits: {} })
       ];
@@ -134,7 +140,7 @@ describe('PlaceGraph', () => {
     });
 
     it('should return undefined for non-existent place', () => {
-      expect(graph.getExits('nonexistent')).toBeUndefined();
+      expect(graph.getExits('nonexistent' as PlaceURN)).toBeUndefined();
     });
   });
 
@@ -158,7 +164,7 @@ describe('PlaceGraph', () => {
     });
 
     it('should return undefined for non-existent place', () => {
-      expect(graph.getPlaceName('nonexistent')).toBeUndefined();
+      expect(graph.getPlaceName('nonexistent' as PlaceURN)).toBeUndefined();
     });
   });
 
@@ -202,10 +208,28 @@ describe('PlaceGraph', () => {
     beforeEach(() => {
       // Create a linear chain: place1 -> place2 -> place3 -> place4
       const places: Place[] = [
-        createTestPlace({ id: 'flux:place:test1' as PlaceURN, exits: { east: { to: 'flux:place:test2' } } }),
-        createTestPlace({ id: 'flux:place:test2' as PlaceURN, exits: { west: { to: 'flux:place:test1' }, east: { to: 'flux:place:test3' } } }),
-        createTestPlace({ id: 'flux:place:test3' as PlaceURN, exits: { west: { to: 'flux:place:test2' }, east: { to: 'flux:place:test4' } } }),
-        createTestPlace({ id: 'flux:place:test4' as PlaceURN, exits: { west: { to: 'flux:place:test3' } } }),
+        createTestPlace({
+          id: 'flux:place:test1' as PlaceURN,
+          exits: { east: createExit(Direction.EAST, 'flux:place:test2' as PlaceURN) }
+        }),
+        createTestPlace({
+          id: 'flux:place:test2' as PlaceURN,
+          exits: {
+            west: createExit(Direction.WEST, 'flux:place:test1' as PlaceURN),
+            east: createExit(Direction.EAST, 'flux:place:test3' as PlaceURN)
+          }
+        }),
+        createTestPlace({
+          id: 'flux:place:test3' as PlaceURN,
+          exits: {
+            west: createExit(Direction.WEST, 'flux:place:test2' as PlaceURN),
+            east: createExit(Direction.EAST, 'flux:place:test4' as PlaceURN)
+          }
+        }),
+        createTestPlace({
+          id: 'flux:place:test4' as PlaceURN,
+          exits: { west: createExit(Direction.WEST, 'flux:place:test3' as PlaceURN) }
+        }),
         createTestPlace({ id: 'flux:place:isolated' as PlaceURN, exits: {} })
       ];
       graph = new PlaceGraph(places);
@@ -243,7 +267,7 @@ describe('PlaceGraph', () => {
     });
 
     it('should return empty array for non-existent place', () => {
-      const result = graph.getPlacesWithinDistance('nonexistent', 1);
+      const result = graph.getPlacesWithinDistance('nonexistent' as PlaceURN, 1);
       expect(result).toEqual([]);
     });
 
@@ -264,10 +288,34 @@ describe('PlaceGraph', () => {
     beforeEach(() => {
       // Create a more complex graph with multiple paths
       const places: Place[] = [
-        createTestPlace({ id: 'flux:place:A' as PlaceURN, exits: { north: { to: 'flux:place:B' }, east: { to: 'flux:place:C' } } }),
-        createTestPlace({ id: 'flux:place:B' as PlaceURN, exits: { south: { to: 'flux:place:A' }, east: { to: 'flux:place:D' } } }),
-        createTestPlace({ id: 'flux:place:C' as PlaceURN, exits: { west: { to: 'flux:place:A' }, north: { to: 'flux:place:D' } } }),
-        createTestPlace({ id: 'flux:place:D' as PlaceURN, exits: { west: { to: 'flux:place:B' }, south: { to: 'flux:place:C' } } }),
+        createTestPlace({
+          id: 'flux:place:A' as PlaceURN,
+          exits: {
+            north: createExit(Direction.NORTH, 'flux:place:B' as PlaceURN),
+            east: createExit(Direction.EAST, 'flux:place:C' as PlaceURN)
+          }
+        }),
+        createTestPlace({
+          id: 'flux:place:B' as PlaceURN,
+          exits: {
+            south: createExit(Direction.SOUTH, 'flux:place:A' as PlaceURN),
+            east: createExit(Direction.EAST, 'flux:place:D' as PlaceURN)
+          }
+        }),
+        createTestPlace({
+          id: 'flux:place:C' as PlaceURN,
+          exits: {
+            west: createExit(Direction.WEST, 'flux:place:A' as PlaceURN),
+            north: createExit(Direction.NORTH, 'flux:place:D' as PlaceURN)
+          }
+        }),
+        createTestPlace({
+          id: 'flux:place:D' as PlaceURN,
+          exits: {
+            west: createExit(Direction.WEST, 'flux:place:B' as PlaceURN),
+            south: createExit(Direction.SOUTH, 'flux:place:C' as PlaceURN)
+          }
+        }),
         createTestPlace({ id: 'flux:place:isolated' as PlaceURN, exits: {} })
       ];
       graph = new PlaceGraph(places);
@@ -393,22 +441,90 @@ describe('PlaceGraph', () => {
       });
 
       it('should return undefined for non-existent place', () => {
-        const place = graph.getPlace('nonexistent');
+        const place = graph.getPlace('nonexistent' as PlaceURN);
         expect(place).toBeUndefined();
       });
     });
 
-    describe('getAllPlaces', () => {
-      it('should return all Place entities', () => {
+        describe('getAllPlaces', () => {
+      it('should return all Place entities as Map', () => {
         const places = graph.getAllPlaces();
-        expect(places).toHaveLength(3);
-        expect(places.map(p => p.id)).toEqual(['flux:place:test1', 'flux:place:test2', 'flux:place:test3']);
+        expect(places.size).toBe(3);
+        expect(Array.from(places.keys())).toEqual(['flux:place:test1', 'flux:place:test2', 'flux:place:test3']);
       });
 
-      it('should return empty array for empty graph', () => {
+      it('should return empty Map for empty graph', () => {
         const emptyGraph = new PlaceGraph([]);
         const places = emptyGraph.getAllPlaces();
-        expect(places).toEqual([]);
+        expect(places.size).toBe(0);
+      });
+
+      it('should return same Map reference when called multiple times', () => {
+        const places1 = graph.getAllPlaces();
+        const places2 = graph.getAllPlaces();
+        expect(places1).toBe(places2); // Same reference
+      });
+
+      it('should return proper Map instance with Map methods', () => {
+        const places = graph.getAllPlaces();
+        expect(places instanceof Map).toBe(true);
+        expect(places).toHaveProperty('get');
+        expect(places).toHaveProperty('has');
+        expect(places).toHaveProperty('size');
+      });
+
+      it('should return places in consistent order', () => {
+        const places1 = graph.getAllPlaces();
+        const places2 = graph.getAllPlaces();
+        expect(Array.from(places1.keys())).toEqual(Array.from(places2.keys()));
+      });
+
+      it('should reflect updates after place modifications', () => {
+        const originalPlaces = graph.getAllPlaces();
+        const originalSize = originalPlaces.size;
+
+        // Update a place
+        const updatedPlace = { ...testPlaces[0], name: 'Updated Name' };
+        graph.updatePlace('flux:place:test1', updatedPlace);
+
+        const newPlaces = graph.getAllPlaces();
+        expect(newPlaces.size).toBe(originalSize);
+        expect(newPlaces.get('flux:place:test1')?.name).toBe('Updated Name');
+      });
+
+            it('should allow external modifications since it returns the actual Map reference', () => {
+        const places = graph.getAllPlaces();
+        const originalSize = places.size;
+
+        // Modify the returned Map (this is allowed in our architectural model)
+        places.set('flux:place:external' as PlaceURN, createTestPlace({ id: 'flux:place:external' as PlaceURN }));
+
+        // The graph IS affected by external modification (expected behavior)
+        expect(graph.size()).toBe(4);
+        expect(graph.getAllPlaceIds()).toHaveLength(4);
+
+        // Getting places again should return the same Map (same reference)
+        const freshPlaces = graph.getAllPlaces();
+        expect(freshPlaces).toBe(places); // Same reference
+
+        // Clean up for other tests
+        places.delete('flux:place:external' as PlaceURN);
+      });
+
+      it('should handle Map equality correctly', () => {
+        const places1 = graph.getAllPlaces();
+        const places2 = graph.getAllPlaces();
+
+        // Same reference check
+        expect(places1).toBe(places2);
+
+        // Content should be identical
+        expect(places1).toEqual(places2);
+
+        // Individual places should be the same objects
+        for (const [key, place] of places1) {
+          expect(places2.get(key)).toBe(place);
+        }
       });
     });
 
@@ -476,7 +592,7 @@ describe('PlaceGraph', () => {
       });
 
       it('should return empty array for non-existent place', () => {
-        const entities = graph.getPlaceEntitiesWithinDistance('nonexistent', 1);
+        const entities = graph.getPlaceEntitiesWithinDistance('nonexistent' as PlaceURN, 1);
         expect(entities).toEqual([]);
       });
     });

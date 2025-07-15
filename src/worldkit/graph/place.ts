@@ -8,7 +8,7 @@ import { Place } from '~/types/entity/place';
  */
 export type PlaceGraphMemoization = {
   /** All places within each distance from each origin (up to maxRadius) */
-  radialLookups: Map<string, Map<number, string[]>>;
+  radialLookups: Map<PlaceURN, Map<number, string[]>>;
   /** Cached extracted exits for each place (performance optimization) */
   exitCache: Map<string, Record<string, string>>;
 }
@@ -32,7 +32,7 @@ export type PlaceGraphMemoization = {
  * runtime pathfinding for movement. Optimized for performance with caching.
  */
 export class PlaceGraph {
-  public readonly topology: Record<PlaceURN, Place>;
+  private readonly topology: Map<PlaceURN, Place>;
   private readonly memo: PlaceGraphMemoization;
 
   /**
@@ -41,12 +41,7 @@ export class PlaceGraph {
    * @param maxRadius Maximum radius for precomputed radial lookups (default: 4, increased for better performance)
    */
   constructor(places: Place[], maxRadius: number = 4) {
-    this.topology = {};
-
-    // Build topology from Place entities
-    for (const place of places) {
-      this.topology[place.id as PlaceURN] = place;
-    }
+    this.topology = new Map(places.map(place => [place.id as PlaceURN, place]));
 
     // Precompute all spatial relationships and caches
     this.memo = this.buildMemoization(maxRadius);
@@ -68,7 +63,7 @@ export class PlaceGraph {
   private buildExitCache(): Map<string, Record<string, string>> {
     const exitCache = new Map<string, Record<string, string>>();
 
-    for (const [placeId, place] of Object.entries(this.topology)) {
+    for (const [placeId, place] of this.topology) {
       const exits: Record<string, string> = {};
 
       if (place.exits) {
@@ -88,21 +83,20 @@ export class PlaceGraph {
    * Memory-efficient approach with extended precomputed range
    */
   private buildMemoization(maxRadius: number): PlaceGraphMemoization {
-    const placeIds = Object.keys(this.topology);
-
     // Build exit cache first for performance
     const exitCache = this.buildExitCache();
 
     // Precompute radial lookups using BFS from each origin
-    const radialLookups = new Map<string, Map<number, string[]>>();
+    const radialLookups = new Map<PlaceURN, Map<number, string[]>>();
 
-    for (const origin of placeIds) {
+    for (const [originPlaceId] of this.topology) {
+
       const originLookups = new Map<number, string[]>();
 
       // BFS to find all places within maxRadius
       const visited = new Set<string>();
-      const queue: Array<{ placeId: string; distance: number }> = [
-        { placeId: origin, distance: 0 }
+      const queue: Array<{ placeId: PlaceURN; distance: number }> = [
+        { placeId: originPlaceId, distance: 0 }
       ];
 
       // Group places by distance for efficient access
@@ -125,8 +119,9 @@ export class PlaceGraph {
         if (distance < maxRadius) {
           const exits = exitCache.get(placeId) || {};
 
-          for (const neighborId of Object.values(exits)) {
-            if (neighborId in this.topology && !visited.has(neighborId)) {
+          const neighborUrns = Object.values(exits) as PlaceURN[];
+          for (const neighborId of neighborUrns) {
+            if (this.topology.has(neighborId) && !visited.has(neighborId)) {
               queue.push({ placeId: neighborId, distance: distance + 1 });
             }
           }
@@ -142,7 +137,7 @@ export class PlaceGraph {
         originLookups.set(radius, placesInRadius);
       }
 
-      radialLookups.set(origin, originLookups);
+      radialLookups.set(originPlaceId, originLookups);
     }
 
     return { radialLookups, exitCache };
@@ -152,8 +147,8 @@ export class PlaceGraph {
    * Get all available exits from a place
    * @returns Record of direction -> destination place ID, or undefined if place not found
    */
-  getExits(placeId: string): Record<Direction, PlaceURN> | undefined {
-    const place = this.topology[placeId as PlaceURN];
+  getExits(placeId: PlaceURN): Record<Direction, PlaceURN> | undefined {
+    const place = this.topology.get(placeId);
     if (!place) {
       return undefined;
     }
@@ -163,23 +158,22 @@ export class PlaceGraph {
   /**
    * Get place name for debugging/logging
    */
-  getPlaceName(placeId: string): string | undefined {
-    const place = this.topology[placeId as PlaceURN];
-    return place?.name;
+  getPlaceName(placeId: PlaceURN): string | undefined {
+    return this.topology.get(placeId)?.name;
   }
 
   /**
    * Get total number of places in the graph
    */
   size(): number {
-    return Object.keys(this.topology).length;
+    return this.topology.size;
   }
 
   /**
    * Get all place IDs in the graph
    */
   getAllPlaceIds(): string[] {
-    return Object.keys(this.topology);
+    return Array.from(this.topology.keys());
   }
 
   /**
@@ -187,23 +181,24 @@ export class PlaceGraph {
    * Uses precomputed radial lookups for maxDistance <= configured radius, falls back to BFS for larger distances
    * @returns Array of place IDs within the specified distance
    */
-  getPlacesWithinDistance(originPlaceId: string, maxDistance: number): string[] {
-    if (!(originPlaceId in this.topology) || maxDistance < 0) {
+  getPlacesWithinDistance(originPlaceId: PlaceURN, maxDistance: number): PlaceURN[] {
+    if (!this.topology.has(originPlaceId) || maxDistance < 0) {
       return [];
     }
 
     // Use precomputed data for common distances
     const precomputed = this.memo.radialLookups.get(originPlaceId)?.get(maxDistance);
     if (precomputed !== undefined) {
-      return precomputed;
+      return precomputed as PlaceURN[];
     }
 
     // Fall back to runtime BFS for larger distances (much less common now)
-    const visited = new Set<string>();
-    const queue: Array<{ placeId: string; distance: number }> = [
+    const visited = new Set<PlaceURN>();
+    const queue: Array<{ placeId: PlaceURN; distance: number }> = [
       { placeId: originPlaceId, distance: 0 }
     ];
-    const result: string[] = [];
+
+    const result: PlaceURN[] = [];
 
     while (queue.length > 0) {
       const { placeId, distance } = queue.shift()!;
@@ -219,8 +214,9 @@ export class PlaceGraph {
       if (distance < maxDistance) {
         const exits = this.getExitsFromCache(placeId);
         for (const destinationId of Object.values(exits)) {
-          if (!visited.has(destinationId)) {
-            queue.push({ placeId: destinationId, distance: distance + 1 });
+          const destinationPlaceId = destinationId as PlaceURN;
+          if (!visited.has(destinationPlaceId)) {
+            queue.push({ placeId: destinationPlaceId, distance: distance + 1 });
           }
         }
       }
@@ -234,7 +230,7 @@ export class PlaceGraph {
    * @returns Array of place IDs representing the path, or null if no path exists
    */
   findShortestPath(fromPlaceId: string, toPlaceId: string): string[] | null {
-    if (!(fromPlaceId in this.topology) || !(toPlaceId in this.topology)) {
+    if (!this.topology.has(fromPlaceId as PlaceURN) || !this.topology.has(toPlaceId as PlaceURN)) {
       return null;
     }
 
@@ -287,16 +283,16 @@ export class PlaceGraph {
    * Get full Place entity by ID
    * @returns Place entity or undefined if not found
    */
-  getPlace(placeId: string): Place | undefined {
-    return this.topology[placeId as PlaceURN];
+  getPlace(placeId: PlaceURN): Place | undefined {
+    return this.topology.get(placeId);
   }
 
   /**
    * Get all Place entities
-   * @returns Array of all Place entities
+   * @returns Map of all Place entities
    */
-  getAllPlaces(): Place[] {
-    return Object.values(this.topology);
+  getAllPlaces(): Map<PlaceURN, Place> {
+    return this.topology;
   }
 
   /**
@@ -305,8 +301,8 @@ export class PlaceGraph {
    * @param placeId The place ID to update
    * @param updatedPlace The updated Place entity
    */
-  updatePlace(placeId: string, updatedPlace: Place): void {
-    this.topology[placeId as PlaceURN] = updatedPlace;
+  updatePlace(placeId: PlaceURN, updatedPlace: Place): void {
+    this.topology.set(placeId, updatedPlace);
 
     // Update exit cache if exits changed
     const exits: Record<string, string> = {};
@@ -324,13 +320,13 @@ export class PlaceGraph {
    * @param maxDistance Maximum distance to search
    * @returns Array of Place entities within the specified distance
    */
-  getPlaceEntitiesWithinDistance(originPlaceId: string, maxDistance: number): Place[] {
+  getPlaceEntitiesWithinDistance(originPlaceId: PlaceURN, maxDistance: number): Place[] {
     const placeIds = this.getPlacesWithinDistance(originPlaceId, maxDistance);
     const result: Place[] = [];
 
     // Optimized: direct access instead of map+filter
     for (const placeId of placeIds) {
-      const place = this.topology[placeId as PlaceURN];
+      const place = this.topology.get(placeId);
       if (place) {
         result.push(place);
       }
@@ -352,7 +348,7 @@ export class PlaceGraph {
     let totalExits = 0;
     let maxExits = 0;
 
-    for (const placeId of Object.keys(this.topology)) {
+    for (const placeId of this.topology.keys()) {
       const exits = this.getExitsFromCache(placeId);
       const exitCount = Object.keys(exits).length;
       totalExits += exitCount;
