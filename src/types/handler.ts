@@ -4,24 +4,12 @@ import { ActorURN, PlaceURN } from '~/types/taxonomy';
 import { Place } from '~/types/entity/place';
 import { Actor } from '~/types/entity/actor';
 
-/**
- * For filter() and find() methods, this is a function that takes an WorldEvent
- * and returns a boolean indicating whether the event matches the filter criteria.
- */
+/** Filter function for WorldEvent matching */
 type EventFilter = (event: WorldEvent) => boolean;
 
-/**
- * This is the absolute minimum set of properties that all world projections must have.
- */
+/** Minimum required properties for all world projections */
 export type MinimalWorldProjection = {
-  /**
-   * All contextually relevant Actors
-   */
   actors: Record<ActorURN, Actor>;
-
-  /**
-   * All contextually relevant Places
-   */
   places: Record<PlaceURN, Place>;
 };
 
@@ -33,145 +21,67 @@ export type TradeProjectionMixin = {
   // add vendor-specific fields
 };
 
-// Union of all possible projections.
-// The Flux World Server satisfies the projection in the Contextualization stage.
+/** Union of all possible projections satisfied by the Flux World Server */
 export type WorldProjection =
   | MinimalWorldProjection
   | MinimalWorldProjection & CombatProjectionMixin
   | MinimalWorldProjection & TradeProjectionMixin;
 
-/**
- * An error that occurred during the execution of a command.
- */
 export type ExecutionError = {
-  /**
-   * The moment in time when the error occurred, expressed as milliseconds since the Unix epoch
-   */
+  /** Timestamp in milliseconds since Unix epoch */
   ts: number;
-  /**
-   * The actual Error
-   */
   error: Error;
-  /**
-   * Identifies the Intent or Command that caused the error
-   */
+  /** Identifies the Intent or Command that caused the error */
   trace: string;
 };
 
 export type ErrorDeclarationProducer = {
-  /**
-   * Declare an error to be emitted in response to the input
-   */
   declareError(error: Error): void;
   declareError(message: string): void;
 };
 
 export type ErrorDeclarationConsumer = {
-  /**
-   * Get the list of errors that have been declared as a result of handling the input.
-   */
   getDeclaredErrors(): ExecutionError[];
 };
 
 export type EventDeclarationConsumer = {
-  /**
-   * Get the list of emergent events that have been declared as a result of handling the input.
-   */
   getDeclaredEvents(): WorldEvent[];
-
-  /**
-   * Get the list of emergent events matching a given type using a picomatch
-   * glob expressions.
-   */
+  /** Get events matching a picomatch glob pattern */
   getDeclaredEvents(pattern: string): WorldEvent[];
-
-  /**
-   * Get the list of emergent events that have been declared by a specific command.
-   */
+  /** Get events declared by a specific command */
   getDeclaredEventsByCommand<TEventType extends WorldEvent = WorldEvent>(commandId: string): TEventType[];
-
-  /**
-   * Return a count of the number of times the given event type has been declared.
-   */
   countDeclaredEvents(type?: EventType, filter?: EventFilter): number;
 };
 
-/**
- * A container for emergent events that have been declared as a result of handling the input.
- */
 export type EventDeclarationProducer = {
-  /**
-   * Declare an emergent event to be emitted in response to the input.
-   */
   declareEvent(input: WorldEventInput): void;
 };
 
-/**
- * Potentailly impure operations that our pure reducers need to do their job.
- * These are injected into the execution context so that pure reducers can stay pure.
- */
+/** Impure operations injected into execution context to keep reducers pure */
 export type PotentiallyImpureOperations = {
-  /**
-   * A function that returns a random value between 0 and 1, inclusive.
-   */
   random: () => number;
-
-  /**
-   * A function that returns the number of milliseconds elapsed since the Unix epoch.
-   */
   timestamp: () => number;
-
-  /**
-   * A function that returns a globally unique identifier. Implementations may return a UUID
-   * or any string of sufficient entropy.
-   */
   uniqid: () => string;
-
-  /**
-   * A function that logs a message to the console.
-   */
   debug: (...args: any[]) => void;
 };
 
-/**
- * A consumer of world state that needs read access to the world projection
- */
 export type WorldProjectionConsumer<W extends WorldProjection = WorldProjection> = {
   world: W;
 };
 
-/**
- * Context during transformation stage
- */
 export type TransformerContext<W extends WorldProjection = WorldProjection> =
   & PotentiallyImpureOperations
   & ErrorDeclarationProducer
   & EventDeclarationProducer
   & WorldProjectionConsumer<W>;
 
-/**
- * Interface for handlers that operate in the Transformation stage
- * These handlers immutably update the world state projection (an Immer draft), and declare emergent events like
- * `ACTOR_DID_MOVE`.
- */
+/** Handlers that immutably update world state and declare emergent events */
 export type TransformerInterface<
   I extends SystemCommand,
 > = {
-  /**
-   * The implementation should return `true` if the handler is interested in processing the input
-   */
   handles: (command: SystemCommand) => command is I;
-
-  /**
-   * Dependencies on other transformers that must run before this one
-   */
   dependencies: TransformerImplementation<I>[];
-
-  /**
-   * A pure, deterministic reducer function that:
-   * 1) performs immutable updates to the world projection, and
-   * 2) declares emergent events.
-   */
+  /** Pure reducer that updates world projection and declares events */
   reduce: PureReducer<TransformerContext, I>;
 }
 
@@ -179,52 +89,25 @@ export type TransformerImplementation<
   I extends SystemCommand,
 > = new (...args: any[]) => TransformerInterface<I>;
 
-/**
- * A pure, deterministic reducer function with zero side effects.
- * It processes input and may declare emergent events on the supplied context.
- */
+/** Pure, deterministic reducer with zero side effects */
 export type PureReducer<C, I> = (context: C, input: I) => C;
 
 /**
- * A reducer that acts in the pure Transformation stage
  * @deprecated Use PureReducer<TransformerContext, AnyCommand<T, A>> instead for more flexibility
  */
 export type Transformer<T extends CommandType, A extends Record<string, any>> = PureReducer<TransformerContext, SystemCommand<T, A>>;
 
-/**
- * A flexible command reducer that can handle both system and actor commands
- */
 export type CommandReducer<T extends CommandType, A extends Record<string, any>> = PureReducer<TransformerContext, AnyCommand<T, A>>;
 
-/**
- * Type guard for determining if a handler can process a specific input
- */
 export type InputTypeGuard<I extends SystemCommand, S extends I> = (input: I) => input is S;
 
-/**
- * A handler is just an object that associates a reducer-like function with its dependencies.
- * PureHandlerInterface is a handler that exposes a `reduce` method that takes a context
- * and an input. The reducer function performs immutable updates to the supplied context,
- * in a pure and deterministic manner.
- */
+/** Handler that associates a reducer with its dependencies */
 export type PureHandlerInterface<
   C,
   I extends Command
 > = {
-  /**
-   * The implementation should return `true` if the handler is interested in processing the input.
-   * Following Postel's Law: be liberal in what you accept, conservative in what you send.
-   */
   handles: (input: any) => input is I;
-
-  /**
-   * Dependencies on other handlers that must run before this one.
-   */
   dependencies: PureHandlerImplementation<C, I>[];
-
-  /**
-   * A pure, deterministic reducer function with zero side effects.
-   */
   reduce: PureReducer<C, I>;
 }
 

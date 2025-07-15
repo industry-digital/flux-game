@@ -112,14 +112,6 @@ export type Weather = {
    */
   ts: number;
 };
-
-export type EcologicalProfile= {
-  ecosystem: EcosystemURN;
-  temperature: [number, number];
-  pressure: [number, number];
-  humidity: [number, number];
-};
-
 /**
  * A Place represents a physical location in our game world. There is always a MUD room (i.e. XMPP MUC chat room)
  * associated with a Place. It can also represent a larger area, such as a city or a region. Topology is entirely
@@ -146,11 +138,14 @@ export type Place =
   entities: PlaceEntities;
 
   /**
-   * The ecological profile of this place
-   * - Biome + Climate = EcosystemURN
-   * - Bounds for temperature, pressure and humidity
+   * `flux:eco:steppe:arid`
+   * `flux:eco:grassland:temperate`
+   * `flux:eco:forest:temperate`
+   * `flux:eco:mountain:arid`
+   * `flux:eco:jungle:tropical`
+   * `flux:eco:marsh:tropical`
    */
-  ecology: EcologicalProfile;
+  ecosystem: EcosystemURN;
 
   /**
    * The current weather conditions in this place

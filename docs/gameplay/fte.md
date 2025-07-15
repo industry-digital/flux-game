@@ -1,12 +1,12 @@
 # Character Creation
 
-> You find yourself in a strange place. Surrounding you is the vastness of the Mongolian steppe. The air is crisp and the sky is clear. You look around and see a small group of people standing nearby -- wielding all manner of primitive weapons, and wearing apparel unlike anything you've ever seen before.
+> You find yourself in a strange place. Surrounding you is the vastness of a place not unlike the Mongolian steppe. The air is crisp and the sky is clear. You look around and see a small group of people standing nearby -- wielding all manner of primitive weapons, and wearing apparel unlike anything you've ever seen before.
 
-> Suddenly, one of them turns to you. It's a woman wearing a strange garment made of furs and leather. On her back is a shortbow made of a strange assembly
+> Suddenly, one of the women, wearing a patchwork of furs and leather, turns to you. Slung across her back is a shortbow made of a strange assembly of metal, wood, bone, and leather. Her gaze is piercing, like the eyes of a hawk, but her voice is warm and inviting.
 
 > "Aha! You've come at just the right time. We've been waiting for you."  She extends her hand to you. "My name is Freyja. Come, let me introduce you to the others."
 
-> You take her hand and she pulls you to your feet. The world feels different somehow -- your body moves with surprising grace and power, and your mind feels sharper than you remember it being.
+> You take her hand and she pulls you to your feet. She is surprisingly strong -- almost too strong. The world feels different somehow -- your body moves with surprising grace and power, and your mind feels sharper than you remember it being.
 
 > "First things first," Freyja says, adjusting her quiver. "You'll need to know how to move around. Try typing 'north' to head toward that cluster of tents."
 
@@ -180,10 +180,64 @@
 
 > Three figures step out from behind the trees. They look human, but something is terribly wrong with them. Their movements are too coordinated, too purposeful. Their eyes hold no warmth, no humanity.
 
-> Freyja's bow is already in her hands. "Antinatalists," she hisses. "Cordyceps gaeatrix. They're not human anymore. They can't be reasoned with, can't be negotiated with. They exist only to stop human reproduction."
+> Freyja's bow is already in her hands. "Antinatalists," she hisses. "Cordyceps gaeatrix. They're not human anymore. They can't be reasoned with, can't be negotiated with."
 
 > "Fight or die. There's no other choice."
 
 > The first antinatalist raises a crude spear, moving with inhuman precision. Your real test begins now.
 
 [Combat encounter begins...]
+
+## After the Fight
+
+> The last antinatalist falls, its body twitching once before going still. The forest seems to exhale, as if the very trees were holding their breath during the violence. Freyja lowers her bow, her breathing steady despite the intensity of the encounter.
+
+> "Well fought," she says, studying you with new respect. "Your choices back at camp served you well. Not everyone survives their first encounter with the infected."
+
+> She wipes her blade clean on a patch of moss, then turns to the auroch carcass. The animal is magnificent even in death - easily three hundred pounds of meat that could feed the camp for days. But you're deep in the forest, hours from home, and the scent of blood will attract predators.
+
+> "You might be wondering," Freyja says, reaching into her pack, "how do we get this auroch back home?"
+
+> She pulls out a device unlike anything you've ever seen. It's black metal, no bigger than her fist, with geometric patterns that seem to shift when you're not looking directly at them. The surface looks almost liquid, as if it's constantly moving despite being solid. But what catches your attention are the quartz crystals embedded in its surface - dozens of them, each no larger than a fingernail, arranged in precise geometric patterns that pulse with faint inner light.
+
+> "This," she says, holding it up so you can see, "is a spacefold device. Pre-collapse technology that most people think is mythology. But it's real, and it's about to save us hours of dangerous travel."
+
+> Freyja studies the device carefully, running her fingers over its surface. The quartz crystals respond to her touch, flickering with deeper luminescence. "Watch closely. Each device is quantum-entangled with a single location - in this case, our camp. The crystals maintain the entanglement bridge. It can only take us home, nowhere else. The process is... dramatic."
+
+> She raises the device, and immediately the air around her begins to shimmer and distort.
+
+> "Stand back," she warns.
+
+> The world around Freyja begins to ripple like water disturbed by a stone. But this isn't water - this is space itself, and something is pulling it taut. The distortion spreads outward in waves, and you watch in horrified fascination as reality begins to fold.
+
+> The trees behind Freyja stretch and warp, then seem to bend inward as if invisible hands are gathering up the corners of existence like a bedsheet. Through the distortion, you can see... elsewhere. The familiar tents and fires of your camp, sharp and clear as if it's right there in the forest with you.
+
+> The device in Freyja's hand pulses with dark light, and the quartz crystals begin to resonate with harmonic frequencies that you can feel in your bones. The geometric patterns on its surface writhe and shift, and the crystals flare with brilliant white light as they channel quantum energy through their lattice structures. The air screams - reality itself crying out as something fundamental is violated.
+
+> Then comes the puncture.
+
+> Space doesn't tear gently. It ruptures with a sound like breaking glass amplified a thousandfold. A ragged hole appears in the air itself, its edges sparking and writhing as if the universe is trying to heal the wound. Through it, you can see the camp as clearly as if you could reach out and touch it.
+
+> "Help me with the auroch," Freyja says calmly, as if reality-tearing holes in space are perfectly normal. "The fold won't hold for long."
+
+> Together, you drag the massive carcass toward the impossible doorway. The hole in space crackles with energy, its edges unstable and wrong. But through it, you can see people from your camp looking back at you with expressions of wonder and relief.
+
+> "After you," Freyja says. "Step through. One moment you're here, the next you're home."
+
+> You hesitate at the threshold, looking into the torn space. This is impossible. This violates everything you thought you knew about the world.
+
+> "Trust me," Freyja says. "The technology is ancient, but reliable. Step through."
+
+[Player steps through the spacefold]
+
+> One moment you're standing in the forest, the next your foot touches familiar ground. The transition is seamless, impossible - a single step that brings you instantly back to the safety of camp.
+
+> Freyja follows, hauling the auroch through the fold. The moment she's clear, the device pulses once more, the quartz crystals flaring with one final burst of light before dimming to their previous faint glow. The fold collapses.
+
+> The hole snaps shut with a thunderclap that reverberates through the camp. The forest vanishes. The only evidence of what you've witnessed is the acrid smell of ozone, the perfect circle of melted grass where the device's energy touched the ground, and the faint harmonic resonance still echoing in the quartz crystals.
+
+> "Welcome home," Freyja says, pocketing the device. "You've just completed your first successful expedition. The auroch will feed us well, and you've proven you can survive in this world."
+
+> "Rest now. Tomorrow, your real education begins."
+
+[End of FTE - Character enters normal gameplay]

@@ -95,6 +95,7 @@ export {
   Place,
   PlaceEntityDescriptor,
   PlaceInput,
+  Weather,
 } from './entity/place';
 
 export {
@@ -177,6 +178,11 @@ export {
   Bundle,
   ContainerSchema,
 } from './schema/container';
+
+export {
+  EcologicalProfile,
+  ECOLOGICAL_PROFILES,
+} from './schema/ecology';
 
 export {
   AbilitySchema,
