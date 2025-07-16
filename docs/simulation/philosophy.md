@@ -1,9 +1,7 @@
-
 # Creating Living Digital Worlds: The Science of Virtual Ecosystems
 
-> *"The life of a whole is created by the life of its parts, and the life of each part is created and sustained by the life of the whole."*
->
-> **— Christopher Alexander, The Nature of Order, Book 1: The Phenomenon of Life**
+> *The best emergent gameplay comes from simple rules interacting in complex ways.*
+— Raph Koster, ["The Fundamentals of Game Design"](https://www.raphkoster.com/2010/10/12/the-fundamentals-of-game-design/)
 
 ---
 ## Introduction
@@ -62,7 +60,7 @@ Instead of scripting experiences, we create conditions for experiences to emerge
 
 #### 1. Weather as Prime Mover
 **What it does**: Models realistic atmospheric conditions - temperature cycles, precipitation patterns, seasonal changes, storm systems.
-**What it doesn't know**: Nothing about resources or creatures. It simply models weather based on time, geography, and physics.
+**What it doesn't know**: It doesn't know about anything outside of weather.
 
 #### 2. Resources as Environmental Response
 **What it does**: Watches weather and responds accordingly - plants grow in warm, wet conditions; storms deplete exposed resources; seasons trigger different availability cycles.
