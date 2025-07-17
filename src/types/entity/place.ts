@@ -89,7 +89,7 @@ export type Weather = {
 
   // DERIVED OUTPUTS (computed from inputs)
   /**
-   * Instantaneous precipitation rate, expressed as mm/day
+   * Instantaneous precipitation rate, expressed as mm/hour
    * Computed from temperature, pressure, and humidity
    */
   precipitation: number;
@@ -112,6 +112,7 @@ export type Weather = {
    */
   ts: number;
 };
+
 /**
  * A Place represents a physical location in our game world. There is always a MUD room (i.e. XMPP MUC chat room)
  * associated with a Place. It can also represent a larger area, such as a city or a region. Topology is entirely

@@ -33,6 +33,7 @@ export {
   DematerializeActorCommand,
   MoveCommand,
   MoveCommandArgs,
+  MutateWeatherCommand,
 } from '~/command';
 
 export {

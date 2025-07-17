@@ -182,6 +182,9 @@ export {
 export {
   EcologicalProfile,
   ECOLOGICAL_PROFILES,
+  Biome,
+  Climate,
+  EcosystemURN,
 } from './schema/ecology';
 
 export {
