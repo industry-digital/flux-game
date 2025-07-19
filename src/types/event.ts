@@ -78,7 +78,14 @@ export type ActorDidDepartInput = RequiresActor & AbstractWorldEventInput<EventT
 export type ActorDidDepart = EventBase & AbstractWorldEventInput<EventType.ACTOR_DID_DEPART, {}>;
 export type ActorDidArriveInput = RequiresActor & AbstractWorldEventInput<EventType.ACTOR_DID_ARRIVE, { origin: PlaceURN }>;
 export type ActorDidArrive = EventBase & ActorDidArriveInput;
-export type WeatherDidChangeInput = AbstractWorldEventInput<EventType.WEATHER_DID_CHANGE, { from: Weather | null, to: Weather }>;
+export type WeatherDidChangeInput = AbstractWorldEventInput<
+  EventType.WEATHER_DID_CHANGE,
+  {
+    from: Weather | null,
+    to: Weather,
+    narrative: string;
+  }>;
+
 export type WeatherDidChange = EventBase & WeatherDidChangeInput;
 
 export type WorldEventInput =

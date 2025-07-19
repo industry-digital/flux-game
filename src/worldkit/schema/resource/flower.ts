@@ -40,13 +40,20 @@ function createFlowerSchema(
     },
 
     // By default, all flowers yield nectar
-    yields: {
-      "nectar": (state) => "sweet flower nectar"
-    },
+    provides: ['nectar'],
 
-    description: (state) =>
-      state.fullness > 0.7 ? "a vibrant flower patch in full bloom" :
-      state.fullness > 0.3 ? "a modest flower patch" : "a few scattered flowers"
+    description: ({ fullness }, now, { name }) => {
+      if (fullness >= 1) {
+        return `a patch of ${name} flowers, popping with vibrant color`;
+      }
+      if (fullness > 0.7) {
+        return `a patch of ${name} flowers, in full bloom`;
+      }
+      if (fullness > 0.3) {
+        return `a patch of ${name} flowers`;
+      }
+      return `a few scattered ${name} flowers`;
+    },
   };
 
   return transform(defaults);
@@ -54,7 +61,7 @@ function createFlowerSchema(
 
 export const DesertMarigoldSchema = createFlowerSchema((defaults) => ({
   ...defaults,
-  name: { singular: 'desert marigold', plural: 'desert marigolds' },
+  name: 'desert marigold',
   requirements: {
     ...defaults.requirements,
     temperature: { min: 15, max: 35 },
@@ -63,17 +70,6 @@ export const DesertMarigoldSchema = createFlowerSchema((defaults) => ({
     seasons: ['spring', 'summer'],
     time: ['morning', 'day', 'afternoon']
   },
-  yields: {
-    ...defaults.yields,
-    "nectar": (state) => "sweet desert marigold nectar"
-  },
-  description: (state) => {
-    const name = typeof defaults.name === 'string' ? defaults.name : defaults.name.singular;
-    if (state.fullness < 0.5) {
-      return `a sparse meadow of ${name}`;
-    }
-    return `a field filled with desert marigolds, dancing in the breeze`;
-  }
 }));
 
 export const WildBergamotSchema = createFlowerSchema((defaults) => ({
@@ -86,12 +82,6 @@ export const WildBergamotSchema = createFlowerSchema((defaults) => ({
     ppfd: { min: 300 },
     seasons: ['summer', 'fall'],
     time: ['dawn', 'morning', 'day', 'afternoon', 'evening']
-  },
-  yields: {
-    ...defaults.yields,
-    "nectar": (state) => "wild bergamot nectar",
-    "herb": (state) => "wild bergamot leaves",
-    "seed": (state) => "wild bergamot seeds"
   },
   description: (state) => {
     if (state.fullness < 0.3) {
@@ -109,6 +99,7 @@ export const WildBergamotSchema = createFlowerSchema((defaults) => ({
 export const PurpleConeflowerSchema = createFlowerSchema((defaults) => ({
   ...defaults,
   name: { singular: 'purple coneflower', plural: 'purple coneflowers' },
+  provides: [...defaults.provides, 'seeds'],
   requirements: {
     ...defaults.requirements,
     temperature: { min: 5, max: 32 },
@@ -116,12 +107,6 @@ export const PurpleConeflowerSchema = createFlowerSchema((defaults) => ({
     ppfd: { min: 600 },
     seasons: ['summer', 'fall'],
     time: ['day', 'afternoon']
-  },
-  yields: {
-    ...defaults.yields,
-    "nectar": (state) => "purple coneflower nectar",
-    "seed": (state) => "purple coneflower seeds",
-    "medicine": (state) => "purple coneflower extract"
   },
   description: (state) => {
     if (state.fullness < 0.3) {
@@ -145,12 +130,6 @@ export const BlackEyedSusanSchema = createFlowerSchema((defaults) => ({
     seasons: ['summer'],
     time: ['morning', 'day', 'afternoon']
   },
-  yields: {
-    ...defaults.yields,
-    "nectar": (state) => "black-eyed susan nectar",
-    "seed": (state) => "black-eyed susan seeds",
-    "dye": (state) => "golden yellow dye"
-  },
   description: (state) => {
     if (state.fullness < 0.4) {
       return 'sparse black-eyed susans scattered through the grassland';
@@ -172,12 +151,6 @@ export const WildColumbineSchema = createFlowerSchema((defaults) => ({
     seasons: ['spring', 'summer'],
     time: ['dawn', 'morning', 'day']
   },
-  yields: {
-    ...defaults.yields,
-    "nectar": (state) => "delicate columbine nectar",
-    "seed": (state) => "wild columbine seeds",
-    "ornamental": (state) => "elegant columbine flowers"
-  },
   description: (state) => {
     if (state.fullness < 0.3) {
       return 'delicate wild columbines hiding in the mountain shadows';
@@ -196,12 +169,6 @@ export const FireweedSchema = createFlowerSchema((defaults) => ({
     ppfd: { min: 300 },
     seasons: ['summer', 'fall'],
     time: ['day', 'afternoon', 'evening']
-  },
-  yields: {
-    ...defaults.yields,
-    "nectar": (state) => "fireweed honey nectar",
-    "herb": (state) => "fireweed tea leaves",
-    "seed": (state) => "fireweed down seeds"
   },
   description: (state) => {
     if (state.fullness < 0.4) {
@@ -224,12 +191,6 @@ export const MountainPassionVineSchema = createFlowerSchema((defaults) => ({
     seasons: ['spring', 'summer', 'fall'],
     time: ['day', 'afternoon']
   },
-  yields: {
-    ...defaults.yields,
-    "nectar": (state) => "exotic passion flower nectar",
-    "fruit": (state) => "small passion fruits",
-    "vine": (state) => "strong passion vine fiber"
-  },
   description: (state) => {
     if (state.fullness < 0.3) {
       return 'passion vines with scattered blooms climbing the mountain slopes';
@@ -249,12 +210,6 @@ export const TropicalGingerSchema = createFlowerSchema((defaults) => ({
     seasons: ['spring', 'summer'],
     time: ['dawn', 'morning', 'day'],
     lunar: ['waxing', 'full']
-  },
-  yields: {
-    ...defaults.yields,
-    "nectar": (state) => "spicy ginger flower nectar",
-    "spice": (state) => "fresh ginger root",
-    "medicine": (state) => "ginger medicinal extract"
   },
   description: (state) => {
     if (state.fullness < 0.4) {
@@ -278,12 +233,6 @@ export const WildTrilliumSchema = createFlowerSchema((defaults) => ({
     seasons: ['spring'],
     time: ['dawn', 'morning', 'day']
   },
-  yields: {
-    ...defaults.yields,
-    "nectar": (state) => "delicate trillium nectar",
-    "medicine": (state) => "trillium medicinal extract",
-    "ornamental": (state) => "pristine white trillium flowers"
-  },
   description: (state) => {
     if (state.fullness < 0.3) {
       return 'scattered white trilliums hiding beneath the forest canopy';
@@ -303,12 +252,6 @@ export const AlpineAsterSchema = createFlowerSchema((defaults) => ({
     ppfd: { min: 800 },
     seasons: ['summer', 'fall'],
     time: ['day', 'afternoon']
-  },
-  yields: {
-    ...defaults.yields,
-    "nectar": (state) => "hardy alpine nectar",
-    "seed": (state) => "alpine aster seeds",
-    "ornamental": (state) => "brilliant purple aster flowers"
   },
   description: (state) => {
     if (state.fullness < 0.4) {
@@ -331,12 +274,6 @@ export const JungleOrchidSchema = createFlowerSchema((defaults) => ({
     time: ['dawn', 'morning'],
     lunar: ['new', 'waxing']
   },
-  yields: {
-    ...defaults.yields,
-    "nectar": (state) => "exotic jungle orchid nectar",
-    "ornamental": (state) => "spectacular orchid blooms",
-    "fragrance": (state) => "intoxicating orchid perfume"
-  },
   description: (state) => {
     if (state.fullness < 0.3) {
       return 'rare orchids blooming high in the jungle canopy';
@@ -349,6 +286,7 @@ export const JungleOrchidSchema = createFlowerSchema((defaults) => ({
 export const WaterLilySchema = createFlowerSchema((defaults) => ({
   ...defaults,
   name: { singular: 'water lily', plural: 'water lilies' },
+  provides: [...defaults.provides, 'roots'],
   requirements: {
     ...defaults.requirements,
     temperature: { min: 10, max: 30 },
@@ -356,12 +294,6 @@ export const WaterLilySchema = createFlowerSchema((defaults) => ({
     ppfd: { min: 400 },
     seasons: ['summer'],
     time: ['morning', 'day', 'afternoon']
-  },
-  yields: {
-    ...defaults.yields,
-    "nectar": (state) => "pure water lily nectar",
-    "seed": (state) => "water lily seeds",
-    "ornamental": (state) => "pristine white water lily blooms"
   },
   description: (state) => {
     if (state.fullness < 0.4) {
@@ -376,33 +308,27 @@ export const WaterLilySchema = createFlowerSchema((defaults) => ({
 // Steppe/Grassland Ecotone
 export const PrairieRoseSchema = createFlowerSchema((defaults) => ({
   ...defaults,
-  name: { singular: 'prairie rose', plural: 'prairie roses' },
+  name: 'prairie rose',
+  provides: [...defaults.provides, 'fruit'],
   requirements: {
     ...defaults.requirements,
     temperature: { min: 8, max: 33 },
     humidity: { min: 25, max: 60 },
     ppfd: { min: 600 },
     seasons: ['spring', 'summer'],
-    time: ['dawn', 'morning', 'day', 'afternoon']
-  },
-  yields: {
-    ...defaults.yields,
-    "nectar": (state) => "wild rose nectar",
-    "hips": (state) => "vitamin-rich rose hips",
-    "ornamental": (state) => "delicate pink prairie roses"
   },
   description: (state) => {
     if (state.fullness < 0.3) {
       return 'wild roses scattered along the grassland edge';
     }
-    return 'thorny prairie roses forming hedgerows between steppe and grassland';
+    return 'thorny prairie roses forming hedgerows along rocky outcrops';
   }
 }));
 
 // Steppe/Mountain Ecotone
 export const DesertLupineSchema = createFlowerSchema((defaults) => ({
   ...defaults,
-  name: { singular: 'desert lupine', plural: 'desert lupine' },
+  name: 'desert lupine',
   requirements: {
     ...defaults.requirements,
     temperature: { min: 5, max: 30 },
@@ -410,12 +336,6 @@ export const DesertLupineSchema = createFlowerSchema((defaults) => ({
     ppfd: { min: 800 },
     seasons: ['spring'],
     time: ['morning', 'day', 'afternoon']
-  },
-  yields: {
-    ...defaults.yields,
-    "nectar": (state) => "desert lupine nectar",
-    "seed": (state) => "protein-rich lupine seeds",
-    "medicine": (state) => "lupine herbal extract"
   },
   description: (state) => {
     if (state.fullness < 0.4) {
@@ -429,6 +349,7 @@ export const DesertLupineSchema = createFlowerSchema((defaults) => ({
 export const MountainSunflowerSchema = createFlowerSchema((defaults) => ({
   ...defaults,
   name: { singular: 'mountain sunflower', plural: 'mountain sunflowers' },
+  provides: [...defaults.provides, 'seeds'],
   requirements: {
     ...defaults.requirements,
     temperature: { min: 2, max: 28 },
@@ -436,12 +357,6 @@ export const MountainSunflowerSchema = createFlowerSchema((defaults) => ({
     ppfd: { min: 700 },
     seasons: ['summer', 'fall'],
     time: ['morning', 'day', 'afternoon']
-  },
-  yields: {
-    ...defaults.yields,
-    "nectar": (state) => "mountain sunflower nectar",
-    "seed": (state) => "oil-rich sunflower seeds",
-    "oil": (state) => "golden sunflower oil"
   },
   description: (state) => {
     if (state.fullness < 0.3) {
@@ -461,13 +376,6 @@ export const TropicalHibiscusSchema = createFlowerSchema((defaults) => ({
     humidity: { min: 60, max: 90 },
     ppfd: { min: 300, max: 800 },
     seasons: ['spring', 'summer', 'fall'],
-    time: ['day', 'afternoon', 'evening']
-  },
-  yields: {
-    ...defaults.yields,
-    "nectar": (state) => "tropical hibiscus nectar",
-    "dye": (state) => "vibrant red hibiscus dye",
-    "ornamental": (state) => "massive hibiscus flowers"
   },
   description: (state) => {
     if (state.fullness < 0.4) {
@@ -489,12 +397,6 @@ export const SwampOrchidSchema = createFlowerSchema((defaults) => ({
     seasons: ['spring', 'summer'],
     time: ['dusk', 'night'],
     lunar: ['full']
-  },
-  yields: {
-    ...defaults.yields,
-    "nectar": (state) => "mysterious swamp orchid nectar",
-    "medicine": (state) => "potent swamp orchid extract",
-    "ornamental": (state) => "ethereal swamp orchid blooms"
   },
   description: (state) => {
     if (state.fullness < 0.3) {

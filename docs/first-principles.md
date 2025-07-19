@@ -44,7 +44,7 @@ These are our first principles. They are not negotiable.
 ### 5. Monetization
 
 * Monetization is a reward -- a side effect -- of good stewardship over a world that players cherish deeply.
-* We build for explorers and creators, not collectors and spenders. In healthy game worlds, whales don't exist.
+* We build for explorers and creators, not collectors and spenders. In healthy game worlds, whales simply don't exist.
 
 ### 6. Fairness
 

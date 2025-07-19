@@ -101,6 +101,17 @@ type ResourceSchemaBase = {
    */
   name: string | Noun;
 
+ /**
+   * The "desirable things" that this resource provides
+   * These are taxonomic atoms that describe the desirable things that can be extracted from the resource.
+   * - Example: "nectar"
+   * - Example: "honey"
+   * - Example: "seed"
+   * - Example: "fruit"
+   * - Example: "wood"
+   */
+  provides: string[];
+
   /**
    * The requirements that must be met for the resource to grow.
    */
@@ -116,17 +127,6 @@ type ResourceSchemaBase = {
    * A resource that is not growing is in a continuous state of decay.
    */
   decay: GrowthBehaviorSpecification;
-
- /**
-   * The biological yields that can be extracted from this resource, each with its own
-   * contextual description function.
-   * - Example: A flower yields nectar, seeds, and hips - each described differently
-   * - Example: A beehive yields honey and wax - each with unique characteristics
-   *
-   * The Map keys should intersect with other taxonomic vocabularies to create emergence.
-   * The renderer functions provide rich contextual variety for the same taxonomic atoms.
-   */
-  yields: Record<string, ResourceStateRenderer>;
 
   /**
    * A function that returns a description of the resource based on the schema and
@@ -150,11 +150,13 @@ type ResourceSchemaBase = {
  * - Example: a single durian fruit that weights 2kg vs the same that weights 1kg
  */
 export type SpecimenResourceSchema = ResourceSchemaBase & {
+
   quantity: {
     measure: UnitOfMeasure.EACH;
     min: 1;
     capacity: 1;
   };
+
   quality: {
     measure: Exclude<UnitOfMeasure, UnitOfMeasure.EACH>;
     min: number;

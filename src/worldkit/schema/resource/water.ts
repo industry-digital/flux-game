@@ -16,7 +16,7 @@ function createWaterBodySchema(
       precipitation: { min: 1  }
     },
 
-    // By default,. all bodies of water replenish in an hour
+    // By default, all bodies of water replenish in an hour
     growth: {
       curve: Easing.EASE_OUT_QUAD,
       duration: [1, TimeUnit.HOUR]
@@ -31,15 +31,12 @@ function createWaterBodySchema(
 
     // About the size of a small koi pond
     quantity: {
-      measure: UnitOfMeasure.VOLUME_LITER,
-      capacity: 1_000,
+      measure: UnitOfMeasure.EACH,
+      capacity: 1_000, // 1000 units = 1000 liters
     },
 
-    // By default, all bodies of water yield water and mud
-    yields: {
-      "water": (state) => "water",
-      "mud": (state) => "mud"
-    },
+    // All bodies of water yield the same taxonomic atoms
+    provides: ['water', 'mud'],
 
     description: (state) =>
       state.fullness > 0.7 ? "a body of water" :
@@ -65,7 +62,7 @@ export const LargePuddleSchema: ResourceSchema = createWaterBodySchema(defaults 
 
   quantity: {
     ...defaults.quantity,
-    capacity: 100
+    capacity: 100 // 100 liters
   },
 
   description: (state) =>
@@ -90,7 +87,7 @@ export const SmallPondSchema: ResourceSchema = createWaterBodySchema(defaults =>
   },
   quantity: {
     ...defaults.quantity,
-    capacity: 5_000,
+    capacity: 5_000, // 5000 liters
   },
   description: (state) =>
     state.fullness > 0.8 ? "a small pond dotted with lily pads" :
@@ -118,15 +115,7 @@ export const LargePondSchema: ResourceSchema = createWaterBodySchema(defaults =>
   },
   quantity: {
     ...defaults.quantity,
-    capacity: 25000
-  },
-  yields: {
-    ...defaults.yields,
-    "water": (state) => "deep pond water",
-    "algae": (state) => "rich pond algae",
-    "lily_pad": (state) => state.fullness > 0.6 ? "floating lily pads" : "dried lily pad remnants",
-    "cattail": (state) => state.fullness > 0.4 ? "tall cattails" : "brown cattail stalks",
-    "pond_weed": (state) => "submerged pond vegetation"
+    capacity: 25_000 // 25,000 liters
   },
   description: (state) =>
     state.fullness > 0.9 ? "a large pond teeming with life" :
@@ -155,17 +144,7 @@ export const SmallLakeSchema: ResourceSchema = createWaterBodySchema(defaults =>
   },
   quantity: {
     ...defaults.quantity,
-    capacity: 100000
-  },
-  yields: {
-    ...defaults.yields,
-    "water": (state) => "pristine lake water",
-    "algae": (state) => "diverse lake algae",
-    "lily_pad": (state) => "expansive lily pad beds",
-    "cattail": (state) => "dense cattail marshes",
-    "pond_weed": (state) => "varied aquatic plants",
-    "fish": (state) => state.fullness > 0.7 ? "small lake fish" : "scattered fish bones",
-    "smooth_stone": (state) => "lake-polished stones"
+    capacity: 100_000 // 100,000 liters
   },
   description: (state) =>
     state.fullness > 0.9 ? "a pristine small lake reflecting the surrounding landscape" :

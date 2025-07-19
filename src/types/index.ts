@@ -105,22 +105,7 @@ export {
   Specializations,
 } from './entity/skill';
 
-export {
-  WorldEvent,
-  WorldEventInput,
-  EventPayload,
-  EventType,
-  ActorDidMove,
-  ActorDidMoveInput,
-  ActorDidArrive,
-  ActorDidArriveInput,
-  ActorDidDepart,
-  ActorDidDepartInput,
-  ActorDidMaterialize,
-  ActorDidMaterializeInput,
-  ActorDidDematerialize,
-  ActorDidDematerializeInput,
-} from './event';
+export * from './event';
 
 export {
   CombatProjectionMixin,

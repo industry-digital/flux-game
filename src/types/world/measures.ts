@@ -1,8 +1,4 @@
 export enum UnitOfMeasure {
-  MASS_KG = 'mass:kg',
-  MASS_GRAMS = 'mass:g',
-  VOLUME_LITER = 'volume:liter',
-  VOLUME_MILLILITER = 'volume:ml',
   TEMPERATURE_CELSIUS = 'temp:c',
   DISTANCE_METERS = 'distance:m',
   DISTANCE_KILOMETERS = 'distance:km',
@@ -14,4 +10,14 @@ export enum UnitOfMeasure {
   TIME_DAY = 'time:day',
   PERCENTAGE = 'percent',
   EACH = 'each',
+}
+
+export enum UnitOfMass {
+  GRAMS = 'mass:g',
+  KILOGRAMS = 'mass:kg',
+}
+
+export enum UnitOfVolume {
+  LITERS = 'volume:liter',
+  MILLILITERS = 'volume:ml',
 }

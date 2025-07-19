@@ -9,7 +9,6 @@ import {
   ModifiableScalarAttribute,
   NormalizedBipolarValue,
 } from '~/types/entity/attribute';
-import { ConsumptionRate } from '~/types/entity/resource';
 
 /**
  * The kinds of actors in the simulation
@@ -298,7 +297,7 @@ export type ResourceNeed = {
   /**
    * How much of this resource the monster consumes per time period
    */
-  consumption: ConsumptionRate;
+  consumption: number;
 
   /**
    * Behavioral thresholds for resource scarcity and abundance

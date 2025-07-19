@@ -6,10 +6,10 @@ import { CommandType, Command } from '~/types/intent';
 import { EventType } from '~/types/event';
 import { PlaceURN } from '~/types/taxonomy';
 import {
-    createCommand,
-    createTransformerContext,
-    createTestPlace,
-    createHandlerTest
+  createCommand,
+  createTransformerContext,
+  createTestPlace,
+  createHandlerTest
 } from '~/testing';
 
 describe('MUTATE_WEATHER Handler', () => {
@@ -91,6 +91,7 @@ describe('MUTATE_WEATHER Handler', () => {
           payload: {
             from: previousWeather,
             to: mockWeather,
+            narrative: '',
           }
         });
       });
@@ -109,6 +110,7 @@ describe('MUTATE_WEATHER Handler', () => {
           payload: {
             from: null,
             to: mockWeather,
+            narrative: '',
           }
         });
       });
@@ -179,7 +181,8 @@ describe('MUTATE_WEATHER Handler', () => {
           expect.objectContaining({
             payload: {
               from: expect.any(Object),
-              to: extremeWeather
+              to: extremeWeather,
+              narrative: '',
             }
           })
         );
@@ -229,7 +232,8 @@ describe('MUTATE_WEATHER Handler', () => {
           expect.objectContaining({
             payload: {
               from: sameWeather,
-              to: sameWeather
+              to: sameWeather,
+              narrative: '',
             }
           })
         );

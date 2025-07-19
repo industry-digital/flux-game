@@ -1,4 +1,3 @@
-
 import { SkillURN } from '~/types/taxonomy';
 import { ActorStat } from '~/types/entity/actor';
 import { AbilityInContainment } from '~/types/schema/ability';
@@ -28,6 +27,7 @@ export type SkillSchema = {
   /**
    * A skill may have an affinity with up to two stats.
    * Such stats are used to determine the skill's effectiveness.
+   * Skills may implement stat affinities any way they want.
    * Examples:
    * - Weapon skills might haven an affinity with either`STR` or `DEX`, depending on the kindof weapon it is
    * - Ranged combat has an intrinsic affinity to the `DEX` stat

@@ -28,7 +28,7 @@ export type CostSpecification =
   | { conc: number }
   | { hp: number }
   | { items: Partial<Record<Taxonomy.Items, number>> }
-  | { currency: number }
+  | { currency: Partial<Record<Taxonomy.Currency, number>> }
 ;
 
 export type AbilityTimers = {

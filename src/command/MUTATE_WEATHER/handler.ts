@@ -1,17 +1,17 @@
 import { isCommandOfType } from '~/lib/intent';
 import { Weather } from '~/types/entity/place';
 import {
-    Command,
-    CommandType,
-    SystemCommand,
+  Command,
+  CommandType,
+  SystemCommand,
 } from '~/types/intent';
 import {
-    PureReducer,
-    TransformerContext,
-    PureHandlerInterface,
+  PureReducer,
+  TransformerContext,
+  PureHandlerInterface,
 } from '~/types/handler';
 import { PlaceURN } from '~/types/taxonomy';
-import { EventType } from '~/types/event';
+import { EventType, WeatherDidChangeInput } from '~/types/event';
 
 export type MutateWeatherArgs = {
   placeId: PlaceURN;
@@ -40,15 +40,18 @@ export const mutateWeatherReducer: PureReducer<TransformerContext, MutateWeather
 
   place.weather = next;
 
-  declareEvent({
+  const event: WeatherDidChangeInput = {
     type: EventType.WEATHER_DID_CHANGE,
     trace: command.id,
     location: placeId,
     payload: {
       from: previous,
       to: next,
+      narrative: '',
     },
-  });
+  };
+
+  declareEvent(event);
 
   return context;
 };
