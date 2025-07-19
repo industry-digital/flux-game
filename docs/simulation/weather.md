@@ -2,32 +2,32 @@
 
 ## Overview
 
-The weather simulation system provides **biologically-informed atmospheric modeling** for the Flux simulation environment. It implements atmospheric physics through **mathematical constraint-following**, creating weather that behaves like real atmospheric systems rather than mechanical state machines.
+The weather simulation system provides **biologically-informed atmospheric modeling** for the Flux simulation. It implements weather that is believable and natural rather than mechanical state machines with predictable patterns.
 
-The system distinguishes between **fundamental atmospheric properties** (temperature, pressure, humidity) and **derived weather phenomena** (precipitation, cloud cover, photosynthetic photon flux density), using biologically-informed easing functions to create natural transitions between weather states.
+The system distinguishes between fundamental atmospheric properties -- temperature, pressure, humidity -- and derived weather phenomena -- precipitation, cloud cover, photosynthetic photon flux density -- using biologically-informed easing functions, creating natural transitions between weather states.
 
 ## Disclaimer
 
-This weather simulation system is designed to create a **plausible approximation of atmospheric behavior** for interactive entertainment purposes. While we employ mathematical models inspired by atmospheric physics and biological systems, **we make no claims as to the scientific accuracy, completeness, or suitability of this system for any particular purpose beyond creating engaging gameplay experiences**.
+This weather simulation system is designed to create a plausible approximation of atmospheric behavior for interactive entertainment purposes. While we employ mathematical models inspired by atmospheric physics and biological systems, we make no claims as to the scientific accuracy, completeness, or suitability of this system for any particular purpose.
 
-The system prioritizes **believable player experience** over scientific precision. Our goal is weather that *feels* natural and responds in ways players find intuitive, not weather that could be used for meteorological research or real-world applications.
+The system prioritizes believable player experience over scientific precision. Our goal is weather that *feels* natural and responds in ways players find intuitive, not weather that could be used for meteorological research or real-world applications.
 
 ## Architecture Philosophy
 
 ### Digital Atmospheric Physics
 
-The system implements **atmospheric behavior** through mathematical constraints rather than traditional weather simulation:
+The system implements atmospheric behavior through mathematical constraints rather than traditional weather simulation:
 
-- **Thermal Mass Effects**: Temperature changes resist initially, then accelerate (like real air masses)
-- **Pressure Momentum**: Barometric systems build momentum gradually (like real atmospheric dynamics)
-- **Moisture Phase Dynamics**: Humidity shows nucleation effects and rapid equilibration (like real condensation)
-- **Spatial Influence**: Weather influence decays naturally with distance (like real weather fronts)
+- Thermal Mass Effects. Temperature changes resist initially, then accelerate (like real air masses)
+- Pressure Momentum. Barometric systems build momentum gradually (like real atmospheric dynamics)
+- Moisture Phase Dynamics. Humidity shows nucleation effects and rapid equilibration (like real condensation)
+- Spatial Influence. Weather influence decays naturally with distance (like real weather fronts)
 
-**Not traditional simulation**: Rather than scripted weather patterns, natural atmospheric behavior emerges from **constraint-driven mathematical relationships**.
+Rather than scripted weather patterns, natural atmospheric behavior emerges from constraint-driven mathematical relationships.
 
 ### Functional Core, Pure Behavior
 
-The system follows strict **pure functional architecture** implemented in TypeScript:
+The system follows strict pure functional architecture implemented in TypeScript:
 
 **Pure Functional Core (`src/weather/core/index.ts`)**:
 ```typescript
@@ -38,7 +38,6 @@ export function calculateNextWeather(
   timestamp: number
 ): Weather
 
-// Biologically-informed evolution with natural transitions
 export function evolveWeatherWithEasing(
   currentWeather: Weather,
   randomValues: WeatherRandomValues,
@@ -53,51 +52,31 @@ export function evolveWeatherWithEasing(
 export function generateRandomValues(timestamp: number, seed: number): WeatherRandomValues
 ```
 
-**Biological Easing Functions**:
+**Easing Functions**:
 ```typescript
-// Six specialized easing functions for believable atmospheric behavior
 export const WeatherEasing = {
-  thermal: (t: number) => number,      // Thermal mass effects
-  pressure: (t: number) => number,     // Pressure momentum
-  moisture: (t: number) => number,     // Condensation dynamics
-  weatherFront: (t: number) => number, // Spatial influence decay
-  cloudFormation: (t: number) => number, // Threshold effects
-  seasonal: (t: number) => number      // Natural cycles
+  logistic: (t: number) => number,
+  exponential: (t: number) => number,
+  logarithmic: (t: number) => number,
+  linear: (t: number) => number,
+  quadratic: (t: number) => number,
 }
-```
 
-### Biologically-Informed Interpolation
-
-The core innovation is **replacing linear interpolation with biological believability**:
-
-**Traditional Problem**:
-```typescript
-// Linear interpolation produces robot-like behavior
-const mechanicalValue = lerp(startValue, endValue, t); // Constant rate of change
-```
-
-**Our Solution**:
-```typescript
 // Biological easing creates believable atmospheric behavior
-const naturalValue = lerp(startValue, endValue, WeatherEasing.thermal(t));
+const naturalValue = lerp(startValue, endValue, WeatherEasing.logistic(t));
 ```
-
-**Mathematical Foundation**:
-- **Constraint**: "Natural systems don't change linearly"
-- **Implementation**: Apply biological easing functions to interpolation parameters
-- **Result**: Believable atmospheric behavior through mathematical constraint-following
 
 ## Anti-Equilibrium Design Philosophy
 
 ### Why Equilibrium is the Enemy of Engaging Virtual Worlds
 
-**Equilibrium = Death of Emergence**
+**Equilibrium = Heat Death of the Universe**
 
-Weather systems that converge to stable states become **predictable, boring, and ultimately irrelevant** to gameplay. This is not theoretical - it's the practical death of any system meant to generate ongoing content and opportunities.
+Weather systems that converge to stable states become predictable, boring, and ultimately irrelevant to gameplay. This is not theoretical -- it's the practical death of any system meant to generate ongoing content and opportunities.
 
 **The Optimization Problem**
 
-Players naturally optimize toward the most efficient behaviors. In equilibrium systems, this optimization eventually **discovers the single "best" state** and the system becomes trivial.
+It is a well-known fact that in any system, players naturally optimize toward the most efficient behaviors. In equilibrium systems, this optimization eventually discovers [the single "best" state](https://en.wikipedia.org/wiki/Nash_equilibrium) and the system becomes boring.
 
 **Historical Examples of Equilibrium Death**
 
@@ -115,24 +94,10 @@ Weather serves as the **prime mover** for all other systems in our world:
 - **Player strategies** must adapt to changing conditions
 - **Economic opportunities** emerge from weather-driven scarcity and abundance
 
-**If weather reaches equilibrium, all dependent systems stagnate.**
-
-### Proven Mathematical Properties
-
-Our weather system has been **mathematically proven** to resist equilibrium through **42 comprehensive tests**:
-
-**Core Test Results**:
-```typescript
-✓ Weather Core Functions (42 tests) - All passing
-✓ Biologically-Informed Interpolation (14 tests) - All passing
-✓ WeatherEasing functions (6 tests) - All passing
-✓ Smooth weather transitions over time - Proven
-✓ Physical constraints with easing - Verified
-✓ Backward compatibility maintained - Confirmed
-```
+If weather reaches equilibrium, all dependent systems stagnate.
 
 **Anti-Equilibrium Mechanisms**:
-1. **Biological Easing Variance**: Natural curves prevent convergence to linear steady states
+1. **Easing Variance**: Natural curves prevent convergence to linear steady states
 2. **Seasonal Cycling**: Continuous seasonal pressure prevents thermal equilibrium
 3. **Thermal Mass Effects**: Temperature changes create momentum, resisting equilibration
 4. **Pressure Momentum**: Barometric systems build inertia, preventing pressure stability
@@ -140,9 +105,9 @@ Our weather system has been **mathematically proven** to resist equilibrium thro
 
 ### Why Equilibrium is Mathematically Impossible
 
-Our system has **structural anti-equilibrium properties**:
+Our system has structural anti-equilibrium properties:
 
-**1. Biological Easing Functions**
+**Easing Functions**
 ```typescript
 // Thermal mass: slow start, then acceleration - never linear convergence
 thermal: (t: number) => {
@@ -492,24 +457,6 @@ property('biological easing creates bounded natural behavior', () => {
   end
 });
 ```
-
-## Performance Characteristics
-
-### Computational Complexity
-
-The pure functional approach achieves excellent performance:
-
-- **O(1) Weather Evolution**: Single weather state evolution
-- **O(1) Easing Application**: Constant-time mathematical functions
-- **No Side Effects**: Enables caching, memoization, parallel processing
-- **Deterministic Output**: Same inputs always produce same outputs
-
-### Function Performance
-
-- **Pure Functions**: No I/O or side effects
-- **Mathematical Operations**: Simple arithmetic and exponential functions
-- **Pre-computed Constants**: Seasonal and diurnal patterns cached
-- **Memory Efficient**: No persistent state, garbage collection friendly
 
 ## Configuration
 
