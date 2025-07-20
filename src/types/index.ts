@@ -275,9 +275,13 @@ export {
 
 export {
   AbstractFact,
-  Fact,
   FactType,
   WorldEventMessageDictionary,
+  ActorLocationFact,
+  WorldEventFact,
+  ViewFact,
+  SystemFact,
+  Fact,
 } from './fact';
 
 export {

@@ -6,6 +6,18 @@ export * from '~/worldkit/event';
 export * from '~/worldkit/graph/place';
 export * from '~/template';
 
+// Explicit fact type exports to fix declaration merging issues
+export type {
+  AbstractFact,
+  FactType,
+  WorldEventMessageDictionary,
+  ActorLocationFact,
+  WorldEventFact,
+  ViewFact,
+  SystemFact,
+  Fact,
+} from '~/types/fact';
+
 export {
   parseEntityUrn,
   parseEntityUrnOrFail,

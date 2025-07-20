@@ -38,9 +38,14 @@ export type WorldEventMessageDictionary = {
   actor?: string;
 };
 
+export type ActorLocationFact = AbstractFact<FactType.ACTOR_LOCATION, PlaceSummary>;
+export type WorldEventFact = AbstractFact<FactType.EVENT, WorldEvent, WorldEventMessageDictionary>;
+export type ViewFact = AbstractFact<FactType.VIEW>;
+export type SystemFact = AbstractFact<FactType.SYSTEM>;
+
 // Union of all possible facts
 export type Fact =
-  | AbstractFact<FactType.ACTOR_LOCATION, PlaceSummary>
-  | AbstractFact<FactType.EVENT, WorldEvent, WorldEventMessageDictionary>
-  | AbstractFact<FactType.VIEW>
-  | AbstractFact<FactType.SYSTEM>;
+  | WorldEventFact
+  | ViewFact
+  | ActorLocationFact
+  | SystemFact

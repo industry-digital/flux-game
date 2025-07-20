@@ -89,14 +89,14 @@ export type Weather = {
 
   // DERIVED OUTPUTS (computed from inputs)
   /**
-   * Instantaneous precipitation rate, expressed as mm/hour
+   * Instantaneous precipitation rate, expressed as `mm/hour`
    * Computed from temperature, pressure, and humidity
    */
   precipitation: number;
 
   /**
-   * Photosynthetic Photon Flux Density in μmol photons m⁻² s⁻¹
-   * Computed from cloud cover and solar geometry
+   * Photosynthetic Photon Flux Density in `μmol photons m⁻² s⁻¹`
+   * Computed from cloud cover and solar geometry (angle of the sun)
    */
   ppfd: number;
 
