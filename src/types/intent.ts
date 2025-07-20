@@ -1,10 +1,5 @@
 import { ActorURN, PlaceURN } from '~/types/taxonomy';
 import { InputTypeGuard } from '~/types/handler';
-import { MoveCommand } from '~/command/MOVE/handler';
-import { MaterializeActorCommand } from '~/command/MATERIALIZE_ACTOR/handler';
-import { DematerializeActorCommand } from '~/command/DEMATERIALIZE_ACTOR/handler';
-import { MutateWeatherCommand } from '~/command/MUTATE_WEATHER/handler';
-import { CreateActorCommand, CreatePlaceCommand } from '~/command';
 
 export type InputMetadata = { __type: 'command' | 'intent' };
 
@@ -71,7 +66,7 @@ export type CommandInput<
  * A fully validated Command with guaranteed fields
  * Safe to execute without additional validation
  */
-export type Command<
+export type SystemCommand<
   T extends CommandType = CommandType,
   A extends Record<string, any> = Record<string, any>
 > =
@@ -114,7 +109,7 @@ export type ActorCommand<
   T extends CommandType,
   A extends Record<string, any> = Record<string, any>
 > =
-  & Command<T, A>
+  & SystemCommand<T, A>
   & {
 
     /**
@@ -143,7 +138,7 @@ export type SystemCommandTypeGuard<
   T extends CommandType,
   A extends Record<string, any> = Record<string, any>
 > =
-  InputTypeGuard<Command, Command<T, A>>;
+  InputTypeGuard<SystemCommand, SystemCommand<T, A>>;
 
 export type ActorCommandTypeGuard<
   T extends CommandType,
@@ -155,24 +150,16 @@ export type ActorCommandTypeGuard<
  * Union type for any command - either system-issued or actor-issued
  * This provides flexibility for handlers that can work with both types
  */
-export type AnyCommand<
+export type Command<
   T extends CommandType = CommandType,
   A extends Record<string, any> = Record<string, any>
-> = Command<T, A> | ActorCommand<T, A>;
+> = SystemCommand<T, A> | ActorCommand<T, A>;
 
 /**
  * Type guard for any command (system or actor) with specific type and arguments
  */
-export type AnyCommandTypeGuard<
+export type CommandTypeGuard<
   T extends CommandType,
   A extends Record<string, any> = Record<string, any>
 > =
-  InputTypeGuard<AnyCommand, AnyCommand<T, A>>;
-
-export type Command =
-| MoveCommand
-| MutateWeatherCommand
-| CreatePlaceCommand
-| CreateActorCommand
-| MaterializeActorCommand
-| DematerializeActorCommand
+  InputTypeGuard<Command, Command<T, A>>;

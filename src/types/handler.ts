@@ -1,5 +1,5 @@
 import { WorldEvent, WorldEventInput, EventType } from '~/types/event';
-import { Command, CommandType, AnyCommand } from '~/types/intent';
+import { Command, CommandType } from '~/types/intent';
 import { ActorURN, PlaceURN } from '~/types/taxonomy';
 import { Place } from '~/types/entity/place';
 import { Actor } from '~/types/entity/actor';
@@ -97,7 +97,7 @@ export type PureReducer<C, I> = (context: C, input: I) => C;
  */
 export type Transformer<T extends CommandType, A extends Record<string, any>> = PureReducer<TransformerContext, Command<T, A>>;
 
-export type CommandReducer<T extends CommandType, A extends Record<string, any>> = PureReducer<TransformerContext, AnyCommand<T, A>>;
+export type CommandReducer<T extends CommandType, A extends Record<string, any>> = PureReducer<TransformerContext, Command<T, A>>;
 
 export type InputTypeGuard<I extends Command, S extends I> = (input: I) => input is S;
 

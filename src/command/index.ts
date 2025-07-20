@@ -1,11 +1,4 @@
-import { CommandType, AnyCommand, AnyCommandTypeGuard } from '~/types/intent';
-
-/**
- * A utility type for creating command type guards
- * Uses our new flexible AnyCommand system
- */
-export type CommandTypeGuard<T extends CommandType, A extends Record<string, any> = Record<string, any>> =
-  AnyCommandTypeGuard<T, A>;
+import { CommandType, Command, CommandTypeGuard } from '~/types/intent';
 
 /**
  * Helper function to create a command type guard for any command type (system or actor)
@@ -13,7 +6,7 @@ export type CommandTypeGuard<T extends CommandType, A extends Record<string, any
 export function createCommandGuard<T extends CommandType, A extends Record<string, any> = Record<string, any>>(
   type: T
 ): CommandTypeGuard<T, A> {
-  return (input: any): input is AnyCommand<T, A> => {
+  return (input: any): input is Command<T, A> => {
     return input?.__type === 'command' && input.type === type;
   };
 }

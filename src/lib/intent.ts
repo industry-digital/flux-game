@@ -1,12 +1,11 @@
 import { randomUUID } from '~/lib/uuid';
 import {
-    Command,
-    CommandInput,
-    CommandType,
-    SystemCommandTypeGuard,
-    InputMetadata,
-    ActorCommand,
-    AnyCommand
+  Command,
+  CommandInput,
+  CommandType,
+  SystemCommandTypeGuard,
+  InputMetadata,
+  ActorCommand
 } from '~/types/intent';
 
 const identity = <I, O = I>(x: I): O => x as unknown as O;
@@ -17,7 +16,7 @@ export type FactoryOptions = {
 };
 
 type Transformer<I, O = I> = (input: I) => O;
-type CommandTransformer = Transformer<AnyCommand>;
+type CommandTransformer = Transformer<Command>;
 
 export const createCommand = <
   T extends CommandType,
@@ -26,7 +25,7 @@ export const createCommand = <
   input: CommandInput<T, A>,
   transform: CommandTransformer = identity,
   { now = Date.now(), generateUniqueId: uuid = randomUUID }: FactoryOptions = {},
-): AnyCommand<T, A> => {
+): Command<T, A> => {
   // Check if this should be an ActorCommand based on presence of actor field
   if ('actor' in input && input.actor) {
     const actorDefaults: ActorCommand<T, A> = {
@@ -67,7 +66,7 @@ export const isCommand = (input: unknown): input is Command => {
   );
 };
 
-export const isActorCommand = (input: unknown): input is Command<CommandType.CREATE_ACTOR> => {
+export const isActorCommand = (input: unknown): input is ActorCommand<CommandType.CREATE_ACTOR> => {
   return isCommand(input) && typeof input.actor === 'string';
 };
 
