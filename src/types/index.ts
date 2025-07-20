@@ -131,7 +131,7 @@ export {
 } from './handler';
 
 export {
-  SystemCommand,
+  Command as SystemCommand,
   CommandInput,
   CommandType,
   Command,

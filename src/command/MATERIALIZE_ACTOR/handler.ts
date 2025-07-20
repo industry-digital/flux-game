@@ -1,8 +1,7 @@
 import { isCommandOfType } from '~/lib/intent';
-import { SystemCommand } from '~/types/intent';
+import { Command } from '~/types/intent';
 import {
-  Command,
-  CommandType,
+  CommandType
 } from '~/types/intent';
 import {
   PureReducer,
@@ -13,7 +12,7 @@ import { EventType } from '~/types/event';
 import { SpecialVisibility } from '~/types/world/visibility';
 import { ActorURN } from '~/types/taxonomy';
 
-export type MaterializeActorCommand = SystemCommand<CommandType.MATERIALIZE_ACTOR, {
+export type MaterializeActorCommand = Command<CommandType.MATERIALIZE_ACTOR, {
   actorId: ActorURN;
 }>;
 

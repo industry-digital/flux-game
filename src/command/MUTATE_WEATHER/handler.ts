@@ -2,8 +2,7 @@ import { isCommandOfType } from '~/lib/intent';
 import { Weather } from '~/types/entity/place';
 import {
   Command,
-  CommandType,
-  SystemCommand,
+  CommandType
 } from '~/types/intent';
 import {
   PureReducer,
@@ -21,7 +20,7 @@ export type MutateWeatherArgs = {
 /**
  * Change the `weather` in specific Place
  */
-export type MutateWeatherCommand = SystemCommand<CommandType.MUTATE_WEATHER, MutateWeatherArgs>;
+export type MutateWeatherCommand = Command<CommandType.MUTATE_WEATHER, MutateWeatherArgs>;
 
 export const mutateWeatherReducer: PureReducer<TransformerContext, MutateWeatherCommand> = (context, command) => {
   const { declareEvent, declareError } = context;

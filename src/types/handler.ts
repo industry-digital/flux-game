@@ -1,5 +1,5 @@
 import { WorldEvent, WorldEventInput, EventType } from '~/types/event';
-import { SystemCommand, CommandType, AnyCommand, Command } from '~/types/intent';
+import { Command, CommandType, AnyCommand } from '~/types/intent';
 import { ActorURN, PlaceURN } from '~/types/taxonomy';
 import { Place } from '~/types/entity/place';
 import { Actor } from '~/types/entity/actor';
@@ -77,16 +77,16 @@ export type TransformerContext<W extends WorldProjection = WorldProjection> =
 
 /** Handlers that immutably update world state and declare emergent events */
 export type TransformerInterface<
-  I extends SystemCommand,
+  I extends Command,
 > = {
-  handles: (command: SystemCommand) => command is I;
+  handles: (command: Command) => command is I;
   dependencies: TransformerImplementation<I>[];
   /** Pure reducer that updates world projection and declares events */
   reduce: PureReducer<TransformerContext, I>;
 }
 
 export type TransformerImplementation<
-  I extends SystemCommand,
+  I extends Command,
 > = new (...args: any[]) => TransformerInterface<I>;
 
 /** Pure, deterministic reducer with zero side effects */
@@ -95,11 +95,11 @@ export type PureReducer<C, I> = (context: C, input: I) => C;
 /**
  * @deprecated Use PureReducer<TransformerContext, AnyCommand<T, A>> instead for more flexibility
  */
-export type Transformer<T extends CommandType, A extends Record<string, any>> = PureReducer<TransformerContext, SystemCommand<T, A>>;
+export type Transformer<T extends CommandType, A extends Record<string, any>> = PureReducer<TransformerContext, Command<T, A>>;
 
 export type CommandReducer<T extends CommandType, A extends Record<string, any>> = PureReducer<TransformerContext, AnyCommand<T, A>>;
 
-export type InputTypeGuard<I extends SystemCommand, S extends I> = (input: I) => input is S;
+export type InputTypeGuard<I extends Command, S extends I> = (input: I) => input is S;
 
 /** Handler that associates a reducer with its dependencies */
 export type PureHandlerInterface<

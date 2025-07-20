@@ -1,13 +1,12 @@
 import { randomUUID } from '~/lib/uuid';
 import {
-  SystemCommand,
-  CommandInput,
-  CommandType,
-  SystemCommandTypeGuard,
-  InputMetadata,
-  ActorCommand,
-  AnyCommand,
-  Command,
+    Command,
+    CommandInput,
+    CommandType,
+    SystemCommandTypeGuard,
+    InputMetadata,
+    ActorCommand,
+    AnyCommand
 } from '~/types/intent';
 
 const identity = <I, O = I>(x: I): O => x as unknown as O;
@@ -41,14 +40,14 @@ export const createCommand = <
     };
     return transform(actorDefaults) as ActorCommand<T, A>;
   } else {
-    const systemDefaults: SystemCommand<T, A> = {
+    const systemDefaults: Command<T, A> = {
       __type: 'command',
       id: input.id || uuid(),
       type: input.type,
       ts: input.ts || now,
       args: input.args as A,
     };
-    return transform(systemDefaults) as SystemCommand<T, A>;
+    return transform(systemDefaults) as Command<T, A>;
   }
 };
 
@@ -68,7 +67,7 @@ export const isCommand = (input: unknown): input is Command => {
   );
 };
 
-export const isActorCommand = (input: unknown): input is SystemCommand<CommandType.CREATE_ACTOR> => {
+export const isActorCommand = (input: unknown): input is Command<CommandType.CREATE_ACTOR> => {
   return isCommand(input) && typeof input.actor === 'string';
 };
 
@@ -94,7 +93,7 @@ export const isCommandInput = (input: unknown): input is CommandInput => {
 export const isCommandOfType = <T extends CommandType, A extends Record<string, any> = Record<string, any>>(
   input: unknown,
   type: T
-): input is SystemCommand<T, A> => {
+): input is Command<T, A> => {
   return isCommand(input) && input.type === type;
 };
 
@@ -102,9 +101,9 @@ export const isCommandOfType = <T extends CommandType, A extends Record<string, 
  * Type guard that checks if a validated Command is of a specific type
  */
 export const isValidatedCommandOfType = <T extends CommandType, A extends Record<string, any> = Record<string, any>>(
-  input: SystemCommand,
+  input: Command,
   type: T
-): input is SystemCommand<T, A> => {
+): input is Command<T, A> => {
   return input.type === type;
 };
 
@@ -114,7 +113,7 @@ export const isValidatedCommandOfType = <T extends CommandType, A extends Record
 export function createCommandGuard<T extends CommandType, A extends Record<string, any> = {}>(
   type: T
 ): SystemCommandTypeGuard<T, A> {
-  return (input: SystemCommand): input is SystemCommand<T, A> =>
+  return (input: Command): input is Command<T, A> =>
     'type' in input && input.type === type;
 }
 
@@ -124,7 +123,7 @@ export function createCommandGuard<T extends CommandType, A extends Record<strin
 export const createCommandTypeGuard = <T extends CommandType, A extends Record<string, any> = Record<string, any>>(
   type: T
 ) => {
-  return (input: unknown): input is SystemCommand<T, A> => {
+  return (input: unknown): input is Command<T, A> => {
     return isCommandOfType(input, type);
   };
 };

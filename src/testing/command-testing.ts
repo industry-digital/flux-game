@@ -1,6 +1,6 @@
-import { CommandType } from '~/types/intent';
+import { CommandInput, CommandType } from '~/types/intent';
 import { EntityType } from '~/types/entity/entity';
-import { SystemCommand } from '~/types/intent';
+import { Command } from '~/types/intent';
 import { createEntityUrn } from '~/lib/taxonomy';
 
 /**
@@ -9,10 +9,9 @@ import { createEntityUrn } from '~/lib/taxonomy';
  */
 export const createCommand = <T extends CommandType>(
   type: T,
-  overrides?: Partial<SystemCommand>
-): SystemCommand => {
-  const defaultCommand: SystemCommand = {
-    __type: 'command',
+  overrides?: Partial<Command>
+): Command => {
+  const defaults: CommandInput = {
     id: 'test-command-id',
     ts: 1234567890,
     type,
@@ -21,10 +20,11 @@ export const createCommand = <T extends CommandType>(
   };
 
   return {
-    ...defaultCommand,
+    __type: 'command',
+    ...defaults,
     ...overrides,
-    type // Ensure type is preserved
-  };
+    type,
+  } as Command;
 };
 
 
@@ -35,8 +35,8 @@ export const createCommand = <T extends CommandType>(
  */
 export const createCommandBatch = (
   count: number,
-  commandFactory: () => SystemCommand
-): SystemCommand[] => {
+  commandFactory: () => Command
+): Command[] => {
   return Array.from({ length: count }, (_, index) => ({
     ...commandFactory(),
     id: `test-command-${index}`
@@ -47,7 +47,7 @@ export const createCommandBatch = (
  * Hook-style utility for testing command handlers
  * Pure function that provides common test patterns
  */
-export const createHandlerTest = <T extends SystemCommand>(
+export const createHandlerTest = <T extends Command>(
   handler: { handles: (input: any) => boolean; reduce?: (context: any, input: T) => any },
   command: T,
   context?: any

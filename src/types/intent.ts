@@ -71,7 +71,7 @@ export type CommandInput<
  * A fully validated Command with guaranteed fields
  * Safe to execute without additional validation
  */
-export type SystemCommand<
+export type Command<
   T extends CommandType = CommandType,
   A extends Record<string, any> = Record<string, any>
 > =
@@ -114,7 +114,7 @@ export type ActorCommand<
   T extends CommandType,
   A extends Record<string, any> = Record<string, any>
 > =
-  & SystemCommand<T, A>
+  & Command<T, A>
   & {
 
     /**
@@ -143,7 +143,7 @@ export type SystemCommandTypeGuard<
   T extends CommandType,
   A extends Record<string, any> = Record<string, any>
 > =
-  InputTypeGuard<SystemCommand, SystemCommand<T, A>>;
+  InputTypeGuard<Command, Command<T, A>>;
 
 export type ActorCommandTypeGuard<
   T extends CommandType,
@@ -158,7 +158,7 @@ export type ActorCommandTypeGuard<
 export type AnyCommand<
   T extends CommandType = CommandType,
   A extends Record<string, any> = Record<string, any>
-> = SystemCommand<T, A> | ActorCommand<T, A>;
+> = Command<T, A> | ActorCommand<T, A>;
 
 /**
  * Type guard for any command (system or actor) with specific type and arguments

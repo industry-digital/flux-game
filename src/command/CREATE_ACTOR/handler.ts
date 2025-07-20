@@ -3,14 +3,14 @@ import { isCommandOfType } from '~/lib/intent';
 import { ActorInput } from '~/types/entity/actor';
 import { CommandType } from '~/types/intent';
 import {
-    PureReducer,
-    TransformerContext,
-    PureHandlerInterface,
+  PureReducer,
+  TransformerContext,
+  PureHandlerInterface,
 } from '~/types/handler';
 import { EventType } from '~/types/event';
-import { Command, SystemCommand } from '~/types/intent';
+import { Command } from '~/types/intent';
 
-export type CreateActorCommand = SystemCommand<CommandType.CREATE_ACTOR, ActorInput>;
+export type CreateActorCommand = Command<CommandType.CREATE_ACTOR, ActorInput>;
 
 export const createActorCommandReducer: PureReducer<TransformerContext, CreateActorCommand> = (
   context,

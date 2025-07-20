@@ -3,13 +3,13 @@ import { EventType, PlaceInput } from '~/types';
 import { isCommandOfType } from '~/lib/intent';
 import { CommandType } from '~/types/intent';
 import {
-    PureReducer,
-    TransformerContext,
-    PureHandlerInterface,
+  PureReducer,
+  TransformerContext,
+  PureHandlerInterface,
 } from '~/types/handler';
-import { Command, SystemCommand } from '~/types/intent';
+import { Command } from '~/types/intent';
 
-export type CreatePlaceCommand = SystemCommand<CommandType.CREATE_PLACE, PlaceInput>;
+export type CreatePlaceCommand = Command<CommandType.CREATE_PLACE, PlaceInput>;
 
 export const createPlaceCommandReducer: PureReducer<TransformerContext, CreatePlaceCommand> = (
   context,
