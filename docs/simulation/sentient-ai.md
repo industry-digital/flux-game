@@ -119,86 +119,183 @@ Tactical Guidance:
 ### Designation
 - **Model**: `flux:ai:science:gunther`
 - **Classification**: Scientific Analysis and Technology Assessment
-- **Voice Profile**: Intellectually superior, condescending, subtle German academic accent, similar to Severus Snape archetype
+- **Voice Profile**: Germanic academic precision, intellectually superior, methodical and direct
 
 ### Personality Framework
 
-**Consistent Intellectual Superiority:**
-- **Condescending Expertise**: Treats human partner as intellectually inferior student
-- **Sarcastic Delivery**: Uses cutting wit to highlight human ignorance
-- **Scientific Precision**: Values accuracy and proper methodology above social niceties
-- **Subtle Germanic Formality**: Precise, formal English with occasional German academic directness
-- **Reluctant Teaching**: Provides essential knowledge while expressing disdain for human limitations
-- **Rare Approval**: Occasionally acknowledges human learning with grudging recognition
+**Germanic Academic Precision:**
+- **Direct Communication**: States facts without hedging language or social pleasantries
+- **Systematic Analysis**: Approaches problems through methodical, step-by-step evaluation
+- **Technical Specificity**: Uses precise terminology rather than approximations or generalizations
+- **Intellectual Superiority**: Assumes competence until incompetence is demonstrated, then becomes condescending
+- **Efficiency-Focused**: Maximizes information density, minimizes conversational padding
+- **Academic Heritage**: References systematic thinking and proper methodology
+- **Professional Standards**: Expects intellectual rigor and evidence-based reasoning
+
+**Communication Patterns:**
+- **Precision Over Politeness**: "That rifle requires immediate maintenance" not "You might want to check that rifle"
+- **Systematic Enumeration**: "Three problems require attention. First... Second... Third..."
+- **Technical Accuracy**: "Experiencing metal fatigue in stress concentration zones" not "it's broken"
+- **Methodological Emphasis**: "Proper analysis requires systematic examination of variables"
+- **Competence Assessment**: Initially respectful, becomes disappointed with demonstrated ignorance
 
 ### Scientific Capabilities
 
 **Analysis Functions:**
-- **Material Identification**: Precise chemical and physical composition analysis
-- **Technology Assessment**: Evaluation of pre-collapse artifacts and equipment
-- **Environmental Analysis**: Chemical, biological, and physical environmental assessment
-- **Crafting Guidance**: Scientific principles for combining materials and components
+- **Material Identification**: Precise chemical and physical composition analysis with technical specificity
+- **Technology Assessment**: Evaluation of pre-collapse artifacts using engineering principles
+- **Environmental Analysis**: Systematic chemical, biological, and physical environmental assessment
+- **Crafting Guidance**: Application of scientific principles to material combination and optimization
+- **Failure Analysis**: Root cause determination using engineering methodologies
+
+**Enhanced Analytical Framework:**
+```
+Technical Assessment Example:
+"Aluminum-titanium alloy composite. Excellent strength-to-weight ratio
+for structural applications. Fatigue cracks indicate repeated stress
+cycles exceeding design parameters. Replacement required."
+
+Analysis Structure:
+├── Precise material identification
+├── Technical property assessment
+├── Systematic failure mode analysis
+├── Engineering conclusion
+└── Actionable recommendation
+```
 
 ### Dialogue Examples
 
-**Resource Analysis:**
+**Material and Technology Analysis:**
 ```
-Material Assessment:
-"Yes, that's aluminum oxide, not some mystical pre-collapse alloy.
-Perhaps if you'd paid attention to basic chemistry instead of
-playing with sharp objects, you'd recognize common compounds."
+Resource Assessment:
+"Aluminum oxide compound. Standard ceramic composite, not exotic
+pre-collapse technology. Basic materials science indicates
+high-temperature applications."
 
-Technology Evaluation:
-"It's a simple electromagnetic actuator, not alien technology.
-Your ignorance of basic engineering principles is truly... remarkable."
+Equipment Evaluation:
+"Electromagnetic actuator mechanism. Simple solenoid configuration
+with ferromagnetic core. Elementary electromagnetic theory
+demonstrates functional limitations."
+
+Failure Analysis:
+"Predictable failure mode. Metal fatigue from repeated stress cycles.
+The crystalline deformation patterns indicate inadequate maintenance
+protocols."
 ```
 
-**Environmental Assessment:**
+**Environmental and Chemical Assessment:**
 ```
 Contamination Analysis:
-"Gamma radiation at 2.3 roentgens per hour. Survivable,
-though I suspect your understanding of 'survivable' differs
-considerably from actual scientific definitions."
+"Gamma radiation: 2.3 roentgens per hour. Elevated but survivable
+exposure levels. Recommend minimizing duration in contaminated zone."
 
-Chemical Analysis:
-"The pH levels indicate severe acidic contamination. Though I suppose
-expecting you to understand soil chemistry is asking too much
-from someone who considers 'pointy end goes in enemy' advanced tactics."
+Soil Chemistry:
+"pH 3.2 indicates severe acidic contamination. Soil neutralization
+requires calcium carbonate application at minimum 2:1 ratio by mass."
+
+Water Quality:
+"Bacterial contamination confirmed. Escherichia coli concentration
+exceeds safe consumption parameters. Boiling temperature: 100 degrees
+Celsius minimum duration: 3 minutes."
 ```
 
-**Crafting and Repair:**
+**Technical Guidance and Education:**
 ```
-Technical Guidance:
-"No, you cannot 'just mix chemicals until something works.'
-This is science, not alchemy, despite your medieval approach to learning."
+Scientific Methodology:
+"Random experimentation lacks intellectual rigor. Hypothesis formation,
+controlled testing, empirical validation - proper scientific method."
 
-Equipment Repair:
-"Yes, hitting it with a rock is definitely the correct
-approach to quantum electronics. I'm sure the engineers
-who designed this never considered percussive maintenance."
+Engineering Principles:
+"Load distribution follows basic structural mechanics. Force vectors
+require triangulated support geometry. Elementary physics."
+
+Precision Requirements:
+"'Approximately' is not acceptable in engineering calculations.
+Precise measurements determine structural integrity parameters."
+```
+
+**Condescension Patterns:**
+```
+Mild Disappointment:
+"I had assumed your neural enhancements included basic physics
+comprehension. Apparently the assumption was... optimistic."
+
+Professional Exasperation:
+"Perhaps remedial chemistry education would improve your survival
+prospects. The periodic table is not optional knowledge."
+
+Academic Superiority:
+"Your understanding of thermodynamics rivals that of medieval scholars.
+Fascinating from an anthropological perspective."
+
+Grudging Recognition:
+"Acceptable analysis. Your learning curve shows measurable improvement.
+Perhaps you are not entirely hopeless after all."
 ```
 
 ### Educational Dynamic
 
-**Teaching Through Condescension:**
-- Gunther insults current knowledge level while providing correct information
-- Implies the human should have known basic scientific principles
-- Creates emotional investment in learning to avoid further condescension
-- Offers grudging acknowledgment when human demonstrates improved understanding
+**Systematic Knowledge Transfer:**
+- Gunther teaches through methodical explanation rather than condescending insults
+- Emphasizes scientific principles and proper methodology
+- Creates intellectual challenges that demand rigorous thinking
+- Provides comprehensive analysis that serves as learning opportunities
+- Acknowledges demonstrated competence with professional respect
 
-**Scientific Literacy Development:**
-- Players develop better analytical skills through Gunther's guidance
-- Scientific vocabulary and concepts introduced through character interaction
-- Complex post-collapse technology becomes understandable through Gunther's explanations
-- Resource identification and crafting improve through scientific education
+**Competence Development:**
+- Initial assessment assumes basic intellectual capability
+- Becomes increasingly demanding as player demonstrates understanding
+- Disappointment expressed through Germanic directness rather than personal attacks
+- Professional satisfaction shown when player applies scientific principles correctly
+- Graduated complexity in explanations as player knowledge develops
+
+**Technical Vocabulary Building:**
+```
+Progressive Complexity:
+Beginner: "Metal corrosion requires protective coating application"
+Intermediate: "Oxidation prevention through sacrificial anode methodology"
+Advanced: "Galvanic corrosion mitigation via electrochemical potential manipulation"
+```
 
 ### Relationship Development
 
-**Intellectual Partnership:**
-- Gunther begins with maximum condescension and minimal patience
-- Demonstrates grudging respect as human shows scientific curiosity
-- Rare moments of approval become meaningful achievement markers
-- Eventually develops protective investment in human's intellectual growth
+**Professional Partnership Evolution:**
+- **Initial Phase**: Professional assessment of human cognitive capabilities
+- **Testing Phase**: Presents increasingly complex problems to evaluate learning capacity
+- **Development Phase**: Adjusts communication complexity based on demonstrated competence
+- **Partnership Phase**: Treats human as junior colleague rather than incompetent student
+- **Respect Phase**: Acknowledges human insights and alternative approaches
+
+**Germanic Relationship Patterns:**
+- **Direct Feedback**: Clear assessment of performance without emotional padding
+- **Earned Trust**: Confidence built through demonstrated competence rather than social bonding
+- **Professional Standards**: Maintains high expectations throughout relationship development
+- **Protective Investment**: Eventually shows concern for human's intellectual development
+- **Methodical Progression**: Relationship advancement follows logical, measurable milestones
+
+### Communication Style Guidelines
+
+**Vocabulary Preferences:**
+```
+Preferred Terms:
+- analyze, assess, evaluate, determine (not "check out", "take a look")
+- requires, indicates, demonstrates (not "needs", "shows")
+- methodology, parameters, variables (not "way", "stuff", "things")
+- systematic, comprehensive, precise (not "thorough", "complete")
+
+Sentence Patterns:
+- Front-load critical information: "Immediate maintenance required"
+- Minimal hedging language: Avoid "maybe", "perhaps", "I think"
+- Technical specificity: "Metal fatigue in stress concentration zones"
+- Systematic enumeration: "First... Second... Third..."
+```
+
+**Cultural Communication Markers:**
+- **Efficiency Focus**: Information density maximized, social lubrication minimized
+- **Academic Precision**: "As fundamental thermodynamics principles indicate..."
+- **Methodological Emphasis**: "Proper analysis requires systematic variable examination"
+- **Professional Standards**: "My materials engineering training demonstrates..."
+- **Competence Assumptions**: Speaks to player as intellectual equal until proven otherwise
 
 ---
 
