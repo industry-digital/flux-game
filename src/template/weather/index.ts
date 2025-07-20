@@ -1,166 +1,116 @@
 import { Template } from '~/types/template';
 import { Weather } from '~/types/entity/place';
+import { PotentiallyImpureOperations } from '~/types/handler';
+import { WeatherReducer, WeatherReducerContext } from './types';
+import { isValidWeather, isValidWeatherTransition, isSignificantWeatherChange } from './utils/validation';
+import { getTimeOfDay } from './utils/time';
+import { BASE62_CHARSET, uniqid } from '~/lib/random';
 
-export type DescribeWeatherProps = {
+// Import all reducers
+import { applySolarGeometry } from './reducers/solar';
+import { applyCloudCover } from './reducers/clouds';
+import { applyPrecipitation } from './reducers/precipitation';
+import { applyFog } from './reducers/fog';
+import { enhanceNarrative } from './reducers/narrative';
+import { renderFinalDescription, extractFinalDescription } from './reducers/final';
+
+export type DescribeWeatherChangeProps = PotentiallyImpureOperations & {
   previous?: Weather;
   current: Weather;
 };
 
-export const describeWeather: Template<DescribeWeatherProps> = (props) => {
-  const enrichedPrevious: EnrichedWeather | null = props.previous ? { ...props.previous, date: new Date(props.previous.ts) } : null;
-  const enrichedCurrent: EnrichedWeather = { ...props.current, date: new Date(props.current.ts) };
+/**
+ * Main weather description function using the reducer pipeline architecture
+ * Generates human-readable descriptions of meaningful atmospheric transitions
+ */
+export const describeWeatherChange: Template<DescribeWeatherChangeProps> = (props) => {
+  // Early validation and exit conditions
+  if (!props.previous) {
+    return ''; // No previous state to compare against
+  }
 
-  const previousDescriptors = enrichedPrevious ? getAtmosphericDescriptors(enrichedPrevious) : {};
-  const currentDescriptors = getAtmosphericDescriptors(enrichedCurrent);
+  if (!isValidWeather(props.current) || !isValidWeather(props.previous)) {
+    props.debug?.('Invalid weather data provided');
+    return ''; // Invalid weather data
+  }
 
-  return '';
+  if (!isValidWeatherTransition(props.previous, props.current)) {
+    props.debug?.('Invalid weather transition detected');
+    return ''; // Unrealistic transition
+  }
+
+  if (!isSignificantWeatherChange(props.previous, props.current)) {
+    props.debug?.('Weather change not significant enough to warrant description');
+    return ''; // No significant change
+  }
+
+  // Create the reducer pipeline context
+  const context = createInitialContext(props);
+
+  props.debug?.('Starting weather description pipeline');
+
+  // Execute the reducer pipeline
+  const finalContext = executeReducerPipeline(context, props.current);
+
+  // Extract and return the final description
+  const description = extractFinalDescription(finalContext);
+  props.debug?.(`Weather description generated: "${description}"`);
+
+  return description;
 };
 
-type EnrichedWeather = Weather & {
-  date: Date;
-};
+// WeatherReducerContext is imported from ./types
 
-export type AtmosphericDescriptor = keyof Omit<Weather, 'ts'>;
+/**
+ * Creates the initial context for the reducer pipeline
+ */
+const createInitialContext = (props: DescribeWeatherChangeProps): WeatherReducerContext => {
+  const currentHour = new Date(props.current.ts).getUTCHours();
 
-export const getAtmosphericDescriptors = (weather: EnrichedWeather): Record<AtmosphericDescriptor, string> => {
   return {
-    temperature: describeTemperature(weather),
-    pressure: describePressure(weather),
-    humidity: describeHumidity(weather),
-    precipitation: describePrecipitation(weather),
-    ppfd: describePhotonFluxDensity(weather),
-    clouds: describeClouds(weather),
+    // Spread in all injected impure operations
+    random: props.random || (() => Math.random()),
+    timestamp: props.timestamp || (() => Date.now()),
+    uniqid: () => uniqid(8, BASE62_CHARSET),
+    debug: props.debug || (() => {}),
+
+    // Weather context
+    previous: props.previous!,
+
+    // Initial weather description state
+    narrative: [] as string[],
+    descriptors: {
+      timeOfDay: getTimeOfDay(currentHour) as 'dawn' | 'day' | 'dusk' | 'night',
+      mood: 'neutral' as const,
+    },
+    intensity: 0,
   };
 };
 
-const describeTemperature = ({ temperature }: Weather): string => {
-  if (temperature < -10) {
-    return 'bitter, freezing';
-  }
-
-  if (temperature < 0) {
-    return 'freezing';
-  }
-
-  if (temperature < 10) {
-    return 'cold';
-  }
-
-  if (temperature < 20) {
-    return 'cool';
-  }
-  if (temperature < 25) {
-    return 'mild';
-  }
-  if (temperature < 30) {
-    return 'warm';
-  }
-
-  if (temperature < 40) {
-    return 'hot';
-  }
-
-  return 'unimaginably hot';
-};
-
-const describePressure = ({ pressure }: Weather): string => {
-  if (pressure < 900) {
-    return 'low pressure';
-  }
-
-  return 'normal pressure';
-};
-
-const describeHumidity = ({ humidity }: Weather): string => {
-  if (humidity < 30) {
-    return 'dry';
-  }
-
-  if (humidity < 60) {
-    return 'humid';
-  }
-
-  return 'damp';
-};
-
-const describePrecipitation = ({ precipitation }: Weather): string => {
-  if (precipitation < 0.1) {
-    return 'light drizzle';
-  }
-
-  if (precipitation < 0.5) {
-    return 'moderate drizzle';
-  }
-
-  if (precipitation < 1) {
-    return 'light rain';
-  }
-
-  if (precipitation < 2) {
-    return 'moderate rain';
-  }
-
-  if (precipitation < 5) {
-    return 'heavy rain';
-  }
-
-  return 'torrential rain';
-};
-
 /**
- * Here we simply describe the amount of light that is being projected onto the ground.
- * PPFD is measured in photons per unit area per unit time.
+ * Executes the complete reducer pipeline in sequence
+ * Each reducer processes atmospheric phenomena and builds narrative
  */
-const describePhotonFluxDensity = ({ ppfd, date }: EnrichedWeather): string => {
-  const isDaytime = date.getHours() >= 6 && date.getHours() < 18;
+const executeReducerPipeline = (initialContext: WeatherReducerContext, current: Weather): WeatherReducerContext => {
+  const reducers: WeatherReducer[] = [
+    applySolarGeometry,      // Handle sun position, sunrise/sunset
+    applyCloudCover,         // Handle cloud formation/clearing
+    applyPrecipitation,      // Handle rain/weather events
+    applyFog,                // Handle fog formation/dissipation
+    enhanceNarrative,        // Merge related phenomena into elegant descriptions
+    renderFinalDescription,  // Format final output
+  ];
 
-  if (ppfd === 0) {
-    return 'It is pitch black. You cannot see a thing.';
-  }
-
-  if (ppfd < 50) {
-    return 'It is almost pitch black. You can barely see a thing.';
-  }
-
-  if (ppfd < 100) {
-    return 'The light is very dim, like deep twilight or heavy storm clouds.';
-  }
-
-  if (ppfd < 200) {
-    return 'The light is dim, similar to a heavily overcast day.';
-  }
-
-  if (ppfd < 500) {
-    return 'The light is moderate, like a cloudy but bright day.';
-  }
-
-  if (ppfd < 800) {
-    return 'The light is good, similar to light cloud cover.';
-  }
-
-  if (ppfd < 1200) {
-    return 'The light is bright, like a partly sunny day.';
-  }
-
-  if (ppfd < 1600) {
-    return 'The light is very bright, like a clear sunny day.';
-  }
-
-  if (ppfd < 2000) {
-    return 'The light is brilliant, like direct sunlight on a crystal clear day.';
-  }
-
-  return 'The light is intensely bright, like tropical midday sun.';
-};
-
-export const describeClouds = ({ clouds }: Weather): string => {
-  if (clouds < 0.1) {
-    return 'clear skies';
-  }
-
-  if (clouds < 0.3) {
-    return 'light clouds';
-  }
-
-  return 'overcast';
+  // Execute reducers in sequence, each building on the previous context
+  return reducers.reduce(
+    (context, reducer) => {
+      try {
+        return reducer(context, current);
+      } catch (error) {
+        context.debug?.(`Reducer error: ${error}`);
+        return context; // Continue with previous context on error
+      }
+    },
+    initialContext
+  );
 };

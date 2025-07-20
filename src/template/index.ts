@@ -15,3 +15,5 @@ export { renderHumanoidAnatomicalPart } from './anatomy';
 // Materialization templates
 export type { ActorMaterializationProps } from './materialization';
 export { renderActorDidMaterialize, renderActorDidDematerialize } from './materialization';
+
+export { describeWeatherChange } from './weather';

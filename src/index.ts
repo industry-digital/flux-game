@@ -9,13 +9,16 @@ export * from '~/template';
 // Explicit fact type exports to fix declaration merging issues
 export type {
   AbstractFact,
-  FactType,
   WorldEventMessageDictionary,
   ActorLocationFact,
   WorldEventFact,
   ViewFact,
   SystemFact,
   Fact,
+} from '~/types/fact';
+
+export {
+  FactType
 } from '~/types/fact';
 
 export {

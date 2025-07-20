@@ -18,9 +18,9 @@ export type WeatherDescription = {
   intensity: number;             // 0-1, how dramatic the change is
 };
 
-type WeatherReducerContext = PotentiallyImpureOperations & WeatherDescription & {
+export type WeatherReducerContext = PotentiallyImpureOperations & WeatherDescription & {
   previous: Weather;
-}
+};
 
 
 /**
