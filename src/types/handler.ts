@@ -36,8 +36,12 @@ export type ExecutionError = {
 };
 
 export type ErrorDeclarationProducer = {
+  /**
+   * @deprecated Use declareError(message: string, trace: string) instead
+   */
   declareError(error: Error): void;
   declareError(message: string): void;
+  declareError(message: string, trace: string): void;
 };
 
 export type ErrorDeclarationConsumer = {
