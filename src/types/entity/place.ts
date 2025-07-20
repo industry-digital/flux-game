@@ -106,6 +106,13 @@ export type Weather = {
    */
   clouds: number;
 
+  /**
+   * This is a normalized value between 0 and 1 that represents the intensity of fog.
+   * 0 = no fog, 1 = dense fog.
+   * Computed from temperature-dewpoint spread and cloud cover.
+   */
+  fog: number;
+
   // METADATA
   /**
    * The last time the weather was updated, in milliseconds since the Unix epoch
