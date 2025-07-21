@@ -55,12 +55,34 @@ describe('Weather Description System', () => {
     });
 
     it('returns empty string for insignificant weather changes', () => {
-      const previous = createWeather();
-      const current = createWeather({ temperature: 20.5 }); // Tiny change
+      const baseTime = Date.now();
+      const previous = createWeather({ temperature: 20, ts: baseTime - 3600000 }); // 1 hour ago
+      const current = createWeather({ temperature: 20.5, ts: baseTime }); // 0.5°C change over 1 hour (rate: 0.5°C/hour < 2°C/hour threshold)
       const props = createProps(previous, current);
 
       const result = describeWeatherChange(props);
       expect(result).toBe('');
+    });
+
+    it('treats weather changes consistently regardless of sampling frequency', () => {
+      const baseTime = Date.now();
+
+      // Same rate of change (3°C/hour) sampled at different frequencies
+      // High frequency: 0.05°C change over 1 minute
+      const prevHighFreq = createWeather({ temperature: 20, ts: baseTime - 60000 }); // 1 minute ago
+      const currHighFreq = createWeather({ temperature: 20.05, ts: baseTime });
+      const propsHighFreq = createProps(prevHighFreq, currHighFreq);
+
+      // Low frequency: 3°C change over 1 hour
+      const prevLowFreq = createWeather({ temperature: 20, ts: baseTime - 3600000 }); // 1 hour ago
+      const currLowFreq = createWeather({ temperature: 23, ts: baseTime });
+      const propsLowFreq = createProps(prevLowFreq, currLowFreq);
+
+      const resultHighFreq = describeWeatherChange(propsHighFreq);
+      const resultLowFreq = describeWeatherChange(propsLowFreq);
+
+      // Both should be treated the same (significant change rate of 3°C/hour > 2°C/hour threshold)
+      expect(resultHighFreq.length > 0).toBe(resultLowFreq.length > 0);
     });
   });
 
@@ -407,26 +429,26 @@ describe('Weather Description System', () => {
   });
 
     describe('Atmospheric Mood Detection', () => {
-        it('detects ominous conditions', () => {
-      const baseTime = Date.now();
-            const previous = createWeather({
-        clouds: 20,
-        pressure: 1020,
-        ppfd: 1200,
-        precipitation: 0,
-        ts: baseTime - 3600000 // 1 hour ago
-      });
-      const current = createWeather({
-        clouds: 85,
-        pressure: 995, // Changed from 985 to 995 to stay within 30 hPa/hour limit (25 hPa/hour change)
-        ppfd: 300,
-        precipitation: 3,
-        ts: baseTime
-      });
-            const props = createProps(previous, current);
+      it('detects ominous conditions', () => {
+        const baseTime = Date.now();
+        const previous = createWeather({
+          clouds: 20,
+          pressure: 1020,
+          ppfd: 1200,
+          precipitation: 0,
+          ts: baseTime - 3600000 // 1 hour ago
+        });
+        const current = createWeather({
+          clouds: 85,
+          pressure: 995, // Changed from 985 to 995 to stay within 30 hPa/hour limit (25 hPa/hour change)
+          ppfd: 300,
+          precipitation: 3,
+          ts: baseTime
+        });
+        const props = createProps(previous, current);
 
-      const result = describeWeatherChange(props);
-      expect(result).toMatch(/ominous|dark|menacing|heavy|shadow|storm.*cloud|burden|drum.*against/i);
+        const result = describeWeatherChange(props);
+        expect(result).toMatch(/ominous|dark|menacing|heavy|shadow|storm.*cloud|burden|drum.*against/i);
     });
 
     it('detects peaceful conditions', () => {

@@ -354,7 +354,7 @@ export function calculateCloudCover(
 
 ```typescript
 export function calculatePPFD(cloudCover: number, timestamp: number): number {
-  const hour = new Date(timestamp).getUTCHours();
+  const hour = new Date(timestamp).getHours(); // Honors TZ environment variable
   const solarAngle = Math.sin((hour - 6) * Math.PI / 12);
   const maxPPFD = Math.max(0, solarAngle * 2000);
   const cloudReduction = (100 - cloudCover) / 100;
@@ -387,7 +387,7 @@ export function getSeasonForTimestamp(timestamp: number): string {
 **Diurnal Temperature Effects**:
 ```typescript
 export function calculateDiurnalTemperatureEffect(timestamp: number): number {
-  const hour = new Date(timestamp).getUTCHours();
+  const hour = new Date(timestamp).getHours(); // Honors TZ environment variable
   const solarAngle = (hour - 6) * Math.PI / 12;
   return Math.sin(solarAngle) * 8; // ±8°C daily variation
 }

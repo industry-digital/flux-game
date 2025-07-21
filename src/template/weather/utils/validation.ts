@@ -54,49 +54,53 @@ export const isValidWeather = (weather: Weather): boolean => {
 
 /**
  * Checks if weather change is significant enough to warrant description
+ * Uses rate-based thresholds to be insensitive to sampling frequency
  */
 export const isSignificantWeatherChange = (
   previous: Weather,
   current: Weather
 ): boolean => {
-  // Temperature change >= 3°C (human-perceptible)
-  if (Math.abs(current.temperature - previous.temperature) >= 3) {
-    return true;
+  // Calculate time elapsed in hours
+  const timeElapsedMs = current.ts - previous.ts;
+  const timeElapsedHours = timeElapsedMs / (1000 * 60 * 60);
+
+  // Avoid division by zero for same-timestamp measurements
+  if (timeElapsedHours <= 0) {
+    return false;
   }
 
-  // Pressure change >= 5 hPa (weather-significant)
-  if (Math.abs(current.pressure - previous.pressure) >= 5) {
-    return true;
-  }
+  // Define significant rates of change per hour
+  const significantRates = {
+    temperature: 2,     // 2°C/hour (noticeable temperature change)
+    pressure: 3,        // 3 hPa/hour (weather-significant pressure change)
+    humidity: 10,       // 10%/hour (noticeable atmospheric change)
+    precipitation: 0.3, // 0.3 mm/hour change rate (noticeable rain change)
+    ppfd: 80,           // 80 μmol/m²/s per hour (captures dawn/dusk transitions)
+    clouds: 15,         // 15%/hour (noticeable sky change)
+    fog: 0.2,           // 0.2/hour (significant visibility change)
+  };
 
-  // Humidity change >= 15% (noticeable atmospheric change)
-  if (Math.abs(current.humidity - previous.humidity) >= 15) {
-    return true;
-  }
+  // Calculate actual rates of change
+  const rates = {
+    temperature: Math.abs(current.temperature - previous.temperature) / timeElapsedHours,
+    pressure: Math.abs(current.pressure - previous.pressure) / timeElapsedHours,
+    humidity: Math.abs(current.humidity - previous.humidity) / timeElapsedHours,
+    precipitation: Math.abs(current.precipitation - previous.precipitation) / timeElapsedHours,
+    ppfd: Math.abs(current.ppfd - previous.ppfd) / timeElapsedHours,
+    clouds: Math.abs(current.clouds - previous.clouds) / timeElapsedHours,
+    fog: Math.abs(current.fog - previous.fog) / timeElapsedHours,
+  };
 
-  // Precipitation change >= 0.5 mm/hour (noticeable rain change)
-  if (Math.abs(current.precipitation - previous.precipitation) >= 0.5) {
-    return true;
-  }
-
-  // PPFD change >= 30% or 200 absolute units (noticeable light change)
-  const ppfdDelta = Math.abs(current.ppfd - previous.ppfd);
-  const ppfdChangePercent = ppfdDelta / Math.max(previous.ppfd, 1);
-  if (ppfdChangePercent >= 0.3 || ppfdDelta >= 200) {
-    return true;
-  }
-
-  // Cloud cover change >= 20% (noticeable sky change)
-  if (Math.abs(current.clouds - previous.clouds) >= 20) {
-    return true;
-  }
-
-  // Fog change >= 0.3 (significant visibility change)
-  if (Math.abs(current.fog - previous.fog) >= 0.3) {
-    return true;
-  }
-
-  return false;
+  // Check if any rate exceeds its threshold
+  return (
+    rates.temperature >= significantRates.temperature ||
+    rates.pressure >= significantRates.pressure ||
+    rates.humidity >= significantRates.humidity ||
+    rates.precipitation >= significantRates.precipitation ||
+    rates.ppfd >= significantRates.ppfd ||
+    rates.clouds >= significantRates.clouds ||
+    rates.fog >= significantRates.fog
+  );
 };
 
 /**
