@@ -62,15 +62,6 @@ describe('Weather Description System', () => {
       const result = describeWeatherChange(props);
       expect(result).toBe('');
     });
-
-    it('returns empty string for unrealistic transitions', () => {
-      const previous = createWeather({ temperature: 20 });
-      const current = createWeather({ temperature: 80, ts: previous.ts + 60000 }); // 60°C change in 1 minute
-      const props = createProps(previous, current);
-
-      const result = describeWeatherChange(props);
-      expect(result).toBe('');
-    });
   });
 
   describe('Solar Transitions', () => {

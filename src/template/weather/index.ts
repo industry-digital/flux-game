@@ -2,7 +2,7 @@ import { Template } from '~/types/template';
 import { Weather } from '~/types/entity/place';
 import { PotentiallyImpureOperations } from '~/types/handler';
 import { WeatherReducer, WeatherReducerContext } from './types';
-import { isValidWeather, isValidWeatherTransition, isSignificantWeatherChange } from './utils/validation';
+import { isValidWeather, isSignificantWeatherChange } from './utils/validation';
 import { getTimeOfDay } from './utils/time';
 import { BASE62_CHARSET, uniqid } from '~/lib/random';
 
@@ -32,11 +32,6 @@ export const describeWeatherChange: Template<DescribeWeatherChangeProps> = (prop
   if (!isValidWeather(props.current) || !isValidWeather(props.previous)) {
     props.debug?.('Invalid weather data provided');
     return ''; // Invalid weather data
-  }
-
-  if (!isValidWeatherTransition(props.previous, props.current)) {
-    props.debug?.('Invalid weather transition detected');
-    return ''; // Unrealistic transition
   }
 
   if (!isSignificantWeatherChange(props.previous, props.current)) {

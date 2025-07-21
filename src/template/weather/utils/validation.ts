@@ -53,49 +53,6 @@ export const isValidWeather = (weather: Weather): boolean => {
 };
 
 /**
- * Validates that weather transition is physically reasonable
- */
-export const isValidWeatherTransition = (
-  previous: Weather,
-  current: Weather,
-  maxTimeDeltaMs: number = 14400000 // 4 hours default - allow reasonable weather transitions
-): boolean => {
-  if (!isValidWeather(previous) || !isValidWeather(current)) {
-    return false;
-  }
-
-  const timeDelta = current.ts - previous.ts;
-
-  // Time must move forward and not too rapidly
-  if (timeDelta <= 0 || timeDelta > maxTimeDeltaMs) {
-    return false;
-  }
-
-  // Check for unrealistic rapid changes (per hour limits)
-  const hoursElapsed = timeDelta / 3600000;
-
-  // Temperature change: max 20°C/hour (very extreme storm front)
-  const tempChangePerHour = Math.abs(current.temperature - previous.temperature) / hoursElapsed;
-  if (tempChangePerHour > 20) {
-    return false;
-  }
-
-  // Pressure change: max 30 hPa/hour (extreme pressure gradient)
-  const pressureChangePerHour = Math.abs(current.pressure - previous.pressure) / hoursElapsed;
-  if (pressureChangePerHour > 30) {
-    return false;
-  }
-
-  // Humidity change: max 80%/hour (very extreme conditions)
-  const humidityChangePerHour = Math.abs(current.humidity - previous.humidity) / hoursElapsed;
-  if (humidityChangePerHour > 80) {
-    return false;
-  }
-
-  return true;
-};
-
-/**
  * Checks if weather change is significant enough to warrant description
  */
 export const isSignificantWeatherChange = (
