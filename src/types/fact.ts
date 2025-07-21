@@ -28,6 +28,7 @@ export type AbstractFact<
   Subject = any,
   Text = string,
 > = {
+  trace: string;
   type: Type;
   subject: Subject;
   text: Text;

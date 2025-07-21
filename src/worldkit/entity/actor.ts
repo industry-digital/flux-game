@@ -3,17 +3,17 @@ import { createModifiableScalarAttribute, createModifiableBoundedAttribute } fro
 import lodash from 'lodash';
 import { createEntityUrn, isUrnOfVocabulary } from '~/lib/taxonomy';
 import {
-    AbstractEntity,
-    EntityType,
+  AbstractEntity,
+  EntityType,
 } from '~/types/entity/entity';
 import {
-    Actor,
-    ActorInput,
-    ActorStat,
-    ActorType,
+  Actor,
+  ActorInput,
+  ActorStat,
+  ActorType,
 } from '~/types/entity/actor';
 import { ActorURN } from '~/types/taxonomy';
-import { WellKnownPlace } from '~/worldkit/entity/place';
+import { WellKnownPlace } from '~/types/world/space';
 
 const { merge } = lodash;
 

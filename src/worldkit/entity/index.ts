@@ -6,7 +6,6 @@ export {
   addActorToPlace,
   removeActorFromPlace,
   getExitDirection,
-  WellKnownPlace
 } from './place';
 export type { PlaceDictionary } from './place';
 

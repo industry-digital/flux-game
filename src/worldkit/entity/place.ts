@@ -7,6 +7,7 @@ import { Direction } from '~/types/world/space';
 import { createEntity, FactoryOptions } from './util';
 import { extractPathFromUrn } from '~/lib/taxonomy';
 import { ExitInput, Exits, PlaceInput } from '~/types/entity/place';
+import { WellKnownPlace } from '~/types/world/space';
 import lodash from 'lodash';
 
 const { merge } = lodash;
@@ -46,10 +47,6 @@ export const createPlace = (
 
   return transform(base);
 };
-
-export enum WellKnownPlace {
-  NOWHERE = 'flux:place:nowhere',
-}
 
 /**
  * Factory function to create an Exit with standard defaults

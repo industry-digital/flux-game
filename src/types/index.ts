@@ -245,7 +245,7 @@ export {
 
 export {
   Direction,
-  WellKnownPlaceName,
+  WellKnownPlace,
 } from './world/space';
 
 export {

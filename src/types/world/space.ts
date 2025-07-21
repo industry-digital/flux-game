@@ -18,7 +18,7 @@ export enum Direction {
   UNKNOWN = 'unknown',
 }
 
-export enum WellKnownPlaceName {
-  NOWHERE = 'nowhere',
-  WORLD = 'world',
+export enum WellKnownPlace {
+  NOWHERE = 'flux:place:nowhere',
+  ORIGIN = 'flux:place:origin',
 }
