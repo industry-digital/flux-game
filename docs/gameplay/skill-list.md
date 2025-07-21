@@ -3,20 +3,29 @@
 ## Martial Skills `flux:skill:martial:*`
 
 ```
-weapon:melee:1h - One-handed melee weapon
-weapon:melee:2h - Two-handed melee weapon
+weapon:melee:1h - One-handed melee weapons
+weapon:melee:2h - Two-handed melee weapons
+weapon:reach:2h - Two-handed reach weapons
+weapon:reach:thrown - Javelin, throwing knife, etc.
+weapon:reach:tethered - Tethered weapon, e.g. kasuri-gama
 weapon:ranged:bow - Shortbow, longbow, crossbow, etc.
-weapon:thrown - Javelin, throwing knife, etc.
-weapon:ballistic:1h - Pistol, submachine gun
-weapon:ballistic:2h - Rifle, machine gun, shotgun
-weapon:kinetic:2h - Gauss rifle, railgun, etc.
-weapon:thermal:1h - Plasma pistol
-weapon:thermal:2h - Melta cannon, flamethrower, etc.
+weapon:shield:small - Bucklers, targes
+weapon:shield:heavy - Tower shields, large shields
+```
 
-defense:armor - Armor, shields, etc.
-defense:dodge - Dodge attacks
-defense:block - Block attacks
-defense:parry - Parry attacks
+### Armor Skills
+```
+armor:light
+armor:heavy
+```
+
+### Combat Skills `flux:skill:combat:*`
+```
+evade - Evade attacks
+shell - Forcefully resist attacks
+counter - Counter attack
+flank - Move to flank the enemy
+disengage - Move away from the enemy without provoking attacks of opportunity
 ```
 
 ## Survival
@@ -37,14 +46,23 @@ survival:mining - Mining for resources
 salvage - Identifying useful components in ruins
 rigging - Combining primitive + industrial materials
 fabrication - Creating new tools from salvaged materials
-electronics - Repairing and maintaining electronic systems
 ```
 
-## Athletics
+# Science Skills `flux:skill:science:*`
 
 ```
-athletics:acrobatics
-athletics:climbing
-athletics:swimming
-athletics:parkour
+botany - Plant identification, cultivation, and harvesting
+mycology - Fungi identification, cultivation, and harvesting
+medicine - Formal training in medicine
+physics - Quantum physics, particle physics, etc.
+chemistry - Organic chemistry, inorganic chemistry, etc.
+computing - Programming, electronics, etc.
+```
+
+## Athletics `flux:skill:athletics:*`
+
+```
+acrobatics - Acrobatic feats, gymnastics, tumbling, etc.
+climbing - Climbing, rappelling, etc.
+swimming - Swimming, diving, etc.
 ```

@@ -16,7 +16,7 @@ function createWaterBodySchema(
       precipitation: { min: 1  }
     },
 
-    // By default, all bodies of water replenish in an hour
+    // By default, all bodies of water replenish in an hour, no matter their size
     growth: {
       curve: Easing.EASE_OUT_QUAD,
       duration: [1, TimeUnit.HOUR]

@@ -3,13 +3,17 @@ import { ResourceSchema } from '~/types/schema/resource';
 import { Easing } from '~/lib/easing';
 
 /**
- * Factory function for creating flower resource schemas using a transformer approach
+ * Factory function for creating flower resource schemas
+ * @param transform - A function that maps the supplied defaults into a new schema
  */
 function createFlowerSchema(
   transform: (defaults: ResourceSchema) => ResourceSchema
 ): ResourceSchema {
   const defaults: ResourceSchema = {
-    name: "flower",
+    name: 'flower',
+
+    // By default, all flowers yield nectar
+    provides: ['flower', 'nectar'],
 
     // By default, flowers need moderate conditions to grow
     requirements: {
@@ -39,8 +43,6 @@ function createFlowerSchema(
       capacity: 100
     },
 
-    // By default, all flowers yield nectar
-    provides: ['nectar'],
 
     description: ({ fullness }, now, { name }) => {
       if (fullness >= 1) {
@@ -74,7 +76,7 @@ export const DesertMarigoldSchema = createFlowerSchema((defaults) => ({
 
 export const WildBergamotSchema = createFlowerSchema((defaults) => ({
   ...defaults,
-  name: { singular: 'wild bergamot', plural: 'wild bergamot' },
+  name: 'wild bergamot',
   requirements: {
     ...defaults.requirements,
     temperature: { min: 5, max: 32 },
@@ -98,8 +100,8 @@ export const WildBergamotSchema = createFlowerSchema((defaults) => ({
 
 export const PurpleConeflowerSchema = createFlowerSchema((defaults) => ({
   ...defaults,
-  name: { singular: 'purple coneflower', plural: 'purple coneflowers' },
-  provides: [...defaults.provides, 'seeds'],
+  name: 'purple coneflower',
+  provides: [...defaults.provides, 'seed'],
   requirements: {
     ...defaults.requirements,
     temperature: { min: 5, max: 32 },
@@ -121,7 +123,7 @@ export const PurpleConeflowerSchema = createFlowerSchema((defaults) => ({
 
 export const BlackEyedSusanSchema = createFlowerSchema((defaults) => ({
   ...defaults,
-  name: { singular: 'black-eyed susan', plural: 'black-eyed susans' },
+  name: 'black-eyed susan',
   requirements: {
     ...defaults.requirements,
     temperature: { min: 5, max: 32 },
@@ -142,7 +144,7 @@ export const BlackEyedSusanSchema = createFlowerSchema((defaults) => ({
 
 export const WildColumbineSchema = createFlowerSchema((defaults) => ({
   ...defaults,
-  name: { singular: 'wild columbine', plural: 'wild columbines' },
+  name: 'wild columbine',
   requirements: {
     ...defaults.requirements,
     temperature: { min: 0, max: 30 },
@@ -161,7 +163,8 @@ export const WildColumbineSchema = createFlowerSchema((defaults) => ({
 
 export const FireweedSchema = createFlowerSchema((defaults) => ({
   ...defaults,
-  name: { singular: 'fireweed', plural: 'fireweed' },
+  name: 'fireweed',
+  provides: [...defaults.provides, 'fiber'],
   requirements: {
     ...defaults.requirements,
     temperature: { min: 0, max: 30 },
@@ -172,9 +175,9 @@ export const FireweedSchema = createFlowerSchema((defaults) => ({
   },
   description: (state) => {
     if (state.fullness < 0.4) {
-      return 'sparse fireweed colonizing the mountain clearing';
+      return 'sparse fireweed flowers colonizing the mountain clearing';
     }
-    return 'tall spikes of magenta fireweed claiming the mountainside';
+    return 'tall spikes of magenta fireweed flowers claiming the mountainside';
   }
 }));
 
@@ -182,14 +185,15 @@ export const FireweedSchema = createFlowerSchema((defaults) => ({
 
 export const MountainPassionVineSchema = createFlowerSchema((defaults) => ({
   ...defaults,
-  name: { singular: 'mountain passion vine', plural: 'mountain passion vines' },
+  name: 'mountain passion vine',
   requirements: {
     ...defaults.requirements,
     temperature: { min: 20, max: 25 },
     humidity: { min: 35, max: 95 },
     ppfd: { min: 400 },
     seasons: ['spring', 'summer', 'fall'],
-    time: ['day', 'afternoon']
+    time: ['day', 'afternoon'],
+    biomes: ['mountain'],
   },
   description: (state) => {
     if (state.fullness < 0.3) {
@@ -201,7 +205,7 @@ export const MountainPassionVineSchema = createFlowerSchema((defaults) => ({
 
 export const TropicalGingerSchema = createFlowerSchema((defaults) => ({
   ...defaults,
-  name: { singular: 'tropical ginger', plural: 'tropical ginger' },
+  name: 'tropical ginger',
   requirements: {
     ...defaults.requirements,
     temperature: { min: 18 },
@@ -219,19 +223,17 @@ export const TropicalGingerSchema = createFlowerSchema((defaults) => ({
   }
 }));
 
-// Pure Ecosystem Flowers
-
-// Forest (Temperate)
+// Forest + Mountain ecotone
 export const WildTrilliumSchema = createFlowerSchema((defaults) => ({
   ...defaults,
-  name: { singular: 'wild trillium', plural: 'wild trillium' },
+  name: 'wild trillium',
   requirements: {
     ...defaults.requirements,
-    temperature: { min: 10, max: 30 },
-    humidity: { min: 55, max: 85 },
-    ppfd: { min: 100, max: 400 },
-    seasons: ['spring'],
-    time: ['dawn', 'morning', 'day']
+    temperature: { min: 10 },
+    humidity: { min: 50, max: 90 },
+    ppfd: { min: 100 },
+    time: ['dawn', 'morning', 'day'],
+    biomes: ['forest', 'mountain'],
   },
   description: (state) => {
     if (state.fullness < 0.3) {
@@ -241,10 +243,12 @@ export const WildTrilliumSchema = createFlowerSchema((defaults) => ({
   }
 }));
 
+// Pure Ecosystem Flowers
+
 // Mountain (Arid)
 export const AlpineAsterSchema = createFlowerSchema((defaults) => ({
   ...defaults,
-  name: { singular: 'alpine aster', plural: 'alpine asters' },
+  name: 'alpine aster',
   requirements: {
     ...defaults.requirements,
     temperature: { min: 0, max: 25 },
@@ -264,7 +268,7 @@ export const AlpineAsterSchema = createFlowerSchema((defaults) => ({
 // Jungle (Tropical)
 export const JungleOrchidSchema = createFlowerSchema((defaults) => ({
   ...defaults,
-  name: { singular: 'jungle orchid', plural: 'jungle orchids' },
+  name: 'orchid',
   requirements: {
     ...defaults.requirements,
     temperature: { min: 20, max: 35 },
@@ -285,7 +289,7 @@ export const JungleOrchidSchema = createFlowerSchema((defaults) => ({
 // Marsh (Tropical)
 export const WaterLilySchema = createFlowerSchema((defaults) => ({
   ...defaults,
-  name: { singular: 'water lily', plural: 'water lilies' },
+  name: 'water lily',
   provides: [...defaults.provides, 'roots'],
   requirements: {
     ...defaults.requirements,
@@ -348,7 +352,7 @@ export const DesertLupineSchema = createFlowerSchema((defaults) => ({
 // Grassland/Mountain Ecotone
 export const MountainSunflowerSchema = createFlowerSchema((defaults) => ({
   ...defaults,
-  name: { singular: 'mountain sunflower', plural: 'mountain sunflowers' },
+  name: 'mountain sunflower',
   provides: [...defaults.provides, 'seeds'],
   requirements: {
     ...defaults.requirements,
@@ -367,36 +371,34 @@ export const MountainSunflowerSchema = createFlowerSchema((defaults) => ({
 }));
 
 // Forest/Jungle Ecotone
-export const TropicalHibiscusSchema = createFlowerSchema((defaults) => ({
+export const BlackLotusSchema = createFlowerSchema((defaults) => ({
   ...defaults,
-  name: { singular: 'tropical hibiscus', plural: 'tropical hibiscus' },
+  name: 'black lotus',
+  provides: [...defaults.provides, 'nectar', 'seeds', 'roots'],
   requirements: {
     ...defaults.requirements,
     temperature: { min: 15, max: 32 },
     humidity: { min: 60, max: 90 },
-    ppfd: { min: 300, max: 800 },
+    ppfd: { max: 200 },
     seasons: ['spring', 'summer', 'fall'],
+    lunar: ['full'], // Only during full moon
   },
   description: (state) => {
-    if (state.fullness < 0.4) {
-      return 'vibrant hibiscus blooms scattered where forest meets jungle';
-    }
-    return 'massive hibiscus flowers creating a wall of color at the jungle edge';
+    return 'a few black lotus flowers clinging to the forest floor';
   }
 }));
 
 // Jungle/Marsh Ecotone
 export const SwampOrchidSchema = createFlowerSchema((defaults) => ({
   ...defaults,
-  name: { singular: 'swamp orchid', plural: 'swamp orchids' },
+  name: 'swamp orchid',
   requirements: {
     ...defaults.requirements,
     temperature: { min: 15, max: 32 },
     humidity: { min: 80, max: 98 },
-    ppfd: { min: 200, max: 500 },
     seasons: ['spring', 'summer'],
     time: ['dusk', 'night'],
-    lunar: ['full']
+    lunar: ['full'], // Only during full moon
   },
   description: (state) => {
     if (state.fullness < 0.3) {

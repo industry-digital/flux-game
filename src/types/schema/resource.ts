@@ -1,7 +1,8 @@
-import { UnitOfMeasure } from '~/types/world/measures';
+import { UnitOfMass, UnitOfMeasure, UnitOfVolume } from '~/types/world/measures';
 import { EasingFunction } from '~/types/easing';
 import { NormalizedValueBetweenZeroAndOne } from '~/types/entity/attribute';
 import { TimeUnit } from '~/types/world/time';
+import { Biome, Climate } from '~/types/schema/ecology';
 
 type Bounds = { min?: number, max?: number };
 
@@ -50,6 +51,12 @@ export type ResourceGrowthRequirements = {
   clouds?: Bounds;
 
   /**
+   * The fog intensity range in which this resource is available/active, as a normalized value (0-1)
+   * 0 = no fog, 1 = dense fog
+   */
+  fog?: Bounds;
+
+  /**
    * Seasons when this resource is available/active
    * - Example: ['spring', 'summer'] for most flowers
    * - Example: ['fall'] for autumn-blooming flowers
@@ -71,6 +78,16 @@ export type ResourceGrowthRequirements = {
    * - Example: ['new'] for resources that prefer dark nights
    */
   lunar?: LunarPhase[];
+
+  /**
+   * To restrict the resource to specific biomes
+   */
+  biomes?: Biome[];
+
+  /**
+   * To restrict the resource to specific climates
+   */
+  climates?: Climate[];
 };
 
 export type Season = 'spring' | 'summer' | 'fall' | 'winter';
@@ -93,13 +110,11 @@ export type ResourceNodeStateWithTimestamp = ResourceNodeState & {
 
 export type ResourceStateRenderer = (state: ResourceNodeStateWithTimestamp, now: number, schema: ResourceSchema) => string;
 
-type Noun = { singular: string, plural?: string };
-
 type ResourceSchemaBase = {
   /**
    * Human-readable name of the resource, not capitalized.
    */
-  name: string | Noun;
+  name: string;
 
  /**
    * The "desirable things" that this resource provides
@@ -126,7 +141,7 @@ type ResourceSchemaBase = {
    * How the resource decays over time
    * A resource that is not growing is in a continuous state of decay.
    */
-  decay: GrowthBehaviorSpecification;
+  decay?: GrowthBehaviorSpecification;
 
   /**
    * A function that returns a description of the resource based on the schema and
@@ -158,7 +173,7 @@ export type SpecimenResourceSchema = ResourceSchemaBase & {
   };
 
   quality: {
-    measure: Exclude<UnitOfMeasure, UnitOfMeasure.EACH>;
+    measure: Exclude<UnitOfMeasure, UnitOfMeasure.EACH> | UnitOfMass | UnitOfVolume;
     min: number;
     capacity: number;
     curve?: EasingFunction;
@@ -173,7 +188,7 @@ export type SpecimenResourceSchema = ResourceSchemaBase & {
  */
 export type BulkResourceSchema = ResourceSchemaBase & {
   quantity: {
-    measure: UnitOfMeasure;
+    measure: UnitOfMeasure | UnitOfMass | UnitOfVolume;
     min?: number;
     capacity: number;
     curve?: EasingFunction,

@@ -183,3 +183,17 @@ Mixed builds sacrifice peak performance for versatility
 Team compositions must balance immediate pressure (AGI) with spike damage (STR)
 
 Neither path is superior—they represent fundamentally different approaches to wielding power in combat. The greatest warriors understand both philosophies, even as they master one.
+
+
+### Verbs
+
+```
+dodge - Dodge attacks
+block - Block attacks
+parry - Parry attacks
+feint - Feint attacks
+disarm - Disarm attacks
+trip - Trip attacks
+overpower - Overpower attacks
+riposte - Riposte attacks
+```

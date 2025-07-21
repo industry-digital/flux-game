@@ -38,7 +38,7 @@ export enum ActorType {
 export enum ActorStat {
   /**
    * Strength. Physical power and raw force. Affects:
-   * - Heavy weapon effectiveness
+   * - Effectiveness of heavy weapons
    * - Athletic feats requiring force
    * - Carrying capacity
    */
@@ -46,7 +46,7 @@ export enum ActorStat {
 
   /**
    * Dexterity. Fine motor control and precision. Affects:
-   * - Precise weapon effectiveness
+   * - Effectiveness of precision weapons
    * - Delicate manual tasks
    * - Crafting quality
    */
@@ -56,7 +56,7 @@ export enum ActorStat {
    * Agility. Speed, grace, and coordination. Affects:
    * - Movement speed and evasion
    * - Initiative in combat, together with WIS
-   * - Athletic feats requiring agility
+   * - Athletic feats requiring finesse
    */
   AGI = 'agi',
 
@@ -64,7 +64,7 @@ export enum ActorStat {
    * Constitution. Physical resilience and endurance. Affects:
    * - Health points and injury resistance
    * - Stamina and fatigue resistance
-   * - Resistance to poison, disease, and physical afflictions
+   * - Resistance to poison, disease
    */
   CON = 'con',
 
@@ -73,34 +73,25 @@ export enum ActorStat {
    * - Rate of experience gain (PXP→XP conversion)
    * - Complex abilities and higher learning
    * - Problem-solving and analysis
+   * - Affects the success of skills that require higher reasoning
    */
   INT = 'int',
 
   /**
-   * Wisdom. Awareness, intuition, and mental fortitude. Affects:
+   * Perception. Awareness and intuition.
+   * - Directly affects rate at which PXP is gained
    * - Initiative in combat, together with Agility
    * - Detecting deception and hidden threats
-   * - Resistance to fear, confusion, and mental effects
-   * - Situational awareness and gut instincts
+   * - Affects saving throws against "surprises"
    */
-  WIS = 'wis',
+  PER = 'per',
 
   /**
-   * Presence. Force of personality and social influence. Affects:
-   * - All social interactions and negotiations
-   * - Leadership and group coordination
-   * - Intimidation and commanding respect
+   * Willpower. Mental fortitude and resolve. Affects:
+   * - Directly affects size of PXP pool
+   * - Affects saving throws against status effects that affect the mind
    */
-  PRS = 'prs',
-
-  /**
-   * Luck. Fortune and supernatural favor. Affects:
-   * - Critical successes and failure avoidance
-   * - Rare item discovery and advantageous encounters
-   * - Quest opportunities and serendipitous events
-   */
-  LCK = 'lck',
-
+  WIL = 'wil',
 }
 
 /**
@@ -248,7 +239,7 @@ export type Actor =
    * If the actor is a good citizen, then the score approaches 1.
    * If the actor is a bad citizen, then the score approaches -1.
    */
-  reputation: NormalizedBipolarValue;
+  standing: NormalizedBipolarValue;
 
   /**
    * The actor's skills, including progression state

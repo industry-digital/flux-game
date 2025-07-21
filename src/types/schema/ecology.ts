@@ -20,7 +20,7 @@ export const ECOLOGICAL_PROFILES = {
     humidity: [40.0, 70.0]        // Moderate humidity
   },
   'flux:eco:forest:temperate': {
-    temperature: [10.0, 30.0],     // Mild, stable climate
+    temperature: [13.0, 31.0],     // Mild, stable climate
     pressure: [990.0, 1020.0],    // Stable pressure
     humidity: [55.0, 85.0]        // Forest moisture retention
   },
@@ -30,13 +30,13 @@ export const ECOLOGICAL_PROFILES = {
     humidity: [10.0, 35.0]        // Arid mountain conditions
   },
   'flux:eco:jungle:tropical': {
-    temperature: [20.0, 35.0],    // Consistently hot tropical
+    temperature: [23.0, 37.0],    // Consistently hot tropical
     pressure: [1000.0, 1020.0],   // Stable tropical pressure
     humidity: [75.0, 95.0]        // High tropical humidity
   },
   'flux:eco:marsh:tropical': {
-    temperature: [10.0, 30.0],    // Cooler wetland temperatures
+    temperature: [13.0, 29.0],    // Cooler wetland temperatures
     pressure: [1020.0, 1040.0],   // Higher pressure (below sea level, in our world)
-    humidity: [85.0, 100.0]       // Saturated wetland conditions
+    humidity: [85.0, 99.0]       // Saturated wetland conditions
   }
 } as const as Record<EcosystemURN, EcologicalProfile>;

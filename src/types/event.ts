@@ -83,7 +83,6 @@ export type WeatherDidChangeInput = AbstractWorldEventInput<
   {
     from: Weather | null,
     to: Weather,
-    narrative: string;
   }>;
 
 export type WeatherDidChange = EventBase & WeatherDidChangeInput;
