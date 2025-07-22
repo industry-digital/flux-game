@@ -53,9 +53,9 @@ export const LargePuddleSchema: ResourceSchema = createWaterBodySchema(defaults 
   ...defaults,
   name: "large puddle",
 
-  // Puddles evaporate quickly
   decay: {
     ...defaults.decay,
+    curve: Easing.EXPONENTIAL,
     duration: [1, TimeUnit.DAY]
   },
 

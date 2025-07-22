@@ -1,732 +1,563 @@
-# Resource Generation System
-
-## Overview
-
-The resource generation system provides flora, fungi, and mineral resources across the Flux simulation environment. Resources emerge naturally from place ecosystems based on climate, biome, and weather characteristics, creating realistic resource distribution patterns that drive player exploration, trade, and settlement decisions.
-
-## Design Philosophy
-
-### Resource Categories
-
-The resource system is organized into four main categories:
-
-1. **Trees** - Renewable wood and specialized products
-2. **Flowers** - Seasonal blooms with unique properties
-3. **Fungi** - Specialized decomposers with magical properties
-4. **Minerals** - Geological resources for crafting and technology
-5. **Water Bodies** - Dynamic water features affected by weather
-
-Each category has distinct growth patterns, requirements, and yields that create unique gameplay opportunities.
-
-### Weather-Driven Generation
-
-Resources respond dynamically to weather conditions:
-
-- Temperature ranges
-- Humidity requirements
-- Light levels (PPFD)
-- Precipitation needs
-- Cloud cover effects
-- Fog impacts
-- Pressure conditions (for high-altitude resources)
-
-### Time-Based Mechanics
-
-Resources follow natural cycles:
-
-- Seasonal availability
-- Day/night preferences
-- Lunar phase dependencies
-- Growth and decay curves
-
-## Resource Categories in Detail
-
-### Trees
-
-Trees are implemented as bulk resources that represent copses or groves rather than individual trees. Each tree type has specific climate requirements and yields multiple resources.
-
-#### Desert/Arid Trees
-- **Mesquite** - Provides wood, bark, nectar
-- **Juniper** - Provides wood, bark, berries, resin
-
-#### Grassland Trees
-- **Cottonwood** - Provides wood, bark, resin
-- **Bur Oak** - Provides wood, bark, nuts
-
-#### Forest Trees
-- **Maple** - Provides wood, bark, sap
-- **White Birch** - Provides wood, bark, sap
-- **White Pine** - Provides wood, bark, resin, nuts
-
-#### Mountain Trees
-- **Mountain Pine** - Provides wood, bark, resin, nuts
-- **Aspen** - Provides wood, bark
-
-#### Tropical Trees
-- **Mahogany** - Provides wood, bark, seeds
-- **Rubber Tree** - Provides wood, bark, latex
-- **Breadfruit** - Provides wood, bark, fruit
-
-#### Wetland Trees
-- **Bald Cypress** - Provides wood, bark
-- **Mangrove** - Provides wood, bark
-
-### Flowers
-
-Flowers are implemented with precise environmental requirements and often follow lunar cycles. They provide nectar and specialized products.
-
-#### Desert/Arid Flowers
-- **Desert Marigold** - Sun-loving, drought-resistant
-- **Desert Lupine** - Spring bloomer in mountain foothills
-
-#### Grassland Flowers
-- **Purple Coneflower** - Provides nectar, seeds
-- **Black-Eyed Susan** - Summer bloomer
-- **Prairie Rose** - Provides nectar, fruit
-
-#### Forest/Mountain Flowers
-- **Wild Columbine** - Shade-tolerant mountain flower
-- **Wild Trillium** - Forest understory specialist
-- **Fireweed** - Pioneer species, provides fiber
-
-#### Alpine Flowers
-- **Alpine Aster** - High-altitude specialist
-- **Mountain Sunflower** - Meadow species with seeds
-
-#### Tropical Flowers
-- **Mountain Passion Vine** - Climbing species
-- **Tropical Ginger** - Understory specialist
-- **Jungle Orchid** - Canopy epiphyte
-- **Black Lotus** - Rare magical species
-- **Swamp Orchid** - Wetland specialist
-
-### Fungi
-
-Fungi have unique growth requirements often tied to darkness and moisture. They provide specialized resources and magical components.
-
-#### Desert Fungi
-- **Desert Puffball** - Emerges after rain
-- **Alpine Bolete** - Mountain specialist
-
-#### Forest Fungi
-- **Chanterelle** - Lunar-dependent
-- **Cordyceps Gaeatrix** - Parasitic specialist
-
-#### Wetland Fungi
-- **Swamp Bracket** - Long-lasting decomposer
-
-#### Generalist Fungi
-- **Oyster Mushroom** - Adaptable decomposer
-- **Common Puffball** - Widespread species
-- **Honey Mushroom** - Aggressive parasite
-
-### Minerals
-
-Minerals are implemented as specimen resources with specific geological requirements. They are organized by technological application.
-
-#### Base Metals
-- **Iron** - Primary metal for tools
-- **Coal** - Carbon source for steel
-
-#### Steel Alloys
-- **Chromium** - Stainless steel component
-- **Nickel** - Temperature-resistant alloys
-- **Tungsten** - High-hardness tools
-- **Molybdenum** - Strength enhancer
-- **Vanadium** - Tool steel component
-- **Manganese** - Structural component
-
-#### Technology Minerals
-- **Silicon** - Electronics component
-- **Titanium** - Lightweight structures
-- **Cobalt** - High-speed tools
-- **Lithium** - Battery technology
-
-#### Piezoelectric Minerals
-- **Quartz** - Common piezoelectric
-- **Tourmaline** - Complex properties
-- **Topaz** - High-quality crystals
-- **Beryl** - Advanced applications
-
-### Water Bodies
-
-Water resources are dynamic features that respond to precipitation and climate.
-
-#### Types
-- **Large Puddle** - Ephemeral, quick to evaporate
-- **Small Pond** - Stable small water body
-- **Large Pond** - Significant ecosystem feature
-- **Small Lake** - Permanent water feature
-
-## Growth Mechanics
-
-### Growth Curves
-
-Resources use different growth curves based on their type:
-
-- **Linear** - Simple constant growth
-- **Logistic** - S-shaped natural growth
-- **Exponential** - Rapid multiplication
-- **Quadratic** - Accelerating growth
-- **Ease Out Quad** - Quick start, gradual finish
-
-### Time Scales
-
-Resources have varying growth and decay periods:
-
-- **Hours** - Water body replenishment
-- **Days** - Fungal growth cycles
-- **Weeks** - Flower blooming periods
-- **Months** - Tree growth
-- **Years** - Mineral regeneration
-
-## Integration with Weather
-
-The resource system integrates deeply with weather simulation:
-
-### Temperature Effects
-- **Cold-adapted** resources (Alpine species)
-- **Heat-tolerant** resources (Desert species)
-- **Temperate** resources (Forest/Grassland species)
-
-### Moisture Requirements
-- **Drought-resistant** (Desert/Steppe species)
-- **Moisture-loving** (Wetland/Tropical species)
-- **Moderate** (Temperate species)
-
-### Light Requirements
-- **Shade-tolerant** (Forest understory species)
-- **Full sun** (Grassland/Desert species)
-- **Variable** (Adaptable species)
-
-## Gameplay Implications
-
-### Resource Gathering
-- Weather conditions affect resource availability
-- Seasonal cycles create harvesting windows
-- Lunar phases influence magical resources
-- Day/night cycles affect gathering strategies
-
-### Settlement Planning
-- Water access is critical for development
-- Mineral deposits drive industrial growth
-- Tree resources enable construction
-- Fungi and flowers provide specialized materials
-
-### Economic Systems
-- Resource requirements create trade networks
-- Seasonal availability drives market cycles
-- Rare resources have high value
-- Processing adds value to raw materials
-
-## Future Extensions
-
-### Planned Features
-- Resource quality variations
-- Processing mechanics
-- Crafting systems
-- Trading networks
-
-### Potential Additions
-- New biome-specific resources
-- Advanced weather interactions
-- Resource cultivation systems
-- Resource transformation chains
-
-## Resource Growth System
-
-We model resource growth using mathematical curves that are pegged to discrete resource capacities. Different resources can use different growth patterns (logistic, exponential, linear, custom) while environmental conditions drive curve parameters in real-time, creating a bottom-up system where natural patterns emerge from simple mathematical rules.
+# Flux Resource Growth System: Binary Growth/Decay with Curve Positions
+
+## Core Philosophy
+Resources follow a binary state machine: they are either **growing** or **decaying** based on environmental conditions. Each resource tracks its position on a mathematical curve, creating predictable yet dynamic resource patterns that emerge from environmental conditions.
+
+## Binary Growth/Decay State Machine
+
+Resources have no intermediate states - they are always either growing toward capacity or decaying toward zero:
+
+```typescript
+// Simple binary check determines resource state
+function updateResource(
+  schema: ResourceSchema,
+  ecosystem: EcosystemURN,
+  weather: Weather,
+  node: ResourceNodeState,
+  now: number = Date.now()
+): ResourceNode {
+  // Binary check: either growing or decaying
+  const isGrowing = doesResourceGrowInPlace(
+    schema,
+    ecosystem,
+    weather,
+    now,
+  );
+
+  return {
+    ...resource,
+    curve: {
+      position: node.curve.position,
+      status: isGrowing ? 'growing' : 'decaying',
+      ts: now,
+    }
+  };
+}
+```
+
+This creates clear ecological boundaries:
+- **ALL growth requirements met** → Resource GROWS
+- **ANY growth requirement not met** → Resource DECAYS
+- **Immediate response** to environmental changes
+- **Clear seasonal dynamics** without complex transitions
+
+## Data Structure
+
+### Resource Node State
+```typescript
+export type ResourceNodeCurve = {
+  position: number;           // Current position on curve (X-axis)
+  status: 'growing' | 'decaying';
+  ts: number;                 // Last update timestamp
+};
+
+export type ResourceNodeState = {
+  quantity: number;           // Current discrete amount
+  quality: number;            // Resource quality/potency
+  fullness: NormalizedValueBetweenZeroAndOne;
+  curve: ResourceNodeCurve;   // Curve tracking state
+};
+
+export type ResourceNodes = {
+  ts: number;                 // When resources were last updated
+  nodes: Partial<Record<ResourceURN, ResourceNodeState>>;
+};
+```
 
 ### Resource Schema Structure
 ```typescript
-// Resources have discrete capacities and environmental requirements
 type ResourceSchema = {
   name: string;
-  provides: string[];           // What this resource yields
-  requirements: {               // Environmental conditions for growth
+  provides: string[];         // What this resource yields
+  requirements: {             // Environmental conditions for growth
     temperature?: { min?: number, max?: number };
     humidity?: { min?: number, max?: number };
-    ppfd?: { min?: number };    // Light requirements
+    ppfd?: { min?: number };  // Light requirements
     seasons?: Season[];
     time?: TimeOfDay[];
-    // ... other environmental factors
+    biomes?: Biome[];
+    lunar?: LunarPhase[];
   };
   growth: {
-    curve: EasingFunction;      // Defaults to LOGISTIC
-    duration: [number, TimeUnit]; // Time to reach 100% capacity
+    curve: EasingFunction;    // Growth curve type
+    duration: [number, TimeUnit];
+  };
+  decay?: {
+    curve: EasingFunction;    // Decay curve type
+    duration: [number, TimeUnit];
   };
   quantity: {
     measure: UnitOfMeasure;
-    capacity: number;           // Hard cap (e.g., 100 flowers max)
+    capacity: number;         // Hard cap
   };
 }
 ```
 
-### Mathematical Foundation
+## Environmental Condition Checking
 
-#### Growth Curve Pegged to Capacity
 ```typescript
-// Any growth curve can be normalized to resource capacity
-function calculateResourceAmount(
+export const doesResourceGrowInPlace = (
   resource: ResourceSchema,
-  environmentalConditions: EnvironmentalState,
-  curveTime: number
+  ecosystem: EcosystemURN,
+  weather: Weather
+): boolean => {
+  const ecology = ECOLOGICAL_PROFILES[ecosystem];
+  if (!ecology) return false;
+
+  const required = resource.requirements;
+
+  // Temperature check
+  if (required.temperature) {
+    if (typeof required.temperature?.min === 'number' &&
+        weather.temperature < required.temperature.min) {
+      return false;
+    }
+    if (typeof required.temperature?.max === 'number' &&
+        weather.temperature > required.temperature.max) {
+      return false;
+    }
+  }
+
+  // Humidity check
+  if (required.humidity) {
+    if (typeof required.humidity?.min === 'number' &&
+        weather.humidity < required.humidity.min) {
+      return false;
+    }
+    if (typeof required.humidity?.max === 'number' &&
+        weather.humidity > required.humidity.max) {
+      return false;
+    }
+  }
+
+  // Light check (PPFD)
+  if (required.ppfd?.min && weather.ppfd < required.ppfd.min) {
+    return false;
+  }
+
+  // Seasonal check
+  if (required.seasons && !required.seasons.includes(weather.season)) {
+    return false;
+  }
+
+  // Time of day check
+  if (required.time && !required.time.includes(weather.timeOfDay)) {
+    return false;
+  }
+
+  // Lunar phase check
+  if (required.lunar && !required.lunar.includes(weather.lunarPhase)) {
+    return false;
+  }
+
+  // All requirements met
+  return true;
+};
+```
+
+## Curve Position Mathematics
+
+### Current Amount Calculation
+```typescript
+function getCurrentAmount(
+  schema: ResourceSchema,
+  node: ResourceNodeState,
 ): number {
-  const effectiveRate = calculateEnvironmentalMultiplier(
-    resource.requirements,
-    environmentalConditions
-  );
-
-  // Apply the specified easing function (logistic, exponential, linear, etc.)
+  // Get normalized progress (0 to 1) from current curve position
   const normalizedProgress = applyEasingFunction(
-    resource.growth.curve,
-    curveTime,
-    effectiveRate
+    node.curve.status === 'growing' ? schema.growth.curve : schema.decay.curve,
+    node.curve.position
   );
 
-  // Scale to resource capacity: curve goes from 0 to capacity
-  const curveValue = normalizedProgress * resource.quantity.capacity;
-
-  // Current discrete amount
-  return Math.floor(curveValue);
+  // Both growth and decay are pegged to capacity
+  return Math.floor(
+    node.curve.status === 'growing'
+      ? normalizedProgress * schema.quantity.capacity        // 0 -> capacity
+      : (1 - normalizedProgress) * schema.quantity.capacity  // capacity -> 0
+  );
 }
+```
 
-// Generic easing function application
+### Easing Function Application
+```typescript
 function applyEasingFunction(
   curve: EasingFunction,
-  time: number,
-  rate: number
-): number {
+  position: number        // Position on X-axis
+): number {              // Returns Y value (0 to 1)
   switch (curve) {
     case Easing.LOGISTIC:
-      return 1 / (1 + Math.exp(-rate * time));
+      return 1 / (1 + Math.exp(-position));  // S-curve
 
     case Easing.EXPONENTIAL:
-      return 1 - Math.exp(-rate * time);
+      return 1 - Math.exp(-position);        // Fast start, slow end
 
     case Easing.LINEAR:
-      return Math.min(1, rate * time);
+      return Math.min(1, position);          // Constant rate
+
+    case Easing.EASE_IN_QUAD:
+      return position * position;            // Accelerating
+
+    case Easing.EASE_OUT_QUAD:
+      return position * (2 - position);      // Decelerating
 
     case Easing.CUBIC:
-      const t = Math.min(1, rate * time);
-      return t * t * (3 - 2 * t);
-
-    case Easing.POWER:
-      return Math.min(1, Math.pow(rate * time, 2));
+      const t = Math.min(1, position);
+      return t * t * (3 - 2 * t);           // Smooth S-curve
 
     default:
-      return Math.min(1, rate * time); // Fallback to linear
+      return Math.min(1, position);          // Fallback to linear
   }
 }
 ```
 
-#### Environmental Multiplier Calculation
+## Growth vs Decay Calculations
+
+Both growth and decay are pegged to capacity, creating a consistent mathematical model:
+
 ```typescript
-function calculateEnvironmentalMultiplier(
-  requirements: ResourceGrowthRequirements,
-  conditions: EnvironmentalState
+function getCurrentAmount(
+  schema: ResourceSchema,
+  node: ResourceNodeState,
 ): number {
-  let multiplier = 1.0;
+  // Get normalized progress (0 to 1) from current curve position
+  const normalizedProgress = applyEasingFunction(
+    node.curve.status === 'growing' ? schema.growth.curve : schema.decay.curve,
+    node.curve.position
+  );
 
-  // Temperature factor
-  if (requirements.temperature) {
-    multiplier *= calculateRangeMultiplier(
-      conditions.temperature,
-      requirements.temperature.min,
-      requirements.temperature.max
-    );
-  }
-
-  // Humidity factor
-  if (requirements.humidity) {
-    multiplier *= calculateRangeMultiplier(
-      conditions.humidity,
-      requirements.humidity.min,
-      requirements.humidity.max
-    );
-  }
-
-  // Light factor (PPFD)
-  if (requirements.ppfd) {
-    multiplier *= Math.min(1.0, conditions.ppfd / requirements.ppfd.min);
-  }
-
-  // Seasonal factor
-  if (requirements.seasons && !requirements.seasons.includes(conditions.season)) {
-    multiplier = 0; // No growth outside preferred seasons
-  }
-
-  return multiplier;
+  // Both growth and decay are pegged to capacity
+  return Math.floor(
+    node.curve.status === 'growing'
+      ? normalizedProgress * schema.quantity.capacity        // 0 -> capacity
+      : (1 - normalizedProgress) * schema.quantity.capacity  // capacity -> 0
+  );
 }
 ```
 
-## Example: Different Growth Patterns
+This creates a symmetrical system where:
+1. Growth progresses from 0 to capacity
+2. Decay progresses from capacity to 0
+3. Curve position always maps to a fixed percentage of capacity
+4. Harvesting can happen during either growth or decay
+5. No moving reference points - everything is pegged to capacity
 
+Example:
 ```typescript
-// Logistic growth - classic S-curve (slow start, fast middle, slow end)
-export const WildRoseSchema = createResourceSchema({
-  name: 'wild rose',
+const resource = {
+  quantity: {
+    capacity: 100  // Max amount
+  },
   growth: {
     curve: Easing.LOGISTIC,
-    duration: [2, TimeUnit.WEEK]
+    duration: [5, TimeUnit.DAY]
   },
-  quantity: { capacity: 12 }
-});
-
-// Exponential growth - rapid early growth, levels off (good for fungi)
-export const MushroomSchema = createResourceSchema({
-  name: 'mushroom',
-  growth: {
+  decay: {
     curve: Easing.EXPONENTIAL,
-    duration: [3, TimeUnit.DAY]
+    duration: [2, TimeUnit.DAY]
+  }
+};
+
+// Growth at position 0.5 (logistic curve ≈ 0.62)
+// amount = 0.62 * 100 = 62
+
+// Decay at position 0.5 (exponential curve ≈ 0.39)
+// amount = (1 - 0.39) * 100 = 61
+
+// Harvesting works the same in both states:
+// 1. Calculate current amount from curve
+// 2. Subtract harvested amount
+// 3. Find new curve position for remaining amount
+// 4. Continue along current curve (growth or decay)
+```
+
+## Harvesting Implementation
+
+### Curve Position Reset on Harvest
+```typescript
+function harvestResource(
+  schema: ResourceSchema,
+  node: ResourceNodeState,
+  harvestAmount: number,
+  now: number = Date.now()
+): ResourceNodeState {
+  const newAmount = node.quantity - harvestAmount;
+
+  // Find where on growth curve this amount would occur
+  const newPosition = findCurveTimeForAmount(
+    schema.growth,
+    newAmount
+  );
+
+  return {
+    ...node,
+    quantity: newAmount,
+    curve: {
+      position: newPosition,    // Reset to intersection point
+      status: 'growing',        // Continue on growth curve
+      ts: now                   // Fresh timestamp
+    }
+  };
+}
+```
+
+### Finding Curve Intersection Points
+```typescript
+/**
+ * Find the position on the curve that corresponds to the given amount.
+ * This solves for X where curve(X) * capacity = targetAmount
+ */
+function findCurveTimeForAmount(
+  growth: Growth,
+  targetAmount: number
+): number {
+  const progress = targetAmount / growth.capacity;
+
+  // Solve inverse equations for each curve type
+  switch (growth.curve) {
+    case Easing.LOGISTIC:
+      // Solve: 1/(1 + e^(-t)) = progress
+      return Math.log((1/progress) - 1) * -1;
+
+    case Easing.EXPONENTIAL:
+      // Solve: 1 - e^(-t) = progress
+      return -Math.log(1 - progress);
+
+    case Easing.LINEAR:
+      // Solve: t = progress
+      return progress;
+
+    case Easing.EASE_IN_QUAD:
+      // Solve: t^2 = progress
+      return Math.sqrt(progress);
+
+    case Easing.EASE_OUT_QUAD:
+      // Solve: t*(2-t) = progress
+      return 1 - Math.sqrt(1 - progress);
+
+    default:
+      return progress; // Fallback to linear
+  }
+}
+```
+
+## Example Resource Definitions
+
+### Desert Marigold - Hardy Desert Flower
+```typescript
+export const DesertMarigoldSchema = createResourceSchema({
+  name: 'desert marigold',
+  provides: ['flower', 'nectar'],
+  requirements: {
+    temperature: { min: 15, max: 35 },
+    humidity: { min: 15, max: 45 },
+    ppfd: { min: 1_200 },
+    seasons: ['spring', 'summer'],
+    time: ['morning', 'day', 'afternoon']
+  },
+  growth: {
+    curve: Easing.LOGISTIC,      // Classic S-curve growth
+    duration: [5, TimeUnit.DAY]
+  },
+  decay: {
+    curve: Easing.EXPONENTIAL,   // Wilts quickly in bad conditions
+    duration: [2, TimeUnit.DAY]
+  },
+  quantity: { capacity: 100 }
+});
+```
+
+### Swamp Bracket Fungus - Resilient Decomposer
+```typescript
+export const SwampBracketSchema = createResourceSchema({
+  name: 'swamp bracket',
+  provides: ['mushroom', 'spores'],
+  requirements: {
+    temperature: { min: 15, max: 29 },
+    humidity: { min: 90, max: 99 },
+    ppfd: { max: 200 },           // Shade-loving
+    seasons: ['winter', 'spring']
+  },
+  growth: {
+    curve: Easing.EASE_IN_QUAD,   // Slow start, accelerating
+    duration: [21, TimeUnit.DAY]
+  },
+  decay: {
+    curve: Easing.LINEAR,         // Very slow, steady decay
+    duration: [30, TimeUnit.DAY]
   },
   quantity: { capacity: 8 }
 });
+```
 
-// Linear growth - steady constant rate (good for grass, leaves)
-export const PrairieGrassSchema = createResourceSchema({
-  name: 'prairie grass',
+### Large Puddle - Ephemeral Water Body
+```typescript
+export const LargePuddleSchema = createResourceSchema({
+  name: 'large puddle',
+  provides: ['water'],
+  requirements: {
+    precipitation: { min: 1 }     // Only during rain
+  },
   growth: {
-    curve: Easing.LINEAR,
-    duration: [1, TimeUnit.MONTH]
+    curve: Easing.EASE_OUT_QUAD,  // Quick filling
+    duration: [1, TimeUnit.HOUR]
   },
   decay: {
-    curve: Easing.EASE_IN_QUAD,
-    duration: [3, TimeUnit.MONTH]
+    curve: Easing.EXPONENTIAL,    // Rapid evaporation
+    duration: [1, TimeUnit.DAY]
   },
-  quantity: { capacity: 500 }
-});
-
-// Power curve - accelerating growth (good for fruit trees)
-export const AppleTreeSchema = createResourceSchema({
-  name: 'apple tree',
-  growth: {
-    curve: Easing.POWER,
-    duration: [4, TimeUnit.MONTH]
-  },
-  quantity: { capacity: 20 }
+  quantity: { capacity: 1000 }    // Liters
 });
 ```
 
-## Harvesting Model
+## Update Strategy
 
-### Curve Position Reset Approach (Universal)
+### Curve Position Updates
 ```typescript
-
-export type ResourceNodeState = {
-  quantity: number;
-  quality: number;
-  fullness: NormalizedValueBetweenZeroAndOne;
-  last: {
-    growth: number; // timestamp
-    decay: number; // timestamp
-  };
-};
-
-export type ResourceNodeStateWithTimestamp = ResourceNodeState & {
-  ts: number;
-};
-export type ResourceNodes = {
-  /**
-   * When the resources were last updated
-   */
-  ts: number;
-
-  /**
-   * The resource nodes that are present
-   */
-  nodes: Partial<Record<ResourceURN, ResourceNodeState>>;
-};
-
-function getCurrentVisibleAmount(
-  node: ResourceNode,
-  conditions: EnvironmentalState
-): number {
-  const effectiveRate = calculateEnvironmentalMultiplier(
-    node.schema.requirements,
-    conditions
-  );
-
-  // Calculate curve value at current position using specified easing function
-  const normalizedProgress = applyEasingFunction(
-    node.schema.growth.curve,
-    node.curveTime,
-    effectiveRate
-  );
-
-  const curveValue = normalizedProgress * node.schema.quantity.capacity;
-  return Math.floor(curveValue);
-}
-
-function harvestResource(
-  node: ResourceNode,
-  harvestedAmount: number,
-  conditions: EnvironmentalState
-): ResourceNode {
-  const newAmount = node.currentAmount - harvestedAmount;
-
-  // Find the curve time that corresponds to the new amount for ANY curve type
-  const newCurveTime = findCurveTimeForAmount(
-    node.schema,
-    newAmount,
-    conditions
-  );
-
-  return {
-    ...node,
-    currentAmount: newAmount,
-    curveTime: newCurveTime
-  };
-}
-
-function findCurveTimeForAmount(
-  schema: ResourceSchema,
-  targetAmount: number,
-  conditions: EnvironmentalState
-): number {
-  const effectiveRate = calculateEnvironmentalMultiplier(
-    schema.requirements,
-    conditions
-  );
-  const targetProgress = targetAmount / schema.quantity.capacity;
-
-  // Use inverse functions for different curve types
-  switch (schema.growth.curve) {
-    case Easing.LOGISTIC:
-      return Math.log((1 - targetProgress) / targetProgress) / (-effectiveRate);
-
-    case Easing.EXPONENTIAL:
-      return -Math.log(1 - targetProgress) / effectiveRate;
-
-    case Easing.LINEAR:
-      return targetProgress / effectiveRate;
-
-    case Easing.CUBIC:
-      // Numerical solution for cubic inverse (more complex)
-      return solveCubicInverse(targetProgress, effectiveRate);
-
-    case Easing.POWER:
-      return Math.pow(targetProgress, 1/2) / effectiveRate;
-
-    default:
-      return targetProgress / effectiveRate; // Fallback to linear
-  }
-}
-
 function updateResourceGrowth(
-  node: ResourceNode,
-  conditions: EnvironmentalState,
-  deltaTime: number
-): ResourceNode {
-  const effectiveRate = calculateEnvironmentalMultiplier(
-    node.schema.requirements,
-    conditions
-  );
+  schema: ResourceSchema,
+  node: ResourceNodeState,
+  deltaTime: number,
+  isGrowing: boolean,
+  now: number = Date.now()
+): ResourceNodeState {
+  // Convert duration to position increment
+  const duration = isGrowing ? schema.growth.duration : schema.decay.duration;
+  const [value, unit] = duration;
+  const durationMs = value * TimeUnit[unit] * 1000;
 
-  // Advance along the curve based on environmental conditions
-  const newCurveTime = node.curveTime + (effectiveRate * deltaTime);
+  // Advance position based on time elapsed
+  const positionIncrement = deltaTime / durationMs;
+  const newPosition = node.curve.position + positionIncrement;
 
+  // Calculate new amount based on curve position
   const normalizedProgress = applyEasingFunction(
-    node.schema.growth.curve,
-    newCurveTime,
-    effectiveRate
+    isGrowing ? schema.growth.curve : schema.decay.curve,
+    newPosition
   );
 
-  const newAmount = Math.floor(normalizedProgress * node.schema.quantity.capacity);
+  let newAmount;
+  if (isGrowing) {
+    newAmount = Math.floor(normalizedProgress * schema.quantity.capacity);
+  } else {
+    newAmount = Math.floor(node.quantity * (1 - normalizedProgress));
+  }
 
   return {
     ...node,
-    curveTime: newCurveTime,
-    currentAmount: Math.min(newAmount, node.schema.quantity.capacity)
+    quantity: newAmount,
+    curve: {
+      position: newPosition,
+      status: isGrowing ? 'growing' : 'decaying',
+      ts: now
+    }
   };
 }
 ```
 
-## Harvesting Example: Different Curve Behaviors
+## Harvesting Examples
 
-### Logistic Curve (S-curve): 3 Flowers → 2 Flowers
+### Example: Flower Patch (3 → 2 flowers)
 ```typescript
-// Initial state: 3 flowers, classic S-curve growth
+// Initial state: 3 flowers at full growth
 const flowerPatch = {
-  schema: { growth: { curve: Easing.LOGISTIC }, capacity: 3 },
-  currentAmount: 3,
-  curveTime: 2.5  // Point where logistic curve = 1.0 (100% progress)
+  quantity: 3,
+  curve: {
+    position: 1.0,              // Fully grown position
+    status: 'growing',
+    ts: previousTime
+  }
 };
 
-// After harvesting 1 flower:
-// - Find time where logistic(t) * 3 = 2
-// - Continue growth from that intersection point
+// Harvest 1 flower
+const afterHarvest = harvestResource(FlowerSchema, flowerPatch, 1);
+
+// Result:
+// quantity: 2
+// curve.position: ~0.67       // Position where logistic curve gives 2/3 progress
+// curve.status: 'growing'     // Continue on growth curve
+// curve.ts: now              // Fresh timestamp
 ```
 
-### Exponential Curve: 5 Mushrooms → 3 Mushrooms
+### Different Curve Behaviors After Harvesting
+
+**Logistic Curve (S-curve):**
+- Middle amounts regrow fastest (steepest part of S-curve)
+- Very low/high amounts regrow slowly (flat parts of S-curve)
+- Natural acceleration/deceleration patterns
+
+**Exponential Curve:**
+- Faster regrowth at lower amounts
+- Progressively slower as approaches capacity
+- Good for rapid colonization that slows near limits
+
+**Linear Curve:**
+- Constant regrowth rate regardless of current amount
+- Predictable timing for players
+- Good for resources with steady accumulation
+
+## Environmental Response Patterns
+
+### Seasonal Resource Dynamics
 ```typescript
-// Initial state: 5 mushrooms, exponential growth pattern
-const mushroomPatch = {
-  schema: { growth: { curve: Easing.EXPONENTIAL }, capacity: 5 },
-  currentAmount: 5,
-  curveTime: 4.2  // Point where exponential curve reaches capacity
-};
+// Spring: Cool-weather flowers emerge
+// - Wild Trillium starts growing
+// - Desert species remain dormant
 
-// After harvesting 2 mushrooms:
-// - Find time where (1 - e^(-rate * t)) * 5 = 3
-// - Continue exponential growth from that point
-```
-
-### Linear Curve: 100 Grass → 75 Grass
-```typescript
-// Initial state: 100 grass stalks, steady linear growth
-const grassPatch = {
-  schema: { growth: { curve: Easing.LINEAR }, capacity: 100 },
-  currentAmount: 100,
-  curveTime: 10.0  // Point where linear progression reaches 100%
-};
-
-// After harvesting 25 grass:
-// - Find time where (rate * t) * 100 = 75
-// - Continue linear growth from that point
-```
-
-### Universal Mathematical Process
-```
-For ANY curve type:
-1. Calculate targetProgress = newAmount / capacity
-2. Use inverse function to find curve time for that progress level
-3. Continue growth from that curve time forward
-
-Curve Types and Their Inverses:
-- Logistic: t = ln((1-p)/p) / (-rate)
-- Exponential: t = -ln(1-p) / rate
-- Linear: t = p / rate
-- Power: t = p^(1/n) / rate
-- Custom: Numerical inverse solving
-```
-
-## Environmental Response Examples
-
-### Good Conditions: Accelerated Growth
-```typescript
-// Perfect desert marigold weather
-const conditions = {
-  temperature: 25,      // Optimal range
-  humidity: 30,         // Perfect for desert flower
-  ppfd: 1500,          // High desert sun
-  season: 'spring',     // Growing season
-  time: 'day'          // Active time
-};
-// Environmental multiplier = 1.0 (full growth rate)
-```
-
-### Poor Conditions: Stunted Growth
-```typescript
-// Suboptimal conditions
-const conditions = {
-  temperature: 10,      // Too cold (below 15°C min)
-  humidity: 60,         // Too humid (above 45% max)
-  ppfd: 800,           // Insufficient light
-  season: 'winter',     // Wrong season
-  time: 'night'        // Wrong time
-};
-// Environmental multiplier = 0.0 (no growth)
-```
-
-### Marginal Conditions: Slow Growth
-```typescript
-// Borderline conditions
-const conditions = {
-  temperature: 16,      // Just above minimum
-  humidity: 44,         // Near maximum tolerance
-  ppfd: 1250,          // Adequate light
-  season: 'summer',     // Correct season
-  time: 'morning'      // Correct time
-};
-// Environmental multiplier = ~0.3 (slow growth)
-```
-
-## Resource Distribution Patterns
-
-### Natural Ecological Niches
-```typescript
-// Different flowers emerge in different conditions automatically:
-
-// Hot, dry, sunny areas → Desert Marigold dominates
-// Cool, humid, shaded areas → Wild Trillium thrives
-// Moderate grasslands → Purple Coneflower proliferates
-// Tropical, humid jungle → Orchids flourish
-
-// No manual placement needed - environmental requirements
-// create natural distribution patterns
-```
-
-### Seasonal Dynamics
-```typescript
-// Spring: Cool-weather flowers emerge first
 // Summer: Heat-tolerant species dominate
+// - Desert Marigold flourishes
+// - Cool-weather species start decaying
+
 // Fall: Late-season bloomers take over
-// Winter: Most flowers dormant, only hardy species persist
+// - Mountain Sunflower peaks
+// - Summer species begin decay
 
-// Transitions happen automatically as conditions change
+// Winter: Hardy species persist
+// - Swamp Bracket continues growing
+// - Most flowers decay to dormancy
 ```
 
-## Update Frequency Considerations
-
-### Time-Independent Evaluation
+### Binary State Transitions
 ```typescript
-// This function always gives same result regardless of sampling frequency
-function updateResourceNodes(nodes: ResourceNode[], conditions: EnvironmentalState): ResourceNode[] {
-  const currentTime = Date.now();
+// Clear day in spring:
+// temperature: 20°C, humidity: 40%, ppfd: 1500
+// → Desert Marigold: GROWING (all requirements met)
+// → Wild Trillium: DECAYING (too much light)
 
-  return nodes.map(node => ({
-    ...node,
-    currentAmount: getCurrentVisibleAmount(node, conditions, currentTime)
-  }));
-}
-
-// Can be called every second, minute, or hour - same mathematical result
-```
-
-### Recommended Update Strategy
-```typescript
-// Environmental condition changes: 1-2 minutes (responsive)
-// Resource amount recalculation: 5-15 minutes (efficient)
-// Player location updates: 30 seconds - 2 minutes (noticeable)
+// Cloudy day in spring:
+// temperature: 15°C, humidity: 60%, ppfd: 300
+// → Desert Marigold: DECAYING (insufficient light)
+// → Wild Trillium: GROWING (shade conditions met)
 ```
 
 ## Key Advantages
 
-1. **Time-Independent**: Same result regardless of update frequency
-2. **Environmentally Responsive**: Growth immediately responds to condition changes
-3. **Mathematically Clean**: Pure function evaluation, no complex state tracking
-4. **Capacity Constrained**: Hard limits enforced mathematically
-5. **Realistic Patterns**: Natural S-curve acceleration and saturation
-6. **Emergent Distribution**: Environmental niches create natural resource zones
-7. **No Integration Errors**: Avoids cumulative sampling frequency problems
+1. **Binary Clarity**: Resources are either growing or decaying - no ambiguous states
+2. **Immediate Response**: Environmental changes trigger instant state transitions
+3. **Curve Continuity**: Position tracking maintains smooth growth patterns
+4. **Mathematical Precision**: Exact curve intersection calculations for harvesting
+5. **Ecological Realism**: Clear environmental boundaries create natural distributions
+6. **Predictable Behavior**: Same curve position always gives same amount
+7. **Harvest Integration**: Natural regrowth from mathematically correct positions
 
-## Usage Guidelines
+## Implementation Guidelines
 
-- Choose appropriate `curve` types based on biological reality:
-  - `Easing.LOGISTIC` for most natural growth (flowers, trees, populations)
-  - `Easing.EXPONENTIAL` for rapid early growth that levels off (fungi, bacteria)
-  - `Easing.LINEAR` for steady constant growth (grass, continuous resources)
-  - `Easing.POWER` for accelerating growth (fruit development, seasonal resources)
-  - Custom curves for specialized growth patterns
+### Choosing Growth Curves
+- **Easing.LOGISTIC**: Most biological growth (flowers, populations)
+- **Easing.EXPONENTIAL**: Rapid early growth (fungi, colonization)
+- **Easing.LINEAR**: Steady accumulation (minerals, simple resources)
+- **Easing.EASE_IN_QUAD**: Accelerating processes (fruit development)
+- **Easing.EASE_OUT_QUAD**: Decelerating processes (water filling)
 
-- Set `capacity` to realistic maximums for the resource type
-- Define tight environmental `requirements` to create distinct ecological niches
-- Growth `duration` should reflect real-world growth timescales
-- `description` functions should reflect the `fullness` ratio dynamically
-- Environmental requirements create natural resource distribution without manual placement
+### Environmental Requirements
+- Define ALL conditions that must be met for growth
+- ANY failed condition triggers decay
+- Use tight ranges for ecological specialization
+- Combine multiple factors for niche creation
 
-## Implementation Notes
+### Duration Settings
+- Growth duration: Time from 0 to full capacity
+- Decay duration: Time from any amount to 0
+- Shorter durations = more responsive to environmental changes
+- Longer durations = more stable resource presence
 
-- The growth curve represents "what nature wants to be there" based on environmental support
-- Harvesting finds the intersection point on the curve and continues growth from that position
-- Resources regrow when the curve naturally progresses beyond the harvested amount
-- Poor environmental conditions slow or stop curve progression
-- Excellent conditions accelerate curve progression, enabling rapid recovery after harvesting
-- Different curve types create different regrowth behaviors:
-  - Logistic: Slow early regrowth, then rapid recovery, then slow final approach
-  - Exponential: Rapid initial regrowth that slows as it approaches original amount
-  - Linear: Steady constant regrowth rate
-  - Power: Slow initial regrowth that accelerates toward full recovery
-
-The system creates emergent resource distribution patterns where environmental conditions naturally determine what grows where, with each resource type following its biologically appropriate growth curve.
+The system creates emergent ecological patterns where environmental conditions determine resource distribution, with each species following its characteristic growth curve while responding immediately to changing conditions through clear binary state transitions.

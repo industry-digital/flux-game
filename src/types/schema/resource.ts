@@ -8,22 +8,15 @@ type Bounds = { min?: number, max?: number };
 
 export type GrowthSpecification = {
   /**
-   * Defaults to Easing.LOGISTIC
+   * The easing function to use for the growth curve
    */
-  curve?: EasingFunction;
+  curve: EasingFunction;
 
   /**
    * The duration over which a resource grows to 100% fullness from zero
    * - Example: [7, TimeUnit.DAY] means the resource grows to 100% fullness in seven days
    */
   duration: [number, TimeUnit];
-};
-
-export type DecaySpecification = GrowthSpecification & {
-  /**
-   * The time it takes for the resource to start decaying, while it is not growing.
-   */
-  latency?: [number, TimeUnit];
 };
 
 export type ResourceGrowthRequirements = {
@@ -141,57 +134,56 @@ type ResourceSchemaBase = {
    * How the resource decays over time
    * A resource that is not growing begins to decay
    */
-  decay?: DecaySpecification;
+  decay?: GrowthSpecification;
 
   /**
-   * A function that returns a description of the resource based on the schema and
-   * current state of a resource node. The timestamp `ts` reflects the moment the
-   * state was last update.
-   * - Example: "a field filled with desert marigolds"
-   * - Example: "a beehive, brimming with honey"
-   * - Example: "a durian tree with a single fruit that *just* blossomed"
-   *
-   * Return a *noun* that describes the resource, without capitalization or full stops.
-   * No special handling is needed for `fullness` being 0. In this case, the description is
-   * not rendered.
+   * A function that returns a description of the resource
    */
   description: ResourceStateRenderer;
 };
 
 /**
- * This lets us model a resource node that produces a single "specimen"
- * having a "quality" dimension.
- * - Example: a single beehive that contains 500mL of honey vs 250mL
- * - Example: a single durian fruit that weights 2kg vs the same that weights 1kg
+ * A resource that produces a single specimen whose quality grows over time.
+ * Examples:
+ * - A single beehive that grows from empty to full of honey
+ * - A single durian fruit that grows from small to large
+ * - A single tree that grows from sapling to mature
+ *
+ * The growth curve directly controls quality growth:
+ * - quality.min + (growthCurve(t) * (quality.capacity - quality.min))
  */
 export type SpecimenResourceSchema = ResourceSchemaBase & {
-
   quantity: {
     measure: UnitOfMeasure.EACH;
     min: 1;
     capacity: 1;
   };
-
   quality: {
     measure: Exclude<UnitOfMeasure, UnitOfMeasure.EACH> | UnitOfMass | UnitOfVolume;
-    min: number;
-    capacity: number;
-    curve?: EasingFunction;
+    min: number;     // Minimum quality (e.g., 0.5kg for smallest valid fruit)
+    capacity: number; // Maximum quality (e.g., 2kg for largest possible fruit)
   };
 };
 
 /**
- * This lets us model a resource node that produces a bulk quantity of a resource,
- * without a "quality" dimension.
- * - Example: 200kg of prairie grass
- * - Example: 1,000 mL of exceptionally clean water
+ * A resource that produces a bulk quantity that grows over time.
+ * Examples:
+ * - A field that grows from 0 to 200kg of grass
+ * - A pond that fills from 0 to 1000L of water
+ * - A patch that grows from 0 to 100 flowers
+ *
+ * The growth curve directly controls quantity growth:
+ * - quantity.min + (growthCurve(t) * (quantity.capacity - quantity.min))
+ *
+ * Optionally can specify a different curve for quantity growth:
+ * - quantity.curve overrides growth.curve for quantity calculations
  */
 export type BulkResourceSchema = ResourceSchemaBase & {
   quantity: {
     measure: UnitOfMeasure | UnitOfMass | UnitOfVolume;
-    min?: number;
-    capacity: number;
-    curve?: EasingFunction,
+    min?: number;    // Minimum quantity (e.g., 50kg - field never completely empty)
+    capacity: number; // Maximum quantity (e.g., 200kg of grass)
+    curve?: EasingFunction; // Optional override of growth.curve for quantity
   };
 };
 

@@ -199,7 +199,18 @@ export {
   ResourceGrowthRequirements,
   GrowthSpecification as GrowthBehaviorSpecification,
   ResourceStateRenderer,
+  Season,
+  TimeOfDay,
+  LunarPhase,
 } from './schema/resource';
+
+export {
+  ResourceGrowthCurve,
+  ResourceNodes,
+  ResourceNodeState,
+  ResourceNodeStateWithTimestamp,
+  ResourceGenerator,
+} from './entity/resource';
 
 // Taxonomy exports
 export {
@@ -270,6 +281,8 @@ export {
 
 export {
   UnitOfMeasure,
+  UnitOfMass,
+  UnitOfVolume,
 } from './world/measures';
 
 // Testing utilities
