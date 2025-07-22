@@ -1,3 +1,5 @@
+import { EcosystemURN } from '~/types/taxonomy';
+
 export type EcologicalProfile = {
   temperature: [number, number];
   pressure: [number, number];
@@ -6,7 +8,6 @@ export type EcologicalProfile = {
 
 export type Biome = 'steppe' | 'grassland' | 'forest' | 'mountain' | 'jungle' | 'marsh';
 export type Climate = 'arid' | 'temperate' | 'tropical';
-export type EcosystemURN = `flux:eco:${Biome}:${Climate}`;
 
 export const ECOLOGICAL_PROFILES = {
   'flux:eco:steppe:arid': {
@@ -39,4 +40,4 @@ export const ECOLOGICAL_PROFILES = {
     pressure: [1020.0, 1040.0],   // Higher pressure (below sea level, in our world)
     humidity: [85.0, 99.0]       // Saturated wetland conditions
   }
-} as const as Record<EcosystemURN, EcologicalProfile>;
+} as const as Partial<Record<EcosystemURN, EcologicalProfile>>;

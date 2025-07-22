@@ -1,12 +1,12 @@
 import { UnitOfMass, UnitOfMeasure, UnitOfVolume } from '~/types/world/measures';
 import { EasingFunction } from '~/types/easing';
-import { NormalizedValueBetweenZeroAndOne } from '~/types/entity/attribute';
 import { TimeUnit } from '~/types/world/time';
 import { Biome, Climate } from '~/types/schema/ecology';
+import { ResourceNodeStateWithTimestamp } from '~/types/entity/resource';
 
 type Bounds = { min?: number, max?: number };
 
-export type GrowthBehaviorSpecification = {
+export type GrowthSpecification = {
   /**
    * Defaults to Easing.LOGISTIC
    */
@@ -17,6 +17,13 @@ export type GrowthBehaviorSpecification = {
    * - Example: [7, TimeUnit.DAY] means the resource grows to 100% fullness in seven days
    */
   duration: [number, TimeUnit];
+};
+
+export type DecaySpecification = GrowthSpecification & {
+  /**
+   * The time it takes for the resource to start decaying, while it is not growing.
+   */
+  latency?: [number, TimeUnit];
 };
 
 export type ResourceGrowthRequirements = {
@@ -94,20 +101,6 @@ export type Season = 'spring' | 'summer' | 'fall' | 'winter';
 export type TimeOfDay = 'dawn' | 'morning' | 'day' | 'afternoon' | 'evening' | 'dusk' | 'night';
 export type LunarPhase = 'new' | 'waxing' | 'full' | 'waning';
 
-export type ResourceNodeState = {
-  quantity: number;
-  quality: number;
-  fullness: NormalizedValueBetweenZeroAndOne;
-  last: {
-    growth: number; // timestamp
-    decay: number; // timestamp
-  };
-};
-
-export type ResourceNodeStateWithTimestamp = ResourceNodeState & {
-  ts: number;
-};
-
 export type ResourceStateRenderer = (state: ResourceNodeStateWithTimestamp, now: number, schema: ResourceSchema) => string;
 
 type ResourceSchemaBase = {
@@ -117,11 +110,11 @@ type ResourceSchemaBase = {
   name: string;
 
   /**
-   * The path fragment used in the resource URN, derived from name.
+   * A URN fragment used in the resource URN, derived from name.
    * This should be a URL-safe, lowercase, hyphenated version of the name.
-   * Example: "large pond" -> "pond:large"
+   * Example: "large pond" -> "large-pond"
    */
-  path: string;
+  slug: string;
 
   /**
    * The "desirable things" that this resource provides
@@ -142,13 +135,13 @@ type ResourceSchemaBase = {
   /**
    * How the resource grows over time
    */
-  growth: GrowthBehaviorSpecification;
+  growth: GrowthSpecification;
 
   /**
    * How the resource decays over time
-   * A resource that is not growing is in a continuous state of decay.
+   * A resource that is not growing begins to decay
    */
-  decay?: GrowthBehaviorSpecification;
+  decay?: DecaySpecification;
 
   /**
    * A function that returns a description of the resource based on the schema and
@@ -163,7 +156,7 @@ type ResourceSchemaBase = {
    * not rendered.
    */
   description: ResourceStateRenderer;
-}
+};
 
 /**
  * This lets us model a resource node that produces a single "specimen"

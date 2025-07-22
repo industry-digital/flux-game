@@ -169,7 +169,6 @@ export {
   ECOLOGICAL_PROFILES,
   Biome,
   Climate,
-  EcosystemURN,
 } from './schema/ecology';
 
 export {
@@ -198,7 +197,7 @@ export {
   BulkResourceSchema,
   SpecimenResourceSchema,
   ResourceGrowthRequirements,
-  GrowthBehaviorSpecification,
+  GrowthSpecification as GrowthBehaviorSpecification,
   ResourceStateRenderer,
 } from './schema/resource';
 
@@ -208,6 +207,7 @@ export {
   ActorURN,
   ArmorURN,
   DirectionURN,
+  EcosystemURN,
   EffectURN,
   EntityURN,
   Intrinsic,

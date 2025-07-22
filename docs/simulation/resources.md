@@ -2,715 +2,731 @@
 
 ## Overview
 
-The resource generation system provides flora and elemental resources across the Flux simulation environment. Resources emerge naturally from place ecosystems based on climate and biome characteristics, creating realistic resource distribution patterns that drive player exploration, trade, and settlement decisions.
+The resource generation system provides flora, fungi, and mineral resources across the Flux simulation environment. Resources emerge naturally from place ecosystems based on climate, biome, and weather characteristics, creating realistic resource distribution patterns that drive player exploration, trade, and settlement decisions.
 
 ## Design Philosophy
 
-### Flora and Elemental Focus
+### Resource Categories
 
-The resource system focuses exclusively on **flora** (plant-based) and **elemental** (geological/mineral) resources found in places. Animal-derived materials (leather, meat, bone, etc.) are deliberately excluded from place-based resource generation - these come from Monster interactions instead.
+The resource system is organized into four main categories:
 
-This separation creates clear gameplay loops:
-- **Places** provide predictable, renewable flora and mineral resources
-- **Monsters** provide unpredictable, finite animal-derived materials
-- **Crafting** combines both types to create useful items
+1. **Trees** - Renewable wood and specialized products
+2. **Flowers** - Seasonal blooms with unique properties
+3. **Fungi** - Specialized decomposers with magical properties
+4. **Minerals** - Geological resources for crafting and technology
+5. **Water Bodies** - Dynamic water features affected by weather
 
-### Two-Dimensional Resource Distribution
-
-Resources are distributed along two orthogonal dimensions:
-
-1. **Climate-Based Resources** - determined by atmospheric conditions (temperate vs arid)
-2. **Biome-Based Resources** - determined by geographical features (grassland, forest, mountain)
-
-Each ecosystem gets resources from both dimensions, creating realistic resource combinations while maintaining clear design logic.
-
-## Climate-Based Resources
-
-Climate resources are determined by fundamental atmospheric patterns that affect plant growth and geological processes. Each climate provides 3 distinct resource types.
-
-### Temperate Climate Resources
-
-Temperate climates support diverse flora with moderate water requirements and enable specific geological processes.
-
-#### `flux:ingredient:fruit:berries`
-- **Type**: Ingredient (flora)
-- **Description**: Wild berries from temperate climate bushes and shrubs
-- **Characteristics**: Sweet, nutritious, seasonal availability
-- **Processing**: Can be eaten raw, preserved, or used in recipes
-
-#### `flux:material:fiber:cotton`
-- **Type**: Material (flora)
-- **Description**: Natural plant fibers from temperate climate cotton plants
-- **Characteristics**: Soft, absorbent, easily dyed
-- **Processing**: Spun into thread, woven into cloth, crafted into garments
-
-#### `flux:ingredient:bark:willow`
-- **Type**: Ingredient (flora)
-- **Description**: Willow bark from moisture-loving temperate trees
-- **Characteristics**: Natural pain relief, anti-inflammatory properties
-- **Processing**: Dried, ground, brewed into teas or applied as poultices
-
-### Arid Climate Resources
-
-Arid climates support specialized flora adapted to low water conditions and create unique mineral formations.
-
-#### `flux:ingredient:fruit:cactus`
-- **Type**: Ingredient (flora)
-- **Description**: Fruits from desert cacti adapted to arid conditions
-- **Characteristics**: High water content, unique flavors, natural preservatives
-- **Processing**: Fresh consumption, dried for preservation, fermented
-
-#### `flux:material:fiber:yucca`
-- **Type**: Material (flora)
-- **Description**: Tough fibers from yucca plants in arid environments
-- **Characteristics**: Strong, durable, naturally water-resistant
-- **Processing**: Woven into rope, baskets, or weather-resistant textiles
-
-#### `flux:ingredient:gel:aloe`
-- **Type**: Ingredient (flora)
-- **Description**: Healing gel from desert aloe succulents
-- **Characteristics**: Cooling, healing, natural antiseptic
-- **Processing**: Fresh gel application, dried for storage, mixed into salves
-
-## Biome-Based Resources
-
-Biome resources are determined by specific geographical and ecological features. Each biome provides 3 distinct resource types reflecting its unique characteristics.
-
-### Grassland Biome Resources
-
-Open grasslands support grain production and create specific geological conditions.
-
-#### `flux:ingredient:grain:wheat`
-- **Type**: Ingredient (flora)
-- **Description**: Seeds from wild wheat growing in open grasslands
-- **Characteristics**: Nutritious, storable, can be cultivated
-- **Processing**: Ground into flour, cooked as porridge, brewed into beverages
-
-#### `flux:material:fiber:grass`
-- **Type**: Material (flora)
-- **Description**: Long, strong grass fibers from prairie grasses
-- **Characteristics**: Flexible, lightweight, naturally golden
-- **Processing**: Woven into baskets, thatched for roofing, braided into rope
-
-#### `flux:mineral:salt`
-- **Type**: Mineral (elemental)
-- **Description**: Salt deposits from dried seasonal lakes and salt flats
-- **Characteristics**: Essential for food preservation, trade commodity
-- **Processing**: Harvested, purified, used for food preservation and seasoning
-
-### Forest Biome Resources
-
-Dense forests provide tree-based resources and support specialized flora.
-
-#### `flux:ingredient:seed:acorn`
-- **Type**: Ingredient (flora)
-- **Description**: Nutritious nuts from forest oak trees
-- **Characteristics**: High protein and fat, requires processing to remove tannins
-- **Processing**: Leached, ground into flour, roasted for direct consumption
-
-#### `flux:material:wood:(oak|maple|birch)`
-- **Type**: Material (flora)
-- **Description**: Dense wood from mature forest trees (oak, maple, birch)
-- **Characteristics**: Strong, durable, beautiful grain patterns
-- **Processing**: Cut into planks, carved into tools, crafted into furniture
-
-#### `flux:ingredient:root:sansam`
-- **Type**: Ingredient (flora)
-- **Description**: Rare variety of ginseng root found in deep forest environments
-- **Characteristics**: Adaptogenic properties, energy enhancement, rare and valuable
-- **Processing**: Dried, powdered, brewed into tonic teas
-
-### Mountain Biome Resources
-
-Mountains provide geological resources and support hardy alpine flora.
-
-#### `flux:ingredient:seed:pine`
-- **Type**: Ingredient (flora)
-- **Description**: Nutritious seeds from hardy mountain pine trees
-- **Characteristics**: High fat content, cold-hardy, long storage life
-- **Processing**: Roasted, pressed for oil, ground into meal
-
-#### `flux:material:stone:granite`
-- **Type**: Material (elemental)
-- **Description**: Hard stone formations from mountain bedrock
-- **Characteristics**: Extremely durable, weather-resistant, workable
-- **Processing**: Quarried, cut into blocks, carved into tools or monuments
-
-#### `flux:mineral:copper`
-- **Type**: Mineral (elemental)
-- **Description**: Copper ore deposits in mountain rock formations
-- **Characteristics**: Malleable metal, corrosion-resistant, conductive
-- **Processing**: Smelted, alloyed, forged into tools and decorative items
-
-## Battery Metal Resources
-
-Advanced energy storage technologies require specific rare metal resources that occur naturally in particular geological conditions. These metals enable the creation of powerful energy storage devices and arcane batteries.
-
-### Lithium Resources
-
-#### `flux:mineral:lithium`
-- **Type**: Mineral (elemental)
-- **Description**: Lithium-bearing minerals (spodumene, lepidolite) in granite pegmatites
-- **Characteristics**: Hard rock deposit, requires intensive mining and processing
-- **Processing**: Crushing, roasting, chemical extraction
-- **Occurrence**: Granite formations in mountainous regions, ancient volcanic areas
-- **Notes**: More stable than brine deposits but requires more complex extraction
-
-### Nickel Resources
-
-#### `flux:mineral:nickel`
-- **Type**: Mineral (elemental)
-- **Description**: Nickel sulfide ore deposits in ancient volcanic formations
-- **Characteristics**: High-temperature metal, corrosion-resistant, magnetic properties
-- **Processing**: Smelting, refining, alloying with other metals
-- **Occurrence**: Ancient volcanic intrusions, mountain ranges, geological fault zones
-- **Notes**: Often found associated with copper deposits, requires high-temperature processing
-
-### Cobalt Resources
-
-#### `flux:mineral:cobalt`
-- **Type**: Mineral (elemental)
-- **Description**: Cobalt arsenide ores in hydrothermal mineral veins
-- **Characteristics**: Hard, lustrous metal with magnetic properties
-- **Processing**: Roasting, leaching, electrowinning
-- **Occurrence**: Hydrothermal veins near geothermal areas, mountain regions
-- **Notes**: Toxic extraction process requires careful handling, often co-occurs with nickel
-
-### Manganese Resources
-
-#### `flux:mineral:manganese`
-- **Type**: Mineral (elemental)
-- **Description**: Manganese oxide deposits in sedimentary formations
-- **Characteristics**: Essential for steel production and battery cathodes
-- **Processing**: Reduction smelting, purification, alloying
-- **Occurrence**: Ancient ocean floor sediments, bog deposits, weathered rock formations
-- **Notes**: Important for both metallurgy and energy storage applications
-
-### Cadmium Resources
-
-#### `flux:mineral:cadmium`
-- **Type**: Mineral (elemental)
-- **Description**: Cadmium sulfide ore, typically found with zinc deposits
-- **Characteristics**: Soft, toxic metal with excellent battery properties
-- **Processing**: Byproduct of zinc refining, requires specialized handling
-- **Occurrence**: Zinc-bearing ore bodies, sedimentary deposits, mountain regions
-- **Notes**: Highly toxic, requires environmental protection measures during extraction
-
-### Rare Earth Elements
-
-#### `flux:mineral:monazite`
-- **Type**: Mineral (elemental)
-- **Description**: Monazite sands containing rare earth elements
-- **Characteristics**: Contains neodymium, dysprosium, and other battery metals
-- **Processing**: Acid dissolution, separation, purification
-- **Occurrence**: Beach sands, weathered granite, placer deposits
-- **Notes**: Critical for advanced battery technologies and magical energy storage
-
-### Battery Metal Distribution by Ecosystem
-
-**Mountain:Arid Ecosystems** (Primary Battery Metal Region):
-- `flux:mineral:lithium`
-- `flux:mineral:cobalt`
-- `flux:mineral:nickel`
-
-**Mountain:Temperate Ecosystems** (Secondary Battery Metal Region):
-- `flux:mineral:nickel`
-- `flux:mineral:monazite` - weathered granite
-- `flux:mineral:cadmium` - zinc-bearing deposits
-
-**Grassland:Temperate Ecosystems** (Sedimentary Battery Metals):
-- `flux:mineral:manganese` - sedimentary formations
-- `flux:mineral:monazite` - placer deposits
-
-### Processing and Safety Considerations
-
-**Environmental Hazards:**
-- Lithium extraction requires massive water usage
-- Cobalt and cadmium processing produces toxic byproducts
-- Rare earth extraction involves radioactive materials
-
-**Processing Requirements:**
-- High-temperature smelting facilities
-- Chemical processing plants
-- Specialized waste management
-- Skilled metallurgical knowledge
-
-**Economic Implications:**
-- Battery metals are high-value, low-volume resources
-- Extraction requires significant infrastructure investment
-- Transportation and security concerns due to strategic value
-- Enables advanced technological development
-
-## Ecosystem Resource Distribution
-
-Each launch ecosystem receives exactly 6 resources: 3 from its climate type and 3 from its biome type.
-
-### `flux:ecosystem:grassland:temperate`
-
-**Climate Resources (Temperate):**
-- `flux:ingredient:fruit:berries` - wild temperate berries
-- `flux:material:fiber:cotton` - temperate cotton fibers
-- `flux:ingredient:bark:willow` - temperate willow bark
-
-**Biome Resources (Grassland):**
-- `flux:ingredient:grain:wheat` - grassland grain seeds
-- `flux:material:fiber:grass` - grassland plant fibers
-- `flux:mineral:salt` - grassland salt deposits
-
-**Total**: 6 resources (3 ingredients, 2 materials, 1 mineral)
-
-### `flux:ecosystem:forest:temperate`
-
-**Climate Resources (Temperate):**
-- `flux:ingredient:fruit:berries` - wild temperate berries
-- `flux:material:fiber:cotton` - temperate cotton fibers
-- `flux:ingredient:bark:willow` - temperate willow bark
-
-**Biome Resources (Forest):**
-- `flux:ingredient:seed:acorn` - forest tree nuts
-- `flux:material:wood:(oak|maple|birch)` - forest hardwood
-- `flux:ingredient:root:sansam` - forest medicinal root
-
-**Total**: 6 resources (4 ingredients, 2 materials)
-
-### `flux:ecosystem:mountain:arid`
-
-**Climate Resources (Arid):**
-- `flux:ingredient:fruit:cactus` - arid climate cacti
-- `flux:material:fiber:yucca` - arid plant fibers
-- `flux:ingredient:gel:aloe` - arid succulent ingredient
-
-**Biome Resources (Mountain):**
-- `flux:ingredient:seed:pine` - mountain pine seeds
-- `flux:material:stone:granite` - mountain stone
-- `flux:mineral:copper` - mountain ore deposits
-
-**Total**: 6 resources (3 ingredients, 2 materials, 1 mineral)
-
-## Resource Generation Mechanics
+Each category has distinct growth patterns, requirements, and yields that create unique gameplay opportunities.
 
 ### Weather-Driven Generation
 
-Resource generation rates are influenced by weather conditions through the weather simulation system. Each resource type responds differently to atmospheric conditions:
+Resources respond dynamically to weather conditions:
 
-**Temperature Effects:**
-- **Flora resources** have optimal temperature ranges for growth/production
-- **Elemental resources** are generally unaffected by temperature
+- Temperature ranges
+- Humidity requirements
+- Light levels (PPFD)
+- Precipitation needs
+- Cloud cover effects
+- Fog impacts
+- Pressure conditions (for high-altitude resources)
 
-**Precipitation Effects:**
-- **Water-loving flora** (berries, cotton, willow) increase with precipitation
-- **Drought-adapted flora** (cacti, yucca, aloe) may decrease with excess water
-- **Mineral extraction** may be affected by water table levels
+### Time-Based Mechanics
 
-**PPFD (Light) Effects:**
-- **Photosynthetic resources** (all flora) directly correlate with available light
-- **Elemental resources** are unaffected by light levels
+Resources follow natural cycles:
 
-### Ecological Constraints
+- Seasonal availability
+- Day/night preferences
+- Lunar phase dependencies
+- Growth and decay curves
 
-Resource generation respects ecological boundaries defined in place profiles:
+## Resource Categories in Detail
 
-- Resources only generate within their appropriate climate and biome combinations
-- Generation rates are constrained by ecological limits (temperature, pressure, humidity ranges)
-- Seasonal variations affect availability and quality
+### Trees
 
-### Regeneration Patterns
+Trees are implemented as bulk resources that represent copses or groves rather than individual trees. Each tree type has specific climate requirements and yields multiple resources.
 
-**Flora Resources:**
-- **Seasonal regeneration** - berries, grains, nuts follow natural seasons
-- **Continuous regeneration** - cotton, fibers grow continuously under good conditions
-- **Slow regeneration** - medicinal ingredients like ginseng regenerate slowly
+#### Desert/Arid Trees
+- **Mesquite** - Provides wood, bark, nectar
+- **Juniper** - Provides wood, bark, berries, resin
 
-**Elemental Resources:**
-- **Geological regeneration** - stone and ore deposits regenerate very slowly
-- **Hydrological regeneration** - salt deposits refresh with seasonal water cycles
+#### Grassland Trees
+- **Cottonwood** - Provides wood, bark, resin
+- **Bur Oak** - Provides wood, bark, nuts
 
-## Integration with Other Systems
+#### Forest Trees
+- **Maple** - Provides wood, bark, sap
+- **White Birch** - Provides wood, bark, sap
+- **White Pine** - Provides wood, bark, resin, nuts
 
-### Weather System Integration
+#### Mountain Trees
+- **Mountain Pine** - Provides wood, bark, resin, nuts
+- **Aspen** - Provides wood, bark
 
-The resource system integrates directly with the weather simulation:
-- Weather conditions drive resource generation rates
-- Seasonal patterns affect resource availability
-- Extreme weather events can impact resource regeneration
+#### Tropical Trees
+- **Mahogany** - Provides wood, bark, seeds
+- **Rubber Tree** - Provides wood, bark, latex
+- **Breadfruit** - Provides wood, bark, fruit
 
-### Place Graph Integration
+#### Wetland Trees
+- **Bald Cypress** - Provides wood, bark
+- **Mangrove** - Provides wood, bark
 
-Resources respect spatial relationships:
-- Similar ecosystems in connected places have correlated resource generation
-- Resource scarcity in one area can drive exploration to neighboring places
-- Trade routes emerge naturally from resource distribution patterns
+### Flowers
 
-### Future Monster Integration
+Flowers are implemented with precise environmental requirements and often follow lunar cycles. They provide nectar and specialized products.
 
-The system is designed to complement future monster systems:
-- Places provide predictable plant and mineral resources
-- Monsters will provide unpredictable animal-derived materials
-- Crafting systems will combine both resource types
+#### Desert/Arid Flowers
+- **Desert Marigold** - Sun-loving, drought-resistant
+- **Desert Lupine** - Spring bloomer in mountain foothills
+
+#### Grassland Flowers
+- **Purple Coneflower** - Provides nectar, seeds
+- **Black-Eyed Susan** - Summer bloomer
+- **Prairie Rose** - Provides nectar, fruit
+
+#### Forest/Mountain Flowers
+- **Wild Columbine** - Shade-tolerant mountain flower
+- **Wild Trillium** - Forest understory specialist
+- **Fireweed** - Pioneer species, provides fiber
+
+#### Alpine Flowers
+- **Alpine Aster** - High-altitude specialist
+- **Mountain Sunflower** - Meadow species with seeds
+
+#### Tropical Flowers
+- **Mountain Passion Vine** - Climbing species
+- **Tropical Ginger** - Understory specialist
+- **Jungle Orchid** - Canopy epiphyte
+- **Black Lotus** - Rare magical species
+- **Swamp Orchid** - Wetland specialist
+
+### Fungi
+
+Fungi have unique growth requirements often tied to darkness and moisture. They provide specialized resources and magical components.
+
+#### Desert Fungi
+- **Desert Puffball** - Emerges after rain
+- **Alpine Bolete** - Mountain specialist
+
+#### Forest Fungi
+- **Chanterelle** - Lunar-dependent
+- **Cordyceps Gaeatrix** - Parasitic specialist
+
+#### Wetland Fungi
+- **Swamp Bracket** - Long-lasting decomposer
+
+#### Generalist Fungi
+- **Oyster Mushroom** - Adaptable decomposer
+- **Common Puffball** - Widespread species
+- **Honey Mushroom** - Aggressive parasite
+
+### Minerals
+
+Minerals are implemented as specimen resources with specific geological requirements. They are organized by technological application.
+
+#### Base Metals
+- **Iron** - Primary metal for tools
+- **Coal** - Carbon source for steel
+
+#### Steel Alloys
+- **Chromium** - Stainless steel component
+- **Nickel** - Temperature-resistant alloys
+- **Tungsten** - High-hardness tools
+- **Molybdenum** - Strength enhancer
+- **Vanadium** - Tool steel component
+- **Manganese** - Structural component
+
+#### Technology Minerals
+- **Silicon** - Electronics component
+- **Titanium** - Lightweight structures
+- **Cobalt** - High-speed tools
+- **Lithium** - Battery technology
+
+#### Piezoelectric Minerals
+- **Quartz** - Common piezoelectric
+- **Tourmaline** - Complex properties
+- **Topaz** - High-quality crystals
+- **Beryl** - Advanced applications
+
+### Water Bodies
+
+Water resources are dynamic features that respond to precipitation and climate.
+
+#### Types
+- **Large Puddle** - Ephemeral, quick to evaporate
+- **Small Pond** - Stable small water body
+- **Large Pond** - Significant ecosystem feature
+- **Small Lake** - Permanent water feature
+
+## Growth Mechanics
+
+### Growth Curves
+
+Resources use different growth curves based on their type:
+
+- **Linear** - Simple constant growth
+- **Logistic** - S-shaped natural growth
+- **Exponential** - Rapid multiplication
+- **Quadratic** - Accelerating growth
+- **Ease Out Quad** - Quick start, gradual finish
+
+### Time Scales
+
+Resources have varying growth and decay periods:
+
+- **Hours** - Water body replenishment
+- **Days** - Fungal growth cycles
+- **Weeks** - Flower blooming periods
+- **Months** - Tree growth
+- **Years** - Mineral regeneration
+
+## Integration with Weather
+
+The resource system integrates deeply with weather simulation:
+
+### Temperature Effects
+- **Cold-adapted** resources (Alpine species)
+- **Heat-tolerant** resources (Desert species)
+- **Temperate** resources (Forest/Grassland species)
+
+### Moisture Requirements
+- **Drought-resistant** (Desert/Steppe species)
+- **Moisture-loving** (Wetland/Tropical species)
+- **Moderate** (Temperate species)
+
+### Light Requirements
+- **Shade-tolerant** (Forest understory species)
+- **Full sun** (Grassland/Desert species)
+- **Variable** (Adaptable species)
 
 ## Gameplay Implications
 
-### Exploration Incentives
+### Resource Gathering
+- Weather conditions affect resource availability
+- Seasonal cycles create harvesting windows
+- Lunar phases influence magical resources
+- Day/night cycles affect gathering strategies
 
-The resource distribution creates natural exploration incentives:
-- **Climate diversity** - players must visit both temperate and arid regions
-- **Biome specialization** - each biome offers unique, non-replaceable resources
-- **Seasonal availability** - encourages long-term planning and storage
+### Settlement Planning
+- Water access is critical for development
+- Mineral deposits drive industrial growth
+- Tree resources enable construction
+- Fungi and flowers provide specialized materials
 
-### Trade and Economy
-
-Resource scarcity drives economic activity:
-- No ecosystem is completely self-sufficient
-- Each ecosystem has valuable exports and necessary imports
-- Natural trade routes emerge from resource complementarity
-
-### Settlement Strategy
-
-Resource availability influences settlement decisions:
-- **Resource richness** - some places have more abundant generation
-- **Resource diversity** - proximity to multiple ecosystems provides advantages
-- **Strategic positioning** - locations that control trade routes gain importance
+### Economic Systems
+- Resource requirements create trade networks
+- Seasonal availability drives market cycles
+- Rare resources have high value
+- Processing adds value to raw materials
 
 ## Future Extensions
 
-### Additional Climates
-
-The system can easily accommodate new climate types:
-- **Tropical** climate (hot + wet)
-- **Polar** climate (cold + dry)
-- **Mediterranean** climate (warm + seasonal)
-
-### Additional Biomes
-
-New biome types can be added:
-- **Wetland** biomes (swamps, marshes)
-- **Coastal** biomes (beaches, cliffs)
-- **Underground** biomes (caves, caverns)
-
-### Resource Quality Variations
-
-Future enhancements could include:
-- **Quality grades** based on generation conditions
-- **Rare variants** with special properties
-- **Seasonal quality changes** reflecting natural cycles
-
-This resource system provides a solid foundation for emergent gameplay while maintaining realistic ecological relationships and clear design principles.
-
----
-
-# Appendix: Product Catalog
-
-This appendix catalogs the potential products that can be created from our resource foundation, organized by category and complexity. Each product shows its resource requirements and the ecosystems needed to create it.
-
-## Product Categories
-
-### Food Products
-
-Food products transform our ingredient resources into consumable items with enhanced nutritional value, preservation, or flavor properties.
-
-#### Basic Foods (Single Ecosystem)
-
-**`flux:food:porridge:wheat`**
-- **Resources**: `flux:ingredient:grain:wheat` + `flux:mineral:salt`
-- **Ecosystem**: Grassland:Temperate
-- **Description**: Hearty grain porridge seasoned with salt
-- **Benefits**: Nutritious, filling, long-lasting energy
-
-**`flux:ingredient:flour:acorn`**
-- **Resources**: `flux:ingredient:seed:acorn` + processing
-- **Ecosystem**: Forest:Temperate
-- **Description**: Ground acorn meal with tannins removed
-- **Benefits**: High protein, gluten-free, storable
-
-**`flux:food:oil:pine`**
-- **Resources**: `flux:ingredient:seed:pine` + pressing
-- **Ecosystem**: Mountain:Arid
-- **Description**: Cold-pressed oil from pine nuts
-- **Benefits**: High-fat content, cooking oil, lamp fuel
-
-**`flux:food:jam:berries`**
-- **Resources**: `flux:ingredient:fruit:berries` + `flux:mineral:salt`
-- **Ecosystem**: Grassland:Temperate
-- **Description**: Berries preserved with salt for long-term storage
-- **Benefits**: Seasonal availability extension, trade commodity
-
-**`flux:food:extract:cactus`**
-- **Resources**: `flux:ingredient:fruit:cactus` + extraction
-- **Ecosystem**: Mountain:Arid
-- **Description**: Purified water extracted from cactus fruits
-- **Benefits**: Hydration, desert survival, electrolyte balance
-
-#### Advanced Foods (Multi-Ecosystem)
-
-**`flux:food:trail-mix`
-- **Resources**: `flux:ingredient:fruit:berries` + `flux:ingredient:seed:pine` + `flux:ingredient:seed:acorn`
-- **Ecosystems**: Forest:Temperate + Mountain:Arid
-- **Description**: High-energy mixture of nuts, seeds, and dried fruits
-- **Benefits**: Portable, long-lasting, balanced nutrition
-
-**`flux:food:desert-jerky`
-- **Resources**: `flux:ingredient:fruit:cactus` + `flux:mineral:salt` + drying
-- **Ecosystem**: Mountain:Arid
-- **Description**: Dried cactus fruit preserved with salt
-- **Benefits**: Lightweight, preserved, unique desert flavors
-
-**`flux:food:foraged-bread`**
-- **Resources**: `flux:ingredient:seed:acorn` + `flux:ingredient:grain:wheat` + `flux:mineral:salt`
-- **Ecosystems**: Forest:Temperate + Grassland:Temperate
-- **Description**: Mixed grain bread using both wheat and acorn flour
-- **Benefits**: Complex flavors, nutritional variety, cultural fusion
-
-### Medicinal Products
-
-Medicinal products process our ingredient resources with healing properties into useful remedies and treatments.
-
-#### Basic Remedies (Single Ecosystem)
-
-**`flux:product:medicine:willow_tea`**
-- **Resources**: `flux:ingredient:bark:willow` + hot water
-- **Ecosystem**: Forest:Temperate or Grassland:Temperate
-- **Description**: Brewed tea from willow bark
-- **Benefits**: Pain relief, anti-inflammatory, fever reduction
-
-**`flux:product:medicine:aloe_salve`**
-- **Resources**: `flux:ingredient:gel:aloe` + basic processing
-- **Ecosystem**: Mountain:Arid
-- **Description**: Cooling gel preparation for topical application
-- **Benefits**: Burn treatment, wound healing, skin soothing
-
-**`flux:product:medicine:sansam_tonic`**
-- **Resources**: `flux:ingredient:root:sansam` + alcohol/water extraction
-- **Ecosystem**: Forest:Temperate
-- **Description**: Concentrated extract of rare ginseng root
-- **Benefits**: Energy enhancement, adaptogenic properties, stamina boost
-
-#### Advanced Medicine (Multi-Ecosystem)
-
-**`flux:product:medicine:healing_compound`**
-- **Resources**: `flux:ingredient:bark:willow` + `flux:ingredient:gel:aloe` + `flux:ingredient:root:sansam`
-- **Ecosystems**: All three ecosystems
-- **Description**: Complete healing preparation combining multiple medicinal ingredients
-- **Benefits**: Comprehensive treatment, pain relief with healing acceleration
-
-**`flux:product:medicine:desert_survival_kit`**
-- **Resources**: `flux:ingredient:gel:aloe` + `flux:product:food:cactus_water` + container
-- **Ecosystem**: Mountain:Arid + crafting
-- **Description**: Emergency medical kit for desert conditions
-- **Benefits**: Heat exhaustion treatment, dehydration prevention, burn care
-
-### Textile Products
-
-Textile products transform our fiber materials into useful clothing, containers, and structural elements.
-
-#### Basic Textiles (Single Ecosystem)
-
-**`flux:product:textile:cotton_thread`**
-- **Resources**: `flux:material:fiber:cotton` + spinning
-- **Ecosystem**: Forest:Temperate or Grassland:Temperate
-- **Description**: Spun cotton fibers formed into usable thread
-- **Benefits**: Soft, absorbent, easily dyed, versatile
-
-**`flux:product:textile:yucca_rope`**
-- **Resources**: `flux:material:fiber:yucca` + braiding
-- **Ecosystem**: Mountain:Arid
-- **Description**: Strong rope braided from yucca plant fibers
-- **Benefits**: Weather-resistant, durable, naturally water-repellent
-
-**`flux:product:textile:grass_cordage`**
-- **Resources**: `flux:material:fiber:grass` + twisting
-- **Ecosystem**: Grassland:Temperate
-- **Description**: Lightweight cord twisted from prairie grass fibers
-- **Benefits**: Flexible, golden color, biodegradable
-
-#### Clothing (Single Ecosystem)
-
-**`flux:product:clothing:cotton_shirt`**
-- **Resources**: `flux:product:textile:cotton_thread` + weaving + sewing
-- **Ecosystem**: Temperate regions
-- **Description**: Comfortable shirt woven from cotton thread
-- **Benefits**: Breathable, comfortable, easily maintained
-
-**`flux:product:clothing:desert_cloak`**
-- **Resources**: `flux:material:fiber:yucca` + weaving
-- **Ecosystem**: Mountain:Arid
-- **Description**: Protective cloak woven from yucca fibers
-- **Benefits**: Sun protection, sand resistance, temperature regulation
-
-**`flux:product:clothing:grass_hat`**
-- **Resources**: `flux:material:fiber:grass` + weaving
-- **Ecosystem**: Grassland:Temperate
-- **Description**: Lightweight hat woven from grass fibers
-- **Benefits**: Sun protection, ventilation, natural camouflage
-
-#### Advanced Textiles (Multi-Ecosystem)
-
-**`flux:product:textile:mixed_fabric`**
-- **Resources**: `flux:material:fiber:cotton` + `flux:material:fiber:yucca`
-- **Ecosystems**: Temperate + Arid
-- **Description**: Blended fabric combining cotton softness with yucca durability
-- **Benefits**: Optimal balance of comfort and strength
-
-**`flux:product:textile:weatherproof_canvas`**
-- **Resources**: `flux:material:fiber:yucca` + `flux:product:food:pine_nut_oil` + treatment
-- **Ecosystems**: Mountain:Arid
-- **Description**: Treated yucca fabric with oil-based weatherproofing
-- **Benefits**: Water resistance, wind protection, tent material
-
-### Tools and Implements
-
-Tools combine our materials and minerals into functional implements for crafting, construction, and survival.
-
-#### Basic Tools (Single Ecosystem)
-
-**`flux:product:tool:copper_knife`**
-- **Resources**: `flux:mineral:copper` + smelting + forging
-- **Ecosystem**: Mountain:Arid
-- **Description**: Sharp knife forged from copper ore
-- **Benefits**: Cutting, food preparation, crafting tool
-
-**`flux:product:tool:wooden_bowl`**
-- **Resources**: `flux:material:wood:(oak|maple|birch)` + carving
-- **Ecosystem**: Forest:Temperate
-- **Description**: Carved wooden bowl for food and liquid storage
-- **Benefits**: Lightweight, natural, food-safe
-
-**`flux:product:tool:stone_hammer`**
-- **Resources**: `flux:material:stone:granite` + shaping
-- **Ecosystem**: Mountain:Arid
-- **Description**: Heavy hammer carved from granite stone
-- **Benefits**: Durable, heavy impact, stone shaping
-
-#### Advanced Tools (Multi-Ecosystem)
-
-**`flux:product:tool:copper_axe`**
-- **Resources**: `flux:mineral:copper` + `flux:material:wood:(oak|maple|birch)` + `flux:product:textile:grass_cordage`
-- **Ecosystems**: Mountain:Arid + Forest:Temperate + Grassland:Temperate
-- **Description**: Copper axe head with wooden handle secured by grass cordage
-- **Benefits**: Tree felling, wood splitting, construction tool
-
-**`flux:product:tool:mason_chisel`**
-- **Resources**: `flux:mineral:copper` + `flux:material:wood:(oak|maple|birch)` + precision forging
-- **Ecosystems**: Mountain:Arid + Forest:Temperate
-- **Description**: Precision copper chisel with hardwood handle
-- **Benefits**: Stone carving, detailed work, monument construction
-
-**`flux:product:tool:foraging_basket`**
-- **Resources**: `flux:material:fiber:grass` + `flux:ingredient:seed:pine` (needles) + weaving
-- **Ecosystems**: Grassland:Temperate + Mountain:Arid
-- **Description**: Tightly woven basket using grass fiber and pine needles
-- **Benefits**: Resource collection, food storage, lightweight carrying
-
-### Containers and Storage
-
-Containers provide storage solutions for resources, products, and personal items.
-
-#### Basic Containers (Single Ecosystem)
-
-**`flux:product:container:grass_basket`**
-- **Resources**: `flux:material:fiber:grass` + weaving
-- **Ecosystem**: Grassland:Temperate
-- **Description**: Simple basket woven from grass fibers
-- **Benefits**: Lightweight, flexible, air circulation
-
-**`flux:product:container:stone_jar`**
-- **Resources**: `flux:material:stone:granite` + hollowing + sealing
-- **Ecosystem**: Mountain:Arid
-- **Description**: Carved stone jar with fitted lid
-- **Benefits**: Durable, temperature stable, moisture protection
-
-#### Advanced Containers (Multi-Ecosystem)
-
-**`flux:product:container:wooden_chest`**
-- **Resources**: `flux:material:wood:(oak|maple|birch)` + `flux:mineral:copper` (fittings) + joinery
-- **Ecosystems**: Forest:Temperate + Mountain:Arid
-- **Description**: Wooden chest with copper hinges and lock mechanism
-- **Benefits**: Secure storage, large capacity, portable
-
-**`flux:product:container:yucca_water_bag`**
-- **Resources**: `flux:material:fiber:yucca` + `flux:product:food:pine_nut_oil` + waterproofing
-- **Ecosystems**: Mountain:Arid
-- **Description**: Yucca fiber bag treated with pine oil for water storage
-- **Benefits**: Flexible, portable, desert survival
-
-### Building Materials
-
-Building materials enable construction of structures, settlements, and infrastructure.
-
-#### Structural Materials (Single Ecosystem)
-
-**`flux:product:building:wooden_planks`**
-- **Resources**: `flux:material:wood:(oak|maple|birch)` + sawing
-- **Ecosystem**: Forest:Temperate
-- **Description**: Cut and shaped wooden planks for construction
-- **Benefits**: Versatile, strong, workable
-
-**`flux:product:building:stone_blocks`**
-- **Resources**: `flux:material:stone:granite` + cutting + shaping
-- **Ecosystem**: Mountain:Arid
-- **Description**: Precisely cut granite blocks for masonry
-- **Benefits**: Extremely durable, weather-resistant, permanent
-
-**`flux:product:building:thatching_bundles`**
-- **Resources**: `flux:material:fiber:grass` + bundling
-- **Ecosystem**: Grassland:Temperate
-- **Description**: Bundled grass fibers prepared for roof thatching
-- **Benefits**: Insulation, water shedding, renewable
-
-#### Advanced Building Materials (Multi-Ecosystem)
-
-**`flux:product:building:reinforced_beam`**
-- **Resources**: `flux:material:wood:(oak|maple|birch)` + `flux:mineral:copper` (brackets) + engineering
-- **Ecosystems**: Forest:Temperate + Mountain:Arid
-- **Description**: Wooden beam reinforced with copper brackets and fittings
-- **Benefits**: High load capacity, earthquake resistance, longevity
-
-**`flux:product:building:mortar`**
-- **Resources**: `flux:material:stone:granite` (crushed) + organic binders + mixing
-- **Ecosystem**: Mountain:Arid + processing
-- **Description**: Bonding mortar made from granite dust and organic compounds
-- **Benefits**: Strong adhesion, weather resistance, gap filling
-
-## Product Complexity Tiers
-
-### Tier 1: Basic Processing (Single Resource)
-- Direct processing of individual resources
-- Examples: Pine nut oil, grass cordage, copper ingots
-- **Skills Required**: Basic resource knowledge, simple tools
-- **Time Investment**: Hours to days
-
-### Tier 2: Local Combinations (Single Ecosystem)
-- Combining 2-3 resources from the same ecosystem
-- Examples: Wheat porridge, cotton cloth, stone tools
-- **Skills Required**: Local ecosystem expertise, basic crafting
-- **Time Investment**: Days to weeks
-
-### Tier 3: Regional Specialization (Multi-Ecosystem)
-- Combining resources from different ecosystems
-- Examples: Copper axe, mixed fabric, complete medicine kits
-- **Skills Required**: Trade knowledge, advanced crafting, material science
-- **Time Investment**: Weeks to months
-
-### Tier 4: Master Craftsmanship (All Ecosystems)
-- Complex recipes requiring resources from all three ecosystems
-- Examples: Luxury furniture, ceremonial items, advanced tools
-- **Skills Required**: Master-level expertise, extensive trade networks
-- **Time Investment**: Months to years
-
-## Economic Implications
-
-### Regional Specialization
-- **Grassland:Temperate**: Food production, basic textiles, agricultural tools
-- **Forest:Temperate**: Woodworking, medicine, furniture, containers
-- **Mountain:Arid**: Metallurgy, stone working, desert survival gear, mining tools
-
-### Trade Dependencies
-- **Essential Trades**: Copper tools require mountain resources but forest handles
-- **Luxury Trades**: Advanced medicines require ingredients from all ecosystems
-- **Seasonal Trades**: Preserved foods become valuable during resource scarcity
-
-### Settlement Strategies
-- **Resource Abundance**: Settlements near ecosystem boundaries access more resources
-- **Trade Routes**: Strategic locations controlling resource flow gain economic advantages
-- **Specialization**: Communities focusing on high-tier products command premium prices
-
-This product catalog demonstrates how our simple resource foundation creates complex economic opportunities through realistic crafting relationships and regional specialization patterns.
+### Planned Features
+- Resource quality variations
+- Processing mechanics
+- Crafting systems
+- Trading networks
+
+### Potential Additions
+- New biome-specific resources
+- Advanced weather interactions
+- Resource cultivation systems
+- Resource transformation chains
+
+## Resource Growth System
+
+We model resource growth using mathematical curves that are pegged to discrete resource capacities. Different resources can use different growth patterns (logistic, exponential, linear, custom) while environmental conditions drive curve parameters in real-time, creating a bottom-up system where natural patterns emerge from simple mathematical rules.
+
+### Resource Schema Structure
+```typescript
+// Resources have discrete capacities and environmental requirements
+type ResourceSchema = {
+  name: string;
+  provides: string[];           // What this resource yields
+  requirements: {               // Environmental conditions for growth
+    temperature?: { min?: number, max?: number };
+    humidity?: { min?: number, max?: number };
+    ppfd?: { min?: number };    // Light requirements
+    seasons?: Season[];
+    time?: TimeOfDay[];
+    // ... other environmental factors
+  };
+  growth: {
+    curve: EasingFunction;      // Defaults to LOGISTIC
+    duration: [number, TimeUnit]; // Time to reach 100% capacity
+  };
+  quantity: {
+    measure: UnitOfMeasure;
+    capacity: number;           // Hard cap (e.g., 100 flowers max)
+  };
+}
+```
+
+### Mathematical Foundation
+
+#### Growth Curve Pegged to Capacity
+```typescript
+// Any growth curve can be normalized to resource capacity
+function calculateResourceAmount(
+  resource: ResourceSchema,
+  environmentalConditions: EnvironmentalState,
+  curveTime: number
+): number {
+  const effectiveRate = calculateEnvironmentalMultiplier(
+    resource.requirements,
+    environmentalConditions
+  );
+
+  // Apply the specified easing function (logistic, exponential, linear, etc.)
+  const normalizedProgress = applyEasingFunction(
+    resource.growth.curve,
+    curveTime,
+    effectiveRate
+  );
+
+  // Scale to resource capacity: curve goes from 0 to capacity
+  const curveValue = normalizedProgress * resource.quantity.capacity;
+
+  // Current discrete amount
+  return Math.floor(curveValue);
+}
+
+// Generic easing function application
+function applyEasingFunction(
+  curve: EasingFunction,
+  time: number,
+  rate: number
+): number {
+  switch (curve) {
+    case Easing.LOGISTIC:
+      return 1 / (1 + Math.exp(-rate * time));
+
+    case Easing.EXPONENTIAL:
+      return 1 - Math.exp(-rate * time);
+
+    case Easing.LINEAR:
+      return Math.min(1, rate * time);
+
+    case Easing.CUBIC:
+      const t = Math.min(1, rate * time);
+      return t * t * (3 - 2 * t);
+
+    case Easing.POWER:
+      return Math.min(1, Math.pow(rate * time, 2));
+
+    default:
+      return Math.min(1, rate * time); // Fallback to linear
+  }
+}
+```
+
+#### Environmental Multiplier Calculation
+```typescript
+function calculateEnvironmentalMultiplier(
+  requirements: ResourceGrowthRequirements,
+  conditions: EnvironmentalState
+): number {
+  let multiplier = 1.0;
+
+  // Temperature factor
+  if (requirements.temperature) {
+    multiplier *= calculateRangeMultiplier(
+      conditions.temperature,
+      requirements.temperature.min,
+      requirements.temperature.max
+    );
+  }
+
+  // Humidity factor
+  if (requirements.humidity) {
+    multiplier *= calculateRangeMultiplier(
+      conditions.humidity,
+      requirements.humidity.min,
+      requirements.humidity.max
+    );
+  }
+
+  // Light factor (PPFD)
+  if (requirements.ppfd) {
+    multiplier *= Math.min(1.0, conditions.ppfd / requirements.ppfd.min);
+  }
+
+  // Seasonal factor
+  if (requirements.seasons && !requirements.seasons.includes(conditions.season)) {
+    multiplier = 0; // No growth outside preferred seasons
+  }
+
+  return multiplier;
+}
+```
+
+## Example: Different Growth Patterns
+
+```typescript
+// Logistic growth - classic S-curve (slow start, fast middle, slow end)
+export const WildRoseSchema = createResourceSchema({
+  name: 'wild rose',
+  growth: {
+    curve: Easing.LOGISTIC,
+    duration: [2, TimeUnit.WEEK]
+  },
+  quantity: { capacity: 12 }
+});
+
+// Exponential growth - rapid early growth, levels off (good for fungi)
+export const MushroomSchema = createResourceSchema({
+  name: 'mushroom',
+  growth: {
+    curve: Easing.EXPONENTIAL,
+    duration: [3, TimeUnit.DAY]
+  },
+  quantity: { capacity: 8 }
+});
+
+// Linear growth - steady constant rate (good for grass, leaves)
+export const PrairieGrassSchema = createResourceSchema({
+  name: 'prairie grass',
+  growth: {
+    curve: Easing.LINEAR,
+    duration: [1, TimeUnit.MONTH]
+  },
+  decay: {
+    curve: Easing.EASE_IN_QUAD,
+    duration: [3, TimeUnit.MONTH]
+  },
+  quantity: { capacity: 500 }
+});
+
+// Power curve - accelerating growth (good for fruit trees)
+export const AppleTreeSchema = createResourceSchema({
+  name: 'apple tree',
+  growth: {
+    curve: Easing.POWER,
+    duration: [4, TimeUnit.MONTH]
+  },
+  quantity: { capacity: 20 }
+});
+```
+
+## Harvesting Model
+
+### Curve Position Reset Approach (Universal)
+```typescript
+
+export type ResourceNodeState = {
+  quantity: number;
+  quality: number;
+  fullness: NormalizedValueBetweenZeroAndOne;
+  last: {
+    growth: number; // timestamp
+    decay: number; // timestamp
+  };
+};
+
+export type ResourceNodeStateWithTimestamp = ResourceNodeState & {
+  ts: number;
+};
+export type ResourceNodes = {
+  /**
+   * When the resources were last updated
+   */
+  ts: number;
+
+  /**
+   * The resource nodes that are present
+   */
+  nodes: Partial<Record<ResourceURN, ResourceNodeState>>;
+};
+
+function getCurrentVisibleAmount(
+  node: ResourceNode,
+  conditions: EnvironmentalState
+): number {
+  const effectiveRate = calculateEnvironmentalMultiplier(
+    node.schema.requirements,
+    conditions
+  );
+
+  // Calculate curve value at current position using specified easing function
+  const normalizedProgress = applyEasingFunction(
+    node.schema.growth.curve,
+    node.curveTime,
+    effectiveRate
+  );
+
+  const curveValue = normalizedProgress * node.schema.quantity.capacity;
+  return Math.floor(curveValue);
+}
+
+function harvestResource(
+  node: ResourceNode,
+  harvestedAmount: number,
+  conditions: EnvironmentalState
+): ResourceNode {
+  const newAmount = node.currentAmount - harvestedAmount;
+
+  // Find the curve time that corresponds to the new amount for ANY curve type
+  const newCurveTime = findCurveTimeForAmount(
+    node.schema,
+    newAmount,
+    conditions
+  );
+
+  return {
+    ...node,
+    currentAmount: newAmount,
+    curveTime: newCurveTime
+  };
+}
+
+function findCurveTimeForAmount(
+  schema: ResourceSchema,
+  targetAmount: number,
+  conditions: EnvironmentalState
+): number {
+  const effectiveRate = calculateEnvironmentalMultiplier(
+    schema.requirements,
+    conditions
+  );
+  const targetProgress = targetAmount / schema.quantity.capacity;
+
+  // Use inverse functions for different curve types
+  switch (schema.growth.curve) {
+    case Easing.LOGISTIC:
+      return Math.log((1 - targetProgress) / targetProgress) / (-effectiveRate);
+
+    case Easing.EXPONENTIAL:
+      return -Math.log(1 - targetProgress) / effectiveRate;
+
+    case Easing.LINEAR:
+      return targetProgress / effectiveRate;
+
+    case Easing.CUBIC:
+      // Numerical solution for cubic inverse (more complex)
+      return solveCubicInverse(targetProgress, effectiveRate);
+
+    case Easing.POWER:
+      return Math.pow(targetProgress, 1/2) / effectiveRate;
+
+    default:
+      return targetProgress / effectiveRate; // Fallback to linear
+  }
+}
+
+function updateResourceGrowth(
+  node: ResourceNode,
+  conditions: EnvironmentalState,
+  deltaTime: number
+): ResourceNode {
+  const effectiveRate = calculateEnvironmentalMultiplier(
+    node.schema.requirements,
+    conditions
+  );
+
+  // Advance along the curve based on environmental conditions
+  const newCurveTime = node.curveTime + (effectiveRate * deltaTime);
+
+  const normalizedProgress = applyEasingFunction(
+    node.schema.growth.curve,
+    newCurveTime,
+    effectiveRate
+  );
+
+  const newAmount = Math.floor(normalizedProgress * node.schema.quantity.capacity);
+
+  return {
+    ...node,
+    curveTime: newCurveTime,
+    currentAmount: Math.min(newAmount, node.schema.quantity.capacity)
+  };
+}
+```
+
+## Harvesting Example: Different Curve Behaviors
+
+### Logistic Curve (S-curve): 3 Flowers → 2 Flowers
+```typescript
+// Initial state: 3 flowers, classic S-curve growth
+const flowerPatch = {
+  schema: { growth: { curve: Easing.LOGISTIC }, capacity: 3 },
+  currentAmount: 3,
+  curveTime: 2.5  // Point where logistic curve = 1.0 (100% progress)
+};
+
+// After harvesting 1 flower:
+// - Find time where logistic(t) * 3 = 2
+// - Continue growth from that intersection point
+```
+
+### Exponential Curve: 5 Mushrooms → 3 Mushrooms
+```typescript
+// Initial state: 5 mushrooms, exponential growth pattern
+const mushroomPatch = {
+  schema: { growth: { curve: Easing.EXPONENTIAL }, capacity: 5 },
+  currentAmount: 5,
+  curveTime: 4.2  // Point where exponential curve reaches capacity
+};
+
+// After harvesting 2 mushrooms:
+// - Find time where (1 - e^(-rate * t)) * 5 = 3
+// - Continue exponential growth from that point
+```
+
+### Linear Curve: 100 Grass → 75 Grass
+```typescript
+// Initial state: 100 grass stalks, steady linear growth
+const grassPatch = {
+  schema: { growth: { curve: Easing.LINEAR }, capacity: 100 },
+  currentAmount: 100,
+  curveTime: 10.0  // Point where linear progression reaches 100%
+};
+
+// After harvesting 25 grass:
+// - Find time where (rate * t) * 100 = 75
+// - Continue linear growth from that point
+```
+
+### Universal Mathematical Process
+```
+For ANY curve type:
+1. Calculate targetProgress = newAmount / capacity
+2. Use inverse function to find curve time for that progress level
+3. Continue growth from that curve time forward
+
+Curve Types and Their Inverses:
+- Logistic: t = ln((1-p)/p) / (-rate)
+- Exponential: t = -ln(1-p) / rate
+- Linear: t = p / rate
+- Power: t = p^(1/n) / rate
+- Custom: Numerical inverse solving
+```
+
+## Environmental Response Examples
+
+### Good Conditions: Accelerated Growth
+```typescript
+// Perfect desert marigold weather
+const conditions = {
+  temperature: 25,      // Optimal range
+  humidity: 30,         // Perfect for desert flower
+  ppfd: 1500,          // High desert sun
+  season: 'spring',     // Growing season
+  time: 'day'          // Active time
+};
+// Environmental multiplier = 1.0 (full growth rate)
+```
+
+### Poor Conditions: Stunted Growth
+```typescript
+// Suboptimal conditions
+const conditions = {
+  temperature: 10,      // Too cold (below 15°C min)
+  humidity: 60,         // Too humid (above 45% max)
+  ppfd: 800,           // Insufficient light
+  season: 'winter',     // Wrong season
+  time: 'night'        // Wrong time
+};
+// Environmental multiplier = 0.0 (no growth)
+```
+
+### Marginal Conditions: Slow Growth
+```typescript
+// Borderline conditions
+const conditions = {
+  temperature: 16,      // Just above minimum
+  humidity: 44,         // Near maximum tolerance
+  ppfd: 1250,          // Adequate light
+  season: 'summer',     // Correct season
+  time: 'morning'      // Correct time
+};
+// Environmental multiplier = ~0.3 (slow growth)
+```
+
+## Resource Distribution Patterns
+
+### Natural Ecological Niches
+```typescript
+// Different flowers emerge in different conditions automatically:
+
+// Hot, dry, sunny areas → Desert Marigold dominates
+// Cool, humid, shaded areas → Wild Trillium thrives
+// Moderate grasslands → Purple Coneflower proliferates
+// Tropical, humid jungle → Orchids flourish
+
+// No manual placement needed - environmental requirements
+// create natural distribution patterns
+```
+
+### Seasonal Dynamics
+```typescript
+// Spring: Cool-weather flowers emerge first
+// Summer: Heat-tolerant species dominate
+// Fall: Late-season bloomers take over
+// Winter: Most flowers dormant, only hardy species persist
+
+// Transitions happen automatically as conditions change
+```
+
+## Update Frequency Considerations
+
+### Time-Independent Evaluation
+```typescript
+// This function always gives same result regardless of sampling frequency
+function updateResourceNodes(nodes: ResourceNode[], conditions: EnvironmentalState): ResourceNode[] {
+  const currentTime = Date.now();
+
+  return nodes.map(node => ({
+    ...node,
+    currentAmount: getCurrentVisibleAmount(node, conditions, currentTime)
+  }));
+}
+
+// Can be called every second, minute, or hour - same mathematical result
+```
+
+### Recommended Update Strategy
+```typescript
+// Environmental condition changes: 1-2 minutes (responsive)
+// Resource amount recalculation: 5-15 minutes (efficient)
+// Player location updates: 30 seconds - 2 minutes (noticeable)
+```
+
+## Key Advantages
+
+1. **Time-Independent**: Same result regardless of update frequency
+2. **Environmentally Responsive**: Growth immediately responds to condition changes
+3. **Mathematically Clean**: Pure function evaluation, no complex state tracking
+4. **Capacity Constrained**: Hard limits enforced mathematically
+5. **Realistic Patterns**: Natural S-curve acceleration and saturation
+6. **Emergent Distribution**: Environmental niches create natural resource zones
+7. **No Integration Errors**: Avoids cumulative sampling frequency problems
+
+## Usage Guidelines
+
+- Choose appropriate `curve` types based on biological reality:
+  - `Easing.LOGISTIC` for most natural growth (flowers, trees, populations)
+  - `Easing.EXPONENTIAL` for rapid early growth that levels off (fungi, bacteria)
+  - `Easing.LINEAR` for steady constant growth (grass, continuous resources)
+  - `Easing.POWER` for accelerating growth (fruit development, seasonal resources)
+  - Custom curves for specialized growth patterns
+
+- Set `capacity` to realistic maximums for the resource type
+- Define tight environmental `requirements` to create distinct ecological niches
+- Growth `duration` should reflect real-world growth timescales
+- `description` functions should reflect the `fullness` ratio dynamically
+- Environmental requirements create natural resource distribution without manual placement
+
+## Implementation Notes
+
+- The growth curve represents "what nature wants to be there" based on environmental support
+- Harvesting finds the intersection point on the curve and continues growth from that position
+- Resources regrow when the curve naturally progresses beyond the harvested amount
+- Poor environmental conditions slow or stop curve progression
+- Excellent conditions accelerate curve progression, enabling rapid recovery after harvesting
+- Different curve types create different regrowth behaviors:
+  - Logistic: Slow early regrowth, then rapid recovery, then slow final approach
+  - Exponential: Rapid initial regrowth that slows as it approaches original amount
+  - Linear: Steady constant regrowth rate
+  - Power: Slow initial regrowth that accelerates toward full recovery
+
+The system creates emergent resource distribution patterns where environmental conditions naturally determine what grows where, with each resource type following its biologically appropriate growth curve.

@@ -47,7 +47,7 @@ export const createFungusSchema = (transform: (defaults: ResourceSchema) => Reso
 export const TruffleSchema = createFungusSchema((defaults) => ({
   ...defaults,
   name: 'truffle',
-  path: 'truffle',
+  slug: 'truffle',
   provides: [...defaults.provides, 'seeds'],
   requirements: {
     ...defaults.requirements,
