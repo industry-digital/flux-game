@@ -65,6 +65,138 @@ function createExit(direction: Direction, to: PlaceURN, label?: string) {
   };
 }
 
+/**
+ * Create a controlled 5x5 grid for basic testing
+ */
+function createTestGrid5x5(): Place[] {
+  const places: Place[] = [];
+  for (let x = 0; x < 5; x++) {
+    for (let y = 0; y < 5; y++) {
+      // Use coordinates that represent meters (300m spacing)
+      const coordX = x * 300;
+      const coordY = y * 300;
+      const placeId = `flux:place:jungle:${coordX}:${coordY}` as PlaceURN;
+      const exits: any = {};
+
+      // Create exits to adjacent places (4-connectivity)
+      if (x > 0) {
+        const adjX = (x-1) * 300;
+        exits.west = createExit(Direction.WEST, `flux:place:jungle:${adjX}:${coordY}` as PlaceURN);
+      }
+      if (x < 4) {
+        const adjX = (x+1) * 300;
+        exits.east = createExit(Direction.EAST, `flux:place:jungle:${adjX}:${coordY}` as PlaceURN);
+      }
+      if (y > 0) {
+        const adjY = (y-1) * 300;
+        exits.south = createExit(Direction.SOUTH, `flux:place:jungle:${coordX}:${adjY}` as PlaceURN);
+      }
+      if (y < 4) {
+        const adjY = (y+1) * 300;
+        exits.north = createExit(Direction.NORTH, `flux:place:jungle:${coordX}:${adjY}` as PlaceURN);
+      }
+
+      places.push(createTestPlace({
+        id: placeId,
+        coordinates: [coordX, coordY], // Coordinates match URN
+        ecosystem: 'flux:eco:jungle:tropical',
+        weather: {
+          temperature: 23, pressure: 1013, humidity: 80,
+          precipitation: 0, ppfd: 1000, clouds: 50, ts: Date.now()
+        },
+        exits
+      }));
+    }
+  }
+  return places;
+}
+
+/**
+ * Create the exact same 24x24 grid used in weather system tests
+ * with 2x2 mountain cluster at center [11,11], [11,12], [12,11], [12,12]
+ */
+function createWeatherTestGrid(): Place[] {
+  const places: Place[] = [];
+
+  for (let x = 0; x < 24; x++) {
+    for (let y = 0; y < 24; y++) {
+      const isMountain = (x === 11 || x === 12) && (y === 11 || y === 12);
+      // Use coordinates that represent meters (300m spacing)
+      const coordX = x * 300;
+      const coordY = y * 300;
+      const placeId = `flux:place:${isMountain ? 'mountain' : 'jungle'}:${coordX}:${coordY}` as PlaceURN;
+      const exits: any = {};
+
+      // Create exits to adjacent places (4-connectivity)
+      if (x > 0) {
+        const adjX = (x-1) * 300;
+        const adjIsMountain = (x-1 === 11 || x-1 === 12) && (y === 11 || y === 12);
+        exits.west = createExit(Direction.WEST, `flux:place:${adjIsMountain ? 'mountain' : 'jungle'}:${adjX}:${coordY}` as PlaceURN);
+      }
+      if (x < 23) {
+        const adjX = (x+1) * 300;
+        const adjIsMountain = (x+1 === 11 || x+1 === 12) && (y === 11 || y === 12);
+        exits.east = createExit(Direction.EAST, `flux:place:${adjIsMountain ? 'mountain' : 'jungle'}:${adjX}:${coordY}` as PlaceURN);
+      }
+      if (y > 0) {
+        const adjY = (y-1) * 300;
+        const adjIsMountain = (x === 11 || x === 12) && (y-1 === 11 || y-1 === 12);
+        exits.south = createExit(Direction.SOUTH, `flux:place:${adjIsMountain ? 'mountain' : 'jungle'}:${coordX}:${adjY}` as PlaceURN);
+      }
+      if (y < 23) {
+        const adjY = (y+1) * 300;
+        const adjIsMountain = (x === 11 || x === 12) && (y+1 === 11 || y+1 === 12);
+        exits.north = createExit(Direction.NORTH, `flux:place:${adjIsMountain ? 'mountain' : 'jungle'}:${coordX}:${adjY}` as PlaceURN);
+      }
+
+      places.push(createTestPlace({
+        id: placeId,
+        coordinates: [coordX, coordY], // Coordinates match URN
+        ecosystem: isMountain ? 'flux:eco:mountain:temperate' : 'flux:eco:jungle:tropical',
+        weather: {
+          temperature: isMountain ? -5 : 23,
+          pressure: 1013,
+          humidity: 80,
+          precipitation: 0,
+          ppfd: isMountain ? 800 : 1000,
+          clouds: 50,
+          ts: Date.now()
+        },
+        exits
+      }));
+    }
+  }
+
+  return places;
+}
+
+/**
+ * Get ecosystem influence radius for testing (matches weather system logic)
+ */
+function getEcosystemInfluenceRadius(ecosystem: string): number {
+  if (ecosystem.includes('mountain')) return 3000; // 3000m for mountains
+  if (ecosystem.includes('jungle')) return 424; // ~424m for jungles
+  return 1000; // Default for other ecosystems
+}
+
+/**
+ * Calculate golden ring influence for testing (simplified weather system logic)
+ */
+function calculateGoldenRingInfluence(distance: number, radius: number, ecosystem: string): number {
+  if (distance >= radius) return 0;
+  const normalizedDistance = distance / radius;
+  return 1 - normalizedDistance; // Linear falloff for testing
+}
+
+/**
+ * Get ecosystem influence amplification for testing
+ */
+function getEcosystemInfluenceAmplification(ecosystem: string): number {
+  if (ecosystem.includes('mountain')) return 2.0; // Strong influence
+  if (ecosystem.includes('jungle')) return 0.5; // Weak influence
+  return 1.0; // Default
+}
+
 describe('PlaceGraph', () => {
 
   describe('constructor', () => {
@@ -1111,5 +1243,260 @@ describe('PlaceGraph', () => {
         expect(weatherInfluence.find(w => w.place.name === 'Nearby Place')?.influence).toBeCloseTo(0.8, 1);
       });
     });
+  });
+
+  // ========================================
+  // NEW COMPREHENSIVE SPATIAL INDEXING TESTS
+  // ========================================
+
+  describe('Coordinate System Validation', () => {
+    describe('coordinate extraction from place URNs', () => {
+      let graph: PlaceGraph;
+
+      beforeEach(() => {
+        const places = createTestGrid5x5();
+        graph = new PlaceGraph(places);
+      });
+
+             it('should extract coordinates from regular place URNs correctly', () => {
+         expect(graph.getCoordinates('flux:place:jungle:300:600')).toEqual([300, 600]);
+         expect(graph.getCoordinates('flux:place:jungle:0:0')).toEqual([0, 0]);
+         expect(graph.getCoordinates('flux:place:jungle:1200:1200')).toEqual([1200, 1200]);
+       });
+
+      it('should handle origin place specially', () => {
+        const places = [
+          createTestPlace({
+            id: 'flux:place:origin' as PlaceURN,
+            coordinates: [50, 75]
+          }),
+          ...createTestGrid5x5() // Add connected places for grid computation
+        ];
+        const graphWithOrigin = new PlaceGraph(places);
+
+        expect(graphWithOrigin.getCoordinates('flux:place:origin')).toEqual([50, 75]);
+      });
+
+      it('should handle edge cases gracefully', () => {
+        expect(graph.getCoordinates('invalid:urn' as PlaceURN)).toBeUndefined();
+        expect(graph.getCoordinates('nonexistent' as PlaceURN)).toBeUndefined();
+      });
+    });
+
+    describe('distance calculations', () => {
+      let graph: PlaceGraph;
+
+      beforeEach(() => {
+        const places = createWeatherTestGrid(); // 24x24 grid with 300m spacing
+        graph = new PlaceGraph(places);
+      });
+
+             it('should calculate distances between grid positions correctly', () => {
+         // Test known distances in our 300m grid
+         // Y8 = y*300 = 2400, Y11 = y*300 = 3300, so 3300-2400 = 900m apart
+         const dist1 = graph.getSpatialDistance('flux:place:jungle:3300:2400', 'flux:place:mountain:3300:3300');
+         expect(dist1).toBeCloseTo(900, 0); // 3 cells apart vertically (3 * 300 = 900)
+
+         const dist2 = graph.getSpatialDistance('flux:place:mountain:3300:3300', 'flux:place:mountain:3600:3300');
+         expect(dist2).toBeCloseTo(300, 0); // 1 cell apart horizontally
+
+         const dist3 = graph.getSpatialDistance('flux:place:mountain:3300:3300', 'flux:place:mountain:3600:3600');
+         expect(dist3).toBeCloseTo(424, 0); // Diagonal (sqrt(2) * 300 ≈ 424)
+       });
+
+             it('should handle zero distance correctly', () => {
+         const distance = graph.getSpatialDistance('flux:place:mountain:3300:3300', 'flux:place:mountain:3300:3300');
+         expect(distance).toBe(0);
+       });
+
+             it('should be symmetric', () => {
+         const dist1 = graph.getSpatialDistance('flux:place:jungle:3300:2400', 'flux:place:mountain:3300:3300');
+         const dist2 = graph.getSpatialDistance('flux:place:mountain:3300:3300', 'flux:place:jungle:3300:2400');
+         expect(dist1).toBeCloseTo(dist2!, 6);
+       });
+    });
+  });
+
+  describe('PlaceGraph Spatial Neighbor Discovery', () => {
+    let placeGraph: PlaceGraph;
+    let testPlaces: Place[];
+
+    beforeEach(() => {
+      // Create a controlled 5x5 grid for testing
+      testPlaces = createTestGrid5x5();
+      placeGraph = new PlaceGraph(testPlaces, { maxSpatialDistance: 3000 });
+    });
+
+    describe('basic spatial neighbor discovery', () => {
+             it('should find immediate neighbors within small radius', () => {
+         const centerPlace = 'flux:place:jungle:600:600'; // Center of 5x5 grid (2*300:2*300)
+         const neighbors = placeGraph.getSpatialNeighbors(centerPlace, 400);
+
+         // Should find 4 cardinal neighbors (diagonal neighbors are 424m away, outside 400m radius)
+         expect(neighbors.length).toBe(4);
+         expect(neighbors.every(n => n.distance <= 400)).toBe(true);
+         expect(neighbors.every(n => n.distance > 0)).toBe(true); // Exclude self
+                  expect(neighbors.every(n => n.distance === 300)).toBe(true); // All cardinal neighbors at 300m
+       });
+
+       it('should find all 8 immediate neighbors (cardinal + diagonal) with sufficient radius', () => {
+         const centerPlace = 'flux:place:jungle:600:600'; // Center of 5x5 grid (2*300:2*300)
+         const neighbors = placeGraph.getSpatialNeighbors(centerPlace, 450); // 450m > 424m (diagonal distance)
+
+         // Should find 8 immediate neighbors (4 cardinal + 4 diagonal)
+         expect(neighbors.length).toBe(8);
+         expect(neighbors.every(n => n.distance <= 450)).toBe(true);
+         expect(neighbors.every(n => n.distance > 0)).toBe(true); // Exclude self
+
+         // Should have 4 cardinal neighbors at 300m and 4 diagonal at ~424m
+         const cardinalNeighbors = neighbors.filter(n => n.distance === 300);
+         const diagonalNeighbors = neighbors.filter(n => Math.abs(n.distance - 424.26) < 1); // ~300*sqrt(2)
+         expect(cardinalNeighbors.length).toBe(4);
+         expect(diagonalNeighbors.length).toBe(4);
+       });
+
+       it('should find more neighbors with larger radius', () => {
+         const centerPlace = 'flux:place:jungle:600:600';
+         const neighbors = placeGraph.getSpatialNeighbors(centerPlace, 1000);
+
+         // Should find more than immediate neighbors
+         expect(neighbors.length).toBeGreaterThan(8);
+         expect(neighbors.length).toBeLessThanOrEqual(24); // Max in 5x5 grid minus center
+         expect(neighbors.every(n => n.distance <= 1000)).toBe(true);
+       });
+
+       it('should return results sorted by distance', () => {
+         const centerPlace = 'flux:place:jungle:600:600';
+         const neighbors = placeGraph.getSpatialNeighbors(centerPlace, 1000);
+
+         for (let i = 1; i < neighbors.length; i++) {
+           expect(neighbors[i].distance).toBeGreaterThanOrEqual(neighbors[i-1].distance);
+         }
+       });
+    });
+
+    describe('mountain cluster visibility test (the critical test)', () => {
+      beforeEach(() => {
+        // Create the exact same setup as our weather test: 24x24 grid with 2x2 mountain cluster at center
+        testPlaces = createWeatherTestGrid(); // Mountains at [11,11], [11,12], [12,11], [12,12]
+        placeGraph = new PlaceGraph(testPlaces, { maxSpatialDistance: 3000 });
+      });
+
+                    it('should find mountain cluster from Y10 position (300m-671m away)', () => {
+         const y10Place = 'flux:place:jungle:3300:3000'; // X=11*300=3300, Y=10*300=3000
+         const neighbors = placeGraph.getSpatialNeighbors(y10Place, 3000);
+         const mountains = neighbors.filter(n => n.place.ecosystem?.includes('mountain'));
+
+         expect(mountains.length).toBe(4); // Should find all 4 mountains
+         expect(mountains.every(m => m.distance <= 680)).toBe(true); // Farthest mountain ~671m away
+         expect(mountains.some(m => m.distance <= 350)).toBe(true); // At least one very close (300m)
+         expect(mountains.some(m => m.distance >= 650)).toBe(true); // At least one at diagonal distance (~671m)
+       });
+
+       it('should find mountain cluster from Y8 position (900m away) - THE CRITICAL TEST', () => {
+         const y8Place = 'flux:place:jungle:3300:2400'; // X=11*300=3300, Y=8*300=2400. Should be 900m from closest mountain
+         const neighbors = placeGraph.getSpatialNeighbors(y8Place, 3000);
+         const mountains = neighbors.filter(n => n.place.ecosystem?.includes('mountain'));
+
+         // This is the test that should reveal if PlaceGraph is broken
+         expect(mountains.length).toBe(4); // Should find all 4 mountains
+         expect(mountains.every(m => m.distance <= 1500)).toBe(true); // All within reasonable range
+         expect(mountains.some(m => m.distance >= 800)).toBe(true); // At least one at expected distance
+         expect(mountains.some(m => m.distance <= 1100)).toBe(true); // At least one close to 900m
+       });
+
+       it('should find expected total neighbor count in 3000m radius', () => {
+         const y8Place = 'flux:place:jungle:3300:2400'; // X=11*300=3300, Y=8*300=2400
+         const neighbors = placeGraph.getSpatialNeighbors(y8Place, 3000);
+
+         // In a 24x24 grid, should find many neighbors within 3000m (10 grid cells)
+         expect(neighbors.length).toBeGreaterThan(100); // Should be hundreds, not dozens
+         expect(neighbors.length).toBeLessThan(576); // Max possible in 24x24 grid
+       });
+    });
+
+    describe('edge cases and robustness', () => {
+             it('should handle places at grid boundaries', () => {
+         const cornerPlace = 'flux:place:jungle:0:0'; // Corner of grid
+         const neighbors = placeGraph.getSpatialNeighbors(cornerPlace, 1000);
+
+         expect(neighbors.length).toBeGreaterThan(0);
+         expect(neighbors.every(n => n.distance <= 1000)).toBe(true);
+       });
+
+       it('should handle very large radius without crashing', () => {
+         const centerPlace = 'flux:place:jungle:600:600'; // Center of 5x5 grid
+         const neighbors = placeGraph.getSpatialNeighbors(centerPlace, 100000);
+
+         expect(neighbors.length).toBeGreaterThan(0);
+         expect(Array.isArray(neighbors)).toBe(true);
+       });
+
+       it('should handle very small radius correctly', () => {
+         const centerPlace = 'flux:place:jungle:600:600'; // Center of 5x5 grid
+         const neighbors = placeGraph.getSpatialNeighbors(centerPlace, 100);
+
+         // Should find no neighbors or very few
+         expect(neighbors.length).toBeLessThan(8);
+         expect(neighbors.every(n => n.distance <= 100)).toBe(true);
+       });
+
+       it('should return empty array for impossible radius', () => {
+         const centerPlace = 'flux:place:jungle:600:600'; // Center of 5x5 grid
+         const neighbors = placeGraph.getSpatialNeighbors(centerPlace, 0);
+
+         expect(neighbors).toEqual([]);
+       });
+    });
+  });
+
+  describe('PlaceGraph Weather System Integration', () => {
+    let placeGraph: PlaceGraph;
+
+    beforeEach(() => {
+      const testPlaces = createWeatherTestGrid(); // Same grid as weather tests
+      placeGraph = new PlaceGraph(testPlaces, { maxSpatialDistance: 3000 });
+    });
+
+         it('should provide spatial data that enables mountain influence on Y8', () => {
+       const y8Place = 'flux:place:jungle:3300:2400'; // X=11*300=3300, Y=8*300=2400
+
+       // This is exactly what the weather system does
+       const spatialNeighbors = placeGraph.getSpatialNeighbors(y8Place, 3000);
+
+       // Filter to only sources that can reach this target (weather system logic)
+       const influentialNeighbors = spatialNeighbors.filter(({ place, distance }) => {
+         const sourceEcosystem = place.ecosystem || 'flux:eco:forest:temperate';
+         const sourceRadius = getEcosystemInfluenceRadius(sourceEcosystem); // 3000m for mountains, 424m for jungles
+         return distance <= sourceRadius; // Source can reach target
+       });
+
+       const mountains = influentialNeighbors.filter(n => n.place.ecosystem?.includes('mountain'));
+
+       // This should pass if PlaceGraph works correctly
+       expect(mountains.length).toBeGreaterThan(0); // Should find mountains
+       expect(mountains.length).toBeLessThanOrEqual(4); // Should not exceed mountain cluster size
+     });
+
+     it('should enable weather system to calculate intermediate temperatures', () => {
+       const y8Place = 'flux:place:jungle:3300:2400'; // X=11*300=3300, Y=8*300=2400
+       const spatialNeighbors = placeGraph.getSpatialNeighbors(y8Place, 3000);
+
+       // Simulate weather system influence calculation
+       const totalInfluence = spatialNeighbors.reduce((sum, { place, distance }) => {
+         const sourceEcosystem = place.ecosystem || 'flux:eco:forest:temperate';
+         const sourceRadius = getEcosystemInfluenceRadius(sourceEcosystem);
+
+         if (distance <= sourceRadius && distance > 0) {
+           const distanceInfluence = calculateGoldenRingInfluence(distance, sourceRadius, sourceEcosystem);
+           const ecosystemAmplification = getEcosystemInfluenceAmplification(sourceEcosystem);
+           return sum + (distanceInfluence * ecosystemAmplification);
+         }
+         return sum;
+       }, 0);
+
+       // If PlaceGraph works correctly, Y8 should have significant mountain influence
+       expect(totalInfluence).toBeGreaterThan(0.5); // Should have substantial influence from mountains
+     });
   });
 });

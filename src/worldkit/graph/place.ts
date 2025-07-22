@@ -23,7 +23,7 @@ export type SpatialNeighborhood = {
  */
 export type PlaceGraphOptions = {
   maxGraphRadius?: number;     // Maximum radius for precomputed graph topology lookups (default: 4)
-  maxSpatialDistance?: number; // Maximum distance in meters for precomputed spatial queries (default: 1500)
+  maxSpatialDistance?: number; // Maximum distance in meters for precomputed spatial queries (default: 3000)
 }
 
 /**
@@ -82,8 +82,8 @@ export class PlaceGraph {
     this.topology = new Map(places.map(place => [place.id as PlaceURN, place]));
 
     const config = options || {};
-    const maxGraphRadius = config.maxGraphRadius ?? 4;
-    const maxSpatialDistance = config.maxSpatialDistance ?? 1500;
+    const maxGraphRadius = config.maxGraphRadius ?? 3;
+    const maxSpatialDistance = config.maxSpatialDistance ?? 3000;
 
     // Precompute all spatial relationships and caches
     this.memo = this.buildMemoization(maxGraphRadius, maxSpatialDistance);
@@ -275,21 +275,6 @@ export class PlaceGraph {
    * Get coordinates from Place, handling origin special case
    */
   private getPlaceCoordinates(place: Place): [number, number] {
-    if (place.id === 'flux:place:origin') {
-      return place.coordinates; // Use coordinates property directly
-    }
-
-    // Parse from URN: flux:place:biome:x:y
-    const parts = place.id.split(':');
-    if (parts.length === 5) {
-      const x = parseInt(parts[3]);
-      const y = parseInt(parts[4]);
-      if (!isNaN(x) && !isNaN(y)) {
-        return [x, y];
-      }
-    }
-
-    // Fallback to coordinates property
     return place.coordinates;
   }
 
