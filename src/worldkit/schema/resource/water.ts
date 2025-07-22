@@ -8,8 +8,7 @@ import { Easing } from '~/lib/easing';
 function createWaterBodySchema(
   transform: (defaults: ResourceSchema) => ResourceSchema
 ): ResourceSchema {
-  const defaults: ResourceSchema = {
-    name: "water body",
+  const defaults: Partial<ResourceSchema> = {
 
     // By default, all bodies of water require minimal precipitation to grow
     requirements: {
@@ -43,7 +42,7 @@ function createWaterBodySchema(
       state.fullness > 0.3 ? "a shallow water body" : "a drying water bed"
   };
 
-  return transform(defaults);
+  return transform(defaults as ResourceSchema);
 }
 
 /**

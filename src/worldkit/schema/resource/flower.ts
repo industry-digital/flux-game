@@ -9,7 +9,7 @@ import { Easing } from '~/lib/easing';
 function createFlowerSchema(
   transform: (defaults: ResourceSchema) => ResourceSchema
 ): ResourceSchema {
-  const defaults: ResourceSchema = {
+  const defaults: Partial<ResourceSchema> = {
     name: 'flower',
 
     // By default, all flowers yield nectar
@@ -58,7 +58,7 @@ function createFlowerSchema(
     },
   };
 
-  return transform(defaults);
+  return transform(defaults as ResourceSchema);
 }
 
 export const DesertMarigoldSchema = createFlowerSchema((defaults) => ({

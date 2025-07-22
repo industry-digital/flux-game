@@ -3,8 +3,7 @@ import { ResourceSchema } from '~/types/schema/resource';
 import { Easing } from '~/lib/easing';
 
 export const createFungusSchema = (transform: (defaults: ResourceSchema) => ResourceSchema): ResourceSchema => {
-  const defaults: ResourceSchema = {
-    name: 'fungus',
+  const defaults: Partial<ResourceSchema> = {
     provides: ['mushroom'],
     requirements: {
       temperature: { min: 10, max: 30 },
@@ -42,12 +41,13 @@ export const createFungusSchema = (transform: (defaults: ResourceSchema) => Reso
     },
   };
 
-  return transform(defaults);
+  return transform(defaults as ResourceSchema);
 };
 
 export const TruffleSchema = createFungusSchema((defaults) => ({
   ...defaults,
   name: 'truffle',
+  path: 'truffle',
   provides: [...defaults.provides, 'seeds'],
   requirements: {
     ...defaults.requirements,

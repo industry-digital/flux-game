@@ -9,7 +9,7 @@ import { Easing } from '~/lib/easing';
 function createTreeSchema(
   transform: (defaults: BulkResourceSchema) => BulkResourceSchema,
 ): BulkResourceSchema {
-  const defaults: BulkResourceSchema = {
+  const defaults: Partial<BulkResourceSchema> = {
     name: 'tree',
 
     // All trees provide basic wood, bark
@@ -57,7 +57,7 @@ function createTreeSchema(
     },
   };
 
-  return transform(defaults);
+  return transform(defaults as BulkResourceSchema);
 }
 
 export const MesquiteSchema = createTreeSchema((defaults) => ({

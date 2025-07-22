@@ -5,6 +5,7 @@ export * from '~/worldkit/view';
 export * from '~/worldkit/event';
 export * from '~/worldkit/graph/place';
 export * from '~/worldkit/schema/manager';
+export * from '~/worldkit/schema/resource';
 export * from '~/template';
 
 // Explicit fact type exports to fix declaration merging issues

@@ -9,7 +9,7 @@ import { UnitOfMass } from '~/types/world/measures';
 function createMineralSchema(
   transform: (defaults: SpecimenResourceSchema) => SpecimenResourceSchema
 ): SpecimenResourceSchema {
-  const defaults: SpecimenResourceSchema = {
+  const defaults: Partial<SpecimenResourceSchema> = {
     name: 'mineral deposit',
 
     provides: ['ore'],
@@ -49,7 +49,7 @@ function createMineralSchema(
     },
   };
 
-  return transform(defaults);
+  return transform(defaults as SpecimenResourceSchema);
 }
 
 // BASE METALS FOR STEEL PRODUCTION
