@@ -116,7 +116,14 @@ type ResourceSchemaBase = {
    */
   name: string;
 
- /**
+  /**
+   * The path fragment used in the resource URN, derived from name.
+   * This should be a URL-safe, lowercase, hyphenated version of the name.
+   * Example: "large pond" -> "pond:large"
+   */
+  path: string;
+
+  /**
    * The "desirable things" that this resource provides
    * These are taxonomic atoms that describe the desirable things that can be extracted from the resource.
    * - Example: "nectar"

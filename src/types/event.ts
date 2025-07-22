@@ -96,6 +96,8 @@ export type ResourcesDidChangeInput = AbstractWorldEventInput<
     to: ResourceNodes;
   }>;
 
+export type ResourcesDidChange = EventBase & ResourcesDidChangeInput;
+
 export type WorldEventInput =
   | ActorWasCreatedInput
   | PlaceWasCreatedInput

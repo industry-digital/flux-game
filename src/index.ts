@@ -4,6 +4,7 @@ export * from '~/worldkit/entity';
 export * from '~/worldkit/view';
 export * from '~/worldkit/event';
 export * from '~/worldkit/graph/place';
+export * from '~/worldkit/schema/manager';
 export * from '~/template';
 
 // Explicit fact type exports to fix declaration merging issues
@@ -39,7 +40,6 @@ export {
   createCommandTypeGuard,
 } from '~/lib/intent';
 
-
 // Export command types
 export {
   CreateActorCommand,
@@ -49,6 +49,7 @@ export {
   MoveCommand,
   MoveCommandArgs,
   MutateWeatherCommand,
+  MutateResourcesCommand,
 } from '~/command';
 
 export {
@@ -79,6 +80,7 @@ import { CREATE_PLACE } from '~/command/CREATE_PLACE/handler';
 import { MATERIALIZE_ACTOR } from '~/command/MATERIALIZE_ACTOR/handler';
 import { DEMATERIALIZE_ACTOR } from '~/command/DEMATERIALIZE_ACTOR/handler';
 import { MUTATE_WEATHER } from '~/command/MUTATE_WEATHER/handler';
+import { MUTATE_RESOURCES } from '~/command/MUTATE_RESOURCES/handler';
 
 /**
  * The Flux World Server literally spreads this array into the Transformation stage.
@@ -88,11 +90,12 @@ import { MUTATE_WEATHER } from '~/command/MUTATE_WEATHER/handler';
 export const PURE_GAME_LOGIC_HANDLERS: PureHandlerImplementation<TransformerContext, any>[]
 = safeTopologicalSort(
   [
-    MOVE,
     CREATE_ACTOR,
     CREATE_PLACE,
-    MATERIALIZE_ACTOR,
     DEMATERIALIZE_ACTOR,
+    MATERIALIZE_ACTOR,
+    MOVE,
+    MUTATE_RESOURCES,
     MUTATE_WEATHER,
   ],
   (Handler) => Handler.prototype.dependencies ?? [],

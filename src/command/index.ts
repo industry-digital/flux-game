@@ -18,3 +18,4 @@ export { CREATE_PLACE, CreatePlaceCommand as CreatePlaceCommand } from './CREATE
 export { MATERIALIZE_ACTOR, MaterializeActorCommand } from './MATERIALIZE_ACTOR/handler';
 export { DEMATERIALIZE_ACTOR, DematerializeActorCommand } from './DEMATERIALIZE_ACTOR/handler';
 export { MUTATE_WEATHER, MutateWeatherCommand } from './MUTATE_WEATHER/handler';
+export { MUTATE_RESOURCES, MutateResourcesCommand } from './MUTATE_RESOURCES/handler';

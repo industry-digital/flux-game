@@ -193,6 +193,15 @@ export {
   SkillSchema,
 } from './schema/skill';
 
+export {
+  ResourceSchema,
+  BulkResourceSchema,
+  SpecimenResourceSchema,
+  ResourceGrowthRequirements,
+  GrowthBehaviorSpecification,
+  ResourceStateRenderer,
+} from './schema/resource';
+
 // Taxonomy exports
 export {
   AbilityURN,
