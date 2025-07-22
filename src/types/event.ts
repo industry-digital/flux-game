@@ -1,4 +1,5 @@
 import { Weather } from '~/types/entity/place';
+import { ResourceNodes } from '~/types/entity/resource';
 import { ActorURN, PlaceURN } from '~/types/taxonomy';
 
 export type EventPayload = Record<string, any>;
@@ -53,6 +54,7 @@ export enum EventType {
   ACTOR_DID_DEPART = 'actor:departed',
   ACTOR_DID_MATERIALIZE = 'actor:materialized',
   ACTOR_DID_DEMATERIALIZE = 'actor:dematerialized',
+  RESOURCES_DID_CHANGE = 'place:resources:changed',
   WEATHER_DID_CHANGE = 'place:weather:changed',
 }
 
@@ -87,6 +89,13 @@ export type WeatherDidChangeInput = AbstractWorldEventInput<
 
 export type WeatherDidChange = EventBase & WeatherDidChangeInput;
 
+export type ResourcesDidChangeInput = AbstractWorldEventInput<
+  EventType.RESOURCES_DID_CHANGE,
+  {
+    from: ResourceNodes;
+    to: ResourceNodes;
+  }>;
+
 export type WorldEventInput =
   | ActorWasCreatedInput
   | PlaceWasCreatedInput
@@ -95,6 +104,7 @@ export type WorldEventInput =
   | ActorDidMoveInput
   | ActorDidArriveInput
   | ActorDidDepartInput
+  | ResourcesDidChangeInput
   | WeatherDidChangeInput;
 
 /**
