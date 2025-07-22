@@ -25,7 +25,7 @@ export const ECOLOGICAL_PROFILES = {
     humidity: [55.0, 85.0]        // Forest moisture retention
   },
   'flux:eco:mountain:arid': {
-    temperature: [5, 25.0],    // Alpine temperature variation
+    temperature: [7.0, 23.0],    // Alpine temperature variation
     pressure: [950.0, 990.0],     // Low pressure (high altitude)
     humidity: [10.0, 35.0]        // Arid mountain conditions
   },
