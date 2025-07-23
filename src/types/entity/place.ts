@@ -2,7 +2,7 @@ import { EcosystemURN, EntityURN, PlaceURN, RootNamespace } from '~/types/taxono
 import { EntityType, AbstractEntity, Describable } from './entity';
 import { Direction } from '~/types/world/space';
 import { SpecialVisibility } from '~/types/world/visibility';
-import { ResourceGenerator } from './resource';
+import { ResourceGenerator, ResourceNodes } from './resource';
 
 export type PlaceVisibilityRules = Record<EntityURN, 1>;
 
@@ -68,6 +68,10 @@ export type PlaceInput = {
   name?: string;
   description?: string;
   exits?: Exits;
+  resources?: ResourceNodes;
+  weather?: Weather;
+  coordinates?: [number, number];
+  ecosystem?: EcosystemURN;
 } & Partial<ResourceGenerator>;
 
 export type Weather = {

@@ -241,3 +241,8 @@
 > "Rest now. Tomorrow, your real education begins."
 
 [End of FTE - Character enters normal gameplay]
+
+
+## IDEAS
+
+- Ask the player if she is right- or left-handed. This has a direct impact on "damaged side" computations in combat. One-handed weapons are always wielded on the main hand.
