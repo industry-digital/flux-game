@@ -84,4 +84,13 @@ describe('SchemaManager', () => {
       expect(stringSchemas[0]).toEqual({ name: 'Schema 3', value: 3 });
     });
   });
+
+  describe('getAllSchemas', () => {
+    const manager = createTestManager();
+
+    it('should return all schemas', () => {
+      const schemas = manager.getAllSchemas();
+      expect(schemas).toHaveLength(3); // see createTestManager
+    });
+  });
 });

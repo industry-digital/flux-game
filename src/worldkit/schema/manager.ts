@@ -23,4 +23,11 @@ export class SchemaManager<TSchemaType, TUrnType extends string> {
     }
     return output;
   }
+
+  /**
+   * Zero-copy, just return the map
+   */
+  public getAllSchemas(): Map<TUrnType, TSchemaType> {
+    return this.schemas;
+  }
 }

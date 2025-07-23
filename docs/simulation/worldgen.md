@@ -2,23 +2,15 @@
 
 ## Overview
 
-The World Generation Library is a sophisticated system for creating balanced, interconnected game worlds using optimized Lichtenberg fractal algorithms. It generates realistic geographic distributions across multiple ecosystems while maintaining deterministic behavior and high performance.
-
-## Context
-
-- [Philosophy](./docs/simulation/philosophy.md)
-- [Geography](./docs/simulation/geography.md)
-- [Weather](./docs/simulation/weather.md)
-
-## Current Status: Production-Ready Multi-Ecosystem
+The World Generation Library is a sophisticated system for creating balanced, interconnected game worlds using continuous river flow patterns with Gaussian ecosystem dithering. It generates realistic geographic distributions across multiple ecosystems while maintaining deterministic behavior and high performance.
 
 ## Core Concept
 
-Instead of traditional grid-based or noise-based world generation, our system uses **Lichtenberg figures** (electrical discharge patterns) to create natural, branching connectivity between locations. This approach produces worlds that feel organic and realistic, with natural flow patterns reminiscent of river systems, trade routes, and ecological corridors.
+Instead of traditional grid-based or noise-based world generation, our system uses **continuous river flow patterns** to create natural, branching connectivity between locations. This approach produces worlds that feel organic and realistic, with natural flow patterns reminiscent of river deltas, trade routes, and ecological corridors.
 
-### Key Innovation: Multi-Ecosystem Approach
+### Key Innovation: Multi-Ecosystem Approach with Golden Ratio Transitions
 
-Our system generates **separate Lichtenberg figures for each ecosystem band**, then connects them to create a unified world. This ensures balanced ecosystem representation rather than random clustering.
+Our system generates a continuous eastward-flowing river network that spans multiple ecosystem bands, using golden ratio proportions (38.2% pure zones, 61.8% transition zones) to create natural transitions between ecosystems:
 
 ```
 West ←→ East
@@ -26,7 +18,7 @@ West ←→ East
 │Steppe│Grass│Forest│Mount│Jungle│
 │ 20% │ 20% │ 20% │ 20% │ 20% │
 └─────┴─────┴─────┴─────┴─────┘
-        + 13% Marsh dithering →
+        + Marsh in the east →
 ```
 
 ## Architecture
@@ -37,313 +29,174 @@ West ←→ East
 ┌─────────────────────────────────────┐
 │ World Generation Layer              │
 │ (src/worldgen/)                     │
-│ • Maps geometry to game concepts    │
-│ • Creates Place objects             │
-│ • Applies ecosystem rules           │
+│ • Continuous river flow             │
+│ • Gaussian ecosystem dithering      │
+│ • Ecosystem connectivity targets    │
 └─────────────────┬───────────────────┘
                   │
 ┌─────────────────▼───────────────────┐
-│ Pure Geometric Layer                │
-│ (src/lib/fractal/)                  │
-│ • Lichtenberg figure generation     │
-│ • No world/game concepts            │
-│ • Optimized algorithms              │
+│ Core Generation Layer               │
+│ (src/worldgen/generator.ts)         │
+│ • River flow algorithms            │
+│ • Diagonal intersection rules      │
+│ • Ecosystem band definitions       │
 └─────────────────────────────────────┘
-```
-
-### File Structure
-
-```
-src/
-├── lib/fractal/
-│   ├── lichtenberg.ts           # Pure geometric algorithm
-│   └── lichtenberg.spec.ts      # 24 geometric tests
-├── worldgen/
-│   ├── types.ts                 # World-specific types
-│   ├── generator.ts             # Main export point
-│   ├── integration.ts           # Multi-ecosystem generation
-│   └── integration.spec.ts      # 26 integration tests
 ```
 
 ## How It Works
 
-### 1. Ecosystem Band Generation
+### 1. Ecosystem Band Definition
 
-The system divides the world into 5 vertical bands (20% each):
+The system divides the world into 5 vertical bands with golden ratio transitions:
 
 1. **Steppe (Arid)** - Western band, dry grasslands
 2. **Grassland (Temperate)** - Rolling plains and meadows
 3. **Forest (Temperate)** - Dense woodlands and groves
 4. **Mountain (Arid)** - Rocky peaks and highlands
 5. **Jungle (Tropical)** - Dense tropical rainforest
+6. **Marsh (Tropical)** - Appears in the eastern edge
 
-**Plus**: 13% Marsh (Tropical) dithering in the eastern band
+Each band has:
+- Pure zone (38.2% of band width, centered)
+- Transition zones (61.8% total, split between edges)
 
-### 2. Lichtenberg Figure Generation
+### 2. Continuous River Flow Generation
 
-For each ecosystem band, the system generates a separate Lichtenberg figure:
+The system generates an eastward-flowing river network:
 
 ```typescript
-const lichtenbergConfig = {
-  startX: 0,                    // Start at band beginning
-  startY: worldHeight / 2,      // Centered vertically
-  width: bandWidth,             // 20% of world width
-  height: worldHeight,
-  eastwardBias: 0.7,           // Flow toward next band
-  startingVertexId: uniqueId,   // Prevent ID collisions
-  // ... other parameters
+const flowConfig = {
+  branchingFactor: 0.6,        // Controls network density
+  meanderingFactor: 0.5,       // Controls path variation
+  ditheringStrength: 0.5,      // Controls ecosystem mixing
+  showZoneBoundaries: false,   // For visualization
+  seed: number                 // For deterministic generation
 };
 ```
 
-### 3. Inter-Ecosystem Connectivity
+Key features:
+- Eastward flow bias
+- Natural branching patterns
+- Diagonal intersection rules for square formation
+- Ecosystem-specific connectivity targets
 
-Adjacent ecosystem bands are automatically connected by linking:
-- **Easternmost vertex** of western band
-- **Westernmost vertex** of eastern band
+### 3. Gaussian Ecosystem Dithering
 
-This creates natural transition zones between ecosystems.
+The system applies sophisticated dithering to create natural transitions:
 
-### 4. Place Object Creation
+- Uses Gaussian probability curves near boundaries
+- Respects ecosystem adjacency rules
+- Adjusts dithering strength based on distance
+- Creates smooth transitions between bands
 
-Each Lichtenberg vertex becomes a full `Place` object with:
+### 4. Ecosystem-Specific Connectivity
 
-```typescript
-{
-  id: "flux:place:vertex_42",           // Unique identifier
-  name: "Windswept Plateau",            // Ecosystem-appropriate name
-  description: "A dry, windswept...",   // Generated description
-  ecology: {
-    ecosystem: "flux:eco:steppe:arid",
-    temperature: [15, 35],              // Ecosystem ranges
-    pressure: [1000, 1020],
-    humidity: [20, 45]
-  },
-  weather: { /* current conditions */ },
-  resources: { /* resource nodes */ },
-  exits: { /* connections to other places */ }
-}
-```
-
-## Usage
-
-### Basic World Generation
+Each ecosystem has target connectivity values:
 
 ```typescript
-import { generateWorld } from './src/worldgen';
-
-const world = generateWorld({
-  minPlaces: 100,              // Target minimum places
-  maxPlaces: 200,              // Maximum places (soft limit)
-  worldAspectRatio: 1.618,     // Golden ratio (required)
-  lichtenberg: {
-    minVertices: 30,           // Min vertices per ecosystem
-    maxChainLength: 15         // Max branch length
-  }
-});
-
-console.log(`Generated ${world.places.length} places`);
-console.log(`${world.connections.total} connections`);
-```
-
-### Expected Output
-
-```
-Generated 200 places
-199 connections
-
-Ecosystem Distribution:
-- steppe:arid: 40 places (20.0%)
-- grassland:temperate: 40 places (20.0%)
-- forest:temperate: 40 places (20.0%)
-- mountain:arid: 40 places (20.0%)
-- jungle:tropical: 39 places (19.5%)
-- marsh:tropical: 1 place (0.5%)
+const TARGET_CONNECTIVITY = {
+  'flux:eco:steppe:arid': 3.0,        // High connectivity plains
+  'flux:eco:grassland:temperate': 3.0,
+  'flux:eco:forest:temperate': 2.0,    // Moderate forest paths
+  'flux:eco:mountain:arid': 1.5,       // Sparse mountain passes
+  'flux:eco:jungle:tropical': 1.5,
+  'flux:eco:marsh:tropical': 1.0       // Limited marsh access
+};
 ```
 
 ## Key Features
 
-### 🎯 **Balanced Distribution**
-- Each ecosystem gets ~20% representation
-- No ecosystem dominance or absence
-- Marsh appears rarely (13% dithering) as intended
+### 🌊 **Natural Flow Patterns**
+- Continuous river-like networks
+- Eastward progression
+- Natural branching and meandering
+- Square formation at intersections
 
-### 🔗 **Natural Connectivity**
-- Fish-spine branching patterns
-- Eastward flow bias mimics natural geography
-- Inter-ecosystem connections create unified world
+### 🎨 **Sophisticated Dithering**
+- Gaussian probability curves
+- Distance-based transition strength
+- Adjacent ecosystem mixing
+- Pure and transition zone balance
 
-### ⚡ **High Performance**
-- O(N log N) time complexity
-- Pre-allocated storage
-- Lookup table trigonometry
-- Spatial indexing for boundary detection
+### 🔗 **Smart Connectivity**
+- Ecosystem-specific targets
+- Cardinal and diagonal connections
+- Exact 45-degree diagonals
+- Natural transition zones
 
-### 🎲 **Deterministic**
-- Same configuration → identical world
-- Seeded random number generation
-- Reproducible for testing and debugging
+### 🎲 **Deterministic Generation**
+- Seed-based randomization
+- Reproducible results
+- Consistent ecosystem distribution
+- Predictable connectivity
 
-### 🧪 **Thoroughly Tested**
-- 193 total tests (100% pass rate)
-- 26 world generation integration tests
-- 24 geometric algorithm tests
-- Edge cases and performance validation
+### 📊 **Balanced Distribution**
+- Golden ratio zone proportions
+- Even ecosystem representation
+- Natural transition boundaries
+- Marsh zone integration
 
 ## Technical Details
 
-### Unique ID Management
-
-**Problem**: Multiple ecosystem figures generate overlapping vertex IDs
-**Solution**: `startingVertexId` parameter in `LichtenbergConfig`
-
-```typescript
-// Ecosystem 1: vertex_0, vertex_1, vertex_2...
-// Ecosystem 2: vertex_20, vertex_21, vertex_22...
-// Ecosystem 3: vertex_45, vertex_46, vertex_47...
-```
-
 ### Ecosystem Assignment
 
-Places are assigned to ecosystems based on their X-coordinate:
+Places are assigned to ecosystems using a combination of:
+1. Initial band-based assignment
+2. Gaussian dithering near boundaries
+3. Distance-based transition probabilities
+4. Adjacent ecosystem mixing rules
 
-```typescript
-function determineEcosystem(x: number, y: number): EcosystemName {
-  const normalizedX = x / worldWidth;
+### Connectivity Adjustment
 
-  if (normalizedX < 0.2) return EcosystemName.STEPPE_ARID;
-  if (normalizedX < 0.4) return EcosystemName.GRASSLAND_TEMPERATE;
-  if (normalizedX < 0.6) return EcosystemName.FOREST_TEMPERATE;
-  if (normalizedX < 0.8) return EcosystemName.MOUNTAIN_ARID;
-
-  // Eastern band with 13% marsh dithering
-  return hash(x, y) % 100 < 13
-    ? EcosystemName.MARSH_TROPICAL
-    : EcosystemName.JUNGLE_TROPICAL;
-}
-```
+The system adjusts connectivity by:
+1. Measuring current connectivity per ecosystem
+2. Adding edges to reach targets
+3. Preferring cardinal directions
+4. Maintaining exact 45° diagonals
 
 ### Performance Characteristics
 
 | Metric | Value |
 |--------|-------|
-| **Time Complexity** | O(N log N) |
-| **Space Complexity** | O(N) |
-| **Generation Time** | < 5 seconds for 200 places |
-| **Memory Usage** | Pre-allocated, no reallocations |
-| **ID Assignment** | O(1) per vertex |
-
-## Configuration Options
-
-### WorldGenerationConfig
-
-```typescript
-{
-  minPlaces: number;           // Target minimum places
-  maxPlaces?: number;          // Maximum places (soft limit)
-  worldAspectRatio: 1.618;     // Fixed golden ratio
-  lichtenberg: {
-    minVertices: number;       // Min vertices per ecosystem
-    maxChainLength: number;    // Max branch depth
-  }
-}
-```
-
-### LichtenbergConfig (Advanced)
-
-```typescript
-{
-  startX: number;              // Starting X coordinate
-  startY: number;              // Starting Y coordinate
-  width: number;               // Figure width
-  height: number;              // Figure height
-  branchingFactor: number;     // Branch probability (0-1)
-  branchingAngle: number;      // Max angle deviation
-  stepSize: number;            // Distance between vertices
-  maxDepth: number;            // Maximum branch depth
-  eastwardBias: number;        // Eastward flow bias (0-1)
-  seed?: number;               // Random seed
-  startingVertexId?: number;   // Starting vertex ID
-  sparking?: {                 // Recursive sparking config
-    enabled: boolean;
-    probability: number;
-    maxSparkDepth: number;
-    // ...
-  }
-}
-```
-
-## Geography.md Compliance
-
-The world generation system strictly follows the ecosystem specifications in [geography.md](./geography.md):
-
-- **Ecosystem Types**: 6 defined ecosystems with specific climate ranges
-- **Spatial Distribution**: 5 vertical bands + marsh dithering
-- **Climate Profiles**: Temperature, pressure, humidity ranges per ecosystem
-- **Granularity**: 100x100m Place resolution
+| **Generation Time** | ~20ms for 800 vertices |
+| **Edge Count** | ~900-1000 edges |
+| **Dithering Rate** | ~47% of transition vertices |
+| **Pure/Transition** | ~38.2%/61.8% ratio |
 
 ## Testing Strategy
 
-### Comprehensive Coverage
+Our tests focus on what matters:
 
-1. **Basic Generation Tests**
-   - Minimum place count validation
-   - Proper data structure generation
-   - Valid ecosystem assignment
+1. **Ecosystem Mixing**
+   - Natural transitions between bands
+   - No impossible ecosystem jumps
+   - Adjacent ecosystem presence
 
-2. **Deterministic Behavior Tests**
-   - Same config → identical results
-   - Different configs → different results
-   - Seed variation validation
+2. **Dithering Quality**
+   - Effective transition zones
+   - Proper mixing ratios
+   - Strength-based variation
 
-3. **Ecosystem Distribution Tests**
-   - Multiple ecosystem representation
-   - Ecosystem profile compliance
-   - Balanced distribution validation
+3. **Connectivity Goals**
+   - Ecosystem-specific targets
+   - Natural path formation
+   - Proper edge distribution
 
-4. **Edge Case Tests**
-   - Very small worlds (5-10 places)
-   - Very large worlds (200+ places)
-   - Extreme aspect ratios
-
-5. **Performance Tests**
-   - Sub-5-second generation
-   - Memory usage validation
-   - Batch generation consistency
-
-### Running Tests
-
-```bash
-# Run all world generation tests
-npm test -- integration.spec.ts
-
-# Run geometric algorithm tests
-npm test -- lichtenberg.spec.ts
-
-# Run all tests
-npm test
-```
+4. **Visual Quality**
+   - Continuous flow patterns
+   - Natural branching
+   - Smooth transitions
 
 ## Future Enhancements
 
 ### Potential Improvements
 
-1. **Dynamic Ecosystem Count**: Support for N ecosystems instead of fixed 5
-2. **Custom Ecosystem Definitions**: User-defined ecosystem parameters
-3. **Elevation Modeling**: Height-based ecosystem transitions
-4. **Climate Simulation**: Dynamic weather pattern generation
-5. **Resource Distribution**: Ecosystem-specific resource abundance
-6. **Biome Transitions**: Gradual ecosystem boundaries instead of sharp bands
-
-### Extensibility
-
-The clean architecture makes it easy to:
-- Add new ecosystem types
-- Modify connectivity algorithms
-- Integrate with external geography data
-- Customize place generation logic
+1. **Dynamic Weather**: Weather system integration
+2. **Resource Distribution**: Ecosystem-based resources
+3. **Elevation Integration**: Height-based transitions
+4. **Custom Ecosystems**: User-defined bands
+5. **Advanced Dithering**: Multi-factor transition rules
 
 ## Conclusion
 
-The World Generation Library provides a robust, tested, and performant solution for creating balanced game worlds. Its multi-ecosystem approach ensures consistent representation of all biomes while maintaining the natural, organic feel that makes Lichtenberg-based generation so compelling.
-
-The system is production-ready with comprehensive test coverage and can generate complex worlds in seconds while maintaining deterministic behavior for reliable testing and debugging.
+Our World Generation Library creates beautiful, natural-looking worlds using continuous river flow patterns and sophisticated ecosystem dithering. The system produces balanced, interconnected environments that maintain the organic feel of natural geography while ensuring consistent ecosystem representation and connectivity.
