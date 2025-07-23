@@ -94,7 +94,7 @@ export type TransformerImplementation<
 > = new (...args: any[]) => TransformerInterface<I>;
 
 /** Pure, deterministic reducer with zero side effects */
-export type PureReducer<C, I> = (context: C, input: I) => C;
+export type PureReducer<C, I, O = any> = (context: C, input: I, ...args: O[]) => C;
 
 /**
  * @deprecated Use PureReducer<TransformerContext, AnyCommand<T, A>> instead for more flexibility
