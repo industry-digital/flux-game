@@ -26,8 +26,7 @@ export type MutateWeatherCommand = SystemCommand<CommandType.MUTATE_WEATHER, Mut
 export const mutateWeatherReducer: PureReducer<TransformerContext, MutateWeatherCommand> = (context, command) => {
   const { declareEvent, declareError } = context;
   const { places } = context.world;
-  const { placeId, weather } = command.args;
-
+  const { placeId } = command.args;
   const place = places[placeId];
 
   if (!place) {
@@ -35,18 +34,18 @@ export const mutateWeatherReducer: PureReducer<TransformerContext, MutateWeather
     return context;
   }
 
-  const next: Weather = weather;
-  const previous: Weather | null = place.weather ?? null;
+  const currentWeather: Weather | null = place.weather ?? null;
+  const nextWeather = command.args.weather;
 
-  place.weather = next;
+  place.weather = nextWeather;
 
   const event: WeatherDidChangeInput = {
     type: EventType.WEATHER_DID_CHANGE,
     trace: command.id,
     location: placeId,
     payload: {
-      from: previous,
-      to: next,
+      from: currentWeather,
+      to: nextWeather,
     },
   };
 
