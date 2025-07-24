@@ -1,5 +1,5 @@
 import { EcosystemURN, EntityURN, PlaceURN, RootNamespace } from '~/types/taxonomy';
-import { EntityType, AbstractEntity, Describable } from './entity';
+import { EntityType, AbstractEntity, Describable, EmergentNarrative } from './entity';
 import { Direction } from '~/types/world/space';
 import { SpecialVisibility } from '~/types/world/visibility';
 import { ResourceGenerator, ResourceNodes } from './resource';
@@ -66,7 +66,7 @@ export type PlaceEntities = Partial<Record<`${RootNamespace}:${EntityType}:${str
 export type PlaceInput = {
   id: PlaceURN;
   name?: string;
-  description?: string;
+  description?: EmergentNarrative;
   exits?: Exits;
   resources?: ResourceNodes;
   weather?: Weather;

@@ -7,7 +7,10 @@ const factory = (): PlaceInput[] => {
     {
       id: createPlaceUrn('nightcity', 'afterlife-bar'),
       name: 'The Afterlife',
-      description: 'The legendary mercenary bar housed in a repurposed morgue. Neon-bathed and smoky, it\'s where the best fixers meet the best mercs in Night City. Rogue Amendiares runs the place with an iron fist, and every drink is named after a merc who became legend... by dying spectacularly. The air is thick with encrypted comms, hushed deals, and the occasional deadly glare.',
+      description: {
+        base: 'The legendary mercenary bar housed in a repurposed morgue. Neon-bathed and smoky, it\'s where the best fixers meet the best mercs in Night City. Rogue Amendiares runs the place with an iron fist, and every drink is named after a merc who became legend... by dying spectacularly. The air is thick with encrypted comms, hushed deals, and the occasional deadly glare.',
+        emergent: '',
+      },
       exits: {
         [Direction.NORTH]: {
           to: createPlaceUrn('nightcity', 'watson-market'),
@@ -29,7 +32,10 @@ const factory = (): PlaceInput[] => {
     {
       id: createPlaceUrn('nightcity', 'watson-market'),
       name: 'Watson Marketplace',
-      description: 'A maze of vibrant market stalls beneath an improvised canopy of corrugated metal and stolen corporate billboards. Crowds push through narrow aisles where vendors hawk everything from black-market cyberware to synthetic street food. The smell of frying noodles mingles with soldering flux and incense, while hundreds of languages blend into a steady hum punctuated by bartering and occasional bursts of laughter or threats.',
+      description: {
+        base: 'A maze of vibrant market stalls beneath an improvised canopy of corrugated metal and stolen corporate billboards. Crowds push through narrow aisles where vendors hawk everything from black-market cyberware to synthetic street food. The smell of frying noodles mingles with soldering flux and incense, while hundreds of languages blend into a steady hum punctuated by bartering and occasional bursts of laughter or threats.',
+        emergent: '',
+      },
       exits: {
         [Direction.SOUTH]: {
           to: createPlaceUrn('nightcity', 'afterlife-bar'),
@@ -51,7 +57,10 @@ const factory = (): PlaceInput[] => {
     {
       id: createPlaceUrn('nightcity', 'corpo-plaza'),
       name: 'Corpo Plaza',
-      description: 'The gleaming heart of corporate Night City, where impossibly tall megabuildings scrape the clouds, their facades alive with holographic advertisements that cast kaleidoscopic light onto the polished streets below. Corporate soldiers in sleek armor stand watch at every entrance, scanning passersby with cold efficiency. The air here is filtered and sanitized, a stark contrast to the rest of the city\'s acrid atmosphere. Pristine walkways connect climate-controlled arcologies where the elite conduct business that shapes the fate of millions.',
+      description: {
+        base: 'The gleaming heart of corporate Night City, where impossibly tall megabuildings scrape the clouds, their facades alive with holographic advertisements that cast kaleidoscopic light onto the polished streets below. Corporate soldiers in sleek armor stand watch at every entrance, scanning passersby with cold efficiency. The air here is filtered and sanitized, a stark contrast to the rest of the city\'s acrid atmosphere. Pristine walkways connect climate-controlled arcologies where the elite conduct business that shapes the fate of millions.',
+        emergent: '',
+      },
       exits: {
         [Direction.WEST]: {
           to: createPlaceUrn('nightcity', 'afterlife-bar'),
@@ -73,7 +82,10 @@ const factory = (): PlaceInput[] => {
     {
       id: createPlaceUrn('nightcity', 'pacifica-combat-zone'),
       name: 'Pacifica Combat Zone',
-      description: 'Once meant to be a luxury resort district, Pacifica now stands abandoned by corporations and city alike. The Grand Imperial Mall looms like a decaying carcus, its skeleton claimed by the Voodoo Boys and Animals gangs. Crumbling high-rises with empty window sockets watch over streets ruled by heavily armed gangers. Makeshift barricades and security checkpoints control movement through the district, while tech scavengers strip anything valuable from the ruins. The constant sound of distant gunfire serves as Pacifica\'s heartbeat.',
+      description: {
+        base: 'Once meant to be a luxury resort district, Pacifica now stands abandoned by corporations and city alike. The Grand Imperial Mall looms like a decaying carcus, its skeleton claimed by the Voodoo Boys and Animals gangs. Crumbling high-rises with empty window sockets watch over streets ruled by heavily armed gangers. Makeshift barricades and security checkpoints control movement through the district, while tech scavengers strip anything valuable from the ruins. The constant sound of distant gunfire serves as Pacifica\'s heartbeat.',
+        emergent: '',
+      },
       exits: {
         [Direction.NORTH]: {
           to: createPlaceUrn('nightcity', 'afterlife-bar'),
