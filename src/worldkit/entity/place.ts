@@ -24,11 +24,28 @@ export const createPlace = (
     (entity) => {
       const exits = input.exits || {};
 
-      const defaults: Partial<Place> = {
+      const defaults: Place = {
         id: entity.id,
+        type: EntityType.PLACE,
         name: entity.name || '',
         description: entity.description || '',
+        ecosystem: 'flux:eco:forest:temperate',
+        coordinates: [0, 0],
         entities: {},
+        resources: {
+          ts: 0,
+          nodes: {},
+        },
+        weather: {
+          temperature: 0,
+          pressure: 0,
+          humidity: 0,
+          precipitation: 0,
+          ppfd: 0,
+          clouds: 0,
+          fog: 0,
+          ts: 0,
+        },
         exits,
       };
 
