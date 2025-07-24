@@ -43,7 +43,7 @@ export type Describable = Nameable & {
   /**
    * Description of the entity
    */
-  description: string | EmergentNarrative;
+  description: EmergentNarrative;
 };
 
 /**

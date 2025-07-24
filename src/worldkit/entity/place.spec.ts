@@ -4,11 +4,11 @@ import { SpecialVisibility } from '~/types/world/visibility';
 import { Direction } from '~/types/world/space';
 import { PlaceInput, ExitInput, Exits } from '~/types/entity/place';
 import {
-    createPlace,
-    createExit,
-    createPlaces,
-    addActorToPlace,
-    removeActorFromPlace,
+  createPlace,
+  createExit,
+  createPlaces,
+  addActorToPlace,
+  removeActorFromPlace,
 } from './place';
 import { createPlaceUrn } from '~/lib/taxonomy';
 
@@ -23,7 +23,7 @@ describe('createPlace', () => {
 
       expect(place.id).toBe('flux:place:test:simple-place');
       expect(place.name).toBe('');
-      expect(place.description).toBe('');
+      expect(place.description).toMatchObject({ base: '' }),
       expect(Object.keys(place.exits)).toHaveLength(0);
     });
 

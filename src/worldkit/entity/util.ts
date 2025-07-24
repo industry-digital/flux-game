@@ -22,12 +22,11 @@ export const createEntity = <T extends EntityType, E extends AbstractEntity<T> &
 ): E => {
   const id = generateUniqueId();
   const urn = createEntityUrn(type, id) as `${RootNamespace}:${T}:${string}`;
-  const path = [id];
   const defaults: AbstractEntity<T> & Describable = {
     type,
     id: urn,
     name: '',
-    description: ''
+    description: { base: '', emergent: '' },
   };
 
   return transform(defaults);
