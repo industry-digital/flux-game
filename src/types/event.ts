@@ -68,18 +68,28 @@ export type EventBase = {
   trace: string;
 };
 
+export type ActorWasCreated = EventBase & ActorWasCreatedInput;
 export type ActorWasCreatedInput = RequiresActor & AbstractWorldEventInput<EventType.ACTOR_WAS_CREATED, {}>;
+
+export type PlaceWasCreated = EventBase & PlaceWasCreatedInput;
 export type PlaceWasCreatedInput = AbstractWorldEventInput<EventType.PLACE_WAS_CREATED, {}>;
-export type ActorDidMaterializeInput = RequiresActor & AbstractWorldEventInput<EventType.ACTOR_DID_MATERIALIZE, {}>;
+
 export type ActorDidMaterialize = EventBase & ActorDidMaterializeInput;
-export type ActorDidDematerializeInput = RequiresActor & AbstractWorldEventInput<EventType.ACTOR_DID_DEMATERIALIZE, {}>;
+export type ActorDidMaterializeInput = RequiresActor & AbstractWorldEventInput<EventType.ACTOR_DID_MATERIALIZE, {}>;
+
 export type ActorDidDematerialize = EventBase & ActorDidDematerializeInput;
-export type ActorDidMoveInput = RequiresActor & AbstractWorldEventInput<EventType.ACTOR_DID_MOVE, { destination: PlaceURN }>;
+export type ActorDidDematerializeInput = RequiresActor & AbstractWorldEventInput<EventType.ACTOR_DID_DEMATERIALIZE, {}>;
+
 export type ActorDidMove = RequiresActor & EventBase & ActorDidMoveInput;
-export type ActorDidDepartInput = RequiresActor & AbstractWorldEventInput<EventType.ACTOR_DID_DEPART, { destination: PlaceURN }>;
+export type ActorDidMoveInput = RequiresActor & AbstractWorldEventInput<EventType.ACTOR_DID_MOVE, { destination: PlaceURN }>;
+
 export type ActorDidDepart = EventBase & AbstractWorldEventInput<EventType.ACTOR_DID_DEPART, {}>;
-export type ActorDidArriveInput = RequiresActor & AbstractWorldEventInput<EventType.ACTOR_DID_ARRIVE, { origin: PlaceURN }>;
+export type ActorDidDepartInput = RequiresActor & AbstractWorldEventInput<EventType.ACTOR_DID_DEPART, { destination: PlaceURN }>;
+
 export type ActorDidArrive = EventBase & ActorDidArriveInput;
+export type ActorDidArriveInput = RequiresActor & AbstractWorldEventInput<EventType.ACTOR_DID_ARRIVE, { origin: PlaceURN }>;
+
+export type WeatherDidChange = EventBase & WeatherDidChangeInput;
 export type WeatherDidChangeInput = AbstractWorldEventInput<
   EventType.WEATHER_DID_CHANGE,
   {
@@ -87,8 +97,7 @@ export type WeatherDidChangeInput = AbstractWorldEventInput<
     to: Weather,
   }>;
 
-export type WeatherDidChange = EventBase & WeatherDidChangeInput;
-
+export type ResourcesDidChange = EventBase & ResourcesDidChangeInput;
 export type ResourcesDidChangeInput = AbstractWorldEventInput<
   EventType.RESOURCES_DID_CHANGE,
   {
@@ -96,8 +105,9 @@ export type ResourcesDidChangeInput = AbstractWorldEventInput<
     to: ResourceNodes;
   }>;
 
-export type ResourcesDidChange = EventBase & ResourcesDidChangeInput;
-
+/**
+ * Union of  all valid event inputs
+ */
 export type WorldEventInput =
   | ActorWasCreatedInput
   | PlaceWasCreatedInput
@@ -110,7 +120,7 @@ export type WorldEventInput =
   | WeatherDidChangeInput;
 
 /**
- * WorldEvent is an event that is generated as a result of processing a command.
+ * Union of all valid events
  */
 export type WorldEvent = Omit<WorldEventInput, 'id' | 'ts' | 'trace'> & {
   id: string;

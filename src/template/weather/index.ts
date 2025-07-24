@@ -68,6 +68,7 @@ const createInitialContext = (props: DescribeWeatherChangeProps): WeatherReducer
     timestamp: props.timestamp || (() => Date.now()),
     uniqid: () => uniqid(8, BASE62_CHARSET),
     debug: props.debug || (() => {}),
+    profile: props.profile || (() => ({ result: undefined, duration: 0 })),
 
     // Weather context
     previous: props.previous!,

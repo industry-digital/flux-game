@@ -36,9 +36,6 @@ export type ExecutionError = {
 };
 
 export type ErrorDeclarationProducer = {
-  /**
-   * @deprecated Use declareError(message: string, trace: string) instead
-   */
   declareError(error: Error): void;
   declareError(message: string): void;
   declareError(message: string, trace: string): void;
@@ -61,12 +58,26 @@ export type EventDeclarationProducer = {
   declareEvent(input: WorldEventInput): void;
 };
 
+/** Profile a function call and return both the result and duration. */
+export type ProfileResult<T> = {
+  /**
+   * Result of the function call
+   */
+  result: T;
+
+  /**
+   * Duration in microseconds
+   */
+  duration: number;
+};
+
 /** Impure operations injected into execution context to keep reducers pure */
 export type PotentiallyImpureOperations = {
   random: () => number;
   timestamp: () => number;
   uniqid: () => string;
   debug: (...args: any[]) => void;
+  profile: <T>(fn: () => T) => ProfileResult<T>;
 };
 
 export type WorldProjectionConsumer<W extends WorldProjection = WorldProjection> = {

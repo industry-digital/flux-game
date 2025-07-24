@@ -1,5 +1,6 @@
 import { vi } from 'vitest';
 import { PotentiallyImpureOperations, TransformerContext } from '~/types/handler';
+import { ProfileResult } from '~/lib/profile';
 
 /**
  * Factory function for creating mock TransformerContext with sensible defaults
@@ -31,7 +32,8 @@ export const createPotentiallyImpureOperations = (): PotentiallyImpureOperations
     random: vi.fn(() => 0.5),
     timestamp: vi.fn(() => 1234567890),
     uniqid: vi.fn(() => 'test-unique-id'),
-    debug: vi.fn()
+    debug: vi.fn(),
+    profile: vi.fn(() => ({ result: undefined, duration: 0 })) as <T>(fn: () => T) => ProfileResult<T>
   };
 };
 

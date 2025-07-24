@@ -7,6 +7,7 @@ export * from '~/worldkit/graph/place';
 export * from '~/worldkit/schema/manager';
 export * from '~/worldkit/schema/resource';
 export * from '~/template';
+export * from '~/lib/profile';
 
 // Explicit fact type exports to fix declaration merging issues
 export type {
