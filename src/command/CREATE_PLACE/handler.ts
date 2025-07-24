@@ -1,15 +1,14 @@
 import { createPlace } from '~/worldkit/entity/place';
 import { EventType, PlaceInput } from '~/types';
 import { isCommandOfType } from '~/lib/intent';
-import { CommandType } from '~/types/intent';
+import { CommandType, SystemCommand } from '~/types/intent';
 import {
   PureReducer,
   TransformerContext,
   PureHandlerInterface,
 } from '~/types/handler';
-import { Command } from '~/types/intent';
 
-export type CreatePlaceCommand = Command<CommandType.CREATE_PLACE, PlaceInput>;
+export type CreatePlaceCommand = SystemCommand<CommandType.CREATE_PLACE, PlaceInput>;
 
 export const createPlaceCommandReducer: PureReducer<TransformerContext, CreatePlaceCommand> = (
   context,
@@ -36,7 +35,7 @@ export const createPlaceCommandReducer: PureReducer<TransformerContext, CreatePl
 export class CREATE_PLACE implements PureHandlerInterface<TransformerContext, CreatePlaceCommand> {
   reduce = createPlaceCommandReducer;
   dependencies = [];
-  handles = (command: Command): command is CreatePlaceCommand => {
+  handles = (command: SystemCommand): command is CreatePlaceCommand => {
     return isCommandOfType<CommandType.CREATE_PLACE, PlaceInput>(command, CommandType.CREATE_PLACE);
   };
 };

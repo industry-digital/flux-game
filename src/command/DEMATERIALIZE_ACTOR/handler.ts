@@ -1,7 +1,7 @@
 import { isCommandOfType } from '~/lib/intent';
 import {
-  Command,
   CommandType,
+  SystemCommand,
 } from '~/types/intent';
 import {
   PureReducer,
@@ -11,7 +11,7 @@ import {
 import { EventType } from '~/types/event';
 import { ActorURN } from '~/types/taxonomy';
 
-export type DematerializeActorCommand = Command<CommandType.DEMATERIALIZE_ACTOR, {
+export type DematerializeActorCommand = SystemCommand<CommandType.DEMATERIALIZE_ACTOR, {
   actorId: ActorURN;
 }>;
 
@@ -51,7 +51,7 @@ export const dematerializeActorCommandReducer: PureReducer<TransformerContext, D
 export class DEMATERIALIZE_ACTOR implements PureHandlerInterface<TransformerContext, DematerializeActorCommand> {
   reduce = dematerializeActorCommandReducer;
   dependencies = [];
-  handles = (command: Command): command is DematerializeActorCommand => {
+  handles = (command: SystemCommand): command is DematerializeActorCommand => {
     return isCommandOfType<CommandType.DEMATERIALIZE_ACTOR, { actorId: ActorURN } >(
       command,
       CommandType.DEMATERIALIZE_ACTOR,

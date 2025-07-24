@@ -1,16 +1,15 @@
 import { createActor } from '~/worldkit/entity/actor';
 import { isCommandOfType } from '~/lib/intent';
 import { ActorInput } from '~/types/entity/actor';
-import { CommandType } from '~/types/intent';
+import { CommandType, SystemCommand } from '~/types/intent';
 import {
   PureReducer,
   TransformerContext,
   PureHandlerInterface,
 } from '~/types/handler';
 import { EventType } from '~/types/event';
-import { Command } from '~/types/intent';
 
-export type CreateActorCommand = Command<CommandType.CREATE_ACTOR, ActorInput>;
+export type CreateActorCommand = SystemCommand<CommandType.CREATE_ACTOR, ActorInput>;
 
 export const createActorCommandReducer: PureReducer<TransformerContext, CreateActorCommand> = (
   context,
@@ -42,7 +41,7 @@ export const createActorCommandReducer: PureReducer<TransformerContext, CreateAc
 export class CREATE_ACTOR implements PureHandlerInterface<TransformerContext, CreateActorCommand> {
   reduce = createActorCommandReducer;
   dependencies = [];
-  handles = (command: Command): command is CreateActorCommand => {
+  handles = (command: SystemCommand): command is CreateActorCommand => {
     return isCommandOfType<CommandType.CREATE_ACTOR, ActorInput>(command, CommandType.CREATE_ACTOR);
   };
 };

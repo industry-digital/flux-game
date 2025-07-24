@@ -1,5 +1,5 @@
 import { isCommandOfType } from '~/lib/intent';
-import { Command } from '~/types/intent';
+import { Command, SystemCommand } from '~/types/intent';
 import {
   CommandType
 } from '~/types/intent';
@@ -12,7 +12,7 @@ import { EventType } from '~/types/event';
 import { SpecialVisibility } from '~/types/world/visibility';
 import { ActorURN } from '~/types/taxonomy';
 
-export type MaterializeActorCommand = Command<CommandType.MATERIALIZE_ACTOR, {
+export type MaterializeActorCommand = SystemCommand<CommandType.MATERIALIZE_ACTOR, {
   actorId: ActorURN;
 }>;
 
@@ -53,7 +53,7 @@ export const materializeActorCommandReducer: PureReducer<TransformerContext, Mat
 export class MATERIALIZE_ACTOR implements PureHandlerInterface<TransformerContext, MaterializeActorCommand> {
   reduce = materializeActorCommandReducer;
   dependencies = [];
-  handles = (command: Command): command is MaterializeActorCommand => {
+  handles = (command: SystemCommand): command is MaterializeActorCommand => {
     return isCommandOfType<CommandType.MATERIALIZE_ACTOR, { actorId: ActorURN }>(
       command,
       CommandType.MATERIALIZE_ACTOR,
