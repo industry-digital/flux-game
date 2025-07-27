@@ -56,7 +56,6 @@ export {
 
 export {
   ItemType,
-  Container,
   Modification,
   Device,
   Weapon,
@@ -64,6 +63,11 @@ export {
   Item,
   AbstractItem,
 } from './entity/item';
+
+export type {
+  Container,
+  KindOfContainer,
+} from './entity/container';
 
 export {
   EmergentNarrative,
@@ -83,7 +87,6 @@ export type {
 export {
   ItemState,
   ItemType as ItemSubtype,
-  ContainerMixin,
   StackableMixin,
   ChargeableMixin,
 } from './entity/item';
@@ -120,7 +123,6 @@ export {
   PureHandlerImplementation,
   PureHandlerInterface,
   PureReducer,
-  Transformer,
   CommandReducer,
   TransformerContext,
   TransformerImplementation,
@@ -247,10 +249,10 @@ export {
 } from './taxonomy/anatomy';
 
 export {
-  EffectSchema,
+  AppliedEffect as EffectSchema,
   EffectOriginType,
   EffectOrigin,
-  TaxonomyEffect,
+  Effect as TaxonomyEffect,
   AppliedEffects,
   EffectCategory,
   EFFECTS,

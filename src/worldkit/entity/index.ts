@@ -6,6 +6,7 @@ export {
   addActorToPlace,
   removeActorFromPlace,
   getExitDirection,
+  isPlace,
 } from './place';
 export type { PlaceDictionary } from './place';
 
@@ -14,7 +15,6 @@ export {
   isActor,
   isActorUrn,
   createActor,
-  createActorUrn
 } from './actor';
 
 // Attribute utilities

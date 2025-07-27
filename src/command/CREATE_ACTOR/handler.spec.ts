@@ -5,11 +5,12 @@ import { Actor } from '~/types/entity/actor';
 import { ActorURN } from '~/types/taxonomy';
 import { CommandType } from '~/types/intent';
 import {
-    createTransformerContext,
-    createCommand,
-    createTestActor,
-    createWorld
+  createTransformerContext,
+  createCommand,
+  createTestActor,
+  createWorld
 } from '~/testing';
+import { WellKnownPlace } from '~/types/world/space';
 
 describe('CreateActorCommandHandler', () => {
   const handler = new CREATE_ACTOR();
@@ -32,6 +33,20 @@ describe('CreateActorCommandHandler', () => {
   });
 
   describe('reducer behavior', () => {
+    it(`should default the actor's \`location\` to the world origin`, () => {
+      const context = createTransformerContext();
+      const command = createCommand(CommandType.CREATE_ACTOR, {
+        args: { name: 'Aria Blackwood', description: 'A skilled ranger from the northern forests' }
+      });
+
+      const result = createActorCommandReducer(context, command as CreateActorCommand);
+      const actorIds = Object.keys(result.world.actors);
+      expect(actorIds).toHaveLength(1);
+
+      const actor = result.world.actors[actorIds[0] as keyof typeof result.world.actors];
+      expect(actor.location).toBe(WellKnownPlace.ORIGIN);
+    });
+
     it('should add a new character to world.actors', () => {
       const context = createTransformerContext();
       const command = createCommand(CommandType.CREATE_ACTOR, {

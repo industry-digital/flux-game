@@ -10,7 +10,8 @@ export const createTransformerContext = (overrides?: Partial<TransformerContext>
   const defaultContext: TransformerContext = {
     world: {
       actors: {},
-      places: {}
+      places: {},
+      items: {},
     },
     declareEvent: vi.fn(),
     declareError: vi.fn(),
@@ -50,6 +51,7 @@ export const createContextWithWorld = (
     world: {
       actors: {},
       places: {},
+      items: {},
       ...worldOverrides
     },
     declareEvent: vi.fn(),

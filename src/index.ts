@@ -7,7 +7,9 @@ export * from '~/worldkit/graph/place';
 export * from '~/worldkit/schema/manager';
 export * from '~/worldkit/schema/resource';
 export * from '~/template';
-export * from '~/lib/profile';
+
+export { profile, profileAsync } from '~/lib/profile';
+export type { ProfileResult } from '~/lib/profile';
 
 // Explicit fact type exports to fix declaration merging issues
 export type {
@@ -52,6 +54,8 @@ export {
   MoveCommandArgs,
   MutateWeatherCommand,
   MutateResourcesCommand,
+  LookCommand,
+  LookCommandArgs,
 } from '~/command';
 
 export {
@@ -83,6 +87,7 @@ import { MATERIALIZE_ACTOR } from '~/command/MATERIALIZE_ACTOR/handler';
 import { DEMATERIALIZE_ACTOR } from '~/command/DEMATERIALIZE_ACTOR/handler';
 import { MUTATE_WEATHER } from '~/command/MUTATE_WEATHER/handler';
 import { MUTATE_RESOURCES } from '~/command/MUTATE_RESOURCES/handler';
+import { LOOK } from '~/command/LOOK/handler';
 
 /**
  * The Flux World Server literally spreads this array into the Transformation stage.
@@ -95,6 +100,7 @@ export const PURE_GAME_LOGIC_HANDLERS: PureHandlerImplementation<TransformerCont
     CREATE_ACTOR,
     CREATE_PLACE,
     DEMATERIALIZE_ACTOR,
+    LOOK,
     MATERIALIZE_ACTOR,
     MOVE,
     MUTATE_RESOURCES,

@@ -1,22 +1,8 @@
 import { Duration } from '~/types/world/time';
 import { createEffectUrn } from '~/lib/taxonomy';
-import { Intrinsic, EntityURN, Taxonomy } from '~/types';
+import { Intrinsic, EntityURN, Taxonomy, EffectURN } from '~/types';
 
-export type EffectSchema = {
-  /**
-   * Identifies the effect
-   */
-  type: Taxonomy.Effects;
-
-  /**
-   * How long the effect lasts upon application
-   */
-  duration: Duration;
-
-  /**
-   * Optional human-friendly description for display purposes.
-   */
-  summary: string;
+export type AppliedEffect = {
 };
 
 export type EffectOriginType =
@@ -34,11 +20,16 @@ export type EffectOrigin = {
 /**
  * An Effect is a temporary state or condition applied to an Entity.
  */
-export interface TaxonomyEffect extends EffectSchema {
+export interface Effect extends AppliedEffect {
   /**
    * The source of the effect (an Entity, a skill, or 'intrinsic').
    */
   origin: EffectOrigin;
+
+  /**
+   * How long the effect lasts upon application
+   */
+  duration: Duration;
 
   /**
    * When the effect was applied (milliseconds since UNIX epoch).
@@ -49,7 +40,7 @@ export interface TaxonomyEffect extends EffectSchema {
 /**
  * A dictionary of effects applied to an entity, keyed by opaque local IDs.
  */
-export type AppliedEffects = Partial<Record<string, TaxonomyEffect>>;
+export type AppliedEffects = Partial<Record<EffectURN, Effect>>;
 
 /**
  * Core effect categories for our system

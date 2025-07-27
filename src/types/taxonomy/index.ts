@@ -140,6 +140,10 @@ export const TAXONOMY = {
     geo: {
       description: 'Geographic features',
       examples: ['flux:geo:mountain', 'flux:geo:water:lake']
+    },
+    schema: {
+      description: 'The various schemas in the game world',
+      examples: ['flux:schema:item:container:backpack', 'flux:schema:item:weapon:sword:elven-longsword']
     }
   }
 } as const;
@@ -277,6 +281,11 @@ export namespace Taxonomy {
    * Geographic and topographic features
    */
   export type Ecosystems = TaxonomyURN<'eco'>;
+
+  /**
+   * The various schemas in the game world
+   */
+  export type Schemas = TaxonomyURN<'schema'>;
 }
 
 export type EntityURN<T extends EntityType = EntityType> = `${RootNamespace}:${T}:${string}`;
@@ -301,3 +310,4 @@ export type GroupURN = Taxonomy.Groups;
 export type TopicURN = Taxonomy.Topics;
 export type ResourceURN = Taxonomy.Resources;
 export type EcosystemURN = Taxonomy.Ecosystems;
+export type SchemaURN = Taxonomy.Schemas;

@@ -1,11 +1,11 @@
-import { EntityType } from '~/types/entity/entity';
+import { AbstractEntity, EntityType } from '~/types/entity/entity';
 import { Place, Exit, PlaceEntityDescriptor } from '~/types/entity/place';
 import { PlaceURN } from '~/types/taxonomy';
 import { Actor } from '~/types/entity/actor';
 import { SpecialVisibility } from '~/types/world/visibility';
 import { Direction } from '~/types/world/space';
 import { createEntity, FactoryOptions } from './util';
-import { extractPathFromUrn } from '~/lib/taxonomy';
+import { extractPathFromUrn, isUrnOfVocabulary } from '~/lib/taxonomy';
 import { ExitInput, Exits, PlaceInput } from '~/types/entity/place';
 import { WellKnownPlace } from '~/types/world/space';
 import lodash from 'lodash';
@@ -13,6 +13,16 @@ import lodash from 'lodash';
 const { merge } = lodash;
 
 const identity = <T>(x: T): T => x;
+
+
+/**
+ * Type guard for Place
+ */
+export const isPlace = (place: AbstractEntity<EntityType>): place is Place => {
+  return place.type === EntityType.PLACE;
+};
+
+export const isPlaceUrn = (urn: string): urn is PlaceURN => isUrnOfVocabulary(urn, 'place');
 
 export const createPlace = (
   input: PlaceInput,

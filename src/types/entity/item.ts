@@ -1,9 +1,7 @@
-import {
-  ModifiableBoundedAttribute,
-  NormalizedValueBetweenZeroAndOne,
-  StatefulBoundedValue,
-} from '~/types/entity/attribute';
+import { NormalizedValueBetweenZeroAndOne, StatefulBoundedValue } from '~/types/entity/attribute';
+import { Container } from '~/types/entity/container';
 import { AbstractEntity, EntityType, Nameable } from '~/types/entity/entity';
+import { SchemaURN } from '~/types/taxonomy';
 
 /**
  * The different types of items that can exist in the game
@@ -24,7 +22,7 @@ export enum ItemType {
  * Common properties for all items
  */
 export interface ItemState {
-
+  schema: SchemaURN
   /**
    * The item's condition, or durability.
    * This is a normalized value between 0 and 1, where 1 is perfect condition and 0 is broken/unusable.
@@ -52,26 +50,6 @@ export type ChargeableMixin = {
   charges: StatefulBoundedValue;
 };
 
-/**
- * Mixin for container items that can hold other items
- */
-export interface ContainerMixin {
-  /**
-   * Container properties
-   */
-  contents: {
-    /**
-     * Maximum capacity in grams
-     */
-    capacity: ModifiableBoundedAttribute;
-
-    /**
-     * Currently stored items
-     */
-    items: Record<string, Item>;
-  };
-}
-
 export type AbstractItem<TItemType extends ItemType> =
 & AbstractEntity<EntityType.ITEM>
 & Nameable
@@ -85,7 +63,6 @@ export type AbstractItem<TItemType extends ItemType> =
 export type Consumable = AbstractItem<ItemType.CONSUMABLE> & StackableMixin;
 export type Resource = AbstractItem<ItemType.RESOURCE> & StackableMixin;
 export type Ammo = AbstractItem<ItemType.AMMO> & StackableMixin;
-export type Container = AbstractItem<ItemType.CONTAINER> & ContainerMixin;
 export type Modification = AbstractItem<ItemType.MODIFICATION> & StackableMixin;
 export type Tool = AbstractItem<ItemType.TOOL> & StackableMixin;
 export type Device = AbstractItem<ItemType.DEVICE> & ChargeableMixin;

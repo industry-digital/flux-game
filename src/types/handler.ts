@@ -1,8 +1,9 @@
 import { WorldEvent, WorldEventInput, EventType } from '~/types/event';
 import { Command, CommandType } from '~/types/intent';
-import { ActorURN, PlaceURN } from '~/types/taxonomy';
+import { ActorURN, ItemURN, PlaceURN } from '~/types/taxonomy';
 import { Place } from '~/types/entity/place';
 import { Actor } from '~/types/entity/actor';
+import { Item } from '~/types/entity/item';
 
 /** Filter function for WorldEvent matching */
 type EventFilter = (event: WorldEvent) => boolean;
@@ -11,6 +12,7 @@ type EventFilter = (event: WorldEvent) => boolean;
 export type MinimalWorldProjection = {
   actors: Record<ActorURN, Actor>;
   places: Record<PlaceURN, Place>;
+  items: Record<ItemURN, Item>;
 };
 
 export type CombatProjectionMixin = {
@@ -106,11 +108,6 @@ export type TransformerImplementation<
 
 /** Pure, deterministic reducer with zero side effects */
 export type PureReducer<C, I, O = any> = (context: C, input: I, ...args: O[]) => C;
-
-/**
- * @deprecated Use PureReducer<TransformerContext, AnyCommand<T, A>> instead for more flexibility
- */
-export type Transformer<T extends CommandType, A extends Record<string, any>> = PureReducer<TransformerContext, Command<T, A>>;
 
 export type CommandReducer<T extends CommandType, A extends Record<string, any>> = PureReducer<TransformerContext, Command<T, A>>;
 

@@ -148,6 +148,7 @@ export type AppliedAnatomicalDamage = {
 export type ActorInput = {
   id?: ActorURN;
   name?: string;
+  kind?: ActorType;
   description?: string;
   location?: PlaceURN;
   subtype?: ActorType;

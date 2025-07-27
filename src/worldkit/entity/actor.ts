@@ -2,10 +2,7 @@ import { createEntity, FactoryOptions } from './util';
 import { createModifiableScalarAttribute, createModifiableBoundedAttribute } from './attribute';
 import lodash from 'lodash';
 import { createEntityUrn, isUrnOfVocabulary } from '~/lib/taxonomy';
-import {
-  AbstractEntity,
-  EntityType,
-} from '~/types/entity/entity';
+import { AbstractEntity, EntityType } from '~/types/entity/entity';
 import {
   Actor,
   ActorInput,
@@ -30,7 +27,7 @@ export const isActorUrn = (urn: string): urn is ActorURN => isUrnOfVocabulary(ur
 
 export const createActor = (
   input: ActorInput,
-  transform: (character: Actor) => Actor = identity,
+  transform: (actor: Actor) => Actor = identity,
   {
     timestamp = () => Date.now(),
   }: FactoryOptions = {},
@@ -39,10 +36,10 @@ export const createActor = (
     EntityType.ACTOR,
     (entity) => {
       const defaults: Partial<Actor> = {
-        name: entity.name,
-        description: entity.description,
-        kind: ActorType.PC,
-        location: WellKnownPlace.NOWHERE,
+        name: input.name ?? entity.name,
+        description: { base: input.description ?? '' },
+        kind: input.kind ?? ActorType.PC,
+        location: input.location ?? WellKnownPlace.ORIGIN,
         level: createModifiableScalarAttribute(),
         hp: createModifiableBoundedAttribute(),
         traits: {},

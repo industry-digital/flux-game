@@ -1,8 +1,8 @@
 import { Requirements } from '~/types/requirement';
 import { RootNamespace, Taxonomy } from '~/types/taxonomy';
-import { EffectSchema } from '~/types/taxonomy/effect';
+import { AppliedEffect } from '~/types/taxonomy/effect';
 
-export type IntrinsicEffects = Record<string, EffectSchema>;
+export type IntrinsicEffects = Record<string, AppliedEffect>;
 
 /**
  * A coefficient type is a URN that identifies a skill, ability, or stat that can be modified by equipment

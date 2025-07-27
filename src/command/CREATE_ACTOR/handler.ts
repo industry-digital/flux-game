@@ -8,6 +8,7 @@ import {
   PureHandlerInterface,
 } from '~/types/handler';
 import { EventType } from '~/types/event';
+import { WellKnownPlace } from '~/types/world/space';
 
 export type CreateActorCommand = SystemCommand<CommandType.CREATE_ACTOR, ActorInput>;
 
@@ -17,6 +18,7 @@ export const createActorCommandReducer: PureReducer<TransformerContext, CreateAc
 ) => {
   const { declareEvent, declareError } = context;
   const { actors } = context.world;
+
   const actor = createActor(command.args);
 
   if (actors[actor.id]) {
@@ -24,7 +26,10 @@ export const createActorCommandReducer: PureReducer<TransformerContext, CreateAc
     return context;
   }
 
-  // Add the new actor to the world projection
+  // All actors materialize at the world origin by default
+  actor.location ??= WellKnownPlace.ORIGIN;
+
+  // Add the actor to the world
   actors[actor.id] = actor;
 
   declareEvent({

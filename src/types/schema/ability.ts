@@ -2,9 +2,9 @@ import { Duration } from '~/types/world/time';
 import { Taxonomy, EffectURN, SkillURN } from '~/types/taxonomy';
 import { Requirements } from '~/types/requirement';
 import { TargetingSpecification } from '~/types/combat';
-import { EffectSchema } from '~/types/taxonomy/effect';
+import { AppliedEffect } from '~/types/taxonomy/effect';
 
-export type AbilityEffects = Partial<Record<EffectURN, EffectSchema>>;
+export type AbilityEffects = Partial<Record<EffectURN, AppliedEffect>>;
 
 export enum AbilityType {
   /**
@@ -56,7 +56,7 @@ export type AbilityInContainment = {
   /**
    * Effects that are applied to the target when the ability is used
    */
-  effects: EffectSchema[];
+  effects: AppliedEffect[];
 
   /**
    * Translation key for the ability name

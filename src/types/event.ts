@@ -1,6 +1,6 @@
 import { Weather } from '~/types/entity/place';
 import { ResourceNodes } from '~/types/entity/resource';
-import { ActorURN, PlaceURN } from '~/types/taxonomy';
+import { ActorURN, ItemURN, PlaceURN } from '~/types/taxonomy';
 
 export type EventPayload = Record<string, any>;
 
@@ -54,6 +54,11 @@ export enum EventType {
   ACTOR_DID_DEPART = 'actor:departed',
   ACTOR_DID_MATERIALIZE = 'actor:materialized',
   ACTOR_DID_DEMATERIALIZE = 'actor:dematerialized',
+  ACTOR_DID_LOOK_AT_SELF = 'actor:looked:self',
+  ACTOR_DID_LOOK_AT_SELF_ITEM = 'actor:looked:self:item',
+  ACTOR_DID_LOOK_AT_ACTOR = 'actor:looked:actor',
+  ACTOR_DID_LOOK_AT_PLACE = 'actor:looked:place',
+  ACTOR_DID_LOOK_AT_PLACE_ITEM = 'actor:looked:place:item',
   RESOURCES_DID_CHANGE = 'place:resources:changed',
   WEATHER_DID_CHANGE = 'place:weather:changed',
 }
@@ -89,6 +94,19 @@ export type ActorDidDepartInput = RequiresActor & AbstractWorldEventInput<EventT
 export type ActorDidArrive = EventBase & ActorDidArriveInput;
 export type ActorDidArriveInput = RequiresActor & AbstractWorldEventInput<EventType.ACTOR_DID_ARRIVE, { origin: PlaceURN }>;
 
+export type ActorDidLookAtActor = EventBase & ActorDidLookAtActorInput;
+export type ActorDidLookAtActorInput = RequiresActor & AbstractWorldEventInput<EventType.ACTOR_DID_LOOK_AT_ACTOR, { target: ActorURN }>;
+
+export type ActorDidLookAtPlace = EventBase & ActorDidLookAtPlaceInput;
+export type ActorDidLookAtPlaceInput = RequiresActor & AbstractWorldEventInput<EventType.ACTOR_DID_LOOK_AT_PLACE, { target: PlaceURN }>;
+
+export type ActorDidLookAtPlaceItem = EventBase & ActorDidLookAtPlaceItemInput;
+export type ActorDidLookAtPlaceItemInput = RequiresActor & AbstractWorldEventInput<EventType.ACTOR_DID_LOOK_AT_PLACE_ITEM, { target: ItemURN }>;
+
+export type ActorDidLookAtSelfItem = EventBase & ActorDidLookAtSelfItemInput;
+export type ActorDidLookAtSelfItemInput = RequiresActor & AbstractWorldEventInput<EventType.ACTOR_DID_LOOK_AT_SELF_ITEM, {}>;
+
+
 export type WeatherDidChange = EventBase & WeatherDidChangeInput;
 export type WeatherDidChangeInput = AbstractWorldEventInput<
   EventType.WEATHER_DID_CHANGE,
@@ -116,8 +134,12 @@ export type WorldEventInput =
   | ActorDidMoveInput
   | ActorDidArriveInput
   | ActorDidDepartInput
+  | ActorDidLookAtActorInput
+  | ActorDidLookAtPlaceInput
+  | ActorDidLookAtPlaceItemInput
+  | ActorDidLookAtSelfItemInput
   | ResourcesDidChangeInput
-  | WeatherDidChangeInput;
+  | WeatherDidChangeInput
 
 /**
  * Union of all valid events

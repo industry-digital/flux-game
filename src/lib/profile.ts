@@ -13,17 +13,20 @@ export type ProfileResult<T> = {
  * @param options - Options including custom now() function.
  * @returns An object containing the function result and duration in milliseconds.
  */
-export const profile = <T>(
+export function profile<T>(
   fn: () => T,
   { now = () => performance.now() }: ProfileOptions = {},
-): ProfileResult<T> => {
+): ProfileResult<T> {
   const t0 = now();
   const result = fn();
-  const t1 = now();
-  const duration = t1 - t0;
+  return { result, duration: now() - t0 };
+}
 
-  return {
-    result,
-    duration,
-  };
-};
+export async function profileAsync<T>(
+  fn: () => Promise<T>,
+  { now = () => performance.now() }: ProfileOptions = {},
+): Promise<ProfileResult<T>> {
+  const t0 = now();
+  const result = await fn();
+  return { result, duration: now() - t0 };
+}
