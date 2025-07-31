@@ -1,4 +1,4 @@
-import { Weather } from '~/types/entity/place';
+import { Weather } from '~/types/schema/weather';
 import { ResourceNodes } from '~/types/entity/resource';
 import { ActorURN, ItemURN, PlaceURN } from '~/types/taxonomy';
 

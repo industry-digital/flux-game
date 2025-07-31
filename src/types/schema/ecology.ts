@@ -1,9 +1,10 @@
+import { WeatherPropertySpecification } from '~/types/schema/weather';
 import { EcosystemURN } from '~/types/taxonomy';
 
 export type EcologicalProfile = {
-  temperature: [number, number];
-  pressure: [number, number];
-  humidity: [number, number];
+  temperature: WeatherPropertySpecification;
+  pressure: WeatherPropertySpecification;
+  humidity: WeatherPropertySpecification;
 };
 
 export type Biome = 'steppe' | 'grassland' | 'forest' | 'mountain' | 'jungle' | 'marsh';
@@ -11,33 +12,33 @@ export type Climate = 'arid' | 'temperate' | 'tropical';
 
 export const ECOLOGICAL_PROFILES = {
   'flux:eco:steppe:arid': {
-    temperature: [15.0, 35.0],    // Hot, continental climate
-    pressure: [1010.0, 1030.0],   // High pressure systems
-    humidity: [15.0, 45.0]        // Arid conditions
+    temperature: { baseline: 20, amplitude: 7 },  // Generally cool: 13-27°C
+    pressure: { baseline: 1020, amplitude: 8 },   // High pressure systems
+    humidity: { baseline: 23, amplitude: 12 }     // Dry: 11-35%
   },
   'flux:eco:grassland:temperate': {
-    temperature: [5.0, 32.0],     // Large temperature swings
-    pressure: [990.0, 1015.0],    // Stable pressure
-    humidity: [40.0, 70.0]        // Moderate humidity
+    temperature: { baseline: 23, amplitude: 13}, // Large swings: 10-36°C
+    pressure: { baseline: 1003, amplitude: 4 },   // High pressure, but not as high as the steppe
+    humidity: { baseline: 30, amplitude: 11 }      // Dry: 19-41%, but not as dry as the steppe
   },
   'flux:eco:forest:temperate': {
-    temperature: [13.0, 31.0],     // Mild, stable climate
-    pressure: [990.0, 1020.0],    // Stable pressure
-    humidity: [55.0, 85.0]        // Forest moisture retention
-  },
+    temperature: { baseline: 23, amplitude: 5  }, // Generally cool: 18-28°C
+    pressure: { baseline: 1013, amplitude: 5 },  // Stable high pressure
+    humidity: { baseline: 51, amplitude: 17 }, // Moderate humidity: 34-68%
+ },
   'flux:eco:mountain:arid': {
-    temperature: [7.0, 23.0],    // Alpine temperature variation
-    pressure: [950.0, 990.0],     // Low pressure (high altitude)
-    humidity: [10.0, 35.0]        // Arid mountain conditions
+    temperature: { baseline: 12, amplitude: 8 },  // Cold (4-20°C)
+    pressure: { baseline: 970, amplitude: 15 },   // Low pressure
+    humidity: { baseline: 25, amplitude: 12 }     // Dry: 13-37%
   },
   'flux:eco:jungle:tropical': {
-    temperature: [23.0, 37.0],    // Consistently hot tropical
-    pressure: [1000.0, 1020.0],   // Stable tropical pressure
-    humidity: [75.0, 95.0]        // High tropical humidity
+    temperature: { baseline: 29, amplitude: 5 },  // Stable heat: 24-34°C
+    pressure: { baseline: 1008, amplitude: 6 },   // Lower tropical pressure
+    humidity: { baseline: 88, amplitude: 8 }      // Saturated: 80-96%
   },
   'flux:eco:marsh:tropical': {
-    temperature: [13.0, 29.0],    // Cooler wetland temperatures
-    pressure: [1020.0, 1040.0],   // Higher pressure (below sea level, in our world)
-    humidity: [85.0, 99.0]       // Saturated wetland conditions
+    temperature: { baseline: 23, amplitude: 5 },  // Moderated by water: 18-28°C
+    pressure: { baseline: 1025, amplitude: 4 },   // Stable high pressure (low elevation)
+    humidity: { baseline: 94, amplitude:5 }      // Near-saturated: 89-99%
   }
-} as const as Partial<Record<EcosystemURN, EcologicalProfile>>;
+} as unknown as Record<EcosystemURN, EcologicalProfile>;

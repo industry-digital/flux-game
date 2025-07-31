@@ -1,4 +1,4 @@
-import { Weather } from '~/types/entity/place';
+import { Weather } from '~/types/schema/weather';
 import { detectTimeTransition, TimeTransition } from '../utils/time';
 import { detectLightChange, detectCloudChange, isDramaticLightChange } from '../utils/ppfd';
 import { PRECIPITATION_THRESHOLDS } from '../utils/ppfd';
@@ -209,7 +209,7 @@ const detectStormTransitions = (
 ): MeaningfulTransition | null => {
   // Storm approaching: rapid cloud buildup + pressure drop + light dimming
   const cloudDelta = current.clouds - previous.clouds;
-  const pressureDelta = previous.pressure - current.pressure; // Pressure DROP indicates storm
+  const pressureDelta = previous.pressure.value - current.pressure.value; // Pressure DROP indicates storm
   const ppfdDelta = previous.ppfd - current.ppfd; // Light DIMMING indicates storm
 
   // Storm approaching criteria

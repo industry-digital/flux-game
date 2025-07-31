@@ -1,6 +1,6 @@
 import { UnitOfMeasure, TimeUnit } from '~/types';
 import { ResourceSchema } from '~/types/schema/resource';
-import { Easing } from '~/lib/easing';
+import { Easing } from '~/types/easing';
 
 /**
  * Factory function for creating flower resource schemas
@@ -42,7 +42,6 @@ function createFlowerSchema(
       min: 1,
       capacity: 100
     },
-
 
     description: ({ fullness }, now, { name }) => {
       if (fullness >= 1) {

@@ -1,5 +1,5 @@
 import { isCommandOfType } from '~/lib/intent';
-import { Weather } from '~/types/entity/place';
+import { Weather } from '~/types/schema/weather';
 import {
   Command,
   CommandType,

@@ -1,6 +1,6 @@
 import { UnitOfMeasure, TimeUnit } from '~/types';
 import { ResourceSchema } from '~/types/schema/resource';
-import { Easing } from '~/lib/easing';
+import { Easing } from '~/types/easing';
 
 export const createFungusSchema = (transform: (defaults: ResourceSchema) => ResourceSchema): ResourceSchema => {
   const defaults: Partial<ResourceSchema> = {

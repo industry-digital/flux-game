@@ -5,7 +5,7 @@ import { Actor } from '~/types/entity/actor';
 import { SpecialVisibility } from '~/types/world/visibility';
 import { Direction } from '~/types/world/space';
 import { createEntity, FactoryOptions } from './util';
-import { extractPathFromUrn, isUrnOfVocabulary } from '~/lib/taxonomy';
+import { isUrnOfVocabulary } from '~/lib/taxonomy';
 import { ExitInput, Exits, PlaceInput } from '~/types/entity/place';
 import { WellKnownPlace } from '~/types/world/space';
 import lodash from 'lodash';
@@ -47,9 +47,10 @@ export const createPlace = (
           nodes: {},
         },
         weather: {
-          temperature: 0,
-          pressure: 0,
-          humidity: 0,
+          seed: 0,
+          temperature: { position: 0.5, value: 20 },
+          pressure: { position: 0.5, value: 1013 },
+          humidity: { position: 0.5, value: 60 },
           precipitation: 0,
           ppfd: 0,
           clouds: 0,
@@ -62,12 +63,7 @@ export const createPlace = (
       // Create a copy of input without the exits to avoid any conflicts
       const { exits: _, ...inputWithoutExits } = input;
 
-      const result = merge({}, entity, defaults, inputWithoutExits) as Place;
-
-      // Derive correct path from input id if provided
-      return input.id && input.id !== entity.id
-        ? { ...result, path: extractPathFromUrn(input.id) }
-        : result;
+      return merge({}, entity, defaults, inputWithoutExits) as Place;
     },
     options,
   );

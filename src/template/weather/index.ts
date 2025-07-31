@@ -1,5 +1,5 @@
 import { Template } from '~/types/template';
-import { Weather } from '~/types/entity/place';
+import { Weather } from '~/types/schema/weather';
 import { PotentiallyImpureOperations } from '~/types/handler';
 import { WeatherReducer, WeatherReducerContext } from './types';
 import { isValidWeather, isSignificantWeatherChange } from './utils/validation';

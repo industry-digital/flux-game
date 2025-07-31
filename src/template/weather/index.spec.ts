@@ -1,6 +1,6 @@
 import { describe, it, expect, vi } from 'vitest';
 import { describeWeatherChange, DescribeWeatherChangeProps } from './index';
-import { Weather } from '~/types/entity/place';
+import { Weather } from '~/types/schema/weather';
 
 /**
  * Comprehensive test suite for the Weather Description System

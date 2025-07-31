@@ -1,4 +1,4 @@
-import { Weather } from '~/types/entity/place';
+import { Weather } from '~/types/schema/weather';
 
 /**
  * Weather data validation utilities
@@ -10,17 +10,17 @@ import { Weather } from '~/types/entity/place';
  */
 export const isValidWeather = (weather: Weather): boolean => {
   // Temperature check: -50°C to 60°C (extreme but possible terrestrial range)
-  if (weather.temperature < -50 || weather.temperature > 60) {
+  if (weather.temperature.value < -50 || weather.temperature.value > 60) {
     return false;
   }
 
   // Pressure check: 870-1085 hPa (covers extreme weather conditions)
-  if (weather.pressure < 870 || weather.pressure > 1085) {
+  if (weather.pressure.value < 870 || weather.pressure.value > 1085) {
     return false;
   }
 
   // Humidity check: 0-100%
-  if (weather.humidity < 0 || weather.humidity > 100) {
+  if (weather.humidity.value < 0 || weather.humidity.value > 100) {
     return false;
   }
 
@@ -82,9 +82,9 @@ export const isSignificantWeatherChange = (
 
   // Calculate actual rates of change
   const rates = {
-    temperature: Math.abs(current.temperature - previous.temperature) / timeElapsedHours,
-    pressure: Math.abs(current.pressure - previous.pressure) / timeElapsedHours,
-    humidity: Math.abs(current.humidity - previous.humidity) / timeElapsedHours,
+    temperature: Math.abs(current.temperature.value - previous.temperature.value) / timeElapsedHours,
+    pressure: Math.abs(current.pressure.value - previous.pressure.value) / timeElapsedHours,
+    humidity: Math.abs(current.humidity.value - previous.humidity.value) / timeElapsedHours,
     precipitation: Math.abs(current.precipitation - previous.precipitation) / timeElapsedHours,
     ppfd: Math.abs(current.ppfd - previous.ppfd) / timeElapsedHours,
     clouds: Math.abs(current.clouds - previous.clouds) / timeElapsedHours,
@@ -113,11 +113,11 @@ export const calculateChangeIntensity = (
   let intensity = 0;
 
   // Temperature contribution (normalized by extreme change threshold)
-  const tempChange = Math.abs(current.temperature - previous.temperature);
+  const tempChange = Math.abs(current.temperature.value - previous.temperature.value);
   intensity += Math.min(tempChange / 10, 1) * 0.15; // 15% weight
 
   // Pressure contribution (normalized by significant change threshold)
-  const pressureChange = Math.abs(current.pressure - previous.pressure);
+  const pressureChange = Math.abs(current.pressure.value - previous.pressure.value);
   intensity += Math.min(pressureChange / 15, 1) * 0.1; // 10% weight
 
   // PPFD contribution (major visual impact)

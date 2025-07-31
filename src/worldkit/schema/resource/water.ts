@@ -1,6 +1,6 @@
 import { UnitOfMeasure, TimeUnit } from '~/types';
 import { ResourceSchema } from '~/types/schema/resource';
-import { Easing } from '~/lib/easing';
+import { Easing } from '~/types/easing';
 
 /**
  * Factory function for creating water body resource schemas using a transformer approach

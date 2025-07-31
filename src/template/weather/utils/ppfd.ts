@@ -1,4 +1,4 @@
-import { Weather } from '~/types/entity/place';
+import { Weather } from '~/types/schema/weather';
 
 /**
  * PPFD (Photosynthetic Photon Flux Density) calculation and light-based utilities

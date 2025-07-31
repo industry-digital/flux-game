@@ -1,6 +1,6 @@
 import { UnitOfMeasure, TimeUnit } from '~/types';
 import { SpecimenResourceSchema } from '~/types/schema/resource';
-import { Easing } from '~/lib/easing';
+import { Easing } from '~/types/easing';
 import { UnitOfMass } from '~/types/world/measures';
 
 /**

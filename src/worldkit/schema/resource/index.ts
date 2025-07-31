@@ -1,10 +1,8 @@
 import { SchemaManager } from '../manager';
 import { ResourceSchema } from '~/types';
 import * as fungusSchemas from './fungus';
-import * as mineralSchemas from './mineral';
 import * as treeSchemas from './tree';
 import * as flowerSchemas from './flower';
-import * as waterSchemas from './water';
 import { sluggify } from '~/lib/slug';
 
 type ResourceURN = `flux:resource:${string}:${string}`;
@@ -42,10 +40,8 @@ export function createSchemaManager(): SchemaManager<ResourceSchema, ResourceURN
   // Add schemas from each module
   const modules: [Record<string, any>, string][] = [
     [fungusSchemas, 'fungus'],
-    [mineralSchemas, 'mineral'],
     [treeSchemas, 'tree'],
     [flowerSchemas, 'flower'],
-    [waterSchemas, 'water']
   ];
 
   modules.forEach(([module, name]) => {

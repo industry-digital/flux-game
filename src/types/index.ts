@@ -98,7 +98,6 @@ export {
   Place,
   PlaceEntityDescriptor,
   PlaceInput,
-  Weather,
 } from './entity/place';
 
 export {
@@ -205,6 +204,13 @@ export {
   TimeOfDay,
   LunarPhase,
 } from './schema/resource';
+
+export {
+  CurvePositionValue,
+  Weather,
+  WeatherPropertySpecification,
+  WeatherPropertySpecificationInput,
+} from './schema/weather';
 
 export {
   ResourceGrowthCurve,

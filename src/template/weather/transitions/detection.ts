@@ -1,4 +1,4 @@
-import { Weather } from '~/types/entity/place';
+import { Weather } from '~/types/schema/weather';
 import { MeaningfulTransition } from './meaningful';
 
 /**

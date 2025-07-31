@@ -1,6 +1,6 @@
 import { UnitOfMeasure, TimeUnit } from '~/types';
 import { BulkResourceSchema } from '~/types/schema/resource';
-import { Easing } from '~/lib/easing';
+import { Easing } from '~/types/easing';
 
 /**
  * Factory function for creating tree resource schemas using a transformer approach
