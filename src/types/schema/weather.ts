@@ -26,7 +26,7 @@ export type WeatherPropertySpecification = WeatherPropertySpecificationInput & {
   curve?: EasingFunctionName;
 }
 
-export type CurvePositionValue = {
+export type CurvePosition = {
   /**
    * The seed value for the weather generator
    */
@@ -36,7 +36,9 @@ export type CurvePositionValue = {
    * The position `t` on an easing curve. Normalized to [0, 1]
    */
   position: number;
+}
 
+export type CurvePositionWithValue = CurvePosition & {
   /**
    * The computed value of the property at the position `t` on the curve
    */
@@ -47,17 +49,17 @@ export type Weather = {
   /**
    * The temperature value in Celsius and the position `t` on the temperature curve
    */
-  temperature: CurvePositionValue;
+  temperature: CurvePositionWithValue;
 
   /**
    * The pressure value in hectopascals (hPa) and the position `t` on the pressure curve
    */
-  pressure: CurvePositionValue;
+  pressure: CurvePositionWithValue;
 
   /**
    * The humidity value as a percentage (0-100) and the position `t` on the humidity curve
    */
-  humidity: CurvePositionValue;
+  humidity: CurvePositionWithValue;
 
   // DERIVED OUTPUTS (computed from inputs)
   /**

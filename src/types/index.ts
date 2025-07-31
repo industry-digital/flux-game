@@ -212,7 +212,8 @@ export {
 } from './schema/resource';
 
 export {
-  CurvePositionValue,
+  CurvePosition,
+  CurvePositionWithValue,
   Weather,
   WeatherPropertySpecification,
   WeatherPropertySpecificationInput,
