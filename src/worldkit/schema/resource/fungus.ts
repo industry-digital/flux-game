@@ -205,8 +205,8 @@ export const SwampBracketSchema = createFungusSchema((defaults) => ({
     biomes: ['marsh'],
   },
   growth: {
-    curve: Easing.EASE_IN_QUAD, // Slow start, then steady growth
-    duration: [21, TimeUnit.DAY] // Very slow growth
+    curve: Easing.LOGISTIC,
+    duration: [21, TimeUnit.DAY]
   },
   decay: {
     curve: Easing.LINEAR,

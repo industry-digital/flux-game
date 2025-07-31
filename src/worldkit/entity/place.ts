@@ -47,10 +47,9 @@ export const createPlace = (
           nodes: {},
         },
         weather: {
-          seed: 0,
-          temperature: { position: 0.5, value: 20 },
-          pressure: { position: 0.5, value: 1013 },
-          humidity: { position: 0.5, value: 60 },
+          temperature: { seed: 0, position: 0.5, value: 20 },
+          pressure: { seed: 0, position: 0.5, value: 1013 },
+          humidity: { seed: 0, position: 0.5, value: 60 },
           precipitation: 0,
           ppfd: 0,
           clouds: 0,

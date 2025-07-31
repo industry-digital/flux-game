@@ -23,6 +23,12 @@ export {
 } from './dice';
 
 export {
+  Easing,
+  EasingFunction,
+  EasingFunctionName,
+} from './easing';
+
+export {
   AppliedEffect,
 } from './effect';
 
@@ -281,6 +287,7 @@ export {
   ScheduledDuration,
   SpecialDuration,
   TimeUnit,
+  WellKnownDuration,
 } from './world/time';
 
 export {

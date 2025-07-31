@@ -16,17 +16,22 @@ export type WeatherPropertySpecificationInput = {
 export type WeatherPropertySpecification = WeatherPropertySpecificationInput & {
   /**
    * The period of the oscillation; defaults to 24 hours
-   * 24 hours = 86400000ms
    */
   period?: [number, WellKnownDuration];
 
   /**
-   * Easing equation for the oscillation; defaults to the `sine` trigonometric function.
+   * Easing equation for the oscillation; defaults to the `EASE_IN_OUT_SINE` easing function.
+   * See `Easing` for available options.
    */
   curve?: EasingFunctionName;
 }
 
 export type CurvePositionValue = {
+  /**
+   * The seed value for the weather generator
+   */
+  seed: number;
+
   /**
    * The position `t` on an easing curve. Normalized to [0, 1]
    */
@@ -39,11 +44,6 @@ export type CurvePositionValue = {
 };
 
 export type Weather = {
-  /**
-   * The seed value for the weather generator
-   */
-  seed: number;
-
   /**
    * The temperature value in Celsius and the position `t` on the temperature curve
    */
@@ -79,8 +79,8 @@ export type Weather = {
   clouds: number;
 
   /**
-   * This is a normalized value between 0 and 1 that represents the intensity of fog.
-   * 0 = no fog, 1 = dense fog.
+   * This is a percentage between 0 and 100 that represents the intensity of fog.
+   * 0 = no fog, 100 = dense fog.
    * Computed from temperature-dewpoint spread and cloud cover.
    */
   fog: number;
