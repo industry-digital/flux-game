@@ -1,9 +1,9 @@
-import { SeededCurvePositionWithValue } from '~/types/easing';
+import { CurvePositionWithValue } from '~/types/easing';
 import { ResourceURN } from '~/types/taxonomy';
 
 export type ResourceNodeStatus = 'growing' | 'decaying';
 
-export type ResourceNodeState = SeededCurvePositionWithValue & {
+export type ResourceNodeState = CurvePositionWithValue & {
   status: ResourceNodeStatus;
 };
 
@@ -12,8 +12,8 @@ export type ResourceNodeState = SeededCurvePositionWithValue & {
  * We deliberately avoid nesting here and opt instead for URNs to keep the data structure compact.
  * Example:
  *  {
- *    'flux:res:tree:oak:position': { position: 0.5, value: 10 },
- *    'flux:res:fruit:berries:position': { position: 0.2, value: 50 },
+ *    'flux:res:tree:oak:position': { position: 0.5, value: 10, status: 'growing' },
+ *    'flux:res:fruit:berries:position': { position: 0.2, value: 50, status: 'decaying' },
  *    'ts': 1717171717,
  *  }
  */
