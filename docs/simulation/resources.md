@@ -2,7 +2,9 @@
 
 ## Core Philosophy
 
-Resources follow a **binary growth/decay state machine** based on environmental conditions, with each resource having specific quantification strategies and environmental requirements. The system supports both bulk resources (measured by quantity) and specimen resources (measured by quality), creating diverse resource types with realistic growth patterns.
+Resources follow a **binary growth/decay state machine** based on environmental conditions, with each resource having specific quantification strategies, environmental requirements, and **rarity thresholds**. The system supports both bulk resources (measured by quantity) and specimen resources (measured by quality), creating diverse resource types with realistic growth patterns.
+
+Resources use **environmental fitness scoring** combined with **rarity thresholds** to determine where they can establish. This creates natural scarcity where common resources appear in many locations, while rare resources only appear in places with excellent environmental alignment.
 
 ## Resource Distribution Constraints
 
@@ -105,11 +107,11 @@ export type SpecimenQuantificationStrategy = AbstractQuantificationStrategy<'spe
 
 ## Resource Selection Algorithm
 
-When determining which resources can grow in a Place, the system uses **environmental fitness scoring** based on comprehensive environmental requirements.
+When determining which resources can grow in a Place, the system uses **multi-layered environmental fitness scoring** that includes weather conditions, geological compatibility, and rarity thresholds.
 
 ### 1. Viability Filtering
 
-First, filter all resources by environmental requirements:
+First, filter all resources by basic environmental requirements:
 
 ```typescript
 function getViableResources(
@@ -124,41 +126,105 @@ function getViableResources(
 
 ### 2. Environmental Fitness Scoring
 
-Rate how well each viable resource matches current conditions:
+Rate how well each viable resource matches current conditions across multiple dimensions:
 
 ```typescript
-function calculateFitness(resource: ResourceSchema, weather: Weather): number {
+function calculateEnvironmentalFitness(
+  resource: ResourceSchema,
+  weather: Weather,
+  ecologicalProfile: EcologicalProfile
+): number {
+  let weatherScore = calculateWeatherFitness(resource, weather);
+  let geologicalScore = calculateGeologicalFitness(resource, ecologicalProfile);
+
+  // Combined fitness score
+  return (weatherScore + geologicalScore) / 2;
+}
+
+function calculateWeatherFitness(resource: ResourceSchema, weather: Weather): number {
   let score = 1.0;
 
   // Temperature fitness (closer to optimal = higher score)
   const tempRange = resource.requirements.temperature;
-  if (tempRange) {
+  if (tempRange?.min && tempRange?.max) {
     const optimal = (tempRange.min + tempRange.max) / 2;
     const deviation = Math.abs(weather.temperature - optimal);
     score *= Math.max(0, 1 - deviation / 20);
   }
 
-  // Similar calculations for humidity, light, etc.
+  // Similar calculations for humidity, PPFD, etc.
+  return score;
+}
+
+function calculateGeologicalFitness(
+  resource: ResourceSchema,
+  ecologicalProfile: EcologicalProfile
+): number {
+  let score = 1.0;
+
+  // Soil preference scoring
+  if (resource.requirements.soils) {
+    let soilScore = 0;
+    for (const [soilType, proportion] of Object.entries(ecologicalProfile.soil)) {
+      const preference = resource.requirements.soils[soilType] || 0.5; // Default neutral
+      soilScore += proportion * preference;
+    }
+    score *= soilScore;
+  }
+
+  // Bedrock preference scoring
+  if (resource.requirements.bedrock) {
+    let bedrockScore = 0;
+    for (const [bedrockType, proportion] of Object.entries(ecologicalProfile.bedrock)) {
+      const preference = resource.requirements.bedrock[bedrockType] || 0.5; // Default neutral
+      bedrockScore += proportion * preference;
+    }
+    score *= bedrockScore;
+  }
+
   return score;
 }
 ```
 
-### 3. Best-Fit Selection
+### 3. Rarity Threshold Filtering
 
-Select the resource with highest environmental fitness score for each type:
+Check if environmental fitness meets the resource's rarity requirements:
+
+```typescript
+function meetsRarityThreshold(resource: ResourceSchema, fitness: number): boolean {
+  const rarityThreshold = resource.rarity || 0.0; // Default: no rarity requirement
+  return fitness >= rarityThreshold;
+}
+```
+
+### 4. Best-Fit Selection
+
+Select the resource with highest environmental fitness score for each type, considering rarity:
 
 ```typescript
 function selectResourceByType(
   viableResources: ResourceSchema[],
-  resourceType: string
+  resourceType: string,
+  weather: Weather,
+  ecologicalProfile: EcologicalProfile
 ): ResourceSchema | null {
   const typeResources = viableResources.filter(r => getResourceType(r) === resourceType);
   if (typeResources.length === 0) return null;
 
+  // Filter by rarity threshold, then select highest fitness
+  const eligibleResources = typeResources.filter(resource => {
+    const fitness = calculateEnvironmentalFitness(resource, weather, ecologicalProfile);
+    return meetsRarityThreshold(resource, fitness);
+  });
+
+  if (eligibleResources.length === 0) return null;
+
   // Return the resource with highest fitness score
-  return typeResources.reduce((best, current) =>
-    calculateFitness(current, weather) > calculateFitness(best, weather) ? current : best
-  );
+  return eligibleResources.reduce((best, current) => {
+    const bestFitness = calculateEnvironmentalFitness(best, weather, ecologicalProfile);
+    const currentFitness = calculateEnvironmentalFitness(current, weather, ecologicalProfile);
+    return currentFitness > bestFitness ? current : best;
+  });
 }
 ```
 
@@ -271,17 +337,24 @@ This creates **dynamic resource evolution** where Places develop changing resour
 
 ## Example Resource Definitions
 
-### Bulk Resource Example (Desert Tree)
+### Common Bulk Resource (Desert Tree)
 ```typescript
 export const MesquiteSchema: BulkResourceSchema = createTreeSchema({
   name: 'mesquite',
   slug: 'mesquite',
   provides: ['wood', 'bark', 'nectar'],
+  rarity: 0.0,  // Common - no rarity requirement
   requirements: {
     temperature: { min: 10, max: 45 },
     humidity: { min: 15, max: 60 },
     precipitation: { min: 0.2 },
-    seasons: ['spring', 'summer', 'fall']
+    seasons: ['spring', 'summer', 'fall'],
+    // Prefers sandy, well-drained soils but can adapt
+    soils: {
+      'sand:gravelly': 0.9,
+      'loam:gravelly': 0.7,
+      'sand:stony': 0.6
+    }
   },
   growth: {
     curve: 'LOGISTIC',
@@ -298,17 +371,50 @@ export const MesquiteSchema: BulkResourceSchema = createTreeSchema({
 });
 ```
 
-### Specimen Resource Example (Individual Fruit Tree)
+### Rare Mineral Resource (Iron Ore)
+```typescript
+export const IronSchema: BulkResourceSchema = createMineralSchema({
+  name: 'iron',
+  slug: 'iron',
+  provides: ['ore', 'iron'],
+  rarity: 0.6,  // Requires good geological conditions
+  requirements: {
+    biomes: ['mountain', 'steppe'],
+    // Strong preference for iron-bearing rocks
+    bedrock: {
+      'igneous:basalt': 0.95,      // Excellent - volcanic iron deposits
+      'sedimentary:shale': 0.7,    // Good - sedimentary iron bands
+      'metamorphic:gneiss': 0.4    // Poor - some metamorphic iron
+    },
+    // Easier mining with rockier soils
+    soils: {
+      'sand:lithic': 0.9,    // Excellent accessibility
+      'loam:lithic': 0.8,    // Good accessibility
+      'clay:stony': 0.6,     // Moderate accessibility
+      'sand:gravelly': 0.4   // Poor accessibility
+    }
+  }
+});
+```
+
+### Ultra-Rare Specimen Resource (Legendary Fruit)
 ```typescript
 export const DurianTreeSchema: SpecimenResourceSchema = {
   name: 'durian tree',
   slug: 'durian-tree',
   provides: ['fruit'],
+  rarity: 0.85, // Very rare - requires near-perfect conditions
   requirements: {
     temperature: { min: 15, max: 35 },
     humidity: { min: 60, max: 90 },
     biomes: ['jungle'],
-    climates: ['tropical']
+    climates: ['tropical'],
+    // Prefers rich, well-draining tropical soils
+    soils: {
+      'clay:stony': 0.8,     // Rich tropical clay
+      'loam:gravelly': 0.6,  // Well-draining loam
+      'silt:gravelly': 0.5   // Acceptable silt
+    }
   },
   growth: {
     curve: 'LOGISTIC',
@@ -326,43 +432,98 @@ export const DurianTreeSchema: SpecimenResourceSchema = {
 };
 ```
 
-### Complex Environmental Requirements Example
+### Complex Environmental Requirements (Mystical Flower)
 ```typescript
 export const BlackLotusSchema: BulkResourceSchema = createFlowerSchema({
   name: 'black lotus',
   slug: 'black-lotus',
   provides: ['flower', 'nectar', 'seeds', 'roots'],
+  rarity: 0.95, // Legendary rarity - requires perfect conditions
   requirements: {
     temperature: { min: 15, max: 32 },
     humidity: { min: 60, max: 90 },
     ppfd: { max: 200 },             // Shade-loving
     seasons: ['spring', 'summer', 'fall'],
     time: ['dusk', 'night'],        // Nocturnal blooming
-    lunar: ['full']                 // Only during full moon
+    lunar: ['full'],                // Only during full moon
+    // Requires specific mystical geology
+    soils: { 'silt:stony': 0.9 },  // Rich organic waterlogged soils
+    bedrock: { 'sedimentary:limestone': 0.8 } // Karst formations for mystical energy
   }
 });
 ```
 
+## Ecological Profile Examples
+
+The following examples show how the enhanced geological system creates realistic resource distribution:
+
+### Mountain Ecosystem
+```typescript
+'flux:eco:mountain:arid': {
+  soil: {
+    'sand:lithic': 0.4,     // Thin soil over bedrock
+    'loam:lithic': 0.3,     // Patchy fertile areas
+    'clay:stony': 0.3       // Rock-filled clay pockets
+  },
+  bedrock: {
+    'metamorphic:gneiss': 0.5,      // High-pressure metamorphic
+    'igneous:granite': 0.3,         // Granite intrusions
+    'sedimentary:limestone': 0.2    // Uplifted sedimentary
+  }
+}
+```
+**Resource Implications**: Excellent for rare metamorphic minerals (tungsten, rare metals), difficult for deep-rooted plants, favors lithophytes and hardy mountain species.
+
+### Jungle Ecosystem
+```typescript
+'flux:eco:jungle:tropical': {
+  soil: {
+    'clay:stony': 0.8,      // Deep tropical weathering
+    'silt:gravelly': 0.2    // Alluvial deposits
+  },
+  bedrock: {
+    'igneous:basalt': 0.6,         // Volcanic activity
+    'sedimentary:limestone': 0.4   // Karst terrain
+  }
+}
+```
+**Resource Implications**: Great for iron-rich volcanic minerals, supports lush vegetation, karst areas provide unique mystical resources.
+
 ## Benefits of This System
+
+### **Graduated Rarity System**
+- **Common resources** (rarity 0.0-0.3): Appear in most suitable locations
+- **Uncommon resources** (rarity 0.3-0.6): Require good environmental alignment
+- **Rare resources** (rarity 0.6-0.8): Only appear in excellent conditions
+- **Legendary resources** (rarity 0.8-1.0): Require near-perfect environmental harmony
+
+### **Geological Authenticity**
+- Iron appears in basalt-rich volcanic regions and sedimentary iron formations
+- Rare metamorphic minerals concentrate in high-pressure mountain zones
+- Coal forms in ancient organic sedimentary environments (marshes with shale)
+- Common minerals like quartz appear across diverse geological settings
 
 ### **Type-Based Specialization**
 - Maximum one resource per type per Place eliminates abundance problem
 - Forces exploration for specific resource types
-- Creates natural Place specialization ("the iron mountain", "the medicinal herb grove")
+- Creates natural Place specialization ("the iron mountain", "the rare herb grove")
 
-### **Environmental Authenticity**
-- Resources that fit conditions better are more likely to appear
-- Weather and seasonal changes affect resource composition
-- Maintains biological realism through environmental constraints
+### **Environmental Fitness Dynamics**
+- Resources that fit conditions better score higher in selection
+- Weather and seasonal changes affect resource composition over time
+- Geological compatibility creates stable, realistic distribution patterns
+- Mining accessibility varies with soil rockiness (lithic > stony > gravelly)
 
-### **Dynamic Gameplay**
+### **Dynamic Succession with Constraints**
 - Resource succession creates changing opportunities over time
 - Environmental changes can shift which resources can grow
 - Depletion decisions have lasting consequences for Place identity
+- Rarity thresholds prevent valuable resources from appearing in poor locations
 
-### **Emergent Specialization**
-- Places develop distinct resource "personalities"
+### **Emergent Complexity**
+- Places develop distinct geological "personalities" based on their soil and bedrock
 - Environmental fitness creates predictable but varied distributions
 - Player actions influence long-term resource composition through succession cycles
+- Exploration becomes purposeful - seeking specific geological formations for rare resources
 
-The system creates **predictable specialization** (one resource per type) with **dynamic variety** (which specific resources depend on environmental fitness and succession), solving the abundance problem while maintaining ecological authenticity and strategic depth.
+The system creates **predictable geological specialization** (rock types determine mineral availability) with **dynamic environmental variety** (weather and succession create changing opportunities), solving the abundance problem while maintaining both ecological and geological authenticity for strategic depth.

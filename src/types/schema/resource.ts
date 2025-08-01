@@ -1,9 +1,10 @@
 import { UnitOfMass, UnitOfMeasure, UnitOfVolume } from '~/types/world/measures';
 import { EasingFunctionName } from '~/types/easing';
 import { TimeUnit } from '~/types/world/time';
-import { Biome, Climate } from '~/types/schema/ecology';
+import { BedrockType, Biome, Climate, SoilType } from '~/types/schema/ecology';
 import { CommandType } from '~/types/intent';
 import { Requirements } from '~/types/requirement';
+import { NormalizedValueBetweenZeroAndOne } from '~/types/entity/attribute';
 
 type Bounds = { min?: number, max?: number };
 
@@ -19,6 +20,8 @@ export type GrowthSpecification = {
    */
   duration: [number, TimeUnit],
 };
+
+export type PartialWeights<T extends string> = Record<T, NormalizedValueBetweenZeroAndOne>;
 
 export type ResourceGrowthRequirements = {
   /**
@@ -82,13 +85,27 @@ export type ResourceGrowthRequirements = {
 
   /**
    * To restrict the resource to specific biomes
+   * Use sparingly, as this is *counter* to emergent behavior.
    */
   biomes?: Biome[];
 
   /**
    * To restrict the resource to specific climates
+   * Use sparingly, as this is *counter* to emergent behavior.
    */
   climates?: Climate[];
+
+  /**
+   * To restrict the resource to specific soils
+   * Use sparingly, as this is *counter* to emergent behavior.
+   */
+  soils?: PartialWeights<SoilType>;
+
+  /**
+   * To restrict the resource to specific bedrock types
+   * Use sparingly, as this is *counter* to emergent behavior.
+   */
+  bedrock?: PartialWeights<BedrockType>;
 };
 
 export type Season = 'spring' | 'summer' | 'fall' | 'winter';
