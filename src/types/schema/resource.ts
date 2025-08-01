@@ -149,7 +149,6 @@ type AbstractResourceSchema<QuantificationStrategy extends ResourceQuantificatio
    */
   quantification: QuantificationStrategy;
 };
-
 export type ResourceQuantificationType = 'bulk' | 'specimen';
 export type AbstractQuantificationStrategy<T extends ResourceQuantificationType> = {
   type: T;

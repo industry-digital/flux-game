@@ -129,17 +129,13 @@ export const TAXONOMY = {
       description: 'A monster in the game world',
       examples: ['flux:monster:goblin:blazor:elite', 'flux:monster:faction:arasaka:cybernetic:assassin'],
     },
-    resource: {
+    res: {
       description: 'A resource that can be obtained and used',
-      examples: ['flux:resource:wood:oak', 'flux:resource:ore:iron'],
+      examples: ['flux:res:wood:oak', 'flux:res:ore:iron'],
     },
     eco: {
       description: 'Ecosystems and environments',
       examples: ['flux:eco:forest:temperate', 'flux:eco:desert:arid', 'flux:eco:tundra:polar']
-    },
-    geo: {
-      description: 'Geographic features',
-      examples: ['flux:geo:mountain', 'flux:geo:water:lake']
     },
     schema: {
       description: 'The various schemas in the game world',
@@ -275,7 +271,7 @@ export namespace Taxonomy {
   /**
    * The various resources in the game world
    */
-  export type Resources = TaxonomyURN<'resource'>;
+  export type Resources = TaxonomyURN<'res'>;
 
   /**
    * Geographic and topographic features
