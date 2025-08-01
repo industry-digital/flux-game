@@ -1,5 +1,6 @@
-import { EasingFunctionName } from '~/types/easing';
+import { EasingFunctionName, CurvePositionWithValue } from '~/types/easing';
 import { WellKnownDuration } from '~/types/world/time';
+
 
 export type WeatherPropertySpecificationInput = {
   /**
@@ -25,25 +26,6 @@ export type WeatherPropertySpecification = WeatherPropertySpecificationInput & {
    */
   curve?: EasingFunctionName;
 }
-
-export type CurvePosition = {
-  /**
-   * The seed value for the weather generator
-   */
-  seed: number;
-
-  /**
-   * The position `t` on an easing curve. Normalized to [0, 1]
-   */
-  position: number;
-}
-
-export type CurvePositionWithValue = CurvePosition & {
-  /**
-   * The computed value of the property at the position `t` on the curve
-   */
-  value: number;
-};
 
 export type Weather = {
   /**

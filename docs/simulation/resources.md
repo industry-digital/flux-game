@@ -1,73 +1,160 @@
-# Flux Resource Growth System: Binary Growth/Decay with Curve Positions
+# Flux Resource System: Environmental Constraints with Strategic Scarcity
 
 ## Core Philosophy
-Resources follow a binary state machine: they are either **growing** or **decaying** based on environmental conditions. Each resource tracks its position on a mathematical curve, creating predictable yet dynamic resource patterns that emerge from environmental conditions.
 
-## Resource Models
+Resources follow a **binary growth/decay state machine** based on environmental conditions, with each resource having specific quantification strategies and environmental requirements. The system supports both bulk resources (measured by quantity) and specimen resources (measured by quality), creating diverse resource types with realistic growth patterns.
 
-The system supports two distinct resource models:
+## Resource Data Model
 
-### Specimen Resources
+### ResourceNodes Structure
+
+Each Place maintains resources using URN-based identification with curve position and value tracking:
+
 ```typescript
-type SpecimenResourceSchema = ResourceSchemaBase & {
-  quantity: {
-    measure: UnitOfMeasure.EACH;
-    min: 1;
-    capacity: 1;
-  };
-  quality: {
-    measure: Exclude<UnitOfMeasure, UnitOfMeasure.EACH> | UnitOfMass | UnitOfVolume;
-    min: number;     // Minimum quality (e.g., 0.5kg for smallest valid fruit)
-    capacity: number; // Maximum quality (e.g., 2kg for largest possible fruit)
-  };
-
-  computeQuantity: (position: PositionOnEasingCurve, ease: EasingFunction, schema: ResourceSchemaBase) => number;
+/**
+ * A record of the position and value of each resource node in the resource curve
+ * We deliberately avoid nesting here and opt instead for URNs to keep the data structure compact.
+ */
+export type ResourceNodes = Record<ResourceURN, CurvePositionWithValue> & {
+  /**
+   * The timestamp of the last update to the resource nodes
+   */
+  ts: number;
 };
 ```
-- Single items that grow in quality (e.g., a fruit, a beehive)
-- Quantity is fixed at 1
-- Quality grows from min to capacity based on growth curve
-- Examples: A single durian fruit growing from 0.5kg to 2kg
 
-### Bulk Resources
+Example ResourceNodes data:
 ```typescript
-type BulkResourceSchema = ResourceSchemaBase & {
+{
+  'flux:resource:apple': {
+    position: 0.5,  // Position on growth curve [0-1]
+    value: 10       // Computed resource value at this position
+  },
+  'flux:resource:wood:oak': {
+    position: 0.2,
+    value: 50
+  },
+  ts: 1717171717,   // Timestamp of last update
+}
+```
+
+### Resource Quantification Strategies
+
+Resources use two distinct quantification approaches:
+
+#### Bulk Resources
+Measured by total quantity that grows over time:
+```typescript
+export type BulkQuantificationStrategy = {
+  type: 'bulk';
   quantity: {
     measure: UnitOfMeasure | UnitOfMass | UnitOfVolume;
-    min?: number;    // Minimum quantity (e.g., 50kg - field never completely empty)
+    min?: number;    // Minimum quantity (field never completely empty)
     capacity: number; // Maximum quantity (e.g., 200kg of grass)
+    curve?: EasingFunctionName; // Optional override of growth.curve
   };
-
-  computeQuantity: (position: PositionOnEasingCurve, ease: EasingFunction, schema: ResourceSchemaBase) => number;
 };
 ```
-- Collections that grow in quantity (e.g., a field, a pond)
-- Quality is fixed at 1
-- Quantity grows from min to capacity based on growth curve
-- Examples: A field growing from 50kg to 200kg of grass
+
+**Examples**: Grass fields, water bodies, mineral deposits, flower patches
+
+#### Specimen Resources
+Single items where quality grows over time:
+```typescript
+export type SpecimenQuantificationStrategy = {
+  type: 'specimen';
+  quantity: { measure: UnitOfMeasure.EACH; min: 1; capacity: 1; };
+  quality: {
+    measure: UnitOfMass | UnitOfVolume;
+    min: number;     // Minimum quality (e.g., 0.5kg for smallest fruit)
+    capacity: number; // Maximum quality (e.g., 2kg for largest fruit)
+  };
+};
+```
+
+**Examples**: Individual fruit trees, beehives, single large specimens
+
+## Resource Selection Algorithm
+
+When determining which resources can grow in a Place, the system uses **environmental fitness scoring** based on comprehensive environmental requirements.
+
+### 1. Viability Filtering
+
+First, filter resources by environmental requirements:
+
+```typescript
+function getViableResources(
+  ecosystem: EcosystemURN,
+  weather: Weather
+): ResourceSchema[] {
+  return ALL_RESOURCES.filter(resource =>
+    doesResourceGrowInPlace(resource, ecosystem, weather)
+  );
+}
+```
+
+### 2. Environmental Fitness Scoring
+
+Rate how well each viable resource matches current conditions:
+
+```typescript
+function calculateFitness(resource: ResourceSchema, weather: Weather): number {
+  let score = 1.0;
+
+  // Temperature fitness (closer to optimal = higher score)
+  const tempRange = resource.requirements.temperature;
+  if (tempRange) {
+    const optimal = (tempRange.min + tempRange.max) / 2;
+    const deviation = Math.abs(weather.temperature - optimal);
+    score *= Math.max(0, 1 - deviation / 20);
+  }
+
+  // Similar calculations for humidity, light, etc.
+  return score;
+}
+```
+
+### 3. Rarity-Weighted Selection
+
+Combine environmental fitness with rarity for natural distributions:
+
+```typescript
+const RESOURCE_RARITY = {
+  'iron': 0.8,           // Common mineral
+  'tungsten': 0.2,       // Rare mineral
+  'desert-marigold': 0.7, // Common flower
+  'black-lotus': 0.1     // Very rare flower
+};
+
+function selectResource(scored: ScoredResource[]): ResourceSchema {
+  // Weighted selection: fitness × rarity
+  return weightedRandomSelect(scored);
+}
+```
 
 ## Binary Growth/Decay State Machine
 
-Resources have no intermediate states - they are always either growing toward capacity or decaying toward their minimum:
+Resources have no intermediate states - they are always either **growing** toward capacity or **decaying** toward minimum based on environmental conditions.
+
+### Environmental Condition Checking
 
 ```typescript
-export function updateResource(
-  schema: ResourceSchema,
+export function doesResourceGrowInPlace(
+  resource: ResourceSchema,
   ecosystem: EcosystemURN,
-  weather: Weather,
-  node: ResourceNodeState,
-  now: number = Date.now()
-): ResourceNodeState {
-  const deltaTime = now - node.curve.ts;
-  if (deltaTime <= 0) return node;
+  weather: Weather
+): boolean {
+  // ALL requirements must be met for growth
+  // ANY failed requirement triggers decay
 
-  const isGrowing = doesResourceGrowInPlace(schema, ecosystem, weather, now);
+  const required = resource.requirements;
 
-  if (isSpecimenSchema(schema)) {
-    return updateSpecimenResource(schema, isGrowing, deltaTime, node, now);
-  } else {
-    return updateBulkResource(schema, isGrowing, deltaTime, node, now);
-  }
+  // Temperature check
+  if (required.temperature?.min && weather.temperature < required.temperature.min) return false;
+  if (required.temperature?.max && weather.temperature > required.temperature.max) return false;
+
+  // Humidity, light, seasonal checks...
+  return true;
 }
 ```
 
@@ -75,186 +162,156 @@ This creates clear ecological boundaries:
 - **ALL growth requirements met** → Resource GROWS
 - **ANY growth requirement not met** → Resource DECAYS
 - **Immediate response** to environmental changes
-- **Clear seasonal dynamics** without complex transitions
 
-## Growth and Decay Curves
+## Growth Curves and Environmental Requirements
 
 ### Easing Functions
+
+Resources use mathematical curves to model realistic growth patterns:
+
 ```typescript
-export const Easing: Record<EasingFunctionName, EasingFunction> = {
-  LINEAR: (t: number) => t,
-  // Centered S-curve with steeper middle section
-  LOGISTIC: (t: number) => 1 / (1 + Math.exp(-12 * (t - 0.5))),
-  // Normalized exponential with faster early growth
-  EXPONENTIAL: (t: number) => {
-    const t2 = t * 1.5; // Stretch input for faster early growth
-    return Math.min(1, (Math.exp(6 * t2) - 1) / (Math.exp(6) - 1));
-  },
-  EASE_OUT_QUAD: (t: number) => 1 - (1 - t) * (1 - t),
-  EASE_IN_QUAD: (t: number) => t * t,
-  CUBIC: (t: number) => t * t * (3 - 2 * t),
+export const Easing = {
+  LINEAR: (t: number) => t,                    // Steady growth
+  LOGISTIC: (t: number) => 1 / (1 + Math.exp(-12 * (t - 0.5))), // S-curve
+  EXPONENTIAL: (t: number) => /* fast early growth */,
+  CUBIC: (t: number) => t * t * (3 - 2 * t)   // Smooth transitions
 };
 ```
 
-### Decay Behavior
-- If no decay curve specified, inverts the growth curve:
-```typescript
-function invertEasing(easing: EasingFunction): EasingFunction {
-  return (t: number) => 1 - easing(1 - t);
-}
-```
-- Default decay duration: 1 day
-- Maintains curve shape but reverses direction
+**Curve Selection Guidelines:**
+- **LOGISTIC**: Most biological growth (flowers, trees)
+- **EXPONENTIAL**: Rapid colonization (fungi, pioneer species)
+- **LINEAR**: Steady accumulation (minerals, water collection)
 
-### Curve Position Updates
-```typescript
-function calculateNewPosition(
-  currentPosition: number,
-  deltaTimeMs: number,
-  duration: readonly [number, TimeUnit],
-): number {
-  if (deltaTimeMs <= 0) return currentPosition;
+### Environmental Requirements
 
-  const durationMs = durationToMs(duration);
-  const positionIncrement = deltaTimeMs / durationMs;
-  return Math.min(1, Math.max(0, currentPosition + positionIncrement));
-}
-```
-
-## Environmental Requirements
-
-Resources respond to a comprehensive set of environmental factors:
+Resources define comprehensive conditions needed for growth:
 
 ```typescript
 export type ResourceGrowthRequirements = {
-  temperature?: Bounds;         // Celsius
-  pressure?: Bounds;           // hectopascals (hPa)
-  humidity?: Bounds;           // percentage (0-100)
-  precipitation?: Bounds;      // mm/hour
-  ppfd?: Bounds;              // μmol/m²/s (light)
-  clouds?: Bounds;            // percentage (0-100)
-  fog?: Bounds;               // normalized (0-1)
-  seasons?: Season[];         // spring, summer, fall, winter
-  time?: TimeOfDay[];        // dawn, morning, day, afternoon, evening, dusk, night
-  lunar?: LunarPhase[];      // new, waxing, full, waning
-  biomes?: Biome[];          // steppe, grassland, forest, mountain, jungle, marsh
-  climates?: Climate[];      // arid, temperate, tropical
+  temperature?: { min?: number, max?: number };     // Celsius
+  pressure?: { min?: number, max?: number };        // hectopascals (hPa)
+  humidity?: { min?: number, max?: number };        // Percentage (0-100)
+  precipitation?: { min?: number, max?: number };   // mm/hour
+  ppfd?: { min?: number, max?: number };           // Light (μmol/m²/s)
+  clouds?: { min?: number, max?: number };         // Cloud cover (0-100%)
+  fog?: { min?: number, max?: number };            // Fog intensity (0-1)
+  seasons?: Season[];                              // Active seasons
+  time?: TimeOfDay[];                              // Active times of day
+  lunar?: LunarPhase[];                            // Lunar phase requirements
+  biomes?: Biome[];                                // Ecosystem restrictions
+  climates?: Climate[];                            // Climate restrictions
 };
+
+// Supporting types
+export type Season = 'spring' | 'summer' | 'fall' | 'winter';
+export type TimeOfDay = 'dawn' | 'morning' | 'day' | 'afternoon' | 'evening' | 'dusk' | 'night';
+export type LunarPhase = 'new' | 'waxing' | 'full' | 'waning';
 ```
 
-### Environmental Condition Checking
+## Resource Lifecycle and Succession
+
+### Growth and Decay Mechanics
+
+Resources follow their growth curves when environmental conditions are met:
+
 ```typescript
-export function doesResourceGrowInPlace(
-  resource: ResourceSchema,
-  ecosystem: EcosystemURN,
-  weather: Weather,
-  now: number = Date.now()
-): boolean {
-  const ecology = ECOLOGICAL_PROFILES[ecosystem];
-  if (!ecology) return false;
+// Growth calculation for bulk resources
+const currentQuantity = quantity.min + (growthCurve(position) * (quantity.capacity - quantity.min));
 
-  // Check each requirement against current conditions
-  // ANY failed check triggers decay
-  // ALL checks must pass for growth
-}
+// Growth calculation for specimen resources
+const currentQuality = quality.min + (growthCurve(position) * (quality.capacity - quality.min));
 ```
+
+### Resource Succession
+
+When resources are depleted or environmental conditions change, new resources can establish based on:
+
+- **Environmental fitness** - how well current conditions match requirements
+- **Seasonal availability** - resources that can grow in current season
+- **Ecosystem compatibility** - biome and climate restrictions
+- **Temporal factors** - time of day and lunar phase requirements
+
+This creates **dynamic resource evolution** where Places develop changing resource compositions over time through natural succession cycles.
 
 ## Example Resource Definitions
 
-### Durian - Specimen Resource
+### Bulk Resource Example (Desert Tree)
 ```typescript
-const DurianSchema: SpecimenResourceSchema = {
-  name: 'durian',
-  slug: 'durian',
-  provides: ['fruit'],
+export const MesquiteSchema: BulkResourceSchema = {
+  name: 'mesquite',
+  slug: 'mesquite',
+  provides: ['wood', 'bark', 'nectar'],
   requirements: {
-    temperature: { min: 15, max: 35 },
+    temperature: { min: 10, max: 45 },
+    humidity: { min: 15, max: 60 },
+    precipitation: { min: 0.2 },
+    seasons: ['spring', 'summer', 'fall']
+  },
+  growth: {
+    curve: 'LOGISTIC',
+    duration: [365, TimeUnit.DAY]  // One year to mature
+  },
+  quantification: {
+    type: 'bulk',
+    quantity: {
+      measure: UnitOfMass.KG,
+      min: 10,        // Always some wood available
+      capacity: 500   // Maximum 500kg of wood
+    }
+  }
+};
+```
+
+### Specimen Resource Example (Rare Fruit)
+```typescript
+export const BlackLotusSchema: SpecimenResourceSchema = {
+  name: 'black lotus',
+  slug: 'black-lotus',
+  provides: ['flower', 'nectar', 'seeds', 'roots'],
+  requirements: {
+    temperature: { min: 15, max: 32 },
     humidity: { min: 60, max: 90 },
-    biomes: ['jungle'],
-    climates: ['tropical'],
+    ppfd: { max: 200 },           // Shade-loving
+    seasons: ['spring', 'summer', 'fall'],
+    lunar: ['full']               // Only during full moon
   },
   growth: {
-    curve: Easing.LOGISTIC,
-    duration: [7, TimeUnit.DAY],
+    curve: 'LOGISTIC',
+    duration: [90, TimeUnit.DAY]  // 90 days to full quality
   },
-  quantity: {
-    measure: UnitOfMeasure.EACH,
-    min: 1,
-    capacity: 1,
-  },
-  quality: {
-    measure: UnitOfMass.KILOGRAMS,
-    min: 0.5,    // Smallest valid fruit: 0.5kg
-    capacity: 2,  // Largest possible fruit: 2kg
-  },
-  description: () => 'a durian fruit',
+  quantification: {
+    type: 'specimen',
+    quantity: { measure: UnitOfMeasure.EACH, min: 1, capacity: 1 },
+    quality: {
+      measure: UnitOfMass.G,
+      min: 5,         // Minimum 5g flower
+      capacity: 50    // Maximum 50g premium flower
+    }
+  }
 };
 ```
 
-### Grass Field - Bulk Resource
-```typescript
-const GrassFieldSchema: BulkResourceSchema = {
-  name: 'grass field',
-  slug: 'grass-field',
-  provides: ['grass'],
-  requirements: {
-    temperature: { min: 5, max: 30 },
-    ppfd: { min: 500 },
-    biomes: ['grassland'],
-    climates: ['temperate'],
-  },
-  growth: {
-    curve: Easing.EXPONENTIAL,
-    duration: [14, TimeUnit.DAY],
-  },
-  quantity: {
-    measure: UnitOfMass.KILOGRAMS,
-    min: 50,     // Field never completely empty
-    capacity: 200, // Maximum 200kg of grass
-  },
-  description: () => 'a field of grass',
-};
-```
+## Benefits of This System
 
-## Implementation Guidelines
+### **Strategic Scarcity**
+- Maximum 5 resources per Place eliminates abundance problem
+- Forces exploration for specific resource types
+- Creates natural specialization ("the iron mountain")
 
-### Choosing Growth Curves
-- **Easing.LOGISTIC**: Most biological growth (flowers, populations)
-  - Centered S-curve with steeper middle section
-  - Good for gradual start/end with rapid middle growth
-- **Easing.EXPONENTIAL**: Rapid early growth (fungi, colonization)
-  - Fast initial growth that slows near capacity
-  - Good for resources that establish quickly
-- **Easing.LINEAR**: Steady accumulation (minerals, simple resources)
-  - Constant growth rate
-  - Good for predictable, mechanical processes
-- **Easing.EASE_IN_QUAD**: Accelerating processes
-  - Starts slow, continuously accelerates
-  - Good for momentum-based growth
-- **Easing.EASE_OUT_QUAD**: Decelerating processes
-  - Starts fast, continuously decelerates
-  - Good for rapid establishment with diminishing returns
-- **Easing.CUBIC**: Smooth transitions
-  - Similar to LOGISTIC but with gentler curve
-  - Good for general-purpose smooth growth
+### **Environmental Authenticity**
+- Resources that fit conditions better are more likely to appear
+- Weather and seasonal changes affect resource composition
+- Maintains biological realism through environmental constraints
 
-### Environmental Requirements
-- Define ALL conditions that must be met for growth
-- ANY failed condition triggers decay
-- Use tight ranges for ecological specialization
-- Combine multiple factors for niche creation
-- Consider both biome and climate restrictions
+### **Dynamic Gameplay**
+- Resource succession creates changing opportunities
+- Depletion decisions have lasting consequences
+- Rare resources create valuable exploration targets
 
-### Duration Settings
-- Growth duration: Time from min to capacity
-- Decay duration: Time from capacity to min
-- Default decay duration: 1 month if not specified
-- Shorter durations = more responsive to environmental changes
-- Longer durations = more stable resource presence
+### **Emergent Specialization**
+- Places develop resource "personalities" over time
+- Player actions influence long-term resource composition
+- Natural trade opportunities emerge between specialized locations
 
-The decay duration specifies how long it would take for a resource to decay from capacity to min if decay conditions persist. The actual decay time depends on where the resource is on its curve when decay begins. For example:
-- A resource at 75% of its range will take about 25% of the decay duration to reach min
-- A resource at 50% of its range will take about 50% of the decay duration to reach min
-- A resource at 25% of its range will take about 75% of the decay duration to reach min
-
-The system creates emergent ecological patterns where environmental conditions determine resource distribution, with each species following its characteristic growth curve while responding immediately to changing conditions through clear binary state transitions.
+The system creates **predictable scarcity** (fixed slot limits) with **dynamic variety** (which resources depend on environmental fitness and succession cycles), solving the abundance problem while maintaining ecological authenticity and strategic depth.

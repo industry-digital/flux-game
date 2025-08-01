@@ -122,10 +122,7 @@ export type Place =
    * The state of various resources in the Place
    * Example:
    *  {
-   *    'flux:resource:apple:position': 0.5,
-   *    'flux:resource:apple:value': 10,
-   *    'flux:resource:wood:oak:position': 0.2,
-   *    'flux:resource:wood:oak:value': 50,
+   *    'flux:resource:tree:oak': { position: 0.618, value: 11 },
    *    'ts': 1717171717,
    *  }
    */

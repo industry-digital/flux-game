@@ -23,6 +23,8 @@ export {
 } from './dice';
 
 export {
+  CurvePosition,
+  CurvePositionWithValue,
   Easing,
   EasingFunction,
   EasingFunctionName,
@@ -212,8 +214,6 @@ export {
 } from './schema/resource';
 
 export {
-  CurvePosition,
-  CurvePositionWithValue,
   Weather,
   WeatherPropertySpecification,
   WeatherPropertySpecificationInput,
@@ -221,9 +221,6 @@ export {
 
 export {
   ResourceNodes,
-  ResourceCurvePosition,
-  ResourceCurveValue,
-  ResourceCurveURN,
 } from './entity/resource';
 
 // Taxonomy exports
