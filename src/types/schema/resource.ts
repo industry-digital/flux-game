@@ -122,6 +122,15 @@ type AbstractResourceSchema<QuantificationStrategy extends ResourceQuantificatio
   provides: string[];
 
   /**
+   * The minimum "environmental fitness" score required for the resource to grow.
+   * Defaults to zero if not specified.
+   *
+   * - Example: 0.9 for a resource that requires a high environmental fitness score to grow
+   * - Example: 0.0 for a resource that "grows" everywhere
+   */
+  rarity?: number;
+
+  /**
    * The requirements that must be met for the resource to grow.
    */
   requirements: ResourceGrowthRequirements;

@@ -1,4 +1,5 @@
 import { EntityType } from '~/types/entity/entity';
+import { Biome, Climate } from '~/types/schema/ecology';
 
 export const ROOT_NAMESPACE = 'flux' as const;
 export type RootNamespace = typeof ROOT_NAMESPACE;
@@ -305,5 +306,5 @@ export type StatURN = Taxonomy.Stats;
 export type GroupURN = Taxonomy.Groups;
 export type TopicURN = Taxonomy.Topics;
 export type ResourceURN = Taxonomy.Resources;
-export type EcosystemURN = Taxonomy.Ecosystems;
+export type EcosystemURN = `${RootNamespace}:eco:${Biome}:${Climate}`;
 export type SchemaURN = Taxonomy.Schemas;
