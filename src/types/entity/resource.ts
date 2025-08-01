@@ -1,5 +1,11 @@
-import { CurvePositionWithValue } from '~/types/easing';
+import { SeededCurvePositionWithValue } from '~/types/easing';
 import { ResourceURN } from '~/types/taxonomy';
+
+export type ResourceNodeStatus = 'growing' | 'decaying';
+
+export type ResourceNodeState = SeededCurvePositionWithValue & {
+  status: ResourceNodeStatus;
+};
 
 /**
  * A record of the position and value of each resource node in the resource curve
@@ -11,7 +17,7 @@ import { ResourceURN } from '~/types/taxonomy';
  *    'ts': 1717171717,
  *  }
  */
-export type ResourceNodes = Record<ResourceURN, CurvePositionWithValue> & {
+export type ResourceNodes = Record<ResourceURN, ResourceNodeState> & {
   /**
    * The timestamp of the last update to the resource nodes
    */

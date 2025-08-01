@@ -25,6 +25,8 @@ export {
 export {
   CurvePosition,
   CurvePositionWithValue,
+  SeededCurvePosition,
+  SeededCurvePositionWithValue,
   Easing,
   EasingFunction,
   EasingFunctionName,
@@ -63,7 +65,6 @@ export {
 } from './entity/group';
 
 export {
-  ItemType,
   Modification,
   Device,
   Weapon,
@@ -94,7 +95,7 @@ export type {
 
 export {
   ItemState,
-  ItemType as ItemSubtype,
+  ItemType,
   StackableMixin,
   ChargeableMixin,
 } from './entity/item';
@@ -221,6 +222,8 @@ export {
 
 export {
   ResourceNodes,
+  ResourceNodeStatus,
+  ResourceNodeState,
 } from './entity/resource';
 
 // Taxonomy exports
