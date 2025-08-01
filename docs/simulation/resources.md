@@ -20,6 +20,8 @@ type SpecimenResourceSchema = ResourceSchemaBase & {
     min: number;     // Minimum quality (e.g., 0.5kg for smallest valid fruit)
     capacity: number; // Maximum quality (e.g., 2kg for largest possible fruit)
   };
+
+  computeQuantity: (position: PositionOnEasingCurve, ease: EasingFunction, schema: ResourceSchemaBase) => number;
 };
 ```
 - Single items that grow in quality (e.g., a fruit, a beehive)
@@ -35,6 +37,8 @@ type BulkResourceSchema = ResourceSchemaBase & {
     min?: number;    // Minimum quantity (e.g., 50kg - field never completely empty)
     capacity: number; // Maximum quantity (e.g., 200kg of grass)
   };
+
+  computeQuantity: (position: PositionOnEasingCurve, ease: EasingFunction, schema: ResourceSchemaBase) => number;
 };
 ```
 - Collections that grow in quantity (e.g., a field, a pond)

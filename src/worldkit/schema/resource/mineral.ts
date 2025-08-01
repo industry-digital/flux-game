@@ -1,320 +1,190 @@
-import { UnitOfMeasure, TimeUnit } from '~/types';
-import { SpecimenResourceSchema } from '~/types/schema/resource';
-import { Easing } from '~/types/easing';
-import { UnitOfMass } from '~/types/world/measures';
+import { UnitOfMass, TimeUnit } from '~/types';
+import { BulkResourceSchema } from '~/types/schema/resource';
 
-/**
- * Factory function for creating mineral resource schemas using a transformer approach
- */
-function createMineralSchema(
-  transform: (defaults: SpecimenResourceSchema) => SpecimenResourceSchema
-): SpecimenResourceSchema {
-  const defaults: Partial<SpecimenResourceSchema> = {
-    name: 'mineral deposit',
-
+// Helper function to create mineral schemas with proper typing
+function createMineralSchema(overrides: Partial<BulkResourceSchema>): BulkResourceSchema {
+  return {
     provides: ['ore'],
-
-    // Minerals require no specific conditions for growth
-    requirements: {},
-
+    quantification: {
+      type: 'bulk',
+      quantity: {
+        measure: UnitOfMass.KILOGRAMS,
+        min: 0,
+        capacity: 10 // 10kg per deposit
+      }
+    },
+    requirements: {}, // Minerals require no specific conditions for growth
     growth: {
-      curve: Easing.LINEAR,
-      duration: [1, TimeUnit.HOUR],
+      curve: 'LINEAR',
+      duration: [1, TimeUnit.HOUR]
     },
-
-    quantity: {
-      measure: UnitOfMeasure.EACH,
-      min: 1,
-      capacity: 1,
-    },
-
-    // Every mineral deposit is between one and ten kilograms
-    quality: {
-      measure: UnitOfMass.KILOGRAMS,
-      min: 1,
-      capacity: 10,
-    },
-
-    description: ({ fullness }, now, { name }) => {
-      if (fullness >= 1) {
-        return `a rich deposit of ${name} stretching deep into the earth`;
-      }
-      if (fullness > 0.7) {
-        return `a substantial ${name} deposit with visible seams`;
-      }
-      if (fullness > 0.3) {
-        return `scattered ${name} deposits requiring careful extraction`;
-      }
-      return `trace amounts of ${name} ore in the surrounding rock`;
-    },
-  };
-
-  return transform(defaults as SpecimenResourceSchema);
+    ...overrides
+  } as BulkResourceSchema;
 }
 
-// BASE METALS FOR STEEL PRODUCTION
+// Base Metals for Steel Production
 
 // Iron - Primary base metal for all steel
-export const IronSchema: SpecimenResourceSchema = createMineralSchema((defaults) => ({
-  ...defaults,
+export const IronSchema: BulkResourceSchema = createMineralSchema({
   name: 'iron',
-  provides: [...defaults.provides, 'iron'],
-}));
+  slug: 'iron',
+  provides: ['ore', 'iron'],
+  requirements: {
+    biomes: ['mountain', 'steppe']
+  }
+});
 
 // Carbon - Essential for steel hardening (coal/graphite deposits)
-export const CoalSchema = createMineralSchema((defaults) => ({
-  ...defaults,
+export const CoalSchema: BulkResourceSchema = createMineralSchema({
   name: 'coal',
-  provides: [...defaults.provides, 'coal', 'carbon'],
+  slug: 'coal',
+  provides: ['ore', 'coal', 'carbon'],
   requirements: {
-    ...defaults.requirements,
-    biomes: ['marsh', 'steppe'],
-  },
-}));
+    biomes: ['marsh', 'jungle']
+  }
+});
 
-// STAINLESS STEEL ALLOYS
-
-export const ChromiumSchema = createMineralSchema((defaults) => ({
-  ...defaults,
+// Stainless Steel Alloys
+export const ChromiumSchema: BulkResourceSchema = createMineralSchema({
   name: 'chromium',
-  provides: [...defaults.provides, 'chromium'],
+  slug: 'chromium',
+  provides: ['ore', 'chromium'],
   requirements: {
-    ...defaults.requirements,
-    biomes: ['steppe'],
-  },
-  description: (state) => {
-    if (state.fullness < 0.3) {
-      return 'chromium ore with metallic luster and greenish tint';
-    }
-    return 'brilliant chromium deposits perfect for stainless steel alloys';
+    biomes: ['steppe']
   }
-}));
+});
 
-export const NickelSchema = createMineralSchema((defaults) => ({
-  ...defaults,
+export const NickelSchema: BulkResourceSchema = createMineralSchema({
   name: 'nickel',
-  provides: [...defaults.provides, 'nickel'],
+  slug: 'nickel',
+  provides: ['ore', 'nickel'],
   requirements: {
-    ...defaults.requirements,
-    biomes: ['mountain', 'grassland', 'steppe'],
-  },
-  description: (state) => {
-    if (state.fullness < 0.4) {
-      return 'nickel ore with characteristic silvery-green coloration';
-    }
-    return 'dense nickel formations ideal for steel alloying';
+    biomes: ['mountain', 'grassland', 'steppe']
   }
-}));
+});
 
-// TOOL AND WEAPON STEEL ALLOYS
+// Tool and Weapon Steel Alloys
 
 // Tungsten - High-temperature strength, cutting edges
-export const TungstenSchema = createMineralSchema((defaults) => ({
-  ...defaults,
+export const TungstenSchema: BulkResourceSchema = createMineralSchema({
   name: 'tungsten',
-  provides: [...defaults.provides, 'tungsten'],
+  slug: 'tungsten',
+  provides: ['ore', 'tungsten'],
   requirements: {
-    ...defaults.requirements,
-    biomes: ['mountain'],
-  },
-  description: (state) => {
-    if (state.fullness < 0.3) {
-      return 'tungsten ore, incredibly dense and resistant to heat';
-    }
-    return 'massive tungsten deposits perfect for hardened tool steel';
+    biomes: ['mountain']
   }
-}));
+});
 
-export const MolybdenumSchema = createMineralSchema((defaults) => ({
-  ...defaults,
+export const MolybdenumSchema: BulkResourceSchema = createMineralSchema({
   name: 'molybdenum',
-  provides: [...defaults.provides, 'molybdenum'],
+  slug: 'molybdenum',
+  provides: ['ore', 'molybdenum'],
   requirements: {
-    ...defaults.requirements,
-    biomes: ['mountain', 'steppe'],
-  },
-  description: (state) => {
-    if (state.fullness < 0.4) {
-      return 'molybdenum ore with distinctive silvery-gray appearance';
-    }
-    return 'rich molybdenum formations for high-strength steel alloys';
+    biomes: ['mountain', 'steppe']
   }
-}));
+});
 
-export const VanadiumSchema = createMineralSchema((defaults) => ({
-  ...defaults,
+export const VanadiumSchema: BulkResourceSchema = createMineralSchema({
   name: 'vanadium',
-  provides: [...defaults.provides, 'vanadium'],
+  slug: 'vanadium',
+  provides: ['ore', 'vanadium'],
   requirements: {
-    ...defaults.requirements,
-    biomes: ['mountain', 'grassland'],
-  },
-  description: (state) => {
-    if (state.fullness < 0.3) {
-      return 'vanadium ore with colorful oxidation patterns';
-    }
-    return 'dense vanadium deposits for tool steel enhancement';
+    biomes: ['mountain', 'grassland']
   }
-}));
+});
 
-// STRUCTURAL STEEL COMPONENTS
-
-export const ManganeseSchema = createMineralSchema((defaults) => ({
-  ...defaults,
+// Structural Steel Components
+export const ManganeseSchema: BulkResourceSchema = createMineralSchema({
   name: 'manganese',
-  provides: [...defaults.provides, 'manganese'],
+  slug: 'manganese',
+  provides: ['ore', 'manganese'],
   requirements: {
-    ...defaults.requirements,
-    biomes: ['grassland', 'marsh'],
-  },
-  description: (state) => {
-    if (state.fullness < 0.4) {
-      return 'manganese ore with characteristic black and brown nodules';
-    }
-    return 'extensive manganese formations for structural steel production';
+    biomes: ['grassland', 'marsh']
   }
-}));
+});
 
 // Silicon - Deoxidizer and steel strength
-export const SiliconSchema = createMineralSchema((defaults) => ({
-  ...defaults,
+export const SiliconSchema: BulkResourceSchema = createMineralSchema({
   name: 'silicon',
-  provides: [...defaults.provides, 'silicon'],
+  slug: 'silicon',
+  provides: ['ore', 'silicon'],
   requirements: {
-    ...defaults.requirements,
-    biomes: ['steppe', 'grassland'],
-  },
-  description: (state) => {
-    if (state.fullness < 0.3) {
-      return 'silicon ore in crystalline quartz and sand formations';
-    }
-    return 'pure silicon deposits perfect for steel production and electronics';
+    biomes: ['steppe', 'grassland']
   }
-}));
+});
 
-// SPECIALTY METALS
+// Specialty Metals
 
 // Titanium - Lightweight, high-strength applications
-export const TitaniumSchema = createMineralSchema((defaults) => ({
-  ...defaults,
+export const TitaniumSchema: BulkResourceSchema = createMineralSchema({
   name: 'titanium',
-  provides: [...defaults.provides, 'titanium'],
+  slug: 'titanium',
+  provides: ['ore', 'titanium'],
   requirements: {
-    ...defaults.requirements,
-    biomes: ['mountain'],
-  },
-  description: (state) => {
-    if (state.fullness < 0.4) {
-      return 'titanium ore with remarkable strength-to-weight properties';
-    }
-    return 'extensive titanium formations for advanced engineering applications';
+    biomes: ['mountain']
   }
-}));
+});
 
 // Cobalt - High-speed cutting tools
-export const CobaltSchema = createMineralSchema((defaults) => ({
-  ...defaults,
+export const CobaltSchema: BulkResourceSchema = createMineralSchema({
   name: 'cobalt',
-  provides: [...defaults.provides, 'cobalt'],
+  slug: 'cobalt',
+  provides: ['ore', 'cobalt'],
   requirements: {
-    ...defaults.requirements,
-    biomes: ['mountain', 'grassland'],
-  },
-  description: (state) => {
-    if (state.fullness < 0.3) {
-      return 'cobalt ore with distinctive blue-gray metallic luster';
-    }
-    return 'rich cobalt deposits for high-performance tool steel';
+    biomes: ['mountain', 'grassland']
   }
-}));
+});
 
-// ENERGY STORAGE
+// Energy Storage
 
 // Lithium - Battery technology
-export const LithiumSchema = createMineralSchema((defaults) => ({
-  ...defaults,
+export const LithiumSchema: BulkResourceSchema = createMineralSchema({
   name: 'lithium',
-  provides: [...defaults.provides, 'lithium'],
+  slug: 'lithium',
+  provides: ['ore', 'lithium'],
   requirements: {
-    ...defaults.requirements,
-    biomes: ['mountain', 'steppe', 'grassland'],
-  },
-  description: (state) => {
-    if (state.fullness < 0.4) {
-      return 'lithium deposits gleaming with metallic luster';
-    }
-    return 'massive lithium formations perfect for advanced battery construction';
+    biomes: ['mountain', 'steppe', 'grassland']
   }
-}));
+});
 
-// PIEZOELECTRIC MINERALS
+// Piezoelectric Minerals
 
 // Quartz - Most common piezoelectric material
-export const QuartzSchema = createMineralSchema((defaults) => ({
-  ...defaults,
+export const QuartzSchema: BulkResourceSchema = createMineralSchema({
   name: 'quartz',
-  provides: [...defaults.provides, 'quartz'],
+  slug: 'quartz',
+  provides: ['ore', 'quartz'],
   requirements: {
-    ...defaults.requirements,
-    biomes: ['mountain', 'steppe', 'grassland', 'forest'], // Extremely widespread
-  },
-  description: (state) => {
-    if (state.fullness < 0.3) {
-      return 'quartz crystals glinting with perfect geometric faces';
-    }
-    if (state.fullness > 0.8) {
-      return 'massive quartz formations ideal for precision electronics';
-    }
-    return 'substantial quartz deposits perfect for piezoelectric applications';
+    biomes: ['mountain', 'steppe', 'grassland', 'forest'] // Extremely widespread
   }
-}));
+});
 
 // Tourmaline - Complex piezoelectric properties
-export const TourmalineSchema = createMineralSchema((defaults) => ({
-  ...defaults,
+export const TourmalineSchema: BulkResourceSchema = createMineralSchema({
   name: 'tourmaline',
-  provides: [...defaults.provides, 'tourmaline'],
+  slug: 'tourmaline',
+  provides: ['ore', 'tourmaline'],
   requirements: {
-    ...defaults.requirements,
-    biomes: ['mountain', 'forest'],
-  },
-  description: (state) => {
-    if (state.fullness < 0.4) {
-      return 'tourmaline crystals displaying remarkable color variations';
-    }
-    return 'dense tourmaline formations perfect for sensitive detection systems';
+    biomes: ['mountain', 'forest']
   }
-}));
+});
 
 // Topaz - High-quality piezoelectric properties
-export const TopazSchema = createMineralSchema((defaults) => ({
-  ...defaults,
+export const TopazSchema: BulkResourceSchema = createMineralSchema({
   name: 'topaz',
-  provides: [...defaults.provides, 'topaz'],
+  slug: 'topaz',
+  provides: ['ore', 'topaz'],
   requirements: {
-    biomes: ['mountain'],
-  },
-  description: (state) => {
-    if (state.fullness < 0.3) {
-      return 'topaz crystals with exceptional clarity and hardness';
-    }
-    return 'brilliant topaz formations ideal for acoustic and communication systems';
+    biomes: ['mountain']
   }
-}));
+});
 
 // Beryl - Advanced piezoelectric applications
-export const BerylSchema = createMineralSchema((defaults) => ({
-  ...defaults,
+export const BerylSchema: BulkResourceSchema = createMineralSchema({
   name: 'beryl',
-  provides: [...defaults.provides, 'beryl'],
+  slug: 'beryl',
+  provides: ['ore', 'beryl'],
   requirements: {
-    ...defaults.requirements,
-    biomes: ['mountain', 'forest'],
-  },
-  description: (state) => {
-    if (state.fullness < 0.4) {
-      return 'beryl crystals with hexagonal structure and piezoelectric properties';
-    }
-    return 'extensive beryl formations for advanced sensor applications';
+    biomes: ['mountain', 'forest']
   }
-}));
+});

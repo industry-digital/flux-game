@@ -1,47 +1,43 @@
 import { SchemaManager } from '../manager';
-import { ResourceSchema } from '~/types';
+import { BulkResourceSchema } from '~/types';
 import * as fungusSchemas from './fungus';
 import * as treeSchemas from './tree';
 import * as flowerSchemas from './flower';
-import { sluggify } from '~/lib/slug';
+import * as waterSchemas from './water';
+import * as mineralSchemas from './mineral';
 
 type ResourceURN = `flux:resource:${string}:${string}`;
 
-function generatePath(name: string): string {
-  return sluggify(name);
-}
-
-function getSchemaExports(module: Record<string, any>, moduleName: string): [ResourceURN, ResourceSchema][] {
+function getSchemaExports(module: Record<string, any>, moduleName: string): [ResourceURN, BulkResourceSchema][] {
   return Object.entries(module)
     .filter(([key, value]) =>
-      // Only include concrete schema objects, not factory functions
+      // Only include schema objects (all exports ending with 'Schema')
       key.endsWith('Schema') &&
-      !key.startsWith('create') &&
       typeof value === 'object' &&
       value !== null &&
       'name' in value &&
+      'slug' in value &&
       'provides' in value &&
+      'quantification' in value &&
       'requirements' in value &&
       'growth' in value
     )
     .map(([_, schema]) => {
-      // Ensure schema has a path, generate it from name if missing
-      if (!('path' in schema)) {
-        (schema as any).path = generatePath(schema.name);
-      }
-      const urn = `flux:resource:${moduleName}:${schema.path}` as ResourceURN;
-      return [urn, schema as ResourceSchema] as [ResourceURN, ResourceSchema];
+      const urn = `flux:resource:${moduleName}:${schema.slug}` as ResourceURN;
+      return [urn, schema as BulkResourceSchema] as [ResourceURN, BulkResourceSchema];
     });
 }
 
-export function createSchemaManager(): SchemaManager<ResourceSchema, ResourceURN> {
-  const schemaMap = new Map<ResourceURN, ResourceSchema>();
+export function createSchemaManager(): SchemaManager<BulkResourceSchema, ResourceURN> {
+  const schemaMap = new Map<ResourceURN, BulkResourceSchema>();
 
   // Add schemas from each module
   const modules: [Record<string, any>, string][] = [
     [fungusSchemas, 'fungus'],
     [treeSchemas, 'tree'],
     [flowerSchemas, 'flower'],
+    [waterSchemas, 'water'],
+    [mineralSchemas, 'mineral'],
   ];
 
   modules.forEach(([module, name]) => {
@@ -51,5 +47,5 @@ export function createSchemaManager(): SchemaManager<ResourceSchema, ResourceURN
     });
   });
 
-  return new SchemaManager<ResourceSchema, ResourceURN>(schemaMap);
+  return new SchemaManager<BulkResourceSchema, ResourceURN>(schemaMap);
 }

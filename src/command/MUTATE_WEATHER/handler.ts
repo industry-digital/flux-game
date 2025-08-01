@@ -11,7 +11,7 @@ import {
   PureHandlerInterface,
 } from '~/types/handler';
 import { PlaceURN } from '~/types/taxonomy';
-import { EventType, WeatherDidChangeInput } from '~/types/event';
+import { EventType } from '~/types/event';
 
 export type MutateWeatherArgs = {
   placeId: PlaceURN;
@@ -37,9 +37,9 @@ export const mutateWeatherReducer: PureReducer<TransformerContext, MutateWeather
   const currentWeather: Weather | null = place.weather ?? null;
   const nextWeather = command.args.weather;
 
-  place.weather = nextWeather;
+  place.weather = command.args.weather;
 
-  const event: WeatherDidChangeInput = {
+  declareEvent({
     type: EventType.WEATHER_DID_CHANGE,
     trace: command.id,
     location: placeId,
@@ -47,9 +47,7 @@ export const mutateWeatherReducer: PureReducer<TransformerContext, MutateWeather
       from: currentWeather,
       to: nextWeather,
     },
-  };
-
-  declareEvent(event);
+  });
 
   return context;
 };

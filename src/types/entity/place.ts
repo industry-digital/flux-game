@@ -2,7 +2,7 @@ import { EcosystemURN, EntityURN, PlaceURN, RootNamespace } from '~/types/taxono
 import { EntityType, AbstractEntity, Describable, EmergentNarrative } from './entity';
 import { Direction } from '~/types/world/space';
 import { SpecialVisibility } from '~/types/world/visibility';
-import { ResourceGenerator, ResourceNodes } from './resource';
+import { ResourceNodes } from './resource';
 import { Weather } from '~/types/schema/weather';
 
 export type PlaceVisibilityRules = Record<EntityURN, 1>;
@@ -73,12 +73,12 @@ export type PlaceInput = {
   weather?: Weather;
   coordinates?: [number, number];
   ecosystem?: EcosystemURN;
-} & Partial<ResourceGenerator>;
+};
 
 /**
  * A Place represents a physical location in our game world. There is always a MUD room (i.e. XMPP MUC chat room)
  * associated with a Place. It can also represent a larger area, such as a city or a region. Topology is entirely
- * determined by the natural containment hierarchy of Places via `parentId`.
+ * determined by the natural containment hierarchy of a Place's ID, which is a URN.
  *
  * All Places must belong to a parent Place, except for the root of all Places, which is a well-known Place named `world`.
  * A fundamental truth to our world is that all Places must be present in either `world` or `nowhere`, which is also
@@ -87,8 +87,11 @@ export type PlaceInput = {
 export type Place =
   & AbstractEntity<EntityType.PLACE>
   & Describable
-  & ResourceGenerator
   & {
+  /**
+   * The coordinates of this place on a Cartesian grid
+   */
+  coordinates: [number, number];
 
   /**
    * Exits to other places
@@ -111,12 +114,20 @@ export type Place =
   ecosystem: EcosystemURN;
 
   /**
-   * The current weather conditions in this place
+   * The current weather conditions in the Place
    */
   weather: Weather;
 
   /**
-   * The coordinates of this place on a Cartesian grid
+   * The state of various resources in the Place
+   * Example:
+   *  {
+   *    'flux:resource:apple:position': 0.5,
+   *    'flux:resource:apple:value': 10,
+   *    'flux:resource:wood:oak:position': 0.2,
+   *    'flux:resource:wood:oak:value': 50,
+   *    'ts': 1717171717,
+   *  }
    */
-  coordinates: [number, number];
+  resources: ResourceNodes;
 };

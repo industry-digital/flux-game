@@ -220,11 +220,10 @@ export {
 } from './schema/weather';
 
 export {
-  ResourceGrowthCurve,
   ResourceNodes,
-  ResourceNodeState,
-  ResourceNodeStateWithTimestamp,
-  ResourceGenerator,
+  ResourceCurvePosition,
+  ResourceCurveValue,
+  ResourceCurveURN,
 } from './entity/resource';
 
 // Taxonomy exports

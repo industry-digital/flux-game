@@ -44,7 +44,6 @@ export const createPlace = (
         entities: {},
         resources: {
           ts: 0,
-          nodes: {},
         },
         weather: {
           temperature: { seed: 0, position: 0.5, value: 20 },

@@ -1,8 +1,9 @@
 import { UnitOfMass, UnitOfMeasure, UnitOfVolume } from '~/types/world/measures';
-import { EasingFunction } from '~/types/easing';
+import { EasingFunctionName } from '~/types/easing';
 import { TimeUnit } from '~/types/world/time';
 import { Biome, Climate } from '~/types/schema/ecology';
-import { ResourceNodeStateWithTimestamp } from '~/types/entity/resource';
+import { CommandType } from '~/types/intent';
+import { Requirements } from '~/types/requirement';
 
 type Bounds = { min?: number, max?: number };
 
@@ -10,13 +11,13 @@ export type GrowthSpecification = {
   /**
    * The easing function to use for the growth curve
    */
-  curve: EasingFunction;
+  curve: EasingFunctionName;
 
   /**
    * The duration over which a resource grows to 100% fullness from zero
    * - Example: [7, TimeUnit.DAY] means the resource grows to 100% fullness in seven days
    */
-  duration: [number, TimeUnit];
+  duration: [number, TimeUnit],
 };
 
 export type ResourceGrowthRequirements = {
@@ -94,9 +95,9 @@ export type Season = 'spring' | 'summer' | 'fall' | 'winter';
 export type TimeOfDay = 'dawn' | 'morning' | 'day' | 'afternoon' | 'evening' | 'dusk' | 'night';
 export type LunarPhase = 'new' | 'waxing' | 'full' | 'waning';
 
-export type ResourceStateRenderer = (state: ResourceNodeStateWithTimestamp, now: number, schema: ResourceSchema) => string;
+export type ResourceStateRenderer = (position: number, value: number, now: number, schema: ResourceSchema) => string;
 
-type ResourceSchemaBase = {
+type AbstractResourceSchema<QuantificationStrategy extends ResourceQuantificationStrategy> = {
   /**
    * Human-readable name of the resource, not capitalized.
    */
@@ -133,26 +134,37 @@ type ResourceSchemaBase = {
   /**
    * How the resource decays over time
    * A resource that is not growing begins to decay
+   * If not specified, the resource decays, by default, according to the inverse of the `growth` curve
    */
   decay?: GrowthSpecification;
 
   /**
-   * A function that returns a description of the resource
+   * Defines all possible ways actors may interact with the resource. If not provided,
+   * the resource is *non-interactive*.
    */
-  description: ResourceStateRenderer;
+  interactions?: Record<CommandType, Requirements>;
+
+  /**
+   * The quantification strategy of the resource
+   */
+  quantification: QuantificationStrategy;
 };
 
-/**
- * A resource that produces a single specimen whose quality grows over time.
- * Examples:
- * - A single beehive that grows from empty to full of honey
- * - A single durian fruit that grows from small to large
- * - A single tree that grows from sapling to mature
- *
- * The growth curve directly controls quality growth:
- * - quality.min + (growthCurve(t) * (quality.capacity - quality.min))
- */
-export type SpecimenResourceSchema = ResourceSchemaBase & {
+export type ResourceQuantificationType = 'bulk' | 'specimen';
+export type AbstractQuantificationStrategy<T extends ResourceQuantificationType> = {
+  type: T;
+};
+
+export type BulkQuantificationStrategy = AbstractQuantificationStrategy<'bulk'> & {
+  quantity: {
+    measure: UnitOfMeasure | UnitOfMass | UnitOfVolume;
+    min?: number;    // Minimum quantity (e.g., 50kg - field never completely empty)
+    capacity: number; // Maximum quantity (e.g., 200kg of grass)
+    curve?: EasingFunctionName; // Optional override of growth.curve for quantity
+  };
+};
+
+export type SpecimenQuantificationStrategy = AbstractQuantificationStrategy<'specimen'> & {
   quantity: {
     measure: UnitOfMeasure.EACH;
     min: 1;
@@ -164,6 +176,20 @@ export type SpecimenResourceSchema = ResourceSchemaBase & {
     capacity: number; // Maximum quality (e.g., 2kg for largest possible fruit)
   };
 };
+
+export type ResourceQuantificationStrategy = BulkQuantificationStrategy | SpecimenQuantificationStrategy;
+
+/**
+ * A resource that produces a single specimen whose quality grows over time.
+ * Examples:
+ * - A single beehive that grows from empty to full of honey
+ * - A single durian fruit that grows from small to large
+ * - A single tree that grows from sapling to mature
+ *
+ * The growth curve directly controls quality growth:
+ * - quality.min + (growthCurve(t) * (quality.capacity - quality.min))
+ */
+export type SpecimenResourceSchema = AbstractResourceSchema<SpecimenQuantificationStrategy>;
 
 /**
  * A resource that produces a bulk quantity that grows over time.
@@ -178,13 +204,6 @@ export type SpecimenResourceSchema = ResourceSchemaBase & {
  * Optionally can specify a different curve for quantity growth:
  * - quantity.curve overrides growth.curve for quantity calculations
  */
-export type BulkResourceSchema = ResourceSchemaBase & {
-  quantity: {
-    measure: UnitOfMeasure | UnitOfMass | UnitOfVolume;
-    min?: number;    // Minimum quantity (e.g., 50kg - field never completely empty)
-    capacity: number; // Maximum quantity (e.g., 200kg of grass)
-    curve?: EasingFunction; // Optional override of growth.curve for quantity
-  };
-};
+export type BulkResourceSchema = AbstractResourceSchema<BulkQuantificationStrategy>;
 
 export type ResourceSchema = SpecimenResourceSchema | BulkResourceSchema;

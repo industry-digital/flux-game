@@ -1,49 +1,24 @@
-import { NormalizedValueBetweenZeroAndOne } from '~/types/entity/attribute';
 import { ResourceURN } from '~/types/taxonomy';
 
-export type ResourceGrowthCurve = {
+export type ResourceCurvePosition = `${ResourceURN}:position`;
+export type ResourceCurveValue = `${ResourceURN}:value`;
+export type ResourceCurveURN = ResourceCurvePosition | ResourceCurveValue;
+
+/**
+ * A record of the position and value of each resource node in the resource curve
+ * We deliberately avoid nesting here and opt instead for URNs to keep the data structure compact.
+ * Example:
+ *  {
+ *    'flux:resource:apple:position': 0.5,
+ *    'flux:resource:apple:value': 10,
+ *    'flux:resource:wood:oak:position': 0.2,
+ *    'flux:resource:wood:oak:value': 50,
+ *    'ts': 1717171717,
+ *  }
+ */
+export type ResourceNodes = Record<ResourceCurveURN, number> & {
   /**
-   * The current position `t` on the curve, where `t` is on the horizontal axis of an easing curve
-   */
-  position: number;
-
-  /**
-   * The current status of the curve
-   */
-  status: 'growing' | 'decaying';
-
-  /**
-   * When the curve was last updated
-   */
-  ts: number;
-};
-
-export type ResourceNodeState = {
-  quantity: number;
-  quality: number;
-  fullness: NormalizedValueBetweenZeroAndOne;
-  curve: ResourceGrowthCurve;
-};
-
-export type ResourceNodeStateWithTimestamp = ResourceNodeState & {
-  ts: number;
-};
-
-export type ResourceNodes = {
-  /**
-   * When the resources were last updated
+   * The timestamp of the last update to the resource nodes
    */
   ts: number;
-
-  /**
-   * The resource nodes that are present
-   */
-  nodes: Partial<Record<ResourceURN, ResourceNodeState>>;
-};
-
-export type ResourceGenerator = {
-  /**
-   * The various resource generation policies
-   */
-  resources: ResourceNodes;
 };
