@@ -1,8 +1,29 @@
-# Flux Resource System: Environmental Constraints with Strategic Scarcity
+# Flux Resource System: Environmental Constraints with Type-Based Specialization
 
 ## Core Philosophy
 
 Resources follow a **binary growth/decay state machine** based on environmental conditions, with each resource having specific quantification strategies and environmental requirements. The system supports both bulk resources (measured by quantity) and specimen resources (measured by quality), creating diverse resource types with realistic growth patterns.
+
+## Resource Distribution Constraints
+
+### Type-Based Specialization
+
+Each Place can support **only one resource of each type** at any given time. Resource types include:
+
+- **Trees**: `mesquite`, `juniper`, `cottonwood`, `maple`, `oak`
+- **Flowers**: `desert-marigold`, `wild-bergamot`, `purple-coneflower`, `orchid`
+- **Minerals**: `iron`, `coal`, `tungsten`, `quartz`, `lithium`
+- **Fungi**: `truffle`, `desert-puffball`, `chanterelle`, `honey-mushroom`
+
+This constraint creates **natural specialization**:
+- A mountain place might have: `mountain-pine` + `iron` + `alpine-aster` + `alpine-bolete`
+- A jungle place might have: `mahogany` + `quartz` + `orchid` + `blood-red-cup-fungus`
+
+### Benefits of Type Constraints
+
+**Strategic Scarcity**: Players must explore different Places to find all needed resource types
+**Natural Specialization**: Places develop distinct "resource personalities"
+**Meaningful Choices**: Harvesting decisions have lasting consequences for Place identity
 
 ## Resource Data Model
 
@@ -15,26 +36,32 @@ Each Place maintains resources using URN-based identification with curve positio
  * A record of the position and value of each resource node in the resource curve
  * We deliberately avoid nesting here and opt instead for URNs to keep the data structure compact.
  */
-export type ResourceNodes = Record<ResourceURN, CurvePositionWithValue> & {
+export type ResourceNodes = Record<ResourceURN, ResourceNodeState> & {
   /**
    * The timestamp of the last update to the resource nodes
    */
   ts: number;
+};
+
+export type ResourceNodeState = CurvePositionWithValue & {
+  status: ResourceNodeStatus;
 };
 ```
 
 Example ResourceNodes data:
 ```typescript
 {
-  'flux:resource:apple': {
-    position: 0.5,  // Position on growth curve [0-1]
-    value: 10       // Computed resource value at this position
+  'flux:resource:tree:mesquite': {
+    position: 0.7,      // Position on growth curve [0-1]
+    value: 350,         // Computed resource value (kg of wood)
+    status: 'growing',  // 'growing' | 'decaying'
   },
-  'flux:resource:wood:oak': {
-    position: 0.2,
-    value: 50
+  'flux:resource:flower:desert-marigold': {
+    position: 0.3,
+    value: 30,          // Number of flowers
+    status: 'decaying',
   },
-  ts: 1717171717,   // Timestamp of last update
+  ts: 1717171717,       // Timestamp of last update
 }
 ```
 
@@ -45,8 +72,7 @@ Resources use two distinct quantification approaches:
 #### Bulk Resources
 Measured by total quantity that grows over time:
 ```typescript
-export type BulkQuantificationStrategy = {
-  type: 'bulk';
+export type BulkQuantificationStrategy = AbstractQuantificationStrategy<'bulk'> & {
   quantity: {
     measure: UnitOfMeasure | UnitOfMass | UnitOfVolume;
     min?: number;    // Minimum quantity (field never completely empty)
@@ -56,23 +82,26 @@ export type BulkQuantificationStrategy = {
 };
 ```
 
-**Examples**: Grass fields, water bodies, mineral deposits, flower patches
+**Examples**: Grass fields (counted by flowers), water bodies (measured in liters), mineral deposits (measured in kg), tree copses (counted by trees)
 
 #### Specimen Resources
 Single items where quality grows over time:
 ```typescript
-export type SpecimenQuantificationStrategy = {
-  type: 'specimen';
-  quantity: { measure: UnitOfMeasure.EACH; min: 1; capacity: 1; };
+export type SpecimenQuantificationStrategy = AbstractQuantificationStrategy<'specimen'> & {
+  quantity: {
+    measure: UnitOfMeasure.EACH;
+    min: 1;
+    capacity: 1;
+  };
   quality: {
-    measure: UnitOfMass | UnitOfVolume;
+    measure: Exclude<UnitOfMeasure, UnitOfMeasure.EACH> | UnitOfMass | UnitOfVolume;
     min: number;     // Minimum quality (e.g., 0.5kg for smallest fruit)
     capacity: number; // Maximum quality (e.g., 2kg for largest fruit)
   };
 };
 ```
 
-**Examples**: Individual fruit trees, beehives, single large specimens
+**Examples**: Individual fruit trees, beehives, single large specimens where the quality (size/potency) increases rather than quantity
 
 ## Resource Selection Algorithm
 
@@ -80,7 +109,7 @@ When determining which resources can grow in a Place, the system uses **environm
 
 ### 1. Viability Filtering
 
-First, filter resources by environmental requirements:
+First, filter all resources by environmental requirements:
 
 ```typescript
 function getViableResources(
@@ -114,21 +143,22 @@ function calculateFitness(resource: ResourceSchema, weather: Weather): number {
 }
 ```
 
-### 3. Rarity-Weighted Selection
+### 3. Best-Fit Selection
 
-Combine environmental fitness with rarity for natural distributions:
+Select the resource with highest environmental fitness score for each type:
 
 ```typescript
-const RESOURCE_RARITY = {
-  'iron': 0.8,           // Common mineral
-  'tungsten': 0.2,       // Rare mineral
-  'desert-marigold': 0.7, // Common flower
-  'black-lotus': 0.1     // Very rare flower
-};
+function selectResourceByType(
+  viableResources: ResourceSchema[],
+  resourceType: string
+): ResourceSchema | null {
+  const typeResources = viableResources.filter(r => getResourceType(r) === resourceType);
+  if (typeResources.length === 0) return null;
 
-function selectResource(scored: ScoredResource[]): ResourceSchema {
-  // Weighted selection: fitness × rarity
-  return weightedRandomSelect(scored);
+  // Return the resource with highest fitness score
+  return typeResources.reduce((best, current) =>
+    calculateFitness(current, weather) > calculateFitness(best, weather) ? current : best
+  );
 }
 ```
 
@@ -170,18 +200,22 @@ This creates clear ecological boundaries:
 Resources use mathematical curves to model realistic growth patterns:
 
 ```typescript
-export const Easing = {
-  LINEAR: (t: number) => t,                    // Steady growth
+export const Easing: Record<EasingFunctionName, EasingFunction> = {
+  LINEAR: (t: number) => t,                                      // Steady growth
   LOGISTIC: (t: number) => 1 / (1 + Math.exp(-12 * (t - 0.5))), // S-curve
-  EXPONENTIAL: (t: number) => /* fast early growth */,
-  CUBIC: (t: number) => t * t * (3 - 2 * t)   // Smooth transitions
+  EXPONENTIAL: (t: number) => /* fast early growth */,           // Rapid colonization
+  EASE_OUT_QUAD: (t: number) => 1 - (1 - t) * (1 - t),         // Fast start, slow end
+  EASE_IN_QUAD: (t: number) => t * t,                           // Slow start, fast end
+  CUBIC: (t: number) => t * t * (3 - 2 * t)                    // Smooth transitions
 };
 ```
 
 **Curve Selection Guidelines:**
-- **LOGISTIC**: Most biological growth (flowers, trees)
-- **EXPONENTIAL**: Rapid colonization (fungi, pioneer species)
-- **LINEAR**: Steady accumulation (minerals, water collection)
+- **LOGISTIC**: Most biological growth (flowers, trees) - S-curve with gradual start/end
+- **EXPONENTIAL**: Rapid colonization (fungi, pioneer species) - fast early growth
+- **LINEAR**: Steady accumulation (minerals, water collection) - constant rate
+- **EASE_OUT_QUAD**: Fast establishment with diminishing returns
+- **CUBIC**: Smooth acceleration then deceleration
 
 ### Environmental Requirements
 
@@ -231,6 +265,7 @@ When resources are depleted or environmental conditions change, new resources ca
 - **Seasonal availability** - resources that can grow in current season
 - **Ecosystem compatibility** - biome and climate restrictions
 - **Temporal factors** - time of day and lunar phase requirements
+- **Type constraints** - only one resource per type allowed
 
 This creates **dynamic resource evolution** where Places develop changing resource compositions over time through natural succession cycles.
 
@@ -238,7 +273,7 @@ This creates **dynamic resource evolution** where Places develop changing resour
 
 ### Bulk Resource Example (Desert Tree)
 ```typescript
-export const MesquiteSchema: BulkResourceSchema = {
+export const MesquiteSchema: BulkResourceSchema = createTreeSchema({
   name: 'mesquite',
   slug: 'mesquite',
   provides: ['wood', 'bark', 'nectar'],
@@ -250,54 +285,70 @@ export const MesquiteSchema: BulkResourceSchema = {
   },
   growth: {
     curve: 'LOGISTIC',
-    duration: [365, TimeUnit.DAY]  // One year to mature
+    duration: [1, TimeUnit.MONTH]  // One month to mature
   },
   quantification: {
     type: 'bulk',
     quantity: {
-      measure: UnitOfMass.KG,
-      min: 10,        // Always some wood available
-      capacity: 500   // Maximum 500kg of wood
+      measure: UnitOfMeasure.EACH,
+      min: 0,         // Can be completely harvested
+      capacity: 1000  // Maximum 1000 trees in copse
+    }
+  }
+});
+```
+
+### Specimen Resource Example (Individual Fruit Tree)
+```typescript
+export const DurianTreeSchema: SpecimenResourceSchema = {
+  name: 'durian tree',
+  slug: 'durian-tree',
+  provides: ['fruit'],
+  requirements: {
+    temperature: { min: 15, max: 35 },
+    humidity: { min: 60, max: 90 },
+    biomes: ['jungle'],
+    climates: ['tropical']
+  },
+  growth: {
+    curve: 'LOGISTIC',
+    duration: [7, TimeUnit.DAY]  // 7 days for fruit to ripen
+  },
+  quantification: {
+    type: 'specimen',
+    quantity: { measure: UnitOfMeasure.EACH, min: 1, capacity: 1 },
+    quality: {
+      measure: UnitOfMass.KILOGRAMS,
+      min: 0.5,       // Minimum 0.5kg fruit
+      capacity: 2.0   // Maximum 2kg premium fruit
     }
   }
 };
 ```
 
-### Specimen Resource Example (Rare Fruit)
+### Complex Environmental Requirements Example
 ```typescript
-export const BlackLotusSchema: SpecimenResourceSchema = {
+export const BlackLotusSchema: BulkResourceSchema = createFlowerSchema({
   name: 'black lotus',
   slug: 'black-lotus',
   provides: ['flower', 'nectar', 'seeds', 'roots'],
   requirements: {
     temperature: { min: 15, max: 32 },
     humidity: { min: 60, max: 90 },
-    ppfd: { max: 200 },           // Shade-loving
+    ppfd: { max: 200 },             // Shade-loving
     seasons: ['spring', 'summer', 'fall'],
-    lunar: ['full']               // Only during full moon
-  },
-  growth: {
-    curve: 'LOGISTIC',
-    duration: [90, TimeUnit.DAY]  // 90 days to full quality
-  },
-  quantification: {
-    type: 'specimen',
-    quantity: { measure: UnitOfMeasure.EACH, min: 1, capacity: 1 },
-    quality: {
-      measure: UnitOfMass.G,
-      min: 5,         // Minimum 5g flower
-      capacity: 50    // Maximum 50g premium flower
-    }
+    time: ['dusk', 'night'],        // Nocturnal blooming
+    lunar: ['full']                 // Only during full moon
   }
-};
+});
 ```
 
 ## Benefits of This System
 
-### **Strategic Scarcity**
-- Maximum 5 resources per Place eliminates abundance problem
+### **Type-Based Specialization**
+- Maximum one resource per type per Place eliminates abundance problem
 - Forces exploration for specific resource types
-- Creates natural specialization ("the iron mountain")
+- Creates natural Place specialization ("the iron mountain", "the medicinal herb grove")
 
 ### **Environmental Authenticity**
 - Resources that fit conditions better are more likely to appear
@@ -305,13 +356,13 @@ export const BlackLotusSchema: SpecimenResourceSchema = {
 - Maintains biological realism through environmental constraints
 
 ### **Dynamic Gameplay**
-- Resource succession creates changing opportunities
-- Depletion decisions have lasting consequences
-- Rare resources create valuable exploration targets
+- Resource succession creates changing opportunities over time
+- Environmental changes can shift which resources can grow
+- Depletion decisions have lasting consequences for Place identity
 
 ### **Emergent Specialization**
-- Places develop resource "personalities" over time
-- Player actions influence long-term resource composition
-- Natural trade opportunities emerge between specialized locations
+- Places develop distinct resource "personalities"
+- Environmental fitness creates predictable but varied distributions
+- Player actions influence long-term resource composition through succession cycles
 
-The system creates **predictable scarcity** (fixed slot limits) with **dynamic variety** (which resources depend on environmental fitness and succession cycles), solving the abundance problem while maintaining ecological authenticity and strategic depth.
+The system creates **predictable specialization** (one resource per type) with **dynamic variety** (which specific resources depend on environmental fitness and succession), solving the abundance problem while maintaining ecological authenticity and strategic depth.

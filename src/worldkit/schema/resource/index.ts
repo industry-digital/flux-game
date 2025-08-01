@@ -1,12 +1,12 @@
 import { SchemaManager } from '../manager';
 import { BulkResourceSchema } from '~/types';
+import { ResourceURN } from '~/types/taxonomy';
 import * as fungusSchemas from './fungus';
 import * as treeSchemas from './tree';
 import * as flowerSchemas from './flower';
 import * as waterSchemas from './water';
 import * as mineralSchemas from './mineral';
 
-type ResourceURN = `flux:resource:${string}:${string}`;
 
 function getSchemaExports(module: Record<string, any>, moduleName: string): [ResourceURN, BulkResourceSchema][] {
   return Object.entries(module)
@@ -23,7 +23,7 @@ function getSchemaExports(module: Record<string, any>, moduleName: string): [Res
       'growth' in value
     )
     .map(([_, schema]) => {
-      const urn = `flux:resource:${moduleName}:${schema.slug}` as ResourceURN;
+      const urn: ResourceURN = `flux:res:${moduleName}:${schema.slug}`;
       return [urn, schema as BulkResourceSchema] as [ResourceURN, BulkResourceSchema];
     });
 }

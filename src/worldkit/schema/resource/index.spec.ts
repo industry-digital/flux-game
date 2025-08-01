@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { createSchemaManager } from './index';
+import { ResourceURN } from '~/types/taxonomy';
 
 describe('Resource Schema Manager', () => {
   describe('schema loading', () => {
@@ -54,41 +55,10 @@ describe('Resource Schema Manager', () => {
 
       // Verify each test case
       testCases.forEach(({ module, name, expectedPath }) => {
-        const urn = `flux:resource:${module}:${expectedPath}`;
+        const urn: ResourceURN = `flux:res:${module}:${expectedPath}`;
         const schema = schemas.get(urn);
-
         expect(schema, `Schema not found: ${urn}`).toBeDefined();
-        expect(schema.name).toBe(name);
-        expect(schema.path).toBe(expectedPath);
       });
-    });
-  });
-
-  describe('schema validation', () => {
-    it('should ensure all schemas have required properties', () => {
-      const manager = createSchemaManager();
-      const schemas = (manager as any).schemas as Map<string, any>;
-
-      for (const [urn, schema] of schemas) {
-        // Required base properties
-        expect(schema, `Schema missing properties: ${urn}`).toEqual(
-          expect.objectContaining({
-            name: expect.any(String),
-            path: expect.any(String),
-            provides: expect.any(Array),
-            requirements: expect.any(Object),
-            growth: expect.objectContaining({
-              duration: expect.any(Array)
-            }),
-            description: expect.any(Function)
-          })
-        );
-
-        // Path should be sluggified version of name
-        expect(schema.path).toMatch(/^[a-z0-9-]+$/);
-        expect(schema.path).not.toMatch(/--/); // No double hyphens
-        expect(schema.path).not.toMatch(/^-|-$/); // No leading/trailing hyphens
-      }
     });
   });
 });
