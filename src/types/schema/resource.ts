@@ -112,13 +112,30 @@ export type Season = 'spring' | 'summer' | 'fall' | 'winter';
 export type TimeOfDay = 'dawn' | 'morning' | 'day' | 'afternoon' | 'evening' | 'dusk' | 'night';
 export type LunarPhase = 'new' | 'waxing' | 'full' | 'waning';
 
-export type ResourceStateRenderer = (position: number, value: number, now: number, schema: ResourceSchema) => string;
+export enum KindOfResource {
+  FLOWER = 'flower',
+  TREE = 'tree',
+  MINERAL = 'mineral',
+  WATER = 'water',
+}
 
 type AbstractResourceSchema<QuantificationStrategy extends ResourceQuantificationStrategy> = {
   /**
    * Human-readable name of the resource, not capitalized.
    */
   name: string;
+
+  /**
+   * Taxonomic atom that describes the family of the resource.
+   * @example "tree"
+   * @example "flower"
+   * @example "mineral"
+   * @example "animal"
+   * @example "plant"
+   * @example "fungus"
+   * @example "microbe"
+   */
+  kind: KindOfResource;
 
   /**
    * A URN fragment used in the resource URN, derived from name.
@@ -175,6 +192,7 @@ type AbstractResourceSchema<QuantificationStrategy extends ResourceQuantificatio
    */
   quantification: QuantificationStrategy;
 };
+
 export type ResourceQuantificationType = 'bulk' | 'specimen';
 export type AbstractQuantificationStrategy<T extends ResourceQuantificationType> = {
   type: T;

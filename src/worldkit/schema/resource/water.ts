@@ -4,6 +4,7 @@ import { BulkResourceSchema } from '~/types/schema/resource';
 // Helper function to create water body schemas with proper typing
 function createWaterSchema(overrides: Partial<BulkResourceSchema>): BulkResourceSchema {
   return {
+    kind: 'water',
     provides: ['water', 'mud'],
     quantification: {
       type: 'bulk',

@@ -4,6 +4,7 @@ import { BulkResourceSchema } from '~/types/schema/resource';
 // Helper function to create flower schemas with proper typing
 function createFlowerSchema(overrides: Partial<BulkResourceSchema>): BulkResourceSchema {
   return {
+    kind: 'flower',
     provides: ['flower', 'nectar'],
     quantification: {
       type: 'bulk',

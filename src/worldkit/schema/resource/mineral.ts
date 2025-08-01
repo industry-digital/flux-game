@@ -4,6 +4,7 @@ import { BulkResourceSchema } from '~/types/schema/resource';
 // Helper function to create mineral schemas with proper typing
 function createMineralSchema(overrides: Partial<BulkResourceSchema>): BulkResourceSchema {
   return {
+    kind: 'mineral',
     provides: ['ore'],
     quantification: {
       type: 'bulk',

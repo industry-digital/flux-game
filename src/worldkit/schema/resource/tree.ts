@@ -6,6 +6,7 @@ import { BulkResourceSchema } from '~/types/schema/resource';
 // Helper function to create tree schemas with proper typing
 function createTreeSchema(overrides: Partial<BulkResourceSchema>): BulkResourceSchema {
   return {
+    kind: 'tree',
     provides: ['wood', 'bark'],
     quantification: {
       type: 'bulk',

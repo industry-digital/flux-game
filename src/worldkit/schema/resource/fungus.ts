@@ -4,6 +4,7 @@ import { BulkResourceSchema } from '~/types/schema/resource';
 // Helper function to create fungus schemas with proper typing
 function createFungusSchema(overrides: Partial<BulkResourceSchema>): BulkResourceSchema {
   return {
+    kind: 'mushroom',
     provides: ['mushroom'],
     quantification: {
       type: 'bulk',
