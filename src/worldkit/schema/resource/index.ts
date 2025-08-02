@@ -4,7 +4,6 @@ import { ResourceURN } from '~/types/taxonomy';
 import * as fungusSchemas from './fungus';
 import * as treeSchemas from './tree';
 import * as flowerSchemas from './flower';
-import * as waterSchemas from './water';
 import * as mineralSchemas from './mineral';
 
 
@@ -36,7 +35,6 @@ export function createSchemaManager(): SchemaManager<BulkResourceSchema, Resourc
     [fungusSchemas, 'fungus'],
     [treeSchemas, 'tree'],
     [flowerSchemas, 'flower'],
-    [waterSchemas, 'water'],
     [mineralSchemas, 'mineral'],
   ];
 

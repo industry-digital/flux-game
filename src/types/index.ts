@@ -179,6 +179,12 @@ export {
   ECOLOGICAL_PROFILES,
   Biome,
   Climate,
+  SoilType,
+  BedrockType,
+  RockType,
+  RockFormationType,
+  SoilTexture,
+  SoilRockiness,
 } from './schema/ecology';
 
 export {
@@ -204,6 +210,7 @@ export {
 
 export {
   ResourceSchema,
+  KindOfResource,
   BulkResourceSchema,
   SpecimenResourceSchema,
   ResourceGrowthRequirements,

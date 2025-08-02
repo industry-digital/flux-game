@@ -510,67 +510,83 @@ This moment wasn't scripted. It emerged from the interaction of quantum physics,
 
 ---
 
-## Narrative Example: The Spacefold
+## Narrative Example: Emergency Extraction
 
-*The following narrative demonstrates how spacefolding technology would appear to observers in our post-collapse world, written in the style of Pierce Brown's Red Rising series to capture the visceral impact of witnessing reality being torn apart and reformed.*
+*The following narrative demonstrates how spacefolding technology would appear in our post-collapse world during a critical survival situation, incorporating the tension of G.A.E.A.'s predators and AI companion tactical assessment.*
 
 ---
 
-The device looks like nothing more than a child's toy in Cassius's palm. Black metal, no bigger than his fist, with geometric patterns that seem to shift when I'm not looking directly at them. But I know better than to judge by size. In the worlds beyond the Rim, the smallest things often carry the greatest terror.
+The device weighs nothing in Maya's palm, but I can feel its significance like a stone in my chest. Pre-collapse tech, quantum-entangled to her sanctuary sixty kilometers north. Our only way home if this expedition goes to hell.
 
-"Watch carefully, Darrow," Cassius says, his voice carrying that familiar edge of barely contained violence. "You'll only see this once."
+Which it just did.
 
-Twenty meters away, I crouch behind the twisted wreckage of a gravCar, my pulse racing. The air tastes of ozone and something else—something wrong, like the moment before lightning strikes. Mustang's hand finds my shoulder, her fingers tight with tension.
+"Two hostiles," Rhea's voice cuts through my neural interface, calm as ever despite the circumstances. "Utahraptors. 11 o'clock and 2 o'clock. 400 meters. Active hunting posture."
 
-Cassius raises the device.
+I freeze behind the twisted remains of a delivery truck, my pulse hammering against my ribs. Through the rusted metal, I can see them—sleek death on two legs, their feathered crests scanning the abandoned industrial complex with predatory intelligence. G.A.E.A.'s enforcers, beautiful and absolutely lethal.
+
+"Movement patterns suggest coordinated search behavior," Rhea continues, her analysis flowing like ice water through my thoughts. "Pack hunting protocol. They know we're here."
+
+Maya crouches beside me, the spacefold device trembling in her hands. Sixty kilos of salvaged electronics and medical supplies weigh down our packs—a fortune in post-collapse resources, if we can get them home.
+
+"Time to detection?" I whisper.
+
+"Eighteen seconds at current search velocity," Rhea responds. "Recommend immediate extraction."
+
+Maya's thumb hovers over the device's activation stud. "The interference?"
+
+I glance at the storm clouds gathering overhead, feeling the electric tension in the air. "Rhea, quantum stability assessment?"
+
+"Atmospheric electrical activity: moderate. Precipitation probability: 60%. Quantum decoherence risk: elevated but manageable. Current window stable for... approximately forty-five seconds post-activation."
+
+"Do it," I breathe.
+
+Maya presses the stud.
 
 The world *breaks*.
 
-Not slowly. Not with warning. One moment reality is solid, immutable, the way it's supposed to be. The next, the air around Cassius begins to ripple like water disturbed by a stone. But this isn't water—this is the fabric of existence itself, and something is pulling it taut.
+It starts as a whisper—a barely perceptible distortion in the air fifteen meters away where Maya dropped the device. The geometric patterns on its surface begin to pulse with dark light, and reality ripples outward like water disturbed by a stone.
 
-"Bloodydamn," Mustang breathes.
+But this isn't water. This is spacetime itself, and something is pulling it taut.
 
-The distortion spreads outward in waves, and I watch in horrified fascination as space begins to *fold*. The hangar wall behind Cassius stretches, warps, then seems to bend inward as if invisible hands are gathering up the corners of reality like a bedsheet. The effect is nauseating—my eyes struggle to process what they're seeing as distance becomes meaningless.
+"Hostile contact," Rhea announces, her voice sharp with tactical urgency. "Northern Utahraptor has altered course. Direct approach. 320 meters and closing. Estimated time to visual contact: twelve seconds."
 
-Through the distortion, I can see... elsewhere. Another place entirely. A familiar stone chamber, sharp and clear as if it's right there in the hangar with us. But it's not. It's Cassius's home base, hundreds of kilometers away, I know, because I've been there. Yet space has folded, bringing here and there together like pages in a book.
+The distortion spreads, and I watch in horrified fascination as space begins to fold. The concrete around the device stretches and warps, distance becoming meaningless as the fold effect gathers momentum. Through the rippling air, I catch glimpses of Maya's sanctuary—stone walls and warm light, impossibly present yet sixty kilometers away.
 
-The device in Cassius's hand begins to pulse with light—not the clean white of a gravLift, but something darker, hungrier. The geometric patterns on its surface writhe and shift, and I realize they're not patterns at all. They're *tears*. Microscopic rips in the device's surface that seem to go deeper than they should, deeper than physics allows.
+"Movement compromised," Rhea states. "Predators aware of anomaly. Both contacts converging on spacefold origin point."
 
-The air screams.
+The first Utahraptor appears around a collapsed wall—three meters of engineered perfection, its head swiveling toward the quantum distortion with intelligent recognition. Its partner emerges from behind a shipping container, cutting off our escape route.
 
-It's the only way to describe the sound—reality itself crying out as something fundamental is violated. The folded space trembles, fighting to return to its natural state, but the device holds it firm. Through the distortion, the mountain peak wavers like a mirage, its edges crackling with discharge that looks like silver lightning.
+They know. Somehow, G.A.E.A.'s creatures understand what the spacefold represents.
 
-Then comes the puncture.
+"Evade immediately," Rhea commands. "Window closing."
 
-Space doesn't tear gently. It *ruptures* with a sound like breaking glass amplified a thousandfold. The opening appears between Cassius and his home chamber—a ragged hole in the air itself, its edges sparking and writhing as if the universe is trying to heal the wound. Through it, I can see the familiar stone walls as clearly as if I could reach out and touch them.
+The device pulses brighter, and space *screams*. The fold reaches critical compression, and reality tears open with a sound like breaking glass amplified thousandfold. Through the ragged hole in the air, Maya's sanctuary lies open and waiting—safety just a single step away.
 
-But the hole is unstable. Wrong. The edges flutter and spark, reality fighting to close the gap. The device in Cassius's hand burns brighter, holding the fold by sheer force of will and technology I can't begin to understand.
+But the Utahraptors are moving.
 
-"The Sovereign's latest gift," Cassius says, his voice carrying through the chaos. "A spacefold generator. Pocket-sized warfare."
+"Northern contact: 180 meters. Southern contact: 150 meters. Convergence in eight seconds," Rhea's analysis comes rapid-fire now. "Fold stability decreasing. Quantum decoherence accelerating due to electromagnetic interference. Traversal window: twenty-two seconds."
 
-Without ceremony, he steps forward.
+Maya lunges for the tear in reality, her pack of medical supplies bouncing against her back. The first Utahraptor breaks into a sprint, closing the distance with mechanical precision. The second follows, their coordination perfect and terrifying.
 
-One moment he's in the hangar with us. The next, his foot passes through the torn space, and he's standing in his home chamber hundreds of kilometers away. The transition is seamless, impossible—a single step that returns him to his sanctuary.
+"Go!" I shout, shouldering my pack and running toward the fold.
 
-The device pulses once more, and the fold collapses.
+Maya dives through the spatial tear. One moment she's in the industrial ruins with us, the next she's tumbling onto the stone floor of her sanctuary, her supplies scattered but safe. The hole wavers, its edges sparking as quantum decoherence fights to collapse it.
 
-The hole snaps shut with a thunderclap that reverberates through the hangar. The stone chamber vanishes. The ripples in space smooth out, reality reasserting itself with violent finality. The only evidence of what we've witnessed is the acrid smell of ozone and the perfect circle of melted metal where the device's energy touched the floor.
+"Contact imminent," Rhea warns. "Seven meters. Five meters. Three—"
 
-Cassius is gone.
+I leap.
 
-"Bloodydamn," Mustang says again, and this time her voice shakes.
+The transition is seamless and impossible—one step on broken concrete, the next on familiar stone. Behind me, the first Utahraptor's claws scrape against the closing edge of the fold, missing me by centimeters.
 
-I stare at the empty space where he stood, my mind struggling to process what I've seen. The Society's technology has always been advanced, but this... this is something else. This is the power to fold space itself, to make distance meaningless.
+The device pulses once more and the fold collapses.
 
-This is the power of gods.
+The hole snaps shut with a thunderclap that shakes the sanctuary walls. The Utahraptors vanish. The ruins disappear. Maya and I lie gasping on the floor, our salvaged supplies scattered around us like treasure.
 
-And they've made it small enough to fit in a pocket.
+"Fold collapse complete," Rhea reports, her voice returning to its normal controlled precision. "Successful extraction. Medical supplies recovered. Quantum device depleted—recharge time approximately six hours."
 
-The implications crash over me like a tide of ice water. No expedition is without escape. No mission is without hope of return. The Sovereign hasn't just created a new weapon—she's given her agents the power to return home from anywhere, no matter how deep into enemy territory they venture.
+I close my eyes and try to forget the sound of reality screaming. And the sight of those intelligent amber eyes watching our escape with something that might have been understanding.
 
-I close my eyes and try to forget the sound of reality screaming.
-
-But I know I never will.
+The spacefold brought us home. But I can't shake the feeling that we've shown G.A.E.A. something it wasn't supposed to see.
 
 ---
 
@@ -582,7 +598,7 @@ The technology emerges from the same principles that drive our weather systems, 
 
 Players don't control spacefolding; they must **understand and work with it**. Success comes from mastering the underlying physics, managing resources effectively, and adapting to environmental conditions. The technology creates opportunities for emergent storytelling, tactical complexity, and memorable shared experiences.
 
-Most importantly, spacefolding devices exist as **discoverable artifacts** in our post-collapse world. They're not crafted or purchased—they're found, studied, preserved, and carefully used. Each device becomes a significant strategic asset that can reshape the balance of power between communities.
+Most importantly, spacefolding devices exist as highly valuable commodities in our post-collapse world. While mediocre ones can be purchased from vendors, the best ones are crafted by the most skilled engineers and are worth their weight in gold.
 
 **This is how we extend our core philosophy: not by adding features, but by creating the conditions for experiences to emerge naturally from the intersection of physics, scarcity, and human ingenuity.**
 
