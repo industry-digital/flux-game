@@ -5,6 +5,7 @@ import * as fungusSchemas from './fungus';
 import * as treeSchemas from './tree';
 import * as flowerSchemas from './flower';
 import * as mineralSchemas from './mineral';
+import * as waterSchemas from './water';
 
 
 function getSchemaExports(module: Record<string, any>, moduleName: string): [ResourceURN, BulkResourceSchema][] {
@@ -36,6 +37,7 @@ export function createSchemaManager(): SchemaManager<BulkResourceSchema, Resourc
     [treeSchemas, 'tree'],
     [flowerSchemas, 'flower'],
     [mineralSchemas, 'mineral'],
+    [waterSchemas, 'water'],
   ];
 
   modules.forEach(([module, name]) => {

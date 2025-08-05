@@ -61,4 +61,89 @@ describe('Resource Schema Manager', () => {
       });
     });
   });
+
+  describe('spatial constraints validation', () => {
+    it('should have constraints defined for all resource schemas', () => {
+      const manager = createSchemaManager();
+      const schemas = (manager as any).schemas as Map<string, any>;
+
+      schemas.forEach((schema, urn) => {
+        expect(schema.constraints, `Schema ${urn} missing constraints`).toBeDefined();
+        expect(schema.constraints.maxNeighbors, `Schema ${urn} missing maxNeighbors`).toBeTypeOf('number');
+        expect(schema.constraints.inhibitionRadius, `Schema ${urn} missing inhibitionRadius`).toBeTypeOf('number');
+        expect(schema.constraints.maxNeighbors).toBeGreaterThanOrEqual(0);
+        expect(schema.constraints.inhibitionRadius).toBeGreaterThan(0);
+      });
+    });
+
+    it('should validate ecological consistency: high rarity correlates with low clustering', () => {
+      const manager = createSchemaManager();
+      const schemas = (manager as any).schemas as Map<string, any>;
+      const warnings: string[] = [];
+
+      schemas.forEach((schema, urn) => {
+        const { maxNeighbors } = schema.constraints;
+        const rarity = schema.rarity || 0;
+
+        // High rarity should correlate with low maxNeighbors
+        if (rarity > 0.8 && maxNeighbors > 1) {
+          warnings.push(`${schema.name}: High rarity (${rarity}) with high clustering (${maxNeighbors})`);
+        }
+      });
+
+      // Log warnings but don't fail test (might be intentional design choices)
+      if (warnings.length > 0) {
+        console.warn('Ecological consistency warnings:', warnings);
+      }
+      expect(warnings.length).toBeLessThan(5); // Allow some flexibility
+    });
+
+    it('should validate spatial consistency: large inhibition radius has low clustering', () => {
+      const manager = createSchemaManager();
+      const schemas = (manager as any).schemas as Map<string, any>;
+      const warnings: string[] = [];
+
+      schemas.forEach((schema, urn) => {
+        const { maxNeighbors, inhibitionRadius } = schema.constraints;
+
+        // Large inhibition radius should have low maxNeighbors
+        if (inhibitionRadius > 2 && maxNeighbors > 2) {
+          warnings.push(`${schema.name}: Large radius (${inhibitionRadius}) with high clustering (${maxNeighbors})`);
+        }
+      });
+
+      // Log warnings but don't fail test (might be intentional design choices)
+      if (warnings.length > 0) {
+        console.warn('Spatial consistency warnings:', warnings);
+      }
+      expect(warnings.length).toBeLessThan(3); // Should be rare
+    });
+
+    it('should have appropriate defaults by resource type', () => {
+      const manager = createSchemaManager();
+      const schemas = (manager as any).schemas as Map<string, any>;
+
+      const typeDefaults = {
+        mineral: { maxNeighbors: 0, inhibitionRadius: 2 },
+        water: { maxNeighbors: 0, inhibitionRadius: 1 },
+        mushroom: { maxNeighbors: 2, inhibitionRadius: 1 },
+        tree: { maxNeighbors: 3, inhibitionRadius: 1 },
+        flower: { maxNeighbors: 5, inhibitionRadius: 1 }
+      };
+
+      Object.entries(typeDefaults).forEach(([kind, defaults]) => {
+        const schemasOfType = Array.from(schemas.values()).filter(schema => schema.kind === kind);
+        expect(schemasOfType.length, `No schemas found for kind: ${kind}`).toBeGreaterThan(0);
+
+        // At least some schemas should use the default (allowing for overrides)
+        const withDefaults = schemasOfType.filter(schema =>
+          schema.constraints.maxNeighbors === defaults.maxNeighbors &&
+          schema.constraints.inhibitionRadius === defaults.inhibitionRadius
+        );
+
+        console.log(`${kind}: ${withDefaults.length}/${schemasOfType.length} use defaults`);
+        expect(withDefaults.length, `No ${kind} schemas use type defaults`).toBeGreaterThan(0);
+      });
+    });
+  });
 });

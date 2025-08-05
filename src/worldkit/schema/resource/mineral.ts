@@ -20,6 +20,11 @@ function createMineralSchema(overrides: Partial<BulkResourceSchema>): BulkResour
       curve: 'LINEAR',
       duration: [1, TimeUnit.DAY]
     },
+    // Most minerals are territorial/exclusive
+    constraints: {
+      maxNeighbors: 0,      // Exclusive by default
+      inhibitionRadius: 2   // Regional exclusion effect
+    },
     ...overrides
   } as BulkResourceSchema;
 }
@@ -33,6 +38,10 @@ export const IronSchema: BulkResourceSchema = createMineralSchema({
   provides: ['ore', 'iron'],
   requirements: {
     biomes: ['mountain', 'steppe']
+  },
+  constraints: {
+    maxNeighbors: 1,      // Override: seam formation
+    inhibitionRadius: 2
   }
 });
 
@@ -43,6 +52,10 @@ export const CoalSchema: BulkResourceSchema = createMineralSchema({
   provides: ['ore', 'coal', 'carbon'],
   requirements: {
     biomes: ['marsh', 'jungle']
+  },
+  constraints: {
+    maxNeighbors: 1,      // Override: seam formation
+    inhibitionRadius: 2
   }
 });
 
@@ -158,6 +171,10 @@ export const QuartzSchema: BulkResourceSchema = createMineralSchema({
   provides: ['ore', 'quartz'],
   requirements: {
     biomes: ['mountain', 'steppe', 'grassland', 'forest'] // Extremely widespread
+  },
+  constraints: {
+    maxNeighbors: 2,      // Override: common clustering
+    inhibitionRadius: 2
   }
 });
 

@@ -30,6 +30,11 @@ function createFlowerSchema(overrides: Partial<BulkResourceSchema>): BulkResourc
       curve: 'EXPONENTIAL',
       duration: [1, TimeUnit.WEEK]
     },
+    // Flowers can form dense meadows and prairies
+    constraints: {
+      maxNeighbors: 5,      // Dense clustering allowed
+      inhibitionRadius: 1   // Local effect only
+    },
     ...overrides
   } as BulkResourceSchema;
 }
@@ -177,6 +182,10 @@ export const JungleOrchidSchema: BulkResourceSchema = createFlowerSchema({
     seasons: ['spring', 'summer', 'fall'],
     time: ['dawn', 'morning'],
     lunar: ['new', 'waxing']
+  },
+  constraints: {
+    maxNeighbors: 0,      // Override: exclusive
+    inhibitionRadius: 1
   }
 });
 
@@ -260,5 +269,9 @@ export const SwampOrchidSchema: BulkResourceSchema = createFlowerSchema({
     seasons: ['spring', 'summer'],
     time: ['dusk', 'night'],
     lunar: ['full'] // Only during full moon
+  },
+  constraints: {
+    maxNeighbors: 0,      // Override: exclusive
+    inhibitionRadius: 1
   }
 });

@@ -30,6 +30,11 @@ function createWaterSchema(overrides: Partial<BulkResourceSchema>): BulkResource
       // By default, all bodies of water decay completely in a week
       duration: [3, TimeUnit.DAY]
     },
+    // Water bodies are typically exclusive
+    constraints: {
+      maxNeighbors: 0,      // One water body per area
+      inhibitionRadius: 1   // Immediate neighbors only
+    },
     ...overrides
   } as BulkResourceSchema;
 }
@@ -49,4 +54,28 @@ export const PuddleSchema: BulkResourceSchema = createWaterSchema({
       capacity: 3,
     }
   },
+});
+
+/**
+ * Large pond - permanent water body
+ * Deeper water that persists through dry seasons
+ */
+export const LargePondSchema: BulkResourceSchema = createWaterSchema({
+  name: 'large pond',
+  slug: 'large-pond',
+  quantification: {
+    type: 'bulk',
+    quantity: {
+      measure: UnitOfVolume.LITERS,
+      min: 100,
+      capacity: 5_000,
+    }
+  },
+  requirements: {
+    precipitation: { min: 1 } // Less dependent on immediate rainfall
+  },
+  decay: {
+    curve: 'EASE_OUT_QUAD',
+    duration: [2, TimeUnit.WEEK] // Takes longer to dry up
+  }
 });

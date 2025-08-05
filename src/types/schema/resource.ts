@@ -120,6 +120,18 @@ export enum KindOfResource {
   FUNGUS = 'fungus',
 }
 
+export type SpatialConstraints = {
+  /**
+   * The maximum number of neighbors that can have this resource in the inhibition radius
+   */
+  maxNeighbors: number;
+
+  /**
+   * The radius in graph distance over which maxNeighbors is enforced
+   */
+  inhibitionRadius: number;
+};
+
 type AbstractResourceSchema<QuantificationStrategy extends ResourceQuantificationStrategy> = {
   /**
    * Human-readable name of the resource, not capitalized.
@@ -162,8 +174,14 @@ type AbstractResourceSchema<QuantificationStrategy extends ResourceQuantificatio
    *
    * - Example: 0.9 for a resource that requires a high environmental fitness score to grow
    * - Example: 0.0 for a resource that "grows" everywhere
+   * @deprecated
    */
   rarity?: number;
+
+  /**
+   * Rules that govern the spatial distribution of the resource
+   */
+  constraints: SpatialConstraints;
 
   /**
    * The requirements that must be met for the resource to grow.

@@ -32,6 +32,11 @@ function createTreeSchema(overrides: Partial<BulkResourceSchema>): BulkResourceS
       curve: 'LINEAR',
       duration: [100, TimeUnit.YEAR]
     },
+    // Trees naturally form forests but need breathing room
+    constraints: {
+      maxNeighbors: 3,      // Forest clustering but not overcrowded
+      inhibitionRadius: 1   // Local spacing only
+    },
     ...overrides
   } as BulkResourceSchema;
 }
@@ -70,6 +75,10 @@ export const CottonwoodSchema: BulkResourceSchema = createTreeSchema({
     humidity: { min: 40, max: 95 },
     precipitation: { min: 1.0 },
     seasons: ['spring', 'summer', 'fall']
+  },
+  constraints: {
+    maxNeighbors: 4,      // Override: pioneer species clustering
+    inhibitionRadius: 1
   }
 });
 

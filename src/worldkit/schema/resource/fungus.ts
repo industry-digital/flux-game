@@ -29,6 +29,11 @@ function createFungusSchema(overrides: Partial<BulkResourceSchema>): BulkResourc
       curve: 'EXPONENTIAL',
       duration: [3, TimeUnit.DAY]
     },
+    // Fungi vary - some cluster, some are territorial
+    constraints: {
+      maxNeighbors: 2,      // Moderate clustering
+      inhibitionRadius: 1   // Local competition
+    },
     ...overrides
   } as BulkResourceSchema;
 }
@@ -43,6 +48,10 @@ export const TruffleSchema: BulkResourceSchema = createFungusSchema({
     ppfd: { max: 400 },
     time: ['dusk', 'night'],
     lunar: ['full']
+  },
+  constraints: {
+    maxNeighbors: 0,      // Override: territorial
+    inhibitionRadius: 1
   }
 });
 
@@ -182,6 +191,10 @@ export const OysterMushroomSchema: BulkResourceSchema = createFungusSchema({
   growth: {
     curve: 'EXPONENTIAL', // Fast, aggressive growth
     duration: [4, TimeUnit.DAY]
+  },
+  constraints: {
+    maxNeighbors: 4,      // Override: aggressive clustering
+    inhibitionRadius: 1
   }
 });
 
