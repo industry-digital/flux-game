@@ -37,6 +37,11 @@ export const IronSchema: BulkResourceSchema = createMineralSchema({
   slug: 'iron',
   provides: ['ore', 'iron'],
   requirements: {
+    bedrock: {
+      'sedimentary:limestone': 0.6,  // Banded iron formations
+      'metamorphic:quartzite': 0.5,  // Taconite pellets
+      'sedimentary:shale': 0.3       // Iron-rich sediments
+    },
     biomes: ['mountain', 'steppe']
   },
   constraints: {
@@ -51,6 +56,10 @@ export const CoalSchema: BulkResourceSchema = createMineralSchema({
   slug: 'coal',
   provides: ['ore', 'coal', 'carbon'],
   requirements: {
+    bedrock: {
+      'sedimentary:shale': 0.7,      // Coal measures
+      'sedimentary:limestone': 0.4   // Carboniferous sequences
+    },
     biomes: ['marsh', 'jungle']
   },
   constraints: {
@@ -65,6 +74,10 @@ export const ChromiumSchema: BulkResourceSchema = createMineralSchema({
   slug: 'chromium',
   provides: ['ore', 'chromium'],
   requirements: {
+    bedrock: {
+      'igneous:basalt': 0.7,         // Ultramafic complexes
+      'metamorphic:gneiss': 0.4      // High-grade metamorphism
+    },
     biomes: ['steppe']
   }
 });
@@ -74,6 +87,11 @@ export const NickelSchema: BulkResourceSchema = createMineralSchema({
   slug: 'nickel',
   provides: ['ore', 'nickel'],
   requirements: {
+    bedrock: {
+      'igneous:basalt': 0.6,         // Ultramafic intrusions
+      'metamorphic:gneiss': 0.5,     // Metamorphic complexes
+      'sedimentary:limestone': 0.3   // Lateritic weathering
+    },
     biomes: ['mountain', 'grassland', 'steppe']
   }
 });
@@ -86,6 +104,11 @@ export const TungstenSchema: BulkResourceSchema = createMineralSchema({
   slug: 'tungsten',
   provides: ['ore', 'tungsten'],
   requirements: {
+    bedrock: {
+      'igneous:granite': 0.6,        // Granite pegmatites
+      'metamorphic:schist': 0.5,     // Contact metamorphism
+      'metamorphic:gneiss': 0.4      // High-grade metamorphism
+    },
     biomes: ['mountain']
   }
 });
@@ -95,6 +118,11 @@ export const MolybdenumSchema: BulkResourceSchema = createMineralSchema({
   slug: 'molybdenum',
   provides: ['ore', 'molybdenum'],
   requirements: {
+    bedrock: {
+      'igneous:granite': 0.6,        // Porphyry deposits
+      'metamorphic:quartzite': 0.4,  // Skarn deposits
+      'igneous:basalt': 0.3          // Volcanic associations
+    },
     biomes: ['mountain', 'steppe']
   }
 });
@@ -104,6 +132,11 @@ export const VanadiumSchema: BulkResourceSchema = createMineralSchema({
   slug: 'vanadium',
   provides: ['ore', 'vanadium'],
   requirements: {
+    bedrock: {
+      'igneous:basalt': 0.6,         // Titaniferous magnetite
+      'sedimentary:shale': 0.5,      // Black shales
+      'sedimentary:limestone': 0.3   // Carnotite deposits
+    },
     biomes: ['mountain', 'grassland']
   }
 });
@@ -114,6 +147,11 @@ export const ManganeseSchema: BulkResourceSchema = createMineralSchema({
   slug: 'manganese',
   provides: ['ore', 'manganese'],
   requirements: {
+    bedrock: {
+      'sedimentary:limestone': 0.6,  // Marine deposits
+      'metamorphic:marble': 0.5,     // Metamorphosed carbonates
+      'sedimentary:shale': 0.4       // Black shale associations
+    },
     biomes: ['grassland', 'marsh']
   }
 });
@@ -124,6 +162,11 @@ export const SiliconSchema: BulkResourceSchema = createMineralSchema({
   slug: 'silicon',
   provides: ['ore', 'silicon'],
   requirements: {
+    bedrock: {
+      'metamorphic:quartzite': 0.7,  // High-purity quartz
+      'igneous:granite': 0.5,        // Quartz-rich granites
+      'sedimentary:limestone': 0.3   // Silica replacement
+    },
     biomes: ['steppe', 'grassland']
   }
 });
@@ -136,6 +179,11 @@ export const TitaniumSchema: BulkResourceSchema = createMineralSchema({
   slug: 'titanium',
   provides: ['ore', 'titanium'],
   requirements: {
+    bedrock: {
+      'igneous:basalt': 0.6,         // Ilmenite in mafic rocks
+      'sedimentary:limestone': 0.4,  // Heavy mineral sands
+      'igneous:granite': 0.3         // Accessory minerals
+    },
     biomes: ['mountain']
   }
 });
@@ -146,6 +194,11 @@ export const CobaltSchema: BulkResourceSchema = createMineralSchema({
   slug: 'cobalt',
   provides: ['ore', 'cobalt'],
   requirements: {
+    bedrock: {
+      'igneous:basalt': 0.6,         // Ultramafic associations
+      'metamorphic:gneiss': 0.4,     // Metamorphic complexes
+      'sedimentary:shale': 0.3       // Sedimentary copper-cobalt
+    },
     biomes: ['mountain', 'grassland']
   }
 });
@@ -158,6 +211,11 @@ export const LithiumSchema: BulkResourceSchema = createMineralSchema({
   slug: 'lithium',
   provides: ['ore', 'lithium'],
   requirements: {
+    bedrock: {
+      'igneous:granite': 0.7,        // Granite pegmatites
+      'sedimentary:limestone': 0.4,  // Lithium brines
+      'metamorphic:schist': 0.3      // Spodumene deposits
+    },
     biomes: ['mountain', 'steppe', 'grassland']
   }
 });
@@ -168,8 +226,14 @@ export const LithiumSchema: BulkResourceSchema = createMineralSchema({
 export const QuartzSchema: BulkResourceSchema = createMineralSchema({
   name: 'quartz',
   slug: 'quartz',
-  provides: ['ore', 'quartz'],
+  provides: ['gem', 'quartz'],
   requirements: {
+    bedrock: {
+      'igneous:granite': 0.6,        // Primary host - granite pegmatites
+      'metamorphic:quartzite': 0.5,  // Metamorphic quartz veins
+      'sedimentary:limestone': 0.3,  // Hydrothermal replacement
+      'metamorphic:gneiss': 0.4      // Regional metamorphism
+    },
     biomes: ['mountain', 'steppe', 'grassland', 'forest'] // Extremely widespread
   },
   constraints: {
@@ -182,8 +246,13 @@ export const QuartzSchema: BulkResourceSchema = createMineralSchema({
 export const TourmalineSchema: BulkResourceSchema = createMineralSchema({
   name: 'tourmaline',
   slug: 'tourmaline',
-  provides: ['ore', 'tourmaline'],
+  provides: ['gem', 'tourmaline'],
   requirements: {
+    bedrock: {
+      'igneous:granite': 0.6,        // Granite pegmatites
+      'metamorphic:schist': 0.5,     // Metamorphic associations
+      'metamorphic:gneiss': 0.4      // High-grade metamorphism
+    },
     biomes: ['mountain', 'forest']
   }
 });
@@ -192,8 +261,13 @@ export const TourmalineSchema: BulkResourceSchema = createMineralSchema({
 export const TopazSchema: BulkResourceSchema = createMineralSchema({
   name: 'topaz',
   slug: 'topaz',
-  provides: ['ore', 'topaz'],
+  provides: ['gem', 'topaz'],
   requirements: {
+    bedrock: {
+      'igneous:granite': 0.7,        // Granite pegmatites
+      'metamorphic:quartzite': 0.4,  // High-temperature metamorphism
+      'metamorphic:schist': 0.3      // Contact metamorphism
+    },
     biomes: ['mountain']
   }
 });
@@ -202,8 +276,13 @@ export const TopazSchema: BulkResourceSchema = createMineralSchema({
 export const BerylSchema: BulkResourceSchema = createMineralSchema({
   name: 'beryl',
   slug: 'beryl',
-  provides: ['ore', 'beryl'],
+  provides: ['gem', 'beryl'],
   requirements: {
+    bedrock: {
+      'igneous:granite': 0.7,        // Granite pegmatites
+      'metamorphic:schist': 0.4,     // Mica schists
+      'metamorphic:gneiss': 0.3      // Regional metamorphism
+    },
     biomes: ['mountain', 'forest']
   }
 });

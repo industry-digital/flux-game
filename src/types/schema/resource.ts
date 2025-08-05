@@ -21,7 +21,7 @@ export type GrowthSpecification = {
   duration: [number, TimeUnit],
 };
 
-export type PartialWeights<T extends string> = Record<T, NormalizedValueBetweenZeroAndOne>;
+export type PartialWeights<T extends string> = Partial<Record<T, NormalizedValueBetweenZeroAndOne>>;
 
 export type ResourceGrowthRequirements = {
   /**
