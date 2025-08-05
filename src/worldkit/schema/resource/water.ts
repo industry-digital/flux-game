@@ -19,10 +19,14 @@ function createWaterSchema(overrides: Partial<BulkResourceSchema>): BulkResource
     },
     growth: {
       curve: 'EASE_OUT_QUAD',
+
+      // By default, all bodies of water recharge completely in an hour
       duration: [1, TimeUnit.HOUR]
     },
     decay: {
-      curve: 'EXPONENTIAL',
+      curve: 'EASE_OUT_QUAD',
+
+      // By default, all bodies of water decay completely in a week
       duration: [1, TimeUnit.WEEK]
     },
     ...overrides
@@ -33,97 +37,15 @@ function createWaterSchema(overrides: Partial<BulkResourceSchema>): BulkResource
  * Large puddle - ephemeral water collection
  * Forms after rain, evaporates quickly
  */
-export const LargePuddleSchema: BulkResourceSchema = createWaterSchema({
-  name: 'large puddle',
-  slug: 'large-puddle',
+export const PuddleSchema: BulkResourceSchema = createWaterSchema({
+  name: 'puddle',
+  slug: 'puddle',
   quantification: {
     type: 'bulk',
     quantity: {
       measure: UnitOfVolume.LITERS,
       min: 0,
-      capacity: 100 // 100 liters
+      capacity: 3,
     }
   },
-  decay: {
-    curve: 'EXPONENTIAL',
-    duration: [1, TimeUnit.DAY]
-  }
-});
-
-/**
- * Small pond - backyard koi pond scale
- * More resilient than puddles, supports simple aquatic life
- */
-export const SmallPondSchema: BulkResourceSchema = createWaterSchema({
-  name: 'small pond',
-  slug: 'small-pond',
-  quantification: {
-    type: 'bulk',
-    quantity: {
-      measure: UnitOfVolume.LITERS,
-      min: 0,
-      capacity: 5_000 // 5000 liters
-    }
-  },
-  growth: {
-    curve: 'LOGISTIC',
-    duration: [1, TimeUnit.WEEK]
-  },
-  decay: {
-    curve: 'LOGISTIC',
-    duration: [1, TimeUnit.YEAR]
-  }
-});
-
-/**
- * Large pond - significant water feature
- * Stable ecosystem, takes substantial drought to affect
- */
-export const LargePondSchema: BulkResourceSchema = createWaterSchema({
-  name: 'large pond',
-  slug: 'large-pond',
-  quantification: {
-    type: 'bulk',
-    quantity: {
-      measure: UnitOfVolume.LITERS,
-      min: 0,
-      capacity: 25_000 // 25,000 liters
-    }
-  },
-  requirements: {
-    precipitation: { min: 3 }
-  },
-  growth: {
-    curve: 'CUBIC',
-    duration: [2, TimeUnit.WEEK]
-  },
-  decay: {
-    curve: 'CUBIC',
-    duration: [6, TimeUnit.WEEK]
-  }
-});
-
-/**
- * Small lake - permanent water feature
- * Very stable, only extreme drought affects it
- */
-export const SmallLakeSchema: BulkResourceSchema = createWaterSchema({
-  name: 'small lake',
-  slug: 'small-lake',
-  quantification: {
-    type: 'bulk',
-    quantity: {
-      measure: UnitOfVolume.LITERS,
-      min: 0,
-      capacity: 100_000 // 100,000 liters
-    }
-  },
-  growth: {
-    curve: 'LINEAR',
-    duration: [1, TimeUnit.DAY]
-  },
-  decay: {
-    curve: 'EXPONENTIAL',
-    duration: [3, TimeUnit.YEAR]
-  }
 });

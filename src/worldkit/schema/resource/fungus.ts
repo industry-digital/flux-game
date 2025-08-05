@@ -11,7 +11,7 @@ function createFungusSchema(overrides: Partial<BulkResourceSchema>): BulkResourc
       quantity: {
         measure: UnitOfMeasure.EACH,
         min: 1,
-        capacity: 11
+        capacity: 3,
       }
     },
     requirements: {
@@ -60,11 +60,11 @@ export const DesertPuffballSchema: BulkResourceSchema = createFungusSchema({
   },
   growth: {
     curve: 'EXPONENTIAL', // Rapid emergence after rain
-    duration: [2, TimeUnit.DAY]
+    duration: [1, TimeUnit.HOUR]
   },
   decay: {
     curve: 'EXPONENTIAL', // Quick decay in harsh conditions
-    duration: [1, TimeUnit.DAY]
+    duration: [3, TimeUnit.DAY]
   }
 });
 
@@ -117,7 +117,7 @@ export const AlpineBoleteSchema: BulkResourceSchema = createFungusSchema({
   },
   growth: {
     curve: 'LOGISTIC',
-    duration: [14, TimeUnit.DAY] // Slow growth in harsh conditions
+    duration: [1, TimeUnit.DAY],
   },
   decay: {
     curve: 'LINEAR',
@@ -146,14 +146,6 @@ export const SwampBracketSchema: BulkResourceSchema = createFungusSchema({
   name: 'swamp bracket',
   slug: 'swamp-bracket',
   provides: ['mushroom', 'tinder', 'medicine'],
-  quantification: {
-    type: 'bulk',
-    quantity: {
-      measure: UnitOfMeasure.EACH,
-      min: 1,
-      capacity: 20 // Fewer but larger bracket fungi
-    }
-  },
   requirements: {
     temperature: { min: 15, max: 29 },
     humidity: { min: 90, max: 99 }, // Extremely humid swamp conditions
@@ -211,14 +203,6 @@ export const HoneyMushroomSchema: BulkResourceSchema = createFungusSchema({
   name: 'honey mushroom',
   slug: 'honey-mushroom',
   provides: ['mushroom', 'honey'],
-  quantification: {
-    type: 'bulk',
-    quantity: {
-      measure: UnitOfMeasure.EACH,
-      min: 1,
-      capacity: 75 // More prolific than average
-    }
-  },
   requirements: {
     temperature: { min: 8, max: 30 }, // Broad temperate range
     humidity: { min: 45, max: 90 }, // Wide humidity tolerance
@@ -241,14 +225,6 @@ export const HoneyMushroomSchema: BulkResourceSchema = createFungusSchema({
 export const CordycepsGaeatrixSchema: BulkResourceSchema = createFungusSchema({
   name: 'gaeatrix',
   slug: 'gaeatrix',
-  quantification: {
-    type: 'bulk',
-    quantity: {
-      measure: UnitOfMeasure.EACH,
-      min: 1,
-      capacity: 3 // Very rare
-    }
-  },
   requirements: {
     temperature: { min: 13, max: 28 }, // Forest temperate range
     humidity: { min: 65, max: 90 }, // High forest humidity
@@ -258,6 +234,6 @@ export const CordycepsGaeatrixSchema: BulkResourceSchema = createFungusSchema({
   },
   growth: {
     curve: 'LOGISTIC',
-    duration: [7, TimeUnit.DAY]
+    duration: [3, TimeUnit.DAY]
   }
 });

@@ -117,6 +117,7 @@ export enum KindOfResource {
   TREE = 'tree',
   MINERAL = 'mineral',
   WATER = 'water',
+  FUNGUS = 'fungus',
 }
 
 type AbstractResourceSchema<QuantificationStrategy extends ResourceQuantificationStrategy> = {

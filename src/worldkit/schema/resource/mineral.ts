@@ -11,7 +11,7 @@ function createMineralSchema(overrides: Partial<BulkResourceSchema>): BulkResour
       quantity: {
         measure: UnitOfMass.KILOGRAMS,
         min: 0,
-        capacity: 10 // 10kg per deposit
+        capacity: 3,
       }
     },
     requirements: {}, // Minerals require no specific conditions for growth

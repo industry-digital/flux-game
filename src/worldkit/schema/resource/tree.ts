@@ -13,7 +13,7 @@ function createTreeSchema(overrides: Partial<BulkResourceSchema>): BulkResourceS
       quantity: {
         measure: UnitOfMeasure.EACH,
         min: 0,
-        capacity: 1_000
+        capacity: 3,
       }
     },
     requirements: {

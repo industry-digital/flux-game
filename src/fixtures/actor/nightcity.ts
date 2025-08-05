@@ -1,11 +1,10 @@
-import { ActorInput, ActorType } from '~/types/entity/actor';
+import { ActorInput } from '~/types/entity/actor';
 import { createPlaceUrn } from '~/lib/taxonomy';
 import { createActorUrn } from '~/worldkit/entity/actor';
 
 export const nightcityCharacters: ActorInput[] = [
   {
     id: createActorUrn('rogue'),
-    subtype: ActorType.NPC,
     name: 'Rogue',
     description: 'The iron-fisted owner of the Afterlife bar. A legendary fixer with chrome-silver hair and eyes that have seen too much. She commands respect through reputation alone - every merc in Night City knows her name, and most owe her favors. Her mechanical arm gleams under the neon lights as she pours drinks named after dead legends.',
     location: createPlaceUrn('nightcity', 'afterlife-bar')

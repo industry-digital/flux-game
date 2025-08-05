@@ -1,4 +1,4 @@
-import { Taxonomy, ItemURN, PlaceURN, ActorURN, GroupURN, ResourceURN } from '~/types/taxonomy';
+import { Taxonomy, ItemURN, PlaceURN, ActorURN, GroupURN, BehaviorURN } from '~/types/taxonomy';
 import { AppliedEffects } from '~/types/taxonomy/effect';
 import { EntityType, AbstractEntity, Describable } from '~/types/entity/entity';
 import { SkillState, Specializations } from '~/types/entity/skill';
@@ -20,14 +20,9 @@ export enum ActorType {
   PC = 'pc',
 
   /**
-   * Non-player character (friendly NPCs, quest givers, etc.)
-   */
-  NPC = 'npc',
-
-  /**
    * Hostile creature or monster
    */
-  MONSTER = 'monster',
+  CREATURE = 'creature',
 }
 
 /**
@@ -55,7 +50,6 @@ export enum ActorStat {
   /**
    * Agility. Speed, grace, and coordination. Affects:
    * - Movement speed and evasion
-   * - Initiative in combat, together with WIS
    * - Athletic feats requiring finesse
    */
   AGI = 'agi',
@@ -71,27 +65,23 @@ export enum ActorStat {
   /**
    * Intelligence. Reasoning ability and learning capacity. Affects:
    * - Rate of experience gain (PXP→XP conversion)
-   * - Complex abilities and higher learning
-   * - Problem-solving and analysis
-   * - Affects the success of skills that require higher reasoning
    */
   INT = 'int',
 
   /**
    * Perception. Awareness and intuition.
+   * - Directly affects the actor's ability to perceive the world around them, including the ability to detect hidden things
+   * - Initiative in combat
    * - Directly affects rate at which PXP is gained
-   * - Initiative in combat, together with Agility
-   * - Detecting deception and hidden threats
-   * - Affects saving throws against "surprises"
    */
   PER = 'per',
 
   /**
-   * Willpower. Mental fortitude and resolve. Affects:
+   * Memory. The actor's ability to remember things.
+   * - Directly affects the number of abilities the actor can hold in their head at once
    * - Directly affects size of PXP pool
-   * - Affects saving throws against status effects that affect the mind
    */
-  WIL = 'wil',
+  MEM= 'mem',
 }
 
 /**
@@ -256,7 +246,7 @@ export type Actor =
 
 export type Autonomous = {
   needs: Needs;
-  behaviors: Behaviors;
+  behaviors: Record<BehaviorURN, 1>;
 };
 
 /**
@@ -265,9 +255,23 @@ export type Autonomous = {
  */
 export type Needs = {
   /**
-   * Resources this monster requires, mapped to consumption rates and thresholds
+   * Taxononomic atoms that the actor is interested in
+   * @example `sing`, `dance`, `flutter``
    */
-  resources: Partial<Record<ResourceURN, ResourceNeed>>;
+  social: string[];
+
+  /**
+   * Taxononomic atoms that the actor is interested in, relating to shelter
+   * @example `cave`, `tree`, `rock`, etc.
+   */
+  shelter: string[];
+
+  /**
+   * Resources this monster requires, mapped to consumption rates and thresholds
+   * Food resources are handled in this field
+   * @example { `mushroom`: { consumption: 100, thresholds: { scarcity: 0.5, abundance: 0.8 }, search: { radius: 10 } } }
+   */
+  resources: Record<string, ResourceNeed>;
 };
 
 export type BehaviorThresholds = {
@@ -302,62 +306,8 @@ export type ResourceNeed = {
   search: SearchParameters;
 };
 
-/**
- * Behavioral responses to resource availability
- * These define what actions monsters take when resource needs are triggered
- */
-export type Behaviors = {
-  /**
-   * Actions taken when resources are scarce in current location
-   */
-  resourceScarcity: ResourceScarcityBehavior;
-
-  /**
-   * Actions taken when resources are abundant in current location
-   */
-  resourceAbundance: ResourceAbundanceBehavior;
+export type AbstractNonPlayerCharacter<T extends ActorType> = Autonomous & Actor & {
+  kind: T;
 };
 
-/**
- * What the monster does when resources become scarce
- */
-export type ResourceScarcityBehavior = {
-  /**
-   * Probability of aggressive resource competition (0-1)
-   */
-  aggressiveCompetition: NormalizedValueBetweenZeroAndOne;
-
-  /**
-   * Probability of fleeing to find resources elsewhere (0-1)
-   */
-  fleeToSearch: NormalizedValueBetweenZeroAndOne;
-
-  /**
-   * Probability of entering conservation mode (reduced activity) (0-1)
-   */
-  conservationMode: NormalizedValueBetweenZeroAndOne;
-};
-
-/**
- * What the monster does when resources are abundant
- */
-export type ResourceAbundanceBehavior = {
-  /**
-   * Probability of becoming territorial/protective of the abundance (0-1)
-   */
-  becomeGuardian: NormalizedValueBetweenZeroAndOne;
-
-  /**
-   * How much to consume when resources are plentiful (multiplier)
-   */
-  consumptionMultiplier: number;
-
-  /**
-   * Probability of becoming docile/less aggressive (0-1)
-   */
-  becomeDormant: NormalizedValueBetweenZeroAndOne;
-};
-
-export type Monster = Autonomous & Actor & {
-  kind: ActorType.MONSTER;
-};
+export type Creature = AbstractNonPlayerCharacter<ActorType.CREATURE>;

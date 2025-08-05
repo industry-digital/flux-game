@@ -50,7 +50,7 @@ export const createActor = (
           [ActorStat.DEX]: createModifiableScalarAttribute((defaults) => ({ ...defaults, nat: 10 })),
           [ActorStat.INT]: createModifiableScalarAttribute((defaults) => ({ ...defaults, nat: 10 })),
           [ActorStat.PER]: createModifiableScalarAttribute((defaults) => ({ ...defaults, nat: 10 })),
-          [ActorStat.WIL]: createModifiableScalarAttribute((defaults) => ({ ...defaults, nat: 10 })),
+          [ActorStat.MEM]: createModifiableScalarAttribute((defaults) => ({ ...defaults, nat: 10 })),
         },
         injuries: {},
         mana: {},

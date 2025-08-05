@@ -141,6 +141,10 @@ export const TAXONOMY = {
     schema: {
       description: 'The various schemas in the game world',
       examples: ['flux:schema:item:container:backpack', 'flux:schema:item:weapon:sword:elven-longsword']
+    },
+    behavior: {
+      description: 'The various behaviors of actors',
+      examples: ['flux:behavior:scarcity:aggressive', 'flux:behavior:scarcity:flee']
     }
   }
 } as const;
@@ -283,6 +287,8 @@ export namespace Taxonomy {
    * The various schemas in the game world
    */
   export type Schemas = TaxonomyURN<'schema'>;
+
+  export type Behaviors = TaxonomyURN<'behavior'>;
 }
 
 export type EntityURN<T extends EntityType = EntityType> = `${RootNamespace}:${T}:${string}`;
@@ -308,3 +314,4 @@ export type TopicURN = Taxonomy.Topics;
 export type ResourceURN = Taxonomy.Resources;
 export type EcosystemURN = `${RootNamespace}:eco:${Biome}:${Climate}`;
 export type SchemaURN = Taxonomy.Schemas;
+export type BehaviorURN = Taxonomy.Behaviors;

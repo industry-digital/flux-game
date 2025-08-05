@@ -11,7 +11,7 @@ function createFlowerSchema(overrides: Partial<BulkResourceSchema>): BulkResourc
       quantity: {
         measure: UnitOfMeasure.EACH,
         min: 1,
-        capacity: 100
+        capacity: 3,
       }
     },
     requirements: {

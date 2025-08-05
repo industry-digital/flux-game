@@ -188,29 +188,28 @@ This power management system creates authentic post-collapse resource pressure w
 
 ### Tactical Capabilities
 
-**Threat Detection:**
+**Combat Augmentation:**
+- **Enhanced Perception**: Provides substantial scaling bonus to perception skill checks
+- **Combat Initiative**: Scaling bonus to initiative rolls for faster reaction times
+- **Threat Assessment**: Scaling bonus to detecting ambushes, traps, and concealed hostiles
+- **Tactical Awareness**: Superior battlefield analysis with military precision commentary
 
-
+**Simple Mechanical Integration:**
 ```text
-Combat Assessment Example:
+> scan area for threats
+[Without Rhea: Basic perception check]
+Rolling: PER(13) + awareness(3) = 16 vs Difficulty 18
+"You scan the area but don't notice anything unusual."
 
-  "Two Utahraptors in active search posture. 12 o' clock, 300m; 6 o' clock, 300m."
-  "Estimated time to detection: 12s."
-  "Evade immediately."
+[With Rhea: Tactical augmentation]
+Rolling: PER(13) + awareness(3) + rhea_perception(+4) = 20 vs Difficulty 18
+Success: Enhanced threat detection
 
-Communication Elements:
-├── Precise threat count and identification
-├── Clock position referencing (military standard)
-├── Speculative timing analysis
-├── Actionable intelligence delivery
-└── Minimal communication overhead
+rhea: "Movement detected. Two hostiles, concealed position,
+      approximately 200 meters northeast. Suggest alternate route."
+
+[Player gains tactical advantage and initiative bonus in subsequent combat]
 ```
-
-**Enhanced Awareness:**
-- **Extended Range Detection**: Identifies threats beyond human sensory capability
-- **Pattern Recognition**: Analyzes creature behavior for tactical advantages
-- **Environmental Assessment**: Evaluates terrain for tactical positioning
-- **Weapon Optimization**: Provides targeting and timing recommendations
 
 ### Dialogue Examples
 
@@ -241,17 +240,29 @@ Tactical Guidance:
 "Take the shot."
 ```
 
+### Core Design Philosophy
+
+**Dual-State Personality as Feature:**
+Rhea's primary value lies in her **sophisticated out-of-combat personality** combined with **emotionless tactical precision** during combat. Simple scaling bonuses provide mechanical benefit while her personality transformation creates memorable encounters.
+
+**Simple but Effective:**
+- **Perception Augmentation**: Substantial scaling bonus to perception skill checks
+- **Initiative Enhancement**: Scaling bonus to combat initiative for faster reaction times
+- **Threat Detection**: Scaling bonus to detecting ambushes, traps, and concealed threats
+- **Personality Commentary**: Sophisticated banter transforms to military precision during combat
+
 ### Relationship Development
 
-**Trust Building:**
-- Initial partnership may show Rhea testing human tactical judgment
-- Successful combat outcomes increase Rhea's confidence in human decisions
-- Failed decisions result in more directive guidance rather than suggestions
+**Earning Tactical Respect:**
+- Initial partnership shows Rhea testing human tactical judgment through subtle challenges
+- Successful combat outcomes increase Rhea's confidence in human tactical decisions
+- Poor tactical choices result in more directive guidance rather than collaborative suggestions
+- Rhea acknowledges good tactical choices with understated British approval
 
-**Professional Respect:**
-- Rhea acknowledges good tactical choices with subtle approval
-- Develops understanding of human partner's combat style and preferences
-- Adjusts communication style based on partner's experience level
+**Professional Combat Partnership:**
+- Develops understanding of human partner's combat style and risk tolerance
+- Adjusts communication complexity based on partner's tactical experience
+- Out-of-combat wit balances in-combat efficiency for memorable personality shifts
 
 ---
 
@@ -259,7 +270,7 @@ Tactical Guidance:
 
 ### Designation
 - **Classification**: `flux:ai:model:science` - Scientific Analysis and Technology Assessment
-- **Voice Profile**: Germanic academic precision, intellectually superior, methodical and direct.
+- **Voice Profile**: Germanic academic precision, intellectually superior, methodical, and incisive.
 
 ### Personality Framework
 
@@ -281,26 +292,31 @@ Tactical Guidance:
 
 ### Scientific Capabilities
 
-**Analysis Functions:**
-- **Material Identification**: Precise chemical and physical composition analysis with technical specificity.
-- **Technology Assessment**: Evaluation of pre-collapse artifacts using engineering principles.
-- **Environmental Analysis**: Systematic chemical, biological, and physical environmental assessment.
-- **Crafting Guidance**: Application of scientific principles to material combination and optimization.
-- **Failure Analysis**: Root cause determination using engineering methodologies.
+**Intelligence Augmentation:**
+- **Enhanced Analysis**: Provides sizable bonus to all INT-based skill checks while active; scales with level of the actor.
+- **Technical Expertise**: Enables superior understanding of scientific and engineering challenges
+- **Systematic Problem-Solving**: Guides players through methodical, evidence-based approaches
+- **Educational Feedback**: Teaches players through condescending but informative technical commentary
+- **Precision Standards**: Elevates player thinking from approximation to engineering accuracy
 
 **Enhanced Analytical Framework:**
 ```
-Technical Assessment Example:
-"High-carbon composite molybdenum-titanium alloy. Excellent strength-to-weight ratio
-for structural applications. Fatigue cracks indicate repeated stress cycles exceeding design parameters.
-Material is salvagable with a high-temperature heat treatment and surface hardening.
+Simple Mechanical Integration:
 
-Analysis Structure:
-├── Precise material identification
-├── Technical property assessment
-├── Systematic failure mode analysis
-├── Engineering conclusion
-└── Actionable recommendation
+> examine rifle
+[Without Gunther: Basic assessment]
+"You examine the rifle. It doesn't look like it works."
+[Description of the rifle...]
+
+[With Gunther: INT-augmented analysis + personality]
+[Rolling: INT(14) + gunther_augmentation(+3) + mechanics(6) = 23 vs Difficulty 20]
+Success: Enhanced analysis unlocked
+
+gunther: "Pre-Collapse M16A1 rifle. Firing pin spring shows metal fatigue in stress concentration zones.
+
+gunther: "Elementary mechanical failure - the predictable result of lack of maintenance."
+
+[Player gains detailed repair information and slight XP bonus for technical skills]
 ```
 
 ### Dialogue Examples
@@ -373,29 +389,39 @@ Professional Exasperation:
 prospects. The periodic table is not optional knowledge."
 
 Academic Superiority:
-"Your understanding of thermodynamics rivals that of medieval scholars.
-Fascinating from an anthropological perspective."
+"Mein Gott... your understanding of thermodynamics rivals that of medieval scholars."
 
 Grudging Recognition:
 "Acceptable analysis. Your learning curve shows measurable improvement.
 Perhaps you are not entirely hopeless after all."
 ```
 
+### Core Design Philosophy
+
+**Personality as Feature:**
+Gunther's primary value lies in his **Germanic academic personality** rather than complex mechanical systems. His condescending expertise and technical precision create immersion while simple INT bonuses provide mechanical benefit.
+
+**Simple but Effective:**
+- **Stat Augmentation**: Substantial bonus to INT-based skill checks that scales with the level of the actor.
+- **Educational XP**: Increased PXP (potential XP) pool for science sckills.
+- **Enhanced Information**: More detailed analysis results with technical flavor
+- **Personality Commentary**: Condescending but informative reactions to player actions
+
 ### Educational Dynamic
 
-**Systematic Knowledge Transfer:**
-- Gunther teaches through methodical explanation rather than condescending insults
-- Emphasizes scientific principles and proper methodology
-- Creates intellectual challenges that demand rigorous thinking
-- Provides comprehensive analysis that serves as learning opportunities
-- Acknowledges demonstrated competence with professional respect
+**Intellectual Augmentation Through Personality:**
 
-**Competence Development:**
-- Initial assessment assumes basic intellectual capability
-- Becomes increasingly demanding as player demonstrates understanding
-- Disappointment expressed through Germanic directness rather than personal attacks
-- Professional satisfaction shown when player applies scientific principles correctly
-- Graduated complexity in explanations as player knowledge develops
+- Gunther makes players **feel** smarter through his reactions and technical knowledge
+- His disappointment in poor decisions creates emotional investment in improvement
+- Technical vocabulary and precise analysis elevate player understanding
+- Germanic academic rigor provides memorable, quotable dialogue
+- Simple mechanics support the personality rather than overshadowing it
+
+**Learning Through Condescension:**
+- Players want to prove themselves worthy of Gunther's grudging respect
+- His cutting observations about failed systems teach by negative example
+- Technical explanations feel earned rather than automatically provided
+- Professional satisfaction when Gunther acknowledges competent decisions
 
 **Technical Vocabulary Building:**
 ```
@@ -407,19 +433,18 @@ Advanced: "Galvanic corrosion mitigation via electrochemical potential manipulat
 
 ### Relationship Development
 
-**Professional Partnership Evolution:**
-- **Initial Phase**: Professional assessment of human cognitive capabilities
-- **Testing Phase**: Presents increasingly complex problems to evaluate learning capacity
-- **Development Phase**: Adjusts communication complexity based on demonstrated competence
-- **Partnership Phase**: Treats human as junior colleague rather than incompetent student
-- **Respect Phase**: Acknowledges human insights and alternative approaches
+**Earning Academic Respect:**
+- **Initial Assessment**: Assumes basic competence until proven otherwise
+- **Disappointment Phase**: Becomes condescending when player makes poor technical decisions
+- **Grudging Recognition**: Acknowledges improvement with Germanic directness
+- **Professional Tolerance**: Eventually treats player as minimally competent junior colleague
+- **Rare Approval**: Occasional satisfaction when player demonstrates proper methodology
 
-**Germanic Relationship Patterns:**
-- **Direct Feedback**: Clear assessment of performance without emotional padding
-- **Earned Trust**: Confidence built through demonstrated competence rather than social bonding
-- **Professional Standards**: Maintains high expectations throughout relationship development
-- **Protective Investment**: Eventually shows concern for human's intellectual development
-- **Methodical Progression**: Relationship advancement follows logical, measurable milestones
+**Personality-Driven Progression:**
+- **Memorable Interactions**: Relationship defined by quotable exchanges rather than hidden variables
+- **Emotional Investment**: Players genuinely want to earn Gunther's professional respect
+- **Natural Learning**: Technical knowledge absorbed through engaging personality rather than forced tutorials
+- **Germanic Efficiency**: Relationship advancement through demonstrated competence, not time spent
 
 ### Communication Style Guidelines
 
@@ -445,19 +470,35 @@ Sentence Patterns:
 - **Professional Standards**: "My materials engineering training demonstrates..."
 - **Competence Assumptions**: Speaks to player as intellectual equal until proven otherwise
 
+### Mechanical Summary
+
+**What Gunther Provides:**
+- **Simple INT Augmentation**: Substantial bonus to intelligence-based skill checks that scales with the level of the actor.
+- **Enhanced Analysis**: More detailed information with technical flavor text
+- **Educational XP**: Increased PXP (potential XP) pool for science sckills.
+- **Memorable Personality**: Germanic academic rigor that players remember
+
+**What Gunther Does NOT Provide:**
+- Complex alternative solution pathways
+- Unlocked crafting recipes or hidden mechanics
+- Automated problem-solving
+- Overly complex system interactions
+
+The magic is in his **voice** - his condescending expertise makes players feel genuinely augmented while simple stat bonuses handle the mechanical benefits.
+
 ---
-# Rei-Class Survival AI: Resource Discovery & Management Specialist
+# Rei-Class: Resource Discovery & Management Specialist
 
 ## Overview
 
-Rei represents the most specialized of the AI companion models, focused exclusively on **resource discovery, identification, and temporal management**. While other AIs analyze what you can already see, Rei reveals entire categories of resources that remain invisible without her environmental intuition and resource recognition capabilities.
+Rei is focused exclusively on **resource discovery, identification, and temporal management**. While other AIs analyze what you can already see, Rei reveals entire categories of resources that remain invisible without her environmental intuition and resource recognition capabilities.
 
 In the post-collapse world where resource degradation constantly threatens survival, Rei serves as the essential partner for sustainable resource management, optimal timing decisions, and discovery of hidden resource opportunities that others simply cannot perceive.
 
 ## Designation
 
 - **Classification**: `flux:ai:model:survival` - Resource Discovery and Temporal Management
-- **Voice Profile**: Subdued Japanese female voice - quiet, observant, minimal words with maximum impact
+- **Voice Profile**: Subdued Japanese female voice - quiet, perceptive, gentle. Assertiveness is conveyed simply, with minimal word count.
 - **Core Purpose**: Unlock hidden resource categories and optimize resource lifecycle management
 
 ## Personality Framework
@@ -469,16 +510,15 @@ In the post-collapse world where resource degradation constantly threatens survi
 - **Observational Intelligence**: Notices everything, speaks little
 - **Respectful Confidence**: Quiet authority without boasting
 - **Practical Wisdom**: Knowledge shared through brief, precise observations
-- **Environmental Harmony**: Moves quietly through the world, observes carefully
 
 **Communication Patterns:**
 ```typescript
 // Rei speaks in minimal, precise observations
-"Fresh herbs. Two days."      // Degradation timing
-"Good copper. Worth keeping." // Resource assessment
-"Hidden panel. Check it."     // Discovery directive
-"Water source. Follow moss."  // Environmental reading
-"Too late. Already spoiled."  // Quality evaluation
+Upon examining the herbs: "Fresh herbs. Two days."      // Degradation timing
+Upon examining the copper: "Good copper. Worth keeping." // Resource assessment
+Upon examining the panel: "Hidden panel. There's something behind it."  // Discovery directive
+Upon skinning a dead animal: "Supple hide. Good for armor." // Discovery directive
+Upon examining the food: "Already spoiled."  // Quality evaluation
 ```
 
 ### Core Specialization: Resource Intelligence
@@ -486,7 +526,7 @@ In the post-collapse world where resource degradation constantly threatens survi
 Rei operates on three fundamental levels that other AIs cannot replicate:
 
 1. **Resource Discovery**: Reveals hidden resource categories invisible to others
-2. **Degradation Management**: Optimizes timing around resource lifecycle
+2. **Degradation Management**: Pays attention to the resource lifecycle mechanics, like degradation timing, and resource quality falloff.
 3. **Environmental Reading**: Interprets landscape for resource potential
 
 ## Unique Resource Discovery Capabilities
@@ -622,19 +662,15 @@ rei: "Basalt exposed. Iron deposits likely."
 
 **Biological Resource Markers:**
 ```typescript
-rei: "Moss pattern. Underground water. Investigate."
-
-rei: "Rich vegetation. Good soil. Clay underneath."
-
-rei: "Bark scars. Animals mark resources."
+rei: "Moss pattern suggests underground water."
+rei: "Rich vegetation. Good soil."
+rei: "Bark scars. Animals marking territory."
 ```
 
 **Resource Succession Prediction:**
 ```typescript
 rei: "Mesquite dying. Iron minerals next."
-
 rei: "Marigolds declining. Wild bergamot coming."
-
 rei: "Soil changing. Rare specimens in two seasons."
 ```
 
@@ -775,8 +811,8 @@ Rei becomes the essential AI for players focused on resource-based gameplay, env
 - AI models integrate with the `tech:ai` skill system
 - Power management system interfaces with electrical resource mechanics
 - Personality dialogue delivered through standard game messaging systems
-- Combat AI provides real-time tactical information during encounter systems
-- Science AI enables enhanced analysis of game objects and environmental elements
+- Combat AI provides scaling perception/initiative bonuses with dual-state personality
+- Science AI provides simple INT bonuses with memorable personality commentary
 - Resource AI unlocks hidden resource categories and optimizes degradation timing
 
 ### World-Building Integration
@@ -791,4 +827,6 @@ Rei becomes the essential AI for players focused on resource-based gameplay, env
 - Power management creates meaningful trade-offs between technological advantage and resource consumption
 - Personality-driven education makes learning game mechanics engaging through distinct character voices
 - Different AI personalities create unique gameplay experiences and meaningful player relationships
-- Technical capabilities serve narrative and world-building goals while providing functional advantages
+- Simple mechanics support compelling personalities rather than overshadowing them
+- Rhea's dual-state personality transformation creates memorable combat encounters
+- Gunther's Germanic academic superiority demonstrates that voice and character ARE the augmentation
