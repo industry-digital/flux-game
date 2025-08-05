@@ -6,6 +6,7 @@ function createFungusSchema(overrides: Partial<BulkResourceSchema>): BulkResourc
   return {
     kind: 'mushroom',
     provides: ['mushroom'],
+    rarity: 0.618,
     quantification: {
       type: 'bulk',
       quantity: {

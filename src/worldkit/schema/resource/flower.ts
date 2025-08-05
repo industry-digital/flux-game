@@ -6,11 +6,12 @@ function createFlowerSchema(overrides: Partial<BulkResourceSchema>): BulkResourc
   return {
     kind: 'flower',
     provides: ['flower', 'nectar'],
+    rarity: 0.618,
     quantification: {
       type: 'bulk',
       quantity: {
         measure: UnitOfMeasure.EACH,
-        min: 1,
+        min: 0,
         capacity: 3,
       }
     },

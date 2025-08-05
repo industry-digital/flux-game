@@ -6,6 +6,7 @@ function createWaterSchema(overrides: Partial<BulkResourceSchema>): BulkResource
   return {
     kind: 'water',
     provides: ['water', 'mud'],
+    rarity: 0.618,
     quantification: {
       type: 'bulk',
       quantity: {
@@ -15,7 +16,7 @@ function createWaterSchema(overrides: Partial<BulkResourceSchema>): BulkResource
       }
     },
     requirements: {
-      precipitation: { min: 1 }
+      precipitation: { min: 2 }
     },
     growth: {
       curve: 'EASE_OUT_QUAD',
@@ -27,7 +28,7 @@ function createWaterSchema(overrides: Partial<BulkResourceSchema>): BulkResource
       curve: 'EASE_OUT_QUAD',
 
       // By default, all bodies of water decay completely in a week
-      duration: [1, TimeUnit.WEEK]
+      duration: [3, TimeUnit.DAY]
     },
     ...overrides
   } as BulkResourceSchema;

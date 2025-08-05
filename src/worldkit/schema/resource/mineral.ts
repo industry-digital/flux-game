@@ -6,6 +6,7 @@ function createMineralSchema(overrides: Partial<BulkResourceSchema>): BulkResour
   return {
     kind: 'mineral',
     provides: ['ore'],
+    rarity: 0.618,
     quantification: {
       type: 'bulk',
       quantity: {
@@ -17,7 +18,7 @@ function createMineralSchema(overrides: Partial<BulkResourceSchema>): BulkResour
     requirements: {}, // Minerals require no specific conditions for growth
     growth: {
       curve: 'LINEAR',
-      duration: [1, TimeUnit.HOUR]
+      duration: [1, TimeUnit.DAY]
     },
     ...overrides
   } as BulkResourceSchema;
