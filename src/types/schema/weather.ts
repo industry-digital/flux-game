@@ -1,4 +1,4 @@
-import { EasingFunctionName, SeededCurvePositionWithValue } from '~/types/easing';
+import { EasingFunctionName, SeedWithValue } from '~/types/easing';
 import { WellKnownDuration } from '~/types/world/time';
 
 
@@ -31,17 +31,17 @@ export type Weather = {
   /**
    * The temperature value in Celsius and the position `t` on the temperature curve
    */
-  temperature: SeededCurvePositionWithValue;
+  temperature: SeedWithValue;
 
   /**
    * The pressure value in hectopascals (hPa) and the position `t` on the pressure curve
    */
-  pressure: SeededCurvePositionWithValue;
+  pressure: SeedWithValue;
 
   /**
    * The humidity value as a percentage (0-100) and the position `t` on the humidity curve
    */
-  humidity: SeededCurvePositionWithValue;
+  humidity: SeedWithValue;
 
   // DERIVED OUTPUTS (computed from inputs)
   /**

@@ -8,7 +8,7 @@ function createTreeSchema(overrides: Partial<BulkResourceSchema>): BulkResourceS
   return {
     kind: 'tree',
     provides: ['wood', 'bark'],
-    rarity: 0.618,
+    fitness: 0.618,
     quantification: {
       type: 'bulk',
       quantity: {

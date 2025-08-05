@@ -170,18 +170,17 @@ type AbstractResourceSchema<QuantificationStrategy extends ResourceQuantificatio
 
   /**
    * The minimum "environmental fitness" score required for the resource to grow.
-   * Defaults to zero if not specified.
+   * Defaults to zero if not specified, meaning the resource will grow anywhere, if all `requirements` are met.
    *
-   * - Example: 0.9 for a resource that requires a high environmental fitness score to grow
-   * - Example: 0.0 for a resource that "grows" everywhere
-   * @deprecated
+   * - Example: 0.9 for a resource that requires not only for all `requirements` to be met, but also for the "degree of matching" to be very high.
+   * - Example: 0.0 for a resource that "grows" anywhere
    */
-  rarity?: number;
+  fitness?: number;
 
   /**
    * Rules that govern the spatial distribution of the resource
    */
-  constraints: SpatialConstraints;
+  constraints?: SpatialConstraints;
 
   /**
    * The requirements that must be met for the resource to grow.

@@ -1,10 +1,21 @@
-# Flux Resource System: Environmental Constraints with Type-Based Specialization
+# Flux Resource Simulation System
+
+## Overview
+
+The Resource Simulation System is one of the [three foundational simulations](./philosophy.md) that comprise the substrate of the game world.
+
+The Resource Simulation System is responsible for:
+
+- Tracking the growth and decay of resources over time
+- Determining which resources can grow in a given place
+- Managing the distribution of resources across the game world
+- Adjusting the growth and decay of resources based on, weather, geological conditions of the place, and actor inputs.
 
 ## Core Philosophy
 
-Resources follow a **binary growth/decay state machine** based on environmental conditions, with each resource having specific quantification strategies, environmental requirements, and **rarity thresholds**. The system supports both bulk resources (measured by quantity) and specimen resources (measured by quality), creating diverse resource types with realistic growth patterns.
+Resources follow a **binary growth/decay state machine** based on environmental conditions, with each resource having specific quantification strategies, environmental requirements, and **fitness thresholds**. The system supports both bulk resources (measured by quantity) and specimen resources (measured by quality), creating diverse resource types with realistic growth patterns.
 
-Resources use **environmental fitness scoring** combined with **rarity thresholds** to determine where they can establish. This creates natural scarcity where common resources appear in many locations, while rare resources only appear in places with excellent environmental alignment.
+Resources use **environmental fitness scoring** combined with **fitness thresholds** to determine where they can establish. This creates natural scarcity where common resources appear in many locations, while rare resources only appear in places with excellent environmental alignment.
 
 ## Resource Distribution Constraints
 
@@ -107,7 +118,7 @@ export type SpecimenQuantificationStrategy = AbstractQuantificationStrategy<'spe
 
 ## Resource Selection Algorithm
 
-When determining which resources can grow in a Place, the system uses **multi-layered environmental fitness scoring** that includes weather conditions, geological compatibility, and rarity thresholds.
+When determining which resources can grow in a Place, the system uses **multi-layered environmental fitness scoring** that includes weather conditions, geological compatibility, and fitness thresholds.
 
 ### 1. Viability Filtering
 
@@ -186,20 +197,19 @@ function calculateGeologicalFitness(
 }
 ```
 
-### 3. Rarity Threshold Filtering
+### 3. fitness Threshold Filtering
 
-Check if environmental fitness meets the resource's rarity requirements:
+Check if environmental fitness meets the resource's fitness requirements:
 
 ```typescript
-function meetsRarityThreshold(resource: ResourceSchema, fitness: number): boolean {
-  const rarityThreshold = resource.rarity || 0.0; // Default: no rarity requirement
-  return fitness >= rarityThreshold;
+function meetsFitnessThreshold(resource: ResourceSchema, fitness: number): boolean {
+  return fitness >= (resource.fitness || 0.0);
 }
 ```
 
 ### 4. Best-Fit Selection
 
-Select the resource with highest environmental fitness score for each type, considering rarity:
+Select the resource with highest environmental fitness score for each type, considering fitness:
 
 ```typescript
 function selectResourceByType(
@@ -211,10 +221,10 @@ function selectResourceByType(
   const typeResources = viableResources.filter(r => getResourceType(r) === resourceType);
   if (typeResources.length === 0) return null;
 
-  // Filter by rarity threshold, then select highest fitness
+  // Filter by fitness threshold, then select highest fitness
   const eligibleResources = typeResources.filter(resource => {
     const fitness = calculateEnvironmentalFitness(resource, weather, ecologicalProfile);
-    return meetsRarityThreshold(resource, fitness);
+    return meetsfitnessThreshold(resource, fitness);
   });
 
   if (eligibleResources.length === 0) return null;
@@ -259,6 +269,98 @@ This creates clear ecological boundaries:
 - **ANY growth requirement not met** → Resource DECAYS
 - **Immediate response** to environmental changes
 
+## Temporal Integration and Sampling Frequency Independence
+
+The binary growth/decay state machine creates a fundamental challenge: how to apply discrete growth/decay decisions over continuous time intervals without introducing sampling frequency artifacts.
+
+### The Sampling Frequency Problem
+
+Naive implementations apply a single growth/decay decision uniformly over an entire time interval:
+
+```typescript
+// Problematic approach:
+const isGrowing = doesResourceGrowInPlace(resource, ecosystem, weather_at_sample_time);
+const newPosition = calculateNewPosition(state.position, deltaTime, duration);
+```
+
+This creates **sampling frequency sensitivity** where resource behavior depends on when updates occur rather than actual environmental conditions:
+
+```typescript
+// Weather oscillates: 25°C (growth) → 35°C (decay) → 25°C (growth)
+// Resource needs: 20-30°C
+
+// High frequency sampling (every 30 minutes):
+// Captures transitions accurately, resource oscillates correctly
+
+// Low frequency sampling (every 3 hours):
+// May sample only during 25°C periods, resource grows continuously
+// Result differs despite identical environmental conditions
+```
+
+### Weather Timestamp Solution
+
+The resource system achieves perfect sampling frequency independence by leveraging precise timing information already present in Weather objects. Each Weather state contains a `ts` timestamp indicating exactly when those conditions became active.
+
+### Event-Driven Temporal Precision
+
+WeatherDidChange events provide both previous and current weather states with their precise timestamps:
+
+```typescript
+interface WeatherDidChange {
+  payload: {
+    from: Weather;  // Previous conditions with from.ts timestamp
+    to: Weather;    // New conditions with to.ts timestamp
+  };
+}
+```
+
+The duration of each weather period is calculated exactly:
+
+```typescript
+const duration = to.ts - from.ts;  // Precise millisecond duration
+```
+
+### Frequency-Independent Resource Updates
+
+Resources are updated using the exact duration each weather state was active:
+
+```typescript
+function updateResourceForExactPeriod(
+  schema: ResourceSchema,
+  weather: Weather,
+  durationMs: number,
+  state: ResourceNodeState
+): ResourceNodeState {
+  // Determine growth state for this specific weather period
+  const wasGrowing = doesResourceGrowInPlace(schema, ecosystem, weather);
+
+  // Calculate exact position change for precise duration
+  const growthDuration = wasGrowing ? schema.growth.duration : schema.decay.duration;
+  const positionDelta = (durationMs / durationToMs(growthDuration)) * (wasGrowing ? 1 : -1);
+
+  return {
+    ...state,
+    position: Math.min(1, Math.max(0, state.position + positionDelta))
+  };
+}
+```
+
+### Mathematical Properties
+
+This approach provides several mathematical guarantees:
+
+**Temporal Precision**: Resource growth reflects the exact duration of each environmental condition rather than approximating through sampling intervals.
+
+**Frequency Independence**: Identical weather sequences produce identical resource states regardless of when updates are processed or how frequently events are sampled.
+
+**Event-Driven Optimization**: Updates occur only when environmental conditions actually change, automatically matching computational frequency to environmental dynamics.
+
+### Integration with Anti-Equilibrium Weather
+
+The frequency-independent approach harmonizes with the anti-equilibrium weather system's rapid environmental changes. Resources respond accurately to weather oscillations and transitions without temporal artifacts, preserving the intended dynamic complexity while maintaining mathematical precision.
+
+This temporal integration method ensures that resource availability patterns emerge purely from environmental fitness relationships rather than simulation artifacts, maintaining the biological authenticity central to the system's design philosophy.
+
 ## Growth Curves and Environmental Requirements
 
 ### Easing Functions
@@ -301,6 +403,8 @@ export type ResourceGrowthRequirements = {
   lunar?: LunarPhase[];                            // Lunar phase requirements
   biomes?: Biome[];                                // Ecosystem restrictions
   climates?: Climate[];                            // Climate restrictions
+  soils?: { [key: string]: number };               // Soil preferences
+  bedrock?: { [key: string]: number };             // Bedrock preferences
 };
 
 // Supporting types
@@ -343,7 +447,7 @@ export const MesquiteSchema: BulkResourceSchema = createTreeSchema({
   name: 'mesquite',
   slug: 'mesquite',
   provides: ['wood', 'bark', 'nectar'],
-  rarity: 0.0,  // Common - no rarity requirement
+  fitness: 0.0,  // Common - no fitness requirement
   requirements: {
     temperature: { min: 10, max: 45 },
     humidity: { min: 15, max: 60 },
@@ -377,12 +481,12 @@ export const IronSchema: BulkResourceSchema = createMineralSchema({
   name: 'iron',
   slug: 'iron',
   provides: ['ore', 'iron'],
-  rarity: 0.6,  // Requires good geological conditions
+  fitness: 0.6,  // Requires "favorable" geological conditions
   requirements: {
     biomes: ['mountain', 'steppe'],
     // Strong preference for iron-bearing rocks
     bedrock: {
-      'igneous:basalt': 0.95,      // Excellent - volcanic iron deposits
+      'igneous:basalt': 1.0,      // Excellent - volcanic iron deposits
       'sedimentary:shale': 0.7,    // Good - sedimentary iron bands
       'metamorphic:gneiss': 0.4    // Poor - some metamorphic iron
     },
@@ -403,7 +507,7 @@ export const DurianTreeSchema: SpecimenResourceSchema = {
   name: 'durian tree',
   slug: 'durian-tree',
   provides: ['fruit'],
-  rarity: 0.85, // Very rare - requires near-perfect conditions
+  fitness: 0.85, // Very rare - requires near-perfect conditions
   requirements: {
     temperature: { min: 15, max: 35 },
     humidity: { min: 60, max: 90 },
@@ -438,7 +542,7 @@ export const BlackLotusSchema: BulkResourceSchema = createFlowerSchema({
   name: 'black lotus',
   slug: 'black-lotus',
   provides: ['flower', 'nectar', 'seeds', 'roots'],
-  rarity: 0.95, // Legendary rarity - requires perfect conditions
+  fitness: 0.95, // Legendary fitness - requires perfect conditions
   requirements: {
     temperature: { min: 15, max: 32 },
     humidity: { min: 60, max: 90 },
@@ -456,6 +560,9 @@ export const BlackLotusSchema: BulkResourceSchema = createFlowerSchema({
 ## Ecological Profile Examples
 
 The following examples show how the enhanced geological system creates realistic resource distribution:
+
+`soil` - soil composition by two qualifiers: `type` and `texture`: `type:texture` (e.g., `sand:gravelly`)
+`bedrock` - bedrock composition by two qualifiers: `type` and `texture`: `type:texture` (e.g., `igneous:basalt`)
 
 ### Mountain Ecosystem
 ```typescript
@@ -491,11 +598,11 @@ The following examples show how the enhanced geological system creates realistic
 
 ## Benefits of This System
 
-### **Graduated Rarity System**
-- **Common resources** (rarity 0.0-0.3): Appear in most suitable locations
-- **Uncommon resources** (rarity 0.3-0.6): Require good environmental alignment
-- **Rare resources** (rarity 0.6-0.8): Only appear in excellent conditions
-- **Legendary resources** (rarity 0.8-1.0): Require near-perfect environmental harmony
+### **Graduated fitness System**
+- **Common resources** (fitness 0.0-0.3): Appear in most suitable locations
+- **Uncommon resources** (fitness 0.3-0.6): Require good environmental alignment
+- **Rare resources** (fitness 0.6-0.8): Only appear in excellent conditions
+- **Legendary resources** (fitness 0.8-1.0): Require near-perfect environmental harmony
 
 ### **Geological Authenticity**
 - Iron appears in basalt-rich volcanic regions and sedimentary iron formations
@@ -518,7 +625,7 @@ The following examples show how the enhanced geological system creates realistic
 - Resource succession creates changing opportunities over time
 - Environmental changes can shift which resources can grow
 - Depletion decisions have lasting consequences for Place identity
-- Rarity thresholds prevent valuable resources from appearing in poor locations
+- Fitness thresholds prevent valuable resources from appearing in poor locations
 
 ### **Emergent Complexity**
 - Places develop distinct geological "personalities" based on their soil and bedrock

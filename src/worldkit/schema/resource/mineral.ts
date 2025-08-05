@@ -6,7 +6,7 @@ function createMineralSchema(overrides: Partial<BulkResourceSchema>): BulkResour
   return {
     kind: 'mineral',
     provides: ['ore'],
-    rarity: 0.618,
+    fitness: 0.618,
     quantification: {
       type: 'bulk',
       quantity: {

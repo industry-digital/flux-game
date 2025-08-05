@@ -6,7 +6,7 @@ function createWaterSchema(overrides: Partial<BulkResourceSchema>): BulkResource
   return {
     kind: 'water',
     provides: ['water', 'mud'],
-    rarity: 0.618,
+    fitness: 0.618,
     quantification: {
       type: 'bulk',
       quantity: {

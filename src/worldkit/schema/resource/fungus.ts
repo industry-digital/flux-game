@@ -6,7 +6,7 @@ function createFungusSchema(overrides: Partial<BulkResourceSchema>): BulkResourc
   return {
     kind: 'mushroom',
     provides: ['mushroom'],
-    rarity: 0.618,
+    fitness: 0.618,
     quantification: {
       type: 'bulk',
       quantity: {
@@ -23,7 +23,7 @@ function createFungusSchema(overrides: Partial<BulkResourceSchema>): BulkResourc
     },
     growth: {
       curve: 'LOGISTIC',
-      duration: [7, TimeUnit.DAY]
+      duration: [1, TimeUnit.DAY]
     },
     decay: {
       curve: 'EXPONENTIAL',

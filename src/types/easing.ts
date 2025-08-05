@@ -18,30 +18,20 @@ export const Easing = {
 
 export type EasingFunctionName = keyof typeof Easing;
 
-export type CurvePosition = {
-  /**
-   * The position `t` on an easing curve. Normalized to [0, 1]
-   */
+type HasPositionOnCurve = {
   position: number;
-}
+};
 
-export type SeededCurvePosition = CurvePosition & {
-  /**
-   * The seed value for the weather generator
-   */
+type HasValue = {
+  value: number;
+};
+
+type HasSeed = {
   seed: number;
-}
-
-export type SeededCurvePositionWithValue = SeededCurvePosition & {
-  /**
-   * The computed value of the property at the position `t` on the curve
-   */
-  value: number;
 };
 
-export type CurvePositionWithValue = CurvePosition & {
-  /**
-   * The computed value of the property at the position `t` on the curve
-   */
-  value: number;
-};
+export type CurvePosition = HasPositionOnCurve;
+export type SeededCurvePosition = HasSeed & HasPositionOnCurve;
+export type CurvePositionWithValue = HasPositionOnCurve & HasValue;
+export type SeededCurvePositionWithValue = HasSeed & HasPositionOnCurve & HasValue;
+export type SeedWithValue = HasSeed & HasValue;
