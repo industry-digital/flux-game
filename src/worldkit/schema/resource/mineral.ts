@@ -1,12 +1,15 @@
 import { UnitOfMass, TimeUnit } from '~/types';
-import { BulkResourceSchema } from '~/types/schema/resource';
+import { BulkResourceSchema, FitnessType } from '~/types/schema/resource';
 
 // Helper function to create mineral schemas with proper typing
 function createMineralSchema(overrides: Partial<BulkResourceSchema>): BulkResourceSchema {
   return {
     kind: 'mineral',
     provides: ['ore'],
-    fitness: 0.618,
+    fitness: {
+      type: FitnessType.GEOLOGICAL,
+      min: 0,
+    },
     quantification: {
       type: 'bulk',
       quantity: {
@@ -17,14 +20,21 @@ function createMineralSchema(overrides: Partial<BulkResourceSchema>): BulkResour
     },
     requirements: {}, // Minerals require no specific conditions for growth
     growth: {
-      curve: 'LINEAR',
-      duration: [1, TimeUnit.DAY]
+      curve: 'LOGISTIC',
+      duration: [1, TimeUnit.WEEK]
     },
+    /**
+     * Minerals don't decay, they are extracted from the ground
+     * But they can be depleted by mining
+     */
+    decay: undefined,
+
     // Most minerals are territorial/exclusive
     constraints: {
       maxNeighbors: 0,      // Exclusive by default
       inhibitionRadius: 2   // Regional exclusion effect
     },
+
     ...overrides
   } as BulkResourceSchema;
 }
@@ -40,7 +50,8 @@ export const IronSchema: BulkResourceSchema = createMineralSchema({
     bedrock: {
       'sedimentary:limestone': 0.6,  // Banded iron formations
       'metamorphic:quartzite': 0.5,  // Taconite pellets
-      'sedimentary:shale': 0.3       // Iron-rich sediments
+      'sedimentary:shale': 0.3,      // Iron-rich sediments
+      'metamorphic:gneiss': 0.4      // Regional metamorphism
     },
     biomes: ['mountain', 'steppe']
   },
@@ -76,9 +87,10 @@ export const ChromiumSchema: BulkResourceSchema = createMineralSchema({
   requirements: {
     bedrock: {
       'igneous:basalt': 0.7,         // Ultramafic complexes
-      'metamorphic:gneiss': 0.4      // High-grade metamorphism
+      'metamorphic:gneiss': 0.4,     // High-grade metamorphism
+      'igneous:granite': 0.5         // Granitic intrusions
     },
-    biomes: ['steppe']
+    biomes: ['steppe', 'jungle']
   }
 });
 
@@ -121,7 +133,7 @@ export const MolybdenumSchema: BulkResourceSchema = createMineralSchema({
     bedrock: {
       'igneous:granite': 0.6,        // Porphyry deposits
       'metamorphic:quartzite': 0.4,  // Skarn deposits
-      'igneous:basalt': 0.3          // Volcanic associations
+      'metamorphic:gneiss': 0.5      // High-grade metamorphism
     },
     biomes: ['mountain', 'steppe']
   }
@@ -165,9 +177,10 @@ export const SiliconSchema: BulkResourceSchema = createMineralSchema({
     bedrock: {
       'metamorphic:quartzite': 0.7,  // High-purity quartz
       'igneous:granite': 0.5,        // Quartz-rich granites
-      'sedimentary:limestone': 0.3   // Silica replacement
+      'sedimentary:limestone': 0.3,  // Silica replacement
+      'metamorphic:gneiss': 0.4      // Regional metamorphism
     },
-    biomes: ['steppe', 'grassland']
+    biomes: ['steppe', 'grassland', 'mountain']
   }
 });
 
@@ -214,7 +227,8 @@ export const LithiumSchema: BulkResourceSchema = createMineralSchema({
     bedrock: {
       'igneous:granite': 0.7,        // Granite pegmatites
       'sedimentary:limestone': 0.4,  // Lithium brines
-      'metamorphic:schist': 0.3      // Spodumene deposits
+      'metamorphic:schist': 0.3,     // Spodumene deposits
+      'metamorphic:gneiss': 0.5      // Regional metamorphism
     },
     biomes: ['mountain', 'steppe', 'grassland']
   }

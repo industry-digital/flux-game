@@ -1,12 +1,15 @@
 import { UnitOfMeasure, TimeUnit } from '~/types';
-import { BulkResourceSchema } from '~/types/schema/resource';
+import { BulkResourceSchema, FitnessType } from '~/types/schema/resource';
 
 // Helper function to create fungus schemas with proper typing
 function createFungusSchema(overrides: Partial<BulkResourceSchema>): BulkResourceSchema {
   return {
     kind: 'mushroom',
     provides: ['mushroom'],
-    fitness: 0.382,
+    fitness: {
+      type: FitnessType.ATMOSPHERIC,
+      min: 0,
+    },
     quantification: {
       type: 'bulk',
       quantity: {

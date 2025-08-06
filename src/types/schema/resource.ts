@@ -8,6 +8,16 @@ import { NormalizedValueBetweenZeroAndOne } from '~/types/entity/attribute';
 
 type Bounds = { min?: number, max?: number };
 
+export enum FitnessType {
+  ATMOSPHERIC = 'atmospheric',
+  GEOLOGICAL = 'geological',
+}
+
+export type FitnessSpecification = {
+  type: FitnessType;
+  min: number;
+};
+
 export type GrowthSpecification = {
   /**
    * The easing function to use for the growth curve
@@ -169,13 +179,10 @@ type AbstractResourceSchema<QuantificationStrategy extends ResourceQuantificatio
   provides: string[];
 
   /**
-   * The minimum "environmental fitness" score required for the resource to grow.
-   * Defaults to zero if not specified, meaning the resource will grow anywhere, if all `requirements` are met.
-   *
-   * - Example: 0.9 for a resource that requires not only for all `requirements` to be met, but also for the "degree of matching" to be very high.
-   * - Example: 0.0 for a resource that "grows" anywhere
+   * The minimum fitness score required for the resource to grow.
+   * This is compared to a score environmental fitness
    */
-  fitness?: number;
+  fitness: FitnessSpecification;
 
   /**
    * Rules that govern the spatial distribution of the resource

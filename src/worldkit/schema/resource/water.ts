@@ -1,11 +1,15 @@
 import { UnitOfVolume, TimeUnit } from '~/types';
-import { BulkResourceSchema } from '~/types/schema/resource';
+import { BulkResourceSchema, FitnessType } from '~/types/schema/resource';
 
 // Helper function to create water body schemas with proper typing
 function createWaterSchema(overrides: Partial<BulkResourceSchema>): BulkResourceSchema {
   return {
     kind: 'water',
     provides: ['water', 'mud'],
+    fitness: {
+      type: FitnessType.ATMOSPHERIC,
+      min: 0,
+    },
     quantification: {
       type: 'bulk',
       quantity: {

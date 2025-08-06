@@ -83,7 +83,7 @@ export const ECOLOGICAL_PROFILES: Partial<Record<EcosystemURN, EcologicalProfile
     },
  },
   'flux:eco:mountain:arid': {
-    temperature: { baseline: 17, amplitude: 5  },  // Cold (12-22)
+    temperature: { baseline: 11, amplitude: 5 },  // Cold (6-16)
     pressure: { baseline: 970, amplitude: 15 },   // Low pressure
    humidity: { baseline: 11, amplitude: 13  },    // Dry: 0-22%
     soil: {

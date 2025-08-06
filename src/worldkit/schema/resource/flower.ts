@@ -1,12 +1,15 @@
 import { UnitOfMeasure, TimeUnit } from '~/types';
-import { BulkResourceSchema } from '~/types/schema/resource';
+import { BulkResourceSchema, FitnessType } from '~/types/schema/resource';
 
 // Helper function to create flower schemas with proper typing
 function createFlowerSchema(overrides: Partial<BulkResourceSchema>): BulkResourceSchema {
   return {
     kind: 'flower',
     provides: ['flower', 'nectar'],
-    fitness: 0.382,
+    fitness: {
+      type: FitnessType.ATMOSPHERIC,
+      min: 0,
+    },
     quantification: {
       type: 'bulk',
       quantity: {
@@ -23,7 +26,7 @@ function createFlowerSchema(overrides: Partial<BulkResourceSchema>): BulkResourc
     },
     growth: {
       curve: 'LOGISTIC',
-      duration: [3, TimeUnit.DAY]
+      duration: [1, TimeUnit.DAY]
     },
     decay: {
       curve: 'EXPONENTIAL',

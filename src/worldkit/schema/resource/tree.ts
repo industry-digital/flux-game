@@ -1,5 +1,5 @@
 import { UnitOfMeasure, TimeUnit } from '~/types';
-import { BulkResourceSchema } from '~/types/schema/resource';
+import { BulkResourceSchema, FitnessType } from '~/types/schema/resource';
 
 
 
@@ -8,6 +8,10 @@ function createTreeSchema(overrides: Partial<BulkResourceSchema>): BulkResourceS
   return {
     kind: 'tree',
     provides: ['wood', 'bark'],
+    fitness: {
+      type: FitnessType.ATMOSPHERIC,
+      min: 0,
+    },
     quantification: {
       type: 'bulk',
       quantity: {
@@ -20,15 +24,14 @@ function createTreeSchema(overrides: Partial<BulkResourceSchema>): BulkResourceS
       temperature: { min: 5, max: 35 },
       humidity: { min: 30, max: 90 },
       ppfd: { min: 200 },
-      seasons: ['spring', 'summer', 'fall']
     },
     growth: {
       curve: 'LOGISTIC',
-      duration: [1, TimeUnit.MONTH]
+      duration: [1, TimeUnit.DAY]
     },
     decay: {
       curve: 'LINEAR',
-      duration: [100, TimeUnit.YEAR]
+      duration: [1, TimeUnit.WEEK]
     },
     // Trees naturally form forests but need breathing room
     constraints: {

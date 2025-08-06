@@ -218,6 +218,8 @@ export {
   Season,
   TimeOfDay,
   LunarPhase,
+  FitnessType,
+  FitnessSpecification,
 } from './schema/resource';
 
 export {

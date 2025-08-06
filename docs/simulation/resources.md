@@ -634,3 +634,79 @@ The following examples show how the enhanced geological system creates realistic
 - Exploration becomes purposeful - seeking specific geological formations for rare resources
 
 The system creates **predictable geological specialization** (rock types determine mineral availability) with **dynamic environmental variety** (weather and succession create changing opportunities), solving the abundance problem while maintaining both ecological and geological authenticity for strategic depth.
+
+
+# Appendix
+
+## Resource Lifecycle State
+
+```mermaid
+sequenceDiagram
+    participant ENV as Environment
+    participant SVC as ResourceService
+    participant UPD as updateResource()
+    participant LCS as getLifecycleState()
+    participant FIT as calculateFitness()
+    participant LOG as Production Logs
+
+    Note over ENV,LOG: Resource Lifecycle: Growth → Decay → Removal
+
+    %% Initial favorable conditions
+    ENV->>SVC: Weather conditions favorable<br/>(temp, humidity optimal)
+    SVC->>UPD: Update existing/new resource
+    UPD->>LCS: Check lifecycle state
+    LCS->>FIT: Calculate environmental fitness
+    FIT-->>LCS: fitness = 0.8
+    Note over LCS: 0.8 >= schema.fitness (0.382)<br/>✅ Threshold met
+    LCS-->>UPD: 'growing'
+    UPD->>UPD: Apply growth curve<br/>position: 0.0 → 0.3<br/>value increases
+    UPD-->>SVC: ResourceNodeState {status: 'growing'}
+    SVC->>LOG: 🟢:mineral:quartz {"p":"0.3/+0.1","v":"2.1/+0.5"}
+
+    %% Continued growth
+    ENV->>SVC: Conditions remain favorable
+    SVC->>UPD: Update resource
+    UPD->>LCS: Check lifecycle state
+    LCS->>FIT: Calculate environmental fitness
+    FIT-->>LCS: fitness = 0.7
+    LCS-->>UPD: 'growing'
+    UPD->>UPD: Continue growth<br/>position: 0.3 → 0.6<br/>value increases
+    UPD-->>SVC: ResourceNodeState {status: 'growing'}
+    SVC->>LOG: 🟢:mineral:quartz {"p":"0.6/+0.3","v":"2.8/+0.7"}
+
+    %% Environmental conditions worsen
+    ENV->>SVC: Weather becomes unfavorable<br/>(drought, temperature drop)
+    SVC->>UPD: Update resource
+    UPD->>LCS: Check lifecycle state
+    LCS->>FIT: Calculate environmental fitness
+    FIT-->>LCS: fitness = 0.2
+    Note over LCS: 0.2 < schema.fitness (0.382)<br/>❌ Below threshold
+    LCS-->>UPD: 'decaying'
+    UPD->>UPD: Apply decay curve<br/>position: 0.0 → 0.2<br/>value decreases
+    UPD-->>SVC: ResourceNodeState {status: 'decaying'}
+    SVC->>LOG: 🔴:mineral:quartz {"p":"0.2/+0.2","v":"2.3/-0.5"}
+
+    %% Continued decay
+    ENV->>SVC: Conditions remain poor
+    SVC->>UPD: Update resource
+    UPD->>LCS: Check lifecycle state
+    LCS->>FIT: Calculate environmental fitness
+    FIT-->>LCS: fitness = 0.1
+    LCS-->>UPD: 'decaying'
+    UPD->>UPD: Continue decay<br/>position: 0.2 → 0.7<br/>value decreases
+    UPD-->>SVC: ResourceNodeState {status: 'decaying'}
+    SVC->>LOG: 🔴:mineral:quartz {"p":"0.7/+0.5","v":"1.1/-1.2"}
+
+    %% Decay completion and removal
+    ENV->>SVC: Conditions still poor
+    SVC->>UPD: Update resource
+    UPD->>LCS: Check lifecycle state
+    LCS->>FIT: Calculate environmental fitness
+    FIT-->>LCS: fitness = 0.1
+    LCS-->>UPD: 'decaying'
+    UPD->>UPD: Continue decay<br/>position: 0.7 → 1.0<br/>value → minimum
+    Note over UPD: position >= 1.0<br/>🗑️ Decay cycle complete
+    UPD-->>SVC: undefined (remove resource)
+    SVC->>SVC: delete nodes[resourceUrn]
+    Note over SVC,LOG: No log entry - resource removed
+```
