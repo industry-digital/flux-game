@@ -1,11 +1,7 @@
 # flux-game
 
-Core game logic for the Flux Simulation Project.
 
-## Overview
+# Priorities
 
-This project contains:
-
-- The core game logic for the Flux Simulation Project
-- Unit tests
-- A tool that allows for easy testing of using a web-based interface
+1. [Weather Simulation Baseline Stability](./docs/simulation/weather.md)
+1. [Rain Nucleation](./docs/simulation/weather.md)
