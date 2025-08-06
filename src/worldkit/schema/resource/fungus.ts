@@ -48,8 +48,7 @@ export const TruffleSchema: BulkResourceSchema = createFungusSchema({
     temperature: { min: 10, max: 30 },
     humidity: { min: 50, max: 90 },
     ppfd: { max: 400 },
-    time: ['dusk', 'night'],
-    lunar: ['full']
+    biomes: ['forest']
   },
   constraints: {
     maxNeighbors: 0,      // Override: territorial
@@ -67,7 +66,6 @@ export const DesertPuffballSchema: BulkResourceSchema = createFungusSchema({
     humidity: { min: 35, max: 60 }, // Need higher humidity than typical desert
     precipitation: { min: 2.0 }, // Only after significant rainfall
     ppfd: { max: 200 }, // Very low light, sheltered spots
-    seasons: ['spring'], // Brief spring emergence after winter rains
     climates: ['arid']
   },
   growth: {
@@ -88,8 +86,7 @@ export const MeadowMushroomSchema: BulkResourceSchema = createFungusSchema({
     temperature: { min: 5, max: 25 },
     humidity: { min: 50, max: 80 },
     ppfd: { max: 600 }, // Can handle more light in open grassland
-    seasons: ['fall'], // Classic autumn mushroom season
-    time: ['dawn', 'morning', 'dusk'] // Active during cooler parts of day
+    climates: ['temperate']
   }
 });
 
@@ -102,9 +99,6 @@ export const ChanterelleSchema: BulkResourceSchema = createFungusSchema({
     temperature: { min: 13, max: 28 },
     humidity: { min: 65, max: 90 },
     ppfd: { max: 300 }, // Deep forest shade
-    seasons: ['summer', 'fall'],
-    time: ['dawn', 'dusk', 'night'],
-    lunar: ['waxing', 'full'], // Peak during fuller moon phases
     biomes: ['forest']
   },
   growth: {
@@ -123,8 +117,6 @@ export const AlpineBoleteSchema: BulkResourceSchema = createFungusSchema({
     humidity: { min: 30, max: 50 }, // Lower humidity tolerance
     pressure: { min: 950, max: 990 }, // High altitude low pressure
     ppfd: { max: 800 }, // Can handle mountain sun when sheltered
-    seasons: ['summer'], // Very brief growing season
-    time: ['morning', 'day'], // Active during warmer daylight hours
     biomes: ['mountain']
   },
   growth: {
@@ -146,9 +138,6 @@ export const BloodRedCupSchema: BulkResourceSchema = createFungusSchema({
     temperature: { min: 24, max: 35 },
     humidity: { min: 80, max: 98 },
     ppfd: { max: 100 }, // Very deep jungle shade
-    seasons: ['spring', 'summer', 'fall'], // Year-round in tropics
-    time: ['night'], // Strictly nocturnal
-    lunar: ['new', 'waning'], // Prefers darker nights
     biomes: ['jungle']
   }
 });
@@ -162,8 +151,6 @@ export const SwampBracketSchema: BulkResourceSchema = createFungusSchema({
     temperature: { min: 15, max: 29 },
     humidity: { min: 90, max: 99 }, // Extremely humid swamp conditions
     ppfd: { max: 200 }, // Swamp shade
-    seasons: ['winter', 'spring'], // Grows during cooler wet season
-    time: ['dawn', 'morning', 'dusk'], // Avoids hot midday
     biomes: ['marsh']
   },
   growth: {
@@ -241,15 +228,29 @@ export const HoneyMushroomSchema: BulkResourceSchema = createFungusSchema({
 export const CordycepsGaeatrixSchema: BulkResourceSchema = createFungusSchema({
   name: 'gaeatrix',
   slug: 'gaeatrix',
+  fitness: {
+    strategy: FitnessEvaluationStrategy.FUNGUS,
+    min: 0.618,
+  },
   requirements: {
     temperature: { min: 13, max: 28 }, // Forest temperate range
     humidity: { min: 65, max: 90 }, // High forest humidity
-    seasons: ['spring', 'summer', 'fall'],
-    time: ['night'],
     biomes: ['forest']
+  },
+  quantification: {
+    type: 'bulk',
+    quantity: {
+      measure: UnitOfMeasure.EACH,
+      min: 0,
+      capacity: 1,
+    }
   },
   growth: {
     curve: 'LOGISTIC',
-    duration: [3, TimeUnit.DAY]
+    duration: [1, TimeUnit.HOUR]
+  },
+  decay: {
+    curve: 'LINEAR',
+    duration: [1, TimeUnit.HOUR]
   }
 });

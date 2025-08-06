@@ -48,6 +48,7 @@ export const DesertMarigoldSchema: BulkResourceSchema = createFlowerSchema({
     temperature: { min: 15 },
     humidity: { min: 10 },
     ppfd: { min: 800 },
+    climates: ['arid']
   }
 });
 
