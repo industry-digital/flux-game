@@ -1,15 +1,15 @@
 import { UnitOfMeasure, TimeUnit } from '~/types';
-import { BulkResourceSchema, FitnessType } from '~/types/schema/resource';
+import { BulkResourceSchema, FitnessEvaluationStrategy } from '~/types/schema/resource';
 
 
 
 // Helper function to create tree schemas with proper typing
-function createTreeSchema(overrides: Partial<BulkResourceSchema>): BulkResourceSchema {
+export function createTreeSchema(overrides: Partial<BulkResourceSchema> = {}): BulkResourceSchema {
   return {
     kind: 'tree',
     provides: ['wood', 'bark'],
     fitness: {
-      type: FitnessType.ATMOSPHERIC,
+      strategy: FitnessEvaluationStrategy.PLANT,
       min: 0,
     },
     quantification: {

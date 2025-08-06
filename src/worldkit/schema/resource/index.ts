@@ -23,7 +23,7 @@ function getSchemaExports(module: Record<string, any>, moduleName: string): [Res
       'growth' in value
     )
     .map(([_, schema]) => {
-      const urn: ResourceURN = `flux:res:${moduleName}:${schema.slug}`;
+      const urn: ResourceURN = `flux:res:${schema.kind}:${schema.slug}`;
       return [urn, schema as BulkResourceSchema] as [ResourceURN, BulkResourceSchema];
     });
 }
@@ -49,3 +49,9 @@ export function createSchemaManager(): SchemaManager<BulkResourceSchema, Resourc
 
   return new SchemaManager<BulkResourceSchema, ResourceURN>(schemaMap);
 }
+
+export { createFlowerSchema } from './flower';
+export { createFungusSchema } from './fungus';
+export { createMineralSchema } from './mineral';
+export { createTreeSchema } from './tree';
+export { createWaterSchema } from './water';

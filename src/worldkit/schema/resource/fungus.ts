@@ -1,13 +1,13 @@
 import { UnitOfMeasure, TimeUnit } from '~/types';
-import { BulkResourceSchema, FitnessType } from '~/types/schema/resource';
+import { BulkResourceSchema, FitnessEvaluationStrategy } from '~/types/schema/resource';
 
 // Helper function to create fungus schemas with proper typing
-function createFungusSchema(overrides: Partial<BulkResourceSchema>): BulkResourceSchema {
+export function createFungusSchema(overrides: Partial<BulkResourceSchema> = {}): BulkResourceSchema {
   return {
     kind: 'mushroom',
     provides: ['mushroom'],
     fitness: {
-      type: FitnessType.ATMOSPHERIC,
+      strategy: FitnessEvaluationStrategy.FUNGUS,
       min: 0,
     },
     quantification: {
@@ -22,7 +22,6 @@ function createFungusSchema(overrides: Partial<BulkResourceSchema>): BulkResourc
       temperature: { min: 10, max: 30 },
       humidity: { min: 50, max: 90 },
       ppfd: { max: 400 },
-      time: ['dusk', 'night']
     },
     growth: {
       curve: 'LOGISTIC',

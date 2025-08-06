@@ -8,13 +8,14 @@ import { NormalizedValueBetweenZeroAndOne } from '~/types/entity/attribute';
 
 type Bounds = { min?: number, max?: number };
 
-export enum FitnessType {
-  ATMOSPHERIC = 'atmospheric',
-  GEOLOGICAL = 'geological',
+export enum FitnessEvaluationStrategy {
+  PLANT = 'plant',
+  FUNGUS = 'fungus',
+  MINERAL = 'mineral',
 }
 
 export type FitnessSpecification = {
-  type: FitnessType;
+  strategy: FitnessEvaluationStrategy;
   min: number;
 };
 

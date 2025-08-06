@@ -1,13 +1,13 @@
 import { UnitOfVolume, TimeUnit } from '~/types';
-import { BulkResourceSchema, FitnessType } from '~/types/schema/resource';
+import { BulkResourceSchema, FitnessEvaluationStrategy } from '~/types/schema/resource';
 
 // Helper function to create water body schemas with proper typing
-function createWaterSchema(overrides: Partial<BulkResourceSchema>): BulkResourceSchema {
+export function createWaterSchema(overrides: Partial<BulkResourceSchema> = {}): BulkResourceSchema {
   return {
     kind: 'water',
     provides: ['water', 'mud'],
     fitness: {
-      type: FitnessType.ATMOSPHERIC,
+      strategy: FitnessEvaluationStrategy.PLANT,
       min: 0,
     },
     quantification: {

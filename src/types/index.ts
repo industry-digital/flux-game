@@ -218,7 +218,7 @@ export {
   Season,
   TimeOfDay,
   LunarPhase,
-  FitnessType,
+  FitnessEvaluationStrategy,
   FitnessSpecification,
 } from './schema/resource';
 

@@ -1,13 +1,13 @@
 import { UnitOfMeasure, TimeUnit } from '~/types';
-import { BulkResourceSchema, FitnessType } from '~/types/schema/resource';
+import { BulkResourceSchema, FitnessEvaluationStrategy } from '~/types/schema/resource';
 
 // Helper function to create flower schemas with proper typing
-function createFlowerSchema(overrides: Partial<BulkResourceSchema>): BulkResourceSchema {
+export function createFlowerSchema(overrides: Partial<BulkResourceSchema> = {}): BulkResourceSchema {
   return {
     kind: 'flower',
     provides: ['flower', 'nectar'],
     fitness: {
-      type: FitnessType.ATMOSPHERIC,
+      strategy: FitnessEvaluationStrategy.PLANT,
       min: 0,
     },
     quantification: {
@@ -22,15 +22,14 @@ function createFlowerSchema(overrides: Partial<BulkResourceSchema>): BulkResourc
       temperature: { min: 5, max: 35 },
       humidity: { min: 30, max: 80 },
       ppfd: { min: 400 },
-      time: ['morning', 'day', 'afternoon']
     },
     growth: {
       curve: 'LOGISTIC',
       duration: [1, TimeUnit.DAY]
     },
     decay: {
-      curve: 'EXPONENTIAL',
-      duration: [1, TimeUnit.WEEK]
+      curve: 'LOGISTIC',
+      duration: [3, TimeUnit.DAY],
     },
     // Flowers can form dense meadows and prairies
     constraints: {
@@ -46,9 +45,9 @@ export const DesertMarigoldSchema: BulkResourceSchema = createFlowerSchema({
   name: 'desert marigold',
   slug: 'desert-marigold',
   requirements: {
-    temperature: { min: 15, max: 35 },
-    humidity: { min: 15, max: 45 },
-    ppfd: { min: 1_200 },
+    temperature: { min: 15 },
+    humidity: { min: 10 },
+    ppfd: { min: 800 },
   }
 });
 
@@ -125,7 +124,8 @@ export const TropicalGingerSchema: BulkResourceSchema = createFlowerSchema({
     temperature: { min: 18 },
     humidity: { min: 60 },
     ppfd: { min: 100 },
-    lunar: ['waxing', 'full']
+    lunar: ['waxing', 'full'],
+    climates: ['tropical']
   }
 });
 
@@ -162,7 +162,8 @@ export const JungleOrchidSchema: BulkResourceSchema = createFlowerSchema({
     temperature: { min: 20, max: 35 },
     humidity: { min: 75, max: 95 },
     ppfd: { min: 100, max: 600 },
-    lunar: ['new', 'waxing']
+    lunar: ['new', 'waxing'],
+    climates: ['tropical']
   },
   constraints: {
     maxNeighbors: 0,      // Override: exclusive
@@ -179,6 +180,7 @@ export const WaterLilySchema: BulkResourceSchema = createFlowerSchema({
     temperature: { min: 10, max: 30 },
     humidity: { min: 85, max: 100 },
     ppfd: { min: 400 },
+    climates: ['tropical']
   }
 });
 
@@ -193,6 +195,7 @@ export const PrairieRoseSchema: BulkResourceSchema = createFlowerSchema({
     temperature: { min: 8, max: 33 },
     humidity: { min: 25, max: 60 },
     ppfd: { min: 600 },
+    climates: ['temperate']
   }
 });
 
@@ -204,6 +207,7 @@ export const DesertLupineSchema: BulkResourceSchema = createFlowerSchema({
     temperature: { min: 5, max: 30 },
     humidity: { min: 15, max: 40 },
     ppfd: { min: 800 },
+    climates: ['arid']
   }
 });
 
@@ -216,6 +220,7 @@ export const MountainSunflowerSchema: BulkResourceSchema = createFlowerSchema({
     temperature: { min: 2, max: 28 },
     humidity: { min: 30, max: 60 },
     ppfd: { min: 700 },
+    biomes: ['mountain'],
   }
 });
 
@@ -228,7 +233,8 @@ export const BlackLotusSchema: BulkResourceSchema = createFlowerSchema({
     temperature: { min: 15, max: 32 },
     humidity: { min: 60, max: 90 },
     ppfd: { max: 200 },
-    lunar: ['full'] // Only during full moon
+    lunar: ['full'], // Only during full moon
+    climates: ['tropical']
   }
 });
 
@@ -241,7 +247,8 @@ export const SwampOrchidSchema: BulkResourceSchema = createFlowerSchema({
     humidity: { min: 80, max: 98 },
     seasons: ['spring', 'summer'],
     time: ['dusk', 'night'],
-    lunar: ['full'] // Only during full moon
+    lunar: ['full'], // Only during full moon
+    biomes: ['marsh'],
   },
   constraints: {
     maxNeighbors: 0,      // Override: exclusive
