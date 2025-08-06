@@ -1,4 +1,4 @@
-import { UnitOfMeasure, TimeUnit } from '~/types';
+import { UnitOfMeasure, TimeUnit, GOLDEN_RATIO } from '~/types';
 import { BulkResourceSchema, FitnessEvaluationStrategy } from '~/types/schema/resource';
 
 
@@ -10,7 +10,7 @@ export function createTreeSchema(overrides: Partial<BulkResourceSchema> = {}): B
     provides: ['wood', 'bark'],
     fitness: {
       strategy: FitnessEvaluationStrategy.PLANT,
-      min: 0,
+      min: GOLDEN_RATIO,
     },
     quantification: {
       type: 'bulk',

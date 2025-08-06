@@ -4,4 +4,11 @@
 # Priorities
 
 1. [Weather Simulation Baseline Stability](./docs/simulation/weather.md)
-1. [Rain Nucleation](./docs/simulation/weather.md)
+1. [Resource Simulation Baseline Stability](./docs/simulation/resource.md)
+1. Analytics Dashboard
+1. [Rain Formation](./docs/simulation/weather.md)
+1. [Lightning Strikes](./docs/simulation/weather.md)
+1. [Spacefold](./docs/simulation/spacefold.md)
+1. [Blink Drives](./docs/simulation/blink.md)
+1. [Skill System](./docs/simulation/skills.md)
+1. [Combat System](./docs/simulation/combat.md)

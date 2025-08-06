@@ -1,4 +1,4 @@
-import { UnitOfMeasure, TimeUnit } from '~/types';
+import { UnitOfMeasure, TimeUnit, GOLDEN_RATIO } from '~/types';
 import { BulkResourceSchema, FitnessEvaluationStrategy } from '~/types/schema/resource';
 
 // Helper function to create fungus schemas with proper typing
@@ -14,7 +14,7 @@ export function createFungusSchema(overrides: Partial<BulkResourceSchema> = {}):
       type: 'bulk',
       quantity: {
         measure: UnitOfMeasure.EACH,
-        min: 1,
+        min: 0,
         capacity: 3,
       }
     },
@@ -230,7 +230,7 @@ export const CordycepsGaeatrixSchema: BulkResourceSchema = createFungusSchema({
   slug: 'gaeatrix',
   fitness: {
     strategy: FitnessEvaluationStrategy.FUNGUS,
-    min: 0.618,
+    min: GOLDEN_RATIO,
   },
   requirements: {
     temperature: { min: 13, max: 28 }, // Forest temperate range

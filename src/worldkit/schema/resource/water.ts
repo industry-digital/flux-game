@@ -1,4 +1,4 @@
-import { UnitOfVolume, TimeUnit } from '~/types';
+import { UnitOfVolume, TimeUnit, GOLDEN_RATIO } from '~/types';
 import { BulkResourceSchema, FitnessEvaluationStrategy } from '~/types/schema/resource';
 
 // Helper function to create water body schemas with proper typing
@@ -8,7 +8,7 @@ export function createWaterSchema(overrides: Partial<BulkResourceSchema> = {}): 
     provides: ['water', 'mud'],
     fitness: {
       strategy: FitnessEvaluationStrategy.PLANT,
-      min: 0,
+      min: GOLDEN_RATIO,
     },
     quantification: {
       type: 'bulk',
@@ -25,7 +25,7 @@ export function createWaterSchema(overrides: Partial<BulkResourceSchema> = {}): 
       curve: 'EASE_OUT_QUAD',
 
       // By default, all bodies of water recharge completely in an hour
-      duration: [1, TimeUnit.HOUR]
+      duration: [1, TimeUnit.DAY],
     },
     decay: {
       curve: 'EASE_OUT_QUAD',

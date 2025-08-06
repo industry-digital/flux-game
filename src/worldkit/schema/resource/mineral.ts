@@ -1,4 +1,4 @@
-import { UnitOfMass, TimeUnit } from '~/types';
+import { UnitOfMass, TimeUnit, GOLDEN_RATIO } from '~/types';
 import { BulkResourceSchema, FitnessEvaluationStrategy } from '~/types/schema/resource';
 
 // Helper function to create mineral schemas with proper typing
@@ -8,7 +8,7 @@ export function createMineralSchema(overrides: Partial<BulkResourceSchema> = {})
     provides: ['ore'],
     fitness: {
       strategy: FitnessEvaluationStrategy.MINERAL,
-      min: 0,
+      min: GOLDEN_RATIO,
     },
     quantification: {
       type: 'bulk',
