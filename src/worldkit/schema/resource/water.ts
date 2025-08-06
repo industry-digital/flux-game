@@ -6,7 +6,6 @@ function createWaterSchema(overrides: Partial<BulkResourceSchema>): BulkResource
   return {
     kind: 'water',
     provides: ['water', 'mud'],
-    fitness: 0.618,
     quantification: {
       type: 'bulk',
       quantity: {
@@ -54,28 +53,4 @@ export const PuddleSchema: BulkResourceSchema = createWaterSchema({
       capacity: 3,
     }
   },
-});
-
-/**
- * Large pond - permanent water body
- * Deeper water that persists through dry seasons
- */
-export const LargePondSchema: BulkResourceSchema = createWaterSchema({
-  name: 'large pond',
-  slug: 'large-pond',
-  quantification: {
-    type: 'bulk',
-    quantity: {
-      measure: UnitOfVolume.LITERS,
-      min: 100,
-      capacity: 5_000,
-    }
-  },
-  requirements: {
-    precipitation: { min: 1 } // Less dependent on immediate rainfall
-  },
-  decay: {
-    curve: 'EASE_OUT_QUAD',
-    duration: [2, TimeUnit.WEEK] // Takes longer to dry up
-  }
 });

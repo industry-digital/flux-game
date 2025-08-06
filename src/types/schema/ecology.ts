@@ -47,14 +47,22 @@ export const ECOLOGICAL_PROFILES: Partial<Record<EcosystemURN, EcologicalProfile
     pressure: { baseline: 1020, amplitude: 8 },   // High pressure systems
     humidity: { baseline: 13, amplitude: 7 },    // Dry: 6-20%
     soil: { 'sand:gravelly': 0.7, 'loam:gravelly': 0.3 }, // Weathered granite soils
-    bedrock: { 'igneous:granite': 0.6, 'sedimentary:limestone': 0.4 }
+    bedrock: {
+      'igneous:granite': 0.5,
+      'sedimentary:limestone': 0.3,
+      'metamorphic:gneiss': 0.2      // Enables chromium deposits
+    }
   },
   'flux:eco:grassland:temperate': {
     temperature: { baseline: 23, amplitude: 13}, // Large swings: 10-36°C
     pressure: { baseline: 1003, amplitude: 4 },   // High pressure, but not as high as the steppe
     humidity: { baseline: 29, amplitude: 13 }, // Moderate humidity: 16-42%
     soil: { 'loam:gravelly': 0.3, 'silt:gravelly': 0.7 }, // Deep fertile basin soils
-    bedrock: { 'sedimentary:limestone': 0.6, 'sedimentary:shale': 0.4 }
+    bedrock: {
+      'sedimentary:limestone': 0.5,
+      'sedimentary:shale': 0.3,
+      'metamorphic:marble': 0.2      // Enables manganese deposits
+    }
   },
   'flux:eco:forest:temperate': {
     temperature: { baseline: 23, amplitude: 5  }, // Generally cool: 18-28°C
@@ -68,7 +76,13 @@ export const ECOLOGICAL_PROFILES: Partial<Record<EcosystemURN, EcologicalProfile
     pressure: { baseline: 970, amplitude: 15 },   // Low pressure
     humidity: { baseline: 7, amplitude: 12 },    // Dry: 0-19%
     soil: { 'sand:lithic': 0.4, 'loam:lithic': 0.3, 'clay:stony': 0.3 }, // Thin soils over bedrock
-    bedrock: { 'metamorphic:gneiss': 0.5, 'igneous:granite': 0.3, 'sedimentary:limestone': 0.2 }
+    bedrock: {
+      'metamorphic:gneiss': 0.4,
+      'igneous:granite': 0.25,
+      'sedimentary:limestone': 0.15,
+      'metamorphic:quartzite': 0.1,  // Enables iron, silicon, molybdenum, topaz
+      'metamorphic:schist': 0.1      // Enables tungsten, lithium, tourmaline, beryl
+    }
   },
   'flux:eco:jungle:tropical': {
     temperature: { baseline: 29, amplitude: 5 },  // Stable heat: 24-34°C

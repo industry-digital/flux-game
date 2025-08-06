@@ -6,7 +6,7 @@ function createFlowerSchema(overrides: Partial<BulkResourceSchema>): BulkResourc
   return {
     kind: 'flower',
     provides: ['flower', 'nectar'],
-    fitness: 0.618,
+    fitness: 0.382,
     quantification: {
       type: 'bulk',
       quantity: {
@@ -19,7 +19,6 @@ function createFlowerSchema(overrides: Partial<BulkResourceSchema>): BulkResourc
       temperature: { min: 5, max: 35 },
       humidity: { min: 30, max: 80 },
       ppfd: { min: 400 },
-      seasons: ['spring', 'summer'],
       time: ['morning', 'day', 'afternoon']
     },
     growth: {
@@ -47,8 +46,6 @@ export const DesertMarigoldSchema: BulkResourceSchema = createFlowerSchema({
     temperature: { min: 15, max: 35 },
     humidity: { min: 15, max: 45 },
     ppfd: { min: 1_200 },
-    seasons: ['spring', 'summer'],
-    time: ['morning', 'day', 'afternoon']
   }
 });
 
@@ -59,8 +56,6 @@ export const WildBergamotSchema: BulkResourceSchema = createFlowerSchema({
     temperature: { min: 5, max: 32 },
     humidity: { min: 40, max: 85 },
     ppfd: { min: 300 },
-    seasons: ['summer', 'fall'],
-    time: ['dawn', 'morning', 'day', 'afternoon', 'evening']
   }
 });
 
@@ -73,8 +68,6 @@ export const PurpleConeflowerSchema: BulkResourceSchema = createFlowerSchema({
     temperature: { min: 5, max: 32 },
     humidity: { min: 40, max: 70 },
     ppfd: { min: 600 },
-    seasons: ['summer', 'fall'],
-    time: ['day', 'afternoon']
   }
 });
 
@@ -85,8 +78,6 @@ export const BlackEyedSusanSchema: BulkResourceSchema = createFlowerSchema({
     temperature: { min: 5, max: 32 },
     humidity: { min: 40, max: 70 },
     ppfd: { min: 800 },
-    seasons: ['summer'],
-    time: ['morning', 'day', 'afternoon']
   }
 });
 
@@ -98,8 +89,6 @@ export const WildColumbineSchema: BulkResourceSchema = createFlowerSchema({
     temperature: { min: 0, max: 30 },
     humidity: { min: 10, max: 85 },
     ppfd: { min: 200 },
-    seasons: ['spring', 'summer'],
-    time: ['dawn', 'morning', 'day']
   }
 });
 
@@ -111,8 +100,6 @@ export const FireweedSchema: BulkResourceSchema = createFlowerSchema({
     temperature: { min: 0, max: 30 },
     humidity: { min: 10, max: 85 },
     ppfd: { min: 300 },
-    seasons: ['summer', 'fall'],
-    time: ['day', 'afternoon', 'evening']
   }
 });
 
@@ -124,8 +111,6 @@ export const MountainPassionVineSchema: BulkResourceSchema = createFlowerSchema(
     temperature: { min: 20, max: 25 },
     humidity: { min: 35, max: 95 },
     ppfd: { min: 400 },
-    seasons: ['spring', 'summer', 'fall'],
-    time: ['day', 'afternoon'],
     biomes: ['mountain']
   }
 });
@@ -137,8 +122,6 @@ export const TropicalGingerSchema: BulkResourceSchema = createFlowerSchema({
     temperature: { min: 18 },
     humidity: { min: 60 },
     ppfd: { min: 100 },
-    seasons: ['spring', 'summer'],
-    time: ['dawn', 'morning', 'day'],
     lunar: ['waxing', 'full']
   }
 });
@@ -151,7 +134,6 @@ export const WildTrilliumSchema: BulkResourceSchema = createFlowerSchema({
     temperature: { min: 10 },
     humidity: { min: 50, max: 90 },
     ppfd: { min: 100 },
-    time: ['dawn', 'morning', 'day'],
     biomes: ['forest', 'mountain']
   }
 });
@@ -166,8 +148,6 @@ export const AlpineAsterSchema: BulkResourceSchema = createFlowerSchema({
     temperature: { min: 0, max: 25 },
     humidity: { min: 10, max: 35 },
     ppfd: { min: 800 },
-    seasons: ['summer', 'fall'],
-    time: ['day', 'afternoon']
   }
 });
 
@@ -179,8 +159,6 @@ export const JungleOrchidSchema: BulkResourceSchema = createFlowerSchema({
     temperature: { min: 20, max: 35 },
     humidity: { min: 75, max: 95 },
     ppfd: { min: 100, max: 600 },
-    seasons: ['spring', 'summer', 'fall'],
-    time: ['dawn', 'morning'],
     lunar: ['new', 'waxing']
   },
   constraints: {
@@ -198,8 +176,6 @@ export const WaterLilySchema: BulkResourceSchema = createFlowerSchema({
     temperature: { min: 10, max: 30 },
     humidity: { min: 85, max: 100 },
     ppfd: { min: 400 },
-    seasons: ['summer'],
-    time: ['morning', 'day', 'afternoon']
   }
 });
 
@@ -214,7 +190,6 @@ export const PrairieRoseSchema: BulkResourceSchema = createFlowerSchema({
     temperature: { min: 8, max: 33 },
     humidity: { min: 25, max: 60 },
     ppfd: { min: 600 },
-    seasons: ['spring', 'summer']
   }
 });
 
@@ -226,8 +201,6 @@ export const DesertLupineSchema: BulkResourceSchema = createFlowerSchema({
     temperature: { min: 5, max: 30 },
     humidity: { min: 15, max: 40 },
     ppfd: { min: 800 },
-    seasons: ['spring'],
-    time: ['morning', 'day', 'afternoon']
   }
 });
 
@@ -240,8 +213,6 @@ export const MountainSunflowerSchema: BulkResourceSchema = createFlowerSchema({
     temperature: { min: 2, max: 28 },
     humidity: { min: 30, max: 60 },
     ppfd: { min: 700 },
-    seasons: ['summer', 'fall'],
-    time: ['morning', 'day', 'afternoon']
   }
 });
 
@@ -254,7 +225,6 @@ export const BlackLotusSchema: BulkResourceSchema = createFlowerSchema({
     temperature: { min: 15, max: 32 },
     humidity: { min: 60, max: 90 },
     ppfd: { max: 200 },
-    seasons: ['spring', 'summer', 'fall'],
     lunar: ['full'] // Only during full moon
   }
 });

@@ -39,7 +39,7 @@ export const createPlace = (
         type: EntityType.PLACE,
         name: entity.name || '',
         description: entity.description || '',
-        ecosystem: 'flux:eco:forest:temperate',
+        ecosystem: input.ecosystem || 'flux:eco:forest:temperate', // Use provided ecosystem or fallback
         coordinates: [0, 0],
         entities: {},
         resources: {
@@ -61,7 +61,14 @@ export const createPlace = (
       // Create a copy of input without the exits to avoid any conflicts
       const { exits: _, ...inputWithoutExits } = input;
 
-      return merge({}, entity, defaults, inputWithoutExits) as Place;
+      const finalPlace = merge({}, entity, defaults, inputWithoutExits) as Place;
+
+      // Debug logging for ecosystem assignment
+      if (entity.id.includes('jungle') || entity.id.includes('mountain')) {
+        console.log(`🏗️ CREATE_PLACE: ${entity.id} - input.ecosystem=${input.ecosystem}, final.ecosystem=${finalPlace.ecosystem}`);
+      }
+
+      return finalPlace;
     },
     options,
   );

@@ -8,7 +8,6 @@ function createTreeSchema(overrides: Partial<BulkResourceSchema>): BulkResourceS
   return {
     kind: 'tree',
     provides: ['wood', 'bark'],
-    fitness: 0.618,
     quantification: {
       type: 'bulk',
       quantity: {
@@ -21,7 +20,6 @@ function createTreeSchema(overrides: Partial<BulkResourceSchema>): BulkResourceS
       temperature: { min: 5, max: 35 },
       humidity: { min: 30, max: 90 },
       ppfd: { min: 200 },
-      precipitation: { min: 0.5 },
       seasons: ['spring', 'summer', 'fall']
     },
     growth: {
@@ -49,7 +47,6 @@ export const MesquiteSchema: BulkResourceSchema = createTreeSchema({
   requirements: {
     temperature: { min: 10, max: 45 },
     humidity: { min: 15, max: 60 },
-    precipitation: { min: 0.2 },
     seasons: ['spring', 'summer', 'fall']
   }
 });
@@ -61,7 +58,6 @@ export const JuniperSchema: BulkResourceSchema = createTreeSchema({
   requirements: {
     temperature: { min: 0, max: 40 },
     humidity: { min: 20, max: 70 },
-    precipitation: { min: 0.3 }
   }
 });
 
@@ -73,7 +69,6 @@ export const CottonwoodSchema: BulkResourceSchema = createTreeSchema({
   requirements: {
     temperature: { min: -5, max: 35 },
     humidity: { min: 40, max: 95 },
-    precipitation: { min: 1.0 },
     seasons: ['spring', 'summer', 'fall']
   },
   constraints: {
@@ -89,7 +84,6 @@ export const BurOakSchema: BulkResourceSchema = createTreeSchema({
   requirements: {
     temperature: { min: -15, max: 35 },
     humidity: { min: 35, max: 80 },
-    precipitation: { min: 0.8 },
     seasons: ['spring', 'summer', 'fall']
   }
 });
@@ -102,7 +96,6 @@ export const MapleSchema: BulkResourceSchema = createTreeSchema({
   requirements: {
     temperature: { min: -15, max: 30 },
     humidity: { min: 45, max: 85 },
-    precipitation: { min: 1.0 },
     seasons: ['spring', 'summer', 'fall']
   }
 });
@@ -114,7 +107,6 @@ export const WhiteBirchSchema: BulkResourceSchema = createTreeSchema({
   requirements: {
     temperature: { min: -20, max: 25 },
     humidity: { min: 40, max: 80 },
-    precipitation: { min: 0.8 }
   }
 });
 
@@ -125,7 +117,6 @@ export const WhitePineSchema: BulkResourceSchema = createTreeSchema({
   requirements: {
     temperature: { min: -25, max: 25 },
     humidity: { min: 35, max: 80 },
-    precipitation: { min: 0.7 },
     seasons: ['spring', 'summer', 'fall', 'winter'] // Evergreen
   }
 });
@@ -138,7 +129,6 @@ export const MountainPineSchema: BulkResourceSchema = createTreeSchema({
   requirements: {
     temperature: { min: -30, max: 20 },
     humidity: { min: 25, max: 70 },
-    precipitation: { min: 0.5 },
     seasons: ['spring', 'summer', 'fall', 'winter']
   }
 });
@@ -149,7 +139,6 @@ export const AspenSchema: BulkResourceSchema = createTreeSchema({
   requirements: {
     temperature: { min: -25, max: 25 },
     humidity: { min: 30, max: 75 },
-    precipitation: { min: 0.6 }
   }
 });
 
@@ -161,7 +150,6 @@ export const MahoganySchema: BulkResourceSchema = createTreeSchema({
   requirements: {
     temperature: { min: 20, max: 35 },
     humidity: { min: 70, max: 95 },
-    precipitation: { min: 2.0 },
     seasons: ['spring', 'summer', 'fall']
   }
 });
@@ -173,7 +161,6 @@ export const RubberTreeSchema: BulkResourceSchema = createTreeSchema({
   requirements: {
     temperature: { min: 22, max: 32 },
     humidity: { min: 75, max: 95 },
-    precipitation: { min: 2.5 }
   }
 });
 
@@ -184,7 +171,6 @@ export const BreadfruitSchema: BulkResourceSchema = createTreeSchema({
   requirements: {
     temperature: { min: 24, max: 35 },
     humidity: { min: 80, max: 100 },
-    precipitation: { min: 2.0 }
   }
 });
 
@@ -195,7 +181,6 @@ export const BaldCypressSchema: BulkResourceSchema = createTreeSchema({
   requirements: {
     temperature: { min: 15, max: 35 },
     humidity: { min: 85, max: 100 },
-    precipitation: { min: 3.0 },
     seasons: ['spring', 'summer', 'fall']
   }
 });
@@ -206,7 +191,6 @@ export const MangroveSchema: BulkResourceSchema = createTreeSchema({
   requirements: {
     temperature: { min: 20, max: 35 },
     humidity: { min: 90, max: 100 },
-    precipitation: { min: 2.5 },
     seasons: ['spring', 'summer', 'fall']
   }
 });
