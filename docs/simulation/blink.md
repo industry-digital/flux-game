@@ -5,7 +5,7 @@
 
 ## Overview
 
-Blink Drive technology represents the miniaturization of spacefold principles into tactical-scale quantum positioning devices. Unlike spacefold systems that create long-range transportation between fixed anchor points, Blink Drives enable precise short-range repositioning within a single location through controlled quantum tunneling.
+Blink Drive technology represents the miniaturization of [spacefold](./spacefold.md) principles into tactical-scale quantum positioning devices. Unlike spacefold systems that create long-range transportation between fixed anchor points, Blink Drives enable precise short-range repositioning within a single location through controlled quantum tunneling.
 
 In the post-collapse world, these devices provide evolved humans with tactical advantages essential for survival in G.A.E.A.-controlled territories, where superior positioning often determines the difference between successful resource gathering and elimination by superintelligence-coordinated predators.
 

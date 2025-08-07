@@ -141,7 +141,8 @@ You're exploring an abandoned mine when you encounter a pack of bomber goblinsâ€
 > The bomber goblin's right hand is destroyed!
 > The bomber goblin drops a grenade.
 > The bomber goblin drops a grenade.
-> Two grenades will detonate in 6 seconds.
+> A grenade will detonate in 6 seconds.
+> A grenade will detonate in 6 seconds.
 
 > Another bomber goblin takes 38 explosive damage to right hand!
 > The bomber goblin's right hand is destroyed!

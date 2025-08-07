@@ -370,11 +370,19 @@ The pure functional core provides the mathematical foundations necessary for com
 
 ### Development Philosophy
 
-Building complex systems requires different development practices:
+Building complex systems requires different development practices. One cannot simply expect exceptional performance to arise from conventional means.
+
+This holds particularly true for software development. It is the opinion of the author that reliance on libraries, frameworks, and best practices precludes entire regions of the solution space that may actually contain the globally optimal solution -- before the problem-solving process even begins.
+
+It is therefore important to build the system completely from first principles, from the ground up. This is the only way to ensure that the system is truly optimal for the problem at hand. We may leverage libraries and frameworks only if they align with our architectural goals, which are: correctness, performance, and simplicity.
+
+Ultimately, we are searching for a point in the vast solution space where correctness and exceptional performance are the same thing. The [quality without name](https://en.wikipedia.org/wiki/The_Timeless_Way_of_Building).
+
 - **Bottom-Up Design**: Focus on primitive capabilities rather than specific outcomes
 - **Autonomous Testing**: Test individual components and their interactions separately
 - **Behavior Monitoring**: Observe system behavior for unexpected patterns and outcomes
 - **Minimal Constraints**: Provide rules and boundaries while maximizing degrees of freedom
+- **Architectural Dead Ends**: These are valuable learning opportunities that eliminate regions of the solution space that we *know* are suboptimal. Dead ends are a normal part of the creative discovery process. By continuously "probing" the solution space for dead ends, we eventually arrive at the globally optimal solution.
 
 ### Operational Characteristics
 
