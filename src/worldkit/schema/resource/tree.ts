@@ -1,4 +1,4 @@
-import { UnitOfMeasure, TimeUnit, GOLDEN_RATIO } from '~/types';
+import { UnitOfMeasure, TimeUnit } from '~/types';
 import { BulkResourceSchema, FitnessEvaluationStrategy } from '~/types/schema/resource';
 
 
@@ -10,7 +10,7 @@ export function createTreeSchema(overrides: Partial<BulkResourceSchema> = {}): B
     provides: ['wood', 'bark'],
     fitness: {
       strategy: FitnessEvaluationStrategy.PLANT,
-      min: GOLDEN_RATIO,
+      min: 0.382,
     },
     quantification: {
       type: 'bulk',
@@ -24,6 +24,12 @@ export function createTreeSchema(overrides: Partial<BulkResourceSchema> = {}): B
       temperature: { min: 5, max: 35 },
       humidity: { min: 30, max: 90 },
       ppfd: { min: 200 },
+      soils: {
+        'loam:gravelly': 0.4,    // Ideal forest soil
+        'clay:gravelly': 0.3,    // Good drainage, retains nutrients
+        'silt:gravelly': 0.2,    // Prairie/grassland adaptation
+        'loam:lithic': 0.1,      // Mountain adaptation
+      },
     },
     growth: {
       curve: 'LOGISTIC',
@@ -50,7 +56,11 @@ export const MesquiteSchema: BulkResourceSchema = createTreeSchema({
   requirements: {
     temperature: { min: 10, max: 45 },
     humidity: { min: 15, max: 60 },
-    seasons: ['spring', 'summer', 'fall']
+    soils: {
+      'sand:gravelly': 0.6,    // Desert/arid specialist
+      'loam:gravelly': 0.3,    // Adaptable to better soils
+      'sand:lithic': 0.1,      // Rocky desert tolerance
+    },
   }
 });
 
@@ -61,6 +71,14 @@ export const JuniperSchema: BulkResourceSchema = createTreeSchema({
   requirements: {
     temperature: { min: 0, max: 40 },
     humidity: { min: 20, max: 70 },
+  },
+  placement: {
+    soils: {
+      'sand:lithic': 0.4,      // Mountain/rocky specialist
+      'loam:lithic': 0.3,      // Mountain adaptation
+      'clay:stony': 0.2,       // Rocky soil tolerance
+      'sand:gravelly': 0.1,    // Some desert tolerance
+    },
   }
 });
 
@@ -72,7 +90,13 @@ export const CottonwoodSchema: BulkResourceSchema = createTreeSchema({
   requirements: {
     temperature: { min: -5, max: 35 },
     humidity: { min: 40, max: 95 },
-    seasons: ['spring', 'summer', 'fall']
+  },
+  placement: {
+    soils: {
+      'silt:gravelly': 0.5,    // Prairie/riverbank specialist
+      'loam:gravelly': 0.3,    // Good general soil
+      'clay:gravelly': 0.2,    // Moisture retention
+    },
   },
   constraints: {
     maxNeighbors: 4,      // Override: pioneer species clustering
@@ -87,7 +111,14 @@ export const BurOakSchema: BulkResourceSchema = createTreeSchema({
   requirements: {
     temperature: { min: -15, max: 35 },
     humidity: { min: 35, max: 80 },
-    seasons: ['spring', 'summer', 'fall']
+  },
+  placement: {
+    soils: {
+      'loam:gravelly': 0.4,    // Prairie oak specialist
+      'silt:gravelly': 0.3,    // Prairie basin soils
+      'clay:gravelly': 0.2,    // Moisture retention
+      'sand:gravelly': 0.1,    // Some drought tolerance
+    },
   }
 });
 
@@ -99,7 +130,11 @@ export const MapleSchema: BulkResourceSchema = createTreeSchema({
   requirements: {
     temperature: { min: -15, max: 30 },
     humidity: { min: 45, max: 85 },
-    seasons: ['spring', 'summer', 'fall']
+    soils: {
+      'loam:gravelly': 0.5,    // Classic forest soil
+      'clay:gravelly': 0.3,    // Rich, moist forest soil
+      'silt:gravelly': 0.2,    // Forest edge adaptation
+    },
   }
 });
 
@@ -110,6 +145,12 @@ export const WhiteBirchSchema: BulkResourceSchema = createTreeSchema({
   requirements: {
     temperature: { min: -20, max: 25 },
     humidity: { min: 40, max: 80 },
+    soils: {
+      'loam:gravelly': 0.4,    // Forest specialist
+      'clay:gravelly': 0.3,    // Moist forest soil
+      'silt:gravelly': 0.2,    // Pioneer species adaptability
+      'sand:gravelly': 0.1,    // Some poor soil tolerance
+    },
   }
 });
 
@@ -120,7 +161,12 @@ export const WhitePineSchema: BulkResourceSchema = createTreeSchema({
   requirements: {
     temperature: { min: -25, max: 25 },
     humidity: { min: 35, max: 80 },
-    seasons: ['spring', 'summer', 'fall', 'winter'] // Evergreen
+    soils: {
+      'loam:gravelly': 0.4,    // Forest specialist
+      'clay:gravelly': 0.3,    // Rich forest soil
+      'sand:gravelly': 0.2,    // Sandy soil tolerance
+      'loam:lithic': 0.1,      // Some mountain tolerance
+    },
   }
 });
 
@@ -132,7 +178,12 @@ export const MountainPineSchema: BulkResourceSchema = createTreeSchema({
   requirements: {
     temperature: { min: -30, max: 20 },
     humidity: { min: 25, max: 70 },
-    seasons: ['spring', 'summer', 'fall', 'winter']
+    soils: {
+      'sand:lithic': 0.4,      // Mountain specialist
+      'loam:lithic': 0.3,      // Mountain soils
+      'clay:stony': 0.2,       // Rocky mountain soil
+      'sand:gravelly': 0.1,    // Some arid tolerance
+    },
   }
 });
 
@@ -142,6 +193,12 @@ export const AspenSchema: BulkResourceSchema = createTreeSchema({
   requirements: {
     temperature: { min: -25, max: 25 },
     humidity: { min: 30, max: 75 },
+    soils: {
+      'loam:gravelly': 0.3,    // Forest adaptation
+      'sand:lithic': 0.3,      // Mountain adaptation
+      'clay:stony': 0.2,       // Rocky soil tolerance
+      'silt:gravelly': 0.2,    // Pioneer species flexibility
+    },
   }
 });
 
@@ -153,7 +210,11 @@ export const MahoganySchema: BulkResourceSchema = createTreeSchema({
   requirements: {
     temperature: { min: 20, max: 35 },
     humidity: { min: 70, max: 95 },
-    seasons: ['spring', 'summer', 'fall']
+    soils: {
+      'clay:stony': 0.6,       // Tropical jungle specialist
+      'silt:gravelly': 0.3,    // Rich tropical soil
+      'loam:gravelly': 0.1,    // Some adaptation
+    },
   }
 });
 
@@ -164,6 +225,11 @@ export const RubberTreeSchema: BulkResourceSchema = createTreeSchema({
   requirements: {
     temperature: { min: 22, max: 32 },
     humidity: { min: 75, max: 95 },
+    soils: {
+      'clay:stony': 0.7,       // Tropical specialist
+      'silt:gravelly': 0.2,    // Rich organic soil
+      'loam:gravelly': 0.1,    // Minimal adaptation
+    },
   }
 });
 
@@ -174,6 +240,11 @@ export const BreadfruitSchema: BulkResourceSchema = createTreeSchema({
   requirements: {
     temperature: { min: 24, max: 35 },
     humidity: { min: 80, max: 100 },
+    soils: {
+      'clay:stony': 0.6,       // Tropical island specialist
+      'silt:gravelly': 0.3,    // Rich volcanic soil
+      'loam:gravelly': 0.1,    // Some general adaptation
+    },
   }
 });
 
@@ -184,7 +255,11 @@ export const BaldCypressSchema: BulkResourceSchema = createTreeSchema({
   requirements: {
     temperature: { min: 15, max: 35 },
     humidity: { min: 85, max: 100 },
-    seasons: ['spring', 'summer', 'fall']
+    soils: {
+      'clay:stony': 0.4,       // Wetland specialist
+      'silt:stony': 0.4,       // Marsh soils
+      'clay:gravelly': 0.2,    // Some upland tolerance
+    },
   }
 });
 
@@ -194,6 +269,10 @@ export const MangroveSchema: BulkResourceSchema = createTreeSchema({
   requirements: {
     temperature: { min: 20, max: 35 },
     humidity: { min: 90, max: 100 },
-    seasons: ['spring', 'summer', 'fall']
+    soils: {
+      'silt:stony': 0.6,       // Wetland/coastal specialist
+      'clay:stony': 0.3,       // Muddy coastal soil
+      'sand:gravelly': 0.1,    // Some coastal sand tolerance
+    },
   }
 });

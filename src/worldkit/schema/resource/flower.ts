@@ -1,4 +1,4 @@
-import { UnitOfMeasure, TimeUnit, GOLDEN_RATIO } from '~/types';
+import { UnitOfMeasure, TimeUnit } from '~/types';
 import { BulkResourceSchema, FitnessEvaluationStrategy } from '~/types/schema/resource';
 
 // Helper function to create flower schemas with proper typing
@@ -8,7 +8,7 @@ export function createFlowerSchema(overrides: Partial<BulkResourceSchema> = {}):
     provides: ['flower', 'nectar'],
     fitness: {
       strategy: FitnessEvaluationStrategy.PLANT,
-      min: GOLDEN_RATIO,
+      min: 0.5,
     },
     quantification: {
       type: 'bulk',

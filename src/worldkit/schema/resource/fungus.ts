@@ -8,7 +8,7 @@ export function createFungusSchema(overrides: Partial<BulkResourceSchema> = {}):
     provides: ['mushroom'],
     fitness: {
       strategy: FitnessEvaluationStrategy.FUNGUS,
-      min: 0,
+      min: 0.5,
     },
     quantification: {
       type: 'bulk',

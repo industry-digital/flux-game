@@ -97,24 +97,47 @@ export type ResourceGrowthRequirements = {
   /**
    * To restrict the resource to specific biomes
    * Use sparingly, as this is *counter* to emergent behavior.
+   * @deprecated Use `placement` instead
    */
   biomes?: Biome[];
 
   /**
    * To restrict the resource to specific climates
-   * Use sparingly, as this is *counter* to emergent behavior.
+   * @deprecated Use `placement` instead
    */
   climates?: Climate[];
 
   /**
    * To restrict the resource to specific soils
-   * Use sparingly, as this is *counter* to emergent behavior.
+   * @deprecated Use `placement` instead
    */
   soils?: PartialWeights<SoilType>;
 
   /**
    * To restrict the resource to specific bedrock types
-   * Use sparingly, as this is *counter* to emergent behavior.
+   * @deprecated Use `placement` instead
+   */
+  bedrock?: PartialWeights<BedrockType>;
+};
+
+export type ResourcePlacementRequirements = {
+  /**
+   * To restrict the resource to specific biomes
+   */
+  biomes?: Biome[];
+
+  /**
+   * To restrict the resource to specific climates
+   */
+  climates?: Climate[];
+
+  /**
+   * To restrict the resource to specific soils
+   */
+  soils?: PartialWeights<SoilType>;
+
+  /**
+   * To restrict the resource to specific bedrock types
    */
   bedrock?: PartialWeights<BedrockType>;
 };
@@ -189,6 +212,11 @@ type AbstractResourceSchema<QuantificationStrategy extends ResourceQuantificatio
    * Rules that govern the spatial distribution of the resource
    */
   constraints?: SpatialConstraints;
+
+  /**
+   * Rules that govern the spatial distribution of the resource
+   */
+  placement?: ResourcePlacementRequirements;
 
   /**
    * The requirements that must be met for the resource to grow.

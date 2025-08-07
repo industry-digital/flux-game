@@ -1,4 +1,4 @@
-import { UnitOfVolume, TimeUnit, GOLDEN_RATIO } from '~/types';
+import { UnitOfVolume, TimeUnit } from '~/types';
 import { BulkResourceSchema, FitnessEvaluationStrategy } from '~/types/schema/resource';
 
 // Helper function to create water body schemas with proper typing
@@ -8,7 +8,7 @@ export function createWaterSchema(overrides: Partial<BulkResourceSchema> = {}): 
     provides: ['water', 'mud'],
     fitness: {
       strategy: FitnessEvaluationStrategy.PLANT,
-      min: GOLDEN_RATIO,
+      min: 0.5,
     },
     quantification: {
       type: 'bulk',

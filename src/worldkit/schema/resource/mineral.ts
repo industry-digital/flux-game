@@ -1,4 +1,4 @@
-import { UnitOfMass, TimeUnit, GOLDEN_RATIO } from '~/types';
+import { UnitOfMass, TimeUnit } from '~/types';
 import { BulkResourceSchema, FitnessEvaluationStrategy } from '~/types/schema/resource';
 
 // Helper function to create mineral schemas with proper typing
@@ -8,7 +8,7 @@ export function createMineralSchema(overrides: Partial<BulkResourceSchema> = {})
     provides: ['ore'],
     fitness: {
       strategy: FitnessEvaluationStrategy.MINERAL,
-      min: GOLDEN_RATIO,
+      min: 0.4,
     },
     quantification: {
       type: 'bulk',
@@ -18,7 +18,12 @@ export function createMineralSchema(overrides: Partial<BulkResourceSchema> = {})
         capacity: 3,
       }
     },
-    requirements: {}, // Minerals require no specific conditions for growth
+    requirements: {
+      bedrock: {
+        'igneous:granite': 0.3,
+        'sedimentary:shale': 0.3
+      },
+    }, // Minerals require no specific conditions for growth
     growth: {
       curve: 'LOGISTIC',
       duration: [1, TimeUnit.WEEK]
@@ -46,7 +51,7 @@ export const IronSchema: BulkResourceSchema = createMineralSchema({
   name: 'iron',
   slug: 'iron',
   provides: ['ore', 'iron'],
-  requirements: {
+  placement: {
     bedrock: {
       'sedimentary:limestone': 0.6,  // Banded iron formations
       'metamorphic:quartzite': 0.5,  // Taconite pellets
@@ -66,7 +71,7 @@ export const CoalSchema: BulkResourceSchema = createMineralSchema({
   name: 'coal',
   slug: 'coal',
   provides: ['ore', 'coal', 'carbon'],
-  requirements: {
+  placement: {
     bedrock: {
       'sedimentary:shale': 0.7,      // Coal measures
       'sedimentary:limestone': 0.4   // Carboniferous sequences
@@ -84,7 +89,7 @@ export const ChromiumSchema: BulkResourceSchema = createMineralSchema({
   name: 'chromium',
   slug: 'chromium',
   provides: ['ore', 'chromium'],
-  requirements: {
+  placement: {
     bedrock: {
       'igneous:basalt': 0.7,         // Ultramafic complexes
       'metamorphic:gneiss': 0.4,     // High-grade metamorphism
@@ -98,7 +103,7 @@ export const NickelSchema: BulkResourceSchema = createMineralSchema({
   name: 'nickel',
   slug: 'nickel',
   provides: ['ore', 'nickel'],
-  requirements: {
+  placement: {
     bedrock: {
       'igneous:basalt': 0.6,         // Ultramafic intrusions
       'metamorphic:gneiss': 0.5,     // Metamorphic complexes
@@ -115,7 +120,7 @@ export const TungstenSchema: BulkResourceSchema = createMineralSchema({
   name: 'tungsten',
   slug: 'tungsten',
   provides: ['ore', 'tungsten'],
-  requirements: {
+  placement: {
     bedrock: {
       'igneous:granite': 0.6,        // Granite pegmatites
       'metamorphic:schist': 0.5,     // Contact metamorphism
@@ -129,7 +134,7 @@ export const MolybdenumSchema: BulkResourceSchema = createMineralSchema({
   name: 'molybdenum',
   slug: 'molybdenum',
   provides: ['ore', 'molybdenum'],
-  requirements: {
+  placement: {
     bedrock: {
       'igneous:granite': 0.6,        // Porphyry deposits
       'metamorphic:quartzite': 0.4,  // Skarn deposits
@@ -143,7 +148,7 @@ export const VanadiumSchema: BulkResourceSchema = createMineralSchema({
   name: 'vanadium',
   slug: 'vanadium',
   provides: ['ore', 'vanadium'],
-  requirements: {
+  placement: {
     bedrock: {
       'igneous:basalt': 0.6,         // Titaniferous magnetite
       'sedimentary:shale': 0.5,      // Black shales
@@ -158,7 +163,7 @@ export const ManganeseSchema: BulkResourceSchema = createMineralSchema({
   name: 'manganese',
   slug: 'manganese',
   provides: ['ore', 'manganese'],
-  requirements: {
+  placement: {
     bedrock: {
       'sedimentary:limestone': 0.6,  // Marine deposits
       'metamorphic:marble': 0.5,     // Metamorphosed carbonates
@@ -173,7 +178,7 @@ export const SiliconSchema: BulkResourceSchema = createMineralSchema({
   name: 'silicon',
   slug: 'silicon',
   provides: ['ore', 'silicon'],
-  requirements: {
+  placement: {
     bedrock: {
       'metamorphic:quartzite': 0.7,  // High-purity quartz
       'igneous:granite': 0.5,        // Quartz-rich granites
@@ -191,7 +196,7 @@ export const TitaniumSchema: BulkResourceSchema = createMineralSchema({
   name: 'titanium',
   slug: 'titanium',
   provides: ['ore', 'titanium'],
-  requirements: {
+  placement: {
     bedrock: {
       'igneous:basalt': 0.6,         // Ilmenite in mafic rocks
       'sedimentary:limestone': 0.4,  // Heavy mineral sands
@@ -206,7 +211,7 @@ export const CobaltSchema: BulkResourceSchema = createMineralSchema({
   name: 'cobalt',
   slug: 'cobalt',
   provides: ['ore', 'cobalt'],
-  requirements: {
+  placement: {
     bedrock: {
       'igneous:basalt': 0.6,         // Ultramafic associations
       'metamorphic:gneiss': 0.4,     // Metamorphic complexes
@@ -223,7 +228,7 @@ export const LithiumSchema: BulkResourceSchema = createMineralSchema({
   name: 'lithium',
   slug: 'lithium',
   provides: ['ore', 'lithium'],
-  requirements: {
+  placement: {
     bedrock: {
       'igneous:granite': 0.7,        // Granite pegmatites
       'sedimentary:limestone': 0.4,  // Lithium brines
@@ -241,7 +246,7 @@ export const QuartzSchema: BulkResourceSchema = createMineralSchema({
   name: 'quartz',
   slug: 'quartz',
   provides: ['gem', 'quartz'],
-  requirements: {
+  placement: {
     bedrock: {
       'igneous:granite': 0.6,        // Primary host - granite pegmatites
       'metamorphic:quartzite': 0.5,  // Metamorphic quartz veins
@@ -261,7 +266,7 @@ export const TourmalineSchema: BulkResourceSchema = createMineralSchema({
   name: 'tourmaline',
   slug: 'tourmaline',
   provides: ['gem', 'tourmaline'],
-  requirements: {
+  placement: {
     bedrock: {
       'igneous:granite': 0.6,        // Granite pegmatites
       'metamorphic:schist': 0.5,     // Metamorphic associations
@@ -276,7 +281,7 @@ export const TopazSchema: BulkResourceSchema = createMineralSchema({
   name: 'topaz',
   slug: 'topaz',
   provides: ['gem', 'topaz'],
-  requirements: {
+  placement: {
     bedrock: {
       'igneous:granite': 0.7,        // Granite pegmatites
       'metamorphic:quartzite': 0.4,  // High-temperature metamorphism
@@ -291,7 +296,7 @@ export const BerylSchema: BulkResourceSchema = createMineralSchema({
   name: 'beryl',
   slug: 'beryl',
   provides: ['gem', 'beryl'],
-  requirements: {
+  placement: {
     bedrock: {
       'igneous:granite': 0.7,        // Granite pegmatites
       'metamorphic:schist': 0.4,     // Mica schists
