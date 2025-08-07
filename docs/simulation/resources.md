@@ -682,9 +682,9 @@ sequenceDiagram
     FIT-->>LCS: fitness = 0.2
     Note over LCS: 0.2 < schema.fitness (0.382)<br/>❌ Below threshold
     LCS-->>UPD: 'decaying'
-    UPD->>UPD: Apply decay curve<br/>position: 0.0 → 0.2<br/>value decreases
+    UPD->>UPD: Apply decay curve<br/>position: 1.0 → 0.8<br/>value decreases proportionally
     UPD-->>SVC: ResourceNodeState {status: 'decaying'}
-    SVC->>LOG: 🔴:mineral:quartz {"p":"0.2/+0.2","v":"2.3/-0.5"}
+    SVC->>LOG: 🔴:mineral:quartz {"p":"0.8/-0.2","v":"8.0/-2.0"}
 
     %% Continued decay
     ENV->>SVC: Conditions remain poor
@@ -693,9 +693,9 @@ sequenceDiagram
     LCS->>FIT: Calculate environmental fitness
     FIT-->>LCS: fitness = 0.1
     LCS-->>UPD: 'decaying'
-    UPD->>UPD: Continue decay<br/>position: 0.2 → 0.7<br/>value decreases
+    UPD->>UPD: Continue decay<br/>position: 0.8 → 0.3<br/>value decreases proportionally
     UPD-->>SVC: ResourceNodeState {status: 'decaying'}
-    SVC->>LOG: 🔴:mineral:quartz {"p":"0.7/+0.5","v":"1.1/-1.2"}
+    SVC->>LOG: 🔴:mineral:quartz {"p":"0.3/-0.5","v":"3.0/-5.0"}
 
     %% Decay completion and removal
     ENV->>SVC: Conditions still poor
@@ -704,9 +704,108 @@ sequenceDiagram
     LCS->>FIT: Calculate environmental fitness
     FIT-->>LCS: fitness = 0.1
     LCS-->>UPD: 'decaying'
-    UPD->>UPD: Continue decay<br/>position: 0.7 → 1.0<br/>value → minimum
-    Note over UPD: position >= 1.0<br/>🗑️ Decay cycle complete
+    UPD->>UPD: Continue decay<br/>position: 0.3 → 0.0<br/>value → minimum
+    Note over UPD: position <= 0.0<br/>🗑️ Decay cycle complete
     UPD-->>SVC: undefined (remove resource)
     SVC->>SVC: delete nodes[resourceUrn]
     Note over SVC,LOG: No log entry - resource removed
+```
+
+## Mathematical Growth and Decay Mechanics
+
+### **Critical Implementation Note: Bug Fix Applied**
+**FIXED**: A critical bug in `updateBulkResource()` was corrected where decay used an incorrect value calculation formula `capacity - (normalizedProgress * range)` instead of the proper formula.
+
+**Current Implementation**: Both growth and decay now use the **same value calculation formula**: `min + (normalizedProgress * range)`. The directional behavior is handled by position progression, not by inverting the value calculation.
+
+**Impact**: This fix ensures that resources at high decay positions (e.g., 0.948) retain appropriate values rather than incorrectly showing 0 value, maintaining biological authenticity in resource lifecycle behavior.
+
+### Growth Phase
+- **Position**: `Tg` advances from `0` → `1` over `growth.duration`
+- **Value**: `min + (easing(Tg) * (capacity - min))`
+- **Position increments**: `deltaTime / growth.duration`
+- **Direction**: Position increases toward `1.0` (full capacity)
+
+### Decay Phase
+- **Position**: `Td` advances from current position → `0` over `decay.duration`
+- **🔄 Critical Continuity**: `Td` starts at the same position as `Tg` when switching from growth to decay
+- **Value**: `min + (easing(Td) * (capacity - min))` *(same formula as growth)*
+- **Position decrements**: `deltaTime / decay.duration`
+- **Direction**: Position decreases toward `0.0` (approaching minimum)
+
+### **Key Insight: Unified Value Calculation**
+Both growth and decay use identical value calculation logic:
+```typescript
+// BOTH growth and decay use this formula:
+newQuantity = min + (normalizedProgress * range);
+
+// The easing function and position progression handle the behavioral differences:
+// - Growth: position 0→1, so value goes from min to capacity
+// - Decay: position high→0, so value goes from high value down to min
+```
+
+### Transition Logic
+- **Environmental Switching**: Resource switches between growth/decay based on environmental fitness
+- **🔄 Position Continuity**: **Critical** - When switching from growth to decay, `Td` starts at the exact same position as `Tg` (no position reset)
+- **Direction Reversal**: Position progression reverses direction but value calculation remains consistent
+- **Seamless Transition**: Resource value remains continuous across the growth→decay transition
+- **Resource Removal**: Occurs when decay position reaches `≤ 0.0` (decay complete)
+
+### Discrete Quantification (Flowers, Trees, etc.)
+For resources measured in discrete units (`UnitOfMeasure.EACH`):
+```typescript
+// Apply Math.floor() after value calculation
+const discreteValue = Math.floor(min + (normalizedProgress * range));
+```
+
+This ensures realistic behavior where a flower field at decay position `0.948` retains `~2 flowers` rather than incorrectly showing `0 flowers`.
+
+### Example: Growth-to-Decay Transition
+```typescript
+// Resource growing: position = 0.7, value = 2.1 flowers
+// Environmental conditions worsen → switch to decay
+// CRITICAL: Decay starts at position 0.7 (NOT reset to 0)
+// As decay progresses: position 0.7 → 0.6 → 0.5 → ... → 0.0
+// Value decreases proportionally: 2.1 → 1.8 → 1.5 → ... → 0.0
+```
+
+### Mathematical Properties
+- **Temporal Precision**: Resources respond to exact weather duration periods
+- **Frequency Independence**: Identical weather sequences produce identical outcomes regardless of update frequency
+- **Smooth Transitions**: Value remains continuous when switching between growth and decay states
+- **Biological Authenticity**: Decay is gradual and proportional, not abrupt
+
+### Corrected Resource Update Flow
+
+```mermaid
+graph TD
+    A["Resource Update"] --> B{"Environmental<br/>Conditions Met?"}
+
+    B -->|"✅ Yes"| C["Status: 'growing'"]
+    B -->|"❌ No"| D["Status: 'decaying'"]
+
+    C --> E["Position: current → 1.0<br/>(+deltaTime/growth.duration)"]
+    D --> F["Position: current → 0.0<br/>(-deltaTime/decay.duration)"]
+
+    E --> G["Value Calculation<br/>UNIFIED FORMULA"]
+    F --> G
+
+    G --> H["min + (normalizedProgress * range)<br/>📝 SAME for both growth & decay"]
+
+    H --> I{"Discrete Measure?<br/>(UnitOfMeasure.EACH)"}
+
+    I -->|"Yes"| J["Math.floor(value)"]
+    I -->|"No"| K["value (continuous)"]
+
+    J --> L["Final Value"]
+    K --> L
+
+    L --> M{"Position ≤ 0?<br/>(Decay Complete)"}
+
+    M -->|"Yes"| N["🗑️ Remove Resource"]
+    M -->|"No"| O["✅ Update Complete"]
+
+    style G fill:#e1f5fe
+    style H fill:#f3e5f5
+    style N fill:#ffebee
 ```

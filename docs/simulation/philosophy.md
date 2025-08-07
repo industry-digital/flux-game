@@ -14,10 +14,6 @@ We're building virtual worlds that feel genuinely alive rather than mechanical. 
 
 **The breakthrough**: Three orthogonal systems that operate independently of each other, but together create infinite emergent experiences.
 
-**For business leaders**: Emergent systems create infinite content from finite development resources.
-**For technologists**: We're implementing proven biological algorithms rather than inventing new AI.
-**For gamers**: Experience unpredictable but believable worlds that respond authentically to your actions.
-
 ---
 
 ## The Problem: Why Most Virtual Worlds Feel Mechanical
@@ -59,7 +55,7 @@ People quickly recognize artificial patterns:
 Instead of scripting experiences, we create conditions for experiences to emerge naturally through three systems that operate completely independently:
 
 #### 1. Weather as Prime Mover
-**What it does**: Models realistic atmospheric conditions - temperature cycles, precipitation patterns, seasonal changes, storm systems.
+**What it does**: Models realistic atmospheric conditions - temperature cycles, precipitation patterns, seasonal changes, storm systems. Weather is the [Randy Random](https://rimworldwiki.com/wiki/AI_Storytellers), made manifest as a weather system.
 **What it doesn't know**: It doesn't know about anything outside of weather.
 
 #### 2. Resources as Environmental Response
