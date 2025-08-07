@@ -12,3 +12,4 @@
 1. [Blink Drives](./docs/simulation/blink.md)
 1. [Skill System](./docs/simulation/skills.md)
 1. [Combat System](./docs/simulation/combat.md)
+1. [Cordyceps gaeatrix hallucination mechanics](./docs/simulation/world-design.md)

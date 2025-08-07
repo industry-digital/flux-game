@@ -1,0 +1,614 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Entity Projection Architecture</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            width: 100%;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+        }
+
+        h1 {
+            text-align: center;
+            color: #2c3e50;
+            margin-bottom: 10px;
+            font-size: 2.5rem;
+            font-weight: 300;
+        }
+
+        .subtitle {
+            text-align: center;
+            color: #7f8c8d;
+            margin-bottom: 30px;
+            font-size: 1.1rem;
+        }
+
+        .controls {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+        }
+
+        .strategy-btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 0.9rem;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .strategy-btn.minimal {
+            background: linear-gradient(45deg, #3498db, #2980b9);
+            color: white;
+        }
+
+        .strategy-btn.combat {
+            background: linear-gradient(45deg, #e74c3c, #c0392b);
+            color: white;
+        }
+
+        .strategy-btn.trading {
+            background: linear-gradient(45deg, #f39c12, #e67e22);
+            color: white;
+        }
+
+        .strategy-btn.social {
+            background: linear-gradient(45deg, #9b59b6, #8e44ad);
+            color: white;
+        }
+
+        .strategy-btn.complete {
+            background: linear-gradient(45deg, #27ae60, #229954);
+            color: white;
+        }
+
+        .strategy-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+        }
+
+        .strategy-btn.active {
+            transform: scale(1.05);
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.3);
+        }
+
+        .visualization {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+
+        .left-column {
+            display: flex;
+            flex-direction: column;
+            gap: 30px;
+        }
+
+        .fragments-section {
+            background: #ecf0f1;
+            border-radius: 15px;
+            padding: 25px;
+            height: 200px;
+        }
+
+        #fragmentsList {
+            display: flex;
+            gap: 15px;
+            overflow-x: auto;
+            padding: 10px 0;
+        }
+
+        .section-title {
+            font-size: 1.3rem;
+            font-weight: 600;
+            color: #2c3e50;
+            margin-bottom: 20px;
+            text-align: center;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .fragment {
+            background: white;
+            border-radius: 10px;
+            padding: 15px;
+            border-left: 4px solid #bdc3c7;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            flex: 0 0 auto;
+            min-width: 120px;
+            max-width: 140px;
+            text-align: center;
+        }
+
+        .fragment.loaded {
+            border-left-color: #27ae60;
+            background: #d5f4e6;
+            transform: translateY(-5px);
+            box-shadow: 0 8px 20px rgba(39, 174, 96, 0.3);
+        }
+
+        .fragment-name {
+            font-weight: 600;
+            color: #2c3e50;
+            margin-bottom: 8px;
+            font-size: 1rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .fragment-key {
+            font-family: 'Courier New', monospace;
+            font-size: 0.85rem;
+            color: #7f8c8d;
+            background: #f8f9fa;
+            padding: 6px;
+            border-radius: 5px;
+            font-weight: 500;
+        }
+
+        .arrow {
+            font-size: 3rem;
+            color: #3498db;
+            text-align: center;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); opacity: 0.7; }
+            50% { transform: scale(1.1); opacity: 1; }
+        }
+
+        .entity-section {
+            background: #2c3e50;
+            border-radius: 15px;
+            padding: 25px;
+            height: 300px;
+            color: white;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .entity-section::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(45deg, transparent 30%, rgba(255, 255, 255, 0.03) 50%, transparent 70%);
+            animation: shimmer 3s infinite;
+        }
+
+        @keyframes shimmer {
+            0% { transform: translateX(-100%); }
+            100% { transform: translateX(100%); }
+        }
+
+        .entity {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            padding: 20px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            position: relative;
+            z-index: 1;
+        }
+
+        .entity-name {
+            font-size: 1.4rem;
+            font-weight: 600;
+            margin-bottom: 15px;
+            text-align: center;
+            color: #ecf0f1;
+        }
+
+        .entity-properties {
+            display: grid;
+            gap: 10px;
+            max-height: 160px;
+            overflow-y: auto;
+            padding-right: 10px;
+        }
+
+        .entity-properties::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .entity-properties::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 4px;
+        }
+
+        .entity-properties::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.3);
+            border-radius: 4px;
+        }
+
+        .entity-properties::-webkit-scrollbar-thumb:hover {
+            background: rgba(255, 255, 255, 0.5);
+        }
+
+        .entity-property {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 12px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 5px;
+            font-size: 0.9rem;
+        }
+
+        .property-key {
+            font-weight: 600;
+            color: #3498db;
+        }
+
+        .property-value {
+            color: #ecf0f1;
+            font-family: 'Courier New', monospace;
+        }
+
+        .lifecycle {
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 15px;
+        }
+
+        .lifecycle-step {
+            text-align: center;
+            flex: 1;
+        }
+
+        .lifecycle-icon {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 10px;
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: white;
+            transition: all 0.3s ease;
+        }
+
+        .lifecycle-step:nth-child(1) .lifecycle-icon { background: #3498db; }
+        .lifecycle-step:nth-child(2) .lifecycle-icon { background: #e74c3c; }
+        .lifecycle-step:nth-child(3) .lifecycle-icon { background: #f39c12; }
+        .lifecycle-step:nth-child(4) .lifecycle-icon { background: #27ae60; }
+        .lifecycle-step:nth-child(5) .lifecycle-icon { background: #9b59b6; }
+
+        .lifecycle-label {
+            font-weight: 600;
+            color: #2c3e50;
+            margin-bottom: 5px;
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .lifecycle-desc {
+            font-size: 0.8rem;
+            color: #7f8c8d;
+            line-height: 1.4;
+        }
+
+        .strategy-info {
+            text-align: center;
+            padding: 20px;
+            background: #34495e;
+            border-radius: 10px;
+            color: white;
+            margin-bottom: 20px;
+        }
+
+        .strategy-name {
+            font-size: 1.2rem;
+            font-weight: 600;
+            margin-bottom: 10px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .strategy-desc {
+            font-size: 0.9rem;
+            opacity: 0.9;
+            line-height: 1.5;
+        }
+
+        .fade-in {
+            animation: fadeIn 0.5s ease-in;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @media (max-width: 768px) {
+            .lifecycle {
+                flex-direction: column;
+                gap: 20px;
+            }
+
+            .controls {
+                flex-direction: column;
+                align-items: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Entity Projection Architecture</h1>
+        <p class="subtitle">Ephemeral entities assembled from persistent fragments</p>
+
+        <div class="controls">
+            <button class="strategy-btn minimal active" data-strategy="minimal">Minimal</button>
+            <button class="strategy-btn combat" data-strategy="combat">Combat</button>
+            <button class="strategy-btn trading" data-strategy="trading">Trading</button>
+            <button class="strategy-btn social" data-strategy="social">Social</button>
+            <button class="strategy-btn complete" data-strategy="complete">Complete</button>
+        </div>
+
+        <div class="strategy-info" id="strategyInfo">
+            <div class="strategy-name" id="strategyName">Minimal Strategy</div>
+            <div class="strategy-desc" id="strategyDesc">Loads only essential character data for basic operations</div>
+        </div>
+
+        <div class="visualization">
+            <div class="left-column">
+                <div class="entity-section">
+                    <div class="section-title">✨ Ephemeral Entity</div>
+                    <div class="entity fade-in" id="projectedEntity">
+                        <div class="entity-name" id="entityName">Character Projection</div>
+                        <div class="entity-properties" id="entityProperties"></div>
+                    </div>
+                </div>
+
+                <div class="fragments-section">
+                    <div class="section-title">📦 Fragment Storage</div>
+                    <div id="fragmentsList"></div>
+                </div>
+
+                <div class="lifecycle">
+                    <div class="lifecycle-step">
+                        <div class="lifecycle-icon">1</div>
+                        <div class="lifecycle-label">Fragment Loading</div>
+                        <div class="lifecycle-desc">Load required fragments based on projection strategy</div>
+                    </div>
+                    <div class="lifecycle-step">
+                        <div class="lifecycle-icon">2</div>
+                        <div class="lifecycle-label">Entity Assembly</div>
+                        <div class="lifecycle-desc">Assemble ephemeral entity from loaded fragments</div>
+                    </div>
+                    <div class="lifecycle-step">
+                        <div class="lifecycle-icon">3</div>
+                        <div class="lifecycle-label">Computation</div>
+                        <div class="lifecycle-desc">Execute pure business logic on complete entity</div>
+                    </div>
+                    <div class="lifecycle-step">
+                        <div class="lifecycle-icon">4</div>
+                        <div class="lifecycle-label">Disassembly</div>
+                        <div class="lifecycle-desc">Detect changes and update only modified fragments</div>
+                    </div>
+                    <div class="lifecycle-step">
+                        <div class="lifecycle-icon">5</div>
+                        <div class="lifecycle-label">Storage</div>
+                        <div class="lifecycle-desc">Commit surgical updates atomically in single transaction</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const fragments = {
+            base: {
+                name: 'Base',
+                key: 'ch:alice-123:base',
+                data: {
+                    'name': 'Alice',
+                    'level': 5,
+                    'class': 'Warrior',
+                    'location.current': 'tavern'
+                }
+            },
+            vitals: {
+                name: 'Vitals',
+                key: 'ch:alice-123:vitals',
+                data: {
+                    'hp.current': 95,
+                    'hp.max': 100,
+                    'mana.current': 40,
+                    'mana.max': 50,
+                    'stamina': 80
+                }
+            },
+            equipment: {
+                name: 'Equipment',
+                key: 'ch:alice-123:equipment',
+                data: {
+                    'equipped.weapon': 'Iron Sword',
+                    'equipped.armor': 'Leather Vest',
+                    'equipped.shield': 'Wooden Shield'
+                }
+            },
+            inventory: {
+                name: 'Inventory',
+                key: 'ch:alice-123:inventory',
+                data: {
+                    'items.gold': 150,
+                    'items.potion': 3,
+                    'items.bread': 5,
+                    'inventory.mass': 15.5
+                }
+            },
+            social: {
+                name: 'Social',
+                key: 'ch:alice-123:social',
+                data: {
+                    'reputation': 750,
+                    'guild': 'Warriors Guild',
+                    'friends': ['Bob', 'Carol'],
+                    'party.leader': true
+                }
+            }
+        };
+
+        const strategies = {
+            minimal: {
+                name: 'Minimal Strategy',
+                desc: 'Loads only essential character data for basic operations',
+                fragments: ['base'],
+                color: '#3498db'
+            },
+            combat: {
+                name: 'Combat Strategy',
+                desc: 'Optimized for battle scenarios with health, equipment, and core stats',
+                fragments: ['base', 'vitals', 'equipment'],
+                color: '#e74c3c'
+            },
+            trading: {
+                name: 'Trading Strategy',
+                desc: 'Focused on commerce with inventory, reputation, and social data',
+                fragments: ['base', 'inventory', 'social'],
+                color: '#f39c12'
+            },
+            social: {
+                name: 'Social Strategy',
+                desc: 'Emphasizes relationships, guild membership, and social interactions',
+                fragments: ['base', 'social'],
+                color: '#9b59b6'
+            },
+            complete: {
+                name: 'Complete Strategy',
+                desc: 'Full entity projection with all available fragments for admin/debug',
+                fragments: ['base', 'vitals', 'equipment', 'inventory', 'social'],
+                color: '#27ae60'
+            }
+        };
+
+        let currentStrategy = 'minimal';
+
+        function formatFragmentData(data) {
+            return Object.entries(data)
+                .map(([key, value]) => `"${key}": ${JSON.stringify(value)}`)
+                .join('\n');
+        }
+
+        function renderFragments() {
+            const fragmentsList = document.getElementById('fragmentsList');
+            const strategy = strategies[currentStrategy];
+
+            fragmentsList.innerHTML = '';
+
+            Object.entries(fragments).forEach(([key, fragment]) => {
+                const isLoaded = strategy.fragments.includes(key);
+                const fragmentEl = document.createElement('div');
+                fragmentEl.className = `fragment ${isLoaded ? 'loaded' : ''}`;
+
+                fragmentEl.innerHTML = `
+                    <div class="fragment-name">${fragment.name}</div>
+                    <div class="fragment-key">${fragment.key}</div>
+                `;
+
+                fragmentsList.appendChild(fragmentEl);
+            });
+        }
+
+        function renderEntity() {
+            const strategy = strategies[currentStrategy];
+            const entityProperties = document.getElementById('entityProperties');
+            const entityName = document.getElementById('entityName');
+
+            entityName.textContent = `${strategy.name} Projection`;
+
+            // Collect all properties from loaded fragments
+            const allProperties = {};
+            strategy.fragments.forEach(fragmentKey => {
+                Object.assign(allProperties, fragments[fragmentKey].data);
+            });
+
+            entityProperties.innerHTML = '';
+            Object.entries(allProperties).forEach(([key, value]) => {
+                const propEl = document.createElement('div');
+                propEl.className = 'entity-property';
+                propEl.innerHTML = `
+                    <span class="property-key">${key}</span>
+                    <span class="property-value">${JSON.stringify(value)}</span>
+                `;
+                entityProperties.appendChild(propEl);
+            });
+
+            // Add fade-in animation
+            const entity = document.getElementById('projectedEntity');
+            entity.classList.remove('fade-in');
+            setTimeout(() => entity.classList.add('fade-in'), 10);
+        }
+
+        function updateStrategyInfo() {
+            const strategy = strategies[currentStrategy];
+            document.getElementById('strategyName').textContent = strategy.name;
+            document.getElementById('strategyDesc').textContent = strategy.desc;
+        }
+
+        function setActiveStrategy(strategyKey) {
+            currentStrategy = strategyKey;
+
+            // Update button states
+            document.querySelectorAll('.strategy-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            document.querySelector(`[data-strategy="${strategyKey}"]`).classList.add('active');
+
+            updateStrategyInfo();
+            renderFragments();
+            renderEntity();
+        }
+
+        // Event listeners
+        document.querySelectorAll('.strategy-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                setActiveStrategy(btn.dataset.strategy);
+            });
+        });
+
+        // Initial render
+        setActiveStrategy('minimal');
+    </script>
+</body>
+</html>

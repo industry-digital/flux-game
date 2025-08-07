@@ -105,6 +105,9 @@ Every resource-gathering mission has the potential to become an epic survival st
 
 ### The Abundance Paradox
 
+> "Do not, my friends, become addicted to water. It will take hold of you, and you will resent its absence!"
+> -- Immortan Joe, Mad Max: Fury Road (2015)
+
 **Living on the Margins:**
 Players exist at the fringes of G.A.E.A.'s paradise - a lush, bountiful ecological reserve where the superintelligence has created perfect ecosystem balance through cosmic-scale predator enforcement. All animals that players encounter in the world are spillover from that protected realm, creatures that have wandered beyond the boundaries of G.A.E.A.'s actively managed territories.
 

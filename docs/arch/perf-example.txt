@@ -1,0 +1,11 @@
+<-- POST /commands
+--> POST /commands 202 30ms
+{"t":1753827329924,"handler":"UniversalContextualizer","world":{"actors":0,"places":1493},"timing":{"phase:1":"20.885ms","phase:2":"173.048ms","phase:3":"0.082ms","phase:4":"0.023ms","total":"194.038ms"},"roundtrips":{"complete":1,"pending":1}}
+{"t":1753827329924,"stage:contextualization":"194.847ms"}
+{"t":1753827329953,"stage:projection":"28.955ms"}
+{"t":1753827329957,"stage:transformation":"3.747ms"}
+{"t":1753827329994,"sql":"35.1kB","duration":"0.111ms"}
+{"t":1753827329998,"stage:planning":"41.349ms"}
+{"t":1753827330005,"handler":"WorldMutationActuator","total":"6.7ms","commands":1510,"throughput":"225527 commands/s","per":"4.434μs"}
+{"t":1753827330005,"stage:actuation":"6.866ms"}
+{"t":1753827330005,"timing":{"total":"275.928ms","per":"0.183ms","core":"74.049ms","shell":"201.712ms"},"batch":{"id":"http-FVFCTxbhZFXKhi2PMnVb","size":1510},"errors":{"count":0,"items":[]}}
