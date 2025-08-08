@@ -145,7 +145,17 @@ export type WorldEventInput =
  * Union of all valid events
  */
 export type WorldEvent = Omit<WorldEventInput, 'id' | 'ts' | 'trace'> & {
+  /**
+   * The unique identifier for this event.
+   */
   id: string;
+  /**
+   * The moment the event occurred, expressed as milliseconds since the Unix epoch
+   */
   ts: number;
+
+  /**
+   * Identfies Intent or Command from which the event originates
+   */
   trace: string;
 };
