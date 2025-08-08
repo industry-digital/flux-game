@@ -2,7 +2,7 @@
 
 ## Overview
 
-The Monster Simulation System implements autonomous creature behaviors that respond to environmental conditions and player presence within the game world. The system manages up to 30,000 concurrent creatures using TypeScript and Node.js, providing real-time behavioral responses while maintaining the biological authenticity principles established by the weather and resource systems.
+The Monster Simulation System implements autonomous creature behaviors that respond to environmental conditions and player presence within the game world. The system manages -- at minimum, per core -- 10,000 concurrent creatures using TypeScript and Node.js, providing real-time behavioral responses while maintaining the biological authenticity principles established by the weather and resource systems.
 
 ## Architecture Philosophy
 

@@ -13,7 +13,7 @@
 1. [Combat System](./docs/simulation/combat.md)
 1. [Cordyceps gaeatrix hallucination mechanics](./docs/simulation/world-design.md)
 1. 2D Arcade (Street Fighter-style) Combat Positioning System - All participants line up in a straight line across the screen, like in Street Fighter. Moves like feinting and tumbling *around* the opponent to position at the flank are a key part of the system.
-
+1. LLM-powered monster behavior profiles that continuously update based on recent events and player actions.
 # Done
 
 . [Weather Simulation Baseline Stability](./docs/simulation/weather.md)
