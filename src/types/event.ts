@@ -39,6 +39,14 @@ export type AbstractWorldEventInput<T extends EventType, P extends EventPayload>
    * The payload of the event.
    */
   payload: P;
+
+  /**
+   * Normalized value between 0 and 1 indicating the significance of the event.
+   *
+   * 0 means the event is almost not worth mentioning.
+   * 1 means the event is absolutely mind-blowing. a.k.a, "epic", "earth-shattering", "life-changing", etc.
+   */
+  significance?: number;
 };
 
 export type ErrorExplanation = {
