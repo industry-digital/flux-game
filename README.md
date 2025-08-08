@@ -4,6 +4,7 @@
 # Priorities
 
 1. Analytics Dashboard (Clickhouse + Grafana)
+1. [World Texture Service](./docs/simulation/world-texture.md)
 1. [Rain Formation](./docs/simulation/weather.md)
 1. [Lightning Strikes](./docs/simulation/weather.md)
 1. [Spacefold](./docs/simulation/spacefold.md)
