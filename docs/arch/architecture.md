@@ -376,7 +376,7 @@ This holds particularly true for software development. It is the opinion of the 
 
 It is therefore important to build the system completely from first principles, from the ground up. This is the only way to ensure that the system is truly optimal for the problem at hand. We may leverage libraries and frameworks only if they align with our architectural goals, which are: correctness, performance, and simplicity.
 
-Ultimately, we are searching for a point in the vast solution space where correctness and exceptional performance are the same thing. The [quality without name](https://en.wikipedia.org/wiki/The_Timeless_Way_of_Building).
+Ultimately, we are searching for a point in the vast solution space where correctness and exceptional performance are the same thing. Digital jazz. The [quality without name](https://en.wikipedia.org/wiki/The_Timeless_Way_of_Building).
 
 - **Bottom-Up Design**: Focus on primitive capabilities rather than specific outcomes
 - **Autonomous Testing**: Test individual components and their interactions separately

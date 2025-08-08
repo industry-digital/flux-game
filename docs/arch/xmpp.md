@@ -138,7 +138,7 @@ sequenceDiagram
 
     Note over Client, MUCLight: Session Initialization & Roster Presence
     Client->>XMPPServer: Send initial presence
-    XMPPServer->>WorldServer: Forward presence notification (roster-based)
+    XMPPServer->>WorldServer: Forward presence (mod_presence_notify)
     activate WorldServer
     WorldServer->>WorldServer: Process new client connection
     WorldServer->>XMPPServer: Send directed presence response with full JID
