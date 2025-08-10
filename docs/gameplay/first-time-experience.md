@@ -56,9 +56,9 @@ Her words hang in the air like drawn steel.
 The choice feels heavier than it should. Like she's not just asking about tactics, but about the fundamental shape of who you are.
 
 > **Choice: Combat Philosophy**
-> 1. **Thunder** - Overwhelming force and devastating attacks
-> 2. **Shadow** - Precision, speed, and tactical positioning
-> 3. **Stone** - Resilience, endurance, and implacable advance
+> 1. **Power** - Overwhelming force and devastating attacks
+> 2. **Grace** - Precision, speed, and tactical positioning
+> 3. **Resilience** - Fortitude, endurance, and implacable advance
 
 [Player chooses their combat philosophy]
 
@@ -85,7 +85,7 @@ The intensity in her gaze makes it clear this isn't casual conversation.
 Her hand rests casually on the grip of a pistol. Like she's prepared to test your answer immediately.
 
 > **Choice: Mental Attribute**
-> 1. **Perception** - Enhanced awareness, initiative, and learning rate
+> 1. **Perception** - Enhanced awareness, initiative, and learning speed
 > 2. **Intelligence** - Analytical thinking and accelerated skill development
 > 3. **Memory** - Expanded tactical knowledge and ability retention
 
@@ -95,26 +95,14 @@ Her hand rests casually on the grip of a pistol. Like she's prepared to test you
 
 Kestra's expression shifts slightly—still predatory, but with a hint of professional satisfaction. "One more thing. Everyone who survives in this world has something special. Some natural advantage that kept them breathing when others stopped."
 
-She begins laying out equipment on a flat stone, each piece clicking into place with mechanical precision. "What's your edge? Are you a **tech savant**—naturally gifted with mechanical systems and pre-collapse technology? **Analytically enhanced**—your mind cuts through problems like a monomolecular blade? **Toxin resistant**—poisons and biological weapons that drop others barely slow you down?"
+> **Choice: Tool of Choice**
+> 1. **Pistol** - Handgun with high accuracy and damage
+> 2. **Rifle** - Long-range weapon
+> 3. **Shotgun** - Close-range weapon
+> 4. **Melee** - Close-range weapon with high damage and accuracy
 
-Her hands continue working, assembling something that looks like it could punch holes through starship hulls. "Maybe you're **shadow-touched**—moving through the world without drawing attention until you want to? **Hyperaware**—nothing escapes your notice, seeing threats others miss? **Grace-born**—naturally agile, moving with fluid precision?"
+[Player chooses their tool of choice]
 
-The weapon assembly completes with a satisfying *click*. "Could be **night-adapted**—darkness holds fewer secrets from you than most? **Command presence**—people naturally follow your lead, even when terrified? Or **trauma-hardened**—your body and mind endure what would shatter others?"
-
-She looks up from the weapon, grey eyes boring into you. "Choose carefully. Your natural gifts will be the difference between becoming legend or becoming fertilizer."
-
-> **Choice: Natural Trait**
-> 1. **Tech Savant** - Enhanced technology interaction and understanding
-> 2. **Analytical** - Superior problem-solving under pressure
-> 3. **Toxin Resistant** - Natural immunity to poisons and biological agents
-> 4. **Shadow-Touched** - Natural stealth and low profile capabilities
-> 5. **Hyperaware** - Enhanced perception and threat detection
-> 6. **Grace-Born** - Superior agility and fluid movement
-> 7. **Night-Adapted** - Enhanced performance in low-light conditions
-> 8. **Command Presence** - Natural leadership and social influence
-> 9. **Trauma-Hardened** - Superior physical and mental resilience
-
-[Player chooses their natural trait]
 
 Kestra nods, then slides the assembled weapon across the stone toward you. The weight feels perfect in your hands—like it was designed for your grip specifically.
 
@@ -140,7 +128,7 @@ Twisted metal and shattered concrete thrust from the earth like broken teeth. Na
 
 "G.A.E.A.'s work," Kestra whispers, crouched beside the skeletal remains of a truck. "The superintelligence doesn't just let nature reclaim territory—it optimizes the process. Every vine placement, every tree growth pattern, designed for maximum ecological efficiency."
 
-"Thermal signatures," Rhea reports through your augmented reality interface. "Multiple heat sources in the target structure. Analysis suggests mechanical rather than biological origins. Recommend approach vector seven degrees east of current position for optimal concealment."
+"Thermal signatures," Rhea reports through your augmented reality interface. "Multiple heat sources in the target structure. Analysis suggests mechanical rather than biological origins."
 
 The supply depot squats among the ruins like a concrete tumor—pre-collapse military construction designed to survive everything except superintelligence-directed ecological warfare. But the structure remains largely intact, which means whatever's inside might still be functional.
 
@@ -164,7 +152,7 @@ It raises a weapon—crude but effective-looking. And starts moving directly tow
 
 "Doesn't matter," Kestra cuts you off. "It knows we're here. Rules are simple: infected humans can't be reasoned with, can't be negotiated with, can't be converted back. They exist to eliminate human reproductive potential."
 
-"Multiple contacts," Rhea reports. "Three additional heat signatures emerging from the depot structure. Recommend immediate tactical response."
+"Multiple contacts," Rhea reports. "Three additional heat signatures emerging from the depot structure. Take cover immediately."
 
 Four infected humans begin coordinating their approach with the fluid precision of a hive mind. No wasted movement, no hesitation, no fear. Just implacable advance toward your position.
 
@@ -190,7 +178,7 @@ Kestra doesn't disappear—she *shifts*. One instant she's crouched beside you, 
 
 You sprint toward better cover as the antinatalists adjust their targeting, their movements still perfectly coordinated despite the impossibility they just witnessed. Kestra draws a long tactical knife, its edge gleaming with monomolecular sharpness.
 
-"Watch carefully," she says, her voice carrying deadly calm. "This is why we call it a blink strike."
+"Watch carefully," she says, her voice carrying deadly calm. "This is why we call it a 'blink strike'."
 
 The lead antinatalist raises its weapon, tracking toward your position. Kestra activates her blink drive—but this time something is different. The quantum shimmer intensifies, reality distorting more violently around her as she positions the blade ahead of her body.
 
@@ -200,7 +188,7 @@ Kestra doesn't just reposition—she materializes with mathematical precision, h
 
 It drops without a sound. No scream, no struggle—just instant termination.
 
-"Target eliminated," Rhea reports with clinical precision. "Blink strike successful. Two contacts remaining. Drive showing amber status."
+"Target eliminated," Rhea reports with clinical precision. "Two contacts on your flank. Capacitor: 53%."
 
 Kestra's final blink puts her directly in your path of retreat. "This way! The drives can't sustain rapid cycling—they'll overheat and potentially rupture."
 
@@ -259,14 +247,3 @@ The story branches here based on player agency, but the core elements remain:
 - The constant pressure of G.A.E.A.'s optimization agenda
 - Enhanced human capabilities that feel earned rather than arbitrary
 - Choices that matter for character development and playstyle
-
-The Pierce Brown influence shows in:
-- Visceral, kinetic action sequences
-- Characters defined through violence and choice under pressure
-- Technology that feels both alien and grounded in physics
-- Moral complexity without clear heroes or villains
-- Prose that cuts like a blade—sharp, efficient, brutal when necessary
-
----
-
-*"The weak are meat. The strong do eat. But in this world, even the strong are hunted by things that dream in mathematics and optimize in blood."*

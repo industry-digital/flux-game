@@ -13,6 +13,13 @@ Every item has a quality score from 0 to 100 that constantly shifts based on tim
 - **61-80**: High quality, performs well, noticeable advantages
 - **81-100**: Exceptional performance, masterwork level, rare to maintain
 
+## Quality as a Logistic Curve
+
+Quality does not simply increase or decrease linearly. It follows a logistic curve, where the rate of change slows as the item approaches its maximum potential in either direction.
+
+This makes perfect quality mathematically impossible to achieve. Likewise perfect degradation is also impossible. 
+
+
 ## The Three Forces That Shape Quality
 
 Behind every quality score are three factors that constantly change:

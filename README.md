@@ -4,7 +4,7 @@
 
 1. Remove `seed` from Weather
 1. [Resource Simulation Baseline Stability](./docs/simulation/resource.md) (yellow resources, in stasis)
-1. [Local LLM on Metal](./docs/arch/local-llm.md)
+1. [Qwen on Metal](./docs/arch/local-llm.md)
 1. [Creature Simulation](./docs/simulation/monsters.md)
 1. [World Texture Service](./docs/simulation/world-texture.md)
 1. [Rain Formation](./docs/simulation/weather.md)

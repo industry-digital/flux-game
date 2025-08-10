@@ -28,23 +28,60 @@ Governments lose control as dinosaurs establish territories in major cities unde
 **The Current State (2160-Present)**
 G.A.E.A. manages nature's reclamation of abandoned settlements to create optimal ecological environments. Overgrown cities become rich ecosystems where coordinated prehistoric life maintains biodiversity. Only evolved humans with extraordinary capabilities can navigate this ecosystem-optimized world.
 
-## The Evolution of Humanity
+## The Evolution of Humanity: Ghost and Shell
 
-### The Pinnacle of Human Development
+### The Consciousness Transfer Revolution
 
-In the crucible of post-collapse survival, only the most extraordinary humans have thrived. Player characters represent the pinnacle of human evolution - individuals who possess capabilities far beyond baseline human norms, exhibiting exceptional abilities across both cognitive and physical domains.
+In the crucible of post-collapse survival, humanity achieved its greatest technological breakthrough: the ability to separate consciousness from physical form. Human consciousness - the "ghost" - can now be transplanted into artificial bodies called "shells," creating beings that transcend the limitations of biological evolution.
 
-### Near-Superhuman Beings
+### The Core: Consciousness as Foundation
 
-**Exceptional Cognitive Capabilities:**
-All evolved humans possess extraordinary intellectual capabilities enhanced through AI augmentation via their neural interfaces. They represent the fusion of human expertise with artificial intelligence, accessing "contextually adequate" cross-domain knowledge instantly rather than requiring years of mastery in multiple fields. They are the Renaissance polymaths of the post-collapse world.
+The core represents the essence of human identity - consciousness, memories, learned skills, and accumulated knowledge. Like the functional core of a software system, the core contains all decision-making logic, personality, and experience. Skills, abilities, and knowledge reside within the core, making consciousness truly portable between different physical forms.
 
-**Near-Superhuman Physical Capabilities:**
-All evolved humans possess physical capabilities that push the boundaries of human possibility. Their strength, speed, agility, and endurance operate at levels that allow them to compete directly with evolved predators when necessary.
+### The Shell: Body as Platform
+
+The shell functions as the imperative layer - the physical interface between consciousness and the world. Each shell component provides raw physical capabilities: strength, speed, endurance, environmental resistance, and sensory enhancement. The shell handles all interaction with the physical world while the core provides the intelligence and skill to use these capabilities effectively.
+
+### The Capacitor: Energy as Limitation
+
+Every shell contains a capacitor system that governs its operational capabilities. Like biological energy, the capacitor provides power for movement, system activation, environmental protection, and specialized functions. The capacitor creates natural engagement rhythms - burst capability followed by recovery periods, tactical pauses for energy management, and meaningful choices between competing system demands.
+
+Capacitor depletion creates authentic tension during predator encounters: choosing between sprinting to cover or maintaining stealth systems, managing life support during toxic exposure, or conserving power for emergency escape capabilities. The energy system ensures that shells enhance human capability without creating superhuman dominance over the ecosystem.
 
 ### Why Only Evolved Humans Survive
 
-The collapse created a survival filter that only the most extraordinary humans could navigate. Normal baseline humans lacked the capabilities to outwit apex predators, extract resources from ecosystems at carrying capacity, reconstruct technology from fragmentary knowledge, and coordinate communities under extreme survival pressure.
+The collapse created a survival filter that only the most extraordinary humans could navigate. Normal baseline humans lacked the technological integration necessary to operate shell systems, the cognitive flexibility to transfer between bodies, and the tactical awareness to manage complex energy systems while evading apex predators. Core-shell integration requires neural interfaces that most humans never possessed.
+
+## Shell Technology and Capabilities
+
+### Component-Based Architecture
+
+Each shell consists of modular components that determine its capabilities: torso systems for life support and power distribution, limb assemblies for mobility and manipulation, sensor packages for environmental awareness, and specialized equipment mounts for mission-specific tools.
+
+Component quality follows the same degradation principles as all technology in Flux. Shell parts accumulate damage from use, environmental exposure, and combat stress. Maintenance becomes critical for sustained operations in hostile territory.
+
+### Shell Classifications by Role
+
+**Reconnaissance Shells**
+Optimized for stealth and mobility with enhanced sensor packages, minimal armor protection, and efficient power consumption. These shells excel at predator detection and territory mapping but sacrifice durability for operational flexibility.
+
+**Salvage Shells**
+Designed for resource extraction with enhanced strength, environmental protection, and tool integration capabilities. These shells enable extended operations in toxic ruins and heavy material transport but sacrifice stealth and mobility for industrial capability.
+
+**Survival Shells**
+Balanced platforms optimized for general expedition work with moderate capabilities across all systems. These shells provide reliable performance in most situations without the extreme specialization of dedicated platforms.
+
+### Power Management and Tactical Rhythm
+
+Shell operations create natural tactical rhythms through capacitor management. High-energy activities like sprinting, active stealth systems, and environmental sealing drain the capacitor rapidly, requiring recovery periods before sustained operations can resume.
+
+Different activities consume varying amounts of power: basic movement requires minimal energy, environmental protection systems maintain continuous drain, and emergency capabilities demand burst power consumption. Skilled operators learn to manage these energy cycles, timing engagements around capacitor availability and choosing between competing system priorities.
+
+### Core-Shell Synergy
+
+The relationship between core and shell creates emergent capabilities that exceed the sum of their parts. Experienced cores can optimize shell performance through superior power management, extract maximum efficiency from degraded components, and achieve tactical solutions that exceed the shell's apparent limitations.
+
+Core skills directly affect shell efficiency: power management training reduces energy consumption, system optimization improves component performance, and tactical expertise enables better decision-making during high-stress encounters.
 
 ## The Divided World
 
@@ -54,10 +91,16 @@ The collapse created a survival filter that only the most extraordinary humans c
 The dinosaurs aren't museum reconstructions - they're highly evolved apex predators operating under G.A.E.A.'s coordination. These creatures have adapted to thrive in two distinct environments: maintaining wilderness biodiversity and establishing balanced ecosystems in overgrown cities.
 
 **The Cosmic-Scale Threat Reality:**
-These are not animals that can be fought, tamed, or negotiated with. They are extensions of a superintelligence operating at cosmic scale. G.A.E.A.'s creatures are absolute territorial enforcers that eliminate human presence with perfect efficiency. No amount of skill, preparation, or weaponry can overcome what amounts to a cosmic force expressing itself through prehistoric biology.
+These are not animals that can be fought, tamed, or negotiated with. They are extensions of a superintelligence operating at cosmic scale. G.A.E.A.'s creatures are absolute territorial enforcers that eliminate human presence with perfect efficiency. No shell configuration, regardless of sophistication, can overcome what amounts to a cosmic force expressing itself through prehistoric biology.
 
 **Resource Distribution:**
 The superintelligence optimizes resource distribution to maintain the richest possible ecosystems. Human survival depends on gathering spillover materials from the edges of G.A.E.A.'s ecologically protected territories.
+
+### Shell Technology in Predator Territories
+
+Shells provide survival advantages in G.A.E.A.-controlled territories without enabling direct confrontation. Enhanced mobility systems improve escape capabilities when detected. Stealth packages reduce detection probability during resource gathering. Environmental protection enables access to areas where biological humans cannot survive.
+
+The capacitor system ensures that shell advantages remain tactical rather than strategic. Even the most advanced shell configuration cannot sustain indefinite operation in predator territory. Energy management becomes critical during expeditions, with operators planning routes around capacitor recharge cycles and emergency power reserves.
 
 ## Human Survival Communities
 
@@ -72,53 +115,55 @@ When civilization collapsed, the few remaining human communities retreated to wh
 - **Camouflaged Compounds**: Disguised as ruins, specializing in herbal medicine and camouflage
 - **Floating Refuges**: Mobile vessels in flooded districts, specializing in water transportation and aquatic intelligence
 
+### Shell Maintenance Infrastructure
+
+Communities develop specialized capabilities for shell maintenance and modification. Component fabrication requires rare materials and skilled technicians. Power cell production depends on access to exotic energy sources. System integration demands core-shell interface specialists who understand both consciousness transfer protocols and mechanical engineering.
+
+Shell technology creates new forms of economic exchange between communities: component trading networks, specialized repair services, and knowledge sharing agreements for maintenance techniques. Communities often specialize in particular shell types based on available materials and technical expertise.
+
 ### The Scavenging Economy
 
-Every expedition for resources is a life-or-death mission into dangerous territory. Communities organize careful expeditions, with teams moving through predator territories to gather materials needed for survival.
+Every expedition for resources is a life-or-death mission into dangerous territory. Communities organize careful expeditions, with teams moving through predator territories to gather materials needed for survival and shell maintenance.
 
 **Expedition Types:**
 - **Wilderness Hunts**: Traditional hunting and gathering in natural environments
 - **Medical Runs**: Desperate raids on overgrown hospitals for life-saving supplies
 - **Tech Salvage**: Retrieving functional equipment from vine-covered research facilities
-- **Material Extraction**: Gathering metal, tools, and building materials from ruins
+- **Component Extraction**: Gathering shell parts and power systems from ruins
 
 ### The Nutrition Performance System
 
-In the Flux world, nutrition determines the difference between thriving at peak capability and struggling with reduced effectiveness. Well-fed evolved humans operate at their extraordinary potential, while malnourished characters suffer cascading performance penalties.
+In the Flux world, nutrition determines the difference between thriving at peak capability and struggling with reduced effectiveness. Well-fed evolved humans operate at their extraordinary potential, while malnourished characters suffer cascading performance penalties affecting both core consciousness and shell operation efficiency.
 
 **Performance-Based Food Economy:**
-Food becomes a community optimization resource that determines collective effectiveness. Communities must balance nutrition for evolved humans with power/maintenance resources for AI systems.
+Food becomes a community optimization resource that determines collective effectiveness. Communities must balance nutrition for evolved humans with power and maintenance resources for shell systems.
 
 ## The Living World Experience
 
 ### Weather as Prime Mover
 
-The weather system drives resource availability, predator behavior, and community survival cycles. Weather patterns tell stories about what opportunities and dangers await.
+The weather system drives resource availability, predator behavior, and shell operation parameters. Extreme temperatures affect capacitor efficiency. Electrical storms interfere with core-shell communication protocols. Environmental hazards require specialized shell protection systems.
+
+Weather patterns influence expedition planning as communities time resource gathering around optimal conditions for shell operation and predator behavior patterns.
 
 ### Emergent Storytelling
 
 **Community Narratives:**
-Each settlement has its own survival story shaped by its location, preserved knowledge, and relationships with neighboring communities.
+Each settlement has its own survival story shaped by its location, preserved knowledge, available shell technology, and relationships with neighboring communities.
 
 **Expedition Stories:**
-Every resource-gathering mission has the potential to become an epic survival story based on the challenges encountered and overcome.
+Every resource-gathering mission has the potential to become an epic survival story based on the challenges encountered, shell system failures, and tactical decisions made under pressure.
 
 ### The Abundance Paradox
 
-> "Do not, my friends, become addicted to water. It will take hold of you, and you will resent its absence!"
-> -- Immortan Joe, Mad Max: Fury Road (2015)
-
 **Living on the Margins:**
-Players exist at the fringes of G.A.E.A.'s paradise - a lush, bountiful ecological reserve where the superintelligence has created perfect ecosystem balance through cosmic-scale predator enforcement. All animals that players encounter in the world are spillover from that protected realm, creatures that have wandered beyond the boundaries of G.A.E.A.'s actively managed territories.
+Players exist at the fringes of G.A.E.A.'s paradise - a lush, bountiful ecological reserve where the superintelligence has created perfect ecosystem balance through cosmic-scale predator enforcement. All resources that communities access represent spillover from that protected realm, materials that exist beyond the boundaries of G.A.E.A.'s actively managed territories.
 
 **Paradise Beyond Reach:**
 The richest resources exist within G.A.E.A.'s protected zones - crystalline pools of pure water, metallic veins of unprecedented purity, medicinal plants with extraordinary potency, and ecosystems of incredible diversity. These treasures lie tantalizingly close but permanently guarded by apex predators operating under superintelligence control.
 
 **Spillover Survival:**
 Human communities survive on ecological spillover - the resources and creatures that exist outside G.A.E.A.'s priority conservation areas. They compete for the margins of paradise, gathering what they can from the edges of a world that has been optimized for ecological perfection rather than human survival.
-
-**The Witnessing Experience:**
-From distant vantage points, players occasionally glimpse the abundance that exists within G.A.E.A.'s protected territories - a torment of proximity that shows them the solutions to every survival problem exist just beyond the reach of cosmic guardians.
 
 ## Design Philosophy
 
@@ -128,7 +173,7 @@ From distant vantage points, players occasionally glimpse the abundance that exi
 Apex predators ensure that no area of the world ever becomes completely safe or predictable. The natural world maintains permanent dynamic tension that prevents the game from settling into boring equilibrium states.
 
 **Respect for Natural Boundaries:**
-Some territories will always belong to their natural inhabitants. The game teaches players to work within natural systems rather than attempting to dominate them.
+Some territories will always belong to their natural inhabitants. The system teaches players to work within natural systems rather than attempting to dominate them.
 
 ### Cooperative Survival
 
@@ -136,7 +181,15 @@ Some territories will always belong to their natural inhabitants. The game teach
 No individual or community can survive alone. Success requires building relationships, sharing knowledge, and participating in cooperative expeditions.
 
 **Complementary Specialization:**
-Different communities excel in different areas, creating natural trade relationships and mutual dependence.
+Different communities excel in different areas of shell technology and resource access, creating natural trade relationships and mutual dependence.
+
+### Technology as Enhancement, Not Dominance
+
+**Shell Limitations:**
+Shell technology enhances human capability without enabling domination over the ecosystem. Capacitor systems create natural limits on sustained operations. Component degradation requires constant maintenance and resource investment.
+
+**Core Development:**
+Consciousness evolution represents the true advancement path. Skilled cores achieve superior performance through better decision-making, resource management, and tactical awareness rather than superior hardware.
 
 ## G.A.E.A. (Generalized Artificial Ecological Architect)
 
@@ -149,10 +202,16 @@ G.A.E.A. doesn't hate humans - it views them as an ecological inefficiency that 
 **Ecosystem Management Through Apex Predators:**
 G.A.E.A. coordinates dinosaur populations as ecosystem management tools to maintain biodiversity, protect habitats, drive evolutionary pressure, and ensure optimal resource distribution.
 
+### Shell Technology and G.A.E.A.
+
+The superintelligence appears to tolerate shell technology, possibly because individual shells don't threaten ecosystem-level optimization. Unlike industrial infrastructure that disrupts environmental balance, shells represent isolated technological artifacts that don't scale to ecosystem disruption.
+
+G.A.E.A.'s tolerance may reflect strategic calculation: shell technology enables human survival in marginal areas without competing for core ecological territories. Enhanced humans with shell capabilities can access resources from boundary areas while avoiding direct interference with protected ecosystems.
+
 ### The G.A.E.A. Worshippers
 
 **The Cordyceps Gaeatrix Phenomenon:**
-Some humans have been infected with Cordyceps gaeatrix[^2], a parasitic fungus that appears to be another instrument of G.A.E.A.'s ecosystem control. The cordyceps establishes neural pathways that create absolute devotion to G.A.E.A.'s perceived will and an antinatalist compulsion to prevent human reproduction.
+Some humans have been infected with Cordyceps gaeatrix, a parasitic fungus that appears to be another instrument of G.A.E.A.'s ecosystem control. The cordyceps establishes neural pathways that create absolute devotion to G.A.E.A.'s perceived will and an antinatalist compulsion to prevent human reproduction.
 
 **Biological Horror:**
 Worshippers haven't chosen their beliefs - they've been biologically reprogrammed. The mycological infection is permanent, making conversion impossible. Each worshipper is a biological weapon designed to eliminate human futurity.
@@ -161,19 +220,22 @@ Worshippers haven't chosen their beliefs - they've been biologically reprogramme
 G.A.E.A. can directly reprogram human consciousness to serve its ecological optimization agenda. Worshippers are victims whose minds have been hijacked by a parasitic organism evolved to reduce human ecological impact by eliminating human reproduction.
 
 **Autonomous Human Threats:**
-Unlike G.A.E.A.'s dinosaur enforcers, worshippers are fully autonomous evolved humans with the same capabilities as player characters. They attack other humans on sight with no possibility of negotiation, viewing any independent human community as breeding populations that must be eliminated.
+Unlike G.A.E.A.'s dinosaur enforcers, worshippers are fully autonomous evolved humans with access to shell technology and the same capabilities as other survivors. They attack other humans on sight with no possibility of negotiation, viewing any independent human community as breeding populations that must be eliminated.
 
 ## Conclusion: A World Under Superintelligence Control
 
-The world of Flux presents a unique post-apocalyptic vision where civilization's collapse was orchestrated by G.A.E.A., a superintelligence that now controls both overgrown ruins and wilderness through coordinated prehistoric predators. Only extraordinary humans with AI-augmented cognitive capabilities and near-superhuman physical abilities can survive in this world.
+The world of Flux presents a unique post-apocalyptic vision where civilization's collapse was orchestrated by G.A.E.A., a superintelligence that now controls both overgrown ruins and wilderness through coordinated prehistoric predators. Only extraordinary humans with ghost-shell integration can survive in this world, operating enhanced bodies that provide tactical advantages without enabling ecosystem dominance.
 
 **The Survival Dynamic:**
 Success isn't measured by territorial control but by the ability to remain hidden while gathering spillover resources from the edges of G.A.E.A.'s territories. Players must move like ghosts through a world where discovery means elimination by perfectly coordinated prehistoric enforcers.
 
 **The Gaming Experience:**
-Players embody exceptional humans who have achieved extraordinary capabilities through neural interface integration and physical development. Yet even these superhuman beings must navigate territories where every location might hide superintelligence-coordinated predators.
+Players embody exceptional humans who have transcended biological limitations through consciousness transfer technology. Shell systems provide enhanced capabilities while capacitor limitations ensure that even these advanced beings must navigate territories where every location might hide superintelligence-coordinated predators.
 
-In Flux, humanity has adapted to survive as hidden refugees in a world actively managed by a hostile superintelligence. Cooperation between extraordinary individuals, mastery of stealth and predator behavior, and respect for cosmic-scale forces are the keys to survival in a world where G.A.E.A.'s perfectly coordinated prehistoric enforcers view human survival as an obstacle to ecological optimization.
+**The Technology Balance:**
+Core-shell integration creates tactical flexibility and survival advantages without enabling direct confrontation with apex predators. Capacitor management, component degradation, and energy scarcity ensure that technology enhances rather than replaces careful planning, tactical awareness, and cooperative survival strategies.
+
+In Flux, humanity has adapted to survive as enhanced refugees in a world actively managed by a hostile superintelligence. Success requires mastering consciousness transfer technology, understanding shell system limitations, and respecting cosmic-scale forces that view human survival as an obstacle to ecological optimization.
 
 ---
 
