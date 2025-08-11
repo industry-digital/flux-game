@@ -1,12 +1,10 @@
 import { SchemaManager } from '../manager';
-import { BulkResourceSchema } from '~/types';
+import { BulkResourceSchema, KindOfResource } from '~/types';
 import { ResourceURN } from '~/types/taxonomy';
 import * as fungusSchemas from './fungus';
 import * as treeSchemas from './tree';
 import * as flowerSchemas from './flower';
 import * as mineralSchemas from './mineral';
-import * as waterSchemas from './water';
-
 
 function getSchemaExports(module: Record<string, any>, moduleName: string): [ResourceURN, BulkResourceSchema][] {
   return Object.entries(module)
@@ -33,11 +31,10 @@ export function createSchemaManager(): SchemaManager<BulkResourceSchema, Resourc
 
   // Add schemas from each module
   const modules: [Record<string, any>, string][] = [
-    [fungusSchemas, 'fungus'],
-    [treeSchemas, 'tree'],
-    [flowerSchemas, 'flower'],
-    [mineralSchemas, 'mineral'],
-    [waterSchemas, 'water'],
+    [fungusSchemas, KindOfResource.FUNGUS],
+    [treeSchemas, KindOfResource.TREE],
+    [flowerSchemas, KindOfResource.FLOWER],
+    [mineralSchemas, KindOfResource.MINERAL],
   ];
 
   modules.forEach(([module, name]) => {
@@ -54,4 +51,3 @@ export { createFlowerSchema } from './flower';
 export { createFungusSchema } from './fungus';
 export { createMineralSchema } from './mineral';
 export { createTreeSchema } from './tree';
-export { createWaterSchema } from './water';

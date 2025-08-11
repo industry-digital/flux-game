@@ -1,10 +1,10 @@
 import { UnitOfMeasure, TimeUnit, GOLDEN_RATIO } from '~/types';
-import { BulkResourceSchema, FitnessEvaluationStrategy } from '~/types/schema/resource';
+import { BulkResourceSchema, FitnessEvaluationStrategy, KindOfResource } from '~/types/schema/resource';
 
 // Helper function to create fungus schemas with proper typing
 export function createFungusSchema(overrides: Partial<BulkResourceSchema> = {}): BulkResourceSchema {
   return {
-    kind: 'mushroom',
+    kind: KindOfResource.FUNGUS,
     provides: ['mushroom'],
     fitness: {
       strategy: FitnessEvaluationStrategy.FUNGUS,

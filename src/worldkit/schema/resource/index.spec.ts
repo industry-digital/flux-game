@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { createSchemaManager } from './index';
 import { ResourceURN } from '~/types/taxonomy';
+import { KindOfResource } from '~/types/schema/resource';
 
 describe('Resource Schema Manager', () => {
   describe('schema loading', () => {
@@ -10,11 +11,10 @@ describe('Resource Schema Manager', () => {
 
       // Verify we have schemas from all modules
       const moduleNames = new Set(Array.from(schemas.keys()).map(urn => urn.split(':')[2]));
-      expect(moduleNames).toContain('fungus');
-      expect(moduleNames).toContain('mineral');
-      expect(moduleNames).toContain('tree');
-      expect(moduleNames).toContain('flower');
-      expect(moduleNames).toContain('water');
+      expect(moduleNames).toContain(KindOfResource.FUNGUS);
+      expect(moduleNames).toContain(KindOfResource.MINERAL);
+      expect(moduleNames).toContain(KindOfResource.TREE);
+      expect(moduleNames).toContain(KindOfResource.FLOWER);
 
       // Verify total number of schemas
       expect(schemas.size).toBeGreaterThan(0);
@@ -29,25 +29,18 @@ describe('Resource Schema Manager', () => {
       const testCases = [
         // Simple names
         {
-          module: 'mineral',
+          module: KindOfResource.MINERAL,
           name: 'iron',
           expectedPath: 'iron'
         },
-        // Compound names with spaces
         {
-          module: 'water',
-          name: 'large pond',
-          expectedPath: 'large-pond'
-        },
-        // Names with special characters
-        {
-          module: 'fungus',
+          module: KindOfResource.FUNGUS,
           name: 'blood-red cup fungus',
           expectedPath: 'blood-red-cup-fungus'
         },
         // Multi-word descriptive names
         {
-          module: 'flower',
+          module: KindOfResource.FLOWER,
           name: 'mountain passion vine',
           expectedPath: 'mountain-passion-vine'
         }
@@ -124,11 +117,10 @@ describe('Resource Schema Manager', () => {
       const schemas = (manager as any).schemas as Map<string, any>;
 
       const typeDefaults = {
-        mineral: { maxNeighbors: 0, inhibitionRadius: 2 },
-        water: { maxNeighbors: 0, inhibitionRadius: 1 },
-        mushroom: { maxNeighbors: 2, inhibitionRadius: 1 },
-        tree: { maxNeighbors: 3, inhibitionRadius: 1 },
-        flower: { maxNeighbors: 5, inhibitionRadius: 1 }
+        [KindOfResource.MINERAL]: { maxNeighbors: 0, inhibitionRadius: 2 },
+        [KindOfResource.FUNGUS]: { maxNeighbors: 2, inhibitionRadius: 1 },
+        [KindOfResource.TREE]: { maxNeighbors: 3, inhibitionRadius: 1 },
+        [KindOfResource.FLOWER]: { maxNeighbors: 5, inhibitionRadius: 1 }
       };
 
       Object.entries(typeDefaults).forEach(([kind, defaults]) => {
