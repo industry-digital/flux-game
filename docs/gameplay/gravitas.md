@@ -112,9 +112,7 @@ rhea (gray): It has been an honor, my dear.
 [Blast radius disrupts formation | Hostiles scattered]
 [Encirclement broken]
 
-rhea: Impossible. But witnessed.
-gunther: I am... speechless.
-rei: Providence.
+rhea: ...
 ```
 
 The player earned every shot through skill. The AI witnessed every decision. Their own precision, 90 seconds earlier, became the instrument of their salvation.
@@ -181,8 +179,8 @@ This isn't game mechanics anymore. This is character. This is someone refusing t
 ### Gunther: Academic Respect for Irrational Excellence
 ```typescript
 // Technical assessment: "Magazine exhausted. Tactical options eliminated."
-// Witnessing the impossible: "Verdammt... magnificent fool."
-// Final recognition: "I am... speechless."
+// Witnessing the impossible: "Irrational excellence under impossible circumstances."
+// Final recognition: "You fought well, mein Freund."
 ```
 
 **Character Arc**: Clinical analysis → Professional respect → Transcendent acknowledgment
@@ -192,8 +190,7 @@ Gunther's speechlessness carries unique weight because it comes from the mind th
 ### Rei: Quiet Recognition of Moral Worth
 ```typescript
 // Practical assessment: "Eight rounds. Twenty-eight targets. Not enough."
-// Acknowledgment: "You fought well."
-// Final witness: "Providence."
+// Final witness: "You fought well."
 ```
 
 **Character Arc**: Resource analysis → Accepting assessment → Peaceful witness

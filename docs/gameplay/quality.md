@@ -17,7 +17,7 @@ Every item has a quality score from 0 to 100 that constantly shifts based on tim
 
 Quality does not simply increase or decrease linearly. It follows a logistic curve, where the rate of change slows as the item approaches its maximum potential in either direction.
 
-This makes perfect quality mathematically impossible to achieve. Likewise perfect degradation is also impossible. 
+This makes perfect quality mathematically impossible to achieve. Likewise perfect degradation is also impossible.
 
 
 ## The Three Forces That Shape Quality
@@ -157,3 +157,11 @@ Higher quality items don't just "do more damage" - they perform better in multip
 - Day 10: Quality 20 (barely medicinal, mostly compost)
 
 This system makes every item feel alive - constantly changing, requiring attention, creating meaningful decisions about when and how to use your precious resources. Nothing lasts forever, but skilled players can keep quality high through careful management and timely maintenance.
+
+## Locker
+
+Every player character has a "locker". This is container that is placed somewhere in the player's "home base".
+
+The locker is a fixed size container with well-known volume and dimensions. It can hold up to 100 kg of stuff. *Anything inside the locker is subject to degradation.*
+
+This offers the player a "refuge" from degradation.

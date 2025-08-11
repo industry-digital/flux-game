@@ -199,3 +199,104 @@ Twenty-eight blades descend as one.
 
 >
 ```
+
+
+## Distance, Range, and Gap-Closing
+
+### The Fundamental Constraint
+
+**Everything in this world has mass.** This single constraint drives all movement, positioning, and tactical decisions through pure physics rather than arbitrary game mechanics.
+
+### Integration-Based Movement
+
+Movement in Flux operates on the principle that **distance = ∫ velocity(t) dt** - the area under the velocity-time curve. The system uses numerical integration to calculate position from velocity curves, making every meter traveled the result of solving calculus problems in real-time.
+
+```typescript
+// Distance calculated through integration, not direct kinematic equations
+for (let t = 0; t < time; t += integrationStep) {
+  const currentVelocity = calculateVelocity(acceleration, t, terminalVelocity);
+  const nextVelocity = calculateVelocity(acceleration, t + integrationStep, terminalVelocity);
+
+  // Trapezoidal rule: area = (v1 + v2) * dt / 2
+  const deltaDistance = (currentVelocity + nextVelocity) * integrationStep / 2;
+  totalDistance += deltaDistance;
+}
+```
+
+### Actor Configuration Examples
+
+Combat engagements typically begin at 100m range. Consider two actors competing for a contested objective:
+
+**Scout Configuration**:
+- **Mass**: 60kg (minimal gear)
+- **Power Output**: 6,400W
+- **Terminal Velocity**: 80 m/s
+- **Time to 100m**: ~5.3 seconds
+
+**Heavy Configuration**:
+- **Mass**: 200kg (heavy armor + weapons)
+- **Power Output**: 6,400W
+- **Terminal Velocity**: 80 m/s
+- **Time to 100m**: ~9.7 seconds
+
+### The Physics Revelation
+
+When we plot velocity curves and integrate them:
+
+**Scout advantage**: Reaches peak velocity faster due to superior power-to-mass ratio, covers distance through high-velocity sustained phase.
+
+**Heavy limitation**: Same power output but significantly higher mass creates much lower acceleration, requiring longer time to cover distance.
+
+**Mathematical inevitability**: The integration reveals that the Scout reaches the objective **4.4 seconds earlier** - a decisive tactical advantage determined purely by physics, not game balance decisions.
+
+### Tactical Implications
+
+This system creates **authentic tactical trade-offs**:
+- **Light configurations** excel at gap-closing and repositioning
+- **Heavy configurations** require positional discipline and range management
+- **Victory often determined** before the first shot through superior understanding of velocity integrals
+
+Players who grasp the integration relationship gain genuine competitive advantage, making physics literacy a core combat skill rather than memorizing arbitrary movement rules.
+
+## Damage Types
+
+`kinetic`
+
+- Any kind of physical contact, including melee attacks.
+- Any kind of ranged kinetic energy penetrator, including bullets, arrows, and weapons like gauss rifles.
+
+`thermal`
+
+- Any kind of flame-based or heat-based weapon, including flamethrowers, plasma weapons, and lasers. These weapons deal damage through *heat* effects.
+
+`explosive`
+
+- Any kind of explosive weapon, including grenades, bombs, and mines. These weapons deal damage through *pressure* effects.
+
+
+## Momentum-Based Damage: Physics as Weapon
+
+### The Kinetic Energy Transfer Principle
+
+When a shell strikes with a melee weapon while in motion, the total damage delivered combines the weapon's base striking power with the kinetic energy of the moving shell. This creates authentic physics-based combat where velocity becomes a tactical resource.
+
+**Momentum Damage Formula:**
+```
+Total Damage = Base Weapon Damage + (Shell Velocity × Shell Mass × Momentum Coefficient)
+```
+
+### Tactical Applications
+
+**Scout Kinetic Strikes**: A 60kg scout moving at 80 m/s delivers devastating momentum damage - transforming the entire shell into a precision projectile that strikes with the force of its accumulated velocity.
+
+**Heavy Charging**: Even slower heavies gain significant momentum bonus - a 200kg shell moving at 30 m/s transfers crushing kinetic energy through sheer mass multiplication.
+
+**Inertial Drive Mastery**: Scouts with inertial drives can maintain full approach velocity until the moment of impact, then instantly reduce effective mass for stopping - maximizing kinetic energy transfer while minimizing deceleration vulnerability.
+
+### Velocity Awareness System
+
+**Real-Time Velocity Display**: Players see their current velocity at all times, enabling accurate mental modeling of momentum damage potential. Understanding that approach speed directly translates to strike force creates tactical decision-making around movement and timing.
+
+**Physics Transparency**: The system shows players exactly how their movement choices affect combat effectiveness, making velocity management a core skill rather than a hidden mechanic.
+
+This transforms melee combat from simple weapon swinging into **kinetic energy management** where movement, mass, and timing combine through authentic physics to determine strike effectiveness.

@@ -38,15 +38,24 @@ In the crucible of post-collapse survival, humanity achieved its greatest techno
 
 The core represents the essence of human identity - consciousness, memories, learned skills, and accumulated knowledge. Like the functional core of a software system, the core contains all decision-making logic, personality, and experience. Skills, abilities, and knowledge reside within the core, making consciousness truly portable between different physical forms.
 
-### The Shell: Body as Platform
+### The Shell: Instrument of Action
 
-The shell functions as the imperative layer - the physical interface between consciousness and the world. Each shell component provides raw physical capabilities: strength, speed, endurance, environmental resistance, and sensory enhancement. The shell handles all interaction with the physical world while the core provides the intelligence and skill to use these capabilities effectively.
+The shell functions as the core's instrument for affecting the physical world - the means through which consciousness translates intention into action. Each shell component provides raw physical capabilities: strength, speed, endurance, environmental resistance, and sensory enhancement. The shell serves as the core's hands, eyes, and legs in the material realm, while the core provides the intelligence, skill, and will that directs these capabilities toward specific purposes.
 
-### The Capacitor: Energy as Limitation
+### The Flux Capacitor: Solar Energy Harvesting
 
-Every shell contains a capacitor system that governs its operational capabilities. Like biological energy, the capacitor provides power for movement, system activation, environmental protection, and specialized functions. The capacitor creates natural engagement rhythms - burst capability followed by recovery periods, tactical pauses for energy management, and meaningful choices between competing system demands.
+Every shell contains a "flux capacitor" - an advanced photovoltaic system that provides continuous power through sophisticated solar energy collection and storage. The capacitor integrates ultra-efficient metamaterial solar cells with high-density energy storage matrices, enabling sustained operation across varying light conditions.
 
-Capacitor depletion creates authentic tension during predator encounters: choosing between sprinting to cover or maintaining stealth systems, managing life support during toxic exposure, or conserving power for emergency escape capabilities. The energy system ensures that shells enhance human capability without creating superhuman dominance over the ecosystem.
+**Metamaterial Solar Collection**: The capacitor's outer surfaces incorporate metamaterial solar cells that capture energy across the full electromagnetic spectrum - from infrared through ultraviolet. These cells maintain high efficiency even under filtered light conditions common in overgrown urban environments where vegetation blocks direct sunlight.
+
+**Slow Recharge Reality**: Despite advanced metamaterial technology, the flux capacitor recharges at rates comparable to contemporary photovoltaic systems - meaning extended periods of direct sunlight are required to restore power reserves. A fully depleted capacitor requires approximately one hour of optimal sunlight exposure to reach operational capacity, creating meaningful tactical constraints.
+
+**Dynamic Energy Storage**: Internal crystalline matrices store captured solar energy in quantum-stable configurations, but the charging process remains fundamentally limited by photovoltaic physics. The storage system automatically optimizes energy distribution between immediate operational needs and reserve capacity, but cannot overcome the inherent slow accumulation of solar power.
+
+**Environmental Adaptation**: The solar collection system adapts to different light conditions - maximizing efficiency during peak sunlight hours while maintaining minimal power generation from ambient light reflected off vegetation, water surfaces, and atmospheric scattering in G.A.E.A.'s dense ecosystems. However, even optimal conditions yield gradual energy accumulation rather than rapid recharging.
+
+**Emergency Flare Charging**: In desperate situations, operators can use high-intensity signal flares as emergency power sources. A single flare burns bright enough to provide a nominal amount of emergency power - enough for one critical action like activating stealth systems, triggering an escape mechanism, or sending a distress signal. This desperate measure comes with enormous risk: flares are visible across vast distances, alerting every predator in the area to the operator's exact location. Emergency flare charging represents the absolute last resort when survival depends on a single critical action.
+
 
 ### Why Only Evolved Humans Survive
 
@@ -77,11 +86,11 @@ Shell operations create natural tactical rhythms through capacitor management. H
 
 Different activities consume varying amounts of power: basic movement requires minimal energy, environmental protection systems maintain continuous drain, and emergency capabilities demand burst power consumption. Skilled operators learn to manage these energy cycles, timing engagements around capacitor availability and choosing between competing system priorities.
 
-### Core-Shell Synergy
+### Core-Shell Mastery: The Instrumentalist Relationship
 
-The relationship between core and shell creates emergent capabilities that exceed the sum of their parts. Experienced cores can optimize shell performance through superior power management, extract maximum efficiency from degraded components, and achieve tactical solutions that exceed the shell's apparent limitations.
+The relationship between core and shell resembles a master musician with their instrument - the shell provides the physical capabilities, but the core's skill determines what can be accomplished. Experienced cores can coax extraordinary performance from their shells through superior technique, extract maximum efficiency from degraded components, and achieve results that exceed the shell's apparent specifications.
 
-Core skills directly affect shell efficiency: power management training reduces energy consumption, system optimization improves component performance, and tactical expertise enables better decision-making during high-stress encounters.
+Core mastery directly translates to shell effectiveness: power management expertise reduces energy waste, system optimization improves component response, and tactical knowledge enables the core to use the shell's capabilities in ways that transcend mechanical limitations. The shell becomes an extension of the core's will, responding to intention as naturally as a hand grasps or an eye focuses.
 
 ## The Divided World
 
