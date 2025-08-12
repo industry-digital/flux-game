@@ -205,7 +205,7 @@ Twenty-eight blades descend as one.
 
 ### The Fundamental Constraint
 
-**Everything in this world has mass.** This single constraint drives all movement, positioning, and tactical decisions through pure physics rather than arbitrary game mechanics.
+**Everything in this world has mass and requires power.** These two constraints combine to create the fundamental tension at the heart of Flux combat: power output from the shell's fusion reactor must simultaneously support movement, equipment operation, and tactical systems. Every watt allocated to armor protection or weapon systems is a watt unavailable for acceleration and mobility.
 
 ### Integration-Based Movement
 
@@ -223,40 +223,105 @@ for (let t = 0; t < time; t += integrationStep) {
 }
 ```
 
-### Actor Configuration Examples
+### The Power-Mass-Equipment Triangle
 
-Combat engagements typically begin at 100m range. Consider two actors competing for a contested objective:
+Every shell configuration represents a three-way trade-off between available power, total mass, and equipment capability:
 
-**Scout Configuration**:
-- **Mass**: 60kg (minimal gear)
-- **Power Output**: 6,400W
-- **Terminal Velocity**: 80 m/s
+```typescript
+// Available power for movement after equipment overhead
+const movementPower = powerCore.output(chargeLevel) - equipmentDraw - systemOverhead;
+const acceleration = movementPower / totalMass;
+const timeToDistance = ∫(acceleration, mass, distance);
+```
+
+### Power Budget Allocation Examples
+
+Combat engagements typically begin at 100m range. Consider three shell configurations competing for a contested objective:
+
+**Minimalist Scout Configuration**:
+- **Total Mass**: 60kg (bare shell + minimal gear)
+- **Power Core Output**: 6,400W (at full charge)
+- **Equipment Draw**: 200W (basic sensors + life support)
+- **Available for Movement**: 6,200W
+- **Power-to-Mass Ratio**: 103 W/kg
 - **Time to 100m**: ~5.3 seconds
 
-**Heavy Configuration**:
-- **Mass**: 200kg (heavy armor + weapons)
-- **Power Output**: 6,400W
-- **Terminal Velocity**: 80 m/s
+**Armored Scout Configuration**:
+- **Total Mass**: 85kg (scout + armor plates)
+- **Power Core Output**: 6,400W (at full charge)
+- **Equipment Draw**: 800W (armor + enhanced sensors + life support)
+- **Available for Movement**: 5,600W
+- **Power-to-Mass Ratio**: 66 W/kg
+- **Time to 100m**: ~7.2 seconds
+
+**Heavy Combat Configuration**:
+- **Total Mass**: 200kg (heavy shell + full armor + weapons)
+- **Power Core Output**: 6,400W (at full charge)
+- **Equipment Draw**: 1,400W (heavy armor + weapons + sensors + life support)
+- **Available for Movement**: 5,000W
+- **Power-to-Mass Ratio**: 25 W/kg
 - **Time to 100m**: ~9.7 seconds
 
 ### The Physics Revelation
 
-When we plot velocity curves and integrate them:
+When we plot velocity curves and integrate them, the mathematical relationships reveal profound tactical implications:
 
-**Scout advantage**: Reaches peak velocity faster due to superior power-to-mass ratio, covers distance through high-velocity sustained phase.
+**Minimalist Scout**: Peak acceleration due to optimal power-to-mass ratio enables rapid gap-closing and superior positioning flexibility. Explosive acceleration is a key part of the scout's tactical repertoire.
 
-**Heavy limitation**: Same power output but significantly higher mass creates much lower acceleration, requiring longer time to cover distance.
+**Armored Scout**: Protection comes at the cost of 1.9 seconds additional movement time - a 36% mobility penalty for armor security.
 
-**Mathematical inevitability**: The integration reveals that the Scout reaches the objective **4.4 seconds earlier** - a decisive tactical advantage determined purely by physics, not game balance decisions.
+**Heavy Combat**: Maximum protection and firepower requires nearly double the movement time, creating vulnerability windows that must be managed through positioning and timing.
 
-### Tactical Implications
+**Mathematical inevitability**: The integration reveals that equipment choices create predictable tactical advantages and vulnerabilities. The minimalist scout reaches contested positions 4.4 seconds before the heavy configuration - enough time for complete tactical repositioning or first-strike advantage.
 
-This system creates **authentic tactical trade-offs**:
-- **Light configurations** excel at gap-closing and repositioning
-- **Heavy configurations** require positional discipline and range management
-- **Victory often determined** before the first shot through superior understanding of velocity integrals
+### Tactical Implications: The Power-Mobility Spiral
 
-Players who grasp the integration relationship gain genuine competitive advantage, making physics literacy a core combat skill rather than memorizing arbitrary movement rules.
+This system creates **cascading tactical consequences** that extend far beyond simple movement speed:
+
+#### Pre-Combat Positioning
+- **Light configurations** can afford aggressive positioning because they retain repositioning options
+- **Heavy configurations** must choose initial positions carefully since relocation is costly and slow
+- **Power management** becomes critical - heavy builds operating with depleted power cores become tactical liabilities
+
+#### Dynamic Power Allocation
+```typescript
+// Real-time tactical decisions
+if (threatLevel === 'high') {
+  // Boost armor systems, accept mobility penalty
+  armorDraw += 400W;
+  movementPower -= 400W;
+} else if (needsRepositioning) {
+  // Power down non-essential systems for mobility
+  armorDraw = minimumSafeDraw;
+  movementPower = maxAvailable;
+}
+```
+
+#### The Engagement Evolution
+**Early Engagement**: Fresh power cores provide maximum tactical options - heavy builds can still reposition effectively
+**Mid-Engagement**: Power degradation begins favoring lighter configurations as heavy builds lose mobility advantage
+**Late Engagement**: Depleted power cores create dramatic capability gaps - heavy builds become increasingly static
+
+#### Equipment Damage Cascades
+**Armor Damage**: Compromised armor often draws *more* power due to system failures, creating a death spiral where protection degrades while simultaneously reducing mobility
+**Component Failure**: Damaged shell components increase power overhead, making equipment loads that were manageable become crippling
+
+#### Strategic Shell Selection
+- **Scout shells** maximize the power-to-mass advantage for reconnaissance and rapid assault
+- **Assault shells** provide balanced capability for sustained engagement
+- **Heavy shells** require tactical discipline but enable maximum sustained firepower
+
+Players who grasp these power-mobility relationships gain genuine competitive advantage, making energy economics and physics literacy core combat skills rather than memorizing arbitrary movement rules.
+
+### The Counter-Triangle: Shell Type Tactical Relationships
+
+The power-mobility tension creates natural tactical relationships between shell types:
+
+**Scouts Counter Heavies**: Superior mobility enables scouts to control engagement range and timing against slow heavy platforms
+**Assault Counters Scouts**: Balanced firepower and moderate mobility can overwhelm scout defenses in sustained engagement
+**Heavy Counters Assault**: Maximum armor and firepower dominates in static defensive positions
+
+These relationships emerge from authentic physics rather than artificial balance mechanics, creating tactical depth through mathematical inevitability.
 
 ## Damage Types
 
