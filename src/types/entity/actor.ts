@@ -32,39 +32,29 @@ export enum ActorType {
  */
 export enum ActorStat {
   /**
-   * Strength. Physical power and raw force. Affects:
-   * - Effectiveness of heavy weapons
-   * - Athletic feats requiring force
-   * - Carrying capacity
+   * Power. Capacity to perform work over time.
+   * - Increases damage output with attacks
+   * - Increases acceleration
+   * - Increases the damage of momentum-based attacks
    */
-  STR = 'str',
+  POW = 'pow',
 
   /**
-   * Dexterity. Fine motor control and precision. Affects:
-   * - Effectiveness of precision weapons
-   * - Delicate manual tasks
-   * - Crafting quality
+   * Grace. Ability to perform feats of precision and agility.
+   * - Reduces effective mass for inertia calculations
+   * - Directly affects an actor's top speed while sprinting
+   * - Ability to hit targets while in motion
    */
-  DEX = 'dex',
+  GRC = 'grc',
 
   /**
-   * Agility. Speed, grace, and coordination. Affects:
-   * - Movement speed and evasion
-   * - Athletic feats requiring finesse
+   * Resilience. Ability to absorb damage, resist injury, resist negative effects,and recover from wounds.
    */
-  AGI = 'agi',
-
-  /**
-   * Constitution. Physical resilience and endurance. Affects:
-   * - Health points and injury resistance
-   * - Stamina and fatigue resistance
-   * - Resistance to poison, disease
-   */
-  CON = 'con',
+  RES = 'res',
 
   /**
    * Intelligence. Reasoning ability and learning capacity. Affects:
-   * - Rate of experience gain (PXP→XP conversion)
+   * - Rate of PXP→XP conversion
    */
   INT = 'int',
 
