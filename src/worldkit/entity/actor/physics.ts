@@ -13,25 +13,25 @@ export const MAX_VELOCITY_PER_GRACE_POINT = 0.25; // meters per second
  */
 export const MAX_INERTIA_REDUCTION = 1 / GOLDEN_RATIO; // 61.8% (Golden Ratio conjugate)
 
-export const POWER_PER_POW_POINT = 10; // Watts
+export const POWER_PER_POW_POINT = 25; // Watts (increased from 10 for superhuman scaling)
 
 /**
  * Strike duration for kinetic energy calculations (seconds)
  * This is the period over which an actor applies power to the part of the body that strikes the target.
  */
-export const DEFAULT_STRIKE_DURATION = 0.2; // 200ms
+export const DEFAULT_STRIKE_DURATION = 0.25; // 250ms (slightly longer for more energy transfer)
 
 /**
  * Energy transfer efficiency for muscular strikes
  */
-export const STRIKE_EFFICIENCY = 1 / GOLDEN_RATIO; // 61.8% (Golden Ratio conjugate)
+export const STRIKE_EFFICIENCY = 1;
 
 /**
- * Damage conversion: 1 damage point = 10 joules of kinetic energy
+ * Damage conversion: 1 damage point = 5 joules of kinetic energy (reduced for higher damage)
  */
-export const JOULES_PER_DAMAGE = 10;
+export const JOULES_PER_DAMAGE = 5;
 
-const BASELINE_POWER_OUTPUT = 50; // 50W baseline bonus
+const BASELINE_POWER_OUTPUT = 125; // 125W baseline bonus (increased for superhuman feel)
 
 const BASELINE_TOP_SPEED = 2; // 2 m/s baseline
 
@@ -160,40 +160,52 @@ export function calculateGapClosing(power: number, grace: number, distance: numb
 }
 
 // Calculate muscular kinetic energy from Power stat
-export function calculateMuscularKineticEnergy(power: number): number {
+export function calculateMuscularKineticEnergy(power: number, duration: number = DEFAULT_STRIKE_DURATION): number {
     const powerOutput = calculatePowerOutput(power);
-    return powerOutput * DEFAULT_STRIKE_DURATION * STRIKE_EFFICIENCY;
+    return powerOutput * duration; // Linear duration scaling
 }
-
 // Calculate momentum kinetic energy from movement
 export function calculateMomentumKineticEnergy(velocity: number, mass: number): number {
     return 0.5 * mass * velocity * velocity;
 }
 
-// Calculate weapon kinetic energy bonus
-export function calculateWeaponKineticEnergy(weaponType: 'bare' | 'dagger' | 'sword' | 'warhammer'): number {
-    const weaponKE = {
-        bare: 0,
-        dagger: 50,
-        sword: 150,
-        warhammer: 250
+// Calculate weapon efficiency multiplier (Golden Ratio progression)
+export function calculateWeaponEfficiency(weaponType: 'bare' | 'dagger' | 'sword' | 'warhammer'): number {
+    const weaponEfficiencies = {
+        bare: 1 / (GOLDEN_RATIO * GOLDEN_RATIO), // φ⁻² = 0.382 (unarmed)
+        dagger: 1 / GOLDEN_RATIO,                // φ⁻¹ = 0.618 (light)
+        sword: 1.0,                              // 1.0 = baseline (medium)
+        warhammer: GOLDEN_RATIO                  // φ = 1.618 (heavy)
     };
-    return weaponKE[weaponType];
+    return weaponEfficiencies[weaponType];
 }
 
-// Calculate total damage from all kinetic energy sources
+// Calculate POW-based momentum transfer efficiency
+export function calculateMomentumTransferEfficiency(power: number): number {
+    // POW directly determines efficiency percentage
+    return Math.min(power / 100, 1.0); // Cap at 100% efficiency
+}
+
+// Calculate total damage using new physics formula
 export function calculateTotalDamage(
     power: number,
     velocity: number,
     mass: number,
     weaponType: 'bare' | 'dagger' | 'sword' | 'warhammer' = 'bare'
 ): number {
+    // Generate kinetic energy components
     const muscularKE = calculateMuscularKineticEnergy(power);
-    const momentumKE = calculateMomentumKineticEnergy(velocity, mass);
-    const weaponKE = calculateWeaponKineticEnergy(weaponType);
+    const rawMomentumKE = calculateMomentumKineticEnergy(velocity, mass);
 
-    const totalKE = muscularKE + momentumKE + weaponKE;
-    return totalKE / JOULES_PER_DAMAGE;
+    // Apply POW-based momentum transfer efficiency
+    const momentumEfficiency = calculateMomentumTransferEfficiency(power);
+    const effectiveMomentumKE = rawMomentumKE * momentumEfficiency;
+
+    // Apply weapon efficiency to total kinetic energy
+    const weaponEfficiency = calculateWeaponEfficiency(weaponType);
+    const totalEffectiveKE = (muscularKE + effectiveMomentumKE) * weaponEfficiency;
+
+    return totalEffectiveKE / JOULES_PER_DAMAGE;
 }
 
 // Enhanced gap-closing with damage calculation
@@ -207,15 +219,21 @@ export function calculateGapClosingWithDamage(
     const motionProfile = calculateGapClosing(power, grace, distance, naturalMass);
     const impactDamage = calculateTotalDamage(power, motionProfile.maxVelocity, naturalMass, weaponType);
 
+    // Calculate component energies for analysis
+    const muscularKE = calculateMuscularKineticEnergy(power);
+    const rawMomentumKE = calculateMomentumKineticEnergy(motionProfile.maxVelocity, naturalMass);
+    const momentumEfficiency = calculateMomentumTransferEfficiency(power);
+    const effectiveMomentumKE = rawMomentumKE * momentumEfficiency;
+    const weaponEfficiency = calculateWeaponEfficiency(weaponType);
+    const totalEffectiveKE = (muscularKE + effectiveMomentumKE) * weaponEfficiency;
+
     return {
         ...motionProfile,
         impactDamage,
-        muscularKE: calculateMuscularKineticEnergy(power),
-        momentumKE: calculateMomentumKineticEnergy(motionProfile.maxVelocity, naturalMass),
-        weaponKE: calculateWeaponKineticEnergy(weaponType),
-        totalKE: calculateMuscularKineticEnergy(power) +
-                calculateMomentumKineticEnergy(motionProfile.maxVelocity, naturalMass) +
-                calculateWeaponKineticEnergy(weaponType)
+        muscularKE,
+        momentumKE: effectiveMomentumKE, // Return effective momentum after efficiency
+        weaponEfficiency, // Return efficiency multiplier instead of flat bonus
+        totalKE: totalEffectiveKE
     };
 }
 

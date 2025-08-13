@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { createActor } from './actor';
+import { createActor } from '.';
 import { WellKnownPlace } from '~/types/world/space';
 
 describe('createActor', () => {

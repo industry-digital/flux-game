@@ -1,4 +1,5 @@
-# FSP Combat System
+# Flux Combat System: Physics-Based Tactical Combat
+>>>>>>> 31f060a (Actor combat physics)
 
 The Combat System is a physics-based, tactical combat system designed for a Multi-User Dungeon (MUD) that emphasizes skill and understanding of real-world physical principles. Combat follows a **turn-based structure** similar to Divinity: Original Sin 2, where each actor takes sequential turns with a full Action Point pool to spend during their activation.
 
@@ -45,6 +46,7 @@ These stats form a Tactical Triangle, creating distinct character builds:
 
 Combat occurs on a 300-meter linear battlefield. When two opposing actors enter combat, they are placed at opposite ends of the battlefield, 100 meters apart. On both sides of this 100m gap is a margin of 100 meters, yielding a total of 300 meters of battlefield.
 
+**Power Output Scaling:**
 ```
 Linear Battlefield Layout (300m total):
 
