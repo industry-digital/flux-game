@@ -1,12 +1,125 @@
-<<<<<<< HEAD
-# FSP Combat System
-=======
 # Flux Combat System: Physics-Based Tactical Combat
 >>>>>>> 31f060a (Actor combat physics)
 
-The Combat System is a physics-based, tactical combat system designed for a Multi-User Dungeon (MUD) that emphasizes skill and understanding of real-world physical principles. Combat follows a **turn-based structure** similar to Divinity: Original Sin 2, where each actor takes sequential turns with a full Action Point pool to spend during their activation.
-
 <<<<<<< HEAD
+The Combat System is a physics-based, tactical combat system designed for a Multi-User Dungeon (MUD) that emphasizes skill and understanding of real-world physical principles. Combat follows a **turn-based structure** similar to Divinity: Original Sin 2, where each actor takes sequential turns with a full Action Point pool to spend during their activation.
+=======
+## Synopsis
+
+### Linear Battlefield Arena
+Combat takes place on a **300-meter linear battlefield** with combatants starting 100 meters apart at rest. The arena consists of a central 100m combat zone flanked by 100m safety margins on each side, creating focused tactical engagements where positioning and distance management are paramount.
+
+### Physics-Driven Combat
+Every action is governed by authentic physics principles. **Power (POW)** determines kinetic energy generation through a linear 3-second spool-up curve, **Grace (GRA)** controls movement and momentum generation, and **Resilience (RES)** manages energy reserves and recovery. Damage results from muscular force and momentum transfer, modified by weapon efficiency tiers following golden ratio progression (0.382×, 0.618×, 1.000×, 1.618×).
+
+### Tactical Depth Through Mathematics
+Combat rewards understanding of power spool-up mechanics, kinetic energy ($\frac{1}{2}mv^2$), momentum transfer efficiency, and energy management. Flat armor reduction favors devastating single strikes over rapid combinations, while motion-based hit difficulty creates natural counterplay. Players gain competitive advantage through physics literacy rather than memorizing arbitrary damage tables.
+
+### Build Diversity and Tactical Triangle
+- **Heavy Armor + Low Mobility**: Breakthrough specialists immune to chip damage but vulnerable to momentum-based attacks
+- **High Grace + Light Armor**: Anti-armor specialists generating massive momentum damage but vulnerable to sustained combinations
+- **Balanced Builds**: Versatile combatants with tactical flexibility to adapt based on opponent weaknesses
+- **Power specialists**: Focus on devastating single strikes through superior energy generation and weapon efficiency
+
+## Action Points: Temporal Combat Economy
+
+### Action Point Fundamentals
+
+Combat operates on an **Action Point (AP) system** where time becomes a strategic resource. Every combat action has a temporal cost measured in Action Points, creating tactical decisions about timing and resource allocation.
+
+**Base Action Economy:**
+- **Default AP Pool**: 6.0 Action Points
+- **Time Scale**: 1 AP = 1 second of world time
+- **Precision**: 0.1 AP (0.1 second) minimum increment
+- **Base Action Economy**: 6.0 AP over 6 world seconds (100% baseline)
+
+**Universal Action Cost Principle:**
+All combat actions consume Action Points - from simple strikes to complex tactical maneuvers. No action is free, and every decision has temporal consequences.
+
+### Fractional Action Point System
+
+**Granular Precision:**
+- **Minimum Increment**: 0.1 AP represents the threshold of player-noticeable timing differences
+- **Fractional Costs**: Actions can cost precise amounts like 1.3 AP, 2.7 AP, or 0.8 AP
+- **Smooth Progression**: Skills reduce AP costs incrementally rather than in dramatic jumps
+
+**Example Action Costs:**
+```
+Novice Swordsman:    Sword strike costs 2.5 AP
+Trained Swordsman:   Same strike costs 2.2 AP
+Expert Swordsman:    Same strike costs 1.8 AP
+Master Swordsman:    Same strike costs 1.3 AP
+```
+
+### Action Economy Scaling
+
+**Enhanced Action Economy Examples:**
+- **9.0 AP over 6 seconds**: 150% action economy (50% improvement)
+- **4.5 AP over 6 seconds**: 75% action economy (25% reduction)
+- **7.2 AP over 6 seconds**: 120% action economy (20% improvement)
+
+Action economy directly translates to **combat tempo advantage** - actors with higher effective AP can perform more actions within the same timeframe, creating significant tactical superiority.
+
+### Skill-Based Action Efficiency
+
+**Every Action Links to a Skill:**
+All combat actions are governed by specific learnable skills. Higher skill proficiency reduces the AP cost of related actions, creating meaningful character progression and specialization opportunities.
+
+**Skill Categories and AP Reduction:**
+- **Weapon Skills**: Reduce AP costs for weapon-specific attacks and techniques
+- **Athletics**: Decrease movement and positioning action costs
+- **Combat Awareness**: Lower AP costs for defensive actions and reactions
+- **Tactical Skills**: Reduce costs for complex battlefield maneuvers
+
+**Micro-Optimization Benefits:**
+Small skill improvements compound over multiple actions. A character saving 0.2 AP per action gains significant tempo advantage over extended combat encounters.
+
+### Improving Action Economy
+
+Players can enhance their action economy through two primary methods:
+
+**1. Increasing AP Pool Size**
+- Larger AP pools enable more actions per combat round
+- Provides tactical flexibility for complex action sequences
+- Allows sustained high-tempo combat engagement
+- Achieved through gear, augmentations, or character advancement
+
+**2. Reducing AP Costs (Skill-Based)**
+- Skills reduce the temporal overhead of specific action types
+- Expertise enables efficient execution of complex techniques
+- Specialization creates action economy advantages in focused combat areas
+- Smooth progression allows incremental optimization
+
+### Tactical Implications
+
+**High AP Pool Actors:**
+- Execute multiple actions while opponents are limited to fewer
+- Maintain combat initiative through superior action economy
+- Capable of complex tactical combinations within single rounds
+
+**High Skill Actors:**
+- Perform actions with exceptional efficiency
+- Can fit more actions into standard AP pools through reduced costs
+- Demonstrate mastery through precise timing and execution
+
+**Action Chaining Examples:**
+```
+Efficient Combatant: Move (1.2 AP) + Strike (1.8 AP) + Block (1.5 AP) = 4.5 AP total
+Leaves 1.5 AP for reactive actions or partial next-turn preparation
+
+Standard Combatant: Move (1.8 AP) + Strike (2.5 AP) + Block (2.0 AP) = 6.3 AP total
+Exceeds standard pool, requires action prioritization
+```
+
+**Action Point Strategy:**
+- **Burst tactics**: Expend full AP pool for maximum immediate impact
+- **Sustained combat**: Manage AP expenditure for prolonged engagements
+- **Precision timing**: Leverage fractional AP for exact tactical sequences
+- **Skill investment**: Balance AP pool increases with skill development for optimal efficiency
+
+## Core Philosophy
+>>>>>>> 3eef86e (Combat)
+
 ## Turn-Based Combat Structure
 
 Combat proceeds in a strict turn-based sequence with the following phases:
@@ -49,24 +162,10 @@ These stats form a Tactical Triangle, creating distinct character builds:
 ## The Battlefield and Action Point System
 
 Combat occurs on a 300-meter linear battlefield. When two opposing actors enter combat, they are placed at opposite ends of the battlefield, 100 meters apart. On both sides of this 100m gap is a margin of 100 meters, yielding a total of 300 meters of battlefield.
-=======
-Combat in Flux is **physics-based, skill-expressive, and tactically deep**. Every action has real consequences governed by authentic physics principles. Power output, mass, velocity, and momentum combine to create combat where understanding the underlying physics provides genuine competitive advantage.
-
-The system rewards mastery of fundamental physical principles - kinetic energy, momentum transfer, and force multiplication - rather than memorizing arbitrary damage tables.
-
-## Foundation: Physics-Driven Damage
-
-### Power (POW) and Kinetic Energy
-
-**Power determines your ability to generate kinetic energy** through muscular force. High POW actors can:
-- Generate more kinetic energy per strike (Power × Time × Efficiency)
-- Accelerate faster under load
-- Transfer momentum more efficiently when moving
->>>>>>> 31f060a (Actor combat physics)
 
 **Power Output Scaling:**
-```
 <<<<<<< HEAD
+```
 Linear Battlefield Layout (300m total):
 
 [Margin]    [Combat Zone]    [Margin]
@@ -88,14 +187,31 @@ Initial Positions:
 • Distance apart: 100m
 • Available movement: 0m-300m total battlefield
 ```
+=======
+$$P_{output} = (POW \times 25W) + 125W$$
+
+Where:
+- POW 10: $P_{output} = 375W$ (ordinary human)
+- POW 50: $P_{output} = 1,375W$ (strong human)
+- POW 100: $P_{output} = 2,625W$ (superhuman)
+>>>>>>> 3eef86e (Combat)
 
 We use "east" and "west" figuratively here, and not in the literal sense.
 
 ### Collision Mechanics
 
+<<<<<<< HEAD
 First, let's agree on what "collision" means.
 
 Collision is defined as a situation where one actor's body intersects at the same point in space as another actor's body.
+=======
+**Grace Scaling:**
+$$v_{max} = 2 + \max(GRA \times 0.25, 5) \text{ m/s}$$
+$$m_{eff} = m_{natural} \times (1 - I_{reduction})$$
+$$I_{reduction} = \frac{(GRA - 10) \times 0.618}{90} \text{ for } GRA > 10$$
+
+### The Power-Grace-Resilience Triangle
+>>>>>>> 3eef86e (Combat)
 
 Actor bodies on the linear battlefield -- by default -- do not collide with anything. Collision happens only under these specific circumstances:
 
@@ -107,7 +223,16 @@ In both cases, the actor that is being approached is considered the "target" and
 It is assumed that a melee attack has a range of 1 meter.
 A *reach* attack, using a reach weapon like a spear, has a range of 2 meters.
 
+<<<<<<< HEAD
 ### Action Point System
+=======
+$$\begin{align}
+\text{Unarmed Combat:} \quad &\eta = 0.382 = \varphi^{-2} \\
+\text{Light Weapons:} \quad &\eta = 0.618 = \varphi^{-1} \\
+\text{Medium Weapons:} \quad &\eta = 1.000 \text{ (baseline)} \\
+\text{Heavy Weapons:} \quad &\eta = 1.618 = \varphi
+\end{align}$$
+>>>>>>> 3eef86e (Combat)
 
 The combat economy is managed by an Action Point (AP) system, where time becomes a strategic resource within each turn.
 
@@ -131,16 +256,38 @@ $$D_{final} = \max\left(0, \frac{(D_{muscular} + D_{momentum}) \times \eta_{weap
 
 - **Momentum Damage ($D_{momentum}$)**: This is the damage from a character's kinetic energy in motion, calculated as $(\frac{1}{2}mv^2) \times (POW/100) / 5J$. The Power (POW) stat determines how effectively this momentum is transferred.
 
+<<<<<<< HEAD
 - **Weapon Efficiency ($\eta_{weapon}$)**: Weapons follow a golden ratio progression ($\phi$) in efficiency, which determines how effectively kinetic energy is transferred into damage.
 
   - **Unarmed**: $0.382 \times \eta$ ($\phi^{-2}$)
   - **Light Weapons**: $0.618 \times \eta$ ($\phi^{-1}$)
   - **Medium Weapons**: $1.000 \times \eta$ (Baseline)
   - **Heavy Weapons**: $1.618 \times \eta$ ($\phi$)
+=======
+$$D_{total} = (D_{muscular} + D_{momentum}) \times \eta_{weapon}$$
+
+Where:
+$$D_{muscular} = \frac{P_{output} \times t_{strike}}{5J}$$
+$$D_{momentum} = \frac{\frac{1}{2}mv^2 \times \eta_{POW}}{5J}$$
+$$\eta_{POW} = \frac{POW}{100}$$
+$$\eta_{weapon} \in \{0.382, 0.618, 1.000, 1.618\}$$
+>>>>>>> 3eef86e (Combat)
 
 It stands to reason that it's easier to kill someone with a heavy weapon than with fists, even though the power expenditure of the actor is the same. Thus we introduce this artificial "efficiency" coefficient.
 
+<<<<<<< HEAD
 Dual-wielding light weapons provides a total efficiency of $1.236 \times \eta$, placing it between medium and heavy weapons in power.
+=======
+**POW determines how effectively you transfer momentum** from movement into strikes:
+$$\eta_{POW} = \frac{POW}{100}$$
+
+Examples:
+- POW 10: $\eta_{POW} = 0.10$ (90% energy lost to poor form)
+- POW 50: $\eta_{POW} = 0.50$ (balanced technique)
+- POW 100: $\eta_{POW} = 1.00$ (perfect energy transfer)
+
+This reflects the reality that **strength affects technique** - stronger actors maintain better form under dynamic conditions, transferring kinetic energy more effectively.
+>>>>>>> 3eef86e (Combat)
 
 ## Resilience and Energy Management
 
@@ -151,7 +298,13 @@ The Resilience (RES) stat directly affects an actor's capacitor in two key ways:
 1. Larger energy pool (Joules)
 2. Faster recovery rate as a secondary consequence of having a larger energy pool
 
+<<<<<<< HEAD
 **Between-Turn Recovery**: Energy recovery occurs during other actors' turns, not during the active actor's turn. This creates strategic timing where actors with high RES become relatively stronger in longer combats.
+=======
+$$E_{capacity} = RES \times 100J$$
+$$R_{max} = RES \times 10W$$
+$$E_{current} = \text{Available energy for power output}$$
+>>>>>>> 3eef86e (Combat)
 
 - **Golden Ratio Recovery Curve**: The energy recovery rate is not constant; it follows a curve that peaks at 38.2% of a character's maximum energy capacity. This "golden zone" encourages players to maintain a state of moderate energy depletion, as recovery is agonizingly slow from complete exhaustion and inefficient when an energy pool is nearly full.
 
@@ -159,7 +312,13 @@ The Resilience (RES) stat directly affects an actor's capacitor in two key ways:
 
 ## Defensive Maneuvers
 
+<<<<<<< HEAD
 Defensive maneuvers are of three categories:
+=======
+$$t = \frac{E_{current}}{E_{capacity}} \in [0, 1]$$
+$$\text{Peak recovery occurs at } t = 0.382 = \varphi^{-1}$$
+$$\text{Recovery approaches zero at } t = 0 \text{ and } t = 1$$
+>>>>>>> 3eef86e (Combat)
 
 - **Dodging**: The actor moves out of the way of the attack. Dodging is affected by the actor's Finesse (FIN) stat.
 - **Blocking**: The actor blocks the attack with a shield or other object. Blocking is affected by the actor's Resilience (RES) stat.
@@ -177,270 +336,21 @@ The Flux Combat System creates a tactical "rock-paper-scissors" dynamic driven b
 
 - **Motion-Based Hit Difficulty**: Moving targets are harder to hit with momentum-based attacks. This creates an advantage for mobile, high-finesse characters against slow, heavy-hitting opponents.
 
+<<<<<<< HEAD
 - **Turn-Based Tactical Planning**: The turn structure allows players to carefully plan complex sequences of actions, such as building momentum over multiple movement actions before executing a devastating charge attack.
+=======
+$$POW_{effective} = \min(POW_{natural}, POW_{energy-limited})$$
+$$\text{where } POW_{energy-limited} = \frac{E_{current}}{t_{strike}}$$
+>>>>>>> 3eef86e (Combat)
 
 - **Execution Uncertainty**: While damage calculations are deterministic, success is not guaranteed. A dice roll determines if a calculated hit connects, introducing a layer of uncertainty and skill-based execution. There are no "damage dice" or critical hits; instead, the player's understanding of physics and their ability to create the right conditions for a powerful strike is what leads to a "critical" outcome.
 
 The result is a system where players with a deep understanding of the underlying physics—from calculating power-to-mass ratios to managing their energy in the golden recovery zone—gain a genuine, quantifiable competitive advantage within the strategic framework of turn-based planning.
 
 ---
-=======
-Power Output = (POW × 25W) + 125W baseline
-- POW 10: 375W (ordinary human)
-- POW 50: 1,375W (strong human)
-- POW 100: 2,625W (superhuman)
-```
-
-### Grace (GRA) and Movement Physics
-
-**Grace determines your relationship with mass and inertia**:
-- **Top Speed**: Grace directly controls velocity ceiling
-- **Effective Mass**: Grace reduces inertial resistance to movement
-- **Acceleration**: Lower effective mass means faster acceleration at any power level
-
-**Grace Scaling:**
-```
-Top Speed = 2 m/s + max(GRA × 0.25 m/s, 5 m/s)
-Effective Mass = Natural Mass × (1 - Inertia Reduction)
-Inertia Reduction = (GRA - 10) × (61.8% / 90) for GRA > 10
-```
-
-### The Power-Grace-Resistance Triangle
-
-**POW, GRA, and RES work together** to determine combat effectiveness:
-- **High POW, Low GRA**: Strong but slow - devastating when they connect
-- **Low POW, High GRA**: Fast but weak - relies on momentum and positioning
-- **High POW, Low RES**: Devastating but brief - must win quickly
-- **Low POW, High RES**: Consistent but weak - outlasts opponents
-- **Balanced builds**: Versatile combat style with sustainable capabilities
-- **Elite combatants**: High investment across multiple stats
-
-## Weapon Efficiency: The Golden Ratio System
-
-### Weapon Damage Tiers
-
-Weapons modify kinetic energy transfer through a **golden ratio progression**. The progression is as follows:
-
-```
-Unarmed Combat:    0.382x efficiency (φ⁻²) -
-Light Weapons:     0.618x efficiency (φ⁻¹)
-Medium Weapons:    1.000x efficiency (baseline)
-Heavy Weapons:     1.618x efficiency (φ)
-```
-
-The damage output of a weapon strike is a function of the actor's POW, applied over a duration. This generates kinetic energy, which is then transferred to the target. The efficiency of the transfer is determined by the weapon's tier.
-
-### Weapon Categories and Tactical Roles
-
-**Unarmed Combat (0.382x efficiency)**
-- Fists, feet, natural weapons
-- Poor kinetic energy transfer due to soft contact surfaces
-- Requires high POW to be effective
-- Always available, cannot be disarmed
-
-**Light Weapons (0.618x efficiency)**
-- Daggers, short swords, clubs
-- Can be dual-wielded for 2× attacks (1.236x total efficiency)
-- Fast attack speed, good mobility
-- Bridge between unarmed and proper weapons
-
-**Medium Weapons (1.000x efficiency)**
-- Swords, maces, axes
-- Optimal balance of speed and power
-- One-handed, allows shields or secondary weapons
-- Baseline for weapon effectiveness
-
-**Heavy Weapons (1.618x efficiency)**
-- Warhammers, greatswords, polearms
-- Maximum kinetic energy transfer
-- Requires two hands, slower attack speed
-
-### Dual Wielding Mathematics
-
-**Light weapons can be dual-wielded**, creating tactical complexity:
-- **Single Light Weapon**: 0.618x efficiency
-- **Dual Light Weapons**: 1.236x total efficiency (2 × 0.618)
-- **Tactical Position**: Between medium (1.000x) and heavy (1.618x) weapons
-
-This creates meaningful choice between:
-- **Single + Shield**: Defense with medium efficiency
-- **Dual Wielding**: Offense with high efficiency, no defense
-- **Two-Handed Heavy**: Maximum efficiency, maximum commitment
-
-## Momentum-Based Damage: Velocity as Weapon
-
-### The Fundamental Damage Formula
-
-```
-Total Strike Damage = (Muscular Damage + Momentum Damage) × Weapon Efficiency
-
-Where:
-Muscular Damage = (Power Output × Strike Duration) ÷ 5J per damage
-Momentum Damage = (0.5 × Mass × Velocity²) × (POW Efficiency) ÷ 5J per damage
-Weapon Efficiency = 0.382 (unarmed) | 0.618 (light) | 1.000 (medium) | 1.618 (heavy)
-```
-
-### POW-Based Momentum Transfer Efficiency
-
-**POW determines how effectively you transfer momentum** from movement into strikes:
-```
-Momentum Transfer Efficiency = POW ÷ 100
-- POW 10: 10% efficiency (90% energy lost to poor form)
-- POW 50: 50% efficiency (balanced technique)
-- POW 100: 100% efficiency (perfect energy transfer)
-```
-
-This reflects the reality that **strength affects technique** - stronger actors maintain better form under dynamic conditions, transferring kinetic energy more effectively.
-
-## Resilience and Energy Management
-
-### The Biological Energy System
-
-**Resilience (RES) governs an actor's energy reserves and recovery capability**. Like a biological capacitor, resilience determines both how much energy an actor can store and how quickly they can replenish it during combat.
-
-### Energy Pool and Recovery
-
-```
-Energy Capacity = RES × 100 joules per point
-Maximum Recovery Rate = RES × 10 watts per point
-Current Energy = Available energy for power output
-```
-
-**Example Scaling:**
-- **RES 10**: 1,000J capacity, 100W max recovery (baseline human)
-- **RES 30**: 3,000J capacity, 300W max recovery (athletic human)
-- **RES 60**: 6,000J capacity, 600W max recovery (superhuman endurance)
-
-### Golden Ratio Recovery Curve
-
-**Recovery rate varies based on current energy level**, following a curve that peaks at the golden ratio conjugate:
-
-```
-Normalized Energy = Current Energy ÷ Maximum Energy (0 to 1)
-Peak Recovery occurs at t = 0.382 (φ⁻¹, the golden ratio conjugate)
-Recovery approaches zero at both extremes (t = 0 and t = 1)
-```
-
-**Recovery Rate Profile:**
-- **t = 0.0** (empty): ~0% of max recovery rate (too exhausted to recover efficiently)
-- **t = 0.2** (low): ~40% of max recovery rate (starting to recuperate)
-- **t = 0.382** (golden zone): **100% of max recovery rate** (peak metabolic efficiency)
-- **t = 0.6** (high): ~60% of max recovery rate (past optimal zone)
-- **t = 0.8** (very high): ~20% of max recovery rate (diminishing returns)
-- **t = 1.0** (full): ~0% of max recovery rate (no improvement when at capacity)
-
-The actual recovery rate follows an easing curve where the first derivative peaks at t = 0.382, creating natural recovery dynamics that favor moderate depletion over either extreme.
-
-### Tactical Recovery Implications
-
-**The Golden Recovery Zone (38.2% energy):**
-- **Maximum recovery efficiency** when moderately depleted
-- **Encourages active combat** rather than complete rest
-- **Punishes both exhaustion AND over-caution**
-
-**Strategic Energy Management:**
-- **Avoid complete depletion**: Recovery is painfully slow from empty
-- **Don't over-rest**: Going from 80% → 100% is inefficient
-- **Fight in the zone**: Maintain ~38% energy for optimal recovery when possible
-- **Both extremes hurt**: Complete exhaustion OR complete safety waste recovery potential
-
-### Fatigue-Limited Power Output
-
-**As energy depletes, effective power output diminishes**:
-
-```
-Effective POW = min(Natural POW, Energy-Limited POW)
-where Energy-Limited POW = Current Energy ÷ Strike Duration
-```
-
-### Combat Energy Dynamics
-
-**Fresh Fighter** (Full Energy):
-- **RES 30**: 3,000J available, 300W recovery
-- **POW 60**: 1,625W natural power (from formula: 60×25W + 125W)
-- **Effective Power**: Full 1,625W (energy reserves sufficient)
-
-**Fatigued Fighter** (Depleted Energy):
-- **RES 30**: 500J remaining
-- **POW 60**: 1,625W potential, but limited by energy
-- **Effective Power**: Only 2,000W available (500J ÷ 0.25s)
-- **Significant power degradation** due to energy depletion
-
-### Tactical Energy Management
-
-**Energy Costs by Action:**
-- **Strikes**: Power Output × Strike Duration
-- **Movement**: Power Output × Movement Time
-- **Sprinting**: Exponential cost for maximum acceleration
-
-**Strategic Implications:**
-- **Burst fighters** must win quickly before energy depletion
-- **Endurance fighters** maintain consistent performance longer
-- **Energy timing** becomes as critical as positioning and weapon choice
-
-### Tactical Implications of Momentum Combat
-
-**Speed Builds (High GRA, Moderate POW, Moderate RES)**:
-- Generate massive raw kinetic energy through velocity²
-- Lose significant energy to poor momentum transfer efficiency
-- **Energy-intensive movement** requires careful stamina management
-- Excel at hit-and-run tactics but must avoid prolonged engagement
-
-**Strength Builds (High POW, Moderate GRA, Low RES)**:
-- Generate less raw kinetic energy due to lower speeds
-- Transfer energy very efficiently due to superior weapon control
-- **High energy costs** for maximum power output limit sustained combat
-- Must finish fights quickly before energy depletion
-
-**Endurance Builds (Moderate POW, Moderate GRA, High RES)**:
-- Balanced kinetic energy generation and transfer
-- **Superior energy reserves and recovery** enable sustained combat
-- Become relatively stronger as opponents fatigue
-- Excel in prolonged engagements and attrition warfare
-
-**Balanced Builds**:
-- Moderate capabilities across all dimensions
-- Tactical flexibility in different combat scenarios
-- Can adapt strategy based on opponent weaknesses and energy state
-
-## Combat Physics Examples
-
-### Scenario: Captain America vs Ordinary Human
-
-**Captain America (POW 100)**:
-- **Bare-handed**: 50.1 damage vs 100 HP (2 hits to defeat)
-- **Light weapon**: 81.1 damage (2 hits to defeat)
-- **Medium weapon**: 131.3 damage (💀 **ONE-SHOT KILL**)
-- **Heavy weapon**: 212.4 damage (💀 **DEVASTATING ONE-SHOT**)
-
-**Ordinary Human (POW 10)**:
-- **Bare-handed**: 7.2 damage (39 hits to defeat Captain America's 280 HP)
-- **Heavy weapon**: 30.3 damage (10 hits to defeat Captain America)
-
-**Key Insight**: Superhuman POW creates devastating combat effectiveness. Captain America can one-shot ordinary humans with medium+ weapons, while retaining tactical depth in superhuman vs superhuman combat.
-
-### Momentum Combat Example
-
-**Mobile Fighter** (POW 30, GRA 60, Mass 80kg):
-- **Approach Speed**: 17 m/s maximum
-- **Raw Kinetic Energy**: 11,560J at full speed
-- **Momentum Transfer**: 30% efficiency = 3,468J effective
-- **Damage**: 694 points from movement alone
-
-**Power Fighter** (POW 60, GRA 30, Mass 80kg):
-- **Approach Speed**: 9.5 m/s maximum
-- **Raw Kinetic Energy**: 3,610J at full speed
-- **Momentum Transfer**: 60% efficiency = 2,166J effective
-- **Damage**: 433 points from movement
-
-**Tactical Conclusion**: Mobile fighters generate more raw kinetic energy through speed, while power fighters transfer energy more efficiently. Both approaches create viable combat effectiveness through different physics principles.
-
-## Distance and Gap-Closing Physics
->>>>>>> 31f060a (Actor combat physics)
 
 ## Appendices
 
-<<<<<<< HEAD
 ### A. Numeric Integration Algorithm for Strike Power
 
 The combat system uses **32-step Simpson's rule integration** to calculate total kinetic energy generated during variable-duration strikes. As an actor's energy capacitor depletes during extended attacks, their effective power output decreases, creating natural diminishing returns for long wind-ups.
@@ -491,17 +401,6 @@ function integrateStrikePower(duration, initialEnergy, naturalPower, naturalRES)
   }
 
   return (h / 3) * integral; // Total kinetic energy generated
-=======
-Movement uses **numerical integration** where distance = ∫ velocity(t) dt. Every meter traveled results from solving calculus in real-time:
-
-```typescript
-// Authentic physics integration
-for (let t = 0; t < time; t += integrationStep) {
-  const acceleration = powerOutput / effectiveMass;
-  const velocity = Math.min(acceleration * t, topSpeed);
-  const deltaDistance = velocity * integrationStep;
-  totalDistance += deltaDistance;
->>>>>>> 31f060a (Actor combat physics)
 }
 
 <<<<<<< HEAD
@@ -510,6 +409,69 @@ function goldenRecoveryCurve(t) {
   // Peaks at t = 0.382 (golden ratio conjugate)
   const shifted = t - 0.382; // Phase shift to peak at golden ratio
   return Math.exp(-50 * shifted * shifted); // Gaussian-like curve peaked at 0.382
+=======
+### Momentum Combat Example
+
+**Mobile Fighter** (POW 30, GRA 60, Mass 80kg):
+- **Approach Speed**: 17 m/s maximum
+- **Raw Kinetic Energy**: 11,560J at full speed
+- **Momentum Transfer**: 30% efficiency = 3,468J effective
+- **Damage**: 694 points from movement alone
+
+**Power Fighter** (POW 60, GRA 30, Mass 80kg):
+- **Approach Speed**: 9.5 m/s maximum
+- **Raw Kinetic Energy**: 3,610J at full speed
+- **Momentum Transfer**: 60% efficiency = 2,166J effective
+- **Damage**: 433 points from movement
+
+**Tactical Conclusion**: Mobile fighters generate more raw kinetic energy through speed, while power fighters transfer energy more efficiently. Both approaches create viable combat effectiveness through different physics principles.
+
+## Battlefield Structure: Linear Combat Arena
+
+### Arena Layout and Dimensions
+
+Combat in Flux takes place on a **linear battlefield** inspired by arcade-style fighting games like Street Fighter. This design creates focused, tactical engagements where positioning and movement become critical strategic elements.
+
+**Battlefield Specifications:**
+- **Total Length**: 300 meters
+- **Combat Zone**: Central 100m where fighters start
+- **Safety Margins**: 100m on each side for tactical maneuvering
+- **Starting Positions**: Combatants begin 100m apart, at rest
+- **Linear Movement**: All tactical positioning occurs along a single axis
+
+```
+[100m Margin] --- [100m Combat Zone] --- [100m Margin]
+      ↑                    ↑                    ↑
+   Left Edge        Starting Positions      Right Edge
+```
+
+### Strategic Implications of Linear Combat
+
+**Positioning Constraints:**
+- **No flanking maneuvers**: All movement is forward/backward along the axis
+- **Range control is paramount**: Distance management becomes the primary tactical skill
+- **Commitment to engagement**: Moving forward reduces escape options
+- **Corner pressure**: Being pushed to battlefield edges limits tactical options
+
+**Arena Control Dynamics:**
+- **Center control**: Maintaining central position provides maximum tactical flexibility
+- **Edge pressure**: Forcing opponents toward margins reduces their movement options
+- **Momentum preservation**: Linear movement emphasizes acceleration and deceleration timing
+
+## Distance and Gap-Closing Physics
+
+### Integration-Based Movement
+
+Movement uses **numerical integration** where $s = \int_0^t v(t') dt'$. Every meter traveled results from solving calculus in real-time:
+
+```typescript
+// Authentic physics integration
+for (let t = 0; t < time; t += integrationStep) {
+  const acceleration = powerOutput / effectiveMass;
+  const velocity = Math.min(acceleration * t, topSpeed);
+  const deltaDistance = velocity * integrationStep;
+  totalDistance += deltaDistance;
+>>>>>>> 3eef86e (Combat)
 }
 ```
 
@@ -524,6 +486,7 @@ Players who grasp these power-mobility relationships gain genuine competitive ad
 
 ### The Counter-Triangle: Shell Type Tactical Relationships
 
+<<<<<<< HEAD
 Where `t` is the cumulative time spent building power within a single strike during an actor's turn.
 
 **Single 3-Second Haymaker (6.0 AP turn):**
@@ -542,11 +505,446 @@ High POW Fighter (POW 80, RES 80):
 - Remaining Energy: 4,812J (60.2% capacity)
 - Remaining AP: 3.0 (available for movement, defense, etc.)
 ```
+=======
+**Mathematical Inevitability**: Physics creates natural tactical relationships where equipment choices determine engagement capabilities.
+
+## Tactical Combat Applications
+
+### Pre-Combat Positioning
+
+**Light Actors** can afford aggressive positioning because they retain repositioning options through superior mobility.
+
+**Heavy Actors** must choose initial positions carefully since relocation is costly and time-consuming.
+
+### Dynamic Engagement Evolution
+
+**Early Engagement**: All actors have maximum tactical options
+**Mid Engagement**: Momentum damage becomes critical as actors close distance
+**Late Engagement**: Weapon efficiency and POW scaling determine outcomes
+
+### Build Counters Through Physics
+
+**Speed Counters Strength**: Superior positioning and momentum damage
+**Strength Counters Speed**: Perfect momentum transfer and weapon efficiency
+**Balanced Builds**: Tactical flexibility to adapt to opponent strategies
+
+These relationships emerge from **authentic physics** rather than artificial balance mechanics.
+
+## Damage Types and Resistance
+
+### Primary Damage Types
+
+**Kinetic**: Physical force transfer (melee, bullets, arrows)
+- Resisted by armor thickness and material properties
+- Enhanced by momentum and weapon efficiency
+
+**Thermal**: Heat-based damage (flames, plasma, lasers)
+- Resisted by thermal insulation and heat dissipation
+- Bypasses traditional armor through energy transfer
+
+**Explosive**: Pressure wave damage (grenades, bombs, mines)
+- Resisted by structural integrity and blast deflection
+- Area effect with distance-based damage falloff
+
+### Armor and Protection Physics
+
+**Kinetic Protection**: Armor effectiveness follows impact physics
+**Thermal Protection**: Heat dissipation and insulation mechanics
+**Explosive Protection**: Pressure wave deflection and structural integrity
+
+Protection systems operate through **physics simulation** rather than arbitrary damage reduction percentages.
+
+## Mastery Through Physics Understanding
+
+### Core Combat Skills
+
+1. **Power Management**: Understanding POW scaling and kinetic energy generation
+2. **Momentum Mastery**: Using velocity² scaling for massive damage multipliers
+3. **Efficiency Optimization**: Choosing weapons that maximize energy transfer
+4. **Physics Intuition**: Predicting combat outcomes through mathematical understanding
+
+### Competitive Advantage
+
+Players who understand the underlying physics gain **genuine competitive advantage**:
+- **Better build optimization** through power-to-mass calculations
+- **Superior tactical decisions** based on momentum transfer efficiency
+- **Accurate damage prediction** using kinetic energy principles
+- **Equipment synergy** leveraging golden ratio weapon progression
+
+Combat mastery comes from **physics literacy** rather than memorizing arbitrary rules, creating depth that rewards understanding over memorization.
+
+## Appendix
+
+### A. Numeric Integration Algorithm for Strike Power
+
+The combat system uses **32-step Simpson's rule integration** to calculate total kinetic energy generated during variable-duration strikes. As an actor's energy capacitor depletes during extended attacks, their effective power output decreases, creating natural diminishing returns for long wind-ups.
+
+**Integration Method:**
+- **Algorithm**: Simpson's 1/3 rule for cubic accuracy
+- **Steps**: 32 subdivisions for optimal performance/precision balance
+- **Resolution**: ~0.094s per step (well below 0.1s AP threshold)
+- **Purpose**: Calculate area under power curve = total kinetic energy
+
+**Implementation:**
+```javascript
+function integrateStrikePower(duration, initialEnergy, naturalPower, naturalRES) {
+  const n = 32; // Number of integration steps
+  const h = duration / n; // Step size (~0.094s for 3-second strikes)
+  const maxRecovery = naturalRES * 10; // Watts per RES point
+
+  let currentEnergy = initialEnergy;
+  let integral = 0;
+
+  // Simpson's 1/3 rule: (h/3) * [f(x₀) + 4f(x₁) + 2f(x₂) + 4f(x₃) + ... + f(xₙ)]
+  for (let i = 0; i <= n; i++) {
+    const t = i * h;
+    const remainingDuration = duration - t;
+
+    // Energy-limited power output
+    const energyLimitedPower = remainingDuration > 0 ?
+      currentEnergy / remainingDuration : naturalPower;
+    const effectivePower = Math.min(naturalPower, energyLimitedPower);
+
+    // Simpson's coefficients: 1, 4, 2, 4, 2, ..., 4, 1
+    const coefficient = (i === 0 || i === n) ? 1 : (i % 2 === 1) ? 4 : 2;
+    integral += coefficient * effectivePower;
+
+    // Update energy state for next step
+    if (i < n) {
+      // Energy depletion
+      currentEnergy -= effectivePower * h;
+
+      // Golden ratio recovery (peaks at 38.2% capacity)
+      const energyRatio = currentEnergy / (naturalRES * 100);
+      const recoveryRate = maxRecovery * goldenRecoveryCurve(energyRatio);
+      currentEnergy += recoveryRate * h;
+
+      // Clamp to valid range
+      currentEnergy = Math.max(0, Math.min(currentEnergy, naturalRES * 100));
+    }
+  }
+
+  return (h / 3) * integral; // Total kinetic energy generated
+}
+
+function goldenRecoveryCurve(t) {
+  // Recovery rate is the first derivative of a phase-shifted sigmoid
+  // Peaks at t = 0.382 (golden ratio conjugate)
+  // This represents the rate of change, not the accumulated energy
+  const shifted = t - 0.382; // Phase shift to peak at golden ratio
+  const sigmoid = 1 / (1 + Math.exp(-10 * shifted)); // Steep sigmoid
+  // Return derivative approximation (bell curve centered at 0.382)
+  return Math.exp(-50 * shifted * shifted); // Gaussian-like curve peaked at 0.382
+}
+```
+
+**Physical Meaning:**
+- **Area under curve**: Total kinetic energy transferred to weapon
+- **Declining power**: Reflects realistic energy depletion during sustained exertion
+- **Natural balance**: Long wind-ups generate less total energy than rapid combinations
+- **Computational efficiency**: 32 steps provide excellent accuracy with minimal overhead
+
+**Tactical Implications:**
+This integration naturally creates the desired balance where skilled fighters using rapid combinations out-perform brute force approaches, all emerging from authentic physics simulation rather than arbitrary game balance mechanics.
+
+### B. Strike Duration Efficiency Analysis: Power Spool-Up System
+
+The combat system uses a **3-second power spool-up mechanism** where actors must build up to maximum power output over time. This creates natural energy inefficiency for long wind-ups while maintaining the potential for devastating attacks.
+
+**Power Spool-Up Formula:**
+$$P_{effective}(t) = P_{natural} \times \min(1.0, \frac{t}{3.0})$$
+
+Where `t` is the cumulative time spent building power within a single strike.
+
+**The Power Ramp Dynamics:**
+
+**Single 3-Second Haymaker:**
+```
+High POW Fighter (POW 80, RES 80):
+- Starting Energy: 8,000J
+- Natural Power: 2,125W
+- Power ramp over 3 seconds:
+  * t = 0-1s: 0% → 33% power (average 354W)
+  * t = 1-2s: 33% → 67% power (average 1,063W)
+  * t = 2-3s: 67% → 100% power (average 1,771W)
+- Average Power: ~1,063W over 3 seconds
+- Total Energy Generated: 3,188J
+- Energy Cost: 3,188J depleted
+- Remaining Energy: 4,812J (60.2% capacity)
+```
+
+**Three 1-Second Jabs with Recovery Analysis:**
+```
+Same Fighter, 3 separate 1-second strikes with spool-up mechanics:
+
+Starting Energy: 8,000J
+
+Jab 1 (0→1s spool-up):
+- Power ramp: 0% → 33% (average 354W)
+- Energy Generated: 354J
+- Energy Cost: 354J depleted
+- Remaining Energy: 7,646J (95.6% capacity)
+
+Recovery Phase 1 (0.5s positioning):
+- Recovery Rate: 800W × 1.0 efficiency (excellent zone) = 800W
+- Energy Recovered: 800W × 0.5s = 400J
+- Energy Before Jab 2: 8,000J (100% capacity - capped)
+
+Jab 2 (0→1s spool-up):
+- Power ramp: 0% → 33% (average 354W)
+- Energy Generated: 354J
+- Energy Cost: 354J depleted
+- Remaining Energy: 7,646J (95.6% capacity)
+
+Recovery Phase 2 (0.5s positioning):
+- Recovery Rate: 800W × 1.0 efficiency = 800W
+- Energy Recovered: 400J (capped at maximum)
+- Energy Before Jab 3: 8,000J (100% capacity)
+
+Jab 3 (0→1s spool-up):
+- Power ramp: 0% → 33% (average 354W)
+- Energy Generated: 354J
+- Energy Cost: 354J depleted
+- Final Energy: 7,646J (95.6% capacity)
+
+Total Energy Generated: 1,062J
+Total Recovery During Combat: 800J
+Net Energy Expenditure: 1,062J
+```
+
+**Energy Efficiency Comparison (Medium Weapon, 1.0× Efficiency):**
+- **1 × 3-second haymaker**: 3,188J energy → 638 damage points (3,188J ÷ 5J per damage × 1.0 efficiency)
+- **3 × 1-second jabs**: 1,062J total energy → 212 damage points total (354J per jab → 71 damage each)
+- **Haymaker advantage**: Generates **200% more energy** but costs **200% more capacitor**
+- **Critical insight**: Energy cost scales proportionally with energy generation
+
+**Weapon Efficiency Impact:**
+```
+Same 354J jab with different weapons:
+- Unarmed (0.382× efficiency): 354J × 0.382 ÷ 5J = 27 damage
+- Light weapon (0.618× efficiency): 354J × 0.618 ÷ 5J = 44 damage
+- Medium weapon (1.000× efficiency): 354J × 1.000 ÷ 5J = 71 damage
+- Heavy weapon (1.618× efficiency): 354J × 1.618 ÷ 5J = 115 damage
+```
+
+**Why This Occurs:**
+1. **Power spool-up**: All strikes must build from 0% to full power over 3 seconds
+2. **Short strikes are inefficient**: 1-second jabs only reach 33% of maximum power
+3. **Recovery windows**: Brief pauses between jabs enable energy regeneration
+4. **Proportional energy costs**: Energy expenditure matches energy generation (no efficiency bonus)
+
+**Tactical Consequences:**
+- **Risk vs reward balance**: Haymakers generate more damage but cost proportionally more energy
+- **Strategic resource management**: Players must balance devastating potential vs energy conservation
+- **Telegraph vulnerability**: 3-second wind-ups provide massive opportunity for opponent reaction/interruption
+- **Energy efficiency parity**: Both approaches have 1:1 energy generation to cost ratios
+
+**Tactical Trade-offs:**
+
+**Haymaker Advantages:**
+- **3x damage potential**: Significantly more kinetic energy per strike
+- **Single target focus**: All energy concentrated into one devastating blow
+- **Breakthrough potential**: Can overcome heavy armor/defenses
+
+**Haymaker Disadvantages:**
+- **3x energy cost**: Depletes capacitor much faster
+- **3-second telegraph**: Enormous reaction window for opponents
+- **3.0 AP commitment**: Uses half the standard action point pool
+- **All-or-nothing**: Miss wastes massive energy investment
+
+**Jab Advantages:**
+- **Energy conservation**: Minimal capacitor depletion per strike
+- **Tactical flexibility**: Multiple opportunities to connect/adjust
+- **Action economy**: Can mix strikes with movement/defense
+- **Sustainable**: Can maintain pressure over extended engagements
+
+**Jab Disadvantages:**
+- **Low individual damage**: Each strike generates minimal kinetic energy
+- **Requires multiple hits**: Must land several strikes for meaningful damage
+- **Power limitations**: Cannot reach full power potential
+
+This creates authentic tactical depth where both approaches have clear strengths and weaknesses, determined by mathematical physics rather than arbitrary balance mechanics.
+
+### C. Armor and Momentum Counterplay Systems
+
+The combat system incorporates **flat armor reduction per strike** and **motion-based hit difficulty** to create tactical rock-paper-scissors relationships between different combat approaches.
+
+**Flat Armor Reduction Mechanics:**
+$$D_{final} = \max\left(0, \frac{E_{kinetic} \times \eta_{weapon}}{5J} - A_{value}\right)$$
+
+**Armor vs Attack Type Analysis:**
+```
+Example: 20-point armor reduction per blow
+
+Against 3 × 71-damage jabs:
+- Jab 1: 71 - 20 = 51 damage
+- Jab 2: 71 - 20 = 51 damage
+- Jab 3: 71 - 20 = 51 damage
+- Total: 153 damage
+
+Against 1 × 638-damage haymaker:
+- Haymaker: 638 - 20 = 618 damage
+- Total: 618 damage
+
+Result: Haymaker deals 4× more effective damage despite same energy cost
+```
+
+**Motion-Based Hit Difficulty:**
+Moving targets become increasingly difficult to hit with momentum-based attacks, creating natural counterplay dynamics:
+
+- **Stationary targets**: Standard hit probability for all attack types
+- **Moving targets**: Reduced hit probability for momentum-dependent attacks
+- **High-speed targets**: Significant penalty to momentum attacks, minimal penalty to standard strikes
+
+**Tactical Triangle Emerges:**
+
+**Heavy Armor + Low Mobility:**
+- **Strengths**: Immune to rapid combinations, devastating single strikes
+- **Weaknesses**: Vulnerable to momentum attacks from mobile opponents
+- **Role**: Breakthrough specialist, area denial
+
+**High Grace + Light Armor:**
+- **Strengths**: Generates massive momentum damage, difficult to hit while moving
+- **Weaknesses**: Vulnerable to sustained rapid combinations, poor armor penetration
+- **Role**: Anti-armor specialist, hit-and-run tactics
+
+**Balanced Builds + Medium Equipment:**
+- **Strengths**: Tactical flexibility, can adapt to opponent weaknesses
+- **Weaknesses**: No overwhelming advantage in any matchup
+- **Role**: Versatile combatant, strategic adaptation
+
+**Strategic Implications:**
+- **Armor favors single devastating strikes** over rapid combinations
+- **Mobility counters momentum attacks** through evasion mechanics
+- **Equipment choice determines tactical identity** and optimal engagement style
+- **Physics creates natural balance** without artificial rock-paper-scissors mechanics
+
+This system rewards players who understand the physics relationships and can adapt their tactics based on opponent builds and equipment choices.
+
+### D. Dice and Execution Uncertainty
+
+The combat system maintains **deterministic physics calculations** while incorporating **execution uncertainty** through dice rolls. This reflects the reality that while physics is predictable, successful execution in dynamic combat environments involves variables beyond perfect control.
+
+**Core Principle: Physics is Always Deterministic**
+- **354J energy always equals 71 damage** (medium weapon, no armor)
+- **Damage calculations are exact and predictable**
+- **Players can calculate precise outcomes** before committing to actions
+- **Physics literacy provides concrete competitive advantage**
+
+**Dice Role: Attack Execution Only**
+Dice determine whether calculated damage is delivered, not how much damage occurs:
+
+```
+Attack Sequence:
+1. Player commits to action (e.g., 3-second haymaker)
+2. Physics calculates exact damage potential (638 points)
+3. Dice roll determines hit/miss based on execution factors
+4. If hit: Full calculated damage applies
+5. If miss: Zero damage, energy still expended
+```
+
+**Execution Uncertainty Factors:**
+- **Environmental variables**: Wind, terrain, lighting conditions
+- **Timing precision**: Split-second execution windows
+- **Target movement**: Evasion attempts and positioning changes
+- **Combat stress**: Performance under pressure and fatigue
+
+**Attack Roll Modifiers:**
+- **Grace enhances accuracy for momentum-based attacks**: Better body control and precision while moving
+- **Target movement reduces hit chance**: Motion-based evasion mechanics
+- **External effects**: Weapons may confer bonuses or penalties as dice roll modifiers. The actor may be under the influence of some kind of status effect that reduces or enhances their accuracy.
+
+**No Damage Variance or Critical Hits:**
+- **No damage dice**: 354J energy produces exactly 71 damage every time
+- **No arbitrary multipliers**: Devastating damage comes from physics, not random bonuses
+- **Natural "critical hits"**: A 25 m/s momentum strike IS the critical hit
+- **Predictable lethality**: Players know exactly when they possess killing potential
+
+**Strategic Implications:**
+- **Perfect information combat**: Players can calculate "if this haymaker lands, it deals exactly 638 damage"
+- **Risk assessment**: Known damage potential enables precise tactical planning
+- **Execution skill matters**: Success depends on creating favorable hit conditions
+- **Physics mastery rewarded**: Understanding energy calculations provides measurable advantage
+
+**Tactical Depth:**
+The system creates chess-like strategic depth where players can perfectly calculate potential outcomes, but must still execute under uncertainty. This rewards both tactical planning (physics understanding) and execution skill (creating favorable attack conditions while avoiding opponent setups).
+
+## Finalized Physics System Summary
+
+### Core Principles
+
+**1. Power Spool-Up Mechanics**: All strikes build power over 3-second duration
+- $P_{effective}(t) = P_{natural} \times \min(1.0, \frac{t}{3.0})$
+- Short strikes reach limited power potential (1s = 33% max power)
+- Creates natural energy efficiency balance between rapid combinations and devastating singles
+
+**2. Linear Battlefield Dynamics**: 300-meter arena with tactical positioning constraints
+- Starting distance of 100m creates gap-closing challenges
+- Linear movement eliminates flanking, emphasizes range control and momentum
+- Equipment mass directly affects mobility and engagement timing
+
+**3. Action Point Economy**: Fractional AP system with 0.1s precision
+- Base 6.0 AP pool with skill-based cost reduction
+- Every action has temporal cost, creating strategic resource management
+- Action economy scales through larger pools or efficiency improvements
+
+**4. Energy Capacitor System**: RES-based energy management with golden ratio recovery
+- Energy capacity scales with RES (100J per point)
+- Recovery rate peaks at 38.2% capacity (golden zone)
+- Power output limited by available energy during sustained exertion
+
+**5. Golden Ratio Weapon Progression**: Mathematical elegance in force multiplication
+- Unarmed: 0.382× efficiency (φ⁻²)
+- Light: 0.618× efficiency (φ⁻¹)
+- Medium: 1.000× efficiency (baseline)
+- Heavy: 1.618× efficiency (φ)
+
+**6. Momentum Transfer Efficiency**: POW determines energy transfer effectiveness
+- POW 10 = 10% momentum transfer efficiency
+- POW 100 = 100% momentum transfer efficiency
+- Reflects technical skill and body control under dynamic conditions
+
+**7. Flat Armor Reduction**: Armor blocks fixed damage per strike
+- Favors single devastating attacks over rapid combinations
+- Creates equipment-based tactical identity
+- Enables armor penetration through concentrated force
+
+**8. Motion-Based Hit Difficulty**: Moving targets evade momentum attacks
+- Stationary targets vulnerable to momentum-based strikes
+- Mobile targets counter heavy armor through evasion
+- Creates natural rock-paper-scissors balance
+
+### Mathematical Foundation
+
+$$D_{final} = \max\left(0, \frac{(E_{muscular} + E_{momentum}) \times \eta_{weapon}}{5J} - A_{value}\right)$$
+
+**Core Energy Equations:**
+$$E_{muscular} = \int_0^t P_{effective}(t') dt'$$
+$$P_{effective}(t) = \min\left(P_{natural} \times \min\left(1.0, \frac{t}{3.0}\right), \frac{E_{current}}{t_{remaining}}\right)$$
+$$P_{natural} = (POW \times 25W) + 125W$$
+
+**Momentum Components:**
+$$E_{momentum} = E_{kinetic} \times \eta_{POW} \times P_{hit}(v_{target})$$
+$$E_{kinetic} = \frac{1}{2}mv^2$$
+$$P_{hit}(v_{target}) = \text{Function of target movement speed}$$
+
+**Energy Management:**
+$$E_{capacity} = RES \times 100J$$
+$$R_{max} = RES \times 10W$$
+$$R_{current} = R_{max} \times f_{golden}\left(\frac{E_{current}}{E_{capacity}}\right)$$
+$$f_{golden}'(t) \text{ peaks at } t = 0.382 = \varphi^{-1}$$
+
+Where $f_{golden}'(t)$ is the first derivative of a phase-shifted sigmoid curve
+
+**Action Economy:**
+$$C_{action} = C_{base} \times (1 - \eta_{skill})$$
+>>>>>>> 3eef86e (Combat)
 
 **Three 1-Second Jabs in Single Turn:**
 ```
 Same Fighter, 3 separate 1-second strikes (1.0 AP each) within one turn:
 
+<<<<<<< HEAD
 Starting Energy: 8,000J
 Starting AP: 6.0
 
@@ -570,6 +968,31 @@ Jab 3 (1.0 AP, 0→1s spool-up):
 - Energy Cost: 354J depleted
 - Final Energy: 6,938J (86.7% capacity)
 - Remaining AP: 3.0
+=======
+**Power Spool-Up Dynamics**:
+- **1-second strikes**: 33% of maximum power potential
+- **2-second strikes**: 67% of maximum power potential
+- **3-second strikes**: 100% of maximum power potential
+- **Energy costs scale proportionally** with power generation
+
+**Tactical Triangle Balance**:
+- **Heavy Armor**: Counters rapid combinations, vulnerable to momentum attacks
+- **High Mobility**: Counters momentum attacks, vulnerable to sustained combinations
+- **Balanced Approach**: Tactical flexibility without overwhelming advantages
+
+**Equipment Synergy**:
+- **Weapon tier choice** determines force multiplication (0.382× to 1.618×)
+- **Armor level** creates tactical identity through damage reduction
+- **Mass allocation** affects both protection and mobility
+
+### Strategic Implications
+
+**Physics-Based Balance**: All tactical relationships emerge from authentic physics simulation
+**Equipment Identity**: Gear choices determine optimal combat strategies
+**Skill Expression**: Understanding energy, momentum, and timing provides competitive advantage
+**Build Diversity**: Multiple viable approaches through different stat/equipment combinations
+**Adaptive Tactics**: Success requires reading opponent builds and adjusting strategy accordingly
+>>>>>>> 3eef86e (Combat)
 
 Total Energy Generated: 1,062J
 Net Energy Expenditure: 1,062J (no recovery during turn)
@@ -674,150 +1097,3 @@ Where $\eta_{skill}$ represents skill-based efficiency improvements that reduce 
 $$I_{order} = FIN + modifiers + random_{component}$$
 
 Where initiative determines the sequence of actor turns in each combat round.
-=======
-### The Power-Mass Trade-off
-
-**Equipment choices create predictable tactical consequences**:
-
-**Minimalist Build** (60kg total):
-- **Power-to-Mass**: 43.75 W/kg (POW 100)
-- **100m Gap-Closing**: ~4.0 seconds
-- **Tactical Role**: Rapid positioning, hit-and-run
-
-**Armored Build** (120kg total):
-- **Power-to-Mass**: 21.88 W/kg (POW 100)
-- **100m Gap-Closing**: ~7.5 seconds
-- **Tactical Role**: Sustained combat, defensive positions
-
-**Mathematical Inevitability**: Physics creates natural tactical relationships where equipment choices determine engagement capabilities.
-
-## Tactical Combat Applications
-
-### Pre-Combat Positioning
-
-**Light Actors** can afford aggressive positioning because they retain repositioning options through superior mobility.
-
-**Heavy Actors** must choose initial positions carefully since relocation is costly and time-consuming.
-
-### Dynamic Engagement Evolution
-
-**Early Engagement**: All actors have maximum tactical options
-**Mid Engagement**: Momentum damage becomes critical as actors close distance
-**Late Engagement**: Weapon efficiency and POW scaling determine outcomes
-
-### Build Counters Through Physics
-
-**Speed Counters Strength**: Superior positioning and momentum damage
-**Strength Counters Speed**: Perfect momentum transfer and weapon efficiency
-**Balanced Builds**: Tactical flexibility to adapt to opponent strategies
-
-These relationships emerge from **authentic physics** rather than artificial balance mechanics.
-
-## Damage Types and Resistance
-
-### Primary Damage Types
-
-**Kinetic**: Physical force transfer (melee, bullets, arrows)
-- Resisted by armor thickness and material properties
-- Enhanced by momentum and weapon efficiency
-
-**Thermal**: Heat-based damage (flames, plasma, lasers)
-- Resisted by thermal insulation and heat dissipation
-- Bypasses traditional armor through energy transfer
-
-**Explosive**: Pressure wave damage (grenades, bombs, mines)
-- Resisted by structural integrity and blast deflection
-- Area effect with distance-based damage falloff
-
-### Armor and Protection Physics
-
-**Kinetic Protection**: Armor effectiveness follows impact physics
-**Thermal Protection**: Heat dissipation and insulation mechanics
-**Explosive Protection**: Pressure wave deflection and structural integrity
-
-Protection systems operate through **physics simulation** rather than arbitrary damage reduction percentages.
-
-## Mastery Through Physics Understanding
-
-### Core Combat Skills
-
-1. **Power Management**: Understanding POW scaling and kinetic energy generation
-2. **Momentum Mastery**: Using velocity² scaling for massive damage multipliers
-3. **Efficiency Optimization**: Choosing weapons that maximize energy transfer
-4. **Physics Intuition**: Predicting combat outcomes through mathematical understanding
-
-### Competitive Advantage
-
-Players who understand the underlying physics gain **genuine competitive advantage**:
-- **Better build optimization** through power-to-mass calculations
-- **Superior tactical decisions** based on momentum transfer efficiency
-- **Accurate damage prediction** using kinetic energy principles
-- **Equipment synergy** leveraging golden ratio weapon progression
-
-Combat mastery comes from **physics literacy** rather than memorizing arbitrary rules, creating depth that rewards understanding over memorization.
-
-## Finalized Physics System Summary
-
-### Core Principles
-
-**1. Perfect Energy Transfer**: Muscular power converts to kinetic energy with 100% efficiency
-- No arbitrary biomechanical losses
-- Direct relationship: `Power × Time = Energy`
-- Enables superhuman combat capabilities
-
-**2. POW-Based Momentum Efficiency**: Strength determines energy transfer effectiveness
-- POW 10 = 10% momentum transfer efficiency
-- POW 100 = 100% momentum transfer efficiency
-- Reflects technical skill and body control under dynamic conditions
-
-**3. RES-Based Energy Management**: Resilience governs sustained combat capability
-- Energy capacity scales with RES (100J per point)
-- Recovery rate scales with RES (10W per point)
-- Fatigue limits effective power output over time
-
-**4. Golden Ratio Weapon Progression**: Mathematical elegance in force multiplication
-- Unarmed: 0.382× efficiency (φ⁻²)
-- Light: 0.618× efficiency (φ⁻¹)
-- Medium: 1.000× efficiency (baseline)
-- Heavy: 1.618× efficiency (φ)
-
-### Mathematical Foundation
-
-```
-Total Damage = (Muscular Energy + Effective Momentum Energy) × Weapon Efficiency ÷ 5J
-
-Where:
-Muscular Energy = Effective Power Output × Strike Duration (0.25s default)
-Effective Power Output = min(Natural POW, Current Energy ÷ Strike Duration)
-Effective Momentum Energy = Raw Kinetic Energy × (POW ÷ 100)
-Raw Kinetic Energy = 0.5 × Mass × Velocity²
-
-Energy Recovery Rate = Maximum Recovery Rate × Golden Curve(Current Energy ÷ Maximum Energy)
-Golden Curve peaks at t = 0.382 and approaches zero at t = 0 and t = 1
-```
-
-### Combat Effectiveness Scaling
-
-**Power Scaling (POW 10 → 100)**:
-- **7.0× damage increase** across all weapon categories
-- Consistent scaling maintains weapon tier relationships
-- Creates meaningful progression from human to superhuman
-
-**Speed vs Strength Trade-offs**:
-- **Speed builds**: Generate massive raw kinetic energy through velocity²
-- **Strength builds**: Transfer energy with perfect efficiency
-- **Balanced builds**: Optimize both generation and transfer
-
-### Tactical Implications
-
-**Superhuman Dominance**: POW 100 actors one-shot ordinary humans with medium+ weapons
-**Equipment Importance**: Weapon choice multiplies inherent capabilities
-**Build Diversity**: Multiple viable approaches to combat effectiveness
-**Physics Literacy**: Understanding energy transfer provides competitive advantage
-
-## Conclusion: Combat as Applied Physics
-
-Flux combat transforms fighting from random chance into **applied physics** where every decision has mathematical consequences. The simplified system eliminates superfluous coefficients while maintaining the elegant relationship between Power, Grace, momentum, and weapon efficiency.
-
-Victory goes not to those who memorize damage tables, but to those who understand that **kinetic energy generation**, **momentum transfer efficiency**, and **golden ratio force multiplication** are the fundamental tools of combat mastery.
->>>>>>> 31f060a (Actor combat physics)
