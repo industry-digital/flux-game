@@ -356,5 +356,3 @@ This approach transcends traditional content creation. Rather than building pred
 The goal is not to make players feel sad about scripted character deaths, but to make them feel properly seen and honored for their own moments of courage under impossible circumstances.
 
 We're not building a game that tells players a moving story. We're building a system that creates conditions for players to discover something moving about themselves - and ensures that discovery receives the witness it deserves.
-
-**We're building a machine for creating memories of human dignity that people carry with them long after the servers shut down.**

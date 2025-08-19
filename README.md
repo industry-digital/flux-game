@@ -2,12 +2,14 @@
 
 # Priorities
 
-1. Remove `seed` from Weather
+1. `LOOK` command
+1. `SURVEY` command
+1. `FORAGE` command
 1. [Resource Simulation Baseline Stability](./docs/simulation/resource.md)
   - yellow resources, in stasis
+1. [Creature Simulation Server](./docs/simulation/monsters.md)
 1. [Skill System](./docs/simulation/skills.md)
 1. [Character Design](./docs/gameplay/core-shell.md)
-1. [Creature Simulation](./docs/simulation/monsters.md)
 1. [Shell Design](./docs/gameplay/core-shell.md)
 1. [Combat System](./docs/gameplay/combat-system.md)
 1. [Qwen on Metal](./docs/arch/local-llm.md)
