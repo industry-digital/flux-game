@@ -104,9 +104,11 @@ The World Server acts as an **XMPP proxy** for all player spatial actions:
 4. **Publishes spatial events** to relevant MUC Light rooms
 5. **Notifies players** of command results
 
-## Complete System Flow
+## System Flow Diagrams
 
 ### Authentication and Session Initialization
+
+This sequence shows the complete authentication and session establishment flow, from JWT acquisition through World Server handshake completion.
 
 ```mermaid
 sequenceDiagram
@@ -114,19 +116,16 @@ sequenceDiagram
     participant AuthServer
     participant XMPPServer as XMPP Server
     participant WorldServer
-    participant MUCLight as MUC Light (Place)
 
-    Note over Client, MUCLight: Authentication Phase
+    Note over Client, WorldServer: Authentication Phase
     activate Client
     Client->>AuthServer: Request JWT token (username + password)
     activate AuthServer
     AuthServer->>AuthServer: Validate credentials
     AuthServer->>Client: Return signed JWT token
     deactivate AuthServer
-    deactivate Client
 
-    Note over Client, MUCLight: XMPP Connection Phase
-    activate Client
+    Note over Client, WorldServer: XMPP Connection Phase
     Client->>XMPPServer: Initiate XMPP stream
     activate XMPPServer
     XMPPServer->>Client: Stream header response
@@ -134,73 +133,77 @@ sequenceDiagram
     XMPPServer->>XMPPServer: Validate JWT signature
     XMPPServer->>Client: Authentication success
     Client->>XMPPServer: Resource binding request
-    XMPPServer->>Client: Bind resource (assign full JID)
+    XMPPServer->>Client: Bind resource (assign client's full JID)
 
-    Note over Client, MUCLight: Session Initialization & Roster Presence
+    Note over Client: Client status: 'connecting'<br/>Has own JID, waiting for World Server
+
+    Note over Client, WorldServer: World Server Handshake Phase
     Client->>XMPPServer: Send initial presence
     XMPPServer->>WorldServer: Forward presence (mod_presence_notify)
     activate WorldServer
     WorldServer->>WorldServer: Process new client connection
-    WorldServer->>XMPPServer: Send directed presence response with full JID
-    XMPPServer->>Client: Deliver World Server's directed presence
-    deactivate WorldServer
-    Client->>Client: Store World Server's full JID
+    WorldServer->>XMPPServer: Send directed message with World Server JID
+    XMPPServer->>Client: Deliver World Server message
+    Client->>Client: Extract and store World Server's full JID
 
-    Note over Client, MUCLight: Character Selection
+    Note over Client: Client status: 'connected'<br/>Session fully established
+
+    Note over Client, WorldServer: Character Selection & World Entry
     Client->>WorldServer: Send character select command
-    activate WorldServer
     WorldServer->>WorldServer: Process command through pipeline
     WorldServer->>Client: Send character state (including location)
     deactivate WorldServer
+    deactivate XMPPServer
+    deactivate Client
+```
 
-    Note over Client, MUCLight: Initial Place Join (World Server Managed)
-    Client->>Client: Extract current location from state
-    Note over WorldServer: World Server manages MUC Light affiliation
-    WorldServer->>XMPPServer: Add client to Place MUC Light room
-    XMPPServer->>MUCLight: Process affiliation change
-    activate MUCLight
-    Note over WorldServer: World Server broadcasts spatial events
-    WorldServer->>MUCLight: Send arrival event to all occupants
-    MUCLight->>Client: Deliver custom arrival event
-    MUCLight->>Client: Room configuration (Place description)
+### Actor Movement and MUC Light Interactions
 
-    Note over Client, MUCLight: Movement Command
+This sequence shows how actor movement is handled through World Server authority with MUC Light spatial events.
+
+```mermaid
+sequenceDiagram
+    participant Client
+    participant WorldServer
+    participant XMPPServer as XMPP Server
+    participant OldPlace as Old Place<br/>(MUC Light)
+    participant NewPlace as New Place<br/>(MUC Light)
+    participant OtherClients as Other Players<br/>(in Places)
+
+    Note over Client, OtherClients: Actor Movement Command
+    activate Client
     Client->>WorldServer: Send MOVE command with destination
     activate WorldServer
-    WorldServer->>WorldServer: Process through pipeline
+    WorldServer->>WorldServer: Process through 5-stage pipeline
     WorldServer->>WorldServer: Update character location in world state
     WorldServer->>Client: Send ACTOR_MOVEMENT_DID_SUCCEED event
-    deactivate WorldServer
 
-    Note over Client, MUCLight: World Server-Managed Place Transition
-    Client->>Client: Extract new location from movement success event
-    Note over WorldServer: World Server orchestrates MUC Light transitions
-    WorldServer->>XMPPServer: Remove from old Place (affiliation change)
-    XMPPServer->>MUCLight: Process leave
-    WorldServer->>MUCLight: Send departure event to remaining occupants
-    deactivate MUCLight
-    WorldServer->>XMPPServer: Add to new Place (affiliation change)
-    XMPPServer->>MUCLight: Process join
-    activate MUCLight
-    WorldServer->>MUCLight: Send arrival event to new occupants
-    MUCLight->>Client: Deliver custom arrival event
-    MUCLight->>Client: New room configuration (Place description)
+    Note over Client, OtherClients: World Server Orchestrates Place Transition
+    Note over WorldServer: Remove from old Place
+    WorldServer->>XMPPServer: Change affiliation: client -> oldPlace (none)
+    activate XMPPServer
+    XMPPServer->>OldPlace: Process affiliation removal
+    activate OldPlace
+    WorldServer->>OldPlace: Send departure event with narrative
+    OldPlace->>OtherClients: "Gandalf strides north toward the forest"
+    deactivate OldPlace
 
-    Note over Client, MUCLight: Spatial Communication
-    Client->>MUCLight: Send chat message to current Place
-    MUCLight->>XMPPServer: Broadcast to room occupants
-    XMPPServer->>Client: Deliver messages from other occupants
-
-    Note over Client, MUCLight: Connection Loss Detection
-    Client->>Client: Connection drops (network/app crash)
-    XMPPServer->>WorldServer: Unavailable presence (instant)
-    activate WorldServer
-    WorldServer->>WorldServer: Update world state (remove from Place)
-    WorldServer->>MUCLight: Send departure event with narrative
-    deactivate WorldServer
-    MUCLight->>Client: Deliver immersive disconnection message
-    deactivate MUCLight
+    Note over WorldServer: Add to new Place
+    WorldServer->>XMPPServer: Change affiliation: client -> newPlace (member)
+    XMPPServer->>NewPlace: Process affiliation addition
+    activate NewPlace
+    WorldServer->>NewPlace: Send arrival event with narrative
+    NewPlace->>Client: "You enter the misty forest clearing"
+    NewPlace->>OtherClients: "A hooded figure emerges from the south"
+    NewPlace->>Client: Room configuration (Place description)
+    deactivate NewPlace
     deactivate XMPPServer
+
+    Note over Client, OtherClients: Client Updates UI
+    Client->>Client: Update location display
+    Client->>Client: Render new Place description
+    Client->>Client: Update available exits/actions
+    deactivate WorldServer
     deactivate Client
 ```
 

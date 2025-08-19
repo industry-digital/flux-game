@@ -482,8 +482,7 @@ Expected Load at 20K CCU:
 ├── Monster commands: 400,000/sec
 ├── Total operations: 420,000/sec
 ├── Distributed across 4 containers: ~105,000 ops/sec per container
-├── Database load: ~2,500 batched ops/sec
-└── Utilization: ~1.7% of measured database capacity
+└── Database load: ~2,500 batched ops/sec
 ```
 
 ### Resource Utilization Projections (4-Container)

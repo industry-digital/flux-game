@@ -1,36 +1,4 @@
-# Database Architecture: The Inevitable Consequences of Pure Functions
-
-The Flux database architecture emerges not from arbitrary design choices, but from the logical necessities of pure functional programming. Each architectural decision was forced by the constraints of the previous step, creating a system with remarkable performance characteristics.
-
-## Empirical Performance Discoveries
-
-### Single-Threaded CPU as Primary Bottleneck
-
-Performance analysis reveals that the system becomes CPU-bound during complex operations, with SQL generation consuming 100%+ CPU utilization:
-
-- **CPU-Intensive Workloads**: 2,611,136 ops/sec (100.1% CPU utilization)
-- **I/O-Intensive Workloads**: 62,161 ops/sec (22.8% CPU utilization)
-
-This identifies single-threaded CPU performance as the critical scaling factor, making high-performance processors like the Apple M-series chips essential rather than merely convenient.
-
-## Architectural Foundation: Working Set in Memory
-
-### Scale Requirements and Memory Architecture
-
-The architecture assumes a working set that fits entirely within PostgreSQL's buffer pool, eliminating disk I/O from the critical path:
-
-**Target Working Set:**
-- **10,000 concurrent monsters**: ~0.5 GB
-- **10,000 concurrent characters**: ~2.0 GB
-- **10,000 places**: ~5.0 GB
-- **Indexes and overhead**: ~0.5 GB
-- **Total working set**: ~8.0 GB
-
-**Buffer Pool Configuration:**
-- **shared_buffers**: 16GB (2x working set for safety margin)
-- **effective_cache_size**: 24GB (total available system memory)
-
-This memory-resident approach transforms the performance characteristics from I/O-bound to CPU-bound, enabling the extraordinary throughput measurements observed in testing.
+# FSP Database Architecture
 
 ## Single-Table Architecture: The Contextualization Necessity
 
@@ -403,19 +371,6 @@ The optimized settings target high-throughput batch processing. For different pa
 **Mixed Workloads:**
 - Current settings provide good balance
 - Monitor `pg_stat_wal` to tune based on actual patterns
-
-## Conclusion: A New Paradigm for Database Architecture
-
-The Flux database architecture demonstrates that revolutionary performance improvements come from aligning with mathematical fundamentals rather than optimizing existing approaches. The discovery that single-threaded CPU performance dominates scaling reveals the importance of architectural decisions that seemed impossible just a few years ago.
-
-This architecture pattern—single-table design with dotpath JSONB and O(1) round-trip scaling—represents a new paradigm for high-performance OLTP systems. It achieves remarkable characteristics through mathematical alignment with computational fundamentals:
-
-- **Predictable performance**: Mathematical guarantees enable precise modeling
-- **Hardware optimization**: Single-threaded CPU performance becomes critical
-- **ACID without locks**: Full guarantees without traditional contention
-- **O(1) scaling**: Constant round-trips regardless of batch size
-
-The implications extend far beyond gaming to any domain requiring high-throughput transaction processing. Financial systems, IoT platforms, and e-commerce applications can all benefit from these architectural insights, particularly the recognition that modern CPU architectures favor approaches that seemed impossible just a few years ago.
 
 ## Other Reading
 
