@@ -10,15 +10,13 @@ export type ActorMovementProps = {
 };
 
 export const renderActorDidDepart: Template<ActorMovementProps> = ({ actor, direction, perspective }) => {
-  const subject = perspective === 'actor' ? actor.name : 'You';
-  const verb = perspective === 'actor' ? 'moves' : 'move';
-  return `${subject} ${verb} ${direction}.`;
+  if (perspective === 'actor') {
+    return `You move ${direction}.`;
+  }
+  return `${actor.name} moves ${direction}.`;
 };
 
-export const renderActorDidArrive: Template<ActorMovementProps> = ({ actor, direction, perspective }) => {
-  const subject = perspective === 'actor' ? actor.name : 'You';
-  const verb = perspective === 'actor' ? 'arrives' : 'arrive';
-
+const renderFromDirection = (direction: Direction) => {
   switch (direction) {
     case Direction.NORTH:
     case Direction.SOUTH:
@@ -28,12 +26,19 @@ export const renderActorDidArrive: Template<ActorMovementProps> = ({ actor, dire
     case Direction.SOUTHEAST:
     case Direction.SOUTHWEST:
     case Direction.NORTHWEST:
-      return `${subject} ${verb} from the ${direction}.`;
+      return `from the ${direction}.`;
     case Direction.UP:
-      return `${subject} ${verb} from above.`;
+      return `from above.`;
     case Direction.DOWN:
-      return `${subject} ${verb} from below.`;
+      return `from below.`;
     default:
-      return `${subject} ${verb}.`;
+      return '';
   }
+};
+
+export const renderActorDidArrive: Template<ActorMovementProps> = ({ actor, direction, perspective }) => {
+  if (perspective === 'actor') {
+    return '';
+  }
+  return `${actor.name} arrives ${renderFromDirection(direction)}.`;
 };

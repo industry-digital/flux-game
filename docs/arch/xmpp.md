@@ -315,142 +315,199 @@ function extractMovementContext(actor: Actor): MovementContext {
 
 ### World Server Event Broadcasting
 
-The World Server publishes rich spatial events to MUC Light rooms:
+The World Server publishes rich spatial events to MUC Light rooms using a streamlined message format:
 
 #### Actor Arrival
 ```xml
-<message from="flux.sys.server@fabric.flux.local"
-         to="flux.place.tavern@places.flux.local"
+<message to="flux.place.tavern@places.fabric.flux.local"
          type="groupchat">
-  <body>Movement event</body>
-  <event xmlns="flux:world" mime="application/json" schema-version="1.0">
-    <![CDATA[
-    {
-      "id": "cmd_123",
-      "ts": 1705324200000,
+  <body/>
+  <facts xmlns="flux:world" mime="application/json">
+    [{
       "trace": "dcf6924a-b0a0-4d50-b685-e37797afa416",
-      "type": "ACTOR_ARRIVED",
-      "payload": {
-        "actorId": "flux:actor:gandalf",
-        "placeId": "flux:place:tavern",
-        "direction": "north",
-        "originPlaceId": "flux:place:road",
-        "method": "walking",
-        "stealth": false,
-        "mood": "determined"
+      "type": "event",
+      "subject": {
+        "id": "cmd_123",
+        "ts": 1705324200000,
+        "trace": "dcf6924a-b0a0-4d50-b685-e37797afa416",
+        "type": "actor:arrived",
+        "actor": "flux:actor:gandalf",
+        "location": "flux:place:tavern",
+        "payload": {
+          "origin": "flux:place:road"
+        }
       },
-      "spatial": {
-        "from": {
-          "id": "flux:place:road",
-          "name": "North Road"
-        },
-        "to": {
-          "id": "flux:place:tavern",
-          "name": "The Prancing Pony"
-        },
-        "direction": "north"
+      "text": {
+        "actor": "You stride into the tavern from the north.",
+        "observer": "Gandalf strides into the tavern from the north."
       },
-      "subjective": "You stride into the tavern from the north, your steps purposeful and determined.",
-      "objective": "Gandalf strides into the tavern from the north, his robes billowing behind him."
-    }
-    ]]>
-  </event>
+      "id": "SdmhF1SXlzES7YHM"
+    }]
+  </facts>
 </message>
 ```
 
+Note: The XMPP server automatically adds the `from` attribute during routing (e.g., `from="flux.sys.server@fabric.flux.local/resource"`). The empty `<body/>` element is intentional as we use the `<facts>` payload for all event data.
+
 #### Actor Departure
 ```xml
-<message from="flux.sys.server@fabric.flux.local"
-         to="flux.place.tavern@places.flux.local"
+<message to="flux.place.tavern@places.fabric.flux.local"
          type="groupchat">
-  <body>Movement event</body>
-  <event xmlns="flux:world" mime="application/json" schema-version="1.0">
-    <![CDATA[
-    {
-      "id": "cmd_124",
-      "ts": 1705324250000,
+  <body/>
+  <facts xmlns="flux:world" mime="application/json">
+    [{
+      "id": "SdmhF1SXlzES7YHM",
       "trace": "dcf6924a-b0a0-4d50-b685-e37797afa416",
-      "type": "ACTOR_DEPARTED",
-      "payload": {
-        "actorId": "flux:actor:gandalf",
-        "placeId": "flux:place:tavern",
-        "direction": "south",
-        "destinationPlaceId": "flux:place:forest",
-        "method": "walking",
-        "stealth": false,
-        "mood": "urgent"
+      "type": "event",
+      "subject": {
+        "id": "cmd_124",
+        "ts": 1705324250000,
+        "trace": "dcf6924a-b0a0-4d50-b685-e37797afa416",
+        "type": "actor:departed",
+        "actor": "flux:actor:gandalf",
+        "location": "flux:place:tavern",
+        "payload": {
+          "destination": "flux:place:forest"
+        }
       },
-      "spatial": {
-        "from": {
-          "id": "flux:place:tavern",
-          "name": "The Prancing Pony"
-        },
-        "to": {
-          "id": "flux:place:forest",
-          "name": "Whispering Forest"
-        },
-        "direction": "south"
-      },
-      "subjective": "You stride purposefully toward the forest, leaving the warmth of the tavern behind.",
-      "objective": "Gandalf strides purposefully toward the south, his urgent manner unmistakable."
-    }
-    ]]>
-  </event>
+      "text": {
+        "actor": "You stride purposefully toward the forest.",
+        "observer": "Gandalf strides purposefully toward the forest."
+      }
+    }]
+  </facts>
 </message>
 ```
 
 #### Environmental Changes
 ```xml
-<message from='places.example.com/forest' to='player1@example.com' type='groupchat'>
-  <body>The fog begins to lift as dawn approaches.</body>
-  <x xmlns='custom:world-events'>
-    <environment-change type='weather' from='foggy' to='clear'/>
-    <visibility-change from='limited' to='normal'/>
-  </x>
+<message to="flux.place.forest@places.fabric.flux.local"
+         type="groupchat">
+  <body/>
+  <facts xmlns="flux:world" mime="application/json">
+    [{
+      "id": "SdmhF1SXlzES7YHM",
+      "trace": "dcf6924a-b0a0-4d50-b685-e37797afa416",
+      "type": "event",
+      "subject": {
+        "id": "env_123",
+        "ts": 1705324250000,
+        "trace": "dcf6924a-b0a0-4d50-b685-e37797afa416",
+        "type": "environment:weather:changed",
+        "location": "flux:place:forest",
+        "payload": {
+          "from": "foggy",
+          "to": "clear",
+          "visibility": "normal"
+        }
+      },
+      "text": {
+        "actor": "The fog begins to lift as dawn approaches.",
+        "observer": "The fog begins to lift as dawn approaches."
+      }
+    }]
+  </facts>
 </message>
 ```
 
 #### Connection Loss (Graceful Narrative)
 ```xml
-<message from='places.example.com/tavern' to='player1@example.com' type='groupchat'>
-  <body>Gandalf suddenly vanishes in a puff of smoke, muttering about urgent business.</body>
-  <x xmlns='custom:world-events'>
-    <actor-departed jid='gandalf@example.com' reason='connection-lost'/>
-  </x>
+<message to="flux.place.tavern@places.fabric.flux.local"
+         type="groupchat">
+  <body/>
+  <facts xmlns="flux:world" mime="application/json">
+    [{
+      "id": "SdmhF1SXlzES7YHM",
+      "trace": "dcf6924a-b0a0-4d50-b685-e37797afa416",
+      "type": "event",
+      "subject": {
+        "id": "conn_123",
+        "ts": 1705324250000,
+        "trace": "dcf6924a-b0a0-4d50-b685-e37797afa416",
+        "type": "actor:dematerialized",
+        "actor": "flux:actor:gandalf",
+        "location": "flux:place:tavern",
+        "payload": {
+          "reason": "connection_lost"
+        }
+      },
+      "text": {
+        "actor": "You suddenly vanish from the simulation.",
+        "observer": "Gandalf suddenly vanishes from the simulation."
+      }
+    }]
+  </facts>
 </message>
 ```
 
 ### Event Types
 
-The World Server publishes rich spatial domain events with universal narrative enrichment:
+The World Server publishes domain events with universal narrative enrichment. All events follow a consistent structure:
+
+```typescript
+interface WorldEvent {
+  trace: string;           // Correlation ID for distributed tracing
+  type: "event";          // Constant value
+  subject: {
+    id: string;           // Unique event ID
+    ts: number;           // Unix timestamp in milliseconds
+    trace: string;        // Same as parent trace
+    type: string;         // Domain event type (see below)
+    actor?: string;       // Optional actor URN
+    location: string;     // Place URN where event occurred
+    payload: any;         // Event-specific data
+  };
+  text: {
+    actor: string;        // First-person narrative
+    observer: string;     // Third-person narrative
+  };
+  id: string;             // Unique message ID
+}
+```
 
 #### Movement Events
-- **`ACTOR_ARRIVED`**: Actor enters a new place with spatial context
-- **`ACTOR_DEPARTED`**: Actor leaves a place with destination information
-- **`ACTOR_MATERIALIZED`**: Actor connects/spawns into world
-- **`ACTOR_DEMATERIALIZED`**: Actor disconnects/despawns from world
+- **`actor:arrived`**: Actor enters a new place
+  - Payload: `{ origin: string }`
+- **`actor:departed`**: Actor leaves a place
+  - Payload: `{ destination: string }`
+- **`actor:materialized`**: Actor connects/spawns
+  - Payload: `{}`
+- **`actor:dematerialized`**: Actor disconnects/despawns
+  - Payload: `{ reason?: "connection_lost" | string }`
 
 #### Social Events
-- **`SOCIAL_EMOTE`**: Gestures, expressions, social interactions
-- **`SOCIAL_SPEECH`**: Speaking, whispering, shouting
-- **`SOCIAL_ACTION`**: Custom social commands
+- **`social:emote`**: Gestures and expressions
+  - Payload: `{ emote: string }`
+- **`social:speech`**: Communication
+  - Payload: `{ message: string, mode: "say" | "whisper" | "shout" }`
+- **`social:action`**: Custom social commands
+  - Payload: `{ action: string, target?: string }`
 
 #### Combat Events
-- **`COMBAT_ATTACK`**: Physical attacks, spell casting
-- **`COMBAT_DEFEND`**: Blocking, dodging, parrying
-- **`COMBAT_EFFECT`**: Damage, healing, status changes
+- **`combat:attack`**: Combat initiation
+  - Payload: `{ target: string, method: string }`
+- **`combat:defend`**: Combat response
+  - Payload: `{ attacker: string, method: string }`
+- **`combat:effect`**: Combat outcomes
+  - Payload: `{ type: string, value: number }`
 
 #### Environmental Events
-- **`WEATHER_CHANGE`**: Rain starts, fog lifts, etc.
-- **`LIGHTING_CHANGE`**: Day/night transitions, magical illumination
-- **`ATMOSPHERIC_EVENT`**: Sounds, smells, ambient changes
+- **`environment:weather:changed`**: Weather state changes
+  - Payload: `{ from: string, to: string }`
+- **`environment:time:changed`**: Time of day changes
+  - Payload: `{ from: string, to: string }`
+- **`environment:atmosphere:changed`**: Ambient changes
+  - Payload: `{ type: string, value: string }`
 
 #### Economic Events
-- **`TRADE_INITIATED`**: Player-to-player trading
-- **`ITEM_TRANSFER`**: Giving, dropping, picking up items
-- **`SHOP_INTERACTION`**: Buying, selling at merchants
+- **`trade:initiated`**: Trading starts
+  - Payload: `{ parties: string[] }`
+- **`trade:item:transferred`**: Item ownership changes
+  - Payload: `{ item: string, from: string, to: string }`
+- **`trade:completed`**: Economic transaction finishes
+  - Payload: `{ type: string, value: number }`
 
-All events include pre-rendered subjective and objective narratives for immediate client display.
+All events include pre-rendered subjective (first-person) and objective (third-person) narratives for immediate client display. The narratives are contextual to the viewer's relationship to the event (actor vs observer).
 
 ## MUC Light Configuration
 

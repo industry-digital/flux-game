@@ -320,13 +320,19 @@ export {
 
 export {
   AbstractFact,
+  AbstractFactInput,
   FactType,
   WorldEventMessageDictionary,
   ActorLocationFact,
+  ActorLocationFactInput,
   WorldEventFact,
+  WorldEventFactInput,
   ViewFact,
+  ViewFactInput,
   SystemFact,
+  SystemFactInput,
   Fact,
+  FactInput,
 } from './fact';
 
 export {
