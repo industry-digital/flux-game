@@ -9,7 +9,7 @@ const Evasion: SkillSchema = {
   id: 'flux:skill:combat:defense:evasion',
   name: 'Evasion',
   description: 'The practice of avoiding incoming attacks through movement and positioning. Practitioners develop reflexive responses that activate automatically when threatened.',
-  stats: [ActorStat.AGI],
+  stats: [ActorStat.FIN],
   milestones: [
     [10, [
       {

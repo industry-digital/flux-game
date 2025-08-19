@@ -40,12 +40,12 @@ export enum ActorStat {
   POW = 'pow',
 
   /**
-   * Grace. Ability to perform feats of precision and agility.
+   * Finesse. Ability to perform feats of precision and agility.
    * - Reduces effective mass for inertia calculations
    * - Directly affects an actor's top speed while sprinting
    * - Ability to hit targets while in motion
    */
-  GRC = 'grc',
+  FIN = 'fin',
 
   /**
    * Resilience. Ability to absorb damage, resist injury, resist negative effects,and recover from wounds.
@@ -54,7 +54,8 @@ export enum ActorStat {
 
   /**
    * Intelligence. Reasoning ability and learning capacity. Affects:
-   * - Rate of PXP→XP conversion
+   * - Speed of learning (PXP→XP conversion rate)
+   * - Speed of decision-making (less AP cost for certain in-combat, such as `TARGET` and `CONSIDER`)
    */
   INT = 'int',
 

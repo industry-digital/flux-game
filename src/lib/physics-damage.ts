@@ -1,12 +1,16 @@
 /**
  * Physics-based damage calculation system for D&D-style stats
- * 
+ *
  * This system maintains D&D stat progression while grounding damage calculations
  * in real physics principles: kinetic energy, momentum transfer, material stress,
  * and biomechanical limits.
  */
 
-import { calculateBurstPower } from './power';
+
+const calculateBurstPower = (str: number) => {
+  // FIXME: This implementation is a placeholder.
+  return str * 10;
+};
 
 /**
  * Physical constants and biomechanical parameters
@@ -15,7 +19,7 @@ const PHYSICS_CONSTANTS = {
   // Strike mechanics
   typicalStrikeDuration: 0.1, // seconds (100ms for a fast punch)
   slowStrikeDuration: 0.3,    // seconds (300ms for a heavy weapon swing)
-  
+
   // Energy transfer efficiency based on contact mechanics
   efficiency: {
     bareHand: 0.4,           // Soft tissue deforms, absorbs energy
@@ -23,7 +27,7 @@ const PHYSICS_CONSTANTS = {
     heavyWeapon: 0.8,        // Mass amplifies energy transfer
     piercingWeapon: 0.9,     // Concentrated force, minimal energy loss
   },
-  
+
   // Human tissue damage thresholds (based on real biomechanics)
   damageTresholds: {
     bruising: 10,      // joules - visible bruising
@@ -33,7 +37,7 @@ const PHYSICS_CONSTANTS = {
     severeTrauma: 400, // joules - life-threatening damage
     lethal: 1000,      // joules - potentially fatal
   },
-  
+
   // Material properties for armor/weapons
   materials: {
     flesh: { resistance: 1.0, absorption: 0.3 },
@@ -46,7 +50,7 @@ const PHYSICS_CONSTANTS = {
 
 /**
  * Calculate kinetic energy delivered in a strike
- * 
+ *
  * @param powerWatts - Burst power output from muscles
  * @param strikeDuration - Duration of energy application
  * @param efficiency - Energy transfer efficiency (0-1)
@@ -64,7 +68,7 @@ export function calculateStrikeEnergy(
 
 /**
  * Convert kinetic energy to biological damage using real damage thresholds
- * 
+ *
  * @param energyJoules - Kinetic energy delivered
  * @param targetResistance - Material resistance factor
  * @returns Damage severity assessment
@@ -77,11 +81,11 @@ export function assessPhysicalDamage(energyJoules: number, targetResistance: num
 } {
   const adjustedEnergy = energyJoules / targetResistance;
   const thresholds = PHYSICS_CONSTANTS.damageTresholds;
-  
+
   let damageLevel: string;
   let gameplayDamage: number;
   let realWorldContext: string;
-  
+
   if (adjustedEnergy < thresholds.bruising) {
     damageLevel = "Negligible";
     gameplayDamage = Math.max(0.1, adjustedEnergy * 0.1);
@@ -107,7 +111,7 @@ export function assessPhysicalDamage(energyJoules: number, targetResistance: num
     gameplayDamage = 200 + (adjustedEnergy - thresholds.severeTrauma) * 0.2;
     realWorldContext = "Potentially fatal trauma";
   }
-  
+
   return {
     adjustedEnergy,
     damageLevel,
@@ -118,7 +122,7 @@ export function assessPhysicalDamage(energyJoules: number, targetResistance: num
 
 /**
  * Complete physics-based damage calculation
- * 
+ *
  * @param str - Actor's strength stat
  * @param weaponType - Type of weapon/attack
  * @param targetArmor - Target's armor material
@@ -140,16 +144,16 @@ export function calculatePhysicsDamage(
   const efficiency = PHYSICS_CONSTANTS.efficiency[weaponType];
   const duration = strikeDuration || PHYSICS_CONSTANTS.typicalStrikeDuration;
   const armorProperties = PHYSICS_CONSTANTS.materials[targetArmor];
-  
+
   const kineticEnergy = calculateStrikeEnergy(powerOutput, duration, efficiency);
   const damageAssessment = assessPhysicalDamage(kineticEnergy, armorProperties.resistance);
-  
-  const physicsBreakdown = 
+
+  const physicsBreakdown =
     `STR ${str} → ${powerOutput}W power → ` +
     `${kineticEnergy.toFixed(1)}J kinetic energy (${duration}s × ${efficiency} efficiency) → ` +
     `${damageAssessment.adjustedEnergy.toFixed(1)}J vs ${targetArmor} → ` +
     `${damageAssessment.gameplayDamage} damage (${damageAssessment.damageLevel})`;
-  
+
   return {
     powerOutput,
     kineticEnergy,
@@ -166,33 +170,33 @@ export function calculateWeaponPhysics(
   weaponType: 'punch' | 'sword' | 'mace' | 'dagger' | 'warhammer'
 ): ReturnType<typeof calculatePhysicsDamage> {
   const weaponParams = {
-    punch: { 
-      efficiency: 'bareHand' as const, 
-      duration: 0.1, 
-      armor: 'flesh' as const 
+    punch: {
+      efficiency: 'bareHand' as const,
+      duration: 0.1,
+      armor: 'flesh' as const
     },
-    sword: { 
-      efficiency: 'lightWeapon' as const, 
-      duration: 0.2, 
-      armor: 'flesh' as const 
+    sword: {
+      efficiency: 'lightWeapon' as const,
+      duration: 0.2,
+      armor: 'flesh' as const
     },
-    mace: { 
-      efficiency: 'heavyWeapon' as const, 
-      duration: 0.3, 
-      armor: 'flesh' as const 
+    mace: {
+      efficiency: 'heavyWeapon' as const,
+      duration: 0.3,
+      armor: 'flesh' as const
     },
-    dagger: { 
-      efficiency: 'piercingWeapon' as const, 
-      duration: 0.15, 
-      armor: 'flesh' as const 
+    dagger: {
+      efficiency: 'piercingWeapon' as const,
+      duration: 0.15,
+      armor: 'flesh' as const
     },
-    warhammer: { 
-      efficiency: 'heavyWeapon' as const, 
-      duration: 0.4, 
-      armor: 'flesh' as const 
+    warhammer: {
+      efficiency: 'heavyWeapon' as const,
+      duration: 0.4,
+      armor: 'flesh' as const
     },
   };
-  
+
   const params = weaponParams[weaponType];
   return calculatePhysicsDamage(str, params.efficiency, params.armor, params.duration);
 }
@@ -208,14 +212,14 @@ export const PHYSICS_SCENARIOS = {
     sledgehammer: calculateStrikeEnergy(500, 0.5, 0.9),     // ~500W impact
     carCrash20mph: 10000, // ~10kJ for reference
   },
-  
+
   // Game STR scenarios with physics
   str10_punch: calculatePhysicsDamage(10, 'bareHand'),
   str30_sword: calculatePhysicsDamage(30, 'lightWeapon'),
   str50_mace: calculatePhysicsDamage(50, 'heavyWeapon'),
   str75_warhammer: calculatePhysicsDamage(75, 'heavyWeapon'),
   str100_punch: calculatePhysicsDamage(100, 'bareHand'),
-  
+
   // Armor effectiveness
   str75_vs_chainmail: calculatePhysicsDamage(75, 'heavyWeapon', 'chainMail'),
   str75_vs_plate: calculatePhysicsDamage(75, 'heavyWeapon', 'plateMail'),

@@ -1,5 +1,5 @@
-import { createEntity, FactoryOptions } from './util';
-import { createModifiableScalarAttribute, createModifiableBoundedAttribute } from './attribute';
+import { createEntity, FactoryOptions } from '../util';
+import { createModifiableScalarAttribute, createModifiableBoundedAttribute } from '../attribute';
 import lodash from 'lodash';
 import { createEntityUrn, isUrnOfVocabulary } from '~/lib/taxonomy';
 import { AbstractEntity, EntityType } from '~/types/entity/entity';
@@ -44,10 +44,9 @@ export const createActor = (
         hp: createModifiableBoundedAttribute(),
         traits: {},
         stats: {
-          [ActorStat.STR]: createModifiableScalarAttribute((defaults) => ({ ...defaults, nat: 10 })),
-          [ActorStat.AGI]: createModifiableScalarAttribute((defaults) => ({ ...defaults, nat: 10 })),
-          [ActorStat.CON]: createModifiableScalarAttribute((defaults) => ({ ...defaults, nat: 10 })),
-          [ActorStat.DEX]: createModifiableScalarAttribute((defaults) => ({ ...defaults, nat: 10 })),
+          [ActorStat.POW]: createModifiableScalarAttribute((defaults) => ({ ...defaults, nat: 10 })),
+          [ActorStat.FIN]: createModifiableScalarAttribute((defaults) => ({ ...defaults, nat: 10 })),
+          [ActorStat.RES]: createModifiableScalarAttribute((defaults) => ({ ...defaults, nat: 10 })),
           [ActorStat.INT]: createModifiableScalarAttribute((defaults) => ({ ...defaults, nat: 10 })),
           [ActorStat.PER]: createModifiableScalarAttribute((defaults) => ({ ...defaults, nat: 10 })),
           [ActorStat.MEM]: createModifiableScalarAttribute((defaults) => ({ ...defaults, nat: 10 })),
