@@ -1,8 +1,13 @@
 import { EmergentNarrative } from '~/types';
 import { Template } from "~/types/template";
 import { PlaceSummaryLike } from "~/worldkit/view/place";
+import { ActorURN } from '~/types/taxonomy';
 
-export type PlaceTemplateProps = { place: PlaceSummaryLike };
+export type PlaceTemplateProps = {
+  place: PlaceSummaryLike;
+  viewer?: ActorURN;
+};
+
 export type PlaceTemplate = Template<PlaceTemplateProps>;
 
 export const normalizePlaceDescription = (description: string | EmergentNarrative) => {
@@ -12,37 +17,75 @@ export const normalizePlaceDescription = (description: string | EmergentNarrativ
   return description;
 };
 
-export const renderExitDirection: Template<{ direction: string; exit: { label: string } }> = ({ direction, exit }) => {
-  // Capitalize the first letter of the direction
-  const capitalizedDirection = direction.charAt(0).toUpperCase() + direction.slice(1);
-
-  // Try to extract destination from action description
-  // Look for text after the last "to " in the label
-  const toIndex = exit.label.lastIndexOf(' to ');
-  const destination = toIndex !== -1 ? exit.label.substring(toIndex + 4) : exit.label;
-
-  return `${capitalizedDirection} to ${destination}`;
+export const renderRoomName = ({ place }: PlaceTemplateProps): string => {
+  return `[${place.name}]`;
 };
 
-export const renderExits: PlaceTemplate = ({ place }) => {
-  const exitEntries = Object.entries(place.exits);
+export const renderDescription = ({ place }: PlaceTemplateProps): string => {
+  const { base, emergent } = normalizePlaceDescription(place.description);
+  const parts = [base];
 
-  if (exitEntries.length === 0) {
-    return 'Exits: None';
+  if (emergent) {
+    parts.push(emergent);
   }
 
-  const exitDescriptions = exitEntries.map(([direction, exit]) => {
-    return renderExitDirection({ direction, exit });
-  });
+  return parts.join(' ');
+};
 
-  return `Exits: ${exitDescriptions.join(', ')}`;
+export const renderActors = ({ place, viewer }: PlaceTemplateProps): string | null => {
+  if (!place.actors || Object.keys(place.actors).length === 0) {
+    return null;
+  }
+
+  // Get visible actors (excluding viewer if present)
+  const visibleActors = Object.entries(place.actors)
+    .filter(([id, actor]) => {
+      if (viewer && id === viewer) {
+        return false;
+      }
+      return true; // For now, assume all actors are visible
+    })
+    .map(([_, actor]) => actor.name);
+
+  if (visibleActors.length === 0) {
+    return null;
+  }
+
+  return `Also here: ${visibleActors.join(', ')}.`;
+};
+
+export type RenderExitsProps = PlaceTemplateProps & { prefix?: string };
+
+export const renderExits = ({ place, prefix = 'Exits:' }: RenderExitsProps): string => {
+  const exitDirections = Object.keys(place.exits);
+
+  if (exitDirections.length === 0) {
+    return `${prefix} none.`;
+  }
+
+  // Convert directions to lowercase and sort them
+  const formattedDirections = exitDirections
+    .map(dir => dir.toLowerCase())
+    .sort()
+    .join(', ');
+
+  return `${prefix} ${formattedDirections}.`;
 };
 
 export const renderPlaceDescription: PlaceTemplate = (props: PlaceTemplateProps) => {
-  const { place } = props;
-  const { base, emergent } = normalizePlaceDescription(place.description);
-  const exits = renderExits(props);
-  return `${place.name}\n${base}\n${emergent}\n${exits}`;
+  const sections = [
+    renderRoomName(props),
+    renderDescription(props)
+  ];
+
+  const actorsSection = renderActors(props);
+  if (actorsSection) {
+    sections.push(actorsSection);
+  }
+
+  sections.push(renderExits(props));
+
+  return sections.join('\n');
 };
 
 /**

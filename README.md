@@ -8,14 +8,14 @@
 1. [Resource Simulation Baseline Stability](./docs/simulation/resource.md)
   - yellow resources, in stasis
 1. [Creature Simulation Server](./docs/simulation/monsters.md)
+1. [Combat System](./docs/gameplay/combat-system.md)
 1. [Skill System](./docs/simulation/skills.md)
 1. [Character Design](./docs/gameplay/core-shell.md)
-1. [Shell Design](./docs/gameplay/core-shell.md)
-1. [Combat System](./docs/gameplay/combat-system.md)
 1. [Qwen on Metal](./docs/arch/local-llm.md)
 1. [World Texture Service](./docs/simulation/world-texture.md)
 1. [Rain Formation](./docs/simulation/weather.md)
 1. [Lightning Strikes](./docs/simulation/weather.md)
+1. [Witnessed Excellence](./docs/gameplay/gravitas.md)
 1. [Spacefold](./docs/simulation/spacefold.md)
 1. [Blink Drive](./docs/simulation/blink.md)
 1. Crafting
