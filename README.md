@@ -6,11 +6,9 @@
 1. `SURVEY` command
 1. `FORAGE` command
 1. [Resource Simulation Baseline Stability](./docs/simulation/resource.md)
-  - yellow resources, in stasis
 1. [Creature Simulation Server](./docs/simulation/monsters.md)
 1. [Combat System](./docs/gameplay/combat-system.md)
 1. [Skill System](./docs/simulation/skills.md)
-1. [Character Design](./docs/gameplay/core-shell.md)
 1. [Qwen on Metal](./docs/arch/local-llm.md)
 1. [World Texture Service](./docs/simulation/world-texture.md)
 1. [Rain Formation](./docs/simulation/weather.md)

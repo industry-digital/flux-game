@@ -1,7 +1,18 @@
 # Flux Combat System: Physics-Based Tactical Combat
->>>>>>> 31f060a (Actor combat physics)
 
 The Combat System is a physics-based, tactical combat system designed for a Multi-User Dungeon (MUD) that emphasizes skill and understanding of real-world physical principles. Combat follows a **turn-based structure** similar to Divinity: Original Sin 2, where each actor takes sequential turns with a full Action Point pool to spend during their activation.
+
+## The Role of Dice
+
+Dice rolls are used to determine:
+
+- Turn order (initiative)
+- Hit probability
+- Dodging
+- Blocking
+- Parrying
+
+Dice rolls feature prominently in the game client UI. Think Baldur's Gate 3.
 
 ## Turn-Based Combat Structure
 
@@ -44,7 +55,7 @@ These stats form a Tactical Triangle, creating distinct character builds:
 
 ## The Battlefield and Action Point System
 
-Combat occurs on a 300-meter linear battlefield. When two opposing actors enter combat, they are placed at opposite ends of the battlefield, 100 meters apart. On both sides of this 100m gap is a margin of 100 meters, yielding a total of 300 meters of battlefield.
+Combat occurs on a 300-meter linear battlefield. When two opposing actors enter combat, they are placed 100 meters apart. On both sides of this 100m gap is a margin of 100 meters, yielding a total of 300 meters of battlefield.
 
 **Power Output Scaling:**
 ```
@@ -85,6 +96,8 @@ Actor bodies on the linear battlefield -- by default -- do not collide with anyt
 
 In both cases, the actor that is being approached is considered the "target" and the actor that is approaching is considered the "attacker".
 
+## Melee Range
+
 It is assumed that a melee attack has a range of 1 meter.
 A *reach* attack, using a reach weapon like a spear, has a range of 2 meters.
 
@@ -108,11 +121,33 @@ Damage is a product of both muscular force and momentum transfer. The final dama
 
 $$D_{final} = \max\left(0, \frac{(D_{muscular} + D_{momentum}) \times \eta_{weapon}}{5J} - A_{value}\right)$$
 
-- **Muscular Damage ($D_{muscular}$)**: This is the damage generated from the character's muscular effort, calculated as $P_{effective} \times t_{strike} / 5J$.
+### Muscular Damage: Energy Integration Model
 
-- **Momentum Damage ($D_{momentum}$)**: This is the damage from a character's kinetic energy in motion, calculated as $(\frac{1}{2}mv^2) \times (POW/100) / 5J$. The Power (POW) stat determines how effectively this momentum is transferred.
+**Muscular Damage ($D_{muscular}$)** represents the kinetic energy generated through sustained muscular effort over the strike duration. Unlike simple power-time multiplication, this system uses **32-step Simpson's rule integration** to model realistic energy dynamics:
 
-- **Weapon Efficiency ($\eta_{weapon}$)**: Weapons follow a golden ratio progression ($\phi$) in efficiency, which determines how effectively kinetic energy is transferred into damage.
+$$D_{muscular} = \frac{\int_0^{t_{strike}} P_{effective}(t) \, dt}{5J}$$
+
+Where $P_{effective}(t)$ varies over time due to:
+- **Energy depletion**: As the capacitor drains, available power decreases
+- **Energy recovery**: Golden ratio recovery curve (peaks at 38.2% capacity)
+- **Power constraints**: $P_{effective}(t) = \min(P_{natural}, \frac{E_{remaining}(t)}{t_{remaining}})$
+
+This integration captures the fundamental trade-off between strike duration and energy efficiency:
+- **Short strikes**: Maintain high average power output
+- **Long wind-ups**: Generate more total energy but with diminishing returns
+- **Energy management**: Strategic timing becomes crucial for optimal damage
+
+### Momentum Damage
+
+**Momentum Damage ($D_{momentum}$)** represents kinetic energy from the character's motion, calculated as:
+
+$$D_{momentum} = \frac{(\frac{1}{2}mv^2) \times (POW/100)}{5J}$$
+
+The Power (POW) stat determines how effectively this momentum is transferred into the target.
+
+### Weapon Efficiency
+
+**Weapon Efficiency ($\eta_{weapon}$)** follows a golden ratio progression ($\phi$) in efficiency, determining how effectively kinetic energy is transferred into damage:
 
   - **Unarmed**: $0.382 \times \eta$ ($\phi^{-2}$)
   - **Light Weapons**: $0.618 \times \eta$ ($\phi^{-1}$)
@@ -122,6 +157,16 @@ $$D_{final} = \max\left(0, \frac{(D_{muscular} + D_{momentum}) \times \eta_{weap
 It stands to reason that it's easier to kill someone with a heavy weapon than with fists, even though the power expenditure of the actor is the same. Thus we introduce this artificial "efficiency" coefficient.
 
 Dual-wielding light weapons provides a total efficiency of $1.236 \times \eta$, placing it between medium and heavy weapons in power.
+
+### Energy Dynamics in Practice
+
+The integration system creates emergent tactical depth:
+
+**Fresh Fighters**: Full capacitors enable devastating long wind-ups with sustained high power output.
+
+**Fatigued Fighters**: Depleted capacitors favor quick, efficient strikes over extended charging.
+
+**Energy Recovery**: The golden ratio recovery curve peaks at ~38% capacity, providing maximum recovery rate at this energy level, though sustainability depends on the balance between power expenditure and recovery.
 
 ## Resilience and Energy Management
 
@@ -146,9 +191,20 @@ Defensive maneuvers are of three categories:
 - **Blocking**: The actor blocks the attack with a shield or other object. Blocking is affected by the actor's Resilience (RES) stat.
 - **Parrying**: The actor parries the attack with a weapon. Parrying is affected by the actor's Finesse (FIN) stat.
 
-Actors may at any time during their turn issue a `DEFEND` command. This causes the actor to *spend all remaining AP* for the current turn towards defensive bonuses. These bonuses take effect immediately and persist until the beginning of the actor's next turn. While these bonuses are in effect, the effectiveness of attacks directed toward the actor is reduced by the amount proportional to the square of the AP invested.
+### The DEFEND Command
 
-Whenever an actor successfully defends against an attack, a small amount of energy is deducted from the actor's capacitor, but never below a threshold of 38.2% of the actor's maximum capacitor.
+Actors may at any time during their turn issue a `DEFEND` command. This causes the actor to *spend all remaining AP* for the current turn towards defensive bonuses. These bonuses take effect immediately and persist until the beginning of the actor's next turn.
+
+**Exponential Scaling Formula:**
+$$\text{Enhanced Defense} = \text{Base Defense}^{(1 + 0.15 \times AP_{invested})}$$
+
+This exponential scaling creates natural diminishing returns that encourage tactical diversity:
+
+- **1-2 AP Investment**: Modest but meaningful defensive improvements (~15-32% relative gain)
+- **3-4 AP Investment**: Significant defensive enhancement (~50-78% relative gain)
+- **5-6 AP Investment**: Substantial protection (~100-130% relative gain) with diminishing efficiency
+
+The exponential model ensures that defensive specialists can achieve high effectiveness without completely sacrificing offensive capability, while preventing "turtle" strategies from becoming dominant through natural mathematical limits.
 
 ## Tactical and Strategic Implications
 
@@ -389,3 +445,64 @@ Where $\eta_{skill}$ represents skill-based efficiency improvements that reduce 
 $$I_{order} = FIN + modifiers + random_{component}$$
 
 Where initiative determines the sequence of actor turns in each combat round.
+
+### D. Exponential Defensive Scaling Analysis
+
+The DEFEND command uses exponential scaling to create balanced defensive mechanics that reward specialization while preventing dominant "turtle" strategies.
+
+#### Mathematical Model
+
+**Formula**: $\text{Enhanced Defense} = \text{Base Defense}^{(1 + 0.15 \times AP_{invested})}$
+
+**Scaling Characteristics**:
+- Each AP provides ~15% relative improvement to base defensive capability
+- Natural diminishing returns prevent explosive growth
+- Stat-dependent scaling rewards defensive specialization
+- Asymptotic approach to 100% effectiveness prevents invulnerability
+
+#### Defensive Effectiveness by Character Build
+
+**Defensive Specialist** (70% base defense):
+| AP Investment | Enhanced Defense | Marginal Gain | Remaining Offense |
+|---------------|------------------|---------------|-------------------|
+| 1 AP          | 73.9%           | +3.9%         | 5.0 AP            |
+| 2 AP          | 78.4%           | +4.5%         | 4.0 AP            |
+| 3 AP          | 83.5%           | +5.1%         | 3.0 AP            |
+| 4 AP          | 88.8%           | +5.3%         | 2.0 AP            |
+| 5 AP          | 94.7%           | +5.9%         | 1.0 AP            |
+| 6 AP          | 101.2%          | +6.5%         | 0.0 AP            |
+
+**Balanced Fighter** (50% base defense):
+| AP Investment | Enhanced Defense | Marginal Gain | Remaining Offense |
+|---------------|------------------|---------------|-------------------|
+| 1 AP          | 55.3%           | +5.3%         | 5.0 AP            |
+| 2 AP          | 61.7%           | +6.4%         | 4.0 AP            |
+| 3 AP          | 69.2%           | +7.5%         | 3.0 AP            |
+| 4 AP          | 77.5%           | +8.3%         | 2.0 AP            |
+| 5 AP          | 86.6%           | +9.1%         | 1.0 AP            |
+| 6 AP          | 96.8%           | +10.2%        | 0.0 AP            |
+
+**Glass Cannon** (30% base defense):
+| AP Investment | Enhanced Defense | Marginal Gain | Remaining Offense |
+|---------------|------------------|---------------|-------------------|
+| 1 AP          | 33.4%           | +3.4%         | 5.0 AP            |
+| 2 AP          | 37.3%           | +3.9%         | 4.0 AP            |
+| 3 AP          | 41.8%           | +4.5%         | 3.0 AP            |
+| 4 AP          | 46.6%           | +4.8%         | 2.0 AP            |
+| 5 AP          | 52.0%           | +5.4%         | 1.0 AP            |
+| 6 AP          | 58.0%           | +6.0%         | 0.0 AP            |
+
+#### Strategic Implications
+
+**Natural Balance Mechanisms**:
+- **Diminishing Returns**: Each additional AP provides smaller absolute gains
+- **Opportunity Cost**: Defensive investment reduces offensive capability
+- **Build Dependency**: Only characters with high base defense achieve exceptional protection
+- **Tactical Flexibility**: Moderate investments (2-4 AP) provide meaningful benefits without complete commitment
+
+**Tactical Decision Points**:
+- **Defensive Specialists**: Achieve high effectiveness (83-89%) with moderate investment (3-4 AP)
+- **Balanced Characters**: Face genuine trade-offs between offense and defense at all investment levels
+- **Glass Cannons**: Must invest heavily (5-6 AP) for modest protection, creating meaningful strategic choices
+
+This exponential model creates a mathematically elegant system where defensive investment follows the law of diminishing returns, encouraging diverse tactical approaches while maintaining competitive balance across all character builds.

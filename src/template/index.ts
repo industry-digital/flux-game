@@ -7,6 +7,7 @@ export type { PlaceTemplateProps, PlaceTemplate } from './place';
 export { renderExits, renderPlaceDescription, renderPlaceSummary } from './place';
 
 // Actor templates
+export type { ActorSummaryProps } from './actor';
 export { renderActorSummary } from './actor';
 
 // Anatomy templates
