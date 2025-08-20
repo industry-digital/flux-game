@@ -35,7 +35,7 @@ export const lookAtPlaceReducer: PureReducer<TransformerContext, LookCommand> = 
 
   const { actors, places } = context.world;
   const actor = actors[command.actor!];
-  const target = places[command.args.id];
+  const target = places[command.location ?? command.args.id];
 
   if (!target) {
     context.declareError('Could not find target place in world projection', command.id);
