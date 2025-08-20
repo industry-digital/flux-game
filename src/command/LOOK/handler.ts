@@ -16,7 +16,7 @@ export type LookCommand = ActorCommand<CommandType.LOOK, LookCommandArgs>;
 export const lookReducer: PureReducer<TransformerContext, LookCommand> = (context, command) => {
   const { declareError } = context;
   const { places, actors } = context.world;
-  const place = places[command.args.id as PlaceURN];
+  const place = places[command.location!];
 
   if (!place) {
     declareError('Could not find place in world projection', command.id);
