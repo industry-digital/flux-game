@@ -13,6 +13,11 @@ export type MinimalWorldProjection = {
   actors: Record<ActorURN, Actor>;
   places: Record<PlaceURN, Place>;
   items: Record<ItemURN, Item>;
+
+  // Pre-computed arrays so we don't have to constantly Object.values() on the Records above
+  actorIds: ActorURN[];
+  placeIds: PlaceURN[];
+  itemIds: ItemURN[];
 };
 
 export type CombatProjectionMixin = {
