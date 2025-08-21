@@ -186,12 +186,36 @@ describe('SchemaManager', () => {
       expect(hasResourceSchemas).toBe(true);
     });
 
-    it('should support pattern matching across all schema types', () => {
+        it('should support pattern matching across all schema types', () => {
       const manager = createSchemaManager();
 
       // Should be able to find resource schemas by pattern
       const resourceSchemas = manager.getSchemasMatchingPattern('flux:res:', 'resource');
       expect(Array.isArray(resourceSchemas)).toBe(true);
+    });
+
+    it('should get schemas of specific type via getSchemasOfType', () => {
+      const manager = createSchemaManager();
+
+      // Should be able to get resource schemas directly
+      const resourceSchemas = manager.getSchemasOfType('resource');
+      expect(resourceSchemas).toBeInstanceOf(Map);
+
+      // Should have resource schemas loaded
+      let hasResourceSchemas = false;
+      for (const [urn] of resourceSchemas) {
+        if (urn.startsWith('flux:res:')) {
+          hasResourceSchemas = true;
+          break;
+        }
+      }
+      expect(hasResourceSchemas).toBe(true);
+    });
+
+    it('should throw error for unknown schema type in getSchemasOfType', () => {
+      const manager = createSchemaManager();
+
+      expect(() => manager.getSchemasOfType('unknown')).toThrow('No loader registered for schema type: unknown');
     });
   });
 });

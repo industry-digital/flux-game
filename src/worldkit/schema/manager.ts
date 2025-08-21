@@ -161,6 +161,26 @@ export class SchemaManager {
   }
 
   /**
+   * Get all schemas of a specific type
+   * @param schemaType The schema type to filter by (e.g., 'resource', 'weapon')
+   * @returns Map of URNs to schemas for the specified type
+   */
+  public getSchemasOfType<TUrn extends string, TSchema>(
+    schemaType: string
+  ): Map<TUrn, TSchema> {
+    if (!this.loaded) {
+      throw new Error('Schemas have not been loaded yet. Call loadAllSchemas() first.');
+    }
+
+    const loader = this.loaders.get(schemaType);
+    if (!loader) {
+      throw new Error(`No loader registered for schema type: ${schemaType}`);
+    }
+
+    return loader() as Map<TUrn, TSchema>;
+  }
+
+  /**
    * Get all registered schema types
    * @returns Array of schema type strings
    */
