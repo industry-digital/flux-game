@@ -2,9 +2,6 @@
 
 # Priorities
 
-1. `LOOK` command
-1. `SURVEY` command
-1. `FORAGE` command
 1. [Resource Simulation Baseline Stability](./docs/simulation/resource.md)
 1. [Creature Simulation Server](./docs/simulation/monsters.md)
 1. [Combat System](./docs/gameplay/combat-system.md)
@@ -16,6 +13,8 @@
 1. [Witnessed Excellence](./docs/gameplay/gravitas.md)
 1. [Spacefold](./docs/simulation/spacefold.md)
 1. [Blink Drive](./docs/simulation/blink.md)
+1. `SURVEY` command
+1. `FORAGE` command
 1. Crafting
 1. [Cordyceps gaeatrix hallucination mechanics](./docs/simulation/world-design.md)
 1. LLM-powered monster behavior profiles that continuously update based on recent events and player actions.
@@ -38,5 +37,6 @@ graph TD
 1. [XMPP Networking](./docs/arch/xmpp.md)
 1. [Weather Simulation Baseline Stability](./docs/simulation/weather.md)
 1. [Conversational Analytics (Clickhouse + MCP + Claude)](./docs/arch/analytics.md)
+1. `LOOK` command
 
 # Abandoned
