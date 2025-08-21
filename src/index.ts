@@ -5,7 +5,6 @@ export * from '~/worldkit/view';
 export * from '~/worldkit/event';
 export * from '~/worldkit/graph/place';
 export * from '~/worldkit/schema/manager';
-export * from '~/worldkit/schema/resource';
 export * from '~/template';
 
 export { profile, profileAsync } from '~/lib/profile';

@@ -1,11 +1,14 @@
-import { SchemaManager } from '../manager';
+import { SchemaLoader } from '../manager';
 import { BulkResourceSchema, KindOfResource } from '~/types';
 import { ResourceURN } from '~/types/taxonomy';
-import * as fungusSchemas from './fungus';
-import * as treeSchemas from './tree';
-import * as flowerSchemas from './flower';
-import * as mineralSchemas from './mineral';
+import * as fungusSchemas from '../resource/fungus';
+import * as treeSchemas from '../resource/tree';
+import * as flowerSchemas from '../resource/flower';
+import * as mineralSchemas from '../resource/mineral';
 
+/**
+ * Extract schema exports from a module, filtering for valid resource schemas
+ */
 function getSchemaExports(module: Record<string, any>, moduleName: string): [ResourceURN, BulkResourceSchema][] {
   return Object.entries(module)
     .filter(([key, value]) =>
@@ -26,7 +29,10 @@ function getSchemaExports(module: Record<string, any>, moduleName: string): [Res
     });
 }
 
-export function createSchemaManager(): SchemaManager<BulkResourceSchema, ResourceURN> {
+/**
+ * Pure function to load all resource schemas
+ */
+export const loadResourceSchemas: SchemaLoader<ResourceURN, BulkResourceSchema> = () => {
   const schemaMap = new Map<ResourceURN, BulkResourceSchema>();
 
   // Add schemas from each module
@@ -40,14 +46,12 @@ export function createSchemaManager(): SchemaManager<BulkResourceSchema, Resourc
   modules.forEach(([module, name]) => {
     const schemas = getSchemaExports(module, name);
     schemas.forEach(([urn, schema]) => {
+      if (schemaMap.has(urn)) {
+        throw new Error(`Duplicate resource schema URN detected: ${urn}`);
+      }
       schemaMap.set(urn, schema);
     });
   });
 
-  return new SchemaManager<BulkResourceSchema, ResourceURN>(schemaMap);
-}
-
-export { createFlowerSchema } from './flower';
-export { createFungusSchema } from './fungus';
-export { createMineralSchema } from './mineral';
-export { createTreeSchema } from './tree';
+  return schemaMap;
+};
