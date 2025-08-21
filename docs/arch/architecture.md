@@ -93,7 +93,7 @@ The pipeline orchestrates the flow of player Intents and Commands through six di
 ### Pipeline Flow
 
 **Intents**: `Negotiation` → [queue Commands] → Command pipeline
-**Commands**: `Contextualization` → `Projection` → `Transformation` → `Planning` → `Actuation`
+**Commands**: `Contextualization` → `Transformation` → `Planning` → `Actuation`
 
 ```mermaid
 graph TD
@@ -102,8 +102,7 @@ graph TD
     Q -->|Yes| C[Command]
     Q -->|No| END[End]
     C --> CTX[Contextualization]
-    CTX --> P[Projection]
-    P --> T[Transformation]
+    CTX --> T[Transformation]
     T --> PL[Planning]
     PL --> A[Actuation]
     A --> END
@@ -118,13 +117,13 @@ graph TD
 
 ### Stage Types and Capabilities
 
-**Pure Game Logic Stage** (Green - Pure Functions, No Side Effect Awareness):
-- **Transformation**: Business logic only, processes commands individually with strict interface segregation
-
 **Effectful Stages** (Yellow - Impure, Side Effects Allowed):
 - **Negotiation**: Processes Intents into Commands via `queueCommand()`
 - **Contextualization**: Loads entity fragments from database, but does not assemble them into entities
 - **Actuation**: Executes declared side effects (database writes, XMPP messages)
+
+**Pure Game Logic Stage** (Green - Pure Functions, No Side Effect Awareness):
+- **Transformation**: Business logic only, processes commands individually with strict interface segregation
 
 **Pure Side-Effect-Aware Stages** (Blue - side-effect-aware pure functions):
 - **Projection**: Assembles entity fragments into well-formed entities and loads them into the world projection

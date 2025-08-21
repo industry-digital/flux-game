@@ -2,9 +2,10 @@
 
 # Priorities
 
+1. XMPP Command Ingress
+1. [Combat System](./docs/gameplay/combat-system.md)
 1. [Resource Simulation Baseline Stability](./docs/simulation/resource.md)
 1. [Creature Simulation Server](./docs/simulation/monsters.md)
-1. [Combat System](./docs/gameplay/combat-system.md)
 1. [Skill System](./docs/simulation/skills.md)
 1. [Qwen on Metal](./docs/arch/local-llm.md)
 1. [World Texture Service](./docs/simulation/world-texture.md)

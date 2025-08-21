@@ -304,7 +304,7 @@ My shell's combat indicators paint the tactical picture in harsh red geometry: a
 
 I am going to die here.
 
-"Tactical assessment," Rhea's voice cuts through my neural interface, crisp and clinical as battlefield analysis. "Twenty-three hostiles in coordinated advance. Ammunition: twelve rounds. Distance to extraction: impossible."
+"Tactical assessment," Rhea's voice cuts through my neural interface, crisp and clinical as battlefield analysis. "Twenty-three hostiles in coordinated advance. Cordon encirclement. Ammunition: twelve rounds. Distance to extraction: 2.1 kilometers."
 
 I check my rifle. Eleven rounds now. The twelfth went wide when that chunk of masonry exploded near my head.
 
@@ -312,7 +312,7 @@ I check my rifle. Eleven rounds now. The twelfth went wide when that chunk of ma
 
 The first shot finds its mark at 200 meters. Clean entry, instant termination. The antinatalist drops like a broken marionette, neural pathways severed before the fungus can register what happened.
 
-"Excellent placement," Rhea observes. "Target eliminated. Twenty-two remaining."
+Rhea: "Target eliminated. Twenty-two remaining."
 
 Ten rounds.
 
@@ -324,15 +324,13 @@ Third shot. Center mass hit, but it keeps coming. These aren't baseline humans a
 
 Nine rounds. Eight rounds. Seven.
 
-"Range 22 meters. Prepare for CQC," Rhea says.
+"Prepare for CQC," says Rhea. "Decision window: 15 seconds."
 
 Six rounds. Five. Each shot precise, deliberate, finding its target. But there are too many of them, and mathematics is an unforgiving god. They surge forward like a tide of hungry silence, and I am just one person with a rifle that clicks empty at the worst possible moment.
 
 Four rounds. Three. Two.
 
 "Final magazine," I announce, though Rhea already knows. My neural interface displays the tactical situation with brutal clarity: twenty-one hostiles, fifteen still mobile, closing to melee range.
-
-"Indeed," Rhea says, and something changes in her voice. Softer. More... human. "It has been quite the partnership."
 
 One round.
 
@@ -344,20 +342,20 @@ Zero rounds.
 
 I drop the rifle and draw my blade—eighteen inches of pre-collapse steel that gleams like liquid mercury in the rain. Around me, the antinatalists form their circle, moving with the patient certainty of apex predators who know their prey is trapped.
 
-"Prepare for CQC," Rhea says.
-
 They charge.
 
-The blade sings its steel song, and for ninety seconds that stretch like eternity, I am exactly who I was trained to be. Not because it matters. Not because it changes anything. But because some things are worth doing well even when—especially when—they serve no purpose except to honor the choice itself.
+I draw the blade from its sheath on my boot. It sings its steel song, and for ninety seconds that stretch like eternity, I am exactly who I was trained to be. Not because it matters. Not because it changes anything. But because some things are worth doing well even when they serve no purpose except to honor the choice itself.
 
 The first one reaches me as I draw the monomolecular blade—a whisper-thin edge that cuts reality itself. The antinatalist's claws rake across my chest plate as I pivot, and the blade slides through its torso like it's made of morning mist. Two halves of what used to be human collapse in opposite directions, the cut so clean that blood doesn't even spill until gravity remembers what it's supposed to do.
 
-The second antinatalist learns from the first's mistake, coming in low and fast. But the monomolecular edge doesn't care about tactics. It parts flesh, bone, and fungal infection with equal indifference, cleaving the creature's strike nearly in half before the blade continues through its skull.
+Rhea: "Good kill. Two on your flank."
+
+The second antinatalist learns from the first's mistake, coming in low and fast, behind me. But the monomolecular edge doesn't care about tactics. It parts flesh, bone, and fungal infection with equal indifference, cleaving the creature's strike nearly in half before the blade continues through its skull.
 
 The third. The fourth. Each one teaching the others, each death more desperate than the last.
 
 But there are too many, and even monomolecular perfection has limits. When the blade finally slips from my fingers and darkness closes in, Rhea's voice follows me down:
 
-"It has been an honor, my dear." Rhea says.
+Rhea says, "It has been an honor, my dear."
 
 The rain washes blood from concrete, and somewhere in the distance, an explosion echoes through the ruins.
