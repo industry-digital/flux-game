@@ -14,7 +14,7 @@ export function createFlowerSchema(overrides: Partial<BulkResourceSchema> = {}):
       type: 'bulk',
       quantity: {
         measure: UnitOfMeasure.EACH,
-        min: 0,
+        min: 1,
         capacity: 3,
       }
     },

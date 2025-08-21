@@ -14,7 +14,7 @@ export function createMineralSchema(overrides: Partial<BulkResourceSchema> = {})
       type: 'bulk',
       quantity: {
         measure: UnitOfMass.KILOGRAMS,
-        min: 0,
+        min: 1,
         capacity: 3,
       }
     },

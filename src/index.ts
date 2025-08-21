@@ -42,6 +42,9 @@ export {
   isCommandOfType,
   isValidatedCommandOfType,
   createCommandTypeGuard,
+  createCommand,
+  createActorCommand,
+  createSystemCommand,
 } from '~/lib/intent';
 
 // Export command types
@@ -75,6 +78,10 @@ export {
   validatePlaceURN,
   validateExit,
 } from '~/validation/place';
+
+export {
+  validateCommand,
+} from '~/validation/command';
 
 // Begin game logic DAG exports
 

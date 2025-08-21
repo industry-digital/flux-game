@@ -293,8 +293,7 @@ export namespace Taxonomy {
 
 export type EntityURN<T extends EntityType = EntityType> = `${RootNamespace}:${T}:${string}`;
 export type PlaceURN = Taxonomy.Places;
-export type SystemActorURN = `flux:sys:${string}`;
-export type ActorURN = Taxonomy.Actors | SystemActorURN;
+export type ActorURN = Taxonomy.Actors;
 export type TraitURN = Taxonomy.Traits;
 export type AbilityURN = Taxonomy.Abilities;
 export type SkillURN = Taxonomy.Skills;

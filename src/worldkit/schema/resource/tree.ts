@@ -2,7 +2,6 @@ import { UnitOfMeasure, TimeUnit } from '~/types';
 import { BulkResourceSchema, FitnessEvaluationStrategy } from '~/types/schema/resource';
 
 
-
 // Helper function to create tree schemas with proper typing
 export function createTreeSchema(overrides: Partial<BulkResourceSchema> = {}): BulkResourceSchema {
   return {
@@ -16,7 +15,7 @@ export function createTreeSchema(overrides: Partial<BulkResourceSchema> = {}): B
       type: 'bulk',
       quantity: {
         measure: UnitOfMeasure.EACH,
-        min: 0,
+        min: 1,
         capacity: 3,
       }
     },

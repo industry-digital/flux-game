@@ -33,25 +33,28 @@ export const renderDescription = ({ place }: PlaceTemplateProps): string => {
 };
 
 export const renderActors = ({ place, viewer }: PlaceTemplateProps): string | null => {
-  if (!place.actors || Object.keys(place.actors).length === 0) {
+  const actorIds = Object.keys(place.actors) as ActorURN[];
+
+  if (!place.actors || actorIds.length === 0) {
     return null;
   }
 
-  // Get visible actors (excluding viewer if present)
-  const visibleActors = Object.entries(place.actors)
-    .filter(([id, actor]) => {
-      if (viewer && id === viewer) {
-        return false;
+  const visibleActorNames: string[] = [];
+
+  for (const actorId of actorIds) {
+    if (actorId !== viewer) {
+      const actor = place.actors[actorId];
+      if (actor) {
+        visibleActorNames.push(actor.name);
       }
-      return true; // For now, assume all actors are visible
-    })
-    .map(([_, actor]) => actor.name);
+    }
+  }
 
-  if (visibleActors.length === 0) {
+  if (visibleActorNames.length === 0) {
     return null;
   }
 
-  return `Also here: ${visibleActors.join(', ')}.`;
+  return `Also here: ${visibleActorNames.join(', ')}.`;
 };
 
 export type RenderExitsProps = PlaceTemplateProps & { prefix?: string };

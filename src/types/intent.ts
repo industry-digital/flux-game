@@ -14,13 +14,13 @@ export enum CommandType {
    * If an Intent cannot be converted to an actual Command, we still pass this UNRESOLVED_COMMAND
    * through the pipeline so that all stages have an opportunity to act.
    */
-  CREATE_PLACE = 'CREATE_PLACE',
+  ATTACK = 'ATTACK',
   CREATE_ACTOR = 'CREATE_ACTOR',
-  MOVE = 'MOVE',
-  MATERIALIZE_ACTOR = 'MATERIALIZE_ACTOR',
+  CREATE_PLACE = 'CREATE_PLACE',
   DEMATERIALIZE_ACTOR = 'DEMATERIALIZE_ACTOR',
-  HOWL = 'HOWL',
   LOOK = 'LOOK',
+  MATERIALIZE_ACTOR = 'MATERIALIZE_ACTOR',
+  MOVE = 'MOVE',
   MUTATE_RESOURCES = 'MUTATE_RESOURCES',
   MUTATE_WEATHER = 'MUTATE_WEATHER',
 }
@@ -73,7 +73,7 @@ export type SystemCommand<
   A extends Record<string, any> = Record<string, any>
 > =
   & InputMetadata
-  & Omit<CommandInput<T, A>, 'id' | 'ts'>
+  & Omit<CommandInput<T, A>, 'id' | 'ts' | 'actor'>
   & {
     /**
      * Guaranteed unique identifier
@@ -84,6 +84,12 @@ export type SystemCommand<
      * The moment the command was created; epoch milliseconds
      */
     ts: number;
+
+    /**
+     * System actor URN
+     * @example `flux:sys:server`
+     */
+    actor: `flux:sys:${string}`;
   };
 
 export type ActorCommandInput<
@@ -111,8 +117,18 @@ export type ActorCommand<
   T extends CommandType,
   A extends Record<string, any> = Record<string, any>
 > =
-  & SystemCommand<T, A>
+  & InputMetadata
+  & Omit<CommandInput<T, A>, 'id' | 'ts' | 'actor'>
   & {
+    /**
+     * Guaranteed unique identifier
+     */
+    id: string;
+
+    /**
+     * The moment the command was created; epoch milliseconds
+     */
+    ts: number;
 
     /**
      * The Actor that issued the command

@@ -1,4 +1,4 @@
-import { Taxonomy, ItemURN, PlaceURN, ActorURN, GroupURN, BehaviorURN } from '~/types/taxonomy';
+import { Taxonomy, ItemURN, PlaceURN, ActorURN, GroupURN } from '~/types/taxonomy';
 import { AppliedEffects } from '~/types/taxonomy/effect';
 import { EntityType, AbstractEntity, Describable } from '~/types/entity/entity';
 import { SkillState, Specializations } from '~/types/entity/skill';
@@ -237,33 +237,15 @@ export type Actor =
 
 export type Autonomous = {
   needs: Needs;
-  behaviors: Record<BehaviorURN, 1>;
 };
 
 /**
- * Resource-based needs that drive monster behavior
- * Needs are evaluated against available resources in the monster's current location
+ * A record of the actor's "needs".
+ * Each need is a normalized value between `0` and `1` where `0` means "not needed" and `1` means "needed badly".
  */
 export type Needs = {
-  /**
-   * Taxononomic atoms that the actor is interested in
-   * @example `sing`, `dance`, `flutter``
-   */
-  social: string[];
-
-  /**
-   * Taxononomic atoms that the actor is interested in, relating to shelter
-   * @example `cave`, `tree`, `rock`, etc.
-   */
-  shelter: string[];
-
-  /**
-   * Resources this monster requires, mapped to consumption rates and thresholds
-   * Food resources are handled in this field
-   * @example { `mushroom`: { consumption: 100, thresholds: { scarcity: 0.5, abundance: 0.8 }, search: { radius: 10 } } }
-   */
-  resources: Record<string, ResourceNeed>;
-};
+  food: NormalizedValueBetweenZeroAndOne;
+}
 
 export type BehaviorThresholds = {
   scarcity: NormalizedValueBetweenZeroAndOne;

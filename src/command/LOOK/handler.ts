@@ -1,6 +1,5 @@
 import { isCommandOfType } from '~/lib/intent';
-import { ActorInput } from '~/types/entity/actor';
-import { ActorCommand, CommandType, SystemCommand } from '~/types/intent';
+import { ActorCommand, Command, CommandType } from '~/types/intent';
 import { PureReducer, TransformerContext, PureHandlerInterface } from '~/types/handler';
 import { ActorURN, ItemURN, PlaceURN } from '~/types/taxonomy';
 import { EntityType } from '~/types/entity/entity';
@@ -50,7 +49,7 @@ export const lookReducer: PureReducer<TransformerContext, LookCommand> = (contex
 export class LOOK implements PureHandlerInterface<TransformerContext, LookCommand> {
   reduce = lookReducer;
   dependencies = [];
-  handles = (command: SystemCommand): command is LookCommand => {
-    return isCommandOfType<CommandType.LOOK, ActorInput>(command, CommandType.LOOK);
+  handles = (command: Command): command is LookCommand => {
+    return isCommandOfType<CommandType.LOOK, LookCommandArgs>(command, CommandType.LOOK);
   };
 }

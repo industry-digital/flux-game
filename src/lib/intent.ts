@@ -1,11 +1,13 @@
 import { randomUUID } from '~/lib/uuid';
+import { ActorURN } from '~/types/taxonomy';
 import {
   Command,
   CommandInput,
   CommandType,
   SystemCommandTypeGuard,
   InputMetadata,
-  ActorCommand
+  ActorCommand,
+  SystemCommand,
 } from '~/types/intent';
 
 const identity = <I, O = I>(x: I): O => x as unknown as O;
@@ -18,36 +20,65 @@ export type FactoryOptions = {
 type Transformer<I, O = I> = (input: I) => O;
 type CommandTransformer = Transformer<Command>;
 
+/**
+ * Creates an ActorCommand from CommandInput
+ */
+export const createActorCommand = <
+  T extends CommandType,
+  A extends Record<string, any> = Record<string, any>,
+>(
+  input: CommandInput<T, A> & { actor: ActorURN },
+  transform: CommandTransformer = identity,
+  { now = Date.now(), generateUniqueId: uuid = randomUUID }: FactoryOptions = {},
+): ActorCommand<T, A> => {
+  const actorDefaults: ActorCommand<T, A> = {
+    __type: 'command',
+    id: input.id || uuid(),
+    actor: input.actor,
+    location: input.location,
+    type: input.type,
+    ts: input.ts || now,
+    args: input.args as A,
+  };
+  return transform(actorDefaults) as ActorCommand<T, A>;
+};
+
+/**
+ * Creates a SystemCommand from CommandInput
+ */
+export const createSystemCommand = <
+  T extends CommandType,
+  A extends Record<string, any> = Record<string, any>,
+>(
+  input: Omit<CommandInput<T, A>, 'actor'> & { actor?: `flux:sys:${string}` },
+  transform: CommandTransformer = identity,
+  { now = Date.now(), generateUniqueId: uuid = randomUUID }: FactoryOptions = {},
+): SystemCommand<T, A> => {
+  const systemDefaults: SystemCommand<T, A> = {
+    __type: 'command',
+    id: input.id || uuid(),
+    actor: input.actor || ('flux:sys:server' as const),
+    type: input.type,
+    ts: input.ts || now,
+    args: input.args as A,
+    location: input.location,
+  };
+  return transform(systemDefaults) as SystemCommand<T, A>;
+};
+
+/**
+ * @deprecated Use createActorCommand or createSystemCommand instead
+ * Creates a Command from CommandInput - defaults to ActorCommand behavior
+ */
 export const createCommand = <
   T extends CommandType,
   A extends Record<string, any> = Record<string, any>,
 >(
   input: CommandInput<T, A>,
   transform: CommandTransformer = identity,
-  { now = Date.now(), generateUniqueId: uuid = randomUUID }: FactoryOptions = {},
+  options: FactoryOptions = {},
 ): Command<T, A> => {
-  // Check if this should be an ActorCommand based on presence of actor field
-  if ('actor' in input && input.actor) {
-    const actorDefaults: ActorCommand<T, A> = {
-      __type: 'command',
-      id: input.id || uuid(),
-      actor: input.actor,
-      location: 'location' in input ? input.location : undefined,
-      type: input.type,
-      ts: input.ts || now,
-      args: input.args as A,
-    };
-    return transform(actorDefaults) as ActorCommand<T, A>;
-  } else {
-    const systemDefaults: Command<T, A> = {
-      __type: 'command',
-      id: input.id || uuid(),
-      type: input.type,
-      ts: input.ts || now,
-      args: input.args as A,
-    };
-    return transform(systemDefaults) as Command<T, A>;
-  }
+  return createActorCommand(input as CommandInput<T, A> & { actor: ActorURN }, transform, options);
 };
 
 /**
@@ -112,7 +143,7 @@ export const isValidatedCommandOfType = <T extends CommandType, A extends Record
 export function createCommandGuard<T extends CommandType, A extends Record<string, any> = {}>(
   type: T
 ): SystemCommandTypeGuard<T, A> {
-  return (input: Command): input is Command<T, A> =>
+  return (input: SystemCommand): input is SystemCommand<T, A> =>
     'type' in input && input.type === type;
 }
 
