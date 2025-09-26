@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { ref } from 'vue';
-import { useAuth, extractActorFromJwt } from './composables';
+import { useAuth } from './composables';
 import { createComposableTestSuite } from '~/testing';
 
 describe('useAuth', () => {
