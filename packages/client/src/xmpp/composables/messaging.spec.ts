@@ -91,8 +91,9 @@ describe('useXmppMessaging', () => {
 
         await messaging.sendMessage(testMessage);
 
-        expect(mockClient.sentMessages).toHaveLength(1);
-        expect(mockClient.sentMessages[0]).toBe(testMessage);
+        const mockClientImpl = client.value as unknown as MockXmppClient;
+        expect(mockClientImpl.sentMessages).toHaveLength(1);
+        expect(mockClientImpl.sentMessages[0]).toStrictEqual(testMessage);
         expect(messaging.isSending.value).toBe(false);
       });
     });
@@ -144,7 +145,8 @@ describe('useXmppMessaging', () => {
         const messaging = useXmppMessaging(client, mockDeps);
         const testMessage = xml('message', { to: 'test@example.com' }).c('body').t('Hello');
 
-        mockClient.failNextSend(new Error('Network error'));
+        const mockClientImpl = client.value as unknown as MockXmppClient;
+        mockClientImpl.failNextSend(new Error('Network error'));
 
         await expect(messaging.sendMessage(testMessage)).rejects.toThrow('Network error');
 

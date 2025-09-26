@@ -4,6 +4,22 @@ import type {
   ReconnectState
 } from '~/types/xmpp';
 
+export type XmppReconnectionDependencies = {
+  setTimeout: typeof setTimeout;
+  clearTimeout: typeof clearTimeout;
+};
+
+export const DEFAULT_XMPP_RECONNECTION_DEPS: XmppReconnectionDependencies = {
+  setTimeout: setTimeout,
+  clearTimeout: clearTimeout,
+};
+
+export const DEFAULT_XMPP_RECONNECT_CONFIG: ReconnectConfig = {
+  maxAttempts: 5,
+  delayMs: 3000,
+  backoffMultiplier: 1.5,
+};
+
 /**
  * XMPP reconnection strategy composable
  *
@@ -13,12 +29,15 @@ import type {
  * @param config - Reconnection configuration
  * @returns Reactive reconnection state and control methods
  */
-export function useXmppReconnect(config: ReconnectConfig) {
+export function useXmppReconnect(
+  config: ReconnectConfig,
+  deps: XmppReconnectionDependencies = DEFAULT_XMPP_RECONNECTION_DEPS,
+) {
   // Internal state
   const attempts = ref(0);
   const isReconnecting = ref(false);
   const nextAttemptAt = ref<number | null>(null);
-  const reconnectTimeout = ref<NodeJS.Timeout | null>(null);
+  const reconnectTimeout = ref<ReturnType<typeof setTimeout> | null>(null);
 
   // Computed properties
   const canReconnect = computed(() =>
@@ -63,7 +82,7 @@ export function useXmppReconnect(config: ReconnectConfig) {
     isReconnecting.value = true;
     nextAttemptAt.value = attemptTime;
 
-    reconnectTimeout.value = setTimeout(async () => {
+    reconnectTimeout.value = deps.setTimeout(async () => {
       try {
         await onReconnect();
         // If successful, reset will be called externally
@@ -87,7 +106,7 @@ export function useXmppReconnect(config: ReconnectConfig) {
    */
   function cancelReconnect(): void {
     if (reconnectTimeout.value) {
-      clearTimeout(reconnectTimeout.value);
+      deps.clearTimeout(reconnectTimeout.value);
       reconnectTimeout.value = null;
     }
 
