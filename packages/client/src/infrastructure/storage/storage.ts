@@ -1,5 +1,5 @@
 import { ref, watch, onUnmounted, getCurrentInstance, type Ref } from 'vue';
-import type { StorageResolver } from '~/types/storage';
+import type { StorageResolver } from '~/types/infrastructure/storage';
 
 export const LOCAL_STORAGE_RESOLVER: StorageResolver = () => localStorage;
 export const SESSION_STORAGE_RESOLVER: StorageResolver = () => sessionStorage;

@@ -20,7 +20,7 @@ export interface AuthConfig {
 }
 
 export const DEFAULT_AUTH_CONFIG: AuthConfig = {
-  xmppDomain: import.meta?.env?.VITE_XMPP_DOMAIN || 'fabric.flux.local',
+  xmppDomain: 'fabric.flux.local',
 };
 
 /**
