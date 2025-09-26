@@ -1,15 +1,24 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue';
 import { useEnvironment } from '~/infrastructure/environment/composables';
+import { useTheme } from '~/infrastructure/theme/composables';
 import { useAuth } from '~/auth/composables';
 import { useXmppClient } from '~/xmpp/composables/client';
 import { useWorldServerProtocol } from '~/server/composables/protocol';
+import { AuthForm } from '~/auth/components';
+import { GameTerminal } from '~/terminal/components';
 
 // ============================================================================
 // COMPOSITION ROOT - Environment Configuration
 // ============================================================================
 // ONLY place that accesses import.meta.env
 const env = useEnvironment();
+
+// ============================================================================
+// COMPOSITION ROOT - Theme Configuration
+// ============================================================================
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+const _theme = useTheme('dark'); // Auto-applies theme via watchEffect
 
 // ============================================================================
 // COMPOSITION ROOT - Application State
@@ -50,18 +59,18 @@ const worldServer = useWorldServerProtocol(computed(() => xmppClient.client.valu
 // ============================================================================
 const appReady = computed(() =>
   auth.isAuthenticated.value &&
-  xmppClient.connected.value &&
+  xmppClient.connection.value?.status?.value == 'online' &&
   worldServer.ready.value
 );
 
 const isConnecting = computed(() =>
   auth.isAuthenticated.value &&
-  (xmppClient.connecting.value || worldServer.handshaking.value)
+  (xmppClient.status === 'connecting' || worldServer.handshaking.value)
 );
 
 const connectionError = computed(() =>
   auth.authError.value ||
-  xmppClient.error.value ||
+  xmppClient.error ||
   (worldServer.failed.value ? 'World server connection failed' : '')
 );
 
@@ -91,11 +100,11 @@ const handleAuthSubmit = (submittedJwt: string) => {
 
         <!-- Connection Status -->
         <div v-if="isConnecting" class="connection-status">
-          <div v-if="xmppClient.connecting.value" class="status-message connecting">
+          <div v-if="xmppClient.status === 'connecting'" class="status-message connecting">
             Connecting to XMPP server...
           </div>
-          <div v-if="xmppClient.reconnecting.value" class="status-message reconnecting">
-            Reconnecting... (attempt {{ xmppClient.reconnectAttempts.value }})
+          <div v-if="xmppClient.status === 'reconnecting'" class="status-message reconnecting">
+            Reconnecting... (attempt {{ xmppClient.reconnectAttempts }})
           </div>
           <div v-if="worldServer.handshaking.value" class="status-message handshaking">
             Handshaking with world server...
@@ -118,7 +127,7 @@ const handleAuthSubmit = (submittedJwt: string) => {
       <div class="loading-container">
         <div class="loading-spinner"></div>
         <div class="loading-message">
-          <div v-if="!xmppClient.connected.value">Connecting to XMPP...</div>
+          <div v-if="xmppClient.status !== 'connected'">Connecting to XMPP...</div>
           <div v-else-if="!worldServer.ready.value">Connecting to world server...</div>
           <div v-else>Initializing game...</div>
         </div>
@@ -128,25 +137,127 @@ const handleAuthSubmit = (submittedJwt: string) => {
 </template>
 
 <style scoped>
-.logo.vite:hover {
-  filter: drop-shadow(0 0 2em #747bff);
+/* ============================================================================ */
+/* APP LAYOUT */
+/* ============================================================================ */
+.app {
+  background-color: var(--color-background);
+  color: var(--color-text);
+  min-height: 100vh;
+  font-family: monospace;
 }
 
-.logo.vue:hover {
-  filter: drop-shadow(0 0 2em #249b73);
+/* ============================================================================ */
+/* AUTHENTICATION SCREEN */
+/* ============================================================================ */
+.auth-screen {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  background-color: var(--color-background);
 }
 
+.auth-container {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  max-width: 32rem;
+  width: 100%;
+  padding: 2rem;
+}
+
+.connection-status {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  text-align: center;
+}
+
+.status-message {
+  font-size: 0.875rem;
+  font-family: monospace;
+  padding: 0.5rem;
+  border-radius: 0.25rem;
+}
+
+.status-message.connecting {
+  color: var(--color-info);
+  background-color: rgba(59, 130, 246, 0.1);
+}
+
+.status-message.reconnecting {
+  color: var(--color-warning);
+  background-color: rgba(245, 158, 11, 0.1);
+}
+
+.status-message.handshaking {
+  color: var(--color-primary);
+  background-color: rgba(16, 185, 129, 0.1);
+}
+
+/* ============================================================================ */
+/* GAME SCREEN */
+/* ============================================================================ */
+.game-screen {
+  height: 100vh;
+  background-color: var(--color-background);
+}
+
+/* ============================================================================ */
+/* LOADING SCREEN */
+/* ============================================================================ */
+.loading-screen {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  background-color: var(--color-background);
+}
+
+.loading-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+}
+
+.loading-spinner {
+  width: 2rem;
+  height: 2rem;
+  border: 2px solid var(--color-border);
+  border-top: 2px solid var(--color-primary);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.loading-message {
+  color: var(--color-text-secondary);
+  font-family: monospace;
+  font-size: 0.875rem;
+  text-align: center;
+}
 </style>
+
 <style>
-:root {
-  font-family: Inter, Avenir, Helvetica, Arial, sans-serif;
-  font-size: 16px;
-  line-height: 24px;
-  font-weight: 400;
+/* ============================================================================ */
+/* GLOBAL STYLES */
+/* ============================================================================ */
+* {
+  box-sizing: border-box;
+}
 
-  color: #0f0f0f;
-  background-color: #f6f6f6;
-
+body {
+  margin: 0;
+  padding: 0;
+  font-family: monospace;
+  background-color: var(--color-background);
+  color: var(--color-text);
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
@@ -154,98 +265,7 @@ const handleAuthSubmit = (submittedJwt: string) => {
   -webkit-text-size-adjust: 100%;
 }
 
-.container {
-  margin: 0;
-  padding-top: 10vh;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  text-align: center;
+#app {
+  min-height: 100vh;
 }
-
-.logo {
-  height: 6em;
-  padding: 1.5em;
-  will-change: filter;
-  transition: 0.75s;
-}
-
-.logo.tauri:hover {
-  filter: drop-shadow(0 0 2em #24c8db);
-}
-
-.row {
-  display: flex;
-  justify-content: center;
-}
-
-a {
-  font-weight: 500;
-  color: #646cff;
-  text-decoration: inherit;
-}
-
-a:hover {
-  color: #535bf2;
-}
-
-h1 {
-  text-align: center;
-}
-
-input,
-button {
-  border-radius: 8px;
-  border: 1px solid transparent;
-  padding: 0.6em 1.2em;
-  font-size: 1em;
-  font-weight: 500;
-  font-family: inherit;
-  color: #0f0f0f;
-  background-color: #ffffff;
-  transition: border-color 0.25s;
-  box-shadow: 0 2px 2px rgba(0, 0, 0, 0.2);
-}
-
-button {
-  cursor: pointer;
-}
-
-button:hover {
-  border-color: #396cd8;
-}
-button:active {
-  border-color: #396cd8;
-  background-color: #e8e8e8;
-}
-
-input,
-button {
-  outline: none;
-}
-
-#greet-input {
-  margin-right: 5px;
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    color: #f6f6f6;
-    background-color: #2f2f2f;
-  }
-
-  a:hover {
-    color: #24c8db;
-  }
-
-  input,
-  button {
-    color: #ffffff;
-    background-color: #0f0f0f98;
-  }
-  button:active {
-    background-color: #0f0f0f69;
-  }
-}
-
 </style>

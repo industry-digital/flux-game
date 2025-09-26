@@ -9,9 +9,12 @@ export type XmppReconnectionDependencies = {
   clearTimeout: typeof clearTimeout;
 };
 
+const injectedSetTimeout = ((callback: () => void, delay: number) => setTimeout(callback, delay)) as unknown as typeof setTimeout;
+const injectedClearTimeout = ((id: number) => clearTimeout(id)) as unknown as typeof clearTimeout;
+
 export const DEFAULT_XMPP_RECONNECTION_DEPS: XmppReconnectionDependencies = {
-  setTimeout: setTimeout,
-  clearTimeout: clearTimeout,
+  setTimeout: injectedSetTimeout,
+  clearTimeout: injectedClearTimeout,
 };
 
 export const DEFAULT_XMPP_RECONNECT_CONFIG: ReconnectConfig = {
