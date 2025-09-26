@@ -2,25 +2,40 @@ import { ref, computed, watch, type Ref } from 'vue';
 import type { Client as XmppClient } from '@xmpp/client';
 import type { Element as XMLElement } from '@xmpp/xml';
 import type {
-  WorldServerStatus,
-  WorldServerState
-} from '~/types/xmpp';
+  WorldServerConnectionStatus,
+  WorldServerConnectionState,
+  WorldServerConnectionDependencies,
+} from '~/types/server';
+
+export const DEFAULT_WORLD_SERVER_CONNECTION_DEPS: WorldServerConnectionDependencies = {
+  setTimeout: setTimeout,
+  clearTimeout: clearTimeout,
+};
+
+// ============================================================================
+// World Server Protocol Composable
+// ============================================================================
 
 /**
- * World Server protocol composable
+ * World Server protocol composable for Flux game client
  *
  * Handles game-specific handshake with flux.sys.server and tracks
- * world server connection status. Isolated from generic XMPP logic.
+ * world server connection status. This is game domain logic that
+ * uses XMPP as the transport layer.
  *
  * @param client - Reactive XMPP client reference
+ * @param deps - Injectable dependencies for testing
  * @returns Reactive world server state and methods
  */
-export function useWorldServerProtocol(client: Ref<XmppClient | null>) {
+export function useWorldServerProtocol(
+  client: Ref<XmppClient | null>,
+  deps: WorldServerConnectionDependencies = DEFAULT_WORLD_SERVER_CONNECTION_DEPS,
+) {
   // Internal state
-  const status = ref<WorldServerStatus>('waiting');
+  const status = ref<WorldServerConnectionStatus>('waiting');
   const serverJid = ref<string | null>(null);
   const handshakeComplete = ref(false);
-  const handshakeTimeout = ref<NodeJS.Timeout | null>(null);
+  const handshakeTimeout = ref<ReturnType<typeof setTimeout> | null>(null);
 
   // Configuration
   const HANDSHAKE_TIMEOUT_MS = 10000; // 10 seconds
@@ -39,11 +54,15 @@ export function useWorldServerProtocol(client: Ref<XmppClient | null>) {
     status.value === 'failed'
   );
 
+  const handshaking = computed(() =>
+    status.value === 'handshaking'
+  );
+
   // World server state object
-  const worldServerState = computed<WorldServerState>(() => ({
+  const worldServerState = computed<WorldServerConnectionState>(() => ({
     status: status.value,
-    serverJid: serverJid.value,
-    handshakeComplete: handshakeComplete.value,
+    jid: serverJid.value,
+    completed: handshakeComplete.value,
   }));
 
   /**
@@ -79,7 +98,7 @@ export function useWorldServerProtocol(client: Ref<XmppClient | null>) {
   function startHandshakeTimeout(): void {
     clearHandshakeTimeout();
 
-    handshakeTimeout.value = setTimeout(() => {
+    handshakeTimeout.value = deps.setTimeout(() => {
       if (status.value === 'handshaking') {
         status.value = 'failed';
         handshakeComplete.value = false;
@@ -93,7 +112,7 @@ export function useWorldServerProtocol(client: Ref<XmppClient | null>) {
    */
   function clearHandshakeTimeout(): void {
     if (handshakeTimeout.value) {
-      clearTimeout(handshakeTimeout.value);
+      deps.clearTimeout(handshakeTimeout.value);
       handshakeTimeout.value = null;
     }
   }
@@ -150,17 +169,18 @@ export function useWorldServerProtocol(client: Ref<XmppClient | null>) {
   /**
    * Manually trigger handshake failure
    */
-  function setFailed(reason?: string): void {
+  function setFailed(_reason?: string): void {
     clearHandshakeTimeout();
     status.value = 'failed';
     handshakeComplete.value = false;
     serverJid.value = null;
-    
+
     // Reason is available for debugging but not logged to console
+    // Could be passed to a centralized logging system
   }
 
   /**
-   * Get human-readable status
+   * Get human-readable status message
    */
   function getStatusMessage(): string {
     switch (status.value) {
@@ -218,6 +238,7 @@ export function useWorldServerProtocol(client: Ref<XmppClient | null>) {
     ready,
     waiting,
     failed,
+    handshaking,
     worldServerState,
 
     // Methods

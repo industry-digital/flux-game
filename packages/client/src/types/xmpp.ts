@@ -54,18 +54,6 @@ export type ReconnectState = {
 };
 
 // ============================================================================
-// World Server Types
-// ============================================================================
-
-export type WorldServerStatus = 'waiting' | 'handshaking' | 'ready' | 'failed';
-
-export type WorldServerState = {
-  status: WorldServerStatus;
-  serverJid: string | null;
-  handshakeComplete: boolean;
-};
-
-// ============================================================================
 // Messaging Types
 // ============================================================================
 
@@ -87,8 +75,7 @@ export type MessagingState = {
 export type XmppErrorType =
   | { type: 'connection'; cause: 'network' | 'timeout' | 'service' }
   | { type: 'auth'; cause: 'credentials' | 'sasl' | 'forbidden' }
-  | { type: 'protocol'; cause: 'handshake' | 'stanza' | 'version' }
-  | { type: 'world-server'; cause: 'timeout' | 'rejection' | 'protocol' };
+  | { type: 'protocol'; cause: 'handshake' | 'stanza' | 'version' };
 
 export type XmppError = {
   error: XmppErrorType;
@@ -138,12 +125,16 @@ export type XmppClientState = {
   username: string | null;
 
   /**
-   * The fully qualified JID of the World Server that is handling the XMPP client's requests
-   */
-  serverFullJid: string | null;
-
-  /**
    * The number of reconnection attempts made by the XMPP client
    */
   reconnectAttempts: number;
+};
+
+// Extended client state that includes game-specific fields
+// This should be used at the application level, not in pure XMPP composables
+export type ExtendedXmppClientState = XmppClientState & {
+  /**
+   * The fully qualified JID of the World Server that is handling the XMPP client's requests
+   */
+  serverFullJid: string | null;
 };

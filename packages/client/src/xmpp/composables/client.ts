@@ -7,37 +7,42 @@ import type {
   XmppClientStatus,
 } from '~/types/xmpp';
 
-// Import individual composables
+// Import individual XMPP composables (pure transport layer)
 import { useXmppConnection } from './connection';
 import { useXmppAuth } from './auth';
 import { useXmppMessaging } from './messaging';
 import { useXmppReconnect } from './reconnect';
-import { useWorldServerProtocol } from './world-server';
 
 // ============================================================================
-// Default Configurations
+// Default Configuration
 // ============================================================================
 
-export const DEFAULT_XMPP_CONFIG: Readonly<XmppClientConfig> = {
+export const DEFAULT_XMPP_CONFIG: Readonly<XmppClientConfig> = Object.freeze({
   service: 'ws://fabric.flux.local:5280/ws',
   // domain will be extracted from service URL if not provided
   maxReconnectAttempts: 5,
   reconnectDelay: 3000,
   delayPresence: false,
-  reconnect: {
+  reconnect: Object.freeze({
     maxAttempts: 5,
     delayMs: 3000,
     backoffMultiplier: 1.5,
-  },
-};
+  }),
+});
 
+// ============================================================================
+// XMPP Client Composition Root
+// ============================================================================
 
 /**
- * Main XMPP client orchestrator composable
+ * XMPP Client Composition Root
  *
- * Composes individual XMPP concerns into a unified, reactive client interface.
- * Handles the coordination between connection, authentication, messaging,
- * reconnection, and world server protocol.
+ * Composes individual XMPP transport concerns into a unified, reactive interface.
+ * This is a pure XMPP client that handles connection, authentication, messaging,
+ * and reconnection - but NOT game-specific protocols.
+ *
+ * For game-specific functionality, compose this with server protocol composables
+ * at the application level.
  *
  * @param credentials - Reactive credentials reference
  * @param config - Client configuration options
@@ -51,7 +56,9 @@ export function useXmppClient(
   const mergedConfig = { ...DEFAULT_XMPP_CONFIG, ...config };
 
   // Initialize individual composables
-  // Note: Connection needs credentials, so we'll create it reactively
+  const auth = useXmppAuth(credentials);
+
+  // Connection config derived from credentials
   const connectionConfig = computed(() => {
     const creds = credentials.value;
     if (!creds) return null;
@@ -64,31 +71,36 @@ export function useXmppClient(
     };
   });
 
+  // Connection composable (reactive based on config)
   const connection = computed(() => {
     const config = connectionConfig.value;
     if (!config) return null;
-
     return useXmppConnection(config);
   });
 
-  const auth = useXmppAuth(credentials);
+  // Messaging composable (uses connection client)
+  const messaging = computed(() => {
+    const conn = connection.value;
+    if (!conn) return null;
+    return useXmppMessaging(conn.client);
+  });
 
-  const messaging = useXmppMessaging(connection.client);
-
+  // Reconnection composable
   const reconnect = useXmppReconnect({
     maxAttempts: mergedConfig.maxReconnectAttempts!,
     delayMs: mergedConfig.reconnectDelay!,
     backoffMultiplier: mergedConfig.reconnect!.backoffMultiplier,
   });
 
-  const worldServer = useWorldServerProtocol(connection.client);
-
   // Internal state
   const isConnecting = ref(false);
 
   // Computed unified status
   const status = computed<XmppClientStatus>(() => {
-    if (connection.status.value === 'error' || worldServer.failed.value) {
+    const conn = connection.value;
+    if (!conn) return 'disconnected';
+
+    if (conn.status.value === 'error') {
       return 'error';
     }
 
@@ -96,11 +108,11 @@ export function useXmppClient(
       return 'reconnecting';
     }
 
-    if (connection.status.value === 'connecting' || worldServer.status.value === 'handshaking') {
+    if (conn.status.value === 'connecting') {
       return 'connecting';
     }
 
-    if (connection.online.value && worldServer.ready.value) {
+    if (conn.status.value === 'online') {
       return 'connected';
     }
 
@@ -108,14 +120,17 @@ export function useXmppClient(
   });
 
   // Computed ready state (can send messages)
-  const ready = computed(() =>
-    connection.online.value && messaging.canSend.value
-  );
+  const ready = computed(() => {
+    const conn = connection.value;
+    const msg = messaging.value;
+    return !!(conn?.status.value === 'online' && msg?.canSend.value);
+  });
 
   // Computed error state
-  const error = computed(() =>
-    connection.error.value || auth.error.value || null
-  );
+  const error = computed(() => {
+    const conn = connection.value;
+    return conn?.error.value || auth.error.value || null;
+  });
 
   // Unified client state
   const clientState = computed<XmppClientState>(() => ({
@@ -124,7 +139,6 @@ export function useXmppClient(
     error: error.value,
     jid: auth.jid.value,
     username: auth.username.value,
-    serverFullJid: worldServer.serverJid.value,
     reconnectAttempts: reconnect.attempts.value,
   }));
 
@@ -141,15 +155,19 @@ export function useXmppClient(
       throw new Error('Valid credentials required for connection');
     }
 
+    const conn = connection.value;
+    if (!conn) {
+      throw new Error('Connection not available - check credentials');
+    }
+
     try {
       isConnecting.value = true;
 
       // Reset previous states
       reconnect.reset();
-      worldServer.reset();
 
       // Establish connection
-      await connection.connect(validCredentials);
+      await conn.connect();
 
       // Connection successful - auth state will be updated by watchers
     } catch (error) {
@@ -164,22 +182,33 @@ export function useXmppClient(
   async function disconnect(): Promise<void> {
     isConnecting.value = false;
     reconnect.cancelReconnect();
-    worldServer.reset();
-    await connection.disconnect();
+
+    const conn = connection.value;
+    if (conn) {
+      await conn.disconnect();
+    }
   }
 
   /**
    * Send an XML message
    */
   async function sendMessage(message: XMLElement): Promise<void> {
-    return messaging.sendMessage(message);
+    const msg = messaging.value;
+    if (!msg) {
+      throw new Error('Messaging not available - not connected');
+    }
+    return msg.sendMessage(message);
   }
 
   /**
    * Send presence stanza
    */
-  async function sendPresence(show?: string, status?: string): Promise<void> {
-    return messaging.sendPresence(show, status);
+  async function sendPresence(show?: string, statusText?: string): Promise<void> {
+    const msg = messaging.value;
+    if (!msg) {
+      throw new Error('Messaging not available - not connected');
+    }
+    return msg.sendPresence(show, statusText);
   }
 
   /**
@@ -195,24 +224,22 @@ export function useXmppClient(
     });
   }
 
-  // Watch connection online status to update auth and initiate world server handshake
-  watch(connection.online, (online) => {
-    if (online && connection.client.value) {
+  // Watch connection online status to update auth and send initial presence
+  watch(() => connection.value?.status.value, (newStatus) => {
+    const conn = connection.value;
+    if (newStatus === 'online' && conn?.client.value) {
       // Update auth state with JID from connection
-      const address = connection.client.value.jid;
+      const address = conn.client.value.jid;
       if (address && auth.hasCredentials.value) {
         auth.setAuthenticated(address.toString());
       }
 
       // Send initial presence if not delayed
       if (!mergedConfig.delayPresence) {
-        messaging.sendPresence().catch(() => {
+        sendPresence().catch(() => {
           // Ignore presence send errors during connection
         });
       }
-
-      // Initiate world server handshake
-      worldServer.initiateHandshake();
 
       // Mark connection as complete
       isConnecting.value = false;
@@ -221,7 +248,7 @@ export function useXmppClient(
   });
 
   // Watch for disconnection to handle reconnection
-  watch(connection.status, (newStatus, oldStatus) => {
+  watch(() => connection.value?.status.value, (newStatus, oldStatus) => {
     if (oldStatus === 'online' && newStatus === 'disconnected') {
       // Unexpected disconnection - attempt reconnection
       if (reconnect.canReconnect.value && auth.hasCredentials.value) {
@@ -233,7 +260,7 @@ export function useXmppClient(
   });
 
   // Watch for connection errors to handle reconnection
-  watch(connection.error, (error) => {
+  watch(() => connection.value?.error.value, (error) => {
     if (error && reconnect.canReconnect.value && auth.hasCredentials.value) {
       reconnect.scheduleReconnect(async () => {
         await connect();
@@ -265,16 +292,17 @@ export function useXmppClient(
   });
 
   return {
-    // Unified state
+    // Unified state (spread the computed state)
     ...clientState.value,
-    client: connection.client,
+
+    // Raw client access for advanced usage
+    client: computed(() => connection.value?.client.value || null),
 
     // Individual composable access (for advanced usage)
-    connection,
+    connection: computed(() => connection.value),
     auth,
-    messaging,
+    messaging: computed(() => messaging.value),
     reconnect,
-    worldServer,
 
     // Main methods
     connect,
@@ -283,19 +311,22 @@ export function useXmppClient(
     sendPresence,
     reconnectNow,
 
-    // Utility methods
-    createMessage: messaging.createMessage,
-    createPresence: messaging.createPresence,
-    createIq: messaging.createIq,
+    // Utility methods (from messaging)
+    createMessage: computed(() => messaging.value?.createMessage),
+    createPresence: computed(() => messaging.value?.createPresence),
+    createIq: computed(() => messaging.value?.createIq),
   };
 }
+
+// ============================================================================
+// Re-exports for Convenience
+// ============================================================================
 
 // Re-export individual composables for direct usage
 export { useXmppConnection } from './connection';
 export { useXmppAuth } from './auth';
 export { useXmppMessaging } from './messaging';
 export { useXmppReconnect } from './reconnect';
-export { useWorldServerProtocol } from './world-server';
 
 // Re-export types
 export type * from '~/types/xmpp';
