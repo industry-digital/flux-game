@@ -1,4 +1,3 @@
-// @ts-expect-error
 import { performance } from 'perf_hooks';
 import { Actor } from '~/types/entity/actor';
 import { SkillState } from '~/types/entity/skill';
