@@ -70,7 +70,27 @@ export default withMermaid(defineConfig({
   vite: {
     resolve: {
       alias: {
-        '@vitepress': resolve(__dirname)
+        '@vitepress': resolve(__dirname),
+        '@flux/ui': resolve(__dirname, '../../ui/src/index.ts'),
+        '@flux/ui/': resolve(__dirname, '../../ui/src/')
+      }
+    },
+    optimizeDeps: {
+      exclude: ['@flux/ui']
+    },
+    // Development server configuration
+    server: {
+      fs: {
+        allow: ['..']
+      }
+    },
+    // Build configuration
+    build: {
+      rollupOptions: {
+        external: (id) => {
+          // Don't externalize our UI package during build
+          return false
+        }
       }
     }
   }

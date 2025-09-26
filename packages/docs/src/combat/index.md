@@ -1,6 +1,6 @@
 <script setup>
 import Legend from '@vitepress/components/Legend.vue'
-import BattlefieldNotation from '@vitepress/components/BattlefieldNotation.vue'
+import { BattlefieldNotation } from '@flux/ui'
 </script>
 
 # Combat Overview
