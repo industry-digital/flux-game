@@ -1,0 +1,122 @@
+# Battlefield Notation
+
+<script setup>
+import BattlefieldNotation from '@vitepress/components/BattlefieldNotation.vue'
+import Legend from '@vitepress/components/Legend.vue'
+import CombatantGlyph from '@vitepress/components/CombatantGlyph.vue'
+</script>
+
+Battlefield notation is the visual language used throughout the combat system to represent battlefield states, combatant positions, and tactical situations. This standardized ASCII representation provides precise, at-a-glance understanding of who is where, how far apart they are, and which direction they're facing.
+
+<BattlefieldNotation
+  currentActor="Alice"
+  subjectTeam="alpha"
+  :combatants="[
+    { name: 'Alice', position: 100, facing: 'right', team: 'alpha' },
+    { name: 'Bob', position: 150, facing: 'left', team: 'bravo' }
+  ]"
+/>
+
+Breaking this down:
+- `[ ]` - Position brackets containing all combatants at that coordinate
+- `A₁>` - Actor glyph with facing direction
+- `─ 50 ─` - Distance between positions
+- **Bold** indicates the current actor
+
+## Actor Glyphs
+
+Actor glyphs use the first letter of the combatant's name with numeric subscripts. When multiple actors share the same first letter, sequential subscripts are assigned. All actors receive subscripts for consistency, even when unique.
+
+<Legend
+  title=""
+  :items="[
+    { symbol: 'A₁', description: 'Alice' },
+    { symbol: 'A₂', description: 'Arthur' },
+    { symbol: 'A₃', description: 'Anna' }
+  ]" />
+
+## Facing Indicators
+
+Facing indicators show combatant orientation using chevrons:
+
+- **Right-facing**: <CombatantGlyph name="Alice" team="alpha" direction="right" /> (glyph followed by chevron)
+- **Left-facing**: <CombatantGlyph name="Alice" team="alpha" direction="left" /> (chevron followed by glyph)
+
+When combatants at the same position face opposite directions, whitespace separates the groups.
+
+## Boundary Markers
+
+When combatants approach battlefield boundaries, a boundary marker `▌` indicates the edge:
+
+<BattlefieldNotation
+  subjectTeam="alpha"
+  :combatants="[
+    { name: 'Alice', position: 100, facing: 'right', team: 'alpha' },
+    { name: 'Bob', position: 150, facing: 'left', team: 'bravo' }
+  ]"
+  :boundaries="[
+    { position: 160, side: 'right' }
+  ]"
+/>
+
+## Complex Example
+
+<BattlefieldNotation
+  currentActor="Charlie"
+  subjectTeam="alpha"
+  :combatants="[
+    { name: 'Alice', position: 50, facing: 'right', team: 'alpha' },
+    { name: 'Bob', position: 50, facing: 'left', team: 'alpha' },
+    { name: 'Charlie', position: 125, facing: 'right', team: 'alpha' },
+    { name: 'David', position: 175, facing: 'left', team: 'bravo' },
+    { name: 'Eve', position: 175, facing: 'right', team: 'bravo' }
+  ]"
+/>
+
+<Legend
+  title=""
+  :items="[
+    { symbol: 'A₁', description: 'Alice' },
+    { symbol: 'B₁', description: 'Bob' },
+    { symbol: 'C₁', description: 'Charlie (current actor)' },
+    { symbol: 'D₁', description: 'David' },
+    { symbol: 'E₁', description: 'Eve' }
+  ]" />
+
+This example demonstrates:
+- Multiple teammates at the same position (Alice & Bob, David & Eve)
+- Facing separation (whitespace between opposite-facing teammates)
+- Current actor highlighting (Charlie in bold)
+- Team color coding (green for player's team, red for opposing teams)
+- Distance gaps between position groups
+
+::: tip Team Colors
+**Green** = your team
+
+**Red** = opposing teams
+:::
+
+## Edge Case: Boundary Position
+
+What happens when a combatant is positioned directly at a battlefield boundary?
+
+<BattlefieldNotation
+  currentActor="Alice"
+  subjectTeam="alpha"
+  :combatants="[
+    { name: 'Alice', position: 0, facing: 'right', team: 'alpha' },
+    { name: 'Bob', position: 100, facing: 'left', team: 'bravo' }
+  ]"
+  :boundaries="[
+    { position: 0, side: 'left' }
+  ]"
+/>
+
+<Legend
+  title=""
+  :items="[
+    { symbol: 'A₁', description: 'Alice (at left boundary)' },
+    { symbol: 'B₁', description: 'Bob' }
+  ]" />
+
+In this scenario, Alice is positioned exactly at coordinate 0, which is the left edge of the battlefield. The boundary marker appears directly adjacent to her position bracket with no distance indicator.

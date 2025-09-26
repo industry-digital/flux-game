@@ -1,0 +1,17 @@
+{
+  "name": "flux-monorepo",
+  "private": true,
+  "workspaces": [
+    "packages/*"
+  ],
+  "scripts": {
+    "build": "npm run build --workspaces",
+    "test": "npm run test --workspaces",
+    "dev:docs": "npm run dev --workspace=@flux/docs",
+    "dev:client": "npm run tauri:dev --workspace=@flux/client",
+    "clean": "npm run clean --workspaces --if-present"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  }
+}

@@ -1,0 +1,98 @@
+<script setup>
+import Legend from '@vitepress/components/Legend.vue'
+import BattlefieldNotation from '@vitepress/components/BattlefieldNotation.vue'
+</script>
+
+# Combat Overview
+
+The combat system is a turn-based tactical combat engine featuring physics-based movement and resource management. Combat takes place on a 300-meter linear battlefield where positioning, timing, and resource management determine victory.
+
+The system synthesizes ideas from Street Fighter's linear battlefield mechanics, Divinity Original Sin 2's tactical positioning, and EVE Online's physics-based movement.
+
+## Linear Battlefield
+
+Combat occurs on a 300-meter linear battlefield using precise coordinate positioning. Combatants occupy specific coordinate points from `0` to `300`, with distances measured as one-meter segments between positions.
+
+When combat begins, opposing forces start 100 meters apart at the battlefield center:
+
+```
+0       50      100      150      200      250      300
+├────────┼────────┼────────┼────────┼────────┼────────┤
+                [ A₁> ]───100m───[ <B₁ ]
+```
+
+<Legend
+  title=""
+  :items="[
+    { symbol: 'A₁', description: 'Alice at position 100, facing right' },
+    { symbol: 'B₁', description: 'Bob at position 200, facing left' }
+  ]" />
+
+Each combatant faces either left (`<`) or right (`>`) on the battlefield. Movement costs derive from physics calculations based on character statistics and the discrete segments traversed.
+
+For detailed movement mechanics, physics integration, and tactical examples, see [Movement System](./movement.md).
+
+## Battlefield Notation
+
+The system uses a standarized notation to represent battlefield states:
+
+<BattlefieldNotation
+  currentActor="Alice"
+  subjectTeam="alpha"
+  :combatants="[
+    { name: 'Alice', position: 100, facing: 'right', team: 'alpha' },
+    { name: 'Bob', position: 150, facing: 'left', team: 'bravo' }
+  ]"
+/>
+
+This notation shows combatant positions (`[ ]`), actor symbols (`A₁`, `B₁`), facing directions (`>`, `<`), and distances between positions (`─100m─`).
+
+For complete notation rules, visual formatting, and complex battlefield examples, see [Battlefield Notation](./notation.md).
+
+## Collision Rules
+
+- Combatants may not move outside the battlefield boundaries.
+- Allies may occupy the same coordinate and pass through each other freely.
+- Enemies maintain a minimum 1-meter separation and cannot pass through each other without the use of [abilities](../skills/index.md#abilities).
+
+## Action Point System
+
+Action Points represent your character's "time budget" during each combat round, where each AP equals one second of time.
+
+$$1 \text{ AP} = 1 \text{ second}$$
+
+On each turn, a combatant receives exactly `6.0` AP per turn, calculated to the nearest `0.1` AP precision. The combatant spends this time budget to perform a variety of [combat actions](./actions/index.md).
+
+For detailed AP mechanics, action costs, and physics integration, see [Action Points](./action-points.md).
+
+## Initiative and Turn Order
+
+Turn order is determined by rolling **1d20 + Perception modifier** for each combatant at combat start:
+
+$$I_{roll} = 1d20 + PER_{modifier}$$
+
+Higher results act first, with ties broken by Finesse stat, combat initiator advantage, and deterministic sorting. Each turn grants a full 6.0 AP pool and follows a structured sequence from action execution to victory condition evaluation.
+
+For complete initiative mechanics, tie-breaking rules, and turn timer systems, see [Combat Encounters](./session.md).
+
+## Combat Actions
+
+The system provides both high-level AI assistance and precise tactical control through a two-tier interface.
+
+**Core Actions**: `TARGET` designates opponents; `ADVANCE` and `RETREAT` handle positioning with distance or AP specification; `STRIKE` executes weapon attacks; `DEFEND` maximizes defensive benefits; `DONE` ends turns voluntarily.
+
+**Movement Specification**: Actions accept either distance (`advance distance 20m`) for precise positioning or AP (`advance ap 2.5`) for resource budgeting.
+
+For complete action syntax, examples, and tactical applications, see [Combat Actions](./actions/).
+
+## Two-Tier Accessibility
+
+The system accommodates both newcomers and experts through dual interfaces:
+
+**High-Level AI** (`ATTACK`): New players can fight effectively using AI-driven optimization that automatically generates optimal action sequences, considering weapon range, positioning, and resource management.
+
+**Low-Level Primitives** (`STRIKE`, `ADVANCE`, `RETREAT`): Experienced players gain precise control for executing specific tactical maneuvers and advanced strategies.
+
+The `ATTACK` command enables immediate tactical effectiveness while individual actions provide granular control when needed.
+
+For AI planning mechanics, tactical examples, and advanced features, see [Planning System](./planning.md).

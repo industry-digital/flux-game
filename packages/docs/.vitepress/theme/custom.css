@@ -1,0 +1,451 @@
+/**
+ * Custom theme for Flux Player Guide
+ * - Zilla Slab font family
+ * - Gruvbox Dark Material color scheme
+ */
+
+/* Import Zilla Slab font from Google Fonts */
+@import url('https://fonts.googleapis.com/css2?family=Zilla+Slab:ital,wght@0,300;0,400;0,500;0,600;0,700;1,300;1,400;1,500;1,600;1,700&display=swap');
+
+/* Gruvbox Dark Material Color Palette */
+:root {
+  /* Gruvbox Dark Material Colors */
+  --gruvbox-bg0: #1d2021;
+  --gruvbox-bg1: #282828;
+  --gruvbox-bg2: #32302f;
+  --gruvbox-bg3: #3c3836;
+  --gruvbox-bg4: #504945;
+  --gruvbox-fg0: #fbf1c7;
+  --gruvbox-fg1: #ebdbb2;
+  --gruvbox-fg2: #d5c4a1;
+  --gruvbox-fg3: #bdae93;
+  --gruvbox-fg4: #a89984;
+
+  /* Gruvbox Accent Colors */
+  --gruvbox-red: #fb4934;
+  --gruvbox-green: #b8bb26;
+  --gruvbox-yellow: #fabd2f;
+  --gruvbox-blue: #83a598;
+  --gruvbox-purple: #d3869b;
+  --gruvbox-aqua: #8ec07c;
+  --gruvbox-orange: #fe8019;
+
+  /* Gruvbox Muted Colors */
+  --gruvbox-red-muted: #cc241d;
+  --gruvbox-green-muted: #98971a;
+  --gruvbox-yellow-muted: #d79921;
+  --gruvbox-blue-muted: #458588;
+  --gruvbox-purple-muted: #b16286;
+  --gruvbox-aqua-muted: #689d6a;
+  --gruvbox-orange-muted: #d65d0e;
+}
+
+/* Override VitePress default colors with Gruvbox Dark Material */
+:root {
+  /* Background colors */
+  --vp-c-bg: var(--gruvbox-bg0);
+  --vp-c-bg-alt: var(--gruvbox-bg1);
+  --vp-c-bg-elv: var(--gruvbox-bg2);
+  --vp-c-bg-soft: var(--gruvbox-bg1);
+
+  /* Text colors */
+  --vp-c-text-1: var(--gruvbox-fg0);
+  --vp-c-text-2: var(--gruvbox-fg1);
+  --vp-c-text-3: var(--gruvbox-fg2);
+
+  /* Border colors */
+  --vp-c-border: var(--gruvbox-bg3);
+  --vp-c-divider: var(--gruvbox-bg3);
+
+  /* Brand colors */
+  --vp-c-brand-1: var(--gruvbox-aqua);
+  --vp-c-brand-2: var(--gruvbox-aqua-muted);
+  --vp-c-brand-3: var(--gruvbox-blue);
+  --vp-c-brand-soft: var(--gruvbox-bg3);
+
+  /* Accent colors */
+  --vp-c-default-1: var(--gruvbox-fg2);
+  --vp-c-default-2: var(--gruvbox-fg3);
+  --vp-c-default-3: var(--gruvbox-fg4);
+  --vp-c-default-soft: var(--gruvbox-bg2);
+
+  /* Warning colors */
+  --vp-c-warning-1: var(--gruvbox-yellow);
+  --vp-c-warning-2: var(--gruvbox-yellow-muted);
+  --vp-c-warning-soft: var(--gruvbox-bg2);
+
+  /* Danger colors */
+  --vp-c-danger-1: var(--gruvbox-red);
+  --vp-c-danger-2: var(--gruvbox-red-muted);
+  --vp-c-danger-soft: var(--gruvbox-bg2);
+
+  /* Success colors */
+  --vp-c-success-1: var(--gruvbox-green);
+  --vp-c-success-2: var(--gruvbox-green-muted);
+  --vp-c-success-soft: var(--gruvbox-bg2);
+
+  /* Tip colors */
+  --vp-c-tip-1: var(--gruvbox-aqua);
+  --vp-c-tip-2: var(--gruvbox-aqua-muted);
+  --vp-c-tip-soft: var(--gruvbox-bg2);
+
+  /* Code block colors */
+  --vp-code-bg: var(--gruvbox-bg1);
+  --vp-code-color: var(--gruvbox-fg1);
+  --vp-c-code-bg: var(--gruvbox-bg2);
+
+  /* Sidebar colors */
+  --vp-sidebar-bg-color: var(--gruvbox-bg0);
+  --vp-c-bg-sidebar: var(--gruvbox-bg0);
+
+  /* Navigation colors */
+  --vp-nav-bg-color: var(--gruvbox-bg0);
+  --vp-c-bg-nav: var(--gruvbox-bg0);
+
+  /* VitePress heading sizes - work with the framework */
+  --vp-font-size-h1: 48px;
+  --vp-font-size-h2: 40px;
+  --vp-font-size-h3: 26px;
+  --vp-font-size-h4: 26px;
+  --vp-font-size-h5: 26px;
+  --vp-font-size-h6: 26px;
+}
+
+/* Apply Zilla Slab font family and larger font size */
+:root {
+  --vp-font-family-base: 'Zilla Slab', serif;
+  --vp-font-family-mono: 'Inconsolata', 'Fira Code', 'JetBrains Mono', 'Consolas', 'Monaco', monospace;
+
+  /* Increase base font size */
+  --vp-font-size-base: 24px;
+  --vp-font-size-small: 20px;
+  --vp-font-size-large: 28px;
+
+  /* Expand content width */
+  --vp-layout-max-width: 1800px;
+}
+
+/* Override all text elements to use Zilla Slab */
+body {
+  font-family: 'Zilla Slab', serif;
+  background-color: var(--gruvbox-bg0);
+  color: var(--gruvbox-fg0);
+  font-size: 24px;
+  line-height: 1.6;
+}
+
+/* Headers */
+h1, h2, h3, h4, h5, h6 {
+  font-family: 'Zilla Slab', serif;
+  color: var(--gruvbox-fg0);
+}
+
+/* Work with VitePress heading system */
+.vp-doc h1,
+.VPDoc h1,
+.vp-doc .content h1,
+.VPDoc .content h1 {
+  color: var(--gruvbox-yellow);
+  margin-bottom: 1rem !important;
+  margin-top: 0 !important;
+  padding-bottom: 1rem !important;
+}
+
+.vp-doc h2 {
+  color: var(--gruvbox-green);
+  padding-top: 2rem !important;
+  padding-bottom: 1rem !important;
+}
+
+.vp-doc h3 {
+  color: var(--gruvbox-yellow);
+}
+
+.vp-doc h4 {
+  color: var(--gruvbox-orange);
+}
+
+.vp-doc h5 {
+  color: var(--gruvbox-purple);
+}
+
+.vp-doc h6 {
+  color: var(--gruvbox-blue);
+}
+
+/* Links */
+a {
+  color: var(--gruvbox-blue);
+  text-decoration: none;
+}
+
+a:hover {
+  color: var(--gruvbox-aqua);
+  text-decoration: underline;
+}
+
+/* Code blocks */
+pre {
+  background-color: var(--gruvbox-bg1) !important;
+  border: 1px solid var(--gruvbox-bg3);
+  border-radius: 6px;
+}
+
+code {
+  background-color: var(--gruvbox-bg2);
+  color: var(--gruvbox-fg1);
+  padding: 0.2em 0.4em;
+  border-radius: 3px;
+  font-family: 'Inconsolata', 'JetBrains Mono', 'Fira Code', 'Consolas', 'Monaco', monospace;
+}
+
+/* Inline code in paragraphs */
+p code, li code {
+  background-color: var(--gruvbox-bg2);
+  color: var(--gruvbox-orange);
+  font-weight: 500;
+}
+
+/* Blockquotes */
+blockquote {
+  border-left: 4px solid var(--gruvbox-aqua);
+  background-color: var(--gruvbox-bg1);
+  color: var(--gruvbox-fg1);
+  padding: 1rem;
+  margin: 1rem 0;
+}
+
+/* Tables */
+table {
+  border-collapse: collapse;
+  background-color: var(--gruvbox-bg1);
+}
+
+th {
+  background-color: var(--gruvbox-bg2);
+  color: var(--gruvbox-fg0);
+  font-weight: 600;
+}
+
+td, th {
+  border: 1px solid var(--gruvbox-bg3);
+  padding: 0.5rem 1rem;
+}
+
+tr:nth-child(even) {
+  background-color: var(--gruvbox-bg0);
+}
+
+/* Navigation */
+.VPNav {
+  background-color: var(--gruvbox-bg0) !important;
+  border-bottom: 1px solid var(--gruvbox-bg3);
+}
+
+.VPNavBar .title,
+.VPNavBarTitle .title {
+  font-size: 28px !important;
+}
+
+.VPNavBar .nav .nav-item .nav-link,
+.VPNavBarMenu .nav-item,
+.VPNavBarMenuLink {
+  font-size: 24px !important;
+}
+
+.VPNavBarSearch .DocSearch-Button {
+  font-size: 20px !important;
+}
+
+/* Sidebar */
+.VPSidebar {
+  background-color: var(--gruvbox-bg0) !important;
+  border-right: 1px solid var(--gruvbox-bg3);
+}
+
+.VPSidebarItem.level-0 .text {
+  font-weight: 600;
+  color: var(--gruvbox-fg0);
+  font-size: 20px !important;
+}
+
+.VPSidebarItem .text {
+  font-size: 18px !important;
+  color: var(--gruvbox-fg3) !important;
+}
+
+.VPSidebarItem.is-active > .item > .text {
+  color: var(--gruvbox-aqua);
+}
+
+/* Content area */
+.VPContent {
+  background-color: var(--gruvbox-bg0);
+}
+
+.VPDoc .container {
+  padding: 0 24px !important;
+  max-width: 1200px !important;
+}
+
+.VPDoc .content {
+  padding: 0 !important;
+}
+
+/* Right sidebar (table of contents) */
+.VPDocAsideOutline .outline-title {
+  font-size: 22px !important;
+}
+
+.VPDocAsideOutline .outline-link {
+  font-size: 20px !important;
+  color: var(--gruvbox-fg3) !important;
+}
+
+.VPDocAside .outline-title {
+  font-size: 22px !important;
+}
+
+.VPDocAside .outline-link {
+  font-size: 20px !important;
+  color: var(--gruvbox-fg3) !important;
+  padding: 4px 8px !important;
+  margin: 2px 0 !important;
+  border-radius: 4px !important;
+  transition: all 0.2s ease !important;
+}
+
+.VPDocAside .outline-link:hover {
+  background-color: var(--gruvbox-bg2) !important;
+  color: var(--gruvbox-fg1) !important;
+}
+
+.VPDocAside .outline-link.active {
+  background-color: var(--gruvbox-green-muted) !important;
+  color: var(--gruvbox-bg0) !important;
+  font-weight: 600 !important;
+}
+
+.VPDoc .content {
+  font-size: 24px;
+  line-height: 1.6;
+}
+
+.VPDoc p, .VPDoc li {
+  font-size: 24px;
+  line-height: 1.6;
+}
+
+/* Custom container styles */
+.custom-block {
+  border-radius: 6px;
+  padding: 1rem;
+  margin: 1rem 0;
+}
+
+.custom-block.tip {
+  background-color: var(--gruvbox-bg1);
+  border-left: 4px solid var(--gruvbox-aqua);
+}
+
+.custom-block.warning {
+  background-color: var(--gruvbox-bg1);
+  border-left: 4px solid var(--gruvbox-yellow);
+}
+
+.custom-block.danger {
+  background-color: var(--gruvbox-bg1);
+  border-left: 4px solid var(--gruvbox-red);
+}
+
+/* Search */
+.DocSearch {
+  --docsearch-primary-color: var(--gruvbox-aqua);
+  --docsearch-text-color: var(--gruvbox-fg1);
+  --docsearch-modal-background: var(--gruvbox-bg1);
+  --docsearch-searchbox-background: var(--gruvbox-bg2);
+}
+
+/* Scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--gruvbox-bg1);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--gruvbox-bg3);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--gruvbox-bg4);
+}
+
+/* Ensure battlefield notation in code blocks is readable */
+pre code {
+  color: var(--gruvbox-fg1);
+  background: transparent;
+  padding: 0;
+}
+
+/* Make sure Unicode subscripts are visible - but only apply to actual subscript characters */
+/* Remove the font-feature-settings that was causing regular numbers to appear as subscripts */
+
+/* Improve readability of battlefield notation */
+.language-text pre code {
+  font-family: 'JetBrains Mono', 'Fira Code', 'SF Mono', 'Consolas', 'Monaco', monospace;
+  font-size: 0.9em;
+  line-height: 1.4;
+  letter-spacing: 0.02em;
+}
+
+/* Character-specific coloring for battlefield notation */
+/* Use Gruvbox colors for consistent character representation */
+.language-text pre code {
+  /* Alice (A₁, A₂, A₃, etc.) - Gruvbox Aqua */
+  background: linear-gradient(transparent, transparent);
+}
+
+.language-text pre code::before {
+  content: '';
+  position: absolute;
+  width: 0;
+  height: 0;
+}
+
+/* Apply character colors using CSS that targets specific text patterns */
+.language-text pre {
+  position: relative;
+}
+
+/* Style individual characters in battlefield notation */
+.battlefield-notation {
+  font-family: 'Inconsolata', 'Fira Code', 'SF Mono', 'Consolas', 'Monaco', monospace;
+}
+
+/* Alice characters - Gruvbox Aqua */
+.alice { color: var(--gruvbox-aqua) !important; }
+
+/* Bob characters - Gruvbox Orange */
+.bob { color: var(--gruvbox-orange) !important; }
+
+/* Charlie characters - Gruvbox Green */
+.charlie { color: var(--gruvbox-green) !important; }
+
+/* David characters - Gruvbox Purple */
+.david { color: var(--gruvbox-purple) !important; }
+
+/* Eve characters - Gruvbox Yellow */
+.eve { color: var(--gruvbox-yellow) !important; }
+
+/* Frank characters - Gruvbox Blue */
+.frank { color: var(--gruvbox-blue) !important; }
+
+/* Generic team colors for other characters */
+.team-alpha { color: var(--gruvbox-aqua) !important; }
+.team-bravo { color: var(--gruvbox-orange) !important; }
+.team-charlie { color: var(--gruvbox-green) !important; }

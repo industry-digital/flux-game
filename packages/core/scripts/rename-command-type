@@ -1,0 +1,170 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+# Script to rename MOVE command to TRAVEL command across game and server projects
+# This script handles:
+# 1. Enum values (CommandType.MOVE -> CommandType.TRAVEL)
+# 2. Directory names (MOVE/ -> TRAVEL/)
+# 3. File names (containing MOVE -> containing TRAVEL)
+# 4. Code references (MOVE -> TRAVEL in all contexts)
+# 5. Comments and documentation
+#
+# EXCLUSIONS:
+# - Does NOT rename MOVE references in src/worldkit/combat (combat movement mechanics)
+
+OLD_NAME="MOVE"
+NEW_NAME="TRAVEL"
+OLD_LOWER="move"
+NEW_LOWER="travel"
+
+# Project paths
+GAME_DIR="/Users/rchoy/var/flux/game"
+SERVER_DIR="/Users/rchoy/var/flux/server"
+
+echo "🔄 Renaming ${OLD_NAME} command to ${NEW_NAME} across game and server projects..."
+
+# Function to rename directories
+rename_directories() {
+    local project_dir="$1"
+    echo "📁 Renaming directories in ${project_dir}..."
+
+    find "${project_dir}" -type d -name "*${OLD_NAME}*" | while read -r dir; do
+        new_dir=$(echo "$dir" | sed "s/${OLD_NAME}/${NEW_NAME}/g")
+        if [[ "$dir" != "$new_dir" ]]; then
+            echo "  📁 ${dir} -> ${new_dir}"
+            mv "$dir" "$new_dir"
+        fi
+    done
+}
+
+# Function to rename files
+rename_files() {
+    local project_dir="$1"
+    echo "📄 Renaming files in ${project_dir}..."
+
+    find "${project_dir}" -type f -name "*${OLD_NAME}*" | while read -r file; do
+        new_file=$(echo "$file" | sed "s/${OLD_NAME}/${NEW_NAME}/g")
+        if [[ "$file" != "$new_file" ]]; then
+            echo "  📄 ${file} -> ${new_file}"
+            mv "$file" "$new_file"
+        fi
+    done
+}
+
+# Function to update file contents
+update_file_contents() {
+    local project_dir="$1"
+    echo "✏️  Updating file contents in ${project_dir}..."
+
+    # Find all TypeScript, JavaScript, and Markdown files, excluding combat directory
+    find "${project_dir}" -type f \( -name "*.ts" -o -name "*.js" -o -name "*.md" -o -name "*.json" \) \
+        ! -path "*/worldkit/combat/*" \
+        ! -path "*/node_modules/*" \
+        ! -path "*/dist/*" \
+        ! -path "*/.git/*" | while read -r file; do
+
+        # Check if file contains any MOVE references
+        if grep -q "${OLD_NAME}" "$file" 2>/dev/null; then
+            echo "  ✏️  Updating: $file"
+
+            # Create backup
+            cp "$file" "${file}.backup"
+
+            # Perform replacements
+            sed -i '' \
+                -e "s/CommandType\.${OLD_NAME}/CommandType.${NEW_NAME}/g" \
+                -e "s/EventType\.ACTOR_DID_${OLD_NAME}/EventType.ACTOR_DID_${NEW_NAME}/g" \
+                -e "s/EventType\.COMBATANT_DID_${OLD_NAME}/EventType.COMBATANT_DID_${NEW_NAME}/g" \
+                -e "s/${OLD_NAME}Command/${NEW_NAME}Command/g" \
+                -e "s/${OLD_NAME}CommandArgs/${NEW_NAME}CommandArgs/g" \
+                -e "s/actor${OLD_NAME}Reducer/actor${NEW_NAME}Reducer/g" \
+                -e "s/actorMovementReducer/actorTravelReducer/g" \
+                -e "s/${OLD_LOWER}Planner/${NEW_LOWER}Planner/g" \
+                -e "s/${OLD_LOWER}Negotiator/${NEW_LOWER}Negotiator/g" \
+                -e "s/MovePlanner/TravelPlanner/g" \
+                -e "s/MoveNegotiator/TravelNegotiator/g" \
+                -e "s/handleActorDid${OLD_NAME}/handleActorDid${NEW_NAME}/g" \
+                -e "s/ActorDid${OLD_NAME}/ActorDid${NEW_NAME}/g" \
+                -e "s/ACTOR_DID_${OLD_NAME}/ACTOR_DID_${NEW_NAME}/g" \
+                -e "s/is${OLD_NAME}Intent/is${NEW_NAME}Intent/g" \
+                -e "s/${OLD_NAME}_VERBS/${NEW_NAME}_VERBS/g" \
+                -e "s/from '~\/command\/${OLD_NAME}\/handler'/from '~\/command\/${NEW_NAME}\/handler'/g" \
+                -e "s/from '~\/command\/${OLD_NAME}\/planning'/from '~\/command\/${NEW_NAME}\/planning'/g" \
+                -e "s/from '~\/command\/${OLD_NAME}\/negotiation'/from '~\/command\/${NEW_NAME}\/negotiation'/g" \
+                -e "s/command\/${OLD_NAME}\//command\/${NEW_NAME}\//g" \
+                -e "s/\b${OLD_NAME}\b/${NEW_NAME}/g" \
+                -e "s/\b${OLD_LOWER}\b/${NEW_LOWER}/g" \
+                "$file"
+
+            # Remove backup if changes were successful
+            rm "${file}.backup"
+        fi
+    done
+}
+
+# Function to update package.json and other config files
+update_config_files() {
+    local project_dir="$1"
+    echo "⚙️  Updating configuration files in ${project_dir}..."
+
+    # Update any references in package.json, tsconfig files, etc.
+    find "${project_dir}" -maxdepth 1 -name "*.json" | while read -r file; do
+        if grep -q "${OLD_NAME}" "$file" 2>/dev/null; then
+            echo "  ⚙️  Updating config: $file"
+            cp "$file" "${file}.backup"
+            sed -i '' "s/${OLD_NAME}/${NEW_NAME}/g" "$file"
+            rm "${file}.backup"
+        fi
+    done
+}
+
+# Main execution
+main() {
+    echo "🚀 Starting ${OLD_NAME} -> ${NEW_NAME} rename process..."
+
+    # Process game project
+    echo ""
+    echo "🎮 Processing GAME project..."
+    if [[ -d "$GAME_DIR" ]]; then
+        rename_directories "$GAME_DIR"
+        rename_files "$GAME_DIR"
+        update_file_contents "$GAME_DIR"
+        update_config_files "$GAME_DIR"
+    else
+        echo "❌ Game directory not found: $GAME_DIR"
+        exit 1
+    fi
+
+    # Process server project
+    echo ""
+    echo "🖥️  Processing SERVER project..."
+    if [[ -d "$SERVER_DIR" ]]; then
+        rename_directories "$SERVER_DIR"
+        rename_files "$SERVER_DIR"
+        update_file_contents "$SERVER_DIR"
+        update_config_files "$SERVER_DIR"
+    else
+        echo "❌ Server directory not found: $SERVER_DIR"
+        exit 1
+    fi
+
+    echo ""
+    echo "✅ Rename complete! Summary:"
+    echo "   • Renamed CommandType.${OLD_NAME} -> CommandType.${NEW_NAME}"
+    echo "   • Renamed all ${OLD_NAME} directories -> ${NEW_NAME}"
+    echo "   • Renamed all ${OLD_NAME} files -> ${NEW_NAME}"
+    echo "   • Updated all code references"
+    echo "   • Updated all comments and documentation"
+    echo "   • Excluded worldkit/combat directory (as requested)"
+    echo ""
+    echo "🔍 Next steps:"
+    echo "   1. Review the changes with 'git diff'"
+    echo "   2. Run tests to ensure everything works"
+    echo "   3. Commit the changes"
+    echo ""
+    echo "⚠️  Note: If you need to revert, use 'git checkout .' to restore all files"
+}
+
+# Run the main function
+main "$@"

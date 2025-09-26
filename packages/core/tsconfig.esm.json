@@ -1,0 +1,15 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "module": "esnext",
+    "target": "es2020",
+    "moduleResolution": "bundler",
+    "outDir": "./dist/esm",
+    "declaration": false,
+    "declarationMap": false
+  },
+  "exclude": [
+    "**/*.spec.ts",
+    "**/*.test.ts"
+  ]
+}

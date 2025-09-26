@@ -1,0 +1,258 @@
+import { UnitOfMeasure, TimeUnit } from '~/types';
+import { BulkResourceSchema, FitnessEvaluationStrategy } from '~/types/schema/resource';
+
+// Helper function to create flower schemas with proper typing
+export function createFlowerSchema(overrides: Partial<BulkResourceSchema> = {}): BulkResourceSchema {
+  return {
+    kind: 'flower',
+    provides: ['flower', 'nectar'],
+    fitness: {
+      strategy: FitnessEvaluationStrategy.PLANT,
+      min: 0.5,
+    },
+    quantification: {
+      type: 'bulk',
+      quantity: {
+        measure: UnitOfMeasure.EACH,
+        min: 1,
+        capacity: 3,
+      }
+    },
+    requirements: {
+      temperature: { min: 5, max: 35 },
+      humidity: { min: 30, max: 80 },
+      ppfd: { min: 400 },
+    },
+    growth: {
+      curve: 'LOGISTIC',
+      duration: [1, TimeUnit.DAY]
+    },
+    decay: {
+      curve: 'LOGISTIC',
+      duration: [3, TimeUnit.DAY],
+    },
+    // Flowers can form dense meadows and prairies
+    constraints: {
+      maxNeighbors: 5,      // Dense clustering allowed
+      inhibitionRadius: 1   // Local effect only
+    },
+    ...overrides
+  } as BulkResourceSchema;
+}
+
+// Desert/Arid Flowers
+export const DesertMarigoldSchema: BulkResourceSchema = createFlowerSchema({
+  name: 'desert marigold',
+  slug: 'desert-marigold',
+  requirements: {
+    temperature: { min: 15 },
+    humidity: { min: 10 },
+    ppfd: { min: 800 },
+    climates: ['arid']
+  }
+});
+
+export const WildBergamotSchema: BulkResourceSchema = createFlowerSchema({
+  name: 'wild bergamot',
+  slug: 'wild-bergamot',
+  requirements: {
+    temperature: { min: 5, max: 32 },
+    humidity: { min: 40, max: 85 },
+    ppfd: { min: 300 },
+  }
+});
+
+// Temperate Grassland Flowers
+export const PurpleConeflowerSchema: BulkResourceSchema = createFlowerSchema({
+  name: 'purple coneflower',
+  slug: 'purple-coneflower',
+  provides: ['flower', 'nectar', 'seed'],
+  requirements: {
+    temperature: { min: 5, max: 32 },
+    humidity: { min: 40, max: 70 },
+    ppfd: { min: 600 },
+  }
+});
+
+export const BlackEyedSusanSchema: BulkResourceSchema = createFlowerSchema({
+  name: 'black-eyed susan',
+  slug: 'black-eyed-susan',
+  requirements: {
+    temperature: { min: 5, max: 32 },
+    humidity: { min: 40, max: 70 },
+    ppfd: { min: 800 },
+  }
+});
+
+// Forest/Mountain Ecotone Flowers
+export const WildColumbineSchema: BulkResourceSchema = createFlowerSchema({
+  name: 'wild columbine',
+  slug: 'wild-columbine',
+  requirements: {
+    temperature: { min: 0, max: 30 },
+    humidity: { min: 10, max: 85 },
+    ppfd: { min: 200 },
+  }
+});
+
+export const FireweedSchema: BulkResourceSchema = createFlowerSchema({
+  name: 'fireweed',
+  slug: 'fireweed',
+  provides: ['flower', 'nectar', 'fiber'],
+  requirements: {
+    temperature: { min: 0, max: 30 },
+    humidity: { min: 10, max: 85 },
+    ppfd: { min: 300 },
+  }
+});
+
+// Mountain/Jungle Ecotone Flowers
+export const MountainPassionVineSchema: BulkResourceSchema = createFlowerSchema({
+  name: 'mountain passion vine',
+  slug: 'mountain-passion-vine',
+  requirements: {
+    temperature: { min: 20, max: 25 },
+    humidity: { min: 35, max: 95 },
+    ppfd: { min: 400 },
+    biomes: ['mountain']
+  }
+});
+
+export const TropicalGingerSchema: BulkResourceSchema = createFlowerSchema({
+  name: 'tropical ginger',
+  slug: 'tropical-ginger',
+  requirements: {
+    temperature: { min: 18 },
+    humidity: { min: 60 },
+    ppfd: { min: 100 },
+    lunar: ['waxing', 'full'],
+    climates: ['tropical']
+  }
+});
+
+// Forest + Mountain ecotone
+export const WildTrilliumSchema: BulkResourceSchema = createFlowerSchema({
+  name: 'wild trillium',
+  slug: 'wild-trillium',
+  requirements: {
+    temperature: { min: 10 },
+    humidity: { min: 50, max: 90 },
+    ppfd: { min: 100 },
+    biomes: ['forest', 'mountain']
+  }
+});
+
+// Pure Ecosystem Flowers
+
+// Mountain (Arid)
+export const AlpineAsterSchema: BulkResourceSchema = createFlowerSchema({
+  name: 'alpine aster',
+  slug: 'alpine-aster',
+  requirements: {
+    temperature: { min: 0, max: 25 },
+    humidity: { min: 10, max: 35 },
+    ppfd: { min: 800 },
+  }
+});
+
+// Jungle (Tropical)
+export const JungleOrchidSchema: BulkResourceSchema = createFlowerSchema({
+  name: 'orchid',
+  slug: 'orchid',
+  requirements: {
+    temperature: { min: 20, max: 35 },
+    humidity: { min: 75, max: 95 },
+    ppfd: { min: 100, max: 600 },
+    lunar: ['new', 'waxing'],
+    climates: ['tropical']
+  },
+  constraints: {
+    maxNeighbors: 0,      // Override: exclusive
+    inhibitionRadius: 1
+  }
+});
+
+// Marsh (Tropical)
+export const WaterLilySchema: BulkResourceSchema = createFlowerSchema({
+  name: 'water lily',
+  slug: 'water-lily',
+  provides: ['flower', 'nectar', 'roots'],
+  requirements: {
+    temperature: { min: 10, max: 30 },
+    humidity: { min: 85, max: 100 },
+    ppfd: { min: 400 },
+    climates: ['tropical']
+  }
+});
+
+// Additional Ecotone Flowers
+
+// Steppe/Grassland Ecotone
+export const PrairieRoseSchema: BulkResourceSchema = createFlowerSchema({
+  name: 'prairie rose',
+  slug: 'prairie-rose',
+  provides: ['flower', 'nectar', 'fruit'],
+  requirements: {
+    temperature: { min: 8, max: 33 },
+    humidity: { min: 25, max: 60 },
+    ppfd: { min: 600 },
+    climates: ['temperate']
+  }
+});
+
+// Steppe/Mountain Ecotone
+export const DesertLupineSchema: BulkResourceSchema = createFlowerSchema({
+  name: 'desert lupine',
+  slug: 'desert-lupine',
+  requirements: {
+    temperature: { min: 5, max: 30 },
+    humidity: { min: 15, max: 40 },
+    ppfd: { min: 800 },
+    climates: ['arid']
+  }
+});
+
+// Grassland/Mountain Ecotone
+export const MountainSunflowerSchema: BulkResourceSchema = createFlowerSchema({
+  name: 'mountain sunflower',
+  slug: 'mountain-sunflower',
+  provides: ['flower', 'nectar', 'seeds'],
+  requirements: {
+    temperature: { min: 2, max: 28 },
+    humidity: { min: 30, max: 60 },
+    ppfd: { min: 700 },
+    biomes: ['mountain'],
+  }
+});
+
+// Forest/Jungle Ecotone
+export const BlackLotusSchema: BulkResourceSchema = createFlowerSchema({
+  name: 'black lotus',
+  slug: 'black-lotus',
+  provides: ['flower', 'nectar', 'nectar', 'seeds', 'roots'],
+  requirements: {
+    temperature: { min: 15, max: 32 },
+    humidity: { min: 60, max: 90 },
+    ppfd: { max: 200 },
+    lunar: ['full'], // Only during full moon
+    climates: ['tropical']
+  }
+});
+
+// Jungle/Marsh Ecotone
+export const SwampOrchidSchema: BulkResourceSchema = createFlowerSchema({
+  name: 'swamp orchid',
+  slug: 'swamp-orchid',
+  requirements: {
+    temperature: { min: 15, max: 32 },
+    humidity: { min: 80, max: 98 },
+    seasons: ['spring', 'summer'],
+    time: ['dusk', 'night'],
+    lunar: ['full'], // Only during full moon
+    biomes: ['marsh'],
+  },
+  constraints: {
+    maxNeighbors: 0,      // Override: exclusive
+    inhibitionRadius: 1
+  }
+});

@@ -1,0 +1,151 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+# Script to rename REPOSITION command to MOVE command in the game project only
+# This script handles:
+# 1. Enum values (CommandType.REPOSITION -> CommandType.MOVE)
+# 2. Directory names (POSITION/ -> MOVE/)
+# 3. File names (containing POSITION -> containing MOVE)
+# 4. Code references (REPOSITION -> MOVE, GO -> MOVE in all contexts)
+# 5. Comments and documentation
+#
+# SCOPE: Game project only (/Users/rchoy/var/flux/game)
+
+OLD_ENUM="REPOSITION"
+NEW_ENUM="MOVE"
+OLD_DIR="POSITION"
+NEW_DIR="MOVE"
+OLD_COMMAND="GO"
+NEW_COMMAND="MOVE"
+
+# Project path
+GAME_DIR="/Users/rchoy/var/flux/game"
+
+echo "🔄 Renaming ${OLD_ENUM} command to ${NEW_ENUM} in game project..."
+
+# Function to rename directories
+rename_directories() {
+    local project_dir="$1"
+    echo "📁 Renaming directories in ${project_dir}..."
+
+    find "${project_dir}" -type d -name "*${OLD_DIR}*" | while read -r dir; do
+        new_dir=$(echo "$dir" | sed "s/${OLD_DIR}/${NEW_DIR}/g")
+        if [[ "$dir" != "$new_dir" ]]; then
+            echo "  📁 ${dir} -> ${new_dir}"
+            mv "$dir" "$new_dir"
+        fi
+    done
+}
+
+# Function to rename files
+rename_files() {
+    local project_dir="$1"
+    echo "📄 Renaming files in ${project_dir}..."
+
+    find "${project_dir}" -type f -name "*${OLD_DIR}*" | while read -r file; do
+        new_file=$(echo "$file" | sed "s/${OLD_DIR}/${NEW_DIR}/g")
+        if [[ "$file" != "$new_file" ]]; then
+            echo "  📄 ${file} -> ${new_file}"
+            mv "$file" "$new_file"
+        fi
+    done
+}
+
+# Function to update file contents
+update_file_contents() {
+    local project_dir="$1"
+    echo "✏️  Updating file contents in ${project_dir}..."
+
+    # Find all TypeScript, JavaScript, and Markdown files
+    find "${project_dir}" -type f \( -name "*.ts" -o -name "*.js" -o -name "*.md" -o -name "*.json" \) \
+        ! -path "*/node_modules/*" \
+        ! -path "*/dist/*" \
+        ! -path "*/.git/*" | while read -r file; do
+
+        # Check if file contains any REPOSITION or GO references
+        if grep -q -E "(${OLD_ENUM}|${OLD_COMMAND}Command|${OLD_COMMAND}CommandArgs|actorGoReducer|GoCommand|GoCommandArgs)" "$file" 2>/dev/null; then
+            echo "  ✏️  Updating: $file"
+
+            # Create backup
+            cp "$file" "${file}.backup"
+
+            # Perform replacements
+            sed -i '' \
+                -e "s/CommandType\.${OLD_ENUM}/CommandType.${NEW_ENUM}/g" \
+                -e "s/${OLD_ENUM} = '${OLD_ENUM}'/${NEW_ENUM} = '${NEW_ENUM}'/g" \
+                -e "s/GoCommand/${NEW_COMMAND}Command/g" \
+                -e "s/GoCommandArgs/${NEW_COMMAND}CommandArgs/g" \
+                -e "s/actorGoReducer/actor${NEW_COMMAND}Reducer/g" \
+                -e "s/\* Reducer for ${OLD_COMMAND} commands/* Reducer for ${NEW_COMMAND} commands/g" \
+                -e "s/\* Handler for ${OLD_COMMAND} commands/* Handler for ${NEW_COMMAND} commands/g" \
+                -e "s/from '~\/command\/${OLD_DIR}\/handler'/from '~\/command\/${NEW_DIR}\/handler'/g" \
+                -e "s/command\/${OLD_DIR}\//command\/${NEW_DIR}\//g" \
+                -e "s/export class ${OLD_COMMAND} /export class ${NEW_COMMAND} /g" \
+                -e "s/\b${OLD_COMMAND}Command\b/${NEW_COMMAND}Command/g" \
+                -e "s/\b${OLD_COMMAND}CommandArgs\b/${NEW_COMMAND}CommandArgs/g" \
+                -e "s/\b${OLD_ENUM}\b/${NEW_ENUM}/g" \
+                "$file"
+
+            # Remove backup if changes were successful
+            rm "${file}.backup"
+        fi
+    done
+}
+
+# Function to update package.json and other config files
+update_config_files() {
+    local project_dir="$1"
+    echo "⚙️  Updating configuration files in ${project_dir}..."
+
+    # Update any references in package.json, tsconfig files, etc.
+    find "${project_dir}" -maxdepth 1 -name "*.json" | while read -r file; do
+        if grep -q -E "(${OLD_ENUM}|${OLD_COMMAND})" "$file" 2>/dev/null; then
+            echo "  ⚙️  Updating config: $file"
+            cp "$file" "${file}.backup"
+            sed -i '' \
+                -e "s/${OLD_ENUM}/${NEW_ENUM}/g" \
+                -e "s/${OLD_COMMAND}/${NEW_COMMAND}/g" \
+                "$file"
+            rm "${file}.backup"
+        fi
+    done
+}
+
+# Main execution
+main() {
+    echo "🚀 Starting ${OLD_ENUM} -> ${NEW_ENUM} rename process..."
+
+    # Process game project only
+    echo ""
+    echo "🎮 Processing GAME project..."
+    if [[ -d "$GAME_DIR" ]]; then
+        rename_directories "$GAME_DIR"
+        rename_files "$GAME_DIR"
+        update_file_contents "$GAME_DIR"
+        update_config_files "$GAME_DIR"
+    else
+        echo "❌ Game directory not found: $GAME_DIR"
+        exit 1
+    fi
+
+    echo ""
+    echo "✅ Rename complete! Summary:"
+    echo "   • Renamed CommandType.${OLD_ENUM} -> CommandType.${NEW_ENUM}"
+    echo "   • Renamed ${OLD_DIR} directory -> ${NEW_DIR}"
+    echo "   • Renamed ${OLD_COMMAND}Command -> ${NEW_COMMAND}Command"
+    echo "   • Renamed ${OLD_COMMAND}CommandArgs -> ${NEW_COMMAND}CommandArgs"
+    echo "   • Renamed actorGoReducer -> actor${NEW_COMMAND}Reducer"
+    echo "   • Updated all code references and comments"
+    echo "   • Scope: Game project only"
+    echo ""
+    echo "🔍 Next steps:"
+    echo "   1. Review the changes with 'git diff'"
+    echo "   2. Run tests to ensure everything works"
+    echo "   3. Commit the changes"
+    echo ""
+    echo "⚠️  Note: If you need to revert, use 'git checkout .' to restore all files"
+}
+
+# Run the main function
+main "$@"

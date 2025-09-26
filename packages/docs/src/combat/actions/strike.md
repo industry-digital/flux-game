@@ -1,0 +1,3 @@
+# STRIKE
+
+*Documentation coming soon*
