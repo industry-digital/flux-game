@@ -106,10 +106,10 @@ describe('useTheme', () => {
     it('should reactively apply theme when currentTheme changes', () => {
       testSuite.runWithContext(() => {
         const theme = useTheme('dark', mockDeps);
-        
+
         // Change theme
         theme.setTheme('accessibility');
-        
+
         // Theme name should change even if config object is the same
         expect(theme.currentTheme.value).toBe('accessibility');
         // Note: watchEffect won't re-trigger since accessibility theme
@@ -142,11 +142,11 @@ describe('useTheme', () => {
     it('should update theme config when theme changes', () => {
       testSuite.runWithContext(() => {
         const theme = useTheme('dark', mockDeps);
-        
+
         expect(theme.getThemeConfig().name).toBe('dark');
-        
+
         theme.setTheme('light');
-        
+
         // Note: Currently light theme points to same darkTheme object,
         // so name remains 'dark'. This will change when separate themes are implemented.
         expect(theme.getThemeConfig().name).toBe('dark');
