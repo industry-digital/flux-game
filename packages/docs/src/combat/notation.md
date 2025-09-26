@@ -1,9 +1,8 @@
 # Battlefield Notation
 
 <script setup>
-import BattlefieldNotation from '@vitepress/components/BattlefieldNotation.vue'
-import Legend from '@vitepress/components/Legend.vue'
-import CombatantGlyph from '@vitepress/components/CombatantGlyph.vue'
+import Legend from '~/components/Legend.vue'
+import { BattlefieldNotation, CombatantGlyph } from '@flux/ui'
 </script>
 
 Battlefield notation is the visual language used throughout the combat system to represent battlefield states, combatant positions, and tactical situations. This standardized ASCII representation provides precise, at-a-glance understanding of who is where, how far apart they are, and which direction they're facing.

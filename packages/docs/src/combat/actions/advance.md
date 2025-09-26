@@ -1,8 +1,8 @@
 <script setup>
-import CommandList from '@vitepress/components/CommandList.vue';
-import CommandListAlt from '@vitepress/components/CommandListAlt.vue';
-import BattlefieldNotation from '@vitepress/components/BattlefieldNotation.vue';
-import BeforeAfterBattlefield from '@vitepress/components/BeforeAfterBattlefield.vue';
+import CommandList from '~/components/CommandList.vue';
+import CommandListAlt from '~/components/CommandListAlt.vue';
+import BeforeAfterBattlefield from '~/components/BeforeAfterBattlefield.vue';
+import { BattlefieldNotation } from '@flux/ui';
 </script>
 
 # ADVANCE

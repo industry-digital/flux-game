@@ -16,7 +16,7 @@
 </template>
 
 <script>
-import CommandSyntax from './CommandSyntax.vue'
+import { CommandSyntax } from '@flux/ui';
 
 export default {
   name: 'CommandListAlt',

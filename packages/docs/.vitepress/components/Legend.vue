@@ -27,8 +27,7 @@
 </template>
 
 <script setup>
-import CleanList from './CleanList.vue';
-import CombatantGlyph from './CombatantGlyph.vue';
+import { CleanList, CombatantGlyph } from '@flux/ui';
 
 const props = defineProps({
   title: {

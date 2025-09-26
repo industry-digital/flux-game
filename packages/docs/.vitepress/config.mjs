@@ -69,11 +69,11 @@ export default withMermaid(defineConfig({
   // Vite configuration
   vite: {
     resolve: {
-      alias: {
-        '@vitepress': resolve(__dirname),
-        '@flux/ui': resolve(__dirname, '../../ui/src/index.ts'),
-        '@flux/ui/': resolve(__dirname, '../../ui/src/')
-      }
+        alias: {
+          '~': resolve(__dirname),
+          '@flux/ui': resolve(__dirname, '../../ui/src/index.ts'),
+          '@flux/ui/': resolve(__dirname, '../../ui/src/')
+        }
     },
     optimizeDeps: {
       exclude: ['@flux/ui']

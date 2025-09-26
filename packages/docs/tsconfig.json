@@ -23,8 +23,8 @@
     /* Path mapping */
     "baseUrl": ".",
     "paths": {
-      "@vitepress/*": [".vitepress/*"],
-      "@vitepress/components/*": [".vitepress/components/*"],
+      "~/*": [".vitepress/*"],
+      "~/components/*": [".vitepress/components/*"],
       "@flux/ui": ["../ui/src/index.ts"],
       "@flux/ui/*": ["../ui/src/*"]
     }

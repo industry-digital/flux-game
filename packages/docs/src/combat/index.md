@@ -1,5 +1,5 @@
 <script setup>
-import Legend from '@vitepress/components/Legend.vue'
+import Legend from '~/components/Legend.vue'
 import { BattlefieldNotation } from '@flux/ui'
 </script>
 
