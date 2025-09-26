@@ -127,3 +127,5 @@ packages/*/.turbo/
 # Local development
 .turbo/
 .rush/
+
+.cursorrules*
