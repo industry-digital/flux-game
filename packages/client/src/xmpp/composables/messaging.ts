@@ -107,7 +107,7 @@ export function useXmppMessaging(client: Ref<XmppClient | null>) {
         await sendMessage(queuedMessage.element);
       } catch (error) {
         // If sending fails, the message will be re-queued by sendMessage
-        console.warn('Failed to send queued message:', error);
+        // Error is handled by the sendMessage function
       }
     }
   }
@@ -176,7 +176,9 @@ export function useXmppMessaging(client: Ref<XmppClient | null>) {
     if (newClient && hasQueuedMessages.value) {
       // Send queued messages after a short delay to ensure connection is stable
       setTimeout(() => {
-        sendQueuedMessages().catch(console.error);
+        sendQueuedMessages().catch(() => {
+          // Ignore errors - queued messages will be retried on next connection
+        });
       }, 1000);
     }
   });

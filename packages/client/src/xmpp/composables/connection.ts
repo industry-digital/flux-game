@@ -1,11 +1,25 @@
 import { ref, computed, onUnmounted, type Ref } from 'vue';
 import { client as createClient, type Client as XmppClient } from '@xmpp/client';
+import { extractDomainFromService } from '~/xmpp/util';
 import type {
   XmppConnectionConfig,
   XmppConnectionState,
   XmppConnectionStatus
 } from '~/types/xmpp';
-import { extractDomainFromService } from '~/types/xmpp';
+
+export type XmppClientResolver = (config: XmppConnectionConfig) => XmppClient;
+
+export const DEFAULT_XMPP_CLIENT_RESOLVER: XmppClientResolver = (config) => {
+  // Determine domain from service URL if not provided
+  const domain = config.domain || extractDomainFromService(config.service);
+
+  return createClient({
+    service: config.service,
+    domain,
+    username: config.username,
+    password: config.password,
+  });
+};
 
 /**
  * Pure XMPP WebSocket connection composable
@@ -16,9 +30,11 @@ import { extractDomainFromService } from '~/types/xmpp';
  * @param config - Connection configuration
  * @returns Reactive connection state and control methods
  */
-export function useXmppConnection(config: XmppConnectionConfig) {
+export function useXmppConnection(config: XmppConnectionConfig, resolver: XmppClientResolver = DEFAULT_XMPP_CLIENT_RESOLVER) {
+  // Here we need to parse credentials from the config
+
   // Internal state
-  const client = ref<XmppClient | null>(null);
+  const client = ref<XmppClient | null>(resolver(config));
   const status = ref<XmppConnectionStatus>('disconnected');
   const error = ref<string | null>(null);
   const isConnecting = ref(false);
@@ -39,9 +55,13 @@ export function useXmppConnection(config: XmppConnectionConfig) {
   /**
    * Establish XMPP connection
    */
-  async function connect(credentials: { username: string; password: string }): Promise<void> {
+  async function connect(): Promise<void> {
     if (!canConnect.value) {
       throw new Error(`Cannot connect when status is ${status.value}`);
+    }
+
+    if (!client.value) {
+      throw new Error('No XMPP client available');
     }
 
     try {
@@ -49,16 +69,7 @@ export function useXmppConnection(config: XmppConnectionConfig) {
       status.value = 'connecting';
       error.value = null;
 
-      // Determine domain from service URL if not provided
-      const domain = config.domain || extractDomainFromService(config.service);
-
-      // Create XMPP client
-      const xmppClient = createClient({
-        service: config.service,
-        domain,
-        username: credentials.username,
-        password: credentials.password,
-      });
+      const xmppClient = client.value;
 
       // Set up core event listeners
       xmppClient.on('online', () => {
@@ -85,8 +96,7 @@ export function useXmppConnection(config: XmppConnectionConfig) {
         isConnecting.value = false;
       });
 
-      // Store client reference and start connection
-      client.value = xmppClient;
+      // Start connection (client is already stored)
       await xmppClient.start();
 
     } catch (err) {
@@ -111,8 +121,7 @@ export function useXmppConnection(config: XmppConnectionConfig) {
 
       await client.value.stop();
     } catch (err) {
-      // Log warning but don't throw - disconnection should be graceful
-      console.warn('Error during XMPP disconnect:', err);
+      // Ignore errors during disconnection - should be graceful
     } finally {
       if (client.value) {
         client.value.removeAllListeners();

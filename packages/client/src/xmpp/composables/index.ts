@@ -51,9 +51,24 @@ export function useXmppClient(
   const mergedConfig = { ...DEFAULT_XMPP_CONFIG, ...config };
 
   // Initialize individual composables
-  const connection = useXmppConnection({
-    service: mergedConfig.service,
-    domain: mergedConfig.domain,
+  // Note: Connection needs credentials, so we'll create it reactively
+  const connectionConfig = computed(() => {
+    const creds = credentials.value;
+    if (!creds) return null;
+
+    return {
+      service: mergedConfig.service,
+      domain: mergedConfig.domain,
+      username: creds.username,
+      password: creds.password,
+    };
+  });
+
+  const connection = computed(() => {
+    const config = connectionConfig.value;
+    if (!config) return null;
+
+    return useXmppConnection(config);
   });
 
   const auth = useXmppAuth(credentials);
@@ -191,7 +206,9 @@ export function useXmppClient(
 
       // Send initial presence if not delayed
       if (!mergedConfig.delayPresence) {
-        messaging.sendPresence().catch(console.error);
+        messaging.sendPresence().catch(() => {
+          // Ignore presence send errors during connection
+        });
       }
 
       // Initiate world server handshake
@@ -237,7 +254,7 @@ export function useXmppClient(
       try {
         await connect();
       } catch (error) {
-        console.error('Auto-connect failed:', error);
+        // Auto-connect failed - error will be reflected in connection state
       }
     }
   }, { immediate: true });

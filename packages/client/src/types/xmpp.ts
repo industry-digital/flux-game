@@ -2,22 +2,6 @@ import type { Client as XmppClient } from '@xmpp/client';
 import type { Element as XMLElement } from '@xmpp/xml';
 
 // ============================================================================
-// Utility Functions
-// ============================================================================
-
-/**
- * Extract domain from XMPP service URL
- */
-export function extractDomainFromService(service: string): string {
-  try {
-    const url = new URL(service);
-    return url.hostname;
-  } catch (error) {
-    throw new Error(`Invalid service URL: ${service}`);
-  }
-}
-
-// ============================================================================
 // Connection Types
 // ============================================================================
 
@@ -26,6 +10,8 @@ export type XmppConnectionStatus = 'disconnected' | 'connecting' | 'online' | 'e
 export interface XmppConnectionConfig {
   service: string;
   domain?: string;
+  username: string;
+  password: string;
   timeout?: number;
 }
 

@@ -155,10 +155,8 @@ export function useWorldServerProtocol(client: Ref<XmppClient | null>) {
     status.value = 'failed';
     handshakeComplete.value = false;
     serverJid.value = null;
-
-    if (reason) {
-      console.warn('World server handshake failed:', reason);
-    }
+    
+    // Reason is available for debugging but not logged to console
   }
 
   /**
