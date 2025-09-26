@@ -1,39 +1,130 @@
 <script setup lang="ts">
-import { ref } from "vue";
-import { invoke } from "@tauri-apps/api/core";
+import { ref, computed } from 'vue';
+import { useEnvironment } from '~/infrastructure/environment/composables';
+import { useAuth } from '~/auth/composables';
+import { useXmppClient } from '~/xmpp/composables/client';
+import { useWorldServerProtocol } from '~/server/composables/protocol';
 
-const greetMsg = ref("");
-const name = ref("");
+// ============================================================================
+// COMPOSITION ROOT - Environment Configuration
+// ============================================================================
+// ONLY place that accesses import.meta.env
+const env = useEnvironment();
 
-async function greet() {
-  // Learn more about Tauri commands at https://tauri.app/develop/calling-rust/
-  greetMsg.value = await invoke("greet", { name: name.value });
-}
+// ============================================================================
+// COMPOSITION ROOT - Application State
+// ============================================================================
+const jwt = ref<string | null>(env.VITE_TEST_JWT || null);
+
+// ============================================================================
+// COMPOSITION ROOT - Authentication Layer (JWT → Actor + JID)
+// ============================================================================
+const auth = useAuth(jwt, { xmppDomain: env.VITE_XMPP_DOMAIN });
+
+// ============================================================================
+// COMPOSITION ROOT - XMPP Credentials Bridge (Actor + JWT → XMPP credentials)
+// ============================================================================
+const xmppCredentials = computed(() => {
+  if (!auth.username.value || !auth.jwt.value) return null;
+  return {
+    username: auth.username.value,
+    password: auth.jwt.value  // JWT as password
+  };
+});
+
+// ============================================================================
+// COMPOSITION ROOT - XMPP Transport Layer
+// ============================================================================
+const xmppClient = useXmppClient(xmppCredentials, {
+  service: env.VITE_XMPP_SERVICE,
+  domain: env.VITE_XMPP_DOMAIN
+});
+
+// ============================================================================
+// COMPOSITION ROOT - Game Protocol Layer
+// ============================================================================
+const worldServer = useWorldServerProtocol(computed(() => xmppClient.client.value));
+
+// ============================================================================
+// COMPOSITION ROOT - Application State
+// ============================================================================
+const appReady = computed(() =>
+  auth.isAuthenticated.value &&
+  xmppClient.connected.value &&
+  worldServer.ready.value
+);
+
+const isConnecting = computed(() =>
+  auth.isAuthenticated.value &&
+  (xmppClient.connecting.value || worldServer.handshaking.value)
+);
+
+const connectionError = computed(() =>
+  auth.authError.value ||
+  xmppClient.error.value ||
+  (worldServer.failed.value ? 'World server connection failed' : '')
+);
+
+// ============================================================================
+// EVENT HANDLERS
+// ============================================================================
+const handleAuthSubmit = (submittedJwt: string) => {
+  if (!submittedJwt.trim()) {
+    return;
+  }
+  jwt.value = submittedJwt;
+};
 </script>
 
 <template>
-  <main class="container">
-    <h1>Welcome to Tauri + Vue</h1>
+  <div class="app">
+    <!-- Authentication Screen -->
+    <div v-if="!auth.isAuthenticated.value" class="auth-screen">
+      <div class="auth-container">
+        <AuthForm
+          :test-jwt="env.VITE_TEST_JWT"
+          :test-jwts="env.VITE_TEST_JWTS"
+          :is-loading="isConnecting"
+          :error="connectionError"
+          @submit="handleAuthSubmit"
+        />
 
-    <div class="row">
-      <a href="https://vite.dev" target="_blank">
-        <img src="/vite.svg" class="logo vite" alt="Vite logo" />
-      </a>
-      <a href="https://tauri.app" target="_blank">
-        <img src="/tauri.svg" class="logo tauri" alt="Tauri logo" />
-      </a>
-      <a href="https://vuejs.org/" target="_blank">
-        <img src="./assets/vue.svg" class="logo vue" alt="Vue logo" />
-      </a>
+        <!-- Connection Status -->
+        <div v-if="isConnecting" class="connection-status">
+          <div v-if="xmppClient.connecting.value" class="status-message connecting">
+            Connecting to XMPP server...
+          </div>
+          <div v-if="xmppClient.reconnecting.value" class="status-message reconnecting">
+            Reconnecting... (attempt {{ xmppClient.reconnectAttempts.value }})
+          </div>
+          <div v-if="worldServer.handshaking.value" class="status-message handshaking">
+            Handshaking with world server...
+          </div>
+        </div>
+      </div>
     </div>
-    <p>Click on the Tauri, Vite, and Vue logos to learn more.</p>
 
-    <form class="row" @submit.prevent="greet">
-      <input id="greet-input" v-model="name" placeholder="Enter a name..." />
-      <button type="submit">Greet</button>
-    </form>
-    <p>{{ greetMsg }}</p>
-  </main>
+    <!-- Game Screen -->
+    <div v-else-if="appReady" class="game-screen">
+      <GameTerminal
+        :current-actor="auth.username.value"
+        :xmpp-client="xmppClient"
+        :world-server="worldServer"
+      />
+    </div>
+
+    <!-- Loading Screen -->
+    <div v-else class="loading-screen">
+      <div class="loading-container">
+        <div class="loading-spinner"></div>
+        <div class="loading-message">
+          <div v-if="!xmppClient.connected.value">Connecting to XMPP...</div>
+          <div v-else-if="!worldServer.ready.value">Connecting to world server...</div>
+          <div v-else>Initializing game...</div>
+        </div>
+      </div>
+    </div>
+  </div>
 </template>
 
 <style scoped>
