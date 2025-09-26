@@ -6,6 +6,14 @@ import type {
   MessagingState
 } from '~/types/xmpp';
 
+export type XmppMessagingDependencies = {
+  setTimeout: typeof setTimeout;
+};
+
+export const DEFAULT_MESSAGING_DEPS: XmppMessagingDependencies = {
+  setTimeout,
+};
+
 /**
  * XMPP messaging composable
  *
@@ -15,7 +23,11 @@ import type {
  * @param client - Reactive XMPP client reference
  * @returns Reactive messaging state and methods
  */
-export function useXmppMessaging(client: Ref<XmppClient | null>) {
+export function useXmppMessaging(
+  client: Ref<XmppClient | null>,
+  deps: XmppMessagingDependencies = DEFAULT_MESSAGING_DEPS,
+) {
+
   // Internal state
   const queuedMessages = ref<XmppMessage[]>([]);
   const isSending = ref(false);
@@ -104,10 +116,10 @@ export function useXmppMessaging(client: Ref<XmppClient | null>) {
 
     for (const queuedMessage of messagesToSend) {
       try {
-        await sendMessage(queuedMessage.element);
+        await client.value.send(queuedMessage.element);
       } catch (error) {
-        // If sending fails, the message will be re-queued by sendMessage
-        // Error is handled by the sendMessage function
+        // If sending fails, re-queue the message
+        queuedMessages.value.push(queuedMessage);
       }
     }
   }
@@ -125,7 +137,8 @@ export function useXmppMessaging(client: Ref<XmppClient | null>) {
   function createMessage(to: string, body: string, type: 'chat' | 'groupchat' = 'chat'): XMLElement {
     return xml('message', { to, type })
       .c('body')
-      .t(body);
+      .t(body)
+      .up();
   }
 
   /**
@@ -175,7 +188,7 @@ export function useXmppMessaging(client: Ref<XmppClient | null>) {
   watch(client, (newClient) => {
     if (newClient && hasQueuedMessages.value) {
       // Send queued messages after a short delay to ensure connection is stable
-      setTimeout(() => {
+      deps.setTimeout(() => {
         sendQueuedMessages().catch(() => {
           // Ignore errors - queued messages will be retried on next connection
         });
