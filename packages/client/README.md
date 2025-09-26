@@ -11,19 +11,29 @@ This client is designed around **domain-centric organization** with **strict bou
 #### 1. **Domain-Driven Organization**
 ```
 src/
+├── infrastructure/ # Cross-cutting platform services
+│   ├── logging/    # Structured logging with contextual loggers
+│   ├── storage/    # Storage abstractions (localStorage, etc.)
+│   └── http/       # HTTP client utilities & retry logic
 ├── auth/           # Authentication & character management
 ├── combat/         # Combat sessions & tactical interfaces
 ├── spatial/        # Movement & location awareness
 ├── social/         # Chat & player interactions
 ├── xmpp/           # Real-time communication protocol
+├── server/         # Game server communication protocols
 ├── dispatch/       # Command & WorldEvent routing
 └── types/          # Shared type definitions
 ```
 
-Each domain is a **complete, self-contained module** with its own:
+Each **business domain** is a **complete, self-contained module** with its own:
 - `composables.ts` - Reactive business logic
 - `types.ts` - Domain-specific interfaces (internal)
 - `*.spec.ts` - Comprehensive test coverage
+
+The **infrastructure domain** provides cross-cutting platform services that business domains can depend on:
+- `logging/` - Contextual structured logging (`useLogger('domain.module')`)
+- `storage/` - Storage abstractions with dependency injection
+- `http/` - HTTP client utilities with retry logic and error handling
 
 #### 2. **Composition Root Pattern**
 `App.vue` serves as the **composition root** - the single place where domain composables are wired together and cross-domain interactions are orchestrated.
@@ -46,10 +56,23 @@ worldEvents.onEvent((event) => {
 ```
 
 #### 3. **Strict Domain Boundaries**
-- **No cross-domain imports**: Domains cannot directly import each other's exports
+- **No business domain cross-imports**: Business domains cannot directly import each other's exports
+- **Infrastructure exception**: Business domains may import from `infrastructure/` (logging, storage, etc.)
 - **Dependency injection**: Cross-domain dependencies are injected at the composition root
 - **Shared types only**: Domains share type definitions but not behavior
 - **Event-driven communication**: Domains communicate through WorldEvents and injected callbacks
+
+**Domain Dependency Rules:**
+```typescript
+// ✅ ALLOWED: Business domains → Infrastructure
+import { useLogger } from '~/infrastructure/logging/composables';
+
+// ❌ FORBIDDEN: Business domains → Business domains
+import { useAuth } from '~/auth/composables';
+
+// ❌ FORBIDDEN: Infrastructure → Business domains
+// Infrastructure must remain domain-agnostic
+```
 
 #### 4. **WorldEvent-Driven Information Architecture**
 All game information flows as **complete WorldEvents** with embedded narratives:
@@ -184,9 +207,20 @@ auth/
 ### Shared Resources
 ```
 src/
+├── infrastructure/     # Cross-cutting platform services
+│   ├── logging/        # Contextual structured logging
+│   │   ├── composables.ts
+│   │   └── composables.spec.ts
+│   ├── storage/        # Storage abstractions
+│   │   ├── composables.ts
+│   │   └── composables.spec.ts
+│   └── http/           # HTTP client utilities
+│       ├── composables.ts
+│       └── composables.spec.ts
 ├── types/              # Shared type definitions
 │   ├── index.ts        # Re-exports @flux/core + client types
 │   ├── client.ts       # Client-specific shared types
+│   ├── infrastructure.ts # Infrastructure service types
 │   └── worldEvents.ts  # WorldEvent utilities & type guards
 ├── views/              # Page-level layout components
 │   ├── GameView.vue    # Main game interface layout
@@ -288,11 +322,18 @@ npm run preview
 5. Update shared types if needed
 
 ### Domain Development Guidelines
-- **No cross-domain imports** of composables
-- **Inject dependencies** at composition root
-- **Use shared types** from `@/types`
+- **No business domain cross-imports** of composables
+- **Infrastructure imports allowed** from `~/infrastructure/` for logging, storage, etc.
+- **Inject dependencies** at composition root for cross-domain communication
+- **Use shared types** from `~/types/`
 - **Test in isolation** with mocked dependencies
 - **Follow Vue 3 best practices** (Composition API, `<script setup>`)
+
+### Infrastructure Development Guidelines
+- **Domain-agnostic services** - no business logic dependencies
+- **Dependency injection patterns** - accept resolvers/interfaces, not concrete implementations
+- **Comprehensive testing** with mocked external dependencies
+- **Contextual logging** - support named loggers (`useLogger('domain.module')`)
 
 ### Testing Requirements
 - **100% composable coverage** for domain logic
