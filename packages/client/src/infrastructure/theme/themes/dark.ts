@@ -4,28 +4,28 @@ export const darkTheme: ThemeConfig = {
   name: 'dark',
   colors: {
     // Base colors
-    background: '#0f0f0f',
-    surface: '#1f2937',
-    primary: '#10b981',
-    secondary: '#374151',
-    accent: '#3b82f6',
+    background: '#1d2021',
+    surface: '#282828',
+    primary: '#a9b665',
+    secondary: '#3c3836',
+    accent: '#7daea3',
 
     // Text colors
-    text: '#ffffff',
-    textSecondary: 'rgba(255, 255, 255, 0.7)',
-    textOnPrimary: '#ffffff',
-    textOnSurface: '#ffffff',
+    text: '#d4be98',
+    textSecondary: '#a89984',
+    textOnPrimary: '#1d2021',
+    textOnSurface: '#d4be98',
 
     // State colors
-    success: '#10b981',
-    warning: '#f59e0b',
-    error: '#ef4444',
-    info: '#3b82f6',
+    success: '#a9b665',
+    warning: '#d8a657',
+    error: '#ea6962',
+    info: '#7daea3',
 
     // Interactive colors
-    border: '#4b5563',
-    borderFocus: '#10b981',
-    hover: '#4b5563',
-    active: '#6b7280',
+    border: '#504945',
+    borderFocus: '#a9b665',
+    hover: '#3c3836',
+    active: '#504945',
   }
 };
