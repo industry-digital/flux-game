@@ -51,12 +51,10 @@ export const DEFAULT_XMPP_CONFIG: Readonly<XmppClientConfig> = Object.freeze({
 export function useXmppClient(
   credentials: Ref<XmppCredentials | null>,
   config: Partial<XmppClientConfig> & { service: string } = DEFAULT_XMPP_CONFIG,
+  auth = useXmppAuth(credentials),
 ) {
   // Merge config with defaults
   const mergedConfig = { ...DEFAULT_XMPP_CONFIG, ...config };
-
-  // Initialize individual composables
-  const auth = useXmppAuth(credentials);
 
   // Connection config derived from credentials
   const connectionConfig = computed(() => {

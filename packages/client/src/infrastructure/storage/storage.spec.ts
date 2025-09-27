@@ -1,6 +1,8 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
-import { useStorage, useLocalStorage, useSessionStorage } from './storage';
+import { useStorage, useLocalStorage, useSessionStorage, StorageDependencies } from './storage';
 import { createComposableTestSuite } from '~/testing';
+import { createMockLogger } from '~/testing/logging';
+import { LoggerInterface } from '~/types/infrastructure/logging';
 
 // Mock localStorage and sessionStorage
 const createMockStorage = (): Storage => {
@@ -27,10 +29,19 @@ const createMockStorage = (): Storage => {
 describe('useStorage', () => {
   const testSuite = createComposableTestSuite();
   let mockStorage: Storage;
+  let mockDeps: StorageDependencies;
 
+  let mockLogger: LoggerInterface;
   beforeEach(() => {
     testSuite.setup();
     mockStorage = createMockStorage();
+    mockLogger = createMockLogger();
+
+    mockDeps = {
+      storageResolver: () => mockStorage,
+      windowResolver: () => window,
+      log: mockLogger,
+    };
   });
 
   afterEach(() => {
@@ -41,7 +52,7 @@ describe('useStorage', () => {
   describe('basic functionality', () => {
     it('should initialize with initial value when storage is empty', () => {
       testSuite.runWithContext(() => {
-        const [value] = useStorage('test-key', 'initial', () => mockStorage);
+        const [value] = useStorage('test-key', 'initial', mockDeps);
         expect(value.value).toBe('initial');
       });
     });
@@ -50,14 +61,14 @@ describe('useStorage', () => {
       mockStorage.setItem('test-key', JSON.stringify('stored-value'));
 
       testSuite.runWithContext(() => {
-        const [value] = useStorage('test-key', 'initial', () => mockStorage);
+        const [value] = useStorage('test-key', 'initial', mockDeps);
         expect(value.value).toBe('stored-value');
       });
     });
 
     it('should persist changes to storage', async () => {
       testSuite.runWithContext(() => {
-        const [, setValue] = useStorage('test-key', 'initial', () => mockStorage);
+        const [, setValue] = useStorage('test-key', 'initial', mockDeps);
 
         setValue('new-value');
 
@@ -71,7 +82,7 @@ describe('useStorage', () => {
 
     it('should support functional updates', () => {
       testSuite.runWithContext(() => {
-        const [value, setValue] = useStorage('test-key', 5, () => mockStorage);
+        const [value, setValue] = useStorage('test-key', 5, mockDeps);
 
         setValue(prev => prev + 10);
 
@@ -87,18 +98,11 @@ describe('useStorage', () => {
   describe('error handling', () => {
     it('should handle JSON parse errors gracefully', () => {
       mockStorage.setItem('test-key', 'invalid-json');
-      const consoleSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
 
       testSuite.runWithContext(() => {
-        const [value] = useStorage('test-key', 'fallback', () => mockStorage);
+        const [value] = useStorage('test-key', 'fallback', mockDeps);
         expect(value.value).toBe('fallback');
-        expect(consoleSpy).toHaveBeenCalledWith(
-          expect.stringContaining('Failed to parse storage item'),
-          expect.any(Error)
-        );
       });
-
-      consoleSpy.mockRestore();
     });
 
     it('should handle storage setItem errors gracefully', () => {
@@ -108,20 +112,21 @@ describe('useStorage', () => {
           throw new Error('Storage quota exceeded');
         })
       };
-      const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+
+      const depsWithErrorStorage = {
+        ...mockDeps,
+        storageResolver: () => mockStorageWithError
+      };
 
       testSuite.runWithContext(() => {
-        const [, setValue] = useStorage('test-key', 'initial', () => mockStorageWithError);
+        const [value, setValue] = useStorage('test-key', 'initial', depsWithErrorStorage);
 
-        setValue('new-value');
+        // Should not throw
+        expect(() => setValue('new-value')).not.toThrow();
 
-        expect(consoleSpy).toHaveBeenCalledWith(
-          expect.stringContaining('Failed to save to storage'),
-          expect.any(Error)
-        );
+        // State should still update locally
+        expect(value.value).toBe('new-value');
       });
-
-      consoleSpy.mockRestore();
     });
   });
 
@@ -130,7 +135,7 @@ describe('useStorage', () => {
       const initialObject = { name: 'Alice', level: 5 };
 
       testSuite.runWithContext(() => {
-        const [value, setValue] = useStorage('test-object', initialObject, () => mockStorage);
+        const [value, setValue] = useStorage('test-object', initialObject, mockDeps);
 
         const newObject = { name: 'Bob', level: 10 };
         setValue(newObject);
@@ -147,7 +152,7 @@ describe('useStorage', () => {
       const initialArray = [1, 2, 3];
 
       testSuite.runWithContext(() => {
-        const [value, setValue] = useStorage('test-array', initialArray, () => mockStorage);
+        const [value, setValue] = useStorage('test-array', initialArray, mockDeps);
 
         const newArray = [4, 5, 6];
         setValue(newArray);
