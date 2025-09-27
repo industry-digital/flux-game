@@ -1,15 +1,14 @@
 import { describe, it, expect } from 'vitest';
-import { AppEnvironment } from '~/types/infrastructure/environment';
+import { AppEnvironment, RuntimeEnvironment } from '~/types/infrastructure/environment';
 import { createRuntimeEnvironmentResolver } from './composables';
 
 describe('useEnvironment', () => {
-  const mockEnv = {
-    VITE_APP_ENV: 'test',
+  const mockEnv: Readonly<RuntimeEnvironment> = Object.freeze({
+    VITE_APP_ENV: AppEnvironment.TEST,
     VITE_XMPP_SERVICE: 'ws://localhost:5280/ws',
     VITE_XMPP_DOMAIN: 'fabric.flux.local',
-    VITE_TEST_JWT: 'test-jwt-token',
     VITE_TEST_JWTS: 'jwt1 jwt2 jwt3',
-  };
+  });
 
   it('should return a valid runtime environment with all required fields', () => {
     const useTestEnvironment = createRuntimeEnvironmentResolver(mockEnv);
@@ -19,7 +18,6 @@ describe('useEnvironment', () => {
     expect(env).toHaveProperty('VITE_APP_ENV');
     expect(env).toHaveProperty('VITE_XMPP_SERVICE');
     expect(env).toHaveProperty('VITE_XMPP_DOMAIN');
-    expect(env).toHaveProperty('VITE_TEST_JWT');
     expect(env).toHaveProperty('VITE_TEST_JWTS');
   });
 
@@ -45,7 +43,6 @@ describe('useEnvironment', () => {
 
     expect(typeof env.VITE_XMPP_SERVICE).toBe('string');
     expect(typeof env.VITE_XMPP_DOMAIN).toBe('string');
-    expect(typeof env.VITE_TEST_JWT).toBe('string');
     expect(typeof env.VITE_TEST_JWTS).toBe('string');
   });
 
@@ -56,7 +53,6 @@ describe('useEnvironment', () => {
     expect(env.VITE_APP_ENV).toBe(AppEnvironment.TEST);
     expect(env.VITE_XMPP_SERVICE).toBe('ws://localhost:5280/ws');
     expect(env.VITE_XMPP_DOMAIN).toBe('fabric.flux.local');
-    expect(env.VITE_TEST_JWT).toBe('test-jwt-token');
     expect(env.VITE_TEST_JWTS).toBe('jwt1 jwt2 jwt3');
   });
 });
