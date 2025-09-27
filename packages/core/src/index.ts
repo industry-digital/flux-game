@@ -14,21 +14,6 @@ export * from '~/template';
 export { profile, profileAsync } from '~/lib/profile';
 export type { ProfileResult } from '~/lib/profile';
 
-// Explicit fact type exports to fix declaration merging issues
-export type {
-  AbstractFact,
-  WorldEventMessageDictionary,
-  ActorLocationFact,
-  WorldEventFact,
-  ViewFact,
-  SystemFact,
-  Fact,
-} from '~/types/fact';
-
-export {
-  FactType
-} from '~/types/fact';
-
 export {
   parseEntityUrn,
   parseEntityUrnOrFail,

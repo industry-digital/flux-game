@@ -356,3 +356,25 @@ export type WorldEvent = Omit<WorldEventInput, 'id' | 'ts' | 'trace'> & {
    */
   trace: string;
 };
+
+type WorldEventEnvelopeBase = {
+  id: string;
+  ts: number;
+  events: WorldEvent[];
+};
+
+/**
+ * A packet containing events to be delivered to an Actor
+ */
+export type ActorBoundEnvelope = WorldEventEnvelopeBase & {
+  to: 'actor';
+  actorId: ActorURN;
+};
+
+/**
+ * A packet containing events to be delivered to a Place
+ */
+export type PlaceBoundEnvelope = WorldEventEnvelopeBase & {
+  to: 'place';
+  placeId: PlaceURN;
+};

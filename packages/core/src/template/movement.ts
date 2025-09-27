@@ -1,18 +1,16 @@
 import { Direction } from '~/types/world/space';
-import { Template } from '~/types/template';
-import { WorldEventMessageDictionary } from '~/types/fact';
 import { ActorSummaryLike } from '~/worldkit/view/actor';
 import { Actor } from '~/types/entity/actor';
-import { Narrative } from '~/types/narrative';
+import { Narrative, Perspective } from '~/types/narrative';
 
 export type ActorMovementProps = {
   actor: ActorSummaryLike;
   direction: Direction;
-  perspective: keyof WorldEventMessageDictionary;
+  perspective: Perspective;
 };
 
-export const renderActorDidDepart: Template<ActorMovementProps> = ({ actor, direction, perspective }) => {
-  if (perspective === 'actor') {
+export const renderActorDidDepart = (actor: Actor, direction: Direction, perspective: Perspective) => {
+  if (perspective === Perspective.SELF) {
     return `You move ${direction}.`;
   }
   return `${actor.name} moves ${direction}.`;
