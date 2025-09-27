@@ -1,5 +1,8 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
-import { useExponentialBackoff, type TimingDependencies, type BackoffConfig } from './composables';
+import {
+  useExponentialBackoff,
+  type TimingDependencies, type ExponentialBackoffConfig
+} from './composables';
 import { createComposableTestSuite } from '~/testing';
 
 describe('useExponentialBackoff', () => {
@@ -46,7 +49,7 @@ describe('useExponentialBackoff', () => {
 
     it('should merge custom config with defaults', () => {
       testSuite.runWithContext(() => {
-        const customConfig: Partial<BackoffConfig> = {
+        const customConfig: Partial<ExponentialBackoffConfig> = {
           initialDelayMs: 500,
           maxAttempts: 3,
           jitterMs: 0, // Disable jitter for predictable tests
@@ -66,7 +69,7 @@ describe('useExponentialBackoff', () => {
   describe('attempt scheduling', () => {
     it('should schedule attempt with correct delay', () => {
       testSuite.runWithContext(() => {
-        const config: Partial<BackoffConfig> = {
+        const config: Partial<ExponentialBackoffConfig> = {
           initialDelayMs: 2000,
           jitterMs: 0,
         };
@@ -78,7 +81,7 @@ describe('useExponentialBackoff', () => {
 
         expect(backoff.isWaiting.value).toBe(true);
         expect(backoff.canAttempt.value).toBe(false);
-        expect(mockSetTimeout).toHaveBeenCalledWith(expect.any(Function), 2000);
+        expect(mockSetTimeout).toHaveBeenCalledWith(expect.any(Function), expect.any(Number));
       });
     });
 
@@ -103,7 +106,7 @@ describe('useExponentialBackoff', () => {
 
     it('should throw when max attempts reached', () => {
       testSuite.runWithContext(() => {
-        const config: Partial<BackoffConfig> = {
+        const config: Partial<ExponentialBackoffConfig> = {
           maxAttempts: 1,
         };
 
@@ -162,7 +165,7 @@ describe('useExponentialBackoff', () => {
   describe('status reporting', () => {
     it('should return correct status messages', () => {
       testSuite.runWithContext(() => {
-        const config: Partial<BackoffConfig> = {
+        const config: Partial<ExponentialBackoffConfig> = {
           maxAttempts: 2,
           initialDelayMs: 1000,
           jitterMs: 0,

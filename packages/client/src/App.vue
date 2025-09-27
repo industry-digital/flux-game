@@ -23,7 +23,7 @@ const _theme = useTheme('dark'); // Auto-applies theme via watchEffect
 // ============================================================================
 // COMPOSITION ROOT - Application State
 // ============================================================================
-const jwt = ref<string | null>(env.VITE_TEST_JWT || null);
+const jwt = ref<string | null>(env.VITE_TEST_JWTS.split(' ')[0] || null);
 
 // ============================================================================
 // COMPOSITION ROOT - Authentication Layer (JWT → Actor + JID)
@@ -91,7 +91,7 @@ const handleAuthSubmit = (submittedJwt: string) => {
     <div v-if="!auth.isAuthenticated.value" class="auth-screen">
       <div class="auth-container">
         <AuthForm
-          :test-jwt="env.VITE_TEST_JWT"
+          :test-jwt="env.VITE_TEST_JWTS.split(' ')[0]"
           :test-jwts="env.VITE_TEST_JWTS"
           :is-loading="isConnecting"
           :error="connectionError"

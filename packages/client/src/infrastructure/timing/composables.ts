@@ -1,6 +1,17 @@
 import { ref, computed, onUnmounted, type ComputedRef } from 'vue';
 
-export type BackoffConfig = {
+export type NormalizedValueBetweenZeroAndOne = number;
+export type EasingFunction = (position: NormalizedValueBetweenZeroAndOne) => number;
+
+export type TimingConfig = {
+  durationMs: number;
+  maxDelayMs?: number;
+  maxAttempts?: number;
+  easingFunction: EasingFunction;
+  jitterMs?: number;
+};
+
+export type ExponentialBackoffConfig = {
   initialDelayMs: number;
   maxDelayMs?: number;
   backoffMultiplier: number;
@@ -14,7 +25,7 @@ export type TimingDependencies = {
   now: () => number;
 };
 
-export type ExponentialBackoffComposable = {
+export type TimingBackoffComposable = {
   // Essential state (readonly)
   readonly canAttempt: ComputedRef<boolean>;
   readonly isWaiting: ComputedRef<boolean>;
@@ -31,7 +42,15 @@ export const DEFAULT_TIMING_DEPS: TimingDependencies = {
   now: () => Date.now(),
 };
 
-export const DEFAULT_BACKOFF_CONFIG: BackoffConfig = {
+export const DEFAULT_TIMING_CONFIG: TimingConfig = {
+  durationMs: 1_000,
+  maxDelayMs: 15_000,
+  maxAttempts: 10,
+  easingFunction: (progress) => Math.pow(2, progress),
+  jitterMs: 100,
+};
+
+export const DEFAULT_EXPONENTIAL_CONFIG: ExponentialBackoffConfig = {
   initialDelayMs: 1_000,
   maxDelayMs: 15_000,
   backoffMultiplier: 2,
@@ -40,16 +59,16 @@ export const DEFAULT_BACKOFF_CONFIG: BackoffConfig = {
 };
 
 /**
- * Exponential backoff timing composable
+ * Core timing backoff composable
  *
- * Provides pure exponential backoff logic that can be composed
- * into any retry/reconnection scenario.
+ * Provides configurable timing logic using easing functions.
+ * This is the foundational composable that other timing strategies build upon.
  */
-export function useExponentialBackoff(
-  config: Partial<BackoffConfig> = {},
+export function useTimingBackoff(
+  config: Partial<TimingConfig> = {},
   deps: TimingDependencies = DEFAULT_TIMING_DEPS,
-): ExponentialBackoffComposable {
-  const mergedConfig = { ...DEFAULT_BACKOFF_CONFIG, ...config };
+): TimingBackoffComposable {
+  const mergedConfig = { ...DEFAULT_TIMING_CONFIG, ...config };
 
   // Internal state
   const attempts = ref(0);
@@ -78,10 +97,16 @@ export function useExponentialBackoff(
   });
 
   /**
-   * Calculate delay for next attempt using exponential backoff
+   * Calculate delay for next attempt using easing function
    */
   function calculateDelay(attemptNumber: number): number {
-    const baseDelay = mergedConfig.initialDelayMs * Math.pow(mergedConfig.backoffMultiplier, attemptNumber);
+    // Normalize attempt number to 0-1 range for easing function
+    const maxAttempts = mergedConfig.maxAttempts || 10;
+    const normalizedPosition = Math.min(attemptNumber / (maxAttempts - 1), 1);
+
+    // Apply easing function to get multiplier
+    const multiplier = mergedConfig.easingFunction(normalizedPosition);
+    const baseDelay = mergedConfig.durationMs * multiplier;
     const cappedDelay = mergedConfig.maxDelayMs ? Math.min(baseDelay, mergedConfig.maxDelayMs) : baseDelay;
 
     // Add jitter to prevent thundering herd
@@ -185,4 +210,28 @@ export function useExponentialBackoff(
       reset,
       getStatus,
     };
+}
+
+/**
+ * Exponential backoff composable
+ *
+ * Specialized timing composable that implements exponential backoff strategy.
+ * Built on top of useTimingBackoff with exponential easing function.
+ */
+export function useExponentialBackoff(
+  config: Partial<ExponentialBackoffConfig> = {},
+  deps: TimingDependencies = DEFAULT_TIMING_DEPS,
+): TimingBackoffComposable {
+  const mergedConfig = { ...DEFAULT_EXPONENTIAL_CONFIG, ...config };
+
+  const timingConfig: TimingConfig = {
+    durationMs: mergedConfig.initialDelayMs,
+    maxDelayMs: mergedConfig.maxDelayMs,
+    maxAttempts: mergedConfig.maxAttempts,
+    easingFunction: (position: NormalizedValueBetweenZeroAndOne) =>
+      Math.pow(mergedConfig.backoffMultiplier, position * (mergedConfig.maxAttempts || 10)),
+    jitterMs: mergedConfig.jitterMs,
+  };
+
+  return useTimingBackoff(timingConfig, deps);
 }
