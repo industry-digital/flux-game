@@ -53,8 +53,8 @@ export const DEFAULT_TIMING_CONFIG: TimingConfig = {
 export const DEFAULT_EXPONENTIAL_CONFIG: ExponentialBackoffConfig = {
   initialDelayMs: 1_000,
   maxDelayMs: 15_000,
-  backoffMultiplier: 2,
-  maxAttempts: 10,
+  backoffMultiplier: 1.618,
+  maxAttempts: 30,
   jitterMs: 100,
 };
 
@@ -85,15 +85,6 @@ export function useTimingBackoff(
       return false;
     }
     return !isWaiting.value;
-  });
-
-  const hasReachedMaxAttempts = computed(() => {
-    return mergedConfig.maxAttempts ? attempts.value >= mergedConfig.maxAttempts : false;
-  });
-
-  const timeUntilNextAttempt = computed(() => {
-    if (!nextAttemptAt.value) return 0;
-    return Math.max(0, nextAttemptAt.value - deps.now());
   });
 
   /**
@@ -200,16 +191,16 @@ export function useTimingBackoff(
   // Cleanup on unmount
   onUnmounted(cleanup);
 
-    return {
-      // Essential state (readonly)
-      canAttempt,
-      isWaiting,
+  return {
+    // Essential state (readonly)
+    canAttempt,
+    isWaiting,
 
-      // Essential methods
-      scheduleAttempt,
-      reset,
-      getStatus,
-    };
+    // Essential methods
+    scheduleAttempt,
+    reset,
+    getStatus,
+  };
 }
 
 /**
