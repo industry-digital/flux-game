@@ -3,6 +3,9 @@ import type { StorageResolver } from '~/types/infrastructure/storage';
 
 export const LOCAL_STORAGE_RESOLVER: StorageResolver = () => localStorage;
 export const SESSION_STORAGE_RESOLVER: StorageResolver = () => sessionStorage;
+
+type WindowResolver = () => Window;
+export const WINDOW_RESOLVER: WindowResolver = () => window;
 /**
  * Vue composable for reactive browser storage (localStorage/sessionStorage)
  *
@@ -17,6 +20,7 @@ export function useStorage<T>(
   key: string,
   initialValue: T,
   storageResolver: StorageResolver = LOCAL_STORAGE_RESOLVER,
+  windowResolver: WindowResolver = WINDOW_RESOLVER,
 ): [Ref<T>, (value: T | ((prev: T) => T)) => void] {
   const storedValue = ref(initialValue) as Ref<T>;
   const storage = storageResolver();
@@ -57,6 +61,8 @@ export function useStorage<T>(
     }
   };
 
+
+  const window = windowResolver();
   window.addEventListener('storage', handleStorageChange);
 
   // Cleanup listener when component unmounts (only if in component context)
