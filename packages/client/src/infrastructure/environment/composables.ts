@@ -1,17 +1,17 @@
 import { AppEnvironment, RuntimeEnvironment, RuntimeEnvironmentResolver } from '~/types/infrastructure/environment';
 
-export const validateRuntimeEnvironment = (env: any): void => {
-  if (!env.VITE_APP_ENV) {
-    throw new Error('VITE_APP_ENV is required');
-  }
-  if (!env.VITE_XMPP_SERVICE) {
-    throw new Error('VITE_XMPP_SERVICE is required');
-  }
-  if (!env.VITE_XMPP_DOMAIN) {
-    throw new Error('VITE_XMPP_DOMAIN is required');
-  }
-  if (!env.VITE_TEST_JWTS) {
-    throw new Error('VITE_TEST_JWTS is required');
+const REQUIRED_ENV_VARS = [
+  'VITE_APP_ENV',
+  'VITE_XMPP_SERVICE',
+  'VITE_XMPP_DOMAIN',
+  'VITE_TEST_JWTS',
+];
+
+const validateRuntimeEnvironment = (env: any): void => {
+  for (const key of REQUIRED_ENV_VARS) {
+    if (!env[key]) {
+      throw new Error(`${key} is required`);
+    }
   }
 };
 
