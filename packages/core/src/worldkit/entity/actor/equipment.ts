@@ -1,15 +1,15 @@
 import { Actor } from '~/types/entity/actor';
 import { WeaponSchema } from '~/types/schema/weapon';
 import { AnatomyURN, ItemURN, WeaponItemURN } from '~/types/taxonomy';
-import { HUMAN_ANATOMY } from '~/types/taxonomy/anatomy';
+import { HumanAnatomy } from '~/types/taxonomy/anatomy';
 import { ActorInventoryApi } from '~/worldkit/entity/actor/inventory';
 import { SchemaManager, SchemaRegistry } from '~/worldkit/schema/manager';
 
 export const WEAPON_EQUIPMENT_ANATOMICAL_LOCATIONS: AnatomyURN[] = [
-  HUMAN_ANATOMY.RIGHT_HAND,
-  HUMAN_ANATOMY.LEFT_HAND,
-  HUMAN_ANATOMY.RIGHT_SHOULDER,
-  HUMAN_ANATOMY.LEFT_SHOULDER,
+  HumanAnatomy.RIGHT_HAND,
+  HumanAnatomy.LEFT_HAND,
+  HumanAnatomy.RIGHT_SHOULDER,
+  HumanAnatomy.LEFT_SHOULDER,
 ];
 
 export type ActorEquipmentApiDependencies = {

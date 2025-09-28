@@ -1,5 +1,5 @@
 import { WeaponSchema } from '~/types/schema/weapon';
-import { HUMAN_ANATOMY } from '~/types/taxonomy/anatomy';
+import { HumanAnatomy } from '~/types/taxonomy/anatomy';
 
 export type WeaponTransformer = (schema: WeaponSchema) => WeaponSchema;
 const identity: WeaponTransformer = (schema) => schema;
@@ -13,7 +13,7 @@ export const createTestWeapon = (transform: WeaponTransformer = identity): Weapo
       optimal: 1,
     },
     fit: {
-      [HUMAN_ANATOMY.RIGHT_HAND]: 1,
+      [HumanAnatomy.RIGHT_HAND]: 1,
     },
   });
 };

@@ -183,7 +183,7 @@ export type CombatSessionStatusDidChangeInput = AbstractWorldEventInput<
     currentStatus: SessionStatus;
   }>;
 
-export type CombatSessionStarted = EventBase & CombatSessionStartedInput;
+export type CombatSessionStarted = EventBase & RequiresNarrative & CombatSessionStartedInput;
 export type CombatSessionStartedInput = AbstractWorldEventInput<
   EventType.COMBAT_SESSION_DID_START,
   {

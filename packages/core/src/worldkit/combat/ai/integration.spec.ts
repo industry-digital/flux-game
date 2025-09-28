@@ -16,7 +16,7 @@ import { createMassApi } from '~/worldkit/physics/mass';
 import { CommandType } from '~/types/intent';
 import { createActor } from '~/worldkit/entity/actor';
 import { Actor, ActorStat } from '~/types/entity/actor';
-import { HUMAN_ANATOMY } from '~/types/taxonomy/anatomy';
+import { HumanAnatomy } from '~/types/taxonomy/anatomy';
 import { CombatantDidAttack, EventType } from '~/types/event';
 import { targetingApi } from './targeting';
 import { HeuristicProfile, SearchConfig, TacticalSituation } from '~/types/combat-ai';
@@ -93,7 +93,7 @@ describe('AI Combat System Integration', () => {
         [ActorStat.PER]: { nat: 10, eff: 10, mods: {} },
         [ActorStat.MEM]: { nat: 10, eff: 10, mods: {} },
       },
-      equipment: { [HUMAN_ANATOMY.RIGHT_HAND]: { [TEST_WEAPON_ENTITY_URN]: 1 } },
+      equipment: { [HumanAnatomy.RIGHT_HAND]: { [TEST_WEAPON_ENTITY_URN]: 1 } },
       inventory: {
         mass: 0,
         items: { [TEST_WEAPON_ENTITY_URN]: { id: TEST_WEAPON_ENTITY_URN, schema: swordSchema.urn } },
@@ -112,7 +112,7 @@ describe('AI Combat System Integration', () => {
         [ActorStat.PER]: { nat: 10, eff: 10, mods: {} },
         [ActorStat.MEM]: { nat: 10, eff: 10, mods: {} },
       },
-      equipment: { [HUMAN_ANATOMY.RIGHT_HAND]: { [TEST_WEAPON_ENTITY_URN]: 1 } },
+      equipment: { [HumanAnatomy.RIGHT_HAND]: { [TEST_WEAPON_ENTITY_URN]: 1 } },
       inventory: {
         mass: 0,
         items: { [TEST_WEAPON_ENTITY_URN]: { id: TEST_WEAPON_ENTITY_URN, schema: swordSchema.urn } },

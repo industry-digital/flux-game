@@ -263,7 +263,7 @@ export {
   AnatomyUrn,
   Anatomy,
   HumanAnatomy,
-  HUMAN_ANATOMY,
+  HumanAnatomy as HUMAN_ANATOMY,
   createHumanAnatomyUrn,
   createAnatomyUrn,
 } from './taxonomy/anatomy';

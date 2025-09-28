@@ -24,7 +24,7 @@ export interface RollResult {
   /**
    * The modifiers that should be applied to compute the final value.
    */
-  mods: AppliedModifiers;
+  mods?: AppliedModifiers;
   /**
    * The raw values of the dice that were rolled.
    */

@@ -10,7 +10,7 @@ import { createTestTransformerContext } from '~/testing';
 import { Actor } from '~/types/entity/actor';
 import { TransformerContext } from '~/types/handler';
 import { WeaponItemURN, ItemURN, SchemaURN } from '~/types/taxonomy';
-import { HUMAN_ANATOMY } from '~/types/taxonomy/anatomy';
+import { HumanAnatomy } from '~/types/taxonomy/anatomy';
 import { WeaponSchema } from '~/types/schema/weapon';
 import { SchemaManager } from '~/worldkit/schema/manager';
 import { MassApi } from '~/worldkit/physics/mass';
@@ -69,7 +69,7 @@ describe('createActorEquipmentApi', () => {
       timers: { fire: 1000 },
       efficiency: 1.0,
       fit: {
-        [HUMAN_ANATOMY.RIGHT_HAND]: 1,
+        [HumanAnatomy.RIGHT_HAND]: 1,
       },
     } as unknown as WeaponSchema;
 
@@ -95,8 +95,8 @@ describe('createActorEquipmentApi', () => {
 
       equipmentApi.equipWeapon(actor, weaponId);
 
-      expect(actor.equipment[HUMAN_ANATOMY.RIGHT_HAND]).toBeDefined();
-      expect(actor.equipment[HUMAN_ANATOMY.RIGHT_HAND]![weaponId]).toBe(1);
+      expect(actor.equipment[HumanAnatomy.RIGHT_HAND]).toBeDefined();
+      expect(actor.equipment[HumanAnatomy.RIGHT_HAND]![weaponId]).toBe(1);
       expect(mockSchemaManager.getSchemaOrFail).toHaveBeenCalledWith('flux:schema:weapon:sword');
     });
 
@@ -107,12 +107,12 @@ describe('createActorEquipmentApi', () => {
       equipmentApi.equipWeapon(actor, weaponId);
 
       // Verify it's equipped
-      expect(actor.equipment[HUMAN_ANATOMY.RIGHT_HAND]![weaponId]).toBe(1);
+      expect(actor.equipment[HumanAnatomy.RIGHT_HAND]![weaponId]).toBe(1);
 
       // Unequip
       equipmentApi.unequipWeapon(actor, weaponId);
 
-      expect(actor.equipment[HUMAN_ANATOMY.RIGHT_HAND]![weaponId]).toBeUndefined();
+      expect(actor.equipment[HumanAnatomy.RIGHT_HAND]![weaponId]).toBeUndefined();
     });
 
     it('should get equipped weapon from default locations', () => {
@@ -133,11 +133,11 @@ describe('createActorEquipmentApi', () => {
       equipmentApi.equipWeapon(actor, weaponId);
 
       // Should find weapon when searching right hand
-      const foundInRightHand = equipmentApi.getEquippedWeapon(actor, [HUMAN_ANATOMY.RIGHT_HAND]);
+      const foundInRightHand = equipmentApi.getEquippedWeapon(actor, [HumanAnatomy.RIGHT_HAND]);
       expect(foundInRightHand).toBe(weaponId);
 
       // Should not find weapon when searching only left hand
-      const foundInLeftHand = equipmentApi.getEquippedWeapon(actor, [HUMAN_ANATOMY.LEFT_HAND]);
+      const foundInLeftHand = equipmentApi.getEquippedWeapon(actor, [HumanAnatomy.LEFT_HAND]);
       expect(foundInLeftHand).toBeNull();
     });
 
@@ -155,7 +155,7 @@ describe('createActorEquipmentApi', () => {
       equipmentApi.equipWeapon(actor, weaponId);
 
       expect(actor.equipment).toBeDefined();
-      expect(actor.equipment[HUMAN_ANATOMY.RIGHT_HAND]![weaponId]).toBe(1);
+      expect(actor.equipment[HumanAnatomy.RIGHT_HAND]![weaponId]).toBe(1);
     });
   });
 
@@ -175,8 +175,8 @@ describe('createActorEquipmentApi', () => {
         timers: { fire: 1500 },
         efficiency: 1.2,
         fit: {
-          [HUMAN_ANATOMY.RIGHT_HAND]: 1,
-          [HUMAN_ANATOMY.LEFT_HAND]: 1,
+          [HumanAnatomy.RIGHT_HAND]: 1,
+          [HumanAnatomy.LEFT_HAND]: 1,
         },
       } as unknown as WeaponSchema;
 
@@ -189,8 +189,8 @@ describe('createActorEquipmentApi', () => {
 
       equipmentApi.equipWeapon(actor, weaponId);
 
-      expect(actor.equipment[HUMAN_ANATOMY.RIGHT_HAND]![weaponId]).toBe(1);
-      expect(actor.equipment[HUMAN_ANATOMY.LEFT_HAND]![weaponId]).toBe(1);
+      expect(actor.equipment[HumanAnatomy.RIGHT_HAND]![weaponId]).toBe(1);
+      expect(actor.equipment[HumanAnatomy.LEFT_HAND]![weaponId]).toBe(1);
     });
 
     it('should unequip weapon from all anatomical locations', () => {
@@ -199,13 +199,13 @@ describe('createActorEquipmentApi', () => {
       equipmentApi.equipWeapon(actor, weaponId);
 
       // Verify it's equipped in both hands
-      expect(actor.equipment[HUMAN_ANATOMY.RIGHT_HAND]![weaponId]).toBe(1);
-      expect(actor.equipment[HUMAN_ANATOMY.LEFT_HAND]![weaponId]).toBe(1);
+      expect(actor.equipment[HumanAnatomy.RIGHT_HAND]![weaponId]).toBe(1);
+      expect(actor.equipment[HumanAnatomy.LEFT_HAND]![weaponId]).toBe(1);
 
       equipmentApi.unequipWeapon(actor, weaponId);
 
-      expect(actor.equipment[HUMAN_ANATOMY.RIGHT_HAND]![weaponId]).toBeUndefined();
-      expect(actor.equipment[HUMAN_ANATOMY.LEFT_HAND]![weaponId]).toBeUndefined();
+      expect(actor.equipment[HumanAnatomy.RIGHT_HAND]![weaponId]).toBeUndefined();
+      expect(actor.equipment[HumanAnatomy.LEFT_HAND]![weaponId]).toBeUndefined();
     });
   });
 
@@ -241,7 +241,7 @@ describe('createActorEquipmentApi', () => {
       // Should not throw, but also should not equip anywhere
       equipmentApi.equipWeapon(actor, weaponId);
 
-      expect(actor.equipment[HUMAN_ANATOMY.RIGHT_HAND]).toBeUndefined();
+      expect(actor.equipment[HumanAnatomy.RIGHT_HAND]).toBeUndefined();
     });
 
     it('should throw error when trying to equip weapon to occupied slot', () => {
@@ -270,7 +270,7 @@ describe('createActorEquipmentApi', () => {
     });
 
     it('should use custom anatomical locations when provided', () => {
-      const customLocations = [HUMAN_ANATOMY.LEFT_HAND];
+      const customLocations = [HumanAnatomy.LEFT_HAND];
       const customDeps: ActorEquipmentApiDependencies = {
         allowedAnatomicalLocations: customLocations,
       };
@@ -302,11 +302,11 @@ describe('createActorEquipmentApi', () => {
       // Mock different weapon schemas
       const swordSchema = {
         id: 'flux:schema:weapon:sword',
-        fit: { [HUMAN_ANATOMY.RIGHT_HAND]: 1 },
+        fit: { [HumanAnatomy.RIGHT_HAND]: 1 },
       };
       const daggerSchema = {
         id: 'flux:schema:weapon:dagger',
-        fit: { [HUMAN_ANATOMY.LEFT_HAND]: 1 },
+        fit: { [HumanAnatomy.LEFT_HAND]: 1 },
       };
 
       mockSchemaManager.getSchemaOrFail
@@ -324,8 +324,8 @@ describe('createActorEquipmentApi', () => {
       expect([sword.id, dagger.id]).toContain(equippedWeapon);
 
       // Should find specific weapons in specific locations
-      const rightHandWeapon = equipmentApi.getEquippedWeapon(actor, [HUMAN_ANATOMY.RIGHT_HAND]);
-      const leftHandWeapon = equipmentApi.getEquippedWeapon(actor, [HUMAN_ANATOMY.LEFT_HAND]);
+      const rightHandWeapon = equipmentApi.getEquippedWeapon(actor, [HumanAnatomy.RIGHT_HAND]);
+      const leftHandWeapon = equipmentApi.getEquippedWeapon(actor, [HumanAnatomy.LEFT_HAND]);
 
       expect(rightHandWeapon).toBe(sword.id);
       expect(leftHandWeapon).toBe(dagger.id);
@@ -339,25 +339,25 @@ describe('createActorEquipmentApi', () => {
       // Equip first weapon
       equipmentApi.equipWeapon(actor, sword.id as WeaponItemURN);
       expect(equipmentApi.getEquippedWeapon(actor)).toBe(sword.id);
-      expect(actor.equipment[HUMAN_ANATOMY.RIGHT_HAND]![sword.id as WeaponItemURN]).toBe(1);
+      expect(actor.equipment[HumanAnatomy.RIGHT_HAND]![sword.id as WeaponItemURN]).toBe(1);
 
       // Attempting to equip second weapon to same slot should throw error
       expect(() => equipmentApi.equipWeapon(actor, sword2.id as WeaponItemURN))
         .toThrow('Equipment slot already occupied');
 
       // First weapon should still be equipped, second should not be
-      expect(actor.equipment[HUMAN_ANATOMY.RIGHT_HAND]![sword.id as WeaponItemURN]).toBe(1);
-      expect(actor.equipment[HUMAN_ANATOMY.RIGHT_HAND]![sword2.id as WeaponItemURN]).toBeUndefined();
+      expect(actor.equipment[HumanAnatomy.RIGHT_HAND]![sword.id as WeaponItemURN]).toBe(1);
+      expect(actor.equipment[HumanAnatomy.RIGHT_HAND]![sword2.id as WeaponItemURN]).toBeUndefined();
       expect(equipmentApi.getEquippedWeapon(actor)).toBe(sword.id);
 
       // After unequipping first weapon, second weapon can be equipped
       equipmentApi.unequipWeapon(actor, sword.id as WeaponItemURN);
-      expect(actor.equipment[HUMAN_ANATOMY.RIGHT_HAND]![sword.id as WeaponItemURN]).toBeUndefined();
+      expect(actor.equipment[HumanAnatomy.RIGHT_HAND]![sword.id as WeaponItemURN]).toBeUndefined();
       expect(equipmentApi.getEquippedWeapon(actor)).toBeNull();
 
       // Now second weapon can be equipped
       equipmentApi.equipWeapon(actor, sword2.id as WeaponItemURN);
-      expect(actor.equipment[HUMAN_ANATOMY.RIGHT_HAND]![sword2.id as WeaponItemURN]).toBe(1);
+      expect(actor.equipment[HumanAnatomy.RIGHT_HAND]![sword2.id as WeaponItemURN]).toBe(1);
       expect(equipmentApi.getEquippedWeapon(actor)).toBe(sword2.id);
     });
 
@@ -368,29 +368,29 @@ describe('createActorEquipmentApi', () => {
       equipmentApi.equipWeapon(actor, weaponId);
 
       // Verify weapon is equipped
-      expect(actor.equipment[HUMAN_ANATOMY.RIGHT_HAND]![weaponId]).toBe(1);
+      expect(actor.equipment[HumanAnatomy.RIGHT_HAND]![weaponId]).toBe(1);
       expect(equipmentApi.getEquippedWeapon(actor)).toBe(weaponId);
 
       // Manually create undefined entries (simulating corrupted state)
-      actor.equipment[HUMAN_ANATOMY.RIGHT_HAND]![weaponId] = undefined as any;
-      actor.equipment[HUMAN_ANATOMY.LEFT_HAND] = {
+      actor.equipment[HumanAnatomy.RIGHT_HAND]![weaponId] = undefined as any;
+      actor.equipment[HumanAnatomy.LEFT_HAND] = {
         ['flux:item:weapon:undefined-weapon' as WeaponItemURN]: undefined as any,
       };
 
       // Before cleanup: undefined entries and empty objects exist
-      expect(weaponId in actor.equipment[HUMAN_ANATOMY.RIGHT_HAND]!).toBe(true); // Key exists
-      expect(actor.equipment[HUMAN_ANATOMY.RIGHT_HAND]![weaponId]).toBeUndefined(); // But value is undefined
-      expect(HUMAN_ANATOMY.LEFT_HAND in actor.equipment).toBe(true); // Location exists
+      expect(weaponId in actor.equipment[HumanAnatomy.RIGHT_HAND]!).toBe(true); // Key exists
+      expect(actor.equipment[HumanAnatomy.RIGHT_HAND]![weaponId]).toBeUndefined(); // But value is undefined
+      expect(HumanAnatomy.LEFT_HAND in actor.equipment).toBe(true); // Location exists
       expect(equipmentApi.getEquippedWeapon(actor)).toBeNull(); // No equipped weapons found
 
       // Cleanup equipment
       equipmentApi.cleanupEquipment(actor);
 
       // After cleanup: undefined entries and empty objects are removed
-      expect(actor.equipment[HUMAN_ANATOMY.RIGHT_HAND]).toBeUndefined(); // Entire location removed
-      expect(actor.equipment[HUMAN_ANATOMY.LEFT_HAND]).toBeUndefined(); // Entire location removed
-      expect(HUMAN_ANATOMY.RIGHT_HAND in actor.equipment).toBe(false); // Location doesn't exist
-      expect(HUMAN_ANATOMY.LEFT_HAND in actor.equipment).toBe(false); // Location doesn't exist
+      expect(actor.equipment[HumanAnatomy.RIGHT_HAND]).toBeUndefined(); // Entire location removed
+      expect(actor.equipment[HumanAnatomy.LEFT_HAND]).toBeUndefined(); // Entire location removed
+      expect(HumanAnatomy.RIGHT_HAND in actor.equipment).toBe(false); // Location doesn't exist
+      expect(HumanAnatomy.LEFT_HAND in actor.equipment).toBe(false); // Location doesn't exist
     });
   });
 
@@ -409,8 +409,8 @@ describe('createActorEquipmentApi', () => {
 
       // Mock different schemas for each weapon
       mockSchemaManager.getSchemaOrFail
-        .mockReturnValueOnce({ fit: { [HUMAN_ANATOMY.RIGHT_HAND]: 1 } })
-        .mockReturnValueOnce({ fit: { [HUMAN_ANATOMY.LEFT_HAND]: 1 } });
+        .mockReturnValueOnce({ fit: { [HumanAnatomy.RIGHT_HAND]: 1 } })
+        .mockReturnValueOnce({ fit: { [HumanAnatomy.LEFT_HAND]: 1 } });
 
       equipmentApi.equipWeapon(actor, sword.id as WeaponItemURN);
       equipmentApi.equipWeapon(actor2, dagger.id as WeaponItemURN);
@@ -419,10 +419,10 @@ describe('createActorEquipmentApi', () => {
       expect(equipmentApi.getEquippedWeapon(actor2)).toBe(dagger.id);
 
       // Verify equipment is separate
-      expect(actor.equipment[HUMAN_ANATOMY.RIGHT_HAND]![sword.id as WeaponItemURN]).toBe(1);
-      expect(actor2.equipment[HUMAN_ANATOMY.LEFT_HAND]![dagger.id as WeaponItemURN]).toBe(1);
-      expect(actor.equipment[HUMAN_ANATOMY.LEFT_HAND]).toBeUndefined();
-      expect(actor2.equipment[HUMAN_ANATOMY.RIGHT_HAND]).toBeUndefined();
+      expect(actor.equipment[HumanAnatomy.RIGHT_HAND]![sword.id as WeaponItemURN]).toBe(1);
+      expect(actor2.equipment[HumanAnatomy.LEFT_HAND]![dagger.id as WeaponItemURN]).toBe(1);
+      expect(actor.equipment[HumanAnatomy.LEFT_HAND]).toBeUndefined();
+      expect(actor2.equipment[HumanAnatomy.RIGHT_HAND]).toBeUndefined();
     });
   });
 

@@ -43,7 +43,7 @@ export function createAnatomyUrn(anatomyPath: string): AnatomyUrn {
 /**
  * Common human anatomy URNs for convenient access
  */
-export const HUMAN_ANATOMY = {
+export const HumanAnatomy = {
   HEAD: createHumanAnatomyUrn('head'),
   TORSO: createHumanAnatomyUrn('torso'),
   BACK: createHumanAnatomyUrn('back'),
