@@ -87,6 +87,10 @@ These commands work only on your currently equipped shell.
 > shell stats add fin 2
 > shell swap combat_shell
 [ERR: Uncommitted changes - Use 'shell commit' or 'shell undo' first]
+
+> transfer rare_component to shell
+> exit
+[ERR: Uncommitted changes - Use 'shell commit' or 'shell undo' first]
 ```
 
 **Shell switching** transfers consciousness between different configurations through the neural interface. The system performs comprehensive diagnostics on target shells, identifying maintenance requirements or performance degradation before executing consciousness transfer protocols.
@@ -116,6 +120,27 @@ Physical shell modification occurs through the component mounting system, which 
 **Component examination** provides detailed analysis of hardware specifications, compatibility matrices, and performance characteristics. The interface displays condition ratings, efficiency percentages, and integration requirements for informed installation decisions.
 
 **Mounting procedures** involve robotic fabrication arms performing actual physical modifications under neural interface guidance. Component installation affects shell capabilities, power consumption, and structural integrity based on chassis architecture and available upgrade slots.
+
+## The Vault
+
+The Vault is a secure storage facility that you can access from the Workbench.
+
+## Vault Operations
+
+The Workbench provides access to your consciousness vault - secure storage that survives shell destruction and enables strategic loadout management across your shell arsenal.
+
+```text
+> transfer <item> to shell     # Deploy vault resources to current shell
+> transfer <item> to vault     # Secure shell items in consciousness storage
+> inventory vault              # View vault contents
+> inventory shell              # View current shell inventory
+```
+
+**Vault storage** contains persistent resources that belong to your consciousness: raw materials, rare components, consumables, and valuable equipment kept secure from mission risks.
+
+**Shell storage** contains tactical loadouts deployed with specific shells: weapons, tools, mission equipment, and expendable resources that provide operational capability but face destruction risk.
+
+**Transfer operations** enable strategic resource deployment by moving items between vault security and shell accessibility. Vault resources become at-risk when transferred to shells but provide immediate operational capability.
 
 ## Resource Management
 
