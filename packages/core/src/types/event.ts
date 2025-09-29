@@ -96,13 +96,6 @@ export enum EventType {
   WEATHER_DID_CHANGE = 'place:weather:changed',
 }
 
-export type RequiresNarrative = {
-  /**
-   * A narrative of the event.
-   */
-  narrative: Narrative;
-};
-
 export type RequiresActor = {
   actor: ActorURN;
 };
@@ -120,39 +113,39 @@ export type PlaceWasCreated = EventBase & PlaceWasCreatedInput;
 export type PlaceWasCreatedInput = AbstractWorldEventInput<EventType.PLACE_WAS_CREATED, {}>;
 
 export type ActorDidMaterialize = EventBase & ActorDidMaterializeInput;
-export type ActorDidMaterializeInput = RequiresActor & RequiresNarrative & AbstractWorldEventInput<EventType.ACTOR_DID_MATERIALIZE, {}>;
+export type ActorDidMaterializeInput = RequiresActor & AbstractWorldEventInput<EventType.ACTOR_DID_MATERIALIZE, {}>;
 
 export type ActorDidDematerialize = EventBase & ActorDidDematerializeInput;
-export type ActorDidDematerializeInput = RequiresActor & RequiresNarrative & AbstractWorldEventInput<EventType.ACTOR_DID_DEMATERIALIZE, {}>;
+export type ActorDidDematerializeInput = RequiresActor & AbstractWorldEventInput<EventType.ACTOR_DID_DEMATERIALIZE, {}>;
 
 export type ActorDidMove = RequiresActor & EventBase & ActorDidMoveInput;
-export type ActorDidMoveInput = RequiresActor & RequiresNarrative & AbstractWorldEventInput<EventType.ACTOR_DID_MOVE,{ destination: PlaceURN }>;
+export type ActorDidMoveInput = RequiresActor & AbstractWorldEventInput<EventType.ACTOR_DID_MOVE,{ destination: PlaceURN }>;
 
 export type ActorDidDepart = EventBase & AbstractWorldEventInput<EventType.ACTOR_DID_DEPART, {}>;
-export type ActorDidDepartInput = RequiresActor & RequiresNarrative & AbstractWorldEventInput<EventType.ACTOR_DID_DEPART, { destination: PlaceURN }>;
+export type ActorDidDepartInput = RequiresActor & AbstractWorldEventInput<EventType.ACTOR_DID_DEPART, { destination: PlaceURN }>;
 
 export type ActorDidArrive = EventBase & ActorDidArriveInput;
-export type ActorDidArriveInput = RequiresActor & RequiresNarrative & AbstractWorldEventInput<EventType.ACTOR_DID_ARRIVE, { origin: PlaceURN }>;
+export type ActorDidArriveInput = RequiresActor & AbstractWorldEventInput<EventType.ACTOR_DID_ARRIVE, { origin: PlaceURN }>;
 
 export type ActorDidLookAtActor = EventBase & ActorDidLookAtActorInput;
-export type ActorDidLookAtActorInput = RequiresActor & RequiresNarrative & AbstractWorldEventInput<EventType.ACTOR_DID_LOOK_AT_ACTOR, { target: ActorURN }>;
+export type ActorDidLookAtActorInput = RequiresActor & AbstractWorldEventInput<EventType.ACTOR_DID_LOOK_AT_ACTOR, { target: ActorURN }>;
 
 export type ActorDidLookAtPlace = EventBase & ActorDidLookAtPlaceInput;
-export type ActorDidLookAtPlaceInput = RequiresActor & RequiresNarrative & AbstractWorldEventInput<EventType.ACTOR_DID_LOOK_AT_PLACE, { target: PlaceURN }>;
+export type ActorDidLookAtPlaceInput = RequiresActor & AbstractWorldEventInput<EventType.ACTOR_DID_LOOK_AT_PLACE, { target: PlaceURN }>;
 
 export type ActorDidLookAtPlaceItem = EventBase & ActorDidLookAtPlaceItemInput;
-export type ActorDidLookAtPlaceItemInput = RequiresActor & RequiresNarrative & AbstractWorldEventInput<EventType.ACTOR_DID_LOOK_AT_PLACE_ITEM, { target: ItemURN }>;
+export type ActorDidLookAtPlaceItemInput = RequiresActor & AbstractWorldEventInput<EventType.ACTOR_DID_LOOK_AT_PLACE_ITEM, { target: ItemURN }>;
 
 export type ActorDidLookAtSelfItem = EventBase & ActorDidLookAtSelfItemInput;
-export type ActorDidLookAtSelfItemInput = RequiresActor & RequiresNarrative & AbstractWorldEventInput<EventType.ACTOR_DID_LOOK_AT_SELF_ITEM, {}>;
+export type ActorDidLookAtSelfItemInput = RequiresActor & AbstractWorldEventInput<EventType.ACTOR_DID_LOOK_AT_SELF_ITEM, {}>;
 
 export type ActorDidDie = EventBase & ActorDidDieInput;
-export type ActorDidDieInput = RequiresActor & RequiresNarrative & AbstractWorldEventInput<EventType.ACTOR_DID_DIE, {
+export type ActorDidDieInput = RequiresActor & AbstractWorldEventInput<EventType.ACTOR_DID_DIE, {
   cause: string;
 }>;
 
 export type ActorDidRecoverEnergy = EventBase & ActorDidRecoverEnergyInput;
-export type ActorDidRecoverEnergyInput = RequiresNarrative & AbstractWorldEventInput<EventType.ACTOR_DID_RECOVER_ENERGY, {
+export type ActorDidRecoverEnergyInput = AbstractWorldEventInput<EventType.ACTOR_DID_RECOVER_ENERGY, {
   before: number;
   after: number;
   recovered: number;
@@ -183,7 +176,7 @@ export type CombatSessionStatusDidChangeInput = AbstractWorldEventInput<
     currentStatus: SessionStatus;
   }>;
 
-export type CombatSessionStarted = EventBase & RequiresNarrative & CombatSessionStartedInput;
+export type CombatSessionStarted = EventBase & CombatSessionStartedInput;
 export type CombatSessionStartedInput = AbstractWorldEventInput<
   EventType.COMBAT_SESSION_DID_START,
   {
@@ -210,7 +203,7 @@ export type CombatantDidAcquireTargetInput = AbstractWorldEventInput<
   }>;
 
 export type CombatantDidDefend = EventBase & CombatantDidDefendInput;
-export type CombatantDidDefendInput = RequiresNarrative & AbstractWorldEventInput<
+export type CombatantDidDefendInput = AbstractWorldEventInput<
   EventType.COMBATANT_DID_DEFEND,
   {
     actor: ActorURN;
@@ -218,7 +211,7 @@ export type CombatantDidDefendInput = RequiresNarrative & AbstractWorldEventInpu
   }>;
 
 export type CombatantDidMove = EventBase & CombatantDidMoveInput;
-export type CombatantDidMoveInput = RequiresNarrative & AbstractWorldEventInput<
+export type CombatantDidMoveInput = AbstractWorldEventInput<
   EventType.COMBATANT_DID_MOVE,
   {
     cost: ActionCost;
@@ -229,7 +222,7 @@ export type CombatantDidMoveInput = RequiresNarrative & AbstractWorldEventInput<
 export type AttackOutcome = 'hit' | 'miss' | 'hit:critical' | 'miss:critical';
 
 export type CombatantDidAttack = EventBase & CombatantDidAttackInput;
-export type CombatantDidAttackInput = RequiresNarrative & AbstractWorldEventInput<
+export type CombatantDidAttackInput = AbstractWorldEventInput<
   EventType.COMBATANT_DID_ATTACK,
   {
     actor: ActorURN;

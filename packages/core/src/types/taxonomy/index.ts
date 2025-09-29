@@ -151,6 +151,7 @@ export const TAXONOMY = {
       examples: ['flux:session:combat:123']
     },
   },
+
 } as const;
 
 // Get all root vocabularies at compile time

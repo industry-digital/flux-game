@@ -2,6 +2,7 @@ import { AbstractEntity, EntityType } from '~/types/entity/entity';
 
 export enum SessionStrategy {
   COMBAT = 'combat',
+  WORKBENCH = 'workbench',
 }
 
 export enum SessionStatus {

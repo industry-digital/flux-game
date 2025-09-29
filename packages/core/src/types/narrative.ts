@@ -7,21 +7,20 @@ export enum Perspective {
   OBSERVER = 'observer',
 }
 
-/**
- * A narrative is a description of an event, from the actor's point of view,
- * from an observer's point of view.
- */
-export type Narrative = {
-  /**
-   * What happened, from the actor's point of view
-   */
-  self?: string;
-
-  /**
-   * What happened, from an observer's point of view
-   */
-  observer?: string;
+export type NarrativeItem = {
+  [Perspective.SELF]?: string;
+  [Perspective.OBSERVER]?: string;
+  type?: 'info' | 'warning' | 'error' | 'success';
+  delay?: number;
 };
+
+/**
+ * A narrative is a description of an event.
+ * It can be a single item or an array of items.
+ * The items are displayed in order.
+ * The delay is the time in milliseconds to wait before displaying the next item.
+ */
+export type Narrative = NarrativeItem | NarrativeItem[];
 
 /**
  * Common narrative renderer function signature

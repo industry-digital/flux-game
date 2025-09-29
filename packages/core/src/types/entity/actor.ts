@@ -9,6 +9,7 @@ import {
   NormalizedBipolarValue,
 } from '~/types/entity/attribute';
 import { CurvePosition } from '~/types/easing';
+import { Shell } from '~/types/entity/shell';
 
 /**
  * The kinds of actors in the simulation
@@ -75,10 +76,20 @@ export enum ActorStat {
   MEM = 'mem',
 }
 
-/**
- * Map of actor stats to their values
- */
-export type ActorStats = Record<typeof ActorStat[keyof typeof ActorStat], ModifiableScalarAttribute>;
+export type CoreStats = {
+  [ActorStat.INT]: ModifiableScalarAttribute;
+  [ActorStat.PER]: ModifiableScalarAttribute;
+  [ActorStat.MEM]: ModifiableScalarAttribute;
+};
+
+export type ShellStats = {
+  [ActorStat.POW]: ModifiableScalarAttribute;
+  [ActorStat.FIN]: ModifiableScalarAttribute;
+  [ActorStat.RES]: ModifiableScalarAttribute;
+};
+
+export type ActorStats = CoreStats & ShellStats;
+
 /**
  * The ItemURN points to an InventoryItem.id in the actor's `inventory`
  */
@@ -91,6 +102,7 @@ export type Traits = Partial<Record<Taxonomy.Traits, 1>>;
 export type Injuries = Partial<Record<Taxonomy.Anatomy, AppliedAnatomicalDamage>>;
 export type Subscriptions = Partial<Record<Taxonomy.Topics, 1>>;
 export type Wallet = Partial<Record<Taxonomy.Currency, number>>;
+export type Shells = Partial<Record<string, Shell>>;
 
 export type InventoryItem = {
   id: ItemURN;
@@ -253,6 +265,9 @@ export type Actor =
    * The subset of skills that the actor has specialized
    */
   specializations: Specializations;
+
+  currentShell: string;
+  shells: Record<string, Shell>;
 };
 
 export type Autonomous = {
