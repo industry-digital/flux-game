@@ -4,13 +4,13 @@ import { TransformerContext } from '~/types/handler';
 import { EventType, WorldEvent } from '~/types/event';
 import { ActorURN } from '~/types/taxonomy';
 import { createWorldEvent } from '~/worldkit/event';
-import { calculateTacticalMovement } from '~/worldkit/combat/tactical-rounding';
+import { calculateTacticalMovement, roundApCostUp } from '~/worldkit/combat/tactical-rounding';
 import { distanceToAp, apToDistance } from '~/worldkit/physics/movement';
 import { createTargetResolver, createCollisionDetector } from '~/worldkit/combat/movement';
 import { deductAp, MOVE_BY_DISTANCE, MovementType } from '~/worldkit/combat/combatant';
-import { calculateMovementEnergyCost } from '~/worldkit/combat/energy-costs';
 import { MovementActionDependencies, DEFAULT_MOVEMENT_DEPS } from './movement-deps';
 import { renderMovementNarrative } from '~/worldkit/narrative/combat/movement-narrative';
+import { createMovementCostFromAp } from '~/worldkit/combat/tactical-cost';
 
 export type AdvanceDependencies = MovementActionDependencies;
 export const DEFAULT_ADVANCE_DEPS = DEFAULT_MOVEMENT_DEPS;
@@ -58,6 +58,7 @@ export function createAdvanceMethod(
     distanceToAp: distanceToApImpl = distanceToAp,
     apToDistance: apToDistanceImpl = apToDistance,
     calculateTacticalMovement: calculateTacticalMovementImpl = calculateTacticalMovement,
+    createMovementCostFromAp: createMovementCostFromApImpl = createMovementCostFromAp,
   } = deps;
 
   // Create movement logic factories
@@ -98,8 +99,8 @@ export function createAdvanceMethod(
       distance = Number.isInteger(value) ? value : Math.ceil(value);
       ap = distanceToApImpl(power, finesse, distance, actorMassKg);
     } else {
-      // Pre-round AP input to nearest 0.1
-      ap = Math.ceil(value * 10) / 10;
+      // Use tactical rounding for AP input
+      ap = roundApCostUp(value);
 
       if (ap > combatant.ap.eff.cur) {
         declareError(
@@ -169,9 +170,8 @@ export function createAdvanceMethod(
       return [];
     }
 
-    // Calculate energy cost for the movement
-    const energyCost = calculateMovementEnergyCost(power, finesse, distance, actorMassKg);
-    const cost = { ap: tacticalAp, energy: energyCost };
+    // Calculate energy cost for the movement using precise AP to avoid double-rounding
+    const cost = createMovementCostFromApImpl(movementResult.precise.apCost, power, finesse, actorMassKg);
 
     // Execute movement using tactical values
     const originalPosition = combatant.position.coordinate;
@@ -183,6 +183,7 @@ export function createAdvanceMethod(
 
     // Handle facing changes
     if (shouldTurn) {
+      // TODO: Delegate to `turn` method
       combatant.position.facing = targetPosition > currentPosition ? CombatFacing.RIGHT : CombatFacing.LEFT;
     }
 
