@@ -186,11 +186,6 @@ export type CombatSessionData = {
   rounds: CombatRounds;
 
   /**
-   * Pre-computed collision detectors for each combatant (performance optimization)
-   */
-  collisionDetectors: Map<ActorURN, CollisionDetector>;
-
-  /**
    * Initiative sorting optimization - tracks if initiative is already sorted
    */
   initiativeSorted?: boolean;

@@ -24,6 +24,10 @@ const defaultAreAllies = (team1: string | undefined, team2: string | undefined):
   return !!(team1 && team2 && team1 === team2);
 };
 
+export const DEFAULT_TEAM_FILTERING_OPTIONS: TeamFilteringOptions = {
+  areAllies: defaultAreAllies,
+};
+
 /**
  * Pure function to determine if two combatants are enemies
  * Zero-copy approach using direct map lookup
@@ -38,7 +42,6 @@ export function areEnemies(
   actorId1: ActorURN,
   actorId2: ActorURN,
   combatants: Map<ActorURN, Combatant>,
-  options: TeamFilteringOptions = {}
 ): boolean {
   const combatant1 = combatants.get(actorId1);
   if (!combatant1) {
@@ -65,9 +68,7 @@ export function areAllies(
   actorId1: ActorURN,
   actorId2: ActorURN,
   combatants: Map<ActorURN, Combatant>,
-  options: TeamFilteringOptions = {}
 ): boolean {
-  const { areAllies: customAreAllies = defaultAreAllies } = options;
   const combatant1 = combatants.get(actorId1);
   if (!combatant1) {
     throw new Error(`Combatant ${actorId1} not found in combatants`);
@@ -93,14 +94,13 @@ export function areAllies(
 export function filterEnemies(
   combatants: Map<ActorURN, Combatant>,
   referenceCombatant: Combatant,
-  options: TeamFilteringOptions = {}
 ): Combatant[] {
   const enemies: Combatant[] = [];
 
   for (const [actorId, combatant] of combatants) {
     if (actorId === referenceCombatant.actorId) continue;
 
-    if (areEnemies(referenceCombatant.actorId, actorId, combatants, options)) {
+    if (areEnemies(referenceCombatant.actorId, actorId, combatants)) {
       enemies.push(combatant);
     }
   }
@@ -120,14 +120,13 @@ export function filterEnemies(
 export function filterAllies(
   combatants: Map<ActorURN, Combatant>,
   referenceCombatant: Combatant,
-  options: TeamFilteringOptions = {}
 ): Combatant[] {
   const allies: Combatant[] = [];
 
   for (const [actorId, combatant] of combatants) {
     if (actorId === referenceCombatant.actorId) continue;
 
-    if (areAllies(referenceCombatant.actorId, actorId, combatants, options)) {
+    if (areAllies(referenceCombatant.actorId, actorId, combatants)) {
       allies.push(combatant);
     }
   }

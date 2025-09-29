@@ -41,7 +41,7 @@ export type ActorBalanceSetup = number | Partial<Combatant['balance']>;
 export type ActorHpSetup = number | Partial<Actor['hp']>;
 
 export type CombatScenarioActorInput = {
-  team: Team;
+  team: Team | string;
   name?: string;
   stats?: ActorStatsSetup;
   skills?: Record<SkillURN, ActorSkillSetup>;

@@ -1,6 +1,5 @@
 import { ActorURN, PlaceURN, SessionURN } from '~/types/taxonomy';
 import { CombatSession, CombatSessionData, Battlefield, Combatant } from '~/types/combat';
-import { createCollisionDetector } from '~/worldkit/combat/movement';
 import { SessionStatus, SessionStrategy } from '~/types/session';
 import { Actor } from '~/types/entity/actor';
 import { EntityType } from '~/types/entity/entity';
@@ -59,19 +58,11 @@ export const createCombatSession = (
   const initiativeRolls = input.initiative ?? computeInitiativeRolls(combatants, getActorOrFail);
   const firstActor = initiativeRolls.keys().next().value! as ActorURN;
 
-  // Pre-compute collision detectors for each combatant (performance optimization)
-  const collisionDetectors = new Map<ActorURN, (from: number, to: number) => { success: boolean; error?: string; finalPosition: number }>();
-  for (const [actorId, combatant] of combatants) {
-    const actor = getActorOrFail(actorId);
-    collisionDetectors.set(actorId, createCollisionDetector(combatants, actor, combatant));
-  }
-
   const data: CombatSessionData = {
     location: input.location,
     combatants: new Map(input.combatants.map(c => [c.actorId, c])),
     initiative: initiativeRolls,
     battlefield: input.battlefield ?? createDefaultBattlefield(),
-    collisionDetectors,
     rounds: {
       current: {
         number: 1,

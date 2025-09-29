@@ -14,7 +14,7 @@ export type TargetResolutionResult =
   | { success: false; error: string };
 
 export type CollisionResult =
-  | { success: true; finalPosition: number }
+  | { success: true; error?: string;finalPosition: number }
   | { success: false; error: string; finalPosition: number };
 
 /**
@@ -149,6 +149,44 @@ export function createCollisionDetector(
 
     return { success: true, finalPosition: to };
   };
+}
+
+export function checkMovementCollision(
+  combatants: Map<ActorURN, Combatant>,
+  movingActorId: ActorURN,
+  from: number,
+  to: number,
+  output: Partial<CollisionResult> = {}
+): CollisionResult {
+  const direction = to > from ? 1 : -1;
+
+  for (const [actorId, combatant] of combatants) {
+    if (actorId === movingActorId) continue;
+
+    const otherPosition = combatant.position.coordinate;
+    const isEnemy = areEnemies(movingActorId, actorId, combatants);
+
+    if (isEnemy) {
+      const minPos = Math.min(from, to);
+      const maxPos = Math.max(from, to);
+
+      if (otherPosition >= minPos && otherPosition <= maxPos) {
+        const stopPosition = otherPosition - (direction * 1);
+        const actualDistance = Math.abs(stopPosition - from);
+
+        output.success = false;
+        output.error = `Movement blocked by enemy ${actorId} at position ${otherPosition}m. You can advance ${actualDistance}m and stop 1m away`;
+        output.finalPosition = stopPosition;
+        return output as CollisionResult;
+      }
+    }
+  }
+
+  output.success = true;
+  output.error = undefined;
+  output.finalPosition = to;
+
+  return output as CollisionResult;
 }
 
 /**

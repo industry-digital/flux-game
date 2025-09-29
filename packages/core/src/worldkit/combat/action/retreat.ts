@@ -12,7 +12,7 @@ import { createWorldEvent } from '~/worldkit/event';
 import { distanceToAp, apToDistance } from '~/worldkit/physics/movement';
 import { deductAp, MOVE_BY_DISTANCE, MovementType } from '~/worldkit/combat/combatant';
 import { calculateTacticalMovement, roundPosition } from '~/worldkit/combat/tactical-rounding';
-import { createCollisionDetector } from '~/worldkit/combat/movement';
+import { checkMovementCollision } from '~/worldkit/combat/movement';
 import { CombatantDidMove } from '~/types/event';
 import { TransformerContext } from '~/types/handler';
 import { ActorURN } from '~/types/taxonomy';
@@ -42,13 +42,6 @@ export function createRetreatMethod(
     createMovementCostFromDistance: createMovementCostFromDistanceImpl = createMovementCostFromDistance,
     createMovementCostFromAp: createMovementCostFromApImpl = createMovementCostFromAp,
   } = deps;
-
-  // Use pre-computed collision detector from session (performance optimization)
-  // Fallback to creating detector on-demand for test compatibility
-  let checkCollisions = session.data.collisionDetectors?.get(actor.id);
-  if (!checkCollisions) {
-    checkCollisions = createCollisionDetector(session.data.combatants, actor, combatant);
-  }
 
   function retreat(by: MovementType, value: number, target?: ActorURN, trace: string = context.uniqid()): WorldEvent[] {
     // Input validation
@@ -116,7 +109,7 @@ export function createRetreatMethod(
     }
 
     // Check collisions using precise position (enemies can block retreat)
-    const collisionResult = checkCollisions!(currentPosition, preciseValues.finalPosition);
+    const collisionResult = checkMovementCollision(combatants, actor.id, currentPosition, preciseValues.finalPosition);
     if (!collisionResult.success) {
       context.declareError(collisionResult.error || 'Retreat blocked by collision', trace);
       return [];

@@ -6,7 +6,7 @@ import { ActorURN } from '~/types/taxonomy';
 import { createWorldEvent } from '~/worldkit/event';
 import { calculateTacticalMovement, roundApCostUp } from '~/worldkit/combat/tactical-rounding';
 import { distanceToAp, apToDistance } from '~/worldkit/physics/movement';
-import { createTargetResolver, createCollisionDetector } from '~/worldkit/combat/movement';
+import { checkMovementCollision, createTargetResolver } from '~/worldkit/combat/movement';
 import { deductAp, MOVE_BY_DISTANCE, MovementType } from '~/worldkit/combat/combatant';
 import { MovementActionDependencies, DEFAULT_MOVEMENT_DEPS } from './movement-deps';
 import { renderMovementNarrative } from '~/worldkit/narrative/combat/movement-narrative';
@@ -63,12 +63,6 @@ export function createAdvanceMethod(
 
   // Create movement logic factories
   const resolveTarget = createTargetResolver(combatants, actor, combatant);
-
-  // Use pre-computed collision detector from session (performance optimization)
-  // Fallback to creating detector on-demand for test compatibility
-  const checkCollisions = session.data.collisionDetectors?.get(actor.id) ||
-    createCollisionDetector(session.data.combatants, actor, combatant);
-
   /**
    * Advance with explicit primitive parameters - zero allocation hot path
    */
@@ -153,7 +147,7 @@ export function createAdvanceMethod(
     }
 
     // Check collisions using precise position
-    const collisionResult = checkCollisions(currentPosition, precisePosition);
+    const collisionResult = checkMovementCollision(combatants, actor.id, currentPosition, precisePosition);
     if (!collisionResult.success) {
       declareError(collisionResult.error || 'Movement blocked by collision', trace);
       return [];

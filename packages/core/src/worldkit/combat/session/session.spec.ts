@@ -154,8 +154,8 @@ describe('session', () => {
       const session = createCombatSession(context, input);
 
       expect(session.type).toBe(EntityType.SESSION);
+      expect(session.strategy).toBe(SessionStrategy.COMBAT);
       expect(session.status).toBe(SessionStatus.PENDING);
-      expect(session.data.strategy).toBe(SessionStrategy.COMBAT);
       expect(session.data.location).toBe(location);
       expect(session.data.combatants.size).toBe(2);
       expect(session.data.combatants.has(TEST_ACTOR_ID)).toBe(true);

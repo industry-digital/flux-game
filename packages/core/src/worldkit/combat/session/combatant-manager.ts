@@ -10,7 +10,6 @@ import {
 import { TransformerContext } from '~/types/handler';
 import { SessionStatus } from '~/types/session';
 import { createCombatant, CreateCombatantDependencies } from '../combatant';
-import { createCollisionDetector } from '~/worldkit/combat/movement';
 
 /**
  * Calculates automatic position and facing for a combatant based on team placement rules.
@@ -111,9 +110,6 @@ export function createCombatantManager(
 
     session.data.combatants.set(actorId, combatant);
 
-    // Create collision detector for the new combatant (performance optimization)
-    session.data.collisionDetectors.set(actorId, createCollisionDetector(session.data.combatants, actor, combatant));
-
     // Invalidate initiative cache since combatants changed
     session.data.initiativeSorted = false;
   };
@@ -123,9 +119,6 @@ export function createCombatantManager(
       throw new Error('Cannot remove combatants after combat has started');
     }
     session.data.combatants.delete(actorId);
-
-    // Clean up collision detector for the removed combatant
-    session.data.collisionDetectors.delete(actorId);
 
     // Invalidate initiative cache since combatants changed
     session.data.initiativeSorted = false;
