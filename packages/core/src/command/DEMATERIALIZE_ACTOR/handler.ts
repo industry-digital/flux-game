@@ -10,7 +10,6 @@ import {
 } from '~/types/handler';
 import { EventType } from '~/types/event';
 import { ActorURN } from '~/types/taxonomy';
-import { renderActorDidDematerialize } from '~/template/materialization';
 
 export type DematerializeActorCommand = SystemCommand<CommandType.DEMATERIALIZE_ACTOR, {
   actorId: ActorURN;
@@ -44,10 +43,7 @@ export const dematerializeActorReducer: PureReducer<TransformerContext, Demateri
     location: place.id,
     payload: {},
     trace: command.id,
-    narrative: {
-      self: renderActorDidDematerialize({ actor, perspective: 'actor' }),
-      observer: renderActorDidDematerialize({ actor, perspective: 'observer' }),
-    },
+    narrative: {},
   });
 
   return context;
@@ -62,4 +58,4 @@ export class DEMATERIALIZE_ACTOR implements PureHandlerInterface<TransformerCont
       CommandType.DEMATERIALIZE_ACTOR,
     );
   };
-};
+}

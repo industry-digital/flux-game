@@ -21,20 +21,28 @@ export type CombatMetrics = {
   recordValue(metric: string, value: number): void;
 }
 
-/** Filter function for WorldEvent matching */
-type EventFilter = (event: WorldEvent) => boolean;
-
 /** Minimum required properties for all world projections */
 export type MinimalWorldProjection = {
   actors: Record<ActorURN, Actor>;
   places: Record<PlaceURN, Place>;
   items: Record<ItemURN, Item>;
-  sessions: Record<string, AbstractSession<any, any, any>>;
+  sessions: Record<SessionURN, AbstractSession<any, any, any>>;
 
-  // Pre-computed arrays so we don't have to constantly Object.values() on the Records above
+  /**
+   * @deprecated Directly iterate over `actors` via `for..in`
+   */
   actorIds: ActorURN[];
+  /**
+   * @deprecated Directly iterate over `places` via `for..in`
+   */
   placeIds: PlaceURN[];
+  /**
+   * @deprecated Directly iterate over `items` via `for..in`
+   */
   itemIds: ItemURN[];
+  /**
+   * @deprecated Directly iterate over `sessions` via `for..in`
+   */
   sessionIds: SessionURN[];
 };
 
