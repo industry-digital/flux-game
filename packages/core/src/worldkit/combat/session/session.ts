@@ -67,7 +67,6 @@ export const createCombatSession = (
   }
 
   const data: CombatSessionData = {
-    strategy: SessionStrategy.COMBAT,
     location: input.location,
     combatants: new Map(input.combatants.map(c => [c.actorId, c])),
     initiative: initiativeRolls,
@@ -92,6 +91,7 @@ export const createCombatSession = (
   return {
     id: input.id ?? `flux:session:combat:${uniqid()}`,
     type: EntityType.SESSION,
+    strategy: SessionStrategy.COMBAT,
     status: SessionStatus.PENDING,
     data,
     log: [],
@@ -109,7 +109,7 @@ export const getCombatSession = (
   world: WorldProjection,
   sessionId: SessionURN,
 ): CombatSession | undefined => {
-  return world.sessions[sessionId];
+  return world.sessions[sessionId] as CombatSession | undefined;
 };
 
 export type CombatSessionOptions = {

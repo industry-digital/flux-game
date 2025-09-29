@@ -7,7 +7,7 @@ import { SessionURN } from '~/types/taxonomy';
  */
 export const createSessionId = (
   strategy: SessionStrategy,
-  key: string = uniqid(16, BASE62_CHARSET),
+  key: string = uniqid(24, BASE62_CHARSET),
 ): SessionURN => {
   return `flux:session:${strategy}:${key}`;
 };

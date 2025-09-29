@@ -26,7 +26,7 @@ export type MinimalWorldProjection = {
   actors: Record<ActorURN, Actor>;
   places: Record<PlaceURN, Place>;
   items: Record<ItemURN, Item>;
-  sessions: Record<SessionURN, AbstractSession<any, any, any>>;
+  sessions: Record<SessionURN, AbstractSession<any, any>>;
 
   /**
    * @deprecated Directly iterate over `actors` via `for..in`

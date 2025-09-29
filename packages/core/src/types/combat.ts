@@ -1,4 +1,4 @@
-import { AbstractSession, AbstractSessionData, SessionStrategy } from '~/types/session';
+import { AbstractSession, SessionStrategy } from '~/types/session';
 import { ActorURN, PlaceURN, SkillURN } from '~/types/taxonomy';
 import { CommandType } from '~/types/intent';
 import { RollResult } from '~/types/dice';
@@ -159,7 +159,7 @@ export type CombatRounds = {
 type CollisionResult = { success: boolean; error?: string; finalPosition: number };
 type CollisionDetector = (from: number, to: number) => CollisionResult;
 
-export type CombatSessionData = AbstractSessionData<SessionStrategy.COMBAT> & {
+export type CombatSessionData = {
   /**
    * The Place where combat is taking place
    */
@@ -185,13 +185,19 @@ export type CombatSessionData = AbstractSessionData<SessionStrategy.COMBAT> & {
    */
   rounds: CombatRounds;
 
-  /** Pre-computed collision detectors for each combatant (performance optimization) */
+  /**
+   * Pre-computed collision detectors for each combatant (performance optimization)
+   */
   collisionDetectors: Map<ActorURN, CollisionDetector>;
 
-  /** Initiative sorting optimization - tracks if initiative is already sorted */
+  /**
+   * Initiative sorting optimization - tracks if initiative is already sorted
+   */
   initiativeSorted?: boolean;
 
-  /** Initiative sorting optimization - hash of combatant IDs to detect changes */
+  /**
+   * Initiative sorting optimization - hash of combatant IDs to detect changes
+   */
   lastCombatantHash?: string;
 };
 

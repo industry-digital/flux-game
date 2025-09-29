@@ -32,10 +32,11 @@ export type AbstractSessionData<TSessionStrategy extends SessionStrategy> = {
 };
 
 export type AbstractSession<
-  TSessionType extends SessionStrategy,
-  TSessionData extends AbstractSessionData<TSessionType>,
-  TSessionLogEntry extends Record<string, unknown>,
+  TSessionStrategy extends SessionStrategy,
+  TSessionData,
+  TSessionLogEntry extends unknown = unknown,
 > = AbstractEntity<EntityType.SESSION> & {
+  strategy: TSessionStrategy;
   status: SessionStatus;
   data: TSessionData;
   log: TSessionLogEntry[];
