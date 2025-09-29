@@ -76,6 +76,11 @@ export function calculateWeaponDps(weaponMassKg: number, powStat: number, finSta
   return damage / apCost;
 }
 
+export type OptimalWeaponMass = {
+  optimalMass: number;
+  maxDps: number;
+};
+
 /**
  * Find optimal weapon mass for given stats
  * Returns the weapon mass that maximizes DPS
@@ -85,8 +90,9 @@ export function findOptimalWeaponMass(
   finStat: number,
   minMassKg: number = 0.5,
   maxMassKg: number = 15.0,
-  stepSize: number = 0.1
-): { optimalMass: number; maxDps: number } {
+  stepSize: number = 0.1,
+  output: Partial<OptimalWeaponMass> = {}, // Consumers can opt into object reuse
+): OptimalWeaponMass {
   let bestDps = 0;
   let optimalMass = minMassKg;
 
@@ -98,27 +104,49 @@ export function findOptimalWeaponMass(
     }
   }
 
-  return { optimalMass, maxDps: bestDps };
+  output.optimalMass = optimalMass;
+  output.maxDps = bestDps;
+
+  return output as OptimalWeaponMass;
 }
+
+enum WeaponMassCategory {
+  ULTRA_LIGHT = 'Ultra-Light',
+  LIGHT = 'Light',
+  MEDIUM = 'Medium',
+  HEAVY = 'Heavy',
+}
+
+export type WeaponAnalysis = {
+  damage: number;
+  apCost: number;
+  dps: number;
+  massCategory: WeaponMassCategory;
+};
 
 /**
  * Complete weapon analysis for given mass and stats
  */
-export function analyzeWeapon(weaponMassKg: number, powStat: number, finStat: number): {
-  damage: number;
-  apCost: number;
-  dps: number;
-  massCategory: string;
-} {
+export function analyzeWeapon(
+  weaponMassKg: number,
+  powStat: number,
+  finStat: number,
+  output: Partial<WeaponAnalysis> = {}, // Consumers can opt into object reuse
+): WeaponAnalysis {
   const damage = calculateWeaponDamage(weaponMassKg, powStat);
   const apCost = calculateWeaponApCost(weaponMassKg, finStat);
   const dps = damage / apCost;
 
-  let massCategory: string;
-  if (weaponMassKg < 1.0) massCategory = 'Ultra-Light';
-  else if (weaponMassKg < 3.0) massCategory = 'Light';
-  else if (weaponMassKg < 7.0) massCategory = 'Medium';
-  else massCategory = 'Heavy';
+  let massCategory;
+  if (weaponMassKg < 1.0) massCategory = WeaponMassCategory.ULTRA_LIGHT;
+  else if (weaponMassKg < 3.0) massCategory = WeaponMassCategory.LIGHT;
+  else if (weaponMassKg < 7.0) massCategory = WeaponMassCategory.MEDIUM;
+  else massCategory = WeaponMassCategory.HEAVY;
 
-  return { damage, apCost, dps, massCategory };
+  output.damage = damage;
+  output.apCost = apCost;
+  output.dps = dps;
+  output.massCategory = massCategory;
+
+  return output as WeaponAnalysis;
 }
