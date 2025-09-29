@@ -1,4 +1,5 @@
 import { AbstractEntity, EntityType } from '~/types/entity/entity';
+import { WorldEvent } from '~/types/event';
 
 export enum SessionStrategy {
   COMBAT = 'combat',
@@ -34,7 +35,7 @@ export type AbstractSessionData<TSessionStrategy extends SessionStrategy> = {
 export type AbstractSession<
   TSessionStrategy extends SessionStrategy,
   TSessionData,
-  TSessionLogEntry extends unknown = unknown,
+  TSessionLogEntry extends unknown = WorldEvent,
 > = AbstractEntity<EntityType.SESSION> & {
   strategy: TSessionStrategy;
   status: SessionStatus;

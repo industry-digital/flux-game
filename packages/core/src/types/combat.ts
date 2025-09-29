@@ -2,7 +2,6 @@ import { AbstractSession, SessionStrategy } from '~/types/session';
 import { ActorURN, PlaceURN, SkillURN } from '~/types/taxonomy';
 import { CommandType } from '~/types/intent';
 import { RollResult } from '~/types/dice';
-import { WorldEvent } from '~/types/event';
 import { CurvePosition } from '~/types/easing';
 import { ModifiableBoundedAttribute } from '~/types/entity/attribute';
 
@@ -196,11 +195,7 @@ export type CombatSessionData = {
   lastCombatantHash?: string;
 };
 
-export type CombatSession = AbstractSession<
-  SessionStrategy.COMBAT,
-  CombatSessionData,
-  WorldEvent
->;
+export type CombatSession = AbstractSession<SessionStrategy.COMBAT, CombatSessionData>;
 
 /**
  * @deprecated Use `string` instead
