@@ -1,4 +1,4 @@
-import { AbstractSession, AbstractSessionData, SessionStrategy } from '~/types/session';
+import { AbstractSession, SessionStrategy } from '~/types/session';
 import { ActorStat } from '~/types/entity/actor';
 import { ItemURN } from '~/types/taxonomy';
 
@@ -70,7 +70,7 @@ export type RenameShellMutation = {
   newName: string;
 };
 
-export type WorkbenchSessionData = AbstractSessionData<SessionStrategy.WORKBENCH> & {
+export type WorkbenchSessionData = {
   currentShellId: string;
   pendingChanges: ShellMutation[];
 };
