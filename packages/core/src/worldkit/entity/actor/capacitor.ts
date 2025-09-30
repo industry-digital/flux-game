@@ -1,7 +1,7 @@
 import { Actor } from '~/types/entity/actor';
 import { NormalizedValueBetweenZeroAndOne } from '~/types/entity/attribute';
 import { ActorStat } from '~/types/entity/actor';
-import { getActorStat, BASELINE_STAT_VALUE, MAX_STAT_VALUE } from '~/worldkit/entity/actor/stats';
+import { BASELINE_STAT_VALUE, MAX_STAT_VALUE, getEffectiveStatValue } from '~/worldkit/entity/actor/stats';
 
 /**
  * Pure functions for actor energy management
@@ -39,7 +39,7 @@ export function getCurrentEnergy(actor: Actor): number {
  * Get maximum energy capacity in Joules based on resilience
  */
 export function getMaxEnergy(actor: Actor): number {
-  const resilience = getActorStat(actor, ActorStat.RES).eff;
+  const resilience = getEffectiveStatValue(actor, ActorStat.RES);
   return calculateMaxEnergy(resilience);
 }
 
@@ -87,7 +87,7 @@ export function setEnergy(actor: Actor, energy: number): void {
  * Get maximum recovery rate in Watts based on resilience
  */
 export function getMaxRecoveryRate(actor: Actor): number {
-  const resilience = getActorStat(actor, ActorStat.RES).eff;
+  const resilience = getEffectiveStatValue(actor, ActorStat.RES);
   return calculateMaxRecoveryRate(resilience);
 }
 

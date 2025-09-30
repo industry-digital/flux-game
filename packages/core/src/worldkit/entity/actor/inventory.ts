@@ -1,10 +1,18 @@
 import { BASE62_CHARSET, uniqid as uniqidImpl } from '~/lib/random';
-import { Actor, InventoryItem } from '~/types/entity/actor';
+import { Actor, Inventory, InventoryItem } from '~/types/entity/actor';
 import { PotentiallyImpureOperations } from '~/types/handler';
 import { ROOT_NAMESPACE, ItemURN, SchemaURN, ItemType } from '~/types/taxonomy';
 import { MassApi } from '~/worldkit/physics/mass';
 
 const ITEM_TYPE_REGEX = /flux:schema:(.*)$/;
+
+export const createInventory = (): Inventory => {
+  return {
+    mass: 0,
+    items: {},
+    ts: 0,
+  };
+};
 
 export type CreateInventoryItemUrnDependencies = {
   uniqid: PotentiallyImpureOperations['uniqid'];
@@ -25,6 +33,8 @@ export function createInventoryItemUrn<TItemType extends ItemType>(
 export type InventoryItemDependencies = {
   createInventoryItemUrn: typeof createInventoryItemUrn;
 };
+
+
 
 export const DEFAULT_INVENTORY_ITEM_DEPENDENCIES: Readonly<InventoryItemDependencies> = {
   createInventoryItemUrn,

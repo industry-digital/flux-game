@@ -6,21 +6,21 @@ export type CreateWorldEventDependencies = Pick<PotentiallyImpureOperations, 'ti
 
 export const DEFAULT_WORLD_EVENT_DEPS: CreateWorldEventDependencies = {
   timestamp: () => Date.now(),
-  uniqid: () => uniqidImpl(16, BASE62_CHARSET),
+  uniqid: () => uniqidImpl(24, BASE62_CHARSET),
 };
 
-export const createWorldEvent = (
+export const createWorldEvent = <TWorldEvent extends WorldEvent = WorldEvent>(
   input: WorldEvent | WorldEventInput,
   deps: CreateWorldEventDependencies = DEFAULT_WORLD_EVENT_DEPS,
-): WorldEvent => {
+): TWorldEvent => {
   return {
     id: deps.uniqid(),
     ts: deps.timestamp(),
     type: input.type,
     trace: input.trace,
-    narrative: input.narrative ?? { observer: '' },
+    narrative: input.narrative,
     actor: input.actor,
     location: input.location,
     payload: input.payload,
-  };
+  } as TWorldEvent;
 };

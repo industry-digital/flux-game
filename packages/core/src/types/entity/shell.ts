@@ -10,3 +10,11 @@ export type Shell = {
   inventory: Actor['inventory'];
   equipment: Actor['equipment'];
 };
+
+export type ShellPreview = Shell & {
+
+  previewStats: ShellStats;
+  previewInventory: Actor['inventory'];
+  previewEquipment: Actor['equipment'];
+
+};

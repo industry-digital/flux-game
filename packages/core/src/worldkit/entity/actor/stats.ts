@@ -1,41 +1,65 @@
-import { Actor, ActorStat } from '~/types/entity/actor';
+import { ActorStat } from '~/types/entity/actor';
 import { ModifiableScalarAttribute } from '~/types/entity/attribute';
 import { AppliedModifiers } from '~/types/modifier';
 
-const ALL_STAT_NAMES = Object.values(ActorStat);
+export const ALL_STAT_NAMES = Object.values(ActorStat);
 export const BASELINE_STAT_VALUE = 10;
 export const MAX_STAT_VALUE = 100;
 export const NORMAL_STAT_RANGE = MAX_STAT_VALUE - BASELINE_STAT_VALUE;
 
+// Generic types for entities with stats
+export type HasStats<TStats extends Record<string, ModifiableScalarAttribute>> = {
+  id: string;
+  stats: TStats;
+};
+
+export type StatKey<TEntity extends HasStats<any>> = keyof TEntity['stats'];
+
+// Shell-specific stat names
+export const SHELL_STAT_NAMES = [ActorStat.POW, ActorStat.FIN, ActorStat.RES] as const;
+export type ShellStatKey = typeof SHELL_STAT_NAMES[number];
+
 /**
  * Calculate the bonus to a stat from a given value
- * We are straight up stealing this status bonus formula from Pathfinder 2E
  */
 export function calculateStatBonus(statValue: number): number {
   return Math.floor((statValue - BASELINE_STAT_VALUE) / 2);
 }
 
-export function getActorStat(actor: Actor, stat: ActorStat): ModifiableScalarAttribute {
-  const attr = actor.stats[stat];
+export function getStat<TEntity extends HasStats<any>>(
+  entity: TEntity,
+  stat: StatKey<TEntity>,
+): ModifiableScalarAttribute {
+  const attr = entity.stats[stat];
   if (!attr) {
-    throw new Error(`Actor ${actor.id} does not have a stat ${stat}`);
+    throw new Error(`Entity ${entity.id} does not have a stat ${String(stat)}`);
   }
   return attr;
 }
 
-/**
- * Extract all modifiers affecting a specific stat
- * @param actor - The actor to query
- * @param stat - The stat to get modifiers for
- * @returns Applied modifiers for the stat
- */
-export function getActorStatModifiers(
-  actor: Actor,
-  stat: ActorStat,
+export function getEffectiveStatValue<TEntity extends HasStats<any>>(
+  entity: TEntity,
+  stat: StatKey<TEntity>,
+  baseStat = getStat(entity, stat),
+): number {
+  return baseStat.eff;
+}
+
+export function getNaturalStatValue<TEntity extends HasStats<any>>(
+  entity: TEntity,
+  stat: StatKey<TEntity>,
+  baseStat = getStat(entity, stat),
+): number {
+  return baseStat.nat;
+}
+
+export function getStatModifiers<TEntity extends HasStats<any>>(
+  entity: TEntity,
+  stat: StatKey<TEntity>,
+  statState = getStat(entity, stat),
 ): AppliedModifiers {
-  const statState = actor.stats[stat];
   if (!statState) {
-    throw new Error(`Actor ${actor.id} does not have a stat ${stat}`);
+    throw new Error(`Entity ${entity.id} does not have a stat ${String(stat)}`);
   }
   return statState.mods ?? {};
 }
@@ -49,11 +73,11 @@ export function getActorStatModifiers(
  * @param modifiers - Optional pre-fetched modifiers for performance
  * @returns Effective stat value (natural base + active modifiers, clamped to valid range)
  */
-export function computeEffectiveStatValue(
-  actor: Actor,
-  stat: ActorStat,
-  baseStat = getActorStat(actor, stat),
-  modifiers = getActorStatModifiers(actor, stat),
+export function computeEffectiveStatValue<TEntity extends HasStats<any>>(
+  entity: TEntity,
+  stat: StatKey<TEntity>,
+  baseStat = getStat(entity, stat),
+  modifiers = getStatModifiers(entity, stat),
 ): number {
   // Single-pass optimization: filter and aggregate in one loop
   let totalBonus = 0;
@@ -69,16 +93,13 @@ export function computeEffectiveStatValue(
 }
 
 /**
- * Check if an actor has any active modifiers on a stat
- * @param actor - The actor to query
- * @param stat - The stat to check
- * @returns True if the stat has active (non-expired) modifiers
+ * Generic version of hasActiveStatModifiers
  */
-export function hasActiveStatModifiers(
-  actor: Actor,
-  stat: ActorStat,
+export function hasGenericActiveStatModifiers<TEntity extends HasStats<any>>(
+  entity: TEntity,
+  stat: StatKey<TEntity>,
 ): boolean {
-  const modifiers = getActorStatModifiers(actor, stat);
+  const modifiers = getStatModifiers(entity, stat);
   for (let modifierId in modifiers) {
     const modifier = modifiers[modifierId];
     if (modifier.position < 1.0) {
@@ -89,16 +110,12 @@ export function hasActiveStatModifiers(
 }
 
 /**
- * Get the total modifier bonus for a stat (for debugging/UI)
- * @param actor - The actor to query
- * @param stat - The stat to calculate bonus for
- * @param modifiers - Optional pre-extracted modifiers array for performance
- * @returns Total modifier bonus (positive or negative)
+ * Generic version of getStatModifierBonus
  */
-export function getStatModifierBonus(
-  actor: Actor,
-  stat: ActorStat,
-  modifiers: AppliedModifiers = getActorStatModifiers(actor, stat),
+export function getGenericStatModifierBonus<TEntity extends HasStats<any>>(
+  entity: TEntity,
+  stat: StatKey<TEntity>,
+  modifiers: AppliedModifiers = getStatModifiers(entity, stat),
 ): number {
   // Single-pass optimization: filter and aggregate in one loop
   let totalBonus = 0;
@@ -113,57 +130,30 @@ export function getStatModifierBonus(
 }
 
 /**
- * Calculate effective stat bonus using Pathfinder 2E formula
+ * Calculate effective stat bonus
  * Includes modifier bonuses in the calculation
  * @param actor - The actor to query
  * @param stat - The stat to calculate bonus for
  * @returns Stat bonus including modifiers
  */
-export function getEffectiveStatBonus(
-  actor: Actor,
-  stat: ActorStat,
+export function getEffectiveStatBonus<TEntity extends HasStats<any>>(
+  entity: TEntity,
+  stat: StatKey<TEntity>,
 ): number {
-  const effectiveValue = computeEffectiveStatValue(actor, stat);
+  const effectiveValue = computeEffectiveStatValue(entity, stat);
   return calculateStatBonus(effectiveValue);
 }
 
-export function refreshActorStats(actor: Actor): void {
-  for (const stat of ALL_STAT_NAMES) {
-    const statState = getActorStat(actor, stat);
-    const modifiers = getActorStatModifiers(actor, stat);
-    const effectiveValue = computeEffectiveStatValue(actor, stat, statState, modifiers);
+export function refreshStats<TEntity extends HasStats<any>>(
+  entity: TEntity,
+  statNames: readonly (StatKey<TEntity>)[] = ALL_STAT_NAMES,
+): void {
+  for (const stat of statNames) {
+    const statState = getStat(entity, stat);
+    const modifiers = getStatModifiers(entity, stat);
+    const effectiveValue = computeEffectiveStatValue(entity, stat, statState, modifiers);
 
     statState.eff = effectiveValue;
     statState.mods = modifiers;
   }
 }
-
-/**
- * @deprecated
- */
-export type ActorStatApi = {
-  getActorStat: typeof getActorStat;
-  getActorStatModifiers: typeof getActorStatModifiers;
-  getEffectiveStatValue: typeof computeEffectiveStatValue;
-  hasActiveStatModifiers: typeof hasActiveStatModifiers;
-  getStatModifierBonus: typeof getStatModifierBonus;
-  getEffectiveStatBonus: typeof getEffectiveStatBonus;
-  refreshActorStats: typeof refreshActorStats;
-};
-
-const SINGLETON_ACTOR_STAT_API: ActorStatApi = {
-  getActorStat: getActorStat,
-  getActorStatModifiers: getActorStatModifiers,
-  getEffectiveStatValue: computeEffectiveStatValue,
-  hasActiveStatModifiers: hasActiveStatModifiers,
-  getStatModifierBonus: getStatModifierBonus,
-  getEffectiveStatBonus: getEffectiveStatBonus,
-  refreshActorStats: refreshActorStats,
-};
-
-/**
- * @deprecated
- */
-export const createActorStatApi = (): ActorStatApi => {
-  return SINGLETON_ACTOR_STAT_API;
-};

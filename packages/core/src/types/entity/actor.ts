@@ -10,6 +10,7 @@ import {
 } from '~/types/entity/attribute';
 import { CurvePosition } from '~/types/easing';
 import { Shell } from '~/types/entity/shell';
+import { CurrencyType } from '~/types/currency';
 
 /**
  * The kinds of actors in the simulation
@@ -76,6 +77,9 @@ export enum ActorStat {
   MEM = 'mem',
 }
 
+export type CoreStat = keyof CoreStats;
+export type ShellStat = keyof ShellStats;
+
 export type CoreStats = {
   [ActorStat.INT]: ModifiableScalarAttribute;
   [ActorStat.PER]: ModifiableScalarAttribute;
@@ -101,7 +105,7 @@ export type Memberships = Partial<Record<Taxonomy.Factions, Membership>>;
 export type Traits = Partial<Record<Taxonomy.Traits, 1>>;
 export type Injuries = Partial<Record<Taxonomy.Anatomy, AppliedAnatomicalDamage>>;
 export type Subscriptions = Partial<Record<Taxonomy.Topics, 1>>;
-export type Wallet = Partial<Record<Taxonomy.Currency, number>>;
+export type Wallet = Partial<Record<CurrencyType, number>>;
 export type Shells = Partial<Record<string, Shell>>;
 
 export type InventoryItem = {

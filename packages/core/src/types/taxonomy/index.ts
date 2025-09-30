@@ -324,7 +324,7 @@ export type AnyGroupURN = Taxonomy.Groups;
 export type TopicURN = Taxonomy.Topics;
 export type ResourceURN = Taxonomy.Resources;
 export type EcosystemURN = `${RootNamespace}:eco:${Biome}:${Climate}`;
-export type ItemType = 'weapon' | 'armor' | 'ammo' | 'container' | 'resource' | 'mod' | 'device';
+export type ItemType = 'weapon' | 'armor' | 'ammo' | 'container' | 'resource' | 'mod' | 'device' | 'component';
 export type ItemURN<TItemType extends ItemType = ItemType> = `${RootNamespace}:item:${TItemType}:${string}`;
 export type WeaponItemURN = ItemURN<'weapon'>;
 export type ArmorItemURN = ItemURN<'armor'>;
@@ -347,6 +347,7 @@ export type ResourceSchemaURN = SchemaURN<'resource'>;
 export type ModSchemaURN = SchemaURN<'mod'>;
 export type DeviceSchemaURN = SchemaURN<'device'>;
 export type ModifierSchemaURN = SchemaURN<'modifier'>;
+export type ComponentSchemaURN = SchemaURN<'component'>;
 
 // Non-item schemas (don't follow the category pattern)
 export type AbilitySchemaURN = `${RootNamespace}:schema:ability:${string}`;

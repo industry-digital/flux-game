@@ -6,6 +6,7 @@ import {
   AbilitySchemaURN,
   SkillSchemaURN,
   ContainerSchemaURN,
+  ComponentSchemaURN,
 } from '~/types/taxonomy';
 import {
   BulkResourceSchema,
@@ -24,6 +25,7 @@ import {
   loadSkillSchemas,
   loadContainerSchemas,
 } from './loaders';
+import { ComponentSchema } from '~/types/schema/component';
 
 /**
  * Registry mapping URN types to their corresponding schema types
@@ -36,6 +38,7 @@ export type SchemaRegistry = {
   [key: AbilitySchemaURN]: AbilitySchema;
   [key: SkillSchemaURN]: SkillSchema;
   [key: ContainerSchemaURN]: ContainerSchema;
+  [key: ComponentSchemaURN]: ComponentSchema;
   // TODO: Add effect, trait schemas when available
   // [key: EffectSchemaURN]: EffectSchema;
   // [key: TraitSchemaURN]: TraitSchema;

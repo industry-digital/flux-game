@@ -54,6 +54,7 @@ export type Modification = AbstractItem<'mod'> & StackableMixin;
 export type Device = AbstractItem<'device'> & ChargeableMixin;
 export type Weapon = AbstractItem<'weapon'>;
 export type Armor = AbstractItem<'armor'> & StackableMixin;
+export type ShellComponent = AbstractItem<'component'>;
 
 // Union of all possible item entity types
-export type Item = Resource | Ammo | Container | Modification | Device | Weapon | Armor;
+export type Item = Resource | Ammo | Container | Modification | Device | Weapon | Armor | ShellComponent;

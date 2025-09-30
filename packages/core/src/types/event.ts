@@ -94,6 +94,14 @@ export enum EventType {
   COMBAT_TURN_DID_END = 'combat:turn:ended',
   RESOURCES_DID_CHANGE = 'place:resources:changed',
   WEATHER_DID_CHANGE = 'place:weather:changed',
+
+  // Workbench events
+  WORKBENCH_SESSION_DID_START = 'workbench:session:started',
+  SHELL_MUTATION_STAGED = 'workbench:mutation:staged',
+  SHELL_MUTATIONS_DIFFED = 'workbench:mutations:diffed',
+  SHELL_MUTATIONS_UNSTAGED = 'workbench:mutations:unstaged',
+  SHELL_MUTATIONS_COMMITTED = 'workbench:commit',
+  WORKBENCH_SESSION_DID_END = 'workbench:session:ended',
 }
 
 export type RequiresActor = {
@@ -297,6 +305,21 @@ export type CombatantDidRecoverApInput = AbstractWorldEventInput<
     recovered: number;
   }>;
 
+export type WorkbenchSessionDidStart = EventBase & WorkbenchSessionDidStartInput;
+export type WorkbenchSessionDidStartInput = RequiresActor & AbstractWorldEventInput<
+  EventType.WORKBENCH_SESSION_DID_START,
+  {
+    session: SessionURN;
+  }>;
+
+export type WorkbenchSessionDidEnd = EventBase & WorkbenchSessionDidEndInput;
+export type WorkbenchSessionDidEndInput = RequiresActor & AbstractWorldEventInput<
+  EventType.WORKBENCH_SESSION_DID_END,
+  {
+    session: SessionURN;
+  }>;
+
+
 /**
  * Union of  all valid event inputs
  */
@@ -330,6 +353,9 @@ export type WorldEventInput =
   | CombatTurnDidEndInput
   | CombatantDidDieInput
   | CombatantDidRecoverApInput
+  | WorkbenchSessionDidStartInput
+  | WorkbenchSessionDidEndInput;
+
 
 /**
  * Union of all valid events

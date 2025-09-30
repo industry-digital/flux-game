@@ -28,6 +28,7 @@ export type ActorEquipmentApi = {
    */
   getEquippedWeapon: (actor: Actor, locations?: AnatomyURN[]) => WeaponItemURN | null;
   getEquippedWeaponSchema: (actor: Actor, locations?: AnatomyURN[]) => WeaponSchema | null;
+  getEquippedWeaponSchemaOrFail: (actor: Actor, locations?: AnatomyURN[]) => WeaponSchema;
   equipWeapon: (actor: Actor, itemId: WeaponItemURN) => void;
   unequipWeapon: (actor: Actor, itemId: WeaponItemURN) => void;
   /**
@@ -79,6 +80,14 @@ export function createActorEquipmentApi (
     const item = inventoryApi.getItem(actor, weaponId);
     const schema = schemaManager.getSchema(item.schema as keyof SchemaRegistry);
     return schema as WeaponSchema | null;
+  }
+
+  function getEquippedWeaponSchemaOrFail(actor: Actor, possibleLocations: AnatomyURN[] = allowedAnatomicalLocations): WeaponSchema {
+    const schema = getEquippedWeaponSchema(actor, possibleLocations);
+    if (!schema) {
+      throw new Error('No weapon equipped');
+    }
+    return schema;
   }
 
   function equipWeapon(actor: Actor, itemId: WeaponItemURN) {
@@ -148,6 +157,7 @@ export function createActorEquipmentApi (
   return {
     getEquippedWeapon,
     getEquippedWeaponSchema,
+    getEquippedWeaponSchemaOrFail,
     equipWeapon,
     unequipWeapon,
     cleanupEquipment,

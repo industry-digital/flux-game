@@ -1,0 +1,108 @@
+import { ActorStat, ShellStats } from '~/types/entity/actor';
+import { Shell } from '~/types/entity/shell';
+import { createModifiableScalarAttribute } from '~/worldkit/entity';
+import { createInventory } from '~/worldkit/entity/actor/inventory';
+import { hashUnsafeString } from '~/worldkit/hash';
+
+export type CreateShellInput = {
+  id?: Shell['id'];
+  name: Shell['name'];
+  inventory?: Shell['inventory'];
+  equipment?: Shell['equipment'];
+};
+
+export type ShellTransformer = (shell: Shell) => Shell;
+const identity: ShellTransformer = (shell: Shell) => shell;
+
+export type CreateShellDependencies = {
+  hashUnsafeString: typeof hashUnsafeString;
+  createModifiableScalarAttribute: typeof createModifiableScalarAttribute;
+  createInventory: typeof createInventory;
+};
+
+export const DEFAULT_CREATE_SHELL_DEPS: CreateShellDependencies = {
+  hashUnsafeString,
+  createModifiableScalarAttribute,
+  createInventory,
+};
+
+export const createShell = (
+  input: CreateShellInput,
+  transform = identity,
+  {
+    hashUnsafeString: hashUnsafeStringImpl,
+    createModifiableScalarAttribute: createModifiableScalarAttributeImpl,
+    createInventory: createInventoryImpl,
+  }: CreateShellDependencies = DEFAULT_CREATE_SHELL_DEPS,
+): Shell => {
+
+  const defaults: Shell = {
+    id: input.id ?? hashUnsafeStringImpl(input.name),
+    name: input.name,
+    stats: {
+      [ActorStat.POW]: createModifiableScalarAttributeImpl((defaults) => ({ ...defaults, nat: 10 })),
+      [ActorStat.FIN]: createModifiableScalarAttributeImpl((defaults) => ({ ...defaults, nat: 10 })),
+      [ActorStat.RES]: createModifiableScalarAttributeImpl((defaults) => ({ ...defaults, nat: 10 })),
+    },
+    inventory: input.inventory ?? createInventoryImpl(),
+    equipment: {},
+  };
+
+  return transform(defaults) as Shell;
+};
+
+export type ShellStatsInput = Partial<{
+  [ActorStat.POW]: number;
+  [ActorStat.FIN]: number;
+  [ActorStat.RES]: number;
+}>;
+
+/**
+ * Apply stat changes to shell stats (immutable update)
+ * Returns a new ShellStats object with updated values
+ */
+export const applyShellStats = (stats: ShellStats, input: ShellStatsInput): ShellStats => {
+  const newStats = { ...stats };
+
+  if (input[ActorStat.POW] !== undefined) {
+    newStats[ActorStat.POW] = {
+      ...newStats[ActorStat.POW],
+      nat: input[ActorStat.POW]!,
+      eff: input[ActorStat.POW]!,
+    };
+
+    delete newStats[ActorStat.POW].mods;
+  }
+
+  if (input[ActorStat.FIN] !== undefined) {
+    newStats[ActorStat.FIN] = {
+      ...newStats[ActorStat.FIN],
+      nat: input[ActorStat.FIN]!,
+      eff: input[ActorStat.FIN]!,
+    };
+
+    delete newStats[ActorStat.FIN].mods;
+  }
+
+  if (input[ActorStat.RES] !== undefined) {
+    newStats[ActorStat.RES] = {
+      ...newStats[ActorStat.RES],
+      nat: input[ActorStat.RES]!,
+      eff: input[ActorStat.RES]!,
+    };
+
+    delete newStats[ActorStat.RES].mods;
+  }
+
+  return newStats;
+};
+
+/**
+ * Create a new shell with updated stats (immutable)
+ */
+export const setShellStats = (shell: Shell, input: ShellStatsInput): Shell => {
+  return {
+    ...shell,
+    stats: applyShellStats(shell.stats, input),
+  };
+};

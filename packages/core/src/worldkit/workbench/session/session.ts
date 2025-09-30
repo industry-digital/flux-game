@@ -5,6 +5,8 @@ import { EntityType } from '~/types/entity/entity';
 import { uniqid as uniqidImpl, BASE62_CHARSET } from '~/lib/random';
 import { TransformerContext, WorldProjection } from '~/types/handler';
 import { createSessionId } from '~/worldkit/session';
+import { EventType, WorkbenchSessionDidStart } from '~/types/event';
+import { createWorldEvent } from '~/worldkit/event';
 
 const uniqid = () => uniqidImpl(16, BASE62_CHARSET);
 
@@ -62,7 +64,7 @@ export const createWorkbenchSession = (
 /**
  * Creates a unique workbench session ID.
  */
-export function createWorkbenchSessionId(key: string = uniqid()): SessionURN {
+export const createWorkbenchSessionId = (key: string = uniqid()): SessionURN => {
   return createSessionId(SessionStrategy.WORKBENCH, key);
 }
 
@@ -76,6 +78,17 @@ export const getWorkbenchSession = (
   return world.sessions[sessionId] as WorkbenchSession | undefined;
 };
 
+export const getWorkbenchSessionOrFail = (
+  world: WorldProjection,
+  sessionId: SessionURN,
+): WorkbenchSession => {
+  const session = getWorkbenchSession(world, sessionId);
+  if (!session) {
+    throw new Error(`Workbench session ${sessionId} not found`);
+  }
+  return session;
+};
+
 export type WorkbenchSessionApi = {
   session: WorkbenchSession;
   isNew: boolean;
@@ -87,30 +100,50 @@ export type WorkbenchSessionApi = {
 export const createWorkbenchSessionApi = (
   context: TransformerContext,
   actorId: ActorURN,
+  trace: string,
   sessionId?: SessionURN,
-  initialShellId?: string,
 ): WorkbenchSessionApi => {
   const { world } = context;
+
+  // Invariant: Actor always exists in world projection
+  const actor = world.actors[actorId];
+  if (!actor) {
+    throw new Error(`Actor not found in world projection`);
+  }
+
+  // Invariant: Actor always has a location
+  if (!actor.location) {
+    throw new Error(`Actor has no location`);
+  }
 
   let isNew = !sessionId;
   sessionId ??= createWorkbenchSessionId();
 
   let session!: WorkbenchSession;
 
-  if (isNew) {
+  if (!isNew) {
+    session = getWorkbenchSessionOrFail(world, sessionId);
+  }
+  else {
     session = createWorkbenchSession(context, {
       id: sessionId,
       actorId,
-      initialShellId,
     });
+
+    const workbenchSessionDidStart: WorkbenchSessionDidStart = createWorldEvent({
+      actor: actor.id,
+      type: EventType.WORKBENCH_SESSION_DID_START,
+      location: actor.location,
+      trace,
+      payload: {
+        session: sessionId,
+      },
+    });
+
+    context.declareEvent(workbenchSessionDidStart);
+
     // Store the new session in the world context so it can be retrieved later
     world.sessions[sessionId] = session;
-  } else {
-    session = getWorkbenchSession(world, sessionId)!;
-  }
-
-  if (!session) {
-    throw new Error(`Workbench session ${sessionId} not found`);
   }
 
   return {
