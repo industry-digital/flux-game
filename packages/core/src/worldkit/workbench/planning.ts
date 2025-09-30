@@ -1,7 +1,7 @@
 import { Shell } from '~/types/entity/shell';
 import { ShellMutation, ShellMutationType, StatMutation, StatMutationOperation, ValidationResult } from '~/types/workbench';
 import { ShellStat } from '~/types/entity/actor';
-import { calculateShellStatUpgradeCost } from '../cost';
+import { calculateShellStatUpgradeCost } from './cost';
 import { MAX_STAT_VALUE } from '~/worldkit/entity/actor';
 import { createShellPreview } from '~/worldkit/workbench/operations/preview';
 import { applyShellMutations } from '~/worldkit/workbench/operations/execution';
