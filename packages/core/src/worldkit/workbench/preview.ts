@@ -1,6 +1,7 @@
 import { Shell } from '~/types/entity/shell';
 import { ShellMutation, ShellMutationType, StatMutationOperation } from '~/types/workbench';
 import { ActorStat } from '~/types/entity/actor';
+import { getNaturalStatValue } from '~/worldkit/entity';
 
 /**
  * Creates a preview of a shell with mutations applied.
@@ -27,7 +28,7 @@ export function createShellPreview(currentShell: Shell, mutations: ShellMutation
   for (const mutation of mutations) {
     switch (mutation.type) {
       case ShellMutationType.STAT: {
-        const currentValue = previewShell.stats[mutation.stat].eff;
+        const currentValue = getNaturalStatValue(previewShell, mutation.stat);
         let newValue: number;
 
         if (mutation.operation === StatMutationOperation.ADD) {

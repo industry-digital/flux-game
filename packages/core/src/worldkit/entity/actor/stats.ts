@@ -3,6 +3,8 @@ import { ModifiableScalarAttribute } from '~/types/entity/attribute';
 import { AppliedModifiers } from '~/types/modifier';
 
 export const ALL_STAT_NAMES = Object.values(ActorStat);
+export const CORE_STAT_NAMES = [ActorStat.INT, ActorStat.PER, ActorStat.MEM] as const;
+export const SHELL_STAT_NAMES = [ActorStat.POW, ActorStat.FIN, ActorStat.RES] as const;
 export const BASELINE_STAT_VALUE = 10;
 export const MAX_STAT_VALUE = 100;
 export const NORMAL_STAT_RANGE = MAX_STAT_VALUE - BASELINE_STAT_VALUE;
@@ -16,7 +18,6 @@ export type HasStats<TStats extends Record<string, ModifiableScalarAttribute>> =
 export type StatKey<TEntity extends HasStats<any>> = keyof TEntity['stats'];
 
 // Shell-specific stat names
-export const SHELL_STAT_NAMES = [ActorStat.POW, ActorStat.FIN, ActorStat.RES] as const;
 export type ShellStatKey = typeof SHELL_STAT_NAMES[number];
 
 /**
@@ -40,17 +41,17 @@ export function getStat<TEntity extends HasStats<any>>(
 export function getEffectiveStatValue<TEntity extends HasStats<any>>(
   entity: TEntity,
   stat: StatKey<TEntity>,
-  baseStat = getStat(entity, stat),
+  statState = getStat(entity, stat),
 ): number {
-  return baseStat.eff;
+  return statState.eff;
 }
 
 export function getNaturalStatValue<TEntity extends HasStats<any>>(
   entity: TEntity,
   stat: StatKey<TEntity>,
-  baseStat = getStat(entity, stat),
+  statState = getStat(entity, stat),
 ): number {
-  return baseStat.nat;
+  return statState.nat;
 }
 
 export function getStatModifiers<TEntity extends HasStats<any>>(
@@ -69,14 +70,14 @@ export function getStatModifiers<TEntity extends HasStats<any>>(
  * Filters out expired modifiers and clamps the result to valid stat range
  * @param actor - The actor to query
  * @param stat - The stat to calculate effective value for
- * @param baseStat - Optional pre-fetched base stat for performance
+ * @param statState - Optional pre-fetched base stat for performance
  * @param modifiers - Optional pre-fetched modifiers for performance
  * @returns Effective stat value (natural base + active modifiers, clamped to valid range)
  */
 export function computeEffectiveStatValue<TEntity extends HasStats<any>>(
   entity: TEntity,
   stat: StatKey<TEntity>,
-  baseStat = getStat(entity, stat),
+  statState = getStat(entity, stat),
   modifiers = getStatModifiers(entity, stat),
 ): number {
   // Single-pass optimization: filter and aggregate in one loop
@@ -89,7 +90,7 @@ export function computeEffectiveStatValue<TEntity extends HasStats<any>>(
   }
 
   // Clamp to valid stat range
-  return Math.max(BASELINE_STAT_VALUE, Math.min(MAX_STAT_VALUE, baseStat.nat + totalBonus));
+  return Math.max(BASELINE_STAT_VALUE, Math.min(MAX_STAT_VALUE, statState.nat + totalBonus));
 }
 
 /**
@@ -109,25 +110,6 @@ export function hasGenericActiveStatModifiers<TEntity extends HasStats<any>>(
   return false;
 }
 
-/**
- * Generic version of getStatModifierBonus
- */
-export function getGenericStatModifierBonus<TEntity extends HasStats<any>>(
-  entity: TEntity,
-  stat: StatKey<TEntity>,
-  modifiers: AppliedModifiers = getStatModifiers(entity, stat),
-): number {
-  // Single-pass optimization: filter and aggregate in one loop
-  let totalBonus = 0;
-  for (let modifierId in modifiers) {
-    const modifier = modifiers[modifierId];
-    if (modifier.position < 1.0) { // Only active modifiers
-      totalBonus += modifier.value;
-    }
-  }
-
-  return totalBonus;
-}
 
 /**
  * Calculate effective stat bonus
@@ -139,15 +121,20 @@ export function getGenericStatModifierBonus<TEntity extends HasStats<any>>(
 export function getEffectiveStatBonus<TEntity extends HasStats<any>>(
   entity: TEntity,
   stat: StatKey<TEntity>,
+  statState = getStat(entity, stat),
 ): number {
-  const effectiveValue = computeEffectiveStatValue(entity, stat);
+  const effectiveValue = computeEffectiveStatValue(entity, stat, statState);
   return calculateStatBonus(effectiveValue);
 }
 
-export function refreshStats<TEntity extends HasStats<any>>(
+/**
+ * Refresh the stats for an entity
+ * This operation directly mutates the supplied entity
+ */
+export const refreshStats = <TEntity extends HasStats<any>> (
   entity: TEntity,
   statNames: readonly (StatKey<TEntity>)[] = ALL_STAT_NAMES,
-): void {
+): void => {
   for (const stat of statNames) {
     const statState = getStat(entity, stat);
     const modifiers = getStatModifiers(entity, stat);
@@ -156,4 +143,22 @@ export function refreshStats<TEntity extends HasStats<any>>(
     statState.eff = effectiveValue;
     statState.mods = modifiers;
   }
-}
+};
+
+export const mutateNaturalStatValue = <TEntity extends HasStats<any>> (
+  entity: TEntity,
+  stat: ActorStat,
+  value: number,
+  statState = getStat(entity, stat),
+) => {
+  statState.nat = value;
+};
+
+export const mutateStatModifiers = <TEntity extends HasStats<any>> (
+  entity: TEntity,
+  stat: ActorStat,
+  mods: AppliedModifiers,
+  statState = getStat(entity, stat),
+):void => {
+  statState.mods = mods;
+};

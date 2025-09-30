@@ -3,8 +3,8 @@ import { ShellMutation, ShellMutationType, StatMutation, StatMutationOperation, 
 import { ShellStat } from '~/types/entity/actor';
 import { calculateShellStatUpgradeCost } from './cost';
 import { MAX_STAT_VALUE } from '~/worldkit/entity/actor';
-import { createShellPreview } from '~/worldkit/workbench/operations/preview';
-import { applyShellMutations } from '~/worldkit/workbench/operations/execution';
+import { createShellPreview } from '~/worldkit/workbench/preview';
+import { applyShellMutations } from '~/worldkit/workbench/execution';
 
 export const createShellStatMutation = (
   stat: ShellStat,

@@ -16,7 +16,6 @@ import {
   getStatModifiers,
   computeEffectiveStatValue,
   hasGenericActiveStatModifiers,
-  getGenericStatModifierBonus,
   getEffectiveStatBonus,
   refreshStats,
   ALL_STAT_NAMES,
@@ -331,60 +330,6 @@ describe('Stats', () => {
     });
   });
 
-  describe('getGenericStatModifierBonus', () => {
-    it('should return 0 when no modifiers exist', () => {
-      const actor = createTestActor({
-        [ActorStat.POW]: createTestStat(),
-      });
-
-      const result = getGenericStatModifierBonus(actor, ActorStat.POW);
-      expect(result).toBe(0);
-    });
-
-    it('should sum active modifier values', () => {
-      const actor = createTestActor({
-        [ActorStat.POW]: createTestStat({
-          mods: {
-            'buff1': createTestModifier({ position: 0.2, value: 5 }),
-            'buff2': createTestModifier({ position: 0.6, value: 3 }),
-            'debuff': createTestModifier({ position: 0.4, value: -2 }),
-          },
-        }),
-      });
-
-      const result = getGenericStatModifierBonus(actor, ActorStat.POW);
-      expect(result).toBe(6); // 5 + 3 - 2
-    });
-
-    it('should ignore expired modifiers', () => {
-      const actor = createTestActor({
-        [ActorStat.POW]: createTestStat({
-          mods: {
-            'active': createTestModifier({ position: 0.5, value: 8 }),
-            'expired': createTestModifier({ position: 1.0, value: 20 }),
-          },
-        }),
-      });
-
-      const result = getGenericStatModifierBonus(actor, ActorStat.POW);
-      expect(result).toBe(8); // Only active modifier
-    });
-
-    it('should work with Shell entities', () => {
-      const shell = createTestShell({
-        [ActorStat.RES]: createTestStat({
-          mods: {
-            'armor': createTestModifier({ position: 0.3, value: 4 }),
-            'curse': createTestModifier({ position: 0.7, value: -1 }),
-          },
-        }),
-      });
-
-      const result = getGenericStatModifierBonus(shell, ActorStat.RES);
-      expect(result).toBe(3); // 4 - 1
-    });
-  });
-
   describe('getEffectiveStatBonus', () => {
     it('should calculate bonus from effective stat value', () => {
       const actor = createTestActor({
@@ -526,7 +471,6 @@ describe('Stats', () => {
       });
 
       const naturalValue = getNaturalStatValue(actor, ActorStat.POW);
-      const modifierBonus = getGenericStatModifierBonus(actor, ActorStat.POW);
       const computedEffective = computeEffectiveStatValue(actor, ActorStat.POW);
       const hasActive = hasGenericActiveStatModifiers(actor, ActorStat.POW);
 
@@ -536,7 +480,6 @@ describe('Stats', () => {
       const effectiveBonus = getEffectiveStatBonus(actor, ActorStat.POW);
 
       expect(naturalValue).toBe(15);
-      expect(modifierBonus).toBe(6); // 5 + 3 - 2 = 6 (expired ignored)
       expect(computedEffective).toBe(21); // 15 + 6
       expect(cachedEffective).toBe(21); // Should match computed after refresh
       expect(effectiveBonus).toBe(5); // (21-10)/2 = 5
@@ -560,7 +503,6 @@ describe('Stats', () => {
       // Both should produce identical results
       expect(getNaturalStatValue(actor, ActorStat.POW)).toBe(getNaturalStatValue(shell, ActorStat.POW));
       expect(computeEffectiveStatValue(actor, ActorStat.POW)).toBe(computeEffectiveStatValue(shell, ActorStat.POW));
-      expect(getGenericStatModifierBonus(actor, ActorStat.POW)).toBe(getGenericStatModifierBonus(shell, ActorStat.POW));
       expect(getEffectiveStatBonus(actor, ActorStat.POW)).toBe(getEffectiveStatBonus(shell, ActorStat.POW));
       expect(hasGenericActiveStatModifiers(actor, ActorStat.POW)).toBe(hasGenericActiveStatModifiers(shell, ActorStat.POW));
     });

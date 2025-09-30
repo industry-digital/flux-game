@@ -5,6 +5,7 @@ import { ActionCost, BattlefieldPositionSummary, CombatantSummary } from '~/type
 import { RollResult } from '~/types/dice';
 import { Narrative } from '~/types/narrative';
 import { SessionStatus } from '~/types/session';
+import { ShellDiff, ShellMutation } from '~/types/workbench';
 
 export type EventPayload = Record<string, any>;
 
@@ -97,10 +98,10 @@ export enum EventType {
 
   // Workbench events
   WORKBENCH_SESSION_DID_START = 'workbench:session:started',
-  SHELL_MUTATION_STAGED = 'workbench:mutation:staged',
-  SHELL_MUTATIONS_DIFFED = 'workbench:mutations:diffed',
-  SHELL_MUTATIONS_UNSTAGED = 'workbench:mutations:unstaged',
-  SHELL_MUTATIONS_COMMITTED = 'workbench:commit',
+  ACTOR_DID_STAGE_SHELL_MUTATION = 'workbench:mutation:staged',
+  ACTOR_DID_DIFF_SHELL_MUTATIONS = 'workbench:mutations:diffed',
+  ACTOR_DID_UNDO_SHELL_MUTATIONS = 'workbench:mutations:undone',
+  ACTOR_DID_COMMIT_SHELL_MUTATIONS = 'workbench:mutations:committed',
   WORKBENCH_SESSION_DID_END = 'workbench:session:ended',
 }
 
@@ -319,6 +320,17 @@ export type WorkbenchSessionDidEndInput = RequiresActor & AbstractWorldEventInpu
     session: SessionURN;
   }>;
 
+export type ActorDidStageShellMutation = EventBase & ActorDidStageShellMutationInput;
+export type ActorDidStageShellMutationInput = RequiresActor & AbstractWorldEventInput<
+  EventType.ACTOR_DID_STAGE_SHELL_MUTATION,
+  ShellMutation
+>;
+
+export type ActorDidDiffShellMutations = EventBase & ActorDidDiffShellMutationsInput;
+export type ActorDidDiffShellMutationsInput = RequiresActor & AbstractWorldEventInput<
+  EventType.ACTOR_DID_DIFF_SHELL_MUTATIONS,
+  ShellDiff
+>;
 
 /**
  * Union of  all valid event inputs
@@ -355,7 +367,6 @@ export type WorldEventInput =
   | CombatantDidRecoverApInput
   | WorkbenchSessionDidStartInput
   | WorkbenchSessionDidEndInput;
-
 
 /**
  * Union of all valid events

@@ -8,6 +8,7 @@ import { MassApi } from '~/worldkit/physics/mass';
 import { ActorEquipmentApi } from '~/worldkit/entity/actor/equipment';
 import { computeEffectiveStatValue, getNaturalStatValue, getStat } from '~/worldkit/entity/actor/stats';
 import { getMaxEnergy, getMaxRecoveryRate } from '~/worldkit/entity/actor/capacitor';
+import { PerformanceChanges } from '~/types/workbench';
 
 /**
  * Predefined distances for performance analysis, in meters
@@ -172,3 +173,30 @@ function calculateComponentPowerDraw(shell: Shell, weaponSchema: any): number {
 
   return powerDraw;
 }
+
+export type PerformanceChangeReducer = (performance: PerformanceChanges) => PerformanceChanges;
+const identity: PerformanceChangeReducer = (performance) => performance;
+
+export const createPerformanceChanges = (transform: PerformanceChangeReducer = identity): PerformanceChanges => {
+  const defaults: any = {
+    gapClosing10: '',
+    gapClosing100: '',
+    avgSpeed10: '',
+    avgSpeed100: '',
+    peakPowerOutput: '',
+    componentPowerDraw: '',
+    freePower: '',
+    weaponDamage: '',
+    weaponApCost: '',
+    weaponDps: '',
+    totalMassKg: '',
+    inertialMassKg: '',
+    inertiaReduction: '',
+    powerToWeightRatio: '',
+    topSpeed: '',
+    capacitorCapacity: '',
+    maxRechargeRate: '',
+  };
+
+  return transform(defaults) as PerformanceChanges;
+};

@@ -103,3 +103,118 @@ export type ShellPreview = {
   shell: Shell;
   perf: ShellPerformanceProfile;
 };
+
+export type Change = `${number} -> ${number}`;
+export type StatChanges = Partial<Record<ShellStat, Change>>;
+
+export type ShellDiff = {
+  shellId: string;
+  /**
+   * Cost in resources
+   */
+  cost: number;
+  /**
+   * Stat changes
+   */
+  stats?: StatChanges;
+  /**
+   * Performance changes
+   */
+  perf: PerformanceChanges;
+};
+
+export type PerformanceChanges = {
+
+  /**
+   * Gap closing time in seconds
+   * Short distance is about ~10 meters
+   */
+  gapClosing10: Change;
+
+  /**
+   * Gap closing time in seconds
+   * Long distance is about ~100 meters
+   */
+  gapClosing100: Change;
+
+  /**
+   * Average speed in meters per second
+   * Short distance is about ~10 meters
+   */
+  avgSpeed10: Change;
+
+  /**
+   * Average speed in meters per second
+   * Long distance is about ~100 meters
+   */
+  avgSpeed100: Change;
+
+  /**
+   * Peak power output in watts
+   */
+  peakPowerOutput: Change;
+
+  /**
+   * Component power draw in watts
+   */
+  componentPowerDraw: Change;
+
+  /**
+   * Free power in watts (peakPowerOut - componentPowerDraw)
+   */
+  freePower: Change;
+
+  // === COMBAT EFFECTIVENESS ===
+
+  /**
+   * Damage per second (damage / AP cost)
+   */
+  weaponDps: Change;
+
+  /**
+   * Weapon damage per strike
+   */
+  weaponDamage: Change;
+
+  /**
+   * Action Point cost per weapon strike
+   */
+  weaponApCost: Change;
+
+  // === PHYSICAL CHARACTERISTICS ===
+
+  /**
+   * Total shell mass in kilograms (body + equipment + inventory)
+   */
+  totalMassKg: Change;
+
+  /**
+   * Effective mass for acceleration calculations (reduced by FIN)
+   */
+  inertialMassKg: Change;
+
+  /**
+   * Inertia reduction percentage from finesse (0-61.8%)
+   */
+  inertiaReduction: Change;
+
+  /**
+   * Power-to-weight ratio (watts per kg)
+   */
+  powerToWeightRatio: Change;
+
+  /**
+   * Maximum theoretical speed in m/s
+   */
+  topSpeed: Change;
+
+  /**
+   * Maximum energy capacity in Joules
+   */
+  capacitorCapacity: Change;
+
+  /**
+   * Maximum energy recovery rate in Watts (at t=~0.382)
+   */
+  maxRechargeRate: Change;
+};
