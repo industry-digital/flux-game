@@ -1,4 +1,53 @@
 import { BASELINE_STAT_VALUE } from '~/worldkit/entity/actor/stats';
+import { Shell } from '~/types/entity/shell';
+import { ShellMutation, ShellMutationType, StatMutationOperation } from '~/types/workbench';
+import { createShellPreview } from '~/worldkit/workbench/preview';
+import { applyShellMutations } from '~/worldkit/workbench/execution';
+
+/**
+ * Compute the resource cost of a single mutation
+ */
+export const calculateMutationCost = (shell: Shell, mutation: ShellMutation): number => {
+  switch (mutation.type) {
+    case ShellMutationType.STAT: {
+      const currentValue = shell.stats[mutation.stat].eff;
+      let targetValue: number;
+
+      if (mutation.operation === StatMutationOperation.ADD) {
+        targetValue = currentValue + mutation.amount;
+      } else {
+        targetValue = currentValue - mutation.amount;
+      }
+
+      return calculateShellStatUpgradeCost(currentValue, targetValue);
+    }
+
+    default: {
+      return 0;
+    }
+  }
+}
+
+/**
+ * Compute the total resource cost of a list of mutations
+ */
+export const calculateTotalCost = (shell: Shell, mutations: ShellMutation[]): number => {
+  let totalCost = 0;
+
+  // Create a working copy to track cumulative changes for cost calculation
+  const workingShell = createShellPreview(shell, []);
+
+  for (const mutation of mutations) {
+    // Calculate cost based on current working state
+    const cost = calculateMutationCost(workingShell, mutation);
+    totalCost += cost;
+
+    // Apply this mutation to working shell for next iteration
+    applyShellMutations(workingShell, [mutation]);
+  }
+
+  return totalCost;
+}
 
 /**
  * Shell stat upgrade cost calculation with tiered exponential growth

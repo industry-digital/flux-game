@@ -48,7 +48,7 @@ export const createWorkbenchSession = (
 
   const data: WorkbenchSessionData = {
     currentShellId,
-    pendingChanges: [],
+    pendingMutations: [],
   };
 
   return {

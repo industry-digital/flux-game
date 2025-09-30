@@ -75,7 +75,7 @@ export type RenameShellMutation = {
 
 export type WorkbenchSessionData = {
   currentShellId: string;
-  pendingChanges: ShellMutation[];
+  pendingMutations: ShellMutation[];
 };
 
 export type WorkbenchSession = AbstractSession<SessionStrategy.WORKBENCH, WorkbenchSessionData>;
@@ -105,7 +105,10 @@ export type ShellPreview = {
 };
 
 export type Change = `${number} -> ${number}`;
-export type StatChanges = Partial<Record<ShellStat, Change>>;
+export type NoChange = `${number}`;
+export type DiffValue = Change | NoChange;
+
+export type StatChanges = Partial<Record<ShellStat, DiffValue>>;
 
 export type ShellDiff = {
   shellId: string;
@@ -129,92 +132,92 @@ export type PerformanceChanges = {
    * Gap closing time in seconds
    * Short distance is about ~10 meters
    */
-  gapClosing10: Change;
+  gapClosing10: DiffValue;
 
   /**
    * Gap closing time in seconds
    * Long distance is about ~100 meters
    */
-  gapClosing100: Change;
+  gapClosing100: DiffValue;
 
   /**
    * Average speed in meters per second
    * Short distance is about ~10 meters
    */
-  avgSpeed10: Change;
+  avgSpeed10: DiffValue;
 
   /**
    * Average speed in meters per second
    * Long distance is about ~100 meters
    */
-  avgSpeed100: Change;
+  avgSpeed100: DiffValue;
 
   /**
    * Peak power output in watts
    */
-  peakPowerOutput: Change;
+  peakPowerOutput: DiffValue;
 
   /**
    * Component power draw in watts
    */
-  componentPowerDraw: Change;
+  componentPowerDraw: DiffValue;
 
   /**
    * Free power in watts (peakPowerOut - componentPowerDraw)
    */
-  freePower: Change;
+  freePower: DiffValue;
 
   // === COMBAT EFFECTIVENESS ===
 
   /**
    * Damage per second (damage / AP cost)
    */
-  weaponDps: Change;
+  weaponDps: DiffValue;
 
   /**
    * Weapon damage per strike
    */
-  weaponDamage: Change;
+  weaponDamage: DiffValue;
 
   /**
    * Action Point cost per weapon strike
    */
-  weaponApCost: Change;
+  weaponApCost: DiffValue;
 
   // === PHYSICAL CHARACTERISTICS ===
 
   /**
    * Total shell mass in kilograms (body + equipment + inventory)
    */
-  totalMassKg: Change;
+  totalMassKg: DiffValue;
 
   /**
    * Effective mass for acceleration calculations (reduced by FIN)
    */
-  inertialMassKg: Change;
+  inertialMassKg: DiffValue;
 
   /**
    * Inertia reduction percentage from finesse (0-61.8%)
    */
-  inertiaReduction: Change;
+  inertiaReduction: DiffValue;
 
   /**
    * Power-to-weight ratio (watts per kg)
    */
-  powerToWeightRatio: Change;
+  powerToWeightRatio: DiffValue;
 
   /**
    * Maximum theoretical speed in m/s
    */
-  topSpeed: Change;
+  topSpeed: DiffValue;
 
   /**
    * Maximum energy capacity in Joules
    */
-  capacitorCapacity: Change;
+  capacitorCapacity: DiffValue;
 
   /**
    * Maximum energy recovery rate in Watts (at t=~0.382)
    */
-  maxRechargeRate: Change;
+  maxRechargeRate: DiffValue;
 };

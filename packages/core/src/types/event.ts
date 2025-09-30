@@ -96,12 +96,14 @@ export enum EventType {
   RESOURCES_DID_CHANGE = 'place:resources:changed',
   WEATHER_DID_CHANGE = 'place:weather:changed',
 
+  ACTOR_DID_EXAMINE_CURRENT_SHELL = 'actor:shell:examined',
+
   // Workbench events
   WORKBENCH_SESSION_DID_START = 'workbench:session:started',
-  ACTOR_DID_STAGE_SHELL_MUTATION = 'workbench:mutation:staged',
-  ACTOR_DID_DIFF_SHELL_MUTATIONS = 'workbench:mutations:diffed',
-  ACTOR_DID_UNDO_SHELL_MUTATIONS = 'workbench:mutations:undone',
-  ACTOR_DID_COMMIT_SHELL_MUTATIONS = 'workbench:mutations:committed',
+  WORKBENCH_SHELL_MUTATION_STAGED = 'workbench:mutation:staged',
+  WORKBENCH_SHELL_MUTATIONS_DIFFED = 'workbench:mutations:diffed',
+  WORKBENCH_SHELL_MUTATIONS_UNDONE = 'workbench:mutations:undone',
+  WORKBENCH_SHELL_MUTATIONS_COMMITTED = 'workbench:mutations:committed',
   WORKBENCH_SESSION_DID_END = 'workbench:session:ended',
 }
 
@@ -322,15 +324,34 @@ export type WorkbenchSessionDidEndInput = RequiresActor & AbstractWorldEventInpu
 
 export type ActorDidStageShellMutation = EventBase & ActorDidStageShellMutationInput;
 export type ActorDidStageShellMutationInput = RequiresActor & AbstractWorldEventInput<
-  EventType.ACTOR_DID_STAGE_SHELL_MUTATION,
-  ShellMutation
+  EventType.WORKBENCH_SHELL_MUTATION_STAGED,
+  {
+    shellId: string;
+    mutation: ShellMutation;
+  }
 >;
 
 export type ActorDidDiffShellMutations = EventBase & ActorDidDiffShellMutationsInput;
 export type ActorDidDiffShellMutationsInput = RequiresActor & AbstractWorldEventInput<
-  EventType.ACTOR_DID_DIFF_SHELL_MUTATIONS,
+  EventType.WORKBENCH_SHELL_MUTATIONS_DIFFED,
   ShellDiff
 >;
+
+export type ActorDidUndoShellMutations = EventBase & ActorDidUndoShellMutationsInput;
+export type ActorDidUndoShellMutationsInput = RequiresActor & AbstractWorldEventInput<
+  EventType.WORKBENCH_SHELL_MUTATIONS_UNDONE,
+  {
+    session: SessionURN;
+  }>;
+
+export type ActorDidCommitShellMutations = EventBase & ActorDidCommitShellMutationsInput;
+export type ActorDidCommitShellMutationsInput = RequiresActor & AbstractWorldEventInput<
+  EventType.WORKBENCH_SHELL_MUTATIONS_COMMITTED,
+  {
+    session: SessionURN;
+    cost: number;
+    mutations: ShellMutation[];
+  }>;
 
 /**
  * Union of  all valid event inputs
@@ -366,7 +387,14 @@ export type WorldEventInput =
   | CombatantDidDieInput
   | CombatantDidRecoverApInput
   | WorkbenchSessionDidStartInput
-  | WorkbenchSessionDidEndInput;
+  | WorkbenchSessionDidEndInput
+  | ActorDidStageShellMutationInput
+  | ActorDidDiffShellMutationsInput
+  | ActorDidUndoShellMutationsInput
+  | ActorDidCommitShellMutationsInput
+  | ActorDidDiffShellMutationsInput
+  | ActorDidUndoShellMutationsInput
+  | ActorDidCommitShellMutationsInput;
 
 /**
  * Union of all valid events
