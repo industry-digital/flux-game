@@ -5,7 +5,7 @@ export type Shell = {
   /**
    * The name of the shell (player-assigned).
    */
-  name: string;
+  name?: string;
   stats: ShellStats;
   inventory: Actor['inventory'];
   equipment: Actor['equipment'];

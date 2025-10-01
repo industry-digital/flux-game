@@ -1,7 +1,7 @@
 import { Shell } from '~/types/entity/shell';
 import { ShellMutation, ShellMutationType, StatMutationOperation } from '~/types/workbench';
 import { ActorStat } from '~/types/entity/actor';
-import { getNaturalStatValue } from '~/worldkit/entity';
+import { getNaturalStatValue } from '~/worldkit/entity/actor/stats';
 
 /**
  * Creates a preview of a shell with mutations applied.

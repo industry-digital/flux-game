@@ -12,6 +12,7 @@ import { ActorURN } from '~/types/taxonomy';
 import { WellKnownPlace } from '~/types/world/space';
 import merge from 'lodash/merge';
 import { refreshCapacitorEnergy } from '~/worldkit/entity/actor/capacitor';
+import { createShell } from '~/worldkit/entity/shell';
 
 export type ActorTransformer = (actor: Actor) => Actor;
 const identity: ActorTransformer = (actor: Actor) => actor;
@@ -39,6 +40,7 @@ export function createActor(
   transform: ActorTransformer = identity,
   deps: CreateActorDependencies = DEFAULT_CREATE_ACTOR_DEPS,
 ): Actor {
+  const defaultShell = createShell();
   const defaults: Actor = createEntity<EntityType.ACTOR, Actor>(
     EntityType.ACTOR,
     (entity) => {
@@ -77,6 +79,10 @@ export function createActor(
         specializations: {
           primary: {},
           secondary: {},
+        },
+        currentShell: defaultShell.id,
+        shells: {
+          [defaultShell.id]: defaultShell,
         },
       };
 

@@ -6,9 +6,10 @@ import { hashUnsafeString } from '~/worldkit/hash';
 
 export type CreateShellInput = {
   id?: Shell['id'];
-  name: Shell['name'];
+  name?: Shell['name'];
   inventory?: Shell['inventory'];
   equipment?: Shell['equipment'];
+  stats?: ShellStats;
 };
 
 export type ShellTransformer = (shell: Shell) => Shell;
@@ -27,7 +28,7 @@ export const DEFAULT_CREATE_SHELL_DEPS: CreateShellDependencies = {
 };
 
 export const createShell = (
-  input: CreateShellInput,
+  input?: CreateShellInput,
   transform = identity,
   {
     hashUnsafeString: hashUnsafeStringImpl,
@@ -35,16 +36,17 @@ export const createShell = (
     createInventory: createInventoryImpl,
   }: CreateShellDependencies = DEFAULT_CREATE_SHELL_DEPS,
 ): Shell => {
+  const name = input?.name ?? generateRandomShellName();
 
   const defaults: Shell = {
-    id: input.id ?? hashUnsafeStringImpl(input.name),
-    name: input.name,
+    id: input?.id ?? hashUnsafeStringImpl(name),
+    name,
     stats: {
       [ActorStat.POW]: createModifiableScalarAttributeImpl((defaults) => ({ ...defaults, nat: 10 })),
       [ActorStat.FIN]: createModifiableScalarAttributeImpl((defaults) => ({ ...defaults, nat: 10 })),
       [ActorStat.RES]: createModifiableScalarAttributeImpl((defaults) => ({ ...defaults, nat: 10 })),
     },
-    inventory: input.inventory ?? createInventoryImpl(),
+    inventory: input?.inventory ?? createInventoryImpl(),
     equipment: {},
   };
 
@@ -105,4 +107,57 @@ export const setShellStats = (shell: Shell, input: ShellStatsInput): Shell => {
     ...shell,
     stats: applyShellStats(shell.stats, input),
   };
+};
+
+const SHELL_NAME_ADJECTIVES = [
+  'Impetuous',
+  'Nimble',
+  'Rapid',
+  'Swift',
+  'Agile',
+  'Lethal',
+  'Deadly',
+  'Ruthless',
+  'Ferocious',
+  'Violent',
+  'Ruthless',
+  'Ferocious',
+  'Violent',
+  'Ruthless',
+];
+
+const SHELL_NAME_NOUNS = [
+  'Bolt',
+  'Bullet',
+  'Eagle',
+  'Falcon',
+  'Hawk',
+  'Jackdaw',
+  'Osprey',
+  'Otter',
+  'Owl',
+  'Vulture',
+  'Wolf',
+  'Bear',
+  'Lion',
+  'Tiger',
+  'Leopard',
+  'Panther',
+  'Jaguar',
+  'Cheetah',
+  'Fox',
+  'Dog',
+  'Cat',
+  'Mouse',
+  'Rat',
+  'Squirrel',
+];
+
+export const generateRandomShellName = (
+  random = () => Math.random(),
+): string => {
+  const randomNumber = Math.floor(random() * 1000);
+  const adjective = SHELL_NAME_ADJECTIVES[Math.floor(random() * SHELL_NAME_ADJECTIVES.length)];
+  const noun = SHELL_NAME_NOUNS[Math.floor(random() * SHELL_NAME_NOUNS.length)];
+  return `${adjective}${noun}${randomNumber}`;
 };
