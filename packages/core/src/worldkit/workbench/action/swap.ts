@@ -79,18 +79,15 @@ export const createSwapShellAction = (
 
     session.data.currentShellId = targetShellId;
 
-    // 7. Create narrative
-    const narrative = {
-      self: `Consciousness successfully transferred to shell ${targetShellName}.`,
-    };
-
-    // 8. Create swap event
+    // Create swap event
     const shellSwapEvent = createWorldEvent<ActorDidSwapShell>({
       type: EventType.ACTOR_DID_SWAP_SHELL,
       trace,
       location: actor.location,
       actor: actor.id,
-      narrative,
+      narrative: {
+        self: `Consciousness successfully transferred to shell ${targetShellName}.`,
+      },
       payload: {
         actorId: actor.id,
         fromShellId: previousShellId,
