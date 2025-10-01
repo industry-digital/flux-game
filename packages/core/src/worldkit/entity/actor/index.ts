@@ -13,6 +13,7 @@ import { WellKnownPlace } from '~/types/world/space';
 import merge from 'lodash/merge';
 import { refreshCapacitorEnergy } from '~/worldkit/entity/actor/capacitor';
 import { createShell } from '~/worldkit/entity/actor/shell';
+import { initializeWallet } from '~/worldkit/entity/actor/wallet';
 
 export type ActorTransformer = (actor: Actor) => Actor;
 const identity: ActorTransformer = (actor: Actor) => actor;
@@ -74,6 +75,7 @@ export function createActor(
           ts: deps.timestamp(),
         },
         equipment: {},
+        wallet: {},
         memberships: {},
         skills: {},
         specializations: {
@@ -88,6 +90,7 @@ export function createActor(
 
       const merged = merge({}, entity, defaults, input) as Actor;
       deps.refreshCapacitorEnergy(merged);
+      initializeWallet(merged);
       return merged;
     },
   );
@@ -107,3 +110,4 @@ export { createActorEquipmentApi, type ActorEquipmentApi } from './equipment';
 export * from './health';
 export * from './stats';
 export * from './skill';
+export * from './wallet';

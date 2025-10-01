@@ -6,6 +6,7 @@ import { RollResult } from '~/types/dice';
 import { Narrative, PrivateNarrative } from '~/types/narrative';
 import { SessionStatus } from '~/types/session';
 import { ShellDiff, ShellMutation } from '~/types/workbench';
+import { CurrencyTransaction } from '~/types/currency';
 
 export type EventPayload = Record<string, any>;
 
@@ -108,7 +109,11 @@ export enum EventType {
   WORKBENCH_SHELL_MUTATIONS_UNDONE = 'workbench:mutations:undone',
   WORKBENCH_SHELL_MUTATIONS_COMMITTED = 'workbench:mutations:committed',
   WORKBENCH_SESSION_DID_END = 'workbench:session:ended',
-  ACTOR_DID_OPEN_HELP_FILE = 'actor:help:opened',
+
+  ACTOR_DID_QUERY_HELPFILE = 'actor:helpfile:queried',
+
+  ACTOR_DID_SPEND_CURRENCY = 'actor:currency:debited',
+  ACTOR_DID_GAIN_CURRENCY = 'actor:currency:credited',
 }
 
 export type RequiresActor = {
@@ -379,11 +384,25 @@ export type ActorDidSwapShellInput = RequiresActor & AbstractWorldEventInput<
 
 export type ActorDidOpenHelpFile = EventBase & ActorDidOpenHelpFileInput;
 export type ActorDidOpenHelpFileInput = RequiresActor & AbstractWorldEventInput<
-  EventType.ACTOR_DID_OPEN_HELP_FILE,
+  EventType.ACTOR_DID_QUERY_HELPFILE,
   {
     sessionId?: SessionURN;
     helpFile: string;
   },
+  PrivateNarrative
+  >;
+
+export type ActorDidSpendCurrency = RequiresActor & ActorDidSpendCurrencyInput;
+export type ActorDidSpendCurrencyInput = RequiresActor & AbstractWorldEventInput<
+  EventType.ACTOR_DID_SPEND_CURRENCY,
+  CurrencyTransaction,
+  PrivateNarrative
+  >;
+
+export type ActorDidGainCurrency = RequiresActor & ActorDidGainCurrencyInput;
+export type ActorDidGainCurrencyInput = RequiresActor & AbstractWorldEventInput<
+  EventType.ACTOR_DID_GAIN_CURRENCY,
+  CurrencyTransaction,
   PrivateNarrative
   >;
 
@@ -427,7 +446,9 @@ export type WorldEventInput =
   | ActorDidUndoShellMutationsInput
   | ActorDidCommitShellMutationsInput
   | ActorDidSwapShellInput
-  | ActorDidOpenHelpFileInput;
+  | ActorDidOpenHelpFileInput
+  | ActorDidSpendCurrencyInput
+  | ActorDidGainCurrencyInput;
 
 /**
  * Union of all valid events
