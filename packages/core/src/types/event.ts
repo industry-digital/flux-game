@@ -97,6 +97,7 @@ export enum EventType {
   WEATHER_DID_CHANGE = 'place:weather:changed',
 
   ACTOR_DID_EXAMINE_CURRENT_SHELL = 'actor:shell:examined',
+  ACTOR_DID_SWAP_SHELL = 'actor:shell:swapped',
 
   // Workbench events
   WORKBENCH_SESSION_DID_START = 'workbench:session:started',
@@ -105,6 +106,7 @@ export enum EventType {
   WORKBENCH_SHELL_MUTATIONS_UNDONE = 'workbench:mutations:undone',
   WORKBENCH_SHELL_MUTATIONS_COMMITTED = 'workbench:mutations:committed',
   WORKBENCH_SESSION_DID_END = 'workbench:session:ended',
+  ACTOR_DID_OPEN_HELP_FILE = 'actor:help:opened',
 }
 
 export type RequiresActor = {
@@ -312,14 +314,14 @@ export type WorkbenchSessionDidStart = EventBase & WorkbenchSessionDidStartInput
 export type WorkbenchSessionDidStartInput = RequiresActor & AbstractWorldEventInput<
   EventType.WORKBENCH_SESSION_DID_START,
   {
-    session: SessionURN;
+    sessionId: SessionURN;
   }>;
 
 export type WorkbenchSessionDidEnd = EventBase & WorkbenchSessionDidEndInput;
 export type WorkbenchSessionDidEndInput = RequiresActor & AbstractWorldEventInput<
   EventType.WORKBENCH_SESSION_DID_END,
   {
-    session: SessionURN;
+    sessionId: SessionURN;
   }>;
 
 export type ActorDidStageShellMutation = EventBase & ActorDidStageShellMutationInput;
@@ -341,20 +343,38 @@ export type ActorDidUndoShellMutations = EventBase & ActorDidUndoShellMutationsI
 export type ActorDidUndoShellMutationsInput = RequiresActor & AbstractWorldEventInput<
   EventType.WORKBENCH_SHELL_MUTATIONS_UNDONE,
   {
-    session: SessionURN;
+    sessionId: SessionURN;
   }>;
 
 export type ActorDidCommitShellMutations = EventBase & ActorDidCommitShellMutationsInput;
 export type ActorDidCommitShellMutationsInput = RequiresActor & AbstractWorldEventInput<
   EventType.WORKBENCH_SHELL_MUTATIONS_COMMITTED,
   {
-    session: SessionURN;
+    sessionId: SessionURN;
     cost: number;
     mutations: ShellMutation[];
   }>;
 
+export type ActorDidSwapShell = EventBase & ActorDidSwapShellInput;
+export type ActorDidSwapShellInput = RequiresActor & AbstractWorldEventInput<
+  EventType.ACTOR_DID_SWAP_SHELL,
+  {
+    actorId: ActorURN;
+    sessionId: SessionURN;
+    fromShellId: string;
+    toShellId: string;
+  }>;
+
+export type ActorDidOpenHelpFile = EventBase & ActorDidOpenHelpFileInput;
+export type ActorDidOpenHelpFileInput = RequiresActor & AbstractWorldEventInput<
+  EventType.ACTOR_DID_OPEN_HELP_FILE,
+  {
+    sessionId?: SessionURN;
+    helpFile: string;
+  }>;
+
 /**
- * Union of  all valid event inputs
+ * Union of all valid event inputs
  */
 export type WorldEventInput =
   | PlaceWasCreatedInput
@@ -392,9 +412,8 @@ export type WorldEventInput =
   | ActorDidDiffShellMutationsInput
   | ActorDidUndoShellMutationsInput
   | ActorDidCommitShellMutationsInput
-  | ActorDidDiffShellMutationsInput
-  | ActorDidUndoShellMutationsInput
-  | ActorDidCommitShellMutationsInput;
+  | ActorDidSwapShellInput
+  | ActorDidOpenHelpFileInput;
 
 /**
  * Union of all valid events

@@ -311,7 +311,7 @@ describe('createTransformerContext', () => {
         type: EventType.COMBAT_SESSION_DID_START,
         location: 'flux:place:test' as PlaceURN,
         trace: 'combat-command',
-        payload: { session: 'flux:session:test', initiative: [], combatants: [] }
+        payload: { sessionId: 'flux:session:test', initiative: [], combatants: [] }
       });
 
       const actorEvents = context.getDeclaredEvents(/^actor:/);
@@ -448,7 +448,7 @@ describe('createTransformerContext', () => {
         type: EventType.COMBAT_SESSION_DID_START,
         location: 'flux:place:arena' as PlaceURN,
         trace: 'combat-init',
-        payload: { session: 'flux:session:1', initiative: [], combatants: [] }
+        payload: { sessionId: 'flux:session:1', initiative: [], combatants: [] }
       });
 
       context.declareEvent({

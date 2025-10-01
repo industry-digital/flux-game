@@ -44,7 +44,7 @@ const createCombatStartEvents = (
       location,
       trace,
       payload: {
-        session: sessionId,
+        sessionId: sessionId,
         initiative: [...initiativeRolls.entries()],
         combatants: [...combatants.entries()].map(([actorId, combatant]) => {
           return [actorId, createCombatantSummary(combatant)];
@@ -64,14 +64,14 @@ const createCombatStartEvents = (
       type: EventType.COMBAT_ROUND_DID_START,
       location,
       trace,
-      payload: { session: sessionId, round: 1 },
+      payload: { sessionId: sessionId, round: 1 },
     }),
     createWorldEvent({
       type: EventType.COMBAT_TURN_DID_START,
       location,
       trace,
       payload: {
-        session: sessionId,
+        sessionId: sessionId,
         round: 1,
         turn: 1,
         actor: firstActorId,
@@ -239,7 +239,7 @@ export function createCombatLifecycle(
       location,
       trace,
       payload: {
-        session: sessionId,
+        sessionId: sessionId,
         winningTeam, // null for mutual destruction, Team for victory
         finalRound: session.data.rounds.current.number,
         finalTurn: session.data.rounds.current.turns.current.number,

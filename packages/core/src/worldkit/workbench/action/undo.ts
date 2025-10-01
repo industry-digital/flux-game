@@ -4,16 +4,15 @@ import { TransformerContext } from '~/types/handler';
 import { WorkbenchSession } from '~/types/workbench';
 import { createWorldEvent } from '~/worldkit/event';
 
-export type UndoStagedMutationsAction = (trace?: string) => WorldEvent[];
+export type UndoStagedMutationsAction = (actor: Actor, trace?: string) => WorldEvent[];
 
 export const createUndoStagedMutationsAction = (
   context: TransformerContext,
   session: WorkbenchSession,
-  actor: Actor,
 ): UndoStagedMutationsAction => {
   const { declareError } = context;
 
-  return function undoStagedMutations(trace: string = context.uniqid()): WorldEvent[] {
+  return function undoStagedMutations(actor: Actor, trace: string = context.uniqid()): WorldEvent[] {
     // Check if there are any mutations to undo
     if (session.data.pendingMutations.length === 0) {
       declareError('No staged mutations to undo');
@@ -29,7 +28,7 @@ export const createUndoStagedMutationsAction = (
       location: actor.location,
       actor: actor.id,
       payload: {
-        session: session.id,
+        sessionId: session.id,
       },
     });
 

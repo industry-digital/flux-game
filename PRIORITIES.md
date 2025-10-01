@@ -1,13 +1,14 @@
 # Priorities
 
+1. [Shell System Data Model](./docs/gameplay/core-shell.md)
+1. [Shell Workbench](./docs/gameplay/workbench.md)
 1. [Workbench: Basic Mechanics](./docs/gameplay/workbench.md)
+1. Player Guide -> Help Files (Vitepress tooling + server handling of helpfile-related events)
 1. [Party Mechanics](./packages/guide/src/party/mechanics.md)
 1. [Combat: Capacitor Mechanics](./docs/gameplay/overview.md)
 1. [Combat: Damage Mechanics](./docs/gameplay/overview.md)
 1. Combat: 3v3 Sandbox
 1. [Combat: DASH](./docs/gameplay/combat/overview.md)
-1. [Shell System Data Model](./docs/gameplay/core-shell.md)
-1. [Shell Workbench](./docs/gameplay/workbench.md)
 1. [DASH](./docs/gameplay/overview.md)
 1. [CHARGE](./docs/gameplay/overview.md)
 1. [TUMBLE](./docs/gameplay/overview.md)

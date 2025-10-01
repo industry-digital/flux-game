@@ -39,17 +39,21 @@ export const validateStatMutation = (
   return result;
 }
 
-export type StageMutationAction = (mutation: ShellMutation, trace?: string) => WorldEvent[];
+export type StageMutationAction = (actor: Actor, shellId: string, mutation: ShellMutation, trace?: string) => WorldEvent[];
 
 export const createStageMutationAction = (
   context: TransformerContext,
   session: WorkbenchSession,
-  actor: Actor,
-  shell: Shell,
 ): StageMutationAction => {
   const { declareError } = context;
 
-  return function stageMutation(mutation: ShellMutation, trace: string = context.uniqid()): WorldEvent[] {
+  return function stageMutation(actor: Actor, shellId: string, mutation: ShellMutation, trace: string = context.uniqid()): WorldEvent[] {
+    const shell = actor.shells[shellId];
+    if (!shell) {
+      declareError(`Shell not found in actor's arsenal`);
+      return [];
+    }
+
     if (mutation.type === ShellMutationType.STAT) {
       const validationResult = validateStatMutation(shell, mutation);
       if (!validationResult.ok) {
@@ -62,15 +66,15 @@ export const createStageMutationAction = (
     session.data.pendingMutations.push(mutation);
 
     const shellMutationStagedEvent = createWorldEvent<ActorDidStageShellMutation>({
-        type: EventType.WORKBENCH_SHELL_MUTATION_STAGED,
-        trace,
-        location: actor.location,
-        actor: actor.id,
-        payload: {
-          shellId: shell.id,
-          mutation,
-        },
-      });
+      type: EventType.WORKBENCH_SHELL_MUTATION_STAGED,
+      trace,
+      location: actor.location,
+      actor: actor.id,
+      payload: {
+        shellId: shell.id,
+        mutation,
+      },
+    });
 
     return [shellMutationStagedEvent];
   }

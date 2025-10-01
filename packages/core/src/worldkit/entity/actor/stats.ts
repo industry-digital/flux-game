@@ -1,4 +1,8 @@
 import { ActorStat } from '~/types/entity/actor';
+import { Actor } from '~/types/entity/actor';
+import { ShellStats } from '~/types/entity/actor';
+import { CoreStats } from '~/types/entity/actor';
+import { ActorStats } from '~/types/entity/actor';
 import { ModifiableScalarAttribute } from '~/types/entity/attribute';
 import { AppliedModifiers } from '~/types/modifier';
 
@@ -161,4 +165,103 @@ export const mutateStatModifiers = <TEntity extends HasStats<any>> (
   statState = getStat(entity, stat),
 ):void => {
   statState.mods = mods;
+};
+
+// ============================================================================
+// COMPUTED PROPERTIES - Phase 1 of Core/Shell Stats Migration
+// ============================================================================
+
+/**
+ * Get the current shell's stats from an actor
+ * @param actor - The actor to get shell stats from
+ * @returns The current shell's stats
+ */
+export const getCurrentShellStats = (actor: Actor): ShellStats => {
+  const currentShell = actor.shells[actor.currentShell];
+  if (!currentShell) {
+    throw new Error(`Actor ${actor.id} has no current shell or shell not found: ${actor.currentShell}`);
+  }
+  return currentShell.stats;
+};
+
+/**
+ * Get a specific stat value from an actor, automatically routing to core or shell stats
+ * @param actor - The actor to get the stat from
+ * @param stat - The stat to retrieve
+ * @returns The stat's ModifiableScalarAttribute
+ */
+export const getActorStat = (actor: Actor, stat: ActorStat): ModifiableScalarAttribute => {
+  // Core stats come from actor.stats
+  if (stat === ActorStat.INT || stat === ActorStat.PER || stat === ActorStat.MEM) {
+    return getStat(actor, stat);
+  }
+
+  // Shell stats come from current shell
+  const currentShellStats = getCurrentShellStats(actor);
+  return getStat({ id: actor.currentShell, stats: currentShellStats }, stat);
+};
+
+/**
+ * Get all effective actor stats (core + current shell) as a unified view
+ * @param actor - The actor to get stats from
+ * @returns Combined ActorStats object with core and shell stats
+ */
+export const getEffectiveActorStats = (actor: Actor): ActorStats => {
+  const coreStats: CoreStats = {
+    [ActorStat.INT]: actor.stats[ActorStat.INT],
+    [ActorStat.PER]: actor.stats[ActorStat.PER],
+    [ActorStat.MEM]: actor.stats[ActorStat.MEM],
+  };
+
+  const shellStats = getCurrentShellStats(actor);
+
+  return {
+    ...coreStats,
+    ...shellStats,
+  };
+};
+
+/**
+ * Computed version of getEffectiveStatValue that works with the new architecture
+ * @param actor - The actor to get the stat from
+ * @param stat - The stat to get the effective value for
+ * @returns The effective stat value
+ */
+export const getActorEffectiveStatValue = (actor: Actor, stat: ActorStat): number => {
+  const statAttr = getActorStat(actor, stat);
+  return statAttr.eff;
+};
+
+/**
+ * Computed version of getNaturalStatValue that works with the new architecture
+ * @param actor - The actor to get the stat from
+ * @param stat - The stat to get the natural value for
+ * @returns The natural stat value
+ */
+export const getActorNaturalStatValue = (actor: Actor, stat: ActorStat): number => {
+  const statAttr = getActorStat(actor, stat);
+  return statAttr.nat;
+};
+
+/**
+ * Computed version of computeEffectiveStatValue that works with the new architecture
+ * @param actor - The actor to compute the stat for
+ * @param stat - The stat to compute
+ * @returns The computed effective stat value
+ */
+export const computeActorEffectiveStatValue = (actor: Actor, stat: ActorStat): number => {
+  const statAttr = getActorStat(actor, stat);
+  const modifiers = statAttr.mods ?? {};
+
+  // Single-pass optimization: filter and aggregate in one loop
+  let totalBonus = 0;
+  for (let modifierId in modifiers) {
+    const modifier = modifiers[modifierId];
+    if (modifier.position < 1.0) { // Only active modifiers
+      totalBonus += modifier.value;
+    }
+  }
+
+  // Clamp to valid stat range
+  return Math.max(BASELINE_STAT_VALUE, Math.min(MAX_STAT_VALUE, statAttr.nat + totalBonus));
 };

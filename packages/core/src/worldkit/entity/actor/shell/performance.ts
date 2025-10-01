@@ -6,7 +6,14 @@ import { calculateWeaponDamage, calculateWeaponApCost, calculateWeaponDps } from
 import { calculatePeakPowerOutput, calculateInertialMass, calculateTopSpeed } from '~/worldkit/physics/physics';
 import { MassApi } from '~/worldkit/physics/mass';
 import { ActorEquipmentApi } from '~/worldkit/entity/actor/equipment';
-import { computeEffectiveStatValue, getNaturalStatValue, getStat } from '~/worldkit/entity/actor/stats';
+import {
+  computeEffectiveStatValue,
+  getNaturalStatValue,
+  getStat,
+  getActorStat,
+  getActorNaturalStatValue,
+  computeActorEffectiveStatValue
+} from '~/worldkit/entity/actor/stats';
 import { getMaxEnergy, getMaxRecoveryRate } from '~/worldkit/entity/actor/capacitor';
 import { PerformanceChanges } from '~/types/workbench';
 
@@ -28,6 +35,17 @@ export type ShellPerformanceDependencies = {
   getStat: typeof getStat;
   getNaturalStatValue: typeof getNaturalStatValue;
   computeEffectiveStatValue: typeof computeEffectiveStatValue;
+};
+
+/**
+ * Performance calculation dependencies for the new computed approach
+ */
+export type ActorPerformanceDependencies = {
+  massApi: MassApi;
+  equipmentApi: ActorEquipmentApi;
+  getActorStat: typeof getActorStat;
+  getActorNaturalStatValue: typeof getActorNaturalStatValue;
+  computeActorEffectiveStatValue: typeof computeActorEffectiveStatValue;
 };
 
 /**
@@ -142,6 +160,113 @@ export function calculateShellPerformance(
     topSpeed,
 
     // Energy system metrics
+    capacitorCapacity,
+    maxRechargeRate,
+  };
+}
+
+/**
+ * Calculate comprehensive actor performance profile using computed stats
+ * This is the new approach that eliminates the need for temporary actor objects
+ */
+export function calculateActorPerformance(
+  actor: Actor,
+  deps: ActorPerformanceDependencies
+): ShellPerformanceProfile {
+  const {
+    massApi,
+    equipmentApi,
+    getActorStat: getActorStatImpl,
+    getActorNaturalStatValue: getActorNaturalStatValueImpl,
+    computeActorEffectiveStatValue: computeActorEffectiveStatValueImpl
+  } = deps;
+
+  // Get natural stat values using computed getters
+  const naturalPowStat = getActorNaturalStatValueImpl(actor, ActorStat.POW);
+  const naturalFinStat = getActorNaturalStatValueImpl(actor, ActorStat.FIN);
+  const naturalResStat = getActorNaturalStatValueImpl(actor, ActorStat.RES);
+
+  // Get effective stat values using computed getters
+  const effectivePowStat = computeActorEffectiveStatValueImpl(actor, ActorStat.POW);
+  const effectiveFinStat = computeActorEffectiveStatValueImpl(actor, ActorStat.FIN);
+  const effectiveResStat = computeActorEffectiveStatValueImpl(actor, ActorStat.RES);
+
+  // Calculate total mass in kilograms for physics
+  const totalMassKg = massApi.computeCombatMass(actor);
+
+  // Get equipped weapon for damage calculations
+  const equippedWeaponSchema = equipmentApi.getEquippedWeaponSchemaOrFail(actor);
+  const weaponMassKg = equippedWeaponSchema.baseMass / 1_000;
+
+  // === MOVEMENT PERFORMANCE ===
+
+  // Gap closing times for tactical distances
+  const gapClosing10 = calculateMovementTime(effectivePowStat, effectiveFinStat, TACTICAL_DISTANCES.SHORT_RANGE, totalMassKg);
+  const gapClosing100 = calculateMovementTime(effectivePowStat, effectiveFinStat, TACTICAL_DISTANCES.LONG_RANGE, totalMassKg);
+
+  // Average speeds over tactical distances
+  const avgSpeed10 = TACTICAL_DISTANCES.SHORT_RANGE / gapClosing10;
+  const avgSpeed100 = TACTICAL_DISTANCES.LONG_RANGE / gapClosing100;
+
+  // === POWER & ENERGY PERFORMANCE ===
+
+  // Peak power output from POW stat
+  const peakPowerOutput = calculatePeakPowerOutput(effectivePowStat);
+
+  // Component power draw (equipment burden)
+  const currentShell = actor.shells[actor.currentShell];
+  const componentPowerDraw = calculateComponentPowerDraw(currentShell, equippedWeaponSchema);
+
+  // Free power available for other systems
+  const freePower = Math.max(0, peakPowerOutput - componentPowerDraw);
+
+  // === COMBAT EFFECTIVENESS ===
+
+  // Weapon damage and AP costs
+  const weaponDamage = calculateWeaponDamage(weaponMassKg, effectivePowStat);
+  const weaponApCost = calculateWeaponApCost(weaponMassKg, effectiveFinStat);
+  const weaponDps = calculateWeaponDps(weaponMassKg, effectivePowStat, effectiveFinStat);
+
+  // === DERIVED METRICS ===
+
+  // Power-to-weight ratio (key performance indicator)
+  const powerToWeightRatio = peakPowerOutput / totalMassKg;
+
+  // Inertial mass for acceleration (FIN reduces effective mass)
+  const inertialMassKg = calculateInertialMass(effectiveFinStat, totalMassKg);
+  const inertiaReduction = ((totalMassKg - inertialMassKg) / totalMassKg) * 100;
+
+  // Top speed potential
+  const topSpeed = calculateTopSpeed(effectivePowStat);
+
+  // === ENERGY SYSTEM METRICS ===
+
+  // Capacitor capacity and recharge rate (based on RES stat)
+  const capacitorCapacity = getMaxEnergy(actor);
+  const maxRechargeRate = getMaxRecoveryRate(actor);
+
+  return {
+    naturalPowStat,
+    naturalFinStat,
+    naturalResStat,
+    effectivePowStat,
+    effectiveFinStat,
+    effectiveResStat,
+    gapClosing10,
+    gapClosing100,
+    avgSpeed10,
+    avgSpeed100,
+    peakPowerOutput,
+    componentPowerDraw,
+    freePower,
+    weaponDamage,
+    weaponApCost,
+    weaponDps,
+    totalMassKg,
+    inertialMassKg,
+    inertiaReduction,
+    powerToWeightRatio,
+    topSpeed,
     capacitorCapacity,
     maxRechargeRate,
   };

@@ -136,7 +136,7 @@ export const createWorkbenchSessionApi = (
       location: actor.location,
       trace,
       payload: {
-        session: sessionId,
+        sessionId: sessionId,
       },
     });
 

@@ -1,7 +1,7 @@
 import { renderShellDiff } from './diff';
 import { ShellDiff } from '~/types/workbench';
 import { ActorStat } from '~/types/entity/actor';
-import { createPerformanceChanges } from '~/worldkit/entity/shell/performance';
+import { createPerformanceChanges } from '~/worldkit/entity/actor/shell/performance';
 import { describe, expect, it } from 'vitest';
 
 describe('renderShellDiff', () => {

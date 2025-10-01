@@ -36,13 +36,13 @@ The **Core** represents your consciousness. It is the thinking, learning, decisi
 
 ### Your Shell: Disposable Physical Form
 
-The **Shell** represents your artificial body. It is a sophisticated marvel of technology that provides physical capabilities but can be destroyed, replaced, and optimized. Your Shell determines:
+The **Shell** represents your artificial body. It is a sophisticated marvel of technology that provides physical capabilities but can be optimized, destroyed, and replaced. Your Shell determines:
 
-**Power (POW)**: Physical strength and energy generation capacity. Higher Power enables devastating combat strikes and sustained high-intensity operations.
+**Power (POW)**: Directly determines damage output and maximum movement speed.
 
-**Finesse (FIN)**: Agility, precision, and acceleration capability. Superior Finesse provides tactical positioning advantages and evasion effectiveness.
+**Finesse (FIN)**: Directly determines acceleration and evasion.
 
-**Resilience (RES)**: Energy storage capacity and damage resistance. Enhanced Resilience supports extended operations and survival under hostile conditions.
+**Resilience (RES)**: Directly determines stamina and resistance to injury.
 
 **Component Configuration**: Specialized equipment and enhancement modules that modify Shell performance for specific tactical roles.
 
@@ -50,7 +50,7 @@ The **Shell** represents your artificial body. It is a sophisticated marvel of t
 
 Shell destruction creates meaningful consequences without character elimination. When your Shell suffers catastrophic damage, your Core consciousness immediately transfers to backup systems while the destroyed Shell and its component investment are permanently lost.
 
-**What You Lose**: Physical capabilities return to baseline levels. Specialized components and rare materials invested in the destroyed Shell cannot be recovered. Current expedition progress terminates as you retreat to safe territory for reconstruction.
+**What You Lose**: Physical capabilities return to baseline levels. Specialized components and rare materials invested in the destroyed Shell cannot be recovered.
 
 **What Persists**: Core consciousness remains unchanged with all skills, abilities, and accumulated knowledge intact. Relationships with expedition partners and community standing continue unaffected. Understanding of Shell optimization and tactical approaches carries forward to inform future builds.
 

@@ -1,8 +1,45 @@
-import { ActorStat, ShellStats } from '~/types/entity/actor';
 import { Shell } from '~/types/entity/shell';
+import { Actor } from '~/types/entity/actor';
+import { ActorStat, ShellStats } from '~/types/entity/actor';
 import { createModifiableScalarAttribute } from '~/worldkit/entity';
 import { createInventory } from '~/worldkit/entity/actor/inventory';
 import { hashUnsafeString } from '~/worldkit/hash';
+
+export const addShellToActor = (actor: Actor, shell: Shell = createShell()) => {
+  actor.shells[shell.id] = shell;
+};
+
+export const removeShellFromActor = (actor: Actor, shellId: string) => {
+  delete actor.shells[shellId];
+};
+
+export const getShellFromActor = (actor: Actor, shellId: string) => {
+  return actor.shells[shellId];
+};
+
+export const getShellsFromActor = (actor: Actor) => {
+  return actor.shells;
+};
+
+/**
+ * Find shell by exact ID or fuzzy name match
+ */
+export const findShellByNameOrId = (actor: Actor, input: string): { shell: any; id: string } | null => {
+  // Try exact ID first
+  if (actor.shells[input]) {
+    return { shell: actor.shells[input], id: input };
+  }
+
+  // Try fuzzy name matching
+  for (const [shellId, shell] of Object.entries(actor.shells)) {
+    if (shell.name?.toLowerCase().includes(input.toLowerCase())) {
+      return { shell, id: shellId };
+    }
+  }
+
+  return null;
+};
+
 
 export type CreateShellInput = {
   id?: Shell['id'];

@@ -4,7 +4,7 @@ import { ActorDidDiffShellMutations, EventType, WorldEvent } from '~/types/event
 import { TransformerContext } from '~/types/handler';
 import { WorkbenchSession } from '~/types/workbench';
 import { createWorldEvent } from '~/worldkit/event';
-import { ShellPerformanceDependencies } from '~/worldkit/entity/shell/performance';
+import { ShellPerformanceDependencies } from '~/worldkit/entity/actor/shell/performance';
 import { renderShellDiff } from '~/template/workbench/diff';
 import { computeEffectiveStatValue, getNaturalStatValue, getStat } from '~/worldkit/entity/actor';
 import { createShellDiff } from '~/worldkit/workbench/diff';
