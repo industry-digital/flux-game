@@ -6,6 +6,7 @@ import { createCombatSession } from './session';
 import { ActorURN, PlaceURN } from '~/types/taxonomy';
 import { Team, CombatFacing } from '~/types/combat';
 import { SessionStatus } from '~/types/session';
+import { EventType } from '~/types/event';
 
 const TEST_PLACE_ID: PlaceURN = 'flux:place:test-place';
 const TEST_ACTOR_ID: ActorURN = 'flux:actor:test-actor';
@@ -15,7 +16,7 @@ describe('createCombatantManager', () => {
   it('should add combatant with automatic positioning', () => {
     const context = createTransformerContext((c) => ({
       ...c,
-      getDeclaredEvents: vi.fn((pattern?: RegExp) => []),
+      getDeclaredEvents: vi.fn((pattern?: RegExp | EventType) => []),
     }));
     const actor = createTestActor({ id: TEST_ACTOR_ID });
 

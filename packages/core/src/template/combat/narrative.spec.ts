@@ -101,7 +101,7 @@ describe('Combat Narrative Renderer', () => {
         type: EventType.COMBAT_SESSION_DID_START,
         location: BATTLEFIELD_ID,
         payload: {
-          session: scenario.session.id,
+          sessionId: scenario.session.id,
           initiative: [
             [ALICE_ID, createDiceRollResult('1d20', [18])],
             [BOB_ID, createDiceRollResult('1d20', [15])],
@@ -141,7 +141,7 @@ describe('Combat Narrative Renderer', () => {
         type: EventType.COMBAT_SESSION_DID_START,
         location: BATTLEFIELD_ID,
         payload: {
-          session: scenario.session.id,
+          sessionId: scenario.session.id,
           initiative: [
             [ALICE_ID, createDiceRollResult('1d20', [18])],
             [BOB_ID, createDiceRollResult('1d20', [15])],
@@ -186,7 +186,7 @@ describe('Combat Narrative Renderer', () => {
         type: EventType.COMBAT_SESSION_DID_START,
         location: BATTLEFIELD_ID,
         payload: {
-          session: scenario.session.id,
+          sessionId: scenario.session.id,
           initiative: [
             [ALICE_ID, createDiceRollResult('1d20', [18])],
             [CHARLIE_ID, createDiceRollResult('1d20', [12])],
@@ -250,7 +250,7 @@ describe('Combat Narrative Renderer', () => {
         type: EventType.COMBAT_SESSION_DID_START,
         location: BATTLEFIELD_ID,
         payload: {
-          session: allyOnlyScenario.session.id,
+          sessionId: allyOnlyScenario.session.id,
           initiative: [
             [ALICE_ID, createDiceRollResult('1d20', [18])],
             [BOB_ID, createDiceRollResult('1d20', [15])],
@@ -279,7 +279,7 @@ describe('Combat Narrative Renderer', () => {
         type: EventType.COMBAT_SESSION_DID_START,
         location: BATTLEFIELD_ID,
         payload: {
-          session: scenario.session.id,
+          sessionId: scenario.session.id,
           initiative: [
             [ALICE_ID, createDiceRollResult('1d20', [18])],
             [CHARLIE_ID, createDiceRollResult('1d20', [12])],
@@ -373,7 +373,7 @@ describe('Combat Narrative Renderer', () => {
         type: EventType.COMBAT_SESSION_DID_START,
         location: BATTLEFIELD_ID,
         payload: {
-          session: scenario.session.id,
+          sessionId: scenario.session.id,
           initiative: [[ALICE_ID, createDiceRollResult('1d20', [18])]],
           combatants: [[ALICE_ID, scenario.session.data.combatants.get(ALICE_ID)!]],
         },
@@ -410,7 +410,7 @@ describe('Combat Narrative Renderer', () => {
         type: EventType.COMBAT_SESSION_DID_START,
         location: BATTLEFIELD_ID,
         payload: {
-          session: scenario.session.id,
+          sessionId: scenario.session.id,
           initiative: [[ALICE_ID, createDiceRollResult('1d20', [18])]],
           combatants: [[ALICE_ID, { ...scenario.session.data.combatants.get(ALICE_ID)!, didInitiateCombat: true }]],
         },

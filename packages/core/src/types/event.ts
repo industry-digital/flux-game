@@ -3,13 +3,17 @@ import { ResourceNodes } from '~/types/entity/resource';
 import { ActorURN, ItemURN, PlaceURN, SessionURN } from '~/types/taxonomy';
 import { ActionCost, BattlefieldPositionSummary, CombatantSummary } from '~/types/combat';
 import { RollResult } from '~/types/dice';
-import { Narrative } from '~/types/narrative';
+import { Narrative, PrivateNarrative } from '~/types/narrative';
 import { SessionStatus } from '~/types/session';
 import { ShellDiff, ShellMutation } from '~/types/workbench';
 
 export type EventPayload = Record<string, any>;
 
-export type AbstractWorldEventInput<T extends EventType, P extends EventPayload> = {
+export type AbstractWorldEventInput<
+  T extends EventType,
+  P extends EventPayload,
+  N extends Narrative | undefined = undefined,
+> = {
   /**
    * The unique identifier for this event.
    */
@@ -52,9 +56,7 @@ export type AbstractWorldEventInput<T extends EventType, P extends EventPayload>
    * 1 means the event is absolutely mind-blowing. a.k.a, "epic", "earth-shattering", "life-changing", etc.
    */
   significance?: number;
-
-  narrative?: Narrative;
-};
+} & (N extends undefined ? {} : { narrative: N });
 
 export type ErrorExplanation = {
   reason: string;
@@ -185,6 +187,7 @@ export type CombatSessionStatusDidChange = EventBase & CombatSessionStatusDidCha
 export type CombatSessionStatusDidChangeInput = AbstractWorldEventInput<
   EventType.COMBAT_SESSION_STATUS_DID_CHANGE,
   {
+    sessionId: SessionURN;
     previousStatus: SessionStatus;
     currentStatus: SessionStatus;
   }>;
@@ -193,7 +196,7 @@ export type CombatSessionStarted = EventBase & CombatSessionStartedInput;
 export type CombatSessionStartedInput = AbstractWorldEventInput<
   EventType.COMBAT_SESSION_DID_START,
   {
-    session: SessionURN;
+    sessionId: SessionURN;
     initiative: [ActorURN, RollResult][];
     combatants: [ActorURN, CombatantSummary][];
   }>;
@@ -202,7 +205,7 @@ export type CombatSessionEnded = EventBase & CombatSessionEndedInput;
 export type CombatSessionEndedInput = AbstractWorldEventInput<
   EventType.COMBAT_SESSION_DID_END,
   {
-    session: SessionURN;
+    sessionId: SessionURN;
     winningTeam: string | null;
     finalRound: number;
     finalTurn: number;
@@ -251,6 +254,7 @@ export type CombatTurnDidStart = EventBase & CombatTurnDidStartInput;
 export type CombatTurnDidStartInput = AbstractWorldEventInput<
   EventType.COMBAT_TURN_DID_START,
   {
+    sessionId: SessionURN;
     round: number;
     turn: number;
     actor: ActorURN;
@@ -283,6 +287,7 @@ export type CombatRoundDidStart = EventBase & CombatRoundDidStartInput;
 export type CombatRoundDidStartInput = AbstractWorldEventInput<
   EventType.COMBAT_ROUND_DID_START,
   {
+    sessionId: SessionURN;
     round: number;
   }>;
 
@@ -330,13 +335,15 @@ export type ActorDidStageShellMutationInput = RequiresActor & AbstractWorldEvent
   {
     shellId: string;
     mutation: ShellMutation;
-  }
+  },
+  PrivateNarrative
 >;
 
 export type ActorDidDiffShellMutations = EventBase & ActorDidDiffShellMutationsInput;
 export type ActorDidDiffShellMutationsInput = RequiresActor & AbstractWorldEventInput<
   EventType.WORKBENCH_SHELL_MUTATIONS_DIFFED,
-  ShellDiff
+  ShellDiff,
+  PrivateNarrative
 >;
 
 export type ActorDidUndoShellMutations = EventBase & ActorDidUndoShellMutationsInput;
@@ -344,7 +351,9 @@ export type ActorDidUndoShellMutationsInput = RequiresActor & AbstractWorldEvent
   EventType.WORKBENCH_SHELL_MUTATIONS_UNDONE,
   {
     sessionId: SessionURN;
-  }>;
+  },
+  PrivateNarrative
+  >;
 
 export type ActorDidCommitShellMutations = EventBase & ActorDidCommitShellMutationsInput;
 export type ActorDidCommitShellMutationsInput = RequiresActor & AbstractWorldEventInput<
@@ -353,7 +362,9 @@ export type ActorDidCommitShellMutationsInput = RequiresActor & AbstractWorldEve
     sessionId: SessionURN;
     cost: number;
     mutations: ShellMutation[];
-  }>;
+  },
+  PrivateNarrative
+  >;
 
 export type ActorDidSwapShell = EventBase & ActorDidSwapShellInput;
 export type ActorDidSwapShellInput = RequiresActor & AbstractWorldEventInput<
@@ -363,7 +374,8 @@ export type ActorDidSwapShellInput = RequiresActor & AbstractWorldEventInput<
     sessionId: SessionURN;
     fromShellId: string;
     toShellId: string;
-  }>;
+  },
+  PrivateNarrative>;
 
 export type ActorDidOpenHelpFile = EventBase & ActorDidOpenHelpFileInput;
 export type ActorDidOpenHelpFileInput = RequiresActor & AbstractWorldEventInput<
@@ -371,7 +383,9 @@ export type ActorDidOpenHelpFileInput = RequiresActor & AbstractWorldEventInput<
   {
     sessionId?: SessionURN;
     helpFile: string;
-  }>;
+  },
+  PrivateNarrative
+  >;
 
 /**
  * Union of all valid event inputs

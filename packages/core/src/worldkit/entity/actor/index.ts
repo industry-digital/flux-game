@@ -12,7 +12,7 @@ import { ActorURN } from '~/types/taxonomy';
 import { WellKnownPlace } from '~/types/world/space';
 import merge from 'lodash/merge';
 import { refreshCapacitorEnergy } from '~/worldkit/entity/actor/capacitor';
-import { createShell } from '~/worldkit/entity/shell';
+import { createShell } from '~/worldkit/entity/actor/shell';
 
 export type ActorTransformer = (actor: Actor) => Actor;
 const identity: ActorTransformer = (actor: Actor) => actor;

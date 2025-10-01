@@ -39,39 +39,44 @@ const createCombatStartEvents = (
   firstActorId: ActorURN
 ): WorldEvent[] => {
   return [
+
     createWorldEvent({
       type: EventType.COMBAT_SESSION_DID_START,
       location,
       trace,
       payload: {
-        sessionId: sessionId,
+        sessionId,
         initiative: [...initiativeRolls.entries()],
         combatants: [...combatants.entries()].map(([actorId, combatant]) => {
           return [actorId, createCombatantSummary(combatant)];
         }),
       },
     }),
+
     createWorldEvent({
       type: EventType.COMBAT_SESSION_STATUS_DID_CHANGE,
       location,
       trace,
       payload: {
+        sessionId,
         previousStatus: SessionStatus.PENDING,
         currentStatus: SessionStatus.RUNNING,
       },
     }),
+
     createWorldEvent({
       type: EventType.COMBAT_ROUND_DID_START,
       location,
       trace,
-      payload: { sessionId: sessionId, round: 1 },
+      payload: { sessionId, round: 1 },
     }),
+
     createWorldEvent({
       type: EventType.COMBAT_TURN_DID_START,
       location,
       trace,
       payload: {
-        sessionId: sessionId,
+        sessionId,
         round: 1,
         turn: 1,
         actor: firstActorId,
@@ -96,12 +101,13 @@ function createCombatSessionStatusDidChangeEvent(
   previousStatus: SessionStatus,
   currentStatus: SessionStatus,
   location: PlaceURN,
+  sessionId: SessionURN,
 ): WorldEvent {
   return createWorldEvent({
     type: EventType.COMBAT_SESSION_STATUS_DID_CHANGE,
     location,
     trace,
-    payload: { previousStatus, currentStatus },
+    payload: { sessionId, previousStatus, currentStatus },
   });
 }
 
@@ -226,6 +232,7 @@ export function createCombatLifecycle(
       location,
       trace,
       payload: {
+        sessionId,
         previousStatus: session.status,
         currentStatus: SessionStatus.TERMINATED,
       },
@@ -239,7 +246,7 @@ export function createCombatLifecycle(
       location,
       trace,
       payload: {
-        sessionId: sessionId,
+        sessionId,
         winningTeam, // null for mutual destruction, Team for victory
         finalRound: session.data.rounds.current.number,
         finalTurn: session.data.rounds.current.turns.current.number,
@@ -270,7 +277,8 @@ export function createCombatLifecycle(
       trace,
       previousStatus,
       SessionStatus.PAUSED,
-      location
+      location,
+      sessionId
     );
 
     context.declareEvent(statusChangeEvent);
@@ -296,7 +304,8 @@ export function createCombatLifecycle(
       trace,
       previousStatus,
       SessionStatus.RUNNING,
-      location
+      location,
+      sessionId
     );
 
     context.declareEvent(statusChangeEvent);

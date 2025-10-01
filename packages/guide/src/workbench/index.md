@@ -30,10 +30,11 @@ The Workbench exposes an interface for you to manage your shell arsenal. You can
 > shell list  # A list of all your shells
 > shell status  # Detailed information about your current shell
 > shell swap <name_of_shell>  # Transfer consciousness to a different shell
+> shell swap <name_of_shell> --force  # Force transfer, discarding pending changes
 > shell rename <shell_name> <new_shell_name>  # Renames the shell
 ```
 
-**Note**: Shell switching requires a clean working state. Any pending modifications must be committed or reverted before consciousness can transfer to a different shell configuration.
+**Note**: Shell switching normally requires a clean working state. Any pending modifications must be committed or reverted before consciousness can transfer to a different shell configuration. Use the `--force` flag to override this safety check and discard pending changes during transfer.
 
 ### Shell Stats
 
@@ -87,6 +88,10 @@ These commands work only on your currently equipped shell.
 > shell stats add fin 2
 > shell swap combat_shell
 [ERR: Uncommitted changes - Use 'shell commit' or 'shell undo' first]
+
+> shell swap combat_shell --force
+[WARNING: Neural interface severed during consciousness transfer. Pending shell modifications discarded.]
+[Consciousness successfully transferred to shell combat_shell.]
 
 > transfer rare_component to shell
 > exit

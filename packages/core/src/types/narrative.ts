@@ -7,11 +7,30 @@ export enum Perspective {
   OBSERVER = 'observer',
 }
 
-export type NarrativeItem = {
-  [Perspective.SELF]?: string;
-  [Perspective.OBSERVER]?: string;
-  type?: 'info' | 'warning' | 'error' | 'success';
-  delay?: number;
+export enum NarrativeType {
+  INFO = 'info',
+  WARNING = 'warning',
+  ERROR = 'error',
+  SUCCESS = 'success',
+}
+
+type NarrativeItem = PrivateNarrative | PublicNarrative | SharedNarrative;
+type NarrativeSequenceItemBase = NarrativeItem & { delay: number };
+type NarrativeSequenceItem = NarrativeSequenceItemBase & NarrativeItem;
+
+export type NarrativeSequence = NarrativeSequenceItem[];
+
+export type PrivateNarrative = {
+  [Perspective.SELF]: string;
+};
+
+export type PublicNarrative = {
+  [Perspective.OBSERVER]: string;
+};
+
+export type SharedNarrative = {
+  [Perspective.SELF]: string;
+  [Perspective.OBSERVER]: string;
 };
 
 /**
@@ -19,6 +38,7 @@ export type NarrativeItem = {
  * It can be a single item or an array of items.
  * The items are displayed in order.
  * The delay is the time in milliseconds to wait before displaying the next item.
+ * @deprecated Use one of the above types.
  */
 export type Narrative = NarrativeItem | NarrativeItem[];
 

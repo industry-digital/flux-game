@@ -10,7 +10,7 @@ export const DEFAULT_WORLD_EVENT_DEPS: CreateWorldEventDependencies = {
 };
 
 export const createWorldEvent = <TWorldEvent extends WorldEvent = WorldEvent>(
-  input: WorldEvent | WorldEventInput,
+  input: WorldEventInput,
   deps: CreateWorldEventDependencies = DEFAULT_WORLD_EVENT_DEPS,
 ): TWorldEvent => {
   return {

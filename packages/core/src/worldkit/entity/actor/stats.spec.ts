@@ -4,7 +4,7 @@ import { Shell } from '~/types/entity/shell';
 import { ModifiableScalarAttribute } from '~/types/entity/attribute';
 import { Modifier } from '~/types/modifier';
 import { createActor } from './index';
-import { createShell } from '../shell/index';
+import { createShell } from './shell';
 import {
   BASELINE_STAT_VALUE,
   MAX_STAT_VALUE,
@@ -37,10 +37,9 @@ const createTestActor = (stats: Partial<Record<ActorStat, ModifiableScalarAttrib
 };
 
 const createTestShell = (stats: Partial<Record<ActorStat, ModifiableScalarAttribute>> = {}): Shell => {
-  return createShell({
-    name: 'Test Shell',
-  }, (shell) => ({
+  return createShell((shell) => ({
     ...shell,
+    name: 'Test Shell',
     stats: {
       ...shell.stats,
       ...stats,
