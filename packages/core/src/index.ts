@@ -49,27 +49,6 @@ export {
   LookCommandArgs,
 } from '~/command';
 
-export {
-  validateActor,
-  validateActorURN,
-  validateActorStats,
-  validateSkills,
-  validateInjuryDescriptor,
-  validateEquipment,
-  validateSkillState,
-  validateInventory,
-  validateActorStat,
-} from '~/validation/actor';
-
-export {
-  validatePlace,
-  validatePlaceURN,
-  validateExit,
-} from '~/validation/place';
-
-export {
-  validateCommand,
-} from '~/validation/command';
 
 // Begin game logic DAG exports
 

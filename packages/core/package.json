@@ -26,8 +26,7 @@
     "build:esm": "tsc --project tsconfig.esm.json && tsc-alias -p tsconfig.esm.json && node scripts/fix-esm-extensions.js && echo '{\"type\":\"module\"}' > dist/esm/package.json",
     "build:types": "tsc --project tsconfig.types.json && tsc-alias -p tsconfig.types.json",
     "test": "vitest run",
-    "benchmark:mass": "vitest run src/worldkit/physics/mass.benchmark.spec.ts",
-    "prepare": "ts-patch install"
+    "benchmark:mass": "vitest run src/worldkit/physics/mass.benchmark.spec.ts"
   },
   "volta": {
     "node": "22.15.0",
@@ -35,10 +34,8 @@
   },
   "devDependencies": {
     "@faker-js/faker": "^9.8.0",
-    "@types/lodash": "^4.17.20",
     "madge": "^8.0.0",
     "mermaid": "^11.12.0",
-    "ts-patch": "^3.3.0",
     "tsc-alias": "^1.8.16",
     "typescript": "~5.8.3",
     "vite": "^6.3.5",
@@ -46,9 +43,5 @@
     "vitepress": "^1.6.4",
     "vitepress-plugin-mermaid": "^2.0.17",
     "vitest": "^3.1.3"
-  },
-  "dependencies": {
-    "lodash": "^4.17.21",
-    "typia": "^9.3.1"
   }
 }

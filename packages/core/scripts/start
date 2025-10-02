@@ -1,5 +1,3 @@
 #!/usr/bin/env bash
 
-npx typia setup --manager=npm
-
-
+# Typia setup no longer needed - removed dependency

@@ -10,7 +10,7 @@ import {
 } from '~/types/entity/actor';
 import { ActorURN } from '~/types/taxonomy';
 import { WellKnownPlace } from '~/types/world/space';
-import merge from 'lodash/merge';
+import { merge } from '~/lib/lang';
 import { refreshCapacitorEnergy } from '~/worldkit/entity/actor/capacitor';
 import { createShell } from '~/worldkit/entity/actor/shell';
 import { initializeWallet } from '~/worldkit/entity/actor/wallet';

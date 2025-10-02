@@ -8,9 +8,7 @@ import { createEntity, DEFAULT_ACTOR_FACTORY_OPTIONS, FactoryDependencies } from
 import { isUrnOfVocabulary } from '~/lib/taxonomy';
 import { ExitInput, Exits, PlaceInput } from '~/types/entity/place';
 import { WellKnownPlace } from '~/types/world/space';
-import lodash from 'lodash';
-
-const { merge } = lodash;
+import { merge } from '~/lib/lang';
 
 const identity = <T>(x: T): T => x;
 
