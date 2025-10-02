@@ -1,5 +1,6 @@
 import { AbstractEntity, EntityType } from '~/types/entity/entity';
-import { WorldEvent } from '~/types/event';
+import { WorkbenchSession } from '~/types/workbench';
+import { CombatSession } from '~/worldkit/combat';
 
 export enum SessionStrategy {
   COMBAT = 'combat',
@@ -35,10 +36,10 @@ export type AbstractSessionData<TSessionStrategy extends SessionStrategy> = {
 export type AbstractSession<
   TSessionStrategy extends SessionStrategy,
   TSessionData,
-  TSessionLogEntry extends unknown = WorldEvent,
 > = AbstractEntity<EntityType.SESSION> & {
   strategy: TSessionStrategy;
   status: SessionStatus;
   data: TSessionData;
-  log: TSessionLogEntry[];
 };
+
+export type Session = CombatSession | WorkbenchSession;

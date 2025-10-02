@@ -85,7 +85,6 @@ export const createCombatSession = (
     strategy: SessionStrategy.COMBAT,
     status: SessionStatus.PENDING,
     data,
-    log: [],
   };
 };
 

@@ -1,5 +1,7 @@
 import { Actor } from '~/types/entity/actor';
+import { Group } from '~/types/entity/group';
 import { Place } from '~/types/entity/place';
+import { Session } from '~/types/session';
 import { RootNamespace } from '~/types/taxonomy';
 
 export type LocallyUniqueId = string;
@@ -64,7 +66,4 @@ export type EmergentNarrative = {
   emergent?: string;
 };
 
-/**
- * An entity is anything that can exist within
- */
-export type Entity = Actor | Place;
+export type Entity = Actor | Place | Session | Group;

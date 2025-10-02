@@ -57,7 +57,6 @@ export const createWorkbenchSession = (
     strategy: SessionStrategy.WORKBENCH,
     status: SessionStatus.PENDING,
     data,
-    log: [],
   };
 };
 

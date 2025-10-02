@@ -54,13 +54,11 @@ const identity: ShellTransformer = (shell: Shell) => shell;
 
 export type CreateShellDependencies = {
   hashUnsafeString: typeof hashUnsafeString;
-  createModifiableScalarAttribute: typeof createModifiableScalarAttribute;
   createInventory: typeof createInventory;
 };
 
 export const DEFAULT_CREATE_SHELL_DEPS: CreateShellDependencies = {
   hashUnsafeString,
-  createModifiableScalarAttribute,
   createInventory,
 };
 
@@ -71,47 +69,45 @@ export function createShell(deps?: CreateShellDependencies): Shell;
 export function createShell(
   inputOrTransformOrDeps?: CreateShellInput | ShellTransformer | CreateShellDependencies,
   transformOrDeps?: ShellTransformer | CreateShellDependencies,
-  deps?: CreateShellDependencies,
+  deps: CreateShellDependencies = DEFAULT_CREATE_SHELL_DEPS,
 ): Shell {
   // Determine the actual arguments based on types
   let input: CreateShellInput | undefined;
   let transform: ShellTransformer = identity;
-  let actualDeps: CreateShellDependencies = DEFAULT_CREATE_SHELL_DEPS;
 
   // Case 1: createShell(transform) - first arg is function
   if (typeof inputOrTransformOrDeps === 'function') {
     transform = inputOrTransformOrDeps;
-    actualDeps = (transformOrDeps as CreateShellDependencies) ?? DEFAULT_CREATE_SHELL_DEPS;
+    deps = (transformOrDeps as CreateShellDependencies) ?? DEFAULT_CREATE_SHELL_DEPS;
   }
   // Case 2: createShell(deps) - first arg is deps object
   else if (inputOrTransformOrDeps && 'hashUnsafeString' in inputOrTransformOrDeps) {
-    actualDeps = inputOrTransformOrDeps;
+    deps = inputOrTransformOrDeps;
   }
   // Case 3: createShell(input, transform?, deps?) - first arg is input object or undefined
   else {
     input = inputOrTransformOrDeps as CreateShellInput | undefined;
     if (typeof transformOrDeps === 'function') {
       transform = transformOrDeps;
-      actualDeps = deps ?? DEFAULT_CREATE_SHELL_DEPS;
+      deps = deps ?? DEFAULT_CREATE_SHELL_DEPS;
     } else if (transformOrDeps) {
-      actualDeps = transformOrDeps;
+      deps = transformOrDeps;
     }
   }
 
   const {
     hashUnsafeString: hashUnsafeStringImpl,
-    createModifiableScalarAttribute: createModifiableScalarAttributeImpl,
     createInventory: createInventoryImpl,
-  } = actualDeps;
+  } = deps;
   const name = input?.name ?? generateRandomShellName();
 
   const defaults: Shell = {
     id: input?.id ?? hashUnsafeStringImpl(name),
     name,
     stats: {
-      [ActorStat.POW]: createModifiableScalarAttributeImpl((defaults) => ({ ...defaults, nat: 10 })),
-      [ActorStat.FIN]: createModifiableScalarAttributeImpl((defaults) => ({ ...defaults, nat: 10 })),
-      [ActorStat.RES]: createModifiableScalarAttributeImpl((defaults) => ({ ...defaults, nat: 10 })),
+      [ActorStat.POW]: createModifiableScalarAttribute((defaults) => ({ ...defaults, nat: 10 })),
+      [ActorStat.FIN]: createModifiableScalarAttribute((defaults) => ({ ...defaults, nat: 10 })),
+      [ActorStat.RES]: createModifiableScalarAttribute((defaults) => ({ ...defaults, nat: 10 })),
     },
     inventory: input?.inventory ?? createInventoryImpl(),
     equipment: {},

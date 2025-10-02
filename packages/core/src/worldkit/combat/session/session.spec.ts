@@ -164,7 +164,6 @@ describe('session', () => {
       expect(session.data.battlefield).toBeDefined();
       expect(session.data.rounds.current.number).toBe(1);
       expect(session.data.rounds.current.turns.current.number).toBe(1);
-      expect(session.log).toEqual([]);
     });
 
     it('should use provided session ID', () => {
