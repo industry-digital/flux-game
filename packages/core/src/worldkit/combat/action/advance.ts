@@ -184,9 +184,6 @@ export function createAdvanceMethod(
     const to = { coordinate: combatant.position.coordinate, facing: combatant.position.facing, velocity: combatant.position.speed };
     const payload = { actor: actor.id,from, to, distance, cost };
 
-    // TODO: Implement narrative
-    const narrative = { self: '', observer: '' };
-
     const event = createWorldEventImpl({
       id: context.uniqid(),
       ts: context.timestamp(),
@@ -194,7 +191,6 @@ export function createAdvanceMethod(
       location: actor.location,
       trace: trace,
       payload,
-      narrative,
     });
 
     context.declareEvent(event);

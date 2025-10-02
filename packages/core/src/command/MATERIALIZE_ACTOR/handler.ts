@@ -10,7 +10,9 @@ import {
 } from '~/types/handler';
 import { SpecialVisibility } from '~/types/world/visibility';
 import { ActorURN } from '~/types/taxonomy';
-import { lookAtPlace } from '~/worldkit/narrative/place';
+import { EventType } from '~/types/event';
+
+const EMPTY_PAYLOAD: Readonly<Record<string, never>> = Object.freeze({});
 
 export type MaterializeActorCommand = SystemCommand<CommandType.MATERIALIZE_ACTOR, {
   actorId: ActorURN;
@@ -39,8 +41,15 @@ export const materializeActorReducer: PureReducer<TransformerContext, Materializ
   // FIXME: How do we handle the case where the actor is in stealth? What should be the actor's visibility then?
   place.entities[actor.id] = { vis: SpecialVisibility.VISIBLE_TO_EVERYONE };
 
-  // After materialization, generate a look event using the reusable function
-  return lookAtPlace(context, actor.id, place.id, command.id);
+  declareEvent({
+    type: EventType.ACTOR_DID_MATERIALIZE,
+    actor: actor.id,
+    location: place.id,
+    trace: command.id,
+    payload: EMPTY_PAYLOAD,
+  });
+
+  return context;
 };
 
 export class MATERIALIZE_ACTOR implements PureHandlerInterface<TransformerContext, MaterializeActorCommand> {

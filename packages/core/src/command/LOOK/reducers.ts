@@ -2,9 +2,6 @@ import { EventType } from '~/types/event';
 import { PureReducer, TransformerContext } from '~/types/handler';
 import { EntityType } from '~/types/entity/entity';
 import type { LookCommand } from './handler';
-import { Perspective } from '~/types/narrative';
-import { renderActorSummary } from '~/template/actor';
-import { lookAtPlace } from '~/worldkit/narrative/place';
 
 export const lookAtActorReducer: PureReducer<TransformerContext, LookCommand> = (context, command) => {
   if (command.args.type !== EntityType.ACTOR) {
@@ -26,9 +23,6 @@ export const lookAtActorReducer: PureReducer<TransformerContext, LookCommand> = 
     actor: actor.id,
     payload: { target: targetActor.id },
     trace: command.id,
-    narrative: {
-      self: renderActorSummary(targetActor, Perspective.OBSERVER),
-    },
   });
 
   return context;
@@ -43,8 +37,15 @@ export const lookAtPlaceReducer: PureReducer<TransformerContext, LookCommand> = 
   const actor = actors[command.actor!];
   const targetPlaceId = command.location ?? command.args.id;
 
-  // Use the shared lookAtPlace function to handle the logic and event generation
-  return lookAtPlace(context, actor.id, targetPlaceId, command.id);
+  context.declareEvent({
+    type: EventType.ACTOR_DID_LOOK_AT_PLACE,
+    location: actor.location!,
+    actor: actor.id,
+    payload: { target: targetPlaceId },
+    trace: command.id,
+  });
+
+  return context;
 };
 
 export const lookAtItemReducer: PureReducer<TransformerContext, LookCommand> = (context, command) => {

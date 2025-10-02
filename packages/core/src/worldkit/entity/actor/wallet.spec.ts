@@ -320,7 +320,6 @@ describe('Wallet Module', () => {
         expect(spendEvent.trace).toBe('test-trace');
         expect(spendEvent.actor).toBe(actor.id);
         expect(spendEvent.payload).toEqual(transaction);
-        expect(spendEvent.narrative?.self).toContain('decreased by 30');
       });
 
       it('should execute CREDIT transaction and emit gain event', () => {
@@ -344,7 +343,6 @@ describe('Wallet Module', () => {
         expect(gainEvent.trace).toBe('test-trace');
         expect(gainEvent.actor).toBe(actor.id);
         expect(gainEvent.payload).toEqual(transaction);
-        expect(gainEvent.narrative?.self).toContain('increased by 50');
       });
 
       it('should handle unknown transaction types gracefully', () => {

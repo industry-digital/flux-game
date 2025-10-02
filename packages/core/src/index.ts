@@ -9,7 +9,7 @@ export * from '~/worldkit/combat';
 export * from '~/worldkit/context';
 export * from '~/worldkit/physics/mass';
 export * from '~/worldkit/session';
-export * from '~/template';
+export * from '~/narrative';
 
 export { profile, profileAsync } from '~/lib/profile';
 export type { ProfileResult } from '~/lib/profile';

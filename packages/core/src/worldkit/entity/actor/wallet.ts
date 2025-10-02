@@ -142,29 +142,23 @@ export const executeCurrencyTransaction = (
         location: actor.location,
         actor: actor.id,
         payload: transaction,
-        narrative: {
-          self: `Your ${transaction.currency} balance has decreased by ${transaction.amount}.`
-        },
       });
 
       return [spendEvent];
     }
 
     case TransactionType.CREDIT: {
-    // Apply the addition to the actor's wallet
-    addFunds(actor, transaction.currency, transaction.amount);
+      // Apply the addition to the actor's wallet
+      addFunds(actor, transaction.currency, transaction.amount);
 
-    // Emit gain event
-    const gainEvent = createWorldEvent({
-      type: EventType.ACTOR_DID_GAIN_CURRENCY,
-      trace: transaction.trace,
-      location: actor.location,
-      actor: actor.id,
-      payload: transaction,
-      narrative: {
-        self: `Your ${transaction.currency} balance has increased by ${transaction.amount}.`
-      },
-    });
+      // Emit gain event
+      const gainEvent = createWorldEvent({
+        type: EventType.ACTOR_DID_GAIN_CURRENCY,
+        trace: transaction.trace,
+        location: actor.location,
+        actor: actor.id,
+        payload: transaction,
+      });
 
       return [gainEvent];
     }

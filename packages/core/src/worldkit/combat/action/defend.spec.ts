@@ -79,10 +79,6 @@ describe('Defend Method', () => {
           actor: defender.id, // Actor should be in payload
           cost: { ap: initialAP }
         },
-        narrative: {
-          self: expect.any(String),
-          observer: expect.any(String)
-        },
       });
     });
   });

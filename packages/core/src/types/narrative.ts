@@ -1,53 +1,44 @@
+import { EventType, WorldEvent } from '~/types/event';
 import { TransformerContext } from '~/types/handler';
-import { Actor } from '~/types/entity/actor';
-import { WorldEvent } from '~/types/event';
+import { ActorURN } from '~/types/taxonomy';
 
 export enum Perspective {
   SELF = 'self',
   OBSERVER = 'observer',
 }
 
-export enum NarrativeType {
-  INFO = 'info',
-  WARNING = 'warning',
-  ERROR = 'error',
-  SUCCESS = 'success',
-}
+/**
+ * Simple narrative item
+ */
+export type PrivateNarrative = { [Perspective.SELF]: string };
+export type PublicNarrative = { [Perspective.OBSERVER]: string };
+export type SharedNarrative = PrivateNarrative & PublicNarrative;
+export type NarrativeItem = PrivateNarrative | PublicNarrative | SharedNarrative;
 
-type NarrativeItem = PrivateNarrative | PublicNarrative | SharedNarrative;
+/**
+ * Narrative sequences
+ */
 type NarrativeSequenceItemBase = NarrativeItem & { delay: number };
 type NarrativeSequenceItem = NarrativeSequenceItemBase & NarrativeItem;
-
 export type NarrativeSequence = NarrativeSequenceItem[];
 
-export type PrivateNarrative = {
-  [Perspective.SELF]: string;
-};
+export type TemplateOutput = NarrativeItem | NarrativeSequence;
 
-export type PublicNarrative = {
-  [Perspective.OBSERVER]: string;
-};
-
-export type SharedNarrative = {
-  [Perspective.SELF]: string;
-  [Perspective.OBSERVER]: string;
-};
-
-/**
- * A narrative is a description of an event.
- * It can be a single item or an array of items.
- * The items are displayed in order.
- * The delay is the time in milliseconds to wait before displaying the next item.
- * @deprecated Use one of the above types.
- */
-export type Narrative = NarrativeItem | NarrativeItem[];
-
-/**
- * Common narrative renderer function signature
- */
-export type NarrativeRenderer<TWorldEvent extends WorldEvent> = (
+export type TemplateFunction<
+  TWorldEvent extends WorldEvent,
+  TOutput extends TemplateOutput,
+> = (
   context: TransformerContext,
-  payload: TWorldEvent['payload'],
-  actor: Actor,
-  targetActor?: Actor
-) => Narrative;
+  event: TWorldEvent,
+  as: ActorURN,
+) => TOutput;
+
+/**
+ * Complete language template interface
+ *
+ * Every language module must implement this exact interface to ensure
+ * complete narrative coverage across all supported game events.
+ */
+export type LanguageTemplates = Record<EventType, TemplateFunction<WorldEvent, TemplateOutput>>;
+
+export type LanguageTemplatesResolver = () => LanguageTemplates;

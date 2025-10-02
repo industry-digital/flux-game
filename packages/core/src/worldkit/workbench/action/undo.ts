@@ -27,9 +27,6 @@ export const createUndoStagedMutationsAction = (
       trace,
       location: actor.location,
       actor: actor.id,
-      narrative: {
-        self: 'Shell mutations undone',
-      },
       payload: {
         sessionId: session.id,
       },

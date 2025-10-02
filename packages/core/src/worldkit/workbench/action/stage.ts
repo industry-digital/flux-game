@@ -1,4 +1,3 @@
-import { describeComponentMutation, describeStatMutation } from '~/template/workbench/mutation';
 import { CurrencyType } from '~/types/currency';
 import { Actor } from '~/types/entity/actor';
 import { Shell } from '~/types/entity/shell';
@@ -97,9 +96,6 @@ const handleStatMutation = (
       trace,
       location: actor.location,
       actor: actor.id,
-      narrative: {
-        self: describeStatMutation(mutation as StatMutation, cost, currency),
-      },
       payload: {
         shellId: shell.id,
         mutation,
@@ -124,9 +120,6 @@ const handleComponentMutation = (
       trace,
       location: actor.location,
       actor: actor.id,
-      narrative: {
-        self: describeComponentMutation(mutation, schema.name, schema.powerDraw ?? 0),
-      },
       payload: {
         shellId: shell.id,
         mutation,

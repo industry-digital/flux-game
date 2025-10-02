@@ -65,10 +65,6 @@ export function createCombatGameStateApi(
           type: EventType.COMBATANT_DID_DIE,
           location,
           trace: trace ?? context.uniqid(),
-          narrative: { // TODO: Implement narrative
-            self: '',
-            observer: '',
-          },
           payload: {
             actor: actorId,
           },

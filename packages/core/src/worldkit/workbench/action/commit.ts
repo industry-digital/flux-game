@@ -66,9 +66,6 @@ export const createCommitShellMutationsAction = (
       trace,
       location: actor.location,
       actor: actor.id,
-      narrative: {
-        self: 'Shell modifications applied', // TODO: Narrative generation
-      },
       payload: {
         sessionId: session.id,
         cost,

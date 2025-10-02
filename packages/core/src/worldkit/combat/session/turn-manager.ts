@@ -42,10 +42,6 @@ export function createTurnManager(
       actor: actorId,
       location: session.data.location,
       trace,
-      narrative: { // TODO: Implement narrative
-        self: '',
-        observer: '',
-      },
       payload: {
         sessionId: session.id,
         round: roundNumber,
@@ -79,10 +75,6 @@ export function createTurnManager(
         type: EventType.COMBAT_ROUND_DID_END,
         location: session.data.location,
         trace,
-        narrative: { // TODO: Implement narrative
-          self: '',
-          observer: '',
-        },
         payload: { round: currentRound.number }
       });
 
@@ -113,10 +105,6 @@ export function createTurnManager(
           type: EventType.COMBAT_ROUND_DID_START,
           location: session.data.location,
           trace,
-          narrative: { // TODO: Implement narrative
-            self: '',
-            observer: '',
-          },
           payload: {
             sessionId: session.id,
             round: nextRoundNumber,
@@ -152,10 +140,6 @@ export function createTurnManager(
           type: EventType.COMBAT_ROUND_DID_END,
           location: session.data.location,
           trace,
-          narrative: { // TODO: Implement narrative
-            self: '',
-            observer: '',
-          },
           payload: { round: currentRound.number }
         });
 
@@ -186,10 +170,6 @@ export function createTurnManager(
             type: EventType.COMBAT_ROUND_DID_START,
             location: session.data.location,
             trace,
-            narrative: { // TODO: Implement narrative
-              self: '',
-              observer: '',
-            },
             payload: {
               sessionId: session.id,
               round: nextRoundNumber,

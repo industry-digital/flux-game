@@ -18,7 +18,6 @@ import { ActorURN } from '~/types/taxonomy';
 import { deductAp } from '~/worldkit/combat/combatant';
 import { TransformerContext } from '~/types/handler';
 import { createStrikeCost } from '~/worldkit/combat/tactical-cost';
-import { renderAttackNarrative } from '~/worldkit/narrative/combat/attack-narrative';
 import { calculateAttackRating } from '~/worldkit/combat/attack';
 import { decrementHp } from '~/worldkit/entity/actor/health';
 import { getEffectiveSkillRank } from '~/worldkit/entity/actor/skill';
@@ -73,12 +72,10 @@ export function createStrikeMethod(
   const { computeCombatMass } = context.mass;
 
   return (target?: ActorURN, trace: string = context.uniqid()): WorldEvent[] => {
-    // Handle target parameter - update persistent target if provided
     if (target) {
       combatant.target = target;
     }
 
-    // Require existing target if none provided
     if (!combatant.target) {
       declareError(
         'No target selected. Use "target <name>" or "strike <name>" to select a target first.',
@@ -87,17 +84,12 @@ export function createStrikeMethod(
       return [];
     }
 
-    // 1. Validate prerequisites (pure checks, no state changes yet)
     const weapon = context.equipmentApi.getEquippedWeaponSchema(actor);
     if (!weapon) {
       declareError('You don\'t have a weapon equipped.', trace);
       return [];
     }
 
-    // Resolve weapon mass from schema (convert grams to kg)
-    if (!weapon.baseMass || weapon.baseMass <= 0) {
-      throw new Error(`Invalid weapon mass: ${weapon.baseMass}g. Weapon must have positive baseMass.`);
-    }
     const weaponMassKg = weapon.baseMass / 1000;
 
     const targetCombatant = session.data.combatants.get(combatant.target!);
@@ -112,36 +104,28 @@ export function createStrikeMethod(
       return [];
     }
 
-    // Calculate tactical AP cost using factory (includes rounding)
     const cost: ActionCost = createStrikeCostImpl(weaponMassKg, actor.stats.fin.eff);
-
     if (cost.ap! > combatant.ap.eff.cur) {
       declareError(`You don't have enough AP to strike.`, trace);
       return [];
     }
 
-    // 2. Execute single deterministic roll (this handles RNG internally)
     const { values, sum: natural } = context.rollDice(ATTACK_ROLL_SPECIFICATION, context.random);
     const roll: RollResult = {
       dice: ATTACK_ROLL_SPECIFICATION,
       values,
       mods: {},
       natural,
-      result: natural, // No modifiers for basic strike
+      result: natural, // TODO: compute result based on `mods` and `natural`.
     };
 
-    // 3. Calculate all values deterministically (no random calls)
     const targetActor = context.world.actors[combatant.target!];
-    // Use combat mass API for consistency with physics calculations (returns kg)
     const defenderEvasionRating = calculateActorEvasionRatingImpl(
       targetActor,
       computeCombatMass,
     );
 
-    // 4. Calculate skill-based attack rating
     const attackRating = calculateAttackRatingImpl(actor, weapon, roll.result);
-
-    // 5. Resolve hit/miss deterministically using skill-enhanced rating
     const hitResolution = resolveHitAttemptImpl(
       defenderEvasionRating,
       attackRating,
@@ -149,38 +133,30 @@ export function createStrikeMethod(
       context, //--> ASSUMPTION: context contains necessary dependencies
     );
 
-    // 5. Calculate damage deterministically using mass-based linear system
     let damage = 0;
     let outcome: 'hit' | 'miss' | 'hit:critical' | 'miss:critical' = 'miss';
 
     if (!hitResolution.evaded) {
       outcome = 'hit';
-
-      // Calculate damage using new mass-based linear system
       damage = calculateWeaponDamageImpl(weaponMassKg, actor.stats.pow.eff);
     }
 
-    // 6. Apply all state changes atomically
     deductAp(combatant, cost.ap!);
 
     if (damage > 0) {
-      // Apply damage to the target actor's HP
       decrementHp(targetActor, damage);
     }
-
-    // 7. Generate narrative for the attack
-    const narrative = renderAttackNarrative(actor, targetActor, weapon, outcome);
 
     const combatantDidAttackEvent = createWorldEventImpl({
       type: EventType.COMBATANT_DID_ATTACK,
       location: actor.location,
       trace: trace,
-      narrative,
       payload: {
         actor: actor.id,
         cost,
         target: combatant.target!,
         roll,
+        damage,
         outcome,
         attackRating,
         evasionRating: defenderEvasionRating,
@@ -193,17 +169,11 @@ export function createStrikeMethod(
 
     context.declareEvent(combatantDidAttackEvent);
 
-    // TODO: Implement narrative
-    const deathNarrative = { self: '', observer: '' };
-
-    // 9. Check for death immediately after applying damage
     if (damage > 0 && targetActor.hp.eff.cur <= 0) {
-      // Create death event directly since we know the target just died from our damage
       const deathEvent = createWorldEventImpl({
         type: EventType.COMBATANT_DID_DIE,
         location: actor.location,
         trace: trace,
-        narrative: deathNarrative,
         payload: {
           actor: combatant.target!,
         },

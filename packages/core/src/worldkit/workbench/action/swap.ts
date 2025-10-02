@@ -85,9 +85,6 @@ export const createSwapShellAction = (
       trace,
       location: actor.location,
       actor: actor.id,
-      narrative: {
-        self: `Consciousness successfully transferred to shell ${targetShellName}.`,
-      },
       payload: {
         actorId: actor.id,
         fromShellId: previousShellId,

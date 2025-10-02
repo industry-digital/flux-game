@@ -5,7 +5,6 @@ import { TransformerContext } from '~/types/handler';
 import { WorkbenchSession } from '~/types/workbench';
 import { createWorldEvent } from '~/worldkit/event';
 import { ShellPerformanceDependencies } from '~/worldkit/entity/actor/shell/performance';
-import { renderShellDiff } from '~/template/workbench/diff';
 import { computeEffectiveStatValue, getNaturalStatValue, getStat } from '~/worldkit/entity/actor';
 import { createShellDiff } from '~/worldkit/workbench/diff';
 
@@ -35,7 +34,6 @@ export const createDiffStagedMutationsAction = (
     }
 
     const shellDiff = createShellDiff(shell, session.data.pendingMutations, shellPerformanceDeps);
-    const narrative = { self: renderShellDiff(shellDiff) };
 
     // Create event
     const shellMutationsDiffedEvent = createWorldEvent<ActorDidDiffShellMutations>({
@@ -43,7 +41,6 @@ export const createDiffStagedMutationsAction = (
       trace,
       location: actor.location,
       actor: actor.id,
-      narrative,
       payload: shellDiff,
     });
 

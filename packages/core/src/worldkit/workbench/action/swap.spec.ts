@@ -314,7 +314,6 @@ describe('SwapShellAction', () => {
       expect(swapEvent.trace).toBe('custom-trace');
       expect(swapEvent.location).toBe(actor.location);
       expect(swapEvent.actor).toBe(actor.id);
-      expect(swapEvent.narrative.self).toBeDefined();
       expect(swapEvent.payload.actorId).toBe(actor.id);
       expect(swapEvent.payload.fromShellId).toBe(originalShellId);
       expect(swapEvent.payload.toShellId).toBe(secondShellId);
@@ -341,10 +340,11 @@ describe('SwapShellAction', () => {
 
       const swapAction = createSwapShellAction(context, session);
       const events = swapAction(actor, secondShellId);
-      const swapEvent = events[0] as ActorDidSwapShell;
 
-      expect(swapEvent.narrative.self).toBeDefined();
-      expect(swapEvent.narrative.self).toContain(secondShellId);
+      expect(events).toHaveLength(1);
+      const swapEvent = events[0] as ActorDidSwapShell;
+      expect(swapEvent.type).toBe(EventType.ACTOR_DID_SWAP_SHELL);
+      expect(swapEvent.payload.toShellId).toBe(secondShellId);
     });
   });
 });

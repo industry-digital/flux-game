@@ -13,7 +13,6 @@ import { distanceToAp, apToDistance } from '~/worldkit/physics/movement';
 import { deductAp, MOVE_BY_DISTANCE, MovementType } from '~/worldkit/combat/combatant';
 import { calculateTacticalMovement, roundPosition } from '~/worldkit/combat/tactical-rounding';
 import { checkMovementCollision } from '~/worldkit/combat/movement';
-import { CombatantDidMove } from '~/types/event';
 import { TransformerContext } from '~/types/handler';
 import { ActorURN } from '~/types/taxonomy';
 import { MovementActionDependencies, DEFAULT_MOVEMENT_DEPS } from './movement-deps';
@@ -148,18 +147,13 @@ export function createRetreatMethod(
     const to = { coordinate: tacticalFinalPosition, facing: combatant.position.facing, velocity: combatant.position.speed };
     const payload = { actor: actor.id,  cost, from, to };
 
-    // TODO: Implement narrative
-    const narrative = { self: '', observer: '' };
-
     // Create movement event with both tactical and precise values
     const event = createWorldEventImpl({
       type: EventType.COMBATANT_DID_MOVE,
       location: actor.location,
       trace: trace,
       payload,
-      narrative,
-    }) as CombatantDidMove;
-
+    });
 
     context.declareEvent(event);
     return [event];

@@ -135,9 +135,6 @@ export const createWorkbenchSessionApi = (
       type: EventType.WORKBENCH_SESSION_DID_START,
       location: actor.location,
       trace,
-      narrative: { // TODO: Implement narrative
-        self: '',
-      },
       payload: {
         sessionId: sessionId,
       },

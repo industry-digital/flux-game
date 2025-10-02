@@ -47,13 +47,11 @@ export function createDefendMethod (
     deductAp(combatant, cost.ap!);
 
 
-    const narrative = { self: '', observer: '' };
     const defendEvent = createWorldEvent({
       type: EventType.COMBATANT_DID_DEFEND,
       location: actor.location,
       trace: trace,
       payload: { actor: actor.id, cost },
-      narrative,
     });
 
     context.declareEvent(defendEvent);

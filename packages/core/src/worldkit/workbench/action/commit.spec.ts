@@ -326,8 +326,6 @@ describe('CommitShellMutationsAction', () => {
       expect(spendEvent.trace).toBe('custom-trace');
       expect(spendEvent.location).toBe(actor.location);
       expect(spendEvent.actor).toBe(actor.id);
-      expect(spendEvent.narrative.self).toBeDefined();
-      expect(spendEvent.narrative.self).toContain('scrap');
       expect(spendEvent.payload.actorId).toBe(actor.id);
       expect(spendEvent.payload.currency).toBe(CurrencyType.SCRAP);
       expect(spendEvent.payload.type).toBe(TransactionType.DEBIT);
@@ -353,7 +351,6 @@ describe('CommitShellMutationsAction', () => {
       expect(commitEvent.trace).toBe('commit-trace');
       expect(commitEvent.location).toBe(actor.location);
       expect(commitEvent.actor).toBe(actor.id);
-      expect(commitEvent.narrative.self).toBe('Shell modifications applied');
       expect(commitEvent.payload.sessionId).toBe(session.id);
       expect(commitEvent.payload.cost).toBeGreaterThan(0);
       expect(commitEvent.payload.mutations).toHaveLength(1);

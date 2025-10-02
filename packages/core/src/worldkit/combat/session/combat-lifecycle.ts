@@ -44,10 +44,6 @@ const createCombatStartEvents = (
       type: EventType.COMBAT_SESSION_DID_START,
       location,
       trace,
-      narrative: { // TODO: Implement narrative
-        self: '',
-        observer: '',
-      },
       payload: {
         sessionId,
         initiative: [...initiativeRolls.entries()],
@@ -72,10 +68,6 @@ const createCombatStartEvents = (
       type: EventType.COMBAT_ROUND_DID_START,
       location,
       trace,
-      narrative: { // TODO: Implement narrative
-        self: '',
-        observer: '',
-      },
       payload: { sessionId, round: 1 },
     }),
 
@@ -83,10 +75,6 @@ const createCombatStartEvents = (
       type: EventType.COMBAT_TURN_DID_START,
       location,
       trace,
-      narrative: { // TODO: Implement narrative
-        self: '',
-        observer: '',
-      },
       payload: {
         sessionId,
         round: 1,
@@ -257,10 +245,6 @@ export function createCombatLifecycle(
       type: EventType.COMBAT_SESSION_DID_END,
       location,
       trace,
-      narrative: { // TODO: Implement narrative
-        self: '',
-        observer: '',
-      },
       payload: {
         sessionId,
         winningTeam, // null for mutual destruction, Team for victory

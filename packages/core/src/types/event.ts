@@ -3,17 +3,16 @@ import { ResourceNodes } from '~/types/entity/resource';
 import { ActorURN, ItemURN, PlaceURN, SessionURN } from '~/types/taxonomy';
 import { ActionCost, BattlefieldPositionSummary, CombatantSummary } from '~/types/combat';
 import { RollResult } from '~/types/dice';
-import { Narrative, PrivateNarrative, SharedNarrative } from '~/types/narrative';
 import { SessionStatus } from '~/types/session';
 import { ShellDiff, ShellMutation } from '~/types/workbench';
 import { CurrencyTransaction } from '~/types/currency';
+import { NarrativeItem, NarrativeSequence } from '~/types/narrative';
 
 export type EventPayload = Record<string, any>;
 
 export type AbstractWorldEventInput<
   T extends EventType,
-  P extends EventPayload,
-  N extends Narrative | undefined = undefined,
+  P extends EventPayload = {},
 > = {
   /**
    * The unique identifier for this event.
@@ -57,8 +56,7 @@ export type AbstractWorldEventInput<
    * 1 means the event is absolutely mind-blowing. a.k.a, "epic", "earth-shattering", "life-changing", etc.
    */
   significance?: number;
-
-} & (N extends undefined ? {} : { narrative: N }); // Define a `narrative` field if it's not undefined
+};
 
 export type ErrorExplanation = {
   reason: string;
@@ -125,19 +123,30 @@ export type EventBase = {
 };
 
 export type ActorWasCreated = EventBase & ActorWasCreatedInput;
-export type ActorWasCreatedInput = RequiresActor & AbstractWorldEventInput<EventType.ACTOR_WAS_CREATED, {}>;
+export type ActorWasCreatedInput = RequiresActor & AbstractWorldEventInput<
+  EventType.ACTOR_WAS_CREATED
+>;
 
 export type PlaceWasCreated = EventBase & PlaceWasCreatedInput;
-export type PlaceWasCreatedInput = AbstractWorldEventInput<EventType.PLACE_WAS_CREATED, {}>;
+export type PlaceWasCreatedInput = AbstractWorldEventInput<
+  EventType.PLACE_WAS_CREATED
+>;
 
 export type ActorDidMaterialize = EventBase & ActorDidMaterializeInput;
-export type ActorDidMaterializeInput = RequiresActor & AbstractWorldEventInput<EventType.ACTOR_DID_MATERIALIZE, {}>;
+export type ActorDidMaterializeInput = RequiresActor & AbstractWorldEventInput<
+  EventType.ACTOR_DID_MATERIALIZE
+>;
 
 export type ActorDidDematerialize = EventBase & ActorDidDematerializeInput;
-export type ActorDidDematerializeInput = RequiresActor & AbstractWorldEventInput<EventType.ACTOR_DID_DEMATERIALIZE, {}>;
+export type ActorDidDematerializeInput = RequiresActor & AbstractWorldEventInput<
+  EventType.ACTOR_DID_DEMATERIALIZE
+>;
 
 export type ActorDidMove = RequiresActor & EventBase & ActorDidMoveInput;
-export type ActorDidMoveInput = RequiresActor & AbstractWorldEventInput<EventType.ACTOR_DID_MOVE,{ destination: PlaceURN }>;
+export type ActorDidMoveInput = RequiresActor & AbstractWorldEventInput<
+  EventType.ACTOR_DID_MOVE,
+  { destination: PlaceURN }
+>;
 
 export type ActorDidDepart = EventBase & AbstractWorldEventInput<EventType.ACTOR_DID_DEPART, {}>;
 export type ActorDidDepartInput = RequiresActor & AbstractWorldEventInput<EventType.ACTOR_DID_DEPART, { destination: PlaceURN }>;
@@ -148,36 +157,26 @@ export type ActorDidArriveInput = RequiresActor & AbstractWorldEventInput<EventT
 export type ActorDidLookAtActor = EventBase & ActorDidLookAtActorInput;
 export type ActorDidLookAtActorInput = RequiresActor & AbstractWorldEventInput<
   EventType.ACTOR_DID_LOOK_AT_ACTOR,
-  { target: ActorURN },
-  PrivateNarrative
-  >;
+  { target: ActorURN }
+>;
 
 export type ActorDidLookAtPlace = EventBase & ActorDidLookAtPlaceInput;
 export type ActorDidLookAtPlaceInput = RequiresActor & AbstractWorldEventInput<
-EventType.ACTOR_DID_LOOK_AT_PLACE,
-{ target: PlaceURN },
-PrivateNarrative
+  EventType.ACTOR_DID_LOOK_AT_PLACE,
+  { target: PlaceURN }
 >;
 
 export type ActorDidLookAtPlaceItem = EventBase & ActorDidLookAtPlaceItemInput;
-export type ActorDidLookAtPlaceItemInput = RequiresActor & AbstractWorldEventInput<EventType.ACTOR_DID_LOOK_AT_PLACE_ITEM, { target: ItemURN }>;
+export type ActorDidLookAtPlaceItemInput = RequiresActor & AbstractWorldEventInput<
+  EventType.ACTOR_DID_LOOK_AT_PLACE_ITEM,
+  { target: ItemURN }
+>;
 
 export type ActorDidLookAtSelfItem = EventBase & ActorDidLookAtSelfItemInput;
-export type ActorDidLookAtSelfItemInput = RequiresActor & AbstractWorldEventInput<EventType.ACTOR_DID_LOOK_AT_SELF_ITEM, {}>;
-
-export type ActorDidDie = EventBase & ActorDidDieInput;
-export type ActorDidDieInput = RequiresActor & AbstractWorldEventInput<EventType.ACTOR_DID_DIE, {
-  actorId: ActorURN;
-  cause: string;
-}>;
-
-export type ActorDidRecoverEnergy = EventBase & ActorDidRecoverEnergyInput;
-export type ActorDidRecoverEnergyInput = AbstractWorldEventInput<EventType.ACTOR_DID_RECOVER_ENERGY, {
-  before: number;
-  after: number;
-  recovered: number;
-}>;
-
+export type ActorDidLookAtSelfItemInput = RequiresActor & AbstractWorldEventInput<
+  EventType.ACTOR_DID_LOOK_AT_SELF_ITEM,
+  { target: ItemURN }
+>;
 
 export type WeatherDidChange = EventBase & WeatherDidChangeInput;
 export type WeatherDidChangeInput = AbstractWorldEventInput<
@@ -202,7 +201,8 @@ export type CombatSessionStatusDidChangeInput = AbstractWorldEventInput<
     sessionId: SessionURN;
     previousStatus: SessionStatus;
     currentStatus: SessionStatus;
-  }>;
+  }
+>;
 
 export type CombatSessionStarted = EventBase & CombatSessionStartedInput;
 export type CombatSessionStartedInput = AbstractWorldEventInput<
@@ -211,9 +211,8 @@ export type CombatSessionStartedInput = AbstractWorldEventInput<
     sessionId: SessionURN;
     initiative: [ActorURN, RollResult][];
     combatants: [ActorURN, CombatantSummary][];
-  },
-  SharedNarrative
-  >;
+  }
+>;
 
 export type CombatSessionEnded = EventBase & CombatSessionEndedInput;
 export type CombatSessionEndedInput = AbstractWorldEventInput<
@@ -223,17 +222,16 @@ export type CombatSessionEndedInput = AbstractWorldEventInput<
     winningTeam: string | null;
     finalRound: number;
     finalTurn: number;
-  },
-  SharedNarrative
-  >;
+  }
+>;
 
 export type CombatantDidAcquireTarget = EventBase & CombatantDidAcquireTargetInput;
 export type CombatantDidAcquireTargetInput = AbstractWorldEventInput<
   EventType.COMBATANT_DID_ACQUIRE_TARGET,
   {
     target: ActorURN;
-  },
-  PrivateNarrative>;
+  }
+>;
 
 export type CombatantDidDefend = EventBase & CombatantDidDefendInput;
 export type CombatantDidDefendInput = AbstractWorldEventInput<
@@ -241,9 +239,8 @@ export type CombatantDidDefendInput = AbstractWorldEventInput<
   {
     actor: ActorURN;
     cost: ActionCost;
-  },
-  SharedNarrative
-  >;
+  }
+>;
 
 export type CombatantDidMove = EventBase & CombatantDidMoveInput;
 export type CombatantDidMoveInput = AbstractWorldEventInput<
@@ -252,9 +249,8 @@ export type CombatantDidMoveInput = AbstractWorldEventInput<
     cost: ActionCost;
     from: BattlefieldPositionSummary;
     to: BattlefieldPositionSummary;
-  },
-  SharedNarrative
-  >;
+  }
+>;
 
 export type AttackOutcome = 'hit' | 'miss' | 'hit:critical' | 'miss:critical';
 
@@ -267,11 +263,11 @@ export type CombatantDidAttackInput = AbstractWorldEventInput<
     cost: ActionCost;
     roll: RollResult;
     outcome: AttackOutcome;
+    damage: number;
     attackRating: number;
     evasionRating: number;
-  },
-  SharedNarrative
-  >;
+  }
+>;
 
 export type CombatTurnDidStart = EventBase & CombatTurnDidStartInput;
 export type CombatTurnDidStartInput = AbstractWorldEventInput<
@@ -281,9 +277,8 @@ export type CombatTurnDidStartInput = AbstractWorldEventInput<
     round: number;
     turn: number;
     actor: ActorURN;
-  },
-  SharedNarrative
-  >;
+  }
+>;
 
 export type EnergySummary = `before=${number} after=${number} recovered=${number}`;
 export type ApSummary = `before=${number} after=${number} recovered=${number}`;
@@ -297,7 +292,8 @@ export type CombatTurnDidEndInput = AbstractWorldEventInput<
     actor: ActorURN;
     ap: ApSummary;
     energy: EnergySummary;
-  }>;
+  }
+>;
 
 export type CombatantDidEndTurn = EventBase & CombatantDidEndTurnInput;
 export type CombatantDidEndTurnInput = AbstractWorldEventInput<
@@ -306,9 +302,8 @@ export type CombatantDidEndTurnInput = AbstractWorldEventInput<
     round: number;
     turn: number;
     actor: ActorURN;
-  },
-  SharedNarrative
-  >;
+  }
+>;
 
 export type CombatRoundDidStart = EventBase & CombatRoundDidStartInput;
 export type CombatRoundDidStartInput = AbstractWorldEventInput<
@@ -316,17 +311,15 @@ export type CombatRoundDidStartInput = AbstractWorldEventInput<
   {
     sessionId: SessionURN;
     round: number;
-  },
-  SharedNarrative
-  >;
+  }
+>;
 
 export type CombatRoundDidEnd = EventBase & CombatRoundDidEndInput;
 export type CombatRoundDidEndInput = AbstractWorldEventInput<
   EventType.COMBAT_ROUND_DID_END,
   {
     round: number;
-  },
-  SharedNarrative
+  }
 >;
 
 export type CombatantDidDie = EventBase & CombatantDidDieInput;
@@ -334,8 +327,7 @@ export type CombatantDidDieInput = AbstractWorldEventInput<
   EventType.COMBATANT_DID_DIE,
   {
     actor: ActorURN;
-  },
-  SharedNarrative
+  }
 >;
 
 export type CombatantDidRecoverAp = EventBase & CombatantDidRecoverApInput;
@@ -346,8 +338,7 @@ export type CombatantDidRecoverApInput = AbstractWorldEventInput<
     before: number;
     after: number;
     recovered: number;
-  },
-  SharedNarrative
+  }
 >;
 
 export type WorkbenchSessionDidStart = EventBase & WorkbenchSessionDidStartInput;
@@ -355,8 +346,7 @@ export type WorkbenchSessionDidStartInput = RequiresActor & AbstractWorldEventIn
   EventType.WORKBENCH_SESSION_DID_START,
   {
     sessionId: SessionURN;
-  },
-  PrivateNarrative
+  }
 >;
 
 export type WorkbenchSessionDidEnd = EventBase & WorkbenchSessionDidEndInput;
@@ -364,8 +354,7 @@ export type WorkbenchSessionDidEndInput = RequiresActor & AbstractWorldEventInpu
   EventType.WORKBENCH_SESSION_DID_END,
   {
     sessionId: SessionURN;
-  },
-  PrivateNarrative
+  }
 >;
 
 export type ActorDidStageShellMutation = EventBase & ActorDidStageShellMutationInput;
@@ -374,15 +363,13 @@ export type ActorDidStageShellMutationInput = RequiresActor & AbstractWorldEvent
   {
     shellId: string;
     mutation: ShellMutation;
-  },
-  PrivateNarrative
+  }
 >;
 
 export type ActorDidDiffShellMutations = EventBase & ActorDidDiffShellMutationsInput;
 export type ActorDidDiffShellMutationsInput = RequiresActor & AbstractWorldEventInput<
   EventType.WORKBENCH_SHELL_MUTATIONS_DIFFED,
-  ShellDiff,
-  PrivateNarrative
+  ShellDiff
 >;
 
 export type ActorDidUndoShellMutations = EventBase & ActorDidUndoShellMutationsInput;
@@ -390,8 +377,7 @@ export type ActorDidUndoShellMutationsInput = RequiresActor & AbstractWorldEvent
   EventType.WORKBENCH_SHELL_MUTATIONS_UNDONE,
   {
     sessionId: SessionURN;
-  },
-  PrivateNarrative
+  }
 >;
 
 export type ActorDidCommitShellMutations = EventBase & ActorDidCommitShellMutationsInput;
@@ -401,8 +387,7 @@ export type ActorDidCommitShellMutationsInput = RequiresActor & AbstractWorldEve
     sessionId: SessionURN;
     cost: number;
     mutations: ShellMutation[];
-  },
-  PrivateNarrative
+  }
 >;
 
 export type ActorDidSwapShell = EventBase & ActorDidSwapShellInput;
@@ -413,8 +398,7 @@ export type ActorDidSwapShellInput = RequiresActor & AbstractWorldEventInput<
     sessionId: SessionURN;
     fromShellId: string;
     toShellId: string;
-  },
-  PrivateNarrative
+  }
 >;
 
 export type ActorDidOpenHelpFile = EventBase & ActorDidOpenHelpFileInput;
@@ -423,22 +407,19 @@ export type ActorDidOpenHelpFileInput = RequiresActor & AbstractWorldEventInput<
   {
     sessionId?: SessionURN;
     helpFile: string;
-  },
-  PrivateNarrative
+  }
 >;
 
 export type ActorDidSpendCurrency = RequiresActor & ActorDidSpendCurrencyInput;
 export type ActorDidSpendCurrencyInput = RequiresActor & AbstractWorldEventInput<
   EventType.ACTOR_DID_SPEND_CURRENCY,
-  CurrencyTransaction,
-  PrivateNarrative
+  CurrencyTransaction
 >;
 
 export type ActorDidGainCurrency = RequiresActor & ActorDidGainCurrencyInput;
 export type ActorDidGainCurrencyInput = RequiresActor & AbstractWorldEventInput<
   EventType.ACTOR_DID_GAIN_CURRENCY,
-  CurrencyTransaction,
-  PrivateNarrative
+  CurrencyTransaction
 >;
 
 /**
@@ -447,7 +428,6 @@ export type ActorDidGainCurrencyInput = RequiresActor & AbstractWorldEventInput<
 export type WorldEventInput =
   | PlaceWasCreatedInput
   | ActorWasCreatedInput
-  | ActorDidDieInput
   | ActorDidMaterializeInput
   | ActorDidDematerializeInput
   | ActorDidMoveInput
@@ -457,7 +437,6 @@ export type WorldEventInput =
   | ActorDidLookAtPlaceInput
   | ActorDidLookAtPlaceItemInput
   | ActorDidLookAtSelfItemInput
-  | ActorDidRecoverEnergyInput
   | ResourcesDidChangeInput
   | WeatherDidChangeInput
   | CombatSessionStatusDidChangeInput
@@ -529,4 +508,11 @@ export type ActorBoundEnvelope = WorldEventEnvelopeBase & {
 export type PlaceBoundEnvelope = WorldEventEnvelopeBase & {
   to: EnvelopeRecipientType.PLACE;
   placeId: PlaceURN;
+};
+
+/**
+ * The server adds narrative to the WorldEvent before sending it to the client
+ */
+export type EnrichedWorldEvent = WorldEvent & {
+  narrative: NarrativeItem | NarrativeSequence;
 };
