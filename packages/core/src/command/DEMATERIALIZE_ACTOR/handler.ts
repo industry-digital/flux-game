@@ -15,6 +15,8 @@ export type DematerializeActorCommand = SystemCommand<CommandType.DEMATERIALIZE_
   actorId: ActorURN;
 }>;
 
+export const EMPTY_PAYLOAD: Readonly<Record<string, never>> = Object.freeze({});
+
 export const dematerializeActorReducer: PureReducer<TransformerContext, DematerializeActorCommand> = (
   context,
   command,
@@ -41,9 +43,8 @@ export const dematerializeActorReducer: PureReducer<TransformerContext, Demateri
     type: EventType.ACTOR_DID_DEMATERIALIZE,
     actor: actor.id,
     location: place.id,
-    payload: {},
+    payload: EMPTY_PAYLOAD,
     trace: command.id,
-    narrative: {},
   });
 
   return context;

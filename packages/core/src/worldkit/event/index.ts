@@ -14,13 +14,14 @@ export const createWorldEvent = <TWorldEvent extends WorldEvent = WorldEvent>(
   deps: CreateWorldEventDependencies = DEFAULT_WORLD_EVENT_DEPS,
 ): TWorldEvent => {
   return {
-    id: deps.uniqid(),
-    ts: deps.timestamp(),
+    id: input.id ?? deps.uniqid(),
+    ts: input.ts ?? deps.timestamp(),
     type: input.type,
     trace: input.trace,
+    // @ts-expect-error: 'Property narrative' does not exist in type 'WorldEventInput'
     narrative: input.narrative,
     actor: input.actor,
     location: input.location,
     payload: input.payload,
-  } as TWorldEvent;
+  } as unknown as TWorldEvent;
 };

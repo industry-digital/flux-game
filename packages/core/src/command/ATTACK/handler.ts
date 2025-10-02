@@ -42,19 +42,19 @@ export const attackReducer: PureReducer<TransformerContext, AttackCommand> = (co
   }
 
   // TODO: Replace this logic with useIntentExecution
-  const { combatant, target, advance: reposition, attack, defend } = useCombatant(actor.id);
+  const { combatant, target, attack, defend } = useCombatant(actor.id);
   const plan: CombatAction[] = generateCombatPlan(context, session, combatant, command.id);
 
   for (const action of plan) {
     switch (action.command) {
       case CommandType.TARGET:
-        target(action.args.target);
+        target(action.args.target, command.id);
         break;
       case CommandType.ATTACK:
-        attack();
+        attack(targetActor.id, command.id);
         break;
       case CommandType.DEFEND:
-        defend();
+        defend(command.id);
         break;
     }
   }

@@ -19,4 +19,11 @@ export type ComponentSchema  =
    * The anatomical locations this item occupies while the weapon is equipped.
    */
   fit?: Partial<Record<Taxonomy.Anatomy, 1>>;
+
+  /**
+   * The power draw of the component in watts
+   * Directly counteracts the actor's peak power output
+   * Free Power = Peak Power Output - (sum of all component power draw)
+   */
+  powerDraw?: number;
 };

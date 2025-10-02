@@ -9,7 +9,6 @@ import { distanceToAp, apToDistance } from '~/worldkit/physics/movement';
 import { checkMovementCollision, createTargetResolver } from '~/worldkit/combat/movement';
 import { deductAp, MOVE_BY_DISTANCE, MovementType } from '~/worldkit/combat/combatant';
 import { MovementActionDependencies, DEFAULT_MOVEMENT_DEPS } from './movement-deps';
-import { renderMovementNarrative } from '~/worldkit/narrative/combat/movement-narrative';
 import { createMovementCostFromAp } from '~/worldkit/combat/tactical-cost';
 
 export type AdvanceDependencies = MovementActionDependencies;
@@ -185,15 +184,12 @@ export function createAdvanceMethod(
     const to = { coordinate: combatant.position.coordinate, facing: combatant.position.facing, velocity: combatant.position.speed };
     const payload = { actor: actor.id,from, to, distance, cost };
 
-    const narrative = renderMovementNarrative(actor, from, to, distance);
-
     const event = createWorldEventImpl({
       id: context.uniqid(),
       ts: context.timestamp(),
       type: EventType.COMBATANT_DID_MOVE,
       location: actor.location,
       trace: trace,
-      narrative,
       payload,
     });
 

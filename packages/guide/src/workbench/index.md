@@ -119,7 +119,12 @@ Physical shell modification occurs through the component mounting system, which 
 > shell component list
 > shell component examine <component_name>
 > shell component mount <component_name>
+[Mounted component_name]
+[Power Draw increased by 10W]
 > shell component unmount <component_name>
+[Unmounted component_name]
+[Power Draw decreased by 10W]
+
 ```
 
 **Component examination** provides detailed analysis of hardware specifications, compatibility matrices, and performance characteristics. The interface displays condition ratings, efficiency percentages, and integration requirements for informed installation decisions.

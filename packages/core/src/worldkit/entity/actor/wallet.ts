@@ -3,6 +3,7 @@ import { CurrencyTransaction, CurrencyTransactionInput, CurrencyType, Transactio
 import { createWorldEvent } from '~/worldkit/event';
 import { EventType, WorldEvent } from '~/types/event';
 import { uniqid, BASE62_CHARSET } from '~/lib/random';
+import { TransformerContext } from '~/types/handler';
 
 const ALLOWED_CURRENCIES: readonly CurrencyType[] = Object.values(CurrencyType);
 
@@ -62,13 +63,6 @@ export const getTotalBalance = (actor: Actor): number => {
 };
 
 /**
- * Check if wallet is empty (no funds in any currency)
- */
-export const isWalletEmpty = (actor: Actor): boolean => {
-  return getTotalBalance(actor) === 0;
-};
-
-/**
  * Set balance for a specific currency directly
  * Directly mutates the actor's wallet state
  */
@@ -116,9 +110,7 @@ export const DEFAULT_CURRENCY_BALANCE = 0;
  * Initialize wallet with default starting funds
  * Directly mutates the actor's wallet state
  */
-export const initializeWallet = (
-  actor: Actor,
-): void => {
+export const initializeWallet = (actor: Actor): void => {
   for (const currency of ALLOWED_CURRENCIES) {
     setBalance(actor, currency, DEFAULT_CURRENCY_BALANCE);
   }
@@ -134,30 +126,31 @@ export const initializeWallet = (
  * Takes a pre-created transaction and emits the corresponding WorldEvent
  */
 export const executeCurrencyTransaction = (
+  context: TransformerContext,
   actor: Actor,
   transaction: CurrencyTransaction,
-  deps: CurrencyDependencies = DEFAULT_CURRENCY_DEPS,
 ): WorldEvent[] => {
-  const events: WorldEvent[] = [];
+  switch (transaction.type) {
+    case TransactionType.DEBIT: {
+      // Apply the deduction to the actor's wallet
+      deductFunds(actor, transaction.currency, transaction.amount);
 
-  if (transaction.type === TransactionType.DEBIT) {
-    // Apply the deduction to the actor's wallet
-    deductFunds(actor, transaction.currency, transaction.amount);
+      // Emit spend event
+      const spendEvent = createWorldEvent({
+        type: EventType.ACTOR_DID_SPEND_CURRENCY,
+        trace: transaction.trace,
+        location: actor.location,
+        actor: actor.id,
+        payload: transaction,
+        narrative: {
+          self: `Your ${transaction.currency} balance has decreased by ${transaction.amount}.`
+        },
+      });
 
-    // Emit spend event
-    const spendEvent = createWorldEvent({
-      type: EventType.ACTOR_DID_SPEND_CURRENCY,
-      trace: transaction.trace,
-      location: actor.location,
-      actor: actor.id,
-      payload: transaction,
-      narrative: {
-        self: `Your ${transaction.currency} balance has decreased by ${transaction.amount}.`
-      },
-    });
+      return [spendEvent];
+    }
 
-    events.push(spendEvent);
-  } else if (transaction.type === TransactionType.CREDIT) {
+    case TransactionType.CREDIT: {
     // Apply the addition to the actor's wallet
     addFunds(actor, transaction.currency, transaction.amount);
 
@@ -173,8 +166,12 @@ export const executeCurrencyTransaction = (
       },
     });
 
-    events.push(gainEvent);
-  }
+      return [gainEvent];
+    }
 
-  return events;
+    default: {
+      context.declareError(`Unknown transaction type: ${transaction.type}`);
+      return [];
+    }
+  }
 };

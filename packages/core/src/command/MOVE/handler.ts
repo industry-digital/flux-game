@@ -89,7 +89,7 @@ export const actorMovementReducer: PureReducer<TransformerContext, MoveCommand> 
       destination: destination.id,
     },
     trace: command.id,
-    narrative: {},
+    // TODO: Add `narrative`
   });
 
   return context;

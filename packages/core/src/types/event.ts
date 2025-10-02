@@ -57,63 +57,61 @@ export type AbstractWorldEventInput<
    * 1 means the event is absolutely mind-blowing. a.k.a, "epic", "earth-shattering", "life-changing", etc.
    */
   significance?: number;
-} & (N extends undefined ? {} : { narrative: N });
+
+} & (N extends undefined ? {} : { narrative: N }); // Define a `narrative` field if it's not undefined
 
 export type ErrorExplanation = {
   reason: string;
   message?: string;
 };
 
+/**
+ * All possible things that can happen in the game universe.
+ */
 export enum EventType {
-  PLACE_WAS_CREATED = 'place:created',
-  ACTOR_WAS_CREATED = 'actor:created',
-  ACTOR_DID_DIE = 'actor:died',
-  ACTOR_DID_MOVE = 'actor:moved',
   ACTOR_DID_ARRIVE = 'actor:arrived',
-  ACTOR_DID_DEPART = 'actor:departed',
-  ACTOR_DID_MATERIALIZE = 'actor:materialized',
   ACTOR_DID_DEMATERIALIZE = 'actor:dematerialized',
-  ACTOR_DID_LOOK_AT_SELF = 'actor:looked:self',
-  ACTOR_DID_LOOK_AT_SELF_ITEM = 'actor:looked:self:item',
+  ACTOR_DID_DEPART = 'actor:departed',
+  ACTOR_DID_DIE = 'actor:died',
+  ACTOR_DID_EXAMINE_SHELL = 'actor:shell:examined',
+  ACTOR_DID_GAIN_CURRENCY = 'actor:currency:credited',
   ACTOR_DID_LOOK_AT_ACTOR = 'actor:looked:actor',
   ACTOR_DID_LOOK_AT_PLACE = 'actor:looked:place',
   ACTOR_DID_LOOK_AT_PLACE_ITEM = 'actor:looked:place:item',
+  ACTOR_DID_LOOK_AT_SELF = 'actor:looked:self',
+  ACTOR_DID_LOOK_AT_SELF_ITEM = 'actor:looked:self:item',
+  ACTOR_DID_MATERIALIZE = 'actor:materialized',
+  ACTOR_DID_MOVE = 'actor:moved',
+  ACTOR_DID_QUERY_HELPFILE = 'actor:helpfile:queried',
   ACTOR_DID_RECOVER_ENERGY = 'actor:energy:recovered',
-  COMBAT_SESSION_DID_START = 'combat:session:started',
+  ACTOR_DID_SPEND_CURRENCY = 'actor:currency:debited',
+  ACTOR_DID_SWAP_SHELL = 'actor:shell:swapped',
+  ACTOR_WAS_CREATED = 'actor:created',
   COMBATANT_DID_ACQUIRE_TARGET = 'combat:actor:target:acquired',
   COMBATANT_DID_ATTACK = 'combat:actor:attacked',
-  COMBATANT_DID_DEFEND = 'combat:actor:defended',
-  COMBATANT_DID_MOVE = 'combat:actor:moved',
-  COMBATANT_DID_RELOAD = 'combat:actor:reloaded',
-  COMBATANT_DID_RECOVER_AP = 'combat:actor:ap:recovered',
-  COMBATANT_DID_REST = 'combat:actor:rested',
   COMBATANT_DID_COVER = 'combat:actor:covered',
+  COMBATANT_DID_DEFEND = 'combat:actor:defended',
   COMBATANT_DID_DIE = 'combat:actor:died',
-  COMBAT_ROUND_DID_START = 'combat:round:started',
+  COMBATANT_DID_MOVE = 'combat:actor:moved',
+  COMBATANT_DID_RECOVER_AP = 'combat:actor:ap:recovered',
+  COMBATANT_DID_RELOAD = 'combat:actor:reloaded',
+  COMBATANT_DID_REST = 'combat:actor:rested',
   COMBAT_ROUND_DID_END = 'combat:round:ended',
-  COMBAT_SESSION_STATUS_DID_CHANGE = 'combat:session:status:changed',
-  COMBAT_TURN_DID_START = 'combat:turn:started',
+  COMBAT_ROUND_DID_START = 'combat:round:started',
   COMBAT_SESSION_DID_END = 'combat:session:ended',
-
+  COMBAT_SESSION_DID_START = 'combat:session:started',
+  COMBAT_SESSION_STATUS_DID_CHANGE = 'combat:session:status:changed',
   COMBAT_TURN_DID_END = 'combat:turn:ended',
+  COMBAT_TURN_DID_START = 'combat:turn:started',
+  PLACE_WAS_CREATED = 'place:created',
   RESOURCES_DID_CHANGE = 'place:resources:changed',
   WEATHER_DID_CHANGE = 'place:weather:changed',
-
-  ACTOR_DID_EXAMINE_CURRENT_SHELL = 'actor:shell:examined',
-  ACTOR_DID_SWAP_SHELL = 'actor:shell:swapped',
-
-  // Workbench events
+  WORKBENCH_SESSION_DID_END = 'workbench:session:ended',
   WORKBENCH_SESSION_DID_START = 'workbench:session:started',
-  WORKBENCH_SHELL_MUTATION_STAGED = 'workbench:mutation:staged',
+  WORKBENCH_SHELL_MUTATIONS_COMMITTED = 'workbench:mutations:committed',
   WORKBENCH_SHELL_MUTATIONS_DIFFED = 'workbench:mutations:diffed',
   WORKBENCH_SHELL_MUTATIONS_UNDONE = 'workbench:mutations:undone',
-  WORKBENCH_SHELL_MUTATIONS_COMMITTED = 'workbench:mutations:committed',
-  WORKBENCH_SESSION_DID_END = 'workbench:session:ended',
-
-  ACTOR_DID_QUERY_HELPFILE = 'actor:helpfile:queried',
-
-  ACTOR_DID_SPEND_CURRENCY = 'actor:currency:debited',
-  ACTOR_DID_GAIN_CURRENCY = 'actor:currency:credited',
+  WORKBENCH_SHELL_MUTATION_STAGED = 'workbench:mutation:staged',
 }
 
 export type RequiresActor = {
@@ -148,7 +146,11 @@ export type ActorDidArrive = EventBase & ActorDidArriveInput;
 export type ActorDidArriveInput = RequiresActor & AbstractWorldEventInput<EventType.ACTOR_DID_ARRIVE, { origin: PlaceURN }>;
 
 export type ActorDidLookAtActor = EventBase & ActorDidLookAtActorInput;
-export type ActorDidLookAtActorInput = RequiresActor & AbstractWorldEventInput<EventType.ACTOR_DID_LOOK_AT_ACTOR, { target: ActorURN }>;
+export type ActorDidLookAtActorInput = RequiresActor & AbstractWorldEventInput<
+  EventType.ACTOR_DID_LOOK_AT_ACTOR,
+  { target: ActorURN },
+  PrivateNarrative
+  >;
 
 export type ActorDidLookAtPlace = EventBase & ActorDidLookAtPlaceInput;
 export type ActorDidLookAtPlaceInput = RequiresActor & AbstractWorldEventInput<EventType.ACTOR_DID_LOOK_AT_PLACE, { target: PlaceURN }>;
@@ -325,14 +327,18 @@ export type WorkbenchSessionDidStartInput = RequiresActor & AbstractWorldEventIn
   EventType.WORKBENCH_SESSION_DID_START,
   {
     sessionId: SessionURN;
-  }>;
+  },
+  PrivateNarrative
+>;
 
 export type WorkbenchSessionDidEnd = EventBase & WorkbenchSessionDidEndInput;
 export type WorkbenchSessionDidEndInput = RequiresActor & AbstractWorldEventInput<
   EventType.WORKBENCH_SESSION_DID_END,
   {
     sessionId: SessionURN;
-  }>;
+  },
+  PrivateNarrative
+>;
 
 export type ActorDidStageShellMutation = EventBase & ActorDidStageShellMutationInput;
 export type ActorDidStageShellMutationInput = RequiresActor & AbstractWorldEventInput<
@@ -358,7 +364,7 @@ export type ActorDidUndoShellMutationsInput = RequiresActor & AbstractWorldEvent
     sessionId: SessionURN;
   },
   PrivateNarrative
-  >;
+>;
 
 export type ActorDidCommitShellMutations = EventBase & ActorDidCommitShellMutationsInput;
 export type ActorDidCommitShellMutationsInput = RequiresActor & AbstractWorldEventInput<
@@ -369,7 +375,7 @@ export type ActorDidCommitShellMutationsInput = RequiresActor & AbstractWorldEve
     mutations: ShellMutation[];
   },
   PrivateNarrative
-  >;
+>;
 
 export type ActorDidSwapShell = EventBase & ActorDidSwapShellInput;
 export type ActorDidSwapShellInput = RequiresActor & AbstractWorldEventInput<
@@ -380,7 +386,8 @@ export type ActorDidSwapShellInput = RequiresActor & AbstractWorldEventInput<
     fromShellId: string;
     toShellId: string;
   },
-  PrivateNarrative>;
+  PrivateNarrative
+>;
 
 export type ActorDidOpenHelpFile = EventBase & ActorDidOpenHelpFileInput;
 export type ActorDidOpenHelpFileInput = RequiresActor & AbstractWorldEventInput<
@@ -390,21 +397,21 @@ export type ActorDidOpenHelpFileInput = RequiresActor & AbstractWorldEventInput<
     helpFile: string;
   },
   PrivateNarrative
-  >;
+>;
 
 export type ActorDidSpendCurrency = RequiresActor & ActorDidSpendCurrencyInput;
 export type ActorDidSpendCurrencyInput = RequiresActor & AbstractWorldEventInput<
   EventType.ACTOR_DID_SPEND_CURRENCY,
   CurrencyTransaction,
   PrivateNarrative
-  >;
+>;
 
 export type ActorDidGainCurrency = RequiresActor & ActorDidGainCurrencyInput;
 export type ActorDidGainCurrencyInput = RequiresActor & AbstractWorldEventInput<
   EventType.ACTOR_DID_GAIN_CURRENCY,
   CurrencyTransaction,
   PrivateNarrative
-  >;
+>;
 
 /**
  * Union of all valid event inputs
@@ -475,11 +482,16 @@ type WorldEventEnvelopeBase = {
   events: WorldEvent[];
 };
 
+export enum EnvelopeRecipientType {
+  ACTOR = 'actor',
+  PLACE = 'place',
+}
+
 /**
  * A packet containing events to be delivered to an Actor
  */
 export type ActorBoundEnvelope = WorldEventEnvelopeBase & {
-  to: 'actor';
+  to: EnvelopeRecipientType.ACTOR;
   actorId: ActorURN;
 };
 
@@ -487,6 +499,6 @@ export type ActorBoundEnvelope = WorldEventEnvelopeBase & {
  * A packet containing events to be delivered to a Place
  */
 export type PlaceBoundEnvelope = WorldEventEnvelopeBase & {
-  to: 'place';
+  to: EnvelopeRecipientType.PLACE;
   placeId: PlaceURN;
 };

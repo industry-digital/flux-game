@@ -43,6 +43,7 @@ export function createTurnManager(
       location: session.data.location,
       trace,
       payload: {
+        sessionId: session.id,
         round: roundNumber,
         turn: turnNumber,
         actor: actorId,
@@ -104,7 +105,10 @@ export function createTurnManager(
           type: EventType.COMBAT_ROUND_DID_START,
           location: session.data.location,
           trace,
-          payload: { round: nextRoundNumber }
+          payload: {
+            sessionId: session.id,
+            round: nextRoundNumber,
+          },
         });
 
         context.declareEvent(roundStartEvent);
@@ -166,7 +170,10 @@ export function createTurnManager(
             type: EventType.COMBAT_ROUND_DID_START,
             location: session.data.location,
             trace,
-            payload: { round: nextRoundNumber }
+            payload: {
+              sessionId: session.id,
+              round: nextRoundNumber,
+            },
           });
 
           context.declareEvent(roundStartEvent);

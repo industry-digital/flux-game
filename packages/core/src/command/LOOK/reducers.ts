@@ -13,10 +13,10 @@ export const lookAtActorReducer: PureReducer<TransformerContext, LookCommand> = 
 
   const { actors } = context.world;
   const actor = actors[command.actor!];
-  const target = actors[command.args.id];
+  const targetActor = actors[command.args.id];
 
-  if (!target) {
-    context.declareError('Could not find target actor in world project', command.id);
+  if (!targetActor) {
+    context.declareError('Target actor not found in world projection', command.id);
     return context;
   }
 
@@ -24,10 +24,10 @@ export const lookAtActorReducer: PureReducer<TransformerContext, LookCommand> = 
     type: EventType.ACTOR_DID_LOOK_AT_ACTOR,
     location: actor.location!,
     actor: actor.id,
-    payload: { target: target.id },
+    payload: { target: targetActor.id },
     trace: command.id,
     narrative: {
-      observer: renderActorSummary(target, Perspective.OBSERVER),
+      self: renderActorSummary(targetActor, Perspective.OBSERVER),
     },
   });
 
@@ -70,10 +70,6 @@ export const lookAtItemReducer: PureReducer<TransformerContext, LookCommand> = (
       actor: actor.id,
       payload: { target: command.args.id },
       trace: command.id,
-      narrative: {
-        // TODO: Implement self item narrative
-        observer: '',
-      },
     });
 
     return context;
@@ -94,10 +90,6 @@ export const lookAtItemReducer: PureReducer<TransformerContext, LookCommand> = (
     actor: actor.id,
     payload: { target: command.args.id },
     trace: command.id,
-    narrative: {
-      // TODO: Implement place item narrative
-      observer: '',
-    },
   });
 
   return context;

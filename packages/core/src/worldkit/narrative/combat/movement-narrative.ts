@@ -2,6 +2,11 @@ import { Actor } from '~/types/entity/actor';
 import { Narrative } from '~/types/narrative';
 import { BattlefieldPositionSummary, CombatFacing } from '~/types/combat';
 
+const ADVANCE = 'advance';
+const RETREAT = 'retreat';
+const FORWARD = 'forward';
+const BACKWARD = 'backward';
+
 /**
  * Generates narrative for COMBATANT_DID_MOVE events
  */
@@ -20,8 +25,8 @@ export const renderMovementNarrative = (
   const isAdvancing = (from.facing === CombatFacing.RIGHT && coordinateChange > 0) ||
                      (from.facing === CombatFacing.LEFT && coordinateChange < 0);
 
-  const actionVerb = isAdvancing ? 'advance' : 'retreat';
-  const direction = isAdvancing ? 'forward' : 'backward';
+  const actionVerb = isAdvancing ? ADVANCE : RETREAT;
+  const direction = isAdvancing ? FORWARD : BACKWARD;
 
   // Generate contextual narrative based on movement type and distance
   if (distance >= 10) {

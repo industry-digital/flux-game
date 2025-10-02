@@ -1,6 +1,6 @@
 import { AbstractSession, SessionStrategy } from '~/types/session';
 import { ShellStat } from '~/types/entity/actor';
-import { ItemURN } from '~/types/taxonomy';
+import { ComponentSchemaURN, ItemURN } from '~/types/taxonomy';
 import { Shell } from '~/types/entity/shell';
 import { WorldEvent } from '~/types/event';
 import { ShellPerformanceProfile } from '~/types/shell';
@@ -46,6 +46,7 @@ export enum ComponentMutationOperation {
  */
 export type ComponentMutation = {
   type: ShellMutationType.COMPONENT;
+  schema: ComponentSchemaURN;
   operation: ComponentMutationOperation;
   componentId: ItemURN;
 };
