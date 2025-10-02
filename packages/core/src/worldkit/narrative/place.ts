@@ -42,7 +42,6 @@ export const lookAtPlace = (
   // Generate narrative using the shared template
   const narrative: Narrative = {
     self: renderPlaceDescription(placeSummary, actorSummaries, actor),
-    observer: renderPlaceDescription(placeSummary, actorSummaries, actor),
   };
 
   // Emit the look event

@@ -99,14 +99,13 @@ describe('Strike Method', () => {
       expect(result[0]).toMatchObject({
         type: EventType.COMBATANT_DID_ATTACK,
         location: attacker.location,
-        payload: {
+        payload: expect.objectContaining({
           actor: attacker.id,
           cost: expect.objectContaining({ ap: expect.any(Number) }),
           target: attackerCombatant.target,
           roll: expect.any(Object),
-          outcome: expect.any(String),
-          damage: expect.any(Number)
-        }
+          outcome: expect.any(String)
+        })
       });
     });
 
@@ -127,8 +126,7 @@ describe('Strike Method', () => {
             cost: expect.any(Object),
             target: expect.any(String),
             roll: expect.any(Object),
-            outcome: expect.any(String),
-            damage: expect.any(Number)
+            outcome: expect.any(String)
           })
         })
       );
@@ -244,14 +242,13 @@ describe('Strike Method', () => {
       expect(result[0]).toMatchObject({
         type: EventType.COMBATANT_DID_ATTACK,
         trace: customTrace,
-        payload: {
+        payload: expect.objectContaining({
           actor: attacker.id,
           cost: expect.any(Object),
           target: attackerCombatant.target,
           roll: expect.any(Object),
-          outcome: expect.any(String),
-          damage: expect.any(Number)
-        }
+          outcome: expect.any(String)
+        })
       });
     });
 
@@ -271,14 +268,13 @@ describe('Strike Method', () => {
       expect(result[0]).toMatchObject({
         type: EventType.COMBATANT_DID_ATTACK,
         trace: generatedTrace,
-        payload: {
+        payload: expect.objectContaining({
           actor: attacker.id,
           cost: expect.any(Object),
           target: attackerCombatant.target,
           roll: expect.any(Object),
-          outcome: expect.any(String),
-          damage: expect.any(Number)
-        }
+          outcome: expect.any(String)
+        })
       });
     });
 

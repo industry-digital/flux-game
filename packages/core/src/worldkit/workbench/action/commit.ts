@@ -51,7 +51,7 @@ export const createCommitShellMutationsAction = (
     });
 
     // 5. Execute Transaction (applies payment + emits currency events)
-    const currencyEvents = executeCurrencyTransaction(actor, transaction);
+    const currencyEvents = executeCurrencyTransaction(context, actor, transaction);
 
     // 6. Apply Mutations
     applyShellMutations(shell, session.data.pendingMutations);

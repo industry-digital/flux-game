@@ -182,7 +182,6 @@ export function createStrikeMethod(
         target: combatant.target!,
         roll,
         outcome,
-        damage,
         attackRating,
         evasionRating: defenderEvasionRating,
       },
@@ -194,6 +193,9 @@ export function createStrikeMethod(
 
     context.declareEvent(combatantDidAttackEvent);
 
+    // TODO: Implement narrative
+    const deathNarrative = { self: '', observer: '' };
+
     // 9. Check for death immediately after applying damage
     if (damage > 0 && targetActor.hp.eff.cur <= 0) {
       // Create death event directly since we know the target just died from our damage
@@ -201,6 +203,7 @@ export function createStrikeMethod(
         type: EventType.COMBATANT_DID_DIE,
         location: actor.location,
         trace: trace,
+        narrative: deathNarrative,
         payload: {
           actor: combatant.target!,
         },

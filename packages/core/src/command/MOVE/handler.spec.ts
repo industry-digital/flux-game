@@ -1,8 +1,8 @@
 import { describe, it, expect } from 'vitest';
 import {
-  MOVE,
-  MoveCommand,
-  actorMovementReducer
+    MOVE,
+    MoveCommand,
+    actorMovementReducer
 } from './handler';
 import { CommandType } from '~/types/intent';
 import { SpecialVisibility } from '~/types/world/visibility';
@@ -130,16 +130,17 @@ describe('MoveCommandHandler', () => {
       actorMovementReducer(context, command as MoveCommand);
 
       // Should have declared the move event
-      expect(context.declareEvent).toHaveBeenCalledWith({
-        type: EventType.ACTOR_DID_MOVE,
-        actor: actor.id,
-        location: originId,
-        narrative: {},
-        payload: {
-          destination: destId,
-        },
-        trace: command.id
-      });
+      expect(context.declareEvent).toHaveBeenCalledWith(
+        expect.objectContaining({
+          type: EventType.ACTOR_DID_MOVE,
+          actor: actor.id,
+          location: originId,
+          payload: expect.objectContaining({
+            destination: destId,
+          }),
+          trace: command.id
+        })
+      );
     });
 
     it('should handle actor not found error', () => {

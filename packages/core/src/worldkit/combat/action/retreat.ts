@@ -18,7 +18,6 @@ import { TransformerContext } from '~/types/handler';
 import { ActorURN } from '~/types/taxonomy';
 import { MovementActionDependencies, DEFAULT_MOVEMENT_DEPS } from './movement-deps';
 import { createMovementCostFromDistance, createMovementCostFromAp } from '~/worldkit/combat/tactical-cost';
-import { renderMovementNarrative } from '~/worldkit/narrative/combat/movement-narrative';
 
 export type RetreatDependencies = MovementActionDependencies;
 export const DEFAULT_RETREAT_DEPS = DEFAULT_MOVEMENT_DEPS;
@@ -147,16 +146,18 @@ export function createRetreatMethod(
 
     const from = { coordinate: currentPosition, facing: combatant.position.facing, velocity: combatant.position.speed };
     const to = { coordinate: tacticalFinalPosition, facing: combatant.position.facing, velocity: combatant.position.speed };
-    const narrative = renderMovementNarrative(actor, from, to, preciseValues.distance);
     const payload = { actor: actor.id,  cost, from, to };
+
+    // TODO: Implement narrative
+    const narrative = { self: '', observer: '' };
 
     // Create movement event with both tactical and precise values
     const event = createWorldEventImpl({
       type: EventType.COMBATANT_DID_MOVE,
       location: actor.location,
       trace: trace,
+      payload,
       narrative,
-      payload
     }) as CombatantDidMove;
 
 

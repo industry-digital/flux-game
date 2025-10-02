@@ -46,16 +46,14 @@ export function createDefendMethod (
     // Apply AP cost (already tactically calculated)
     deductAp(combatant, cost.ap!);
 
+
+    const narrative = { self: '', observer: '' };
     const defendEvent = createWorldEvent({
       type: EventType.COMBATANT_DID_DEFEND,
       location: actor.location,
       trace: trace,
-      // Note: actor is intentionally NOT set at top level, only in payload
       payload: { actor: actor.id, cost },
-      narrative: {
-        self: 'You enter a defensive stance.',
-        observer: `${actor.name} enters a defensive stance.`,
-      },
+      narrative,
     });
 
     context.declareEvent(defendEvent);

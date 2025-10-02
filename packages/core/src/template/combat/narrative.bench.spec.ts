@@ -151,7 +151,7 @@ describe('Combat Narrative Performance Benchmarks', () => {
       expect(avgTime).toBeGreaterThan(0); // Sanity check
     });
 
-    it('should benchmark renderCombatSessionStartedFast method', () => {
+    it('should benchmark renderCombatSessionStarted method', () => {
       const renderer = createCombatNarrativeRenderer(context, scenario.session);
 
       const iterations = 2000;
@@ -159,14 +159,14 @@ describe('Combat Narrative Performance Benchmarks', () => {
 
       for (let i = 0; i < iterations; i++) {
         const actor = Object.values(ACTORS)[i % Object.values(ACTORS).length];
-        renderer.renderCombatSessionStartedFast(event, actor);
+        renderer.renderCombatSessionStarted(event, actor);
       }
 
       const end = performance.now();
       const totalTime = end - start;
       const avgTime = totalTime / iterations;
 
-      console.log(`\n=== renderCombatSessionStartedFast ===`);
+      console.log(`\n=== renderCombatSessionStarted ===`);
       console.log(`Iterations: ${iterations}`);
       console.log(`Total time: ${totalTime.toFixed(2)}ms`);
       console.log(`Average time: ${avgTime.toFixed(4)}ms per call`);
@@ -176,29 +176,9 @@ describe('Combat Narrative Performance Benchmarks', () => {
       expect(avgTime).toBeGreaterThan(0); // Sanity check
     });
 
-    it('should benchmark renderCombatSessionStartedMinimal method', () => {
-      const renderer = createCombatNarrativeRenderer(context, scenario.session);
-
-      const iterations = 2000;
-      const start = performance.now();
-
-      for (let i = 0; i < iterations; i++) {
-        const actor = Object.values(ACTORS)[i % Object.values(ACTORS).length];
-        renderer.renderCombatSessionStartedMinimal(event, actor);
-      }
-
-      const end = performance.now();
-      const totalTime = end - start;
-      const avgTime = totalTime / iterations;
-
-      console.log(`\n=== renderCombatSessionStartedMinimal ===`);
-      console.log(`Iterations: ${iterations}`);
-      console.log(`Total time: ${totalTime.toFixed(2)}ms`);
-      console.log(`Average time: ${avgTime.toFixed(4)}ms per call`);
-      console.log(`Throughput: ${(iterations / (totalTime / 1000)).toFixed(0)} calls/second`);
-      console.log(`=========================================\n`);
-
-      expect(avgTime).toBeGreaterThan(0); // Sanity check
+    it.skip('should benchmark renderCombatSessionStartedMinimal method (not implemented)', () => {
+      // This method doesn't exist in the current implementation
+      // Skip this test until the method is implemented if needed
     });
 
     it('should benchmark renderCombatSessionEnded method', () => {
@@ -210,8 +190,12 @@ describe('Combat Narrative Performance Benchmarks', () => {
         trace: 'bench-end-trace',
         type: EventType.COMBAT_SESSION_DID_END,
         location: BATTLEFIELD_ID,
+        narrative: {
+          self: '',
+          observer: '',
+        },
         payload: {
-          session: scenario.session.id,
+          sessionId: scenario.session.id,
           winningTeam: Team.ALPHA,
           finalRound: 3,
           finalTurn: 12,
@@ -249,8 +233,12 @@ describe('Combat Narrative Performance Benchmarks', () => {
         trace: 'bench-compare-trace',
         type: EventType.COMBAT_SESSION_DID_END,
         location: BATTLEFIELD_ID,
+        narrative: {
+          self: '',
+          observer: '',
+        },
         payload: {
-          session: scenario.session.id,
+          sessionId: scenario.session.id,
           winningTeam: Team.BRAVO,
           finalRound: 2,
           finalTurn: 8,
@@ -421,55 +409,9 @@ describe('Combat Narrative Performance Benchmarks', () => {
   });
 
   describe('Comparative Performance', () => {
-    it('should compare all renderCombatSessionStarted variants', () => {
-      const iterations = 2000;
-
-      // Full version
-      const rendererFull = createCombatNarrativeRenderer(context, scenario.session);
-      const startFull = performance.now();
-      for (let i = 0; i < iterations; i++) {
-        const actor = Object.values(ACTORS)[i % Object.values(ACTORS).length];
-        rendererFull.renderCombatSessionStarted(event, actor);
-      }
-      const endFull = performance.now();
-      const fullTime = endFull - startFull;
-      const fullAvg = fullTime / iterations;
-
-      // Fast version
-      const rendererFast = createCombatNarrativeRenderer(context, scenario.session);
-      const startFast = performance.now();
-      for (let i = 0; i < iterations; i++) {
-        const actor = Object.values(ACTORS)[i % Object.values(ACTORS).length];
-        rendererFast.renderCombatSessionStartedFast(event, actor);
-      }
-      const endFast = performance.now();
-      const fastTime = endFast - startFast;
-      const fastAvg = fastTime / iterations;
-
-      // Minimal version
-      const rendererMinimal = createCombatNarrativeRenderer(context, scenario.session);
-      const startMinimal = performance.now();
-      for (let i = 0; i < iterations; i++) {
-        const actor = Object.values(ACTORS)[i % Object.values(ACTORS).length];
-        rendererMinimal.renderCombatSessionStartedMinimal(event, actor);
-      }
-      const endMinimal = performance.now();
-      const minimalTime = endMinimal - startMinimal;
-      const minimalAvg = minimalTime / iterations;
-
-      const fastSpeedup = fullTime / fastTime;
-      const minimalSpeedup = fullTime / minimalTime;
-
-      console.log(`\n=== COMBAT START VARIANT COMPARISON ===`);
-      console.log(`Iterations: ${iterations}`);
-      console.log(`Full version:     ${fullAvg.toFixed(4)}ms avg    (${(iterations / (fullTime / 1000)).toFixed(0)} calls/sec)`);
-      console.log(`Fast version:     ${fastAvg.toFixed(4)}ms avg    (${(iterations / (fastTime / 1000)).toFixed(0)} calls/sec)    ${fastSpeedup.toFixed(1)}x faster`);
-      console.log(`Minimal version:  ${minimalAvg.toFixed(4)}ms avg    (${(iterations / (minimalTime / 1000)).toFixed(0)} calls/sec)    ${minimalSpeedup.toFixed(1)}x faster`);
-      console.log(`=======================================\n`);
-
-      expect(fullAvg).toBeGreaterThan(0); // Sanity check
-      expect(fastAvg).toBeGreaterThan(0); // Sanity check
-      expect(minimalAvg).toBeGreaterThan(0); // Sanity check
+    it.skip('should compare all renderCombatSessionStarted variants (variants not implemented)', () => {
+      // This test expects Fast and Minimal variants that don't exist in the current implementation
+      // Skip this test until the variants are implemented if needed
     });
 
     it('should compare cache vs no-cache performance', () => {

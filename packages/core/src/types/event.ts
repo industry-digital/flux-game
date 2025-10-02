@@ -3,7 +3,7 @@ import { ResourceNodes } from '~/types/entity/resource';
 import { ActorURN, ItemURN, PlaceURN, SessionURN } from '~/types/taxonomy';
 import { ActionCost, BattlefieldPositionSummary, CombatantSummary } from '~/types/combat';
 import { RollResult } from '~/types/dice';
-import { Narrative, PrivateNarrative } from '~/types/narrative';
+import { Narrative, PrivateNarrative, SharedNarrative } from '~/types/narrative';
 import { SessionStatus } from '~/types/session';
 import { ShellDiff, ShellMutation } from '~/types/workbench';
 import { CurrencyTransaction } from '~/types/currency';
@@ -153,7 +153,11 @@ export type ActorDidLookAtActorInput = RequiresActor & AbstractWorldEventInput<
   >;
 
 export type ActorDidLookAtPlace = EventBase & ActorDidLookAtPlaceInput;
-export type ActorDidLookAtPlaceInput = RequiresActor & AbstractWorldEventInput<EventType.ACTOR_DID_LOOK_AT_PLACE, { target: PlaceURN }>;
+export type ActorDidLookAtPlaceInput = RequiresActor & AbstractWorldEventInput<
+EventType.ACTOR_DID_LOOK_AT_PLACE,
+{ target: PlaceURN },
+PrivateNarrative
+>;
 
 export type ActorDidLookAtPlaceItem = EventBase & ActorDidLookAtPlaceItemInput;
 export type ActorDidLookAtPlaceItemInput = RequiresActor & AbstractWorldEventInput<EventType.ACTOR_DID_LOOK_AT_PLACE_ITEM, { target: ItemURN }>;
@@ -163,6 +167,7 @@ export type ActorDidLookAtSelfItemInput = RequiresActor & AbstractWorldEventInpu
 
 export type ActorDidDie = EventBase & ActorDidDieInput;
 export type ActorDidDieInput = RequiresActor & AbstractWorldEventInput<EventType.ACTOR_DID_DIE, {
+  actorId: ActorURN;
   cause: string;
 }>;
 
@@ -206,7 +211,9 @@ export type CombatSessionStartedInput = AbstractWorldEventInput<
     sessionId: SessionURN;
     initiative: [ActorURN, RollResult][];
     combatants: [ActorURN, CombatantSummary][];
-  }>;
+  },
+  SharedNarrative
+  >;
 
 export type CombatSessionEnded = EventBase & CombatSessionEndedInput;
 export type CombatSessionEndedInput = AbstractWorldEventInput<
@@ -216,14 +223,17 @@ export type CombatSessionEndedInput = AbstractWorldEventInput<
     winningTeam: string | null;
     finalRound: number;
     finalTurn: number;
-  }>;
+  },
+  SharedNarrative
+  >;
 
 export type CombatantDidAcquireTarget = EventBase & CombatantDidAcquireTargetInput;
 export type CombatantDidAcquireTargetInput = AbstractWorldEventInput<
   EventType.COMBATANT_DID_ACQUIRE_TARGET,
   {
     target: ActorURN;
-  }>;
+  },
+  PrivateNarrative>;
 
 export type CombatantDidDefend = EventBase & CombatantDidDefendInput;
 export type CombatantDidDefendInput = AbstractWorldEventInput<
@@ -231,7 +241,9 @@ export type CombatantDidDefendInput = AbstractWorldEventInput<
   {
     actor: ActorURN;
     cost: ActionCost;
-  }>;
+  },
+  SharedNarrative
+  >;
 
 export type CombatantDidMove = EventBase & CombatantDidMoveInput;
 export type CombatantDidMoveInput = AbstractWorldEventInput<
@@ -240,7 +252,9 @@ export type CombatantDidMoveInput = AbstractWorldEventInput<
     cost: ActionCost;
     from: BattlefieldPositionSummary;
     to: BattlefieldPositionSummary;
-  }>;
+  },
+  SharedNarrative
+  >;
 
 export type AttackOutcome = 'hit' | 'miss' | 'hit:critical' | 'miss:critical';
 
@@ -255,7 +269,9 @@ export type CombatantDidAttackInput = AbstractWorldEventInput<
     outcome: AttackOutcome;
     attackRating: number;
     evasionRating: number;
-  }>;
+  },
+  SharedNarrative
+  >;
 
 export type CombatTurnDidStart = EventBase & CombatTurnDidStartInput;
 export type CombatTurnDidStartInput = AbstractWorldEventInput<
@@ -265,7 +281,9 @@ export type CombatTurnDidStartInput = AbstractWorldEventInput<
     round: number;
     turn: number;
     actor: ActorURN;
-  }>;
+  },
+  SharedNarrative
+  >;
 
 export type EnergySummary = `before=${number} after=${number} recovered=${number}`;
 export type ApSummary = `before=${number} after=${number} recovered=${number}`;
@@ -288,7 +306,9 @@ export type CombatantDidEndTurnInput = AbstractWorldEventInput<
     round: number;
     turn: number;
     actor: ActorURN;
-  }>;
+  },
+  SharedNarrative
+  >;
 
 export type CombatRoundDidStart = EventBase & CombatRoundDidStartInput;
 export type CombatRoundDidStartInput = AbstractWorldEventInput<
@@ -296,21 +316,27 @@ export type CombatRoundDidStartInput = AbstractWorldEventInput<
   {
     sessionId: SessionURN;
     round: number;
-  }>;
+  },
+  SharedNarrative
+  >;
 
 export type CombatRoundDidEnd = EventBase & CombatRoundDidEndInput;
 export type CombatRoundDidEndInput = AbstractWorldEventInput<
   EventType.COMBAT_ROUND_DID_END,
   {
     round: number;
-  }>;
+  },
+  SharedNarrative
+>;
 
 export type CombatantDidDie = EventBase & CombatantDidDieInput;
 export type CombatantDidDieInput = AbstractWorldEventInput<
   EventType.COMBATANT_DID_DIE,
   {
     actor: ActorURN;
-  }>;
+  },
+  SharedNarrative
+>;
 
 export type CombatantDidRecoverAp = EventBase & CombatantDidRecoverApInput;
 export type CombatantDidRecoverApInput = AbstractWorldEventInput<
@@ -320,7 +346,9 @@ export type CombatantDidRecoverApInput = AbstractWorldEventInput<
     before: number;
     after: number;
     recovered: number;
-  }>;
+  },
+  SharedNarrative
+>;
 
 export type WorkbenchSessionDidStart = EventBase & WorkbenchSessionDidStartInput;
 export type WorkbenchSessionDidStartInput = RequiresActor & AbstractWorldEventInput<

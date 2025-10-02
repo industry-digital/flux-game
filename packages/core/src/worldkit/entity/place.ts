@@ -24,8 +24,6 @@ export const isPlace = (place: AbstractEntity<EntityType>): place is Place => {
 
 export const isPlaceUrn = (urn: string): urn is PlaceURN => isUrnOfVocabulary(urn, 'place');
 
-
-
 export const createPlace = (
   input: PlaceInput,
   transform: (place: Place) => Place = identity,

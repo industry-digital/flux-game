@@ -1,5 +1,5 @@
 import { Actor } from '~/types/entity/actor';
-import { Narrative } from '~/types/narrative';
+import { SharedNarrative } from '~/types/narrative';
 import { CombatantDidAttack } from '~/types/event';
 import { WeaponSchema } from '~/types/schema/weapon';
 
@@ -11,7 +11,7 @@ export const renderAttackNarrative = (
   targetActor: Actor,
   weapon: WeaponSchema,
   outcome: CombatantDidAttack['payload']['outcome'],
-): Narrative => {
+): SharedNarrative => {
 
   // Get weapon information for context-aware narrative
   const weaponName = weapon?.name || 'weapon';

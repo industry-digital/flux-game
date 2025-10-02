@@ -7,7 +7,6 @@ import { TransformerContext } from '~/types/handler';
 import { ComponentMutation, InventoryMutation, ShellMutation, ShellMutationType, StatMutation, StatMutationOperation, ValidationResult, WorkbenchSession } from '~/types/workbench';
 import { MAX_STAT_VALUE } from '~/worldkit/entity/actor';
 import { createWorldEvent } from '~/worldkit/event';
-import { SchemaRegistry } from '~/worldkit/schema';
 import { calculateMutationCost } from '~/worldkit/workbench/cost';
 
 export const validateStatMutation = (
@@ -79,11 +78,11 @@ const handleStatMutation = (
   shell: Shell,
   mutation: StatMutation,
   trace: string,
-): ActorDidStageShellMutation | null => {
+): WorldEvent[] => {
   const validationResult = validateStatMutation(shell, mutation);
   if (!validationResult.ok) {
     context.declareError(validationResult.error);
-    return null;
+    return [];
   }
 
   const cost = calculateMutationCost(shell, mutation);
@@ -92,19 +91,21 @@ const handleStatMutation = (
   // Direct mutation
   session.data.pendingMutations.push(mutation);
 
-  return createWorldEvent<ActorDidStageShellMutation>({
-    type: EventType.WORKBENCH_SHELL_MUTATION_STAGED,
-    trace,
-    location: actor.location,
-    actor: actor.id,
-    narrative: {
-      self: describeStatMutation(mutation as StatMutation, cost, currency),
-    },
-    payload: {
-      shellId: shell.id,
-      mutation,
-    },
-  });
+  return [
+    createWorldEvent<ActorDidStageShellMutation>({
+      type: EventType.WORKBENCH_SHELL_MUTATION_STAGED,
+      trace,
+      location: actor.location,
+      actor: actor.id,
+      narrative: {
+        self: describeStatMutation(mutation as StatMutation, cost, currency),
+      },
+      payload: {
+        shellId: shell.id,
+        mutation,
+      },
+    }),
+  ];
 };
 
 const handleComponentMutation = (
@@ -114,22 +115,24 @@ const handleComponentMutation = (
   shell: Shell,
   mutation: ComponentMutation,
   trace: string,
-): ActorDidStageShellMutation | null => {
+): WorldEvent[] => {
   const schema = context.schemaManager.getSchemaOrFail(mutation.schema);
 
-  return createWorldEvent<ActorDidStageShellMutation>({
-    type: EventType.WORKBENCH_SHELL_MUTATION_STAGED,
-    trace,
-    location: actor.location,
-    actor: actor.id,
-    narrative: {
-      self: describeComponentMutation(mutation, schema.name, schema.powerDraw ?? 0),
-    },
-    payload: {
-      shellId: shell.id,
-      mutation,
-    },
-  });
+  return [
+    createWorldEvent<ActorDidStageShellMutation>({
+      type: EventType.WORKBENCH_SHELL_MUTATION_STAGED,
+      trace,
+      location: actor.location,
+      actor: actor.id,
+      narrative: {
+        self: describeComponentMutation(mutation, schema.name, schema.powerDraw ?? 0),
+      },
+      payload: {
+        shellId: shell.id,
+        mutation,
+      },
+    }),
+  ];
 };
 
 const handleInventoryMutation = (
@@ -139,19 +142,6 @@ const handleInventoryMutation = (
   shell: Shell,
   mutation: InventoryMutation,
   trace: string,
-): ActorDidStageShellMutation | null => {
-  const { declareError, inventoryApi, schemaManager, mass } = context;
-
-  const item = inventoryApi.getItem(actor, mutation.itemId);
-  if (!item) {
-    context.declareError(`Inventory item ${mutation.itemId} not found`);
-    return null;
-  }
-
-  const schema = context.schemaManager.getSchemaOrFail(item.schema as keyof SchemaRegistry);
-
-
-
-
-  return null;
+): WorldEvent[] => {
+  throw new Error('Not implmented');
 };

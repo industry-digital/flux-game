@@ -26,11 +26,15 @@ export function createTargetMethod (
 
     combatant.target = target;
 
+    // TODO: Implement narrative
+    const narrative = { self: `You targett ${target}.` };
+
     const event = createWorldEvent({
       type: EventType.COMBATANT_DID_ACQUIRE_TARGET,
       actor: actor.id,
       location: actor.location,
       trace: trace,
+      narrative,
       payload: { target },
     });
 
