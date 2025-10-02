@@ -82,52 +82,61 @@ describe('Target Method', () => {
       expect(result[0].type).toBe(EventType.COMBATANT_DID_ACQUIRE_TARGET);
     });
 
-    it('should create COMBATANT_DID_ACQUIRE_TARGET event', () => {
-      const targeter = scenario.actors[TARGETER_ID].actor;
-
-      const result = target(ENEMY_ID);
-
-      expect(result).toHaveLength(1);
-      expect(result[0]).toMatchObject({
-        type: EventType.COMBATANT_DID_ACQUIRE_TARGET,
-        actor: targeter.id,
-        location: targeter.location,
-        payload: { target: ENEMY_ID }
-      });
-    });
-
     it('should call declareEvent on context', () => {
       target(ENEMY_ID);
 
+      expect(context.declareEvent).toHaveBeenCalledTimes(1);
       expect(context.declareEvent).toHaveBeenCalledWith(
         expect.objectContaining({
-          type: EventType.COMBATANT_DID_ACQUIRE_TARGET,
-          payload: { target: ENEMY_ID }
+          type: EventType.COMBATANT_DID_ACQUIRE_TARGET
         })
       );
+    });
+  });
+
+  describe('Event Shape', () => {
+    it('should create properly structured COMBATANT_DID_ACQUIRE_TARGET event', () => {
+      const targeter = scenario.actors[TARGETER_ID].actor;
+      const customTrace = 'test-trace-123';
+
+      const result = target(ENEMY_ID, customTrace);
+
+      expect(result).toHaveLength(1);
+      const event = result[0];
+
+      // Validate complete event structure
+      expect(event).toMatchObject({
+        type: EventType.COMBATANT_DID_ACQUIRE_TARGET,
+        actor: targeter.id,
+        location: targeter.location,
+        trace: customTrace,
+        payload: {
+          sessionId: scenario.session.id,
+          actor: targeter.id,
+          target: ENEMY_ID
+        }
+      });
+
+      // Validate that event has required properties
+      expect(event).toHaveProperty('id');
+      expect(event).toHaveProperty('ts');
+      expect(typeof event.id).toBe('string');
+      expect(typeof event.ts).toBe('number');
     });
   });
 
   describe('Trace Propagation', () => {
     it('should propagate custom trace to WorldEvent payloads', () => {
       const customTrace = 'custom-target-trace-123';
-      const targeter = scenario.actors[TARGETER_ID].actor;
 
       const result = target(ENEMY_ID, customTrace);
 
       expect(result).toHaveLength(1);
       expect(result[0].trace).toBe(customTrace);
-      expect(result[0]).toMatchObject({
-        type: EventType.COMBATANT_DID_ACQUIRE_TARGET,
-        actor: targeter.id,
-        trace: customTrace,
-        payload: { target: ENEMY_ID }
-      });
+      expect(result[0].type).toBe(EventType.COMBATANT_DID_ACQUIRE_TARGET);
     });
 
     it('should use generated trace when none provided', () => {
-      const targeter = scenario.actors[TARGETER_ID].actor;
-
       // Mock context.uniqid to return a known value
       const generatedTrace = 'generated-target-trace-456';
       context.uniqid = vi.fn().mockReturnValue(generatedTrace);
@@ -137,12 +146,7 @@ describe('Target Method', () => {
       expect(result).toHaveLength(1);
       expect(result[0].trace).toBe(generatedTrace);
       expect(context.uniqid).toHaveBeenCalled();
-      expect(result[0]).toMatchObject({
-        type: EventType.COMBATANT_DID_ACQUIRE_TARGET,
-        actor: targeter.id,
-        trace: generatedTrace,
-        payload: { target: ENEMY_ID }
-      });
+      expect(result[0].type).toBe(EventType.COMBATANT_DID_ACQUIRE_TARGET);
     });
   });
 
@@ -183,10 +187,10 @@ describe('Target Method', () => {
       expect(secondResult[0].type).toBe(EventType.COMBATANT_DID_ACQUIRE_TARGET);
       expect((secondResult[0].payload as any).target).toBe(ENEMY2_ID);
       expect(targeterCombatant.target).toBe(ENEMY2_ID);
+      expect(context.declareEvent).toHaveBeenCalledTimes(1);
       expect(context.declareEvent).toHaveBeenCalledWith(
         expect.objectContaining({
-          type: EventType.COMBATANT_DID_ACQUIRE_TARGET,
-          payload: { target: ENEMY2_ID }
+          type: EventType.COMBATANT_DID_ACQUIRE_TARGET
         })
       );
     });
@@ -222,10 +226,10 @@ describe('Target Method', () => {
       expect(result).toHaveLength(1);
       expect(result[0].type).toBe(EventType.COMBATANT_DID_ACQUIRE_TARGET);
       expect(targeterCombatant.target).toBe(ENEMY_ID);
+      expect(context.declareEvent).toHaveBeenCalledTimes(1);
       expect(context.declareEvent).toHaveBeenCalledWith(
         expect.objectContaining({
-          type: EventType.COMBATANT_DID_ACQUIRE_TARGET,
-          payload: { target: ENEMY_ID }
+          type: EventType.COMBATANT_DID_ACQUIRE_TARGET
         })
       );
     });

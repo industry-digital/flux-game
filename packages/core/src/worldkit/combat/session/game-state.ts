@@ -1,6 +1,6 @@
 import { ActorURN, PlaceURN } from '~/types/taxonomy';
 import { CombatSession } from '~/types/combat';
-import { EventType, CombatantDidDie, WorldEvent, ApSummary, EnergySummary } from '~/types/event';
+import { EventType, CombatantDidDie, WorldEvent } from '~/types/event';
 import { createWorldEvent } from '~/worldkit/event';
 import { TransformerContext } from '~/types/handler';
 import { SessionStatus } from '~/types/session';
@@ -216,8 +216,11 @@ export function createCombatGameStateApi(
         round: session.data.rounds.current.number,
         turn: session.data.rounds.current.turns.current.number,
         actor: actorId,
-        ap: `before=${previousAp} after=${maxAp} recovered=${apRecovered}` as ApSummary,
-        energy: `before=${energyBefore} after=${energyAfterRecovery} recovered=${energyRecovered}` as EnergySummary,
+        energy: {
+          before: energyBefore,
+          after: energyAfterRecovery,
+          change: energyRecovered,
+        },
       },
     });
 

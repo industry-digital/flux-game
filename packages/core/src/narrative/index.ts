@@ -1,5 +1,5 @@
 import { LanguageTemplates } from '~/types/narrative';
-import { en_US } from './i18n/en_US';
+import { en_US } from './locale/en_US';
 
 export enum Language {
   'en_US' = 'en_US',

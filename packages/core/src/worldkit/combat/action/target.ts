@@ -31,7 +31,11 @@ export function createTargetMethod (
       actor: actor.id,
       location: actor.location,
       trace: trace,
-      payload: { target },
+      payload: {
+        sessionId: session.id,
+        actor: actor.id,
+        target,
+      },
     });
 
     context.declareEvent(event);

@@ -1,6 +1,6 @@
 import { EventType, WorldEvent } from '~/types/event';
 import { TransformerContext } from '~/types/handler';
-import { ActorURN } from '~/types/taxonomy';
+import { ActorURN, PlaceURN } from '~/types/taxonomy';
 
 export enum Perspective {
   SELF = 'self',
@@ -8,29 +8,23 @@ export enum Perspective {
 }
 
 /**
- * Simple narrative item
- */
-export type PrivateNarrative = { [Perspective.SELF]: string };
-export type PublicNarrative = { [Perspective.OBSERVER]: string };
-export type SharedNarrative = PrivateNarrative & PublicNarrative;
-export type NarrativeItem = PrivateNarrative | PublicNarrative | SharedNarrative;
-
-/**
  * Narrative sequences
  */
-type NarrativeSequenceItemBase = NarrativeItem & { delay: number };
-type NarrativeSequenceItem = NarrativeSequenceItemBase & NarrativeItem;
+type NarrativeSequenceItem = { text: string, delay: number };
 export type NarrativeSequence = NarrativeSequenceItem[];
 
-export type TemplateOutput = NarrativeItem | NarrativeSequence;
+export type TemplateOutput = string | NarrativeSequence;
+
+export type NarrativeRecipient = ActorURN | PlaceURN;
 
 export type TemplateFunction<
   TWorldEvent extends WorldEvent,
-  TOutput extends TemplateOutput,
+  TRecipient extends NarrativeRecipient = NarrativeRecipient,
+  TOutput extends TemplateOutput = string,
 > = (
   context: TransformerContext,
   event: TWorldEvent,
-  as: ActorURN,
+  recipient: TRecipient,
 ) => TOutput;
 
 /**
@@ -39,6 +33,8 @@ export type TemplateFunction<
  * Every language module must implement this exact interface to ensure
  * complete narrative coverage across all supported game events.
  */
-export type LanguageTemplates = Record<EventType, TemplateFunction<WorldEvent, TemplateOutput>>;
+export type LanguageTemplates = {
+  [K in EventType]: TemplateFunction<Extract<WorldEvent, { type: K }>, any>;
+};
 
 export type LanguageTemplatesResolver = () => LanguageTemplates;

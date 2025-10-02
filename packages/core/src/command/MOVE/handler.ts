@@ -82,14 +82,13 @@ export const actorMovementReducer: PureReducer<TransformerContext, MoveCommand> 
   actor.location = destination.id;
 
   declareEvent({
+    trace: command.id,
     type: EventType.ACTOR_DID_MOVE,
     actor: actor.id,
     location: origin.id,
     payload: {
       destination: destination.id,
     },
-    trace: command.id,
-    // TODO: Add `narrative`
   });
 
   return context;

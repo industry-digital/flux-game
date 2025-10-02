@@ -151,6 +151,7 @@ export function createRetreatMethod(
     const event = createWorldEventImpl({
       type: EventType.COMBATANT_DID_MOVE,
       location: actor.location,
+      actor: actor.id,
       trace: trace,
       payload,
     });

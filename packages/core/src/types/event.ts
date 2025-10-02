@@ -6,7 +6,7 @@ import { RollResult } from '~/types/dice';
 import { SessionStatus } from '~/types/session';
 import { ShellDiff, ShellMutation } from '~/types/workbench';
 import { CurrencyTransaction } from '~/types/currency';
-import { NarrativeItem, NarrativeSequence } from '~/types/narrative';
+import { NarrativeSequence } from '~/types/narrative';
 
 export type EventPayload = Record<string, any>;
 
@@ -229,6 +229,8 @@ export type CombatantDidAcquireTarget = EventBase & CombatantDidAcquireTargetInp
 export type CombatantDidAcquireTargetInput = AbstractWorldEventInput<
   EventType.COMBATANT_DID_ACQUIRE_TARGET,
   {
+    sessionId: SessionURN;
+    actor: ActorURN;
     target: ActorURN;
   }
 >;
@@ -243,9 +245,10 @@ export type CombatantDidDefendInput = AbstractWorldEventInput<
 >;
 
 export type CombatantDidMove = EventBase & CombatantDidMoveInput;
-export type CombatantDidMoveInput = AbstractWorldEventInput<
+export type CombatantDidMoveInput = RequiresActor & AbstractWorldEventInput<
   EventType.COMBATANT_DID_MOVE,
   {
+    actor: ActorURN;
     cost: ActionCost;
     from: BattlefieldPositionSummary;
     to: BattlefieldPositionSummary;
@@ -280,8 +283,7 @@ export type CombatTurnDidStartInput = AbstractWorldEventInput<
   }
 >;
 
-export type EnergySummary = `before=${number} after=${number} recovered=${number}`;
-export type ApSummary = `before=${number} after=${number} recovered=${number}`;
+type CombatantResourceChange = { before: number; after: number; change: number };
 
 export type CombatTurnDidEnd = EventBase & CombatTurnDidEndInput;
 export type CombatTurnDidEndInput = AbstractWorldEventInput<
@@ -290,8 +292,7 @@ export type CombatTurnDidEndInput = AbstractWorldEventInput<
     round: number;
     turn: number;
     actor: ActorURN;
-    ap: ApSummary;
-    energy: EnergySummary;
+    energy: CombatantResourceChange;
   }
 >;
 
@@ -514,5 +515,5 @@ export type PlaceBoundEnvelope = WorldEventEnvelopeBase & {
  * The server adds narrative to the WorldEvent before sending it to the client
  */
 export type EnrichedWorldEvent = WorldEvent & {
-  narrative: NarrativeItem | NarrativeSequence;
+  narrative: string | NarrativeSequence;
 };

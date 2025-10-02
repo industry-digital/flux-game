@@ -188,6 +188,7 @@ export function createAdvanceMethod(
       id: context.uniqid(),
       ts: context.timestamp(),
       type: EventType.COMBATANT_DID_MOVE,
+      actor: actor.id,
       location: actor.location,
       trace: trace,
       payload,
