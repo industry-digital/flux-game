@@ -37,12 +37,13 @@ export const DEFAULT_TEAM_FILTERING_OPTIONS: TeamFilteringOptions = {
  * @param combatants Map of all combatants for direct lookup
  * @param options Optional configuration for team comparison logic
  * @returns true if actors are enemies (different teams or no teams)
+ * @deprecated Use computeAlliesAndEnemies instead
  */
-export function areEnemies(
+export const areEnemies = (
   actorId1: ActorURN,
   actorId2: ActorURN,
   combatants: Map<ActorURN, Combatant>,
-): boolean {
+): boolean => {
   const combatant1 = combatants.get(actorId1);
   if (!combatant1) {
     throw new Error(`Combatant ${actorId1} not found in combatants`);
@@ -54,82 +55,43 @@ export function areEnemies(
   }
 
   return combatant1.team !== combatant2.team;
-}
+};
 
-/**
- * Pure function to determine if two combatants are allies
- *
- * @param combatant1 First combatant
- * @param combatant2 Second combatant
- * @param options Optional configuration for team comparison logic
- * @returns true if combatants are allies (same team)
- */
-export function areAllies(
-  actorId1: ActorURN,
-  actorId2: ActorURN,
+export type AlliesAndEnemies = {
+  allies: ActorURN[];
+  enemies: ActorURN[];
+};
+
+export const computeAlliesAndEnemies = (
+  as: ActorURN,
   combatants: Map<ActorURN, Combatant>,
-): boolean {
-  const combatant1 = combatants.get(actorId1);
-  if (!combatant1) {
-    throw new Error(`Combatant ${actorId1} not found in combatants`);
+  output: AlliesAndEnemies = { allies: [], enemies: [] },
+): AlliesAndEnemies => {
+  // Clear output arrays if reusing (optimization for repeated calls)
+  output.allies.length = 0;
+  output.enemies.length = 0;
+
+  // Early termination for single combatant
+  if (combatants.size <= 1) {
+    return output;
   }
 
-  const combatant2 = combatants.get(actorId2);
-  if (!combatant2) {
-    throw new Error(`Combatant ${actorId2} not found in combatants`);
+  // Cache reference combatant to avoid repeated lookups
+  const referenceCombatant = combatants.get(as);
+  if (!referenceCombatant) {
+    throw new Error(`Reference combatant ${as} not found in combatants`);
   }
-
-  return combatant1.team === combatant2.team;
-}
-
-/**
- * Filter combatants to find enemies of the given combatant
- * Zero-copy iteration approach for performance
- *
- * @param combatants Map of all combatants
- * @param referenceCombatant The combatant to find enemies for
- * @param options Optional configuration for team comparison logic
- * @returns Array of enemy combatants
- */
-export function filterEnemies(
-  combatants: Map<ActorURN, Combatant>,
-  referenceCombatant: Combatant,
-): Combatant[] {
-  const enemies: Combatant[] = [];
 
   for (const [actorId, combatant] of combatants) {
-    if (actorId === referenceCombatant.actorId) continue;
-
-    if (areEnemies(referenceCombatant.actorId, actorId, combatants)) {
-      enemies.push(combatant);
+    if (actorId === as) {
+      continue;
+    }
+    if (referenceCombatant.team !== combatant.team) {
+      output.enemies.push(actorId);
+    } else {
+      output.allies.push(actorId);
     }
   }
 
-  return enemies;
-}
-
-/**
- * Filter combatants to find allies of the given combatant
- * Zero-copy iteration approach for performance
- *
- * @param combatants Map of all combatants
- * @param referenceCombatant The combatant to find allies for
- * @param options Optional configuration for team comparison logic
- * @returns Array of allied combatants (excluding the reference combatant itself)
- */
-export function filterAllies(
-  combatants: Map<ActorURN, Combatant>,
-  referenceCombatant: Combatant,
-): Combatant[] {
-  const allies: Combatant[] = [];
-
-  for (const [actorId, combatant] of combatants) {
-    if (actorId === referenceCombatant.actorId) continue;
-
-    if (areAllies(referenceCombatant.actorId, actorId, combatants)) {
-      allies.push(combatant);
-    }
-  }
-
-  return allies;
-}
+  return output;
+};
