@@ -6,7 +6,14 @@ import {
   CombatantDidDie,
   CombatTurnDidEnd,
   CombatTurnDidStart,
+  CombatRoundDidStart,
+  CombatRoundDidEnd,
+  CombatSessionStarted,
+  CombatSessionEnded,
+  CombatSessionStatusDidChange,
+  CombatantDidRecoverAp,
 } from '~/types/event';
+import { SessionStatus } from '~/types/session';
 import { TemplateFunction } from '~/types/narrative';
 import { ActorURN } from '~/types/taxonomy';
 
@@ -112,3 +119,64 @@ export const renderTurnStartNarrative: TemplateFunction<CombatTurnDidStart, Acto
 
   return `${actor.name}'s turn begins.`;
 };
+
+export const renderRoundStartNarrative: TemplateFunction<CombatRoundDidStart> = (context, event, recipientId) => {
+  const round = event.payload.round;
+  return `Round ${round} begins!`;
+};
+
+export const renderRoundEndNarrative: TemplateFunction<CombatRoundDidEnd> = (context, event, recipientId) => {
+  const round = event.payload.round;
+  return `Round ${round} ends.`;
+};
+
+export const renderCombatSessionStartNarrative: TemplateFunction<CombatSessionStarted> = (context, event, recipientId) => {
+  const { world } = context;
+  const combatantNames = event.payload.combatants.map(([actorId]) => world.actors[actorId]?.name).filter(Boolean);
+
+  if (combatantNames.length <= 2) {
+    return `Combat begins between ${combatantNames.join(' and ')}!`;
+  }
+
+  return `A fierce battle erupts involving ${combatantNames.length} combatants!`;
+};
+
+export const renderCombatSessionEndNarrative: TemplateFunction<CombatSessionEnded> = (context, event, recipientId) => {
+  const { winningTeam, finalRound } = event.payload;
+
+  if (winningTeam) {
+    return `Combat ends after ${finalRound} rounds. Team ${winningTeam} is victorious!`;
+  }
+
+  return `Combat ends after ${finalRound} rounds with no clear victor.`;
+};
+
+export const renderCombatStatusChangeNarrative: TemplateFunction<CombatSessionStatusDidChange> = (context, event, recipientId) => {
+  const { currentStatus } = event.payload;
+
+  switch (currentStatus) {
+    case SessionStatus.RUNNING:
+      return 'Combat is now active!';
+    case SessionStatus.PAUSED:
+      return 'Combat has been paused.';
+    case SessionStatus.TERMINATED:
+      return 'Combat has ended.';
+    default:
+      return `Combat status changed to ${currentStatus}.`;
+  }
+};
+
+export const renderApRecoveryNarrative: TemplateFunction<CombatantDidRecoverAp, ActorURN> = (context, event, recipientId) => {
+  const { world } = context;
+  const actor = world.actors[event.payload.actor];
+  const recovered = event.payload.recovered;
+
+  if (recipientId === event.payload.actor) {
+    return `You recover ${recovered} action points.`;
+  }
+
+  return `${actor.name} recovers ${recovered} action points.`;
+};
+
+// Note: ActorDidDie and ActorDidRecoverEnergy are handled in actor.ts
+// These were moved to avoid duplication since they're actor events, not combat-specific

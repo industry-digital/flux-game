@@ -148,8 +148,11 @@ export type ActorDidMoveInput = RequiresActor & AbstractWorldEventInput<
   { destination: PlaceURN }
 >;
 
-export type ActorDidDepart = EventBase & AbstractWorldEventInput<EventType.ACTOR_DID_DEPART, {}>;
-export type ActorDidDepartInput = RequiresActor & AbstractWorldEventInput<EventType.ACTOR_DID_DEPART, { destination: PlaceURN }>;
+export type ActorDidDepart = EventBase & ActorDidDepartInput;
+export type ActorDidDepartInput = RequiresActor & AbstractWorldEventInput<
+  EventType.ACTOR_DID_DEPART,
+  { destination: PlaceURN }
+>;
 
 export type ActorDidArrive = EventBase & ActorDidArriveInput;
 export type ActorDidArriveInput = RequiresActor & AbstractWorldEventInput<EventType.ACTOR_DID_ARRIVE, { origin: PlaceURN }>;

@@ -25,6 +25,7 @@ export type TemplateFunction<
   context: TransformerContext,
   event: TWorldEvent,
   recipient: TRecipient,
+  ...args: any[]
 ) => TOutput;
 
 /**
