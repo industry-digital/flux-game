@@ -1,4 +1,4 @@
-import { createEntity, DEFAULT_ACTOR_FACTORY_OPTIONS, FactoryDependencies } from '../util';
+import { createEntity, DEFAULT_FACTORY_DEPS, FactoryDependencies } from '../util';
 import { createModifiableScalarAttribute, createModifiableBoundedAttribute } from '../attribute';
 import { createEntityUrn, isUrnOfVocabulary } from '~/lib/taxonomy';
 import { AbstractEntity, EntityType } from '~/types/entity/entity';
@@ -32,7 +32,7 @@ export type CreateActorDependencies = FactoryDependencies & {
 };
 
 export const DEFAULT_CREATE_ACTOR_DEPS: CreateActorDependencies = {
-  ...DEFAULT_ACTOR_FACTORY_OPTIONS,
+  ...DEFAULT_FACTORY_DEPS,
   refreshCapacitorEnergy: refreshCapacitorEnergy,
 };
 

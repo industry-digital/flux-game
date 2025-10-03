@@ -104,7 +104,7 @@ export function createShell(
   const defaults: Shell = {
     id: input?.id ?? hashUnsafeStringImpl(name),
     name,
-    stats: {
+    stats: input?.stats ?? {
       [ActorStat.POW]: createModifiableScalarAttribute((defaults) => ({ ...defaults, nat: 10 })),
       [ActorStat.FIN]: createModifiableScalarAttribute((defaults) => ({ ...defaults, nat: 10 })),
       [ActorStat.RES]: createModifiableScalarAttribute((defaults) => ({ ...defaults, nat: 10 })),
@@ -123,53 +123,48 @@ export type ShellStatsInput = Partial<{
 }>;
 
 /**
- * Apply stat changes to shell stats (immutable update)
- * Returns a new ShellStats object with updated values
+ * Directly mutate the shell stats in place (zero-allocation)
  */
-export const applyShellStats = (stats: ShellStats, input: ShellStatsInput): ShellStats => {
-  const newStats = { ...stats };
-
+export const mutateShellStats = (stats: ShellStats, input: ShellStatsInput): void => {
   if (input[ActorStat.POW] !== undefined) {
-    newStats[ActorStat.POW] = {
-      ...newStats[ActorStat.POW],
-      nat: input[ActorStat.POW]!,
-      eff: input[ActorStat.POW]!,
-    };
-
-    delete newStats[ActorStat.POW].mods;
+    stats[ActorStat.POW].nat = input[ActorStat.POW]!;
+    stats[ActorStat.POW].eff = input[ActorStat.POW]!;
+    delete stats[ActorStat.POW].mods;
   }
 
   if (input[ActorStat.FIN] !== undefined) {
-    newStats[ActorStat.FIN] = {
-      ...newStats[ActorStat.FIN],
-      nat: input[ActorStat.FIN]!,
-      eff: input[ActorStat.FIN]!,
-    };
-
-    delete newStats[ActorStat.FIN].mods;
+    stats[ActorStat.FIN].nat = input[ActorStat.FIN]!;
+    stats[ActorStat.FIN].eff = input[ActorStat.FIN]!;
+    delete stats[ActorStat.FIN].mods;
   }
 
   if (input[ActorStat.RES] !== undefined) {
-    newStats[ActorStat.RES] = {
-      ...newStats[ActorStat.RES],
-      nat: input[ActorStat.RES]!,
-      eff: input[ActorStat.RES]!,
-    };
-
-    delete newStats[ActorStat.RES].mods;
+    stats[ActorStat.RES].nat = input[ActorStat.RES]!;
+    stats[ActorStat.RES].eff = input[ActorStat.RES]!;
+    delete stats[ActorStat.RES].mods;
   }
+};
 
+/**
+ * Apply stat changes to shell stats (shallow copy with mutation)
+ * Returns a shallow copy of the stats object with mutated stat values
+ * Uses zero-allocation mutation internally for performance
+ */
+export const applyShellStats = (stats: ShellStats, input: ShellStatsInput): ShellStats => {
+  const newStats = { ...stats }; // Shallow copy (1 allocation)
+  mutateShellStats(newStats, input); // Mutate stat objects in place (0 allocations)
   return newStats;
 };
 
 /**
- * Create a new shell with updated stats (immutable)
+ * Create a deep copy of a shell for cases where immutability is required
+ * Use this when you need to preserve the original shell completely unchanged
+ *
+ * Uses JSON serialization for simplicity and correctness (handles arbitrary nesting)
+ * Performance is not a concern as this is only used at the workbench (~1x per hour, per player)
  */
-export const setShellStats = (shell: Shell, input: ShellStatsInput): Shell => {
-  return {
-    ...shell,
-    stats: applyShellStats(shell.stats, input),
-  };
+export const cloneShell = (shell: Shell): Shell => {
+  return JSON.parse(JSON.stringify(shell));
 };
 
 const SHELL_NAME_ADJECTIVES = [
