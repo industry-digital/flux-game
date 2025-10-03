@@ -5,8 +5,6 @@ import { TransformerContext } from '~/types/handler';
 import { WorkbenchSession } from '~/types/workbench';
 import { createWorldEvent } from '~/worldkit/event';
 import { ShellPerformanceDependencies } from '~/worldkit/entity/actor/shell/instrumentation';
-import { computeStatValue, getNaturalStatValue, getStat } from '~/worldkit/entity/actor/new-stats';
-import { getShellStatValue, getShellNaturalStatValue } from '~/worldkit/entity/actor/shell';
 import { createShellDiff } from '~/worldkit/workbench/diff';
 
 export type DiffStagedMutationsAction = (trace?: string) => WorldEvent[];
@@ -22,12 +20,6 @@ export const createDiffStagedMutationsAction = (
   const shellPerformanceDeps: ShellPerformanceDependencies = {
     massApi: context.mass,
     equipmentApi: context.equipmentApi,
-    getStat: getStat,
-    getActorStat: getStat,
-    getNaturalStatValue: getShellNaturalStatValue,
-    getActorNaturalStatValue: getNaturalStatValue,
-    computeActorEffectiveStatValue: computeStatValue,
-    computeEffectiveStatValue: (entity, stat) => getShellStatValue(entity as Shell, stat),
   };
 
   return function diffStagedMutations(trace: string = context.uniqid()): WorldEvent[] {
