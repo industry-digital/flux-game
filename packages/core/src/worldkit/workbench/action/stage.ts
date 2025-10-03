@@ -4,9 +4,10 @@ import { Shell } from '~/types/entity/shell';
 import { ActorDidStageShellMutation, EventType, WorldEvent } from '~/types/event';
 import { TransformerContext } from '~/types/handler';
 import { ComponentMutation, InventoryMutation, ShellMutation, ShellMutationType, StatMutation, StatMutationOperation, ValidationResult, WorkbenchSession } from '~/types/workbench';
-import { MAX_STAT_VALUE } from '~/worldkit/entity/stats';
+import { MAX_STAT_VALUE } from '~/worldkit/entity/actor/new-stats';
 import { createWorldEvent } from '~/worldkit/event';
 import { calculateMutationCost } from '~/worldkit/workbench/cost';
+import { getShellStatValue } from '~/worldkit/entity/actor/shell';
 
 export const validateStatMutation = (
   shell: Shell,
@@ -14,7 +15,7 @@ export const validateStatMutation = (
   // Consumers may opt into object re-use
   result: ValidationResult = { ok: false, error: 'DEFAULT_ERROR_MESSAGE' },
 ): ValidationResult => {
-  const currentValue = shell.stats[mutation.stat].eff;
+  const currentValue = getShellStatValue(shell, mutation.stat);
   let targetValue: number;
 
   if (mutation.operation === StatMutationOperation.ADD) {

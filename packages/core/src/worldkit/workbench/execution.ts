@@ -1,14 +1,8 @@
 import { Shell } from '~/types/entity/shell';
 import { ShellMutation, ShellMutationType, StatMutationOperation } from '~/types/workbench';
 import { WorldEvent } from '~/types/event';
-import { SHELL_STAT_NAMES } from '~/worldkit/entity/actor/actor-stats';
-import {
-  getNaturalStatValue,
-  mutateNaturalStatValue,
-  refreshStats,
-  BASELINE_STAT_VALUE,
-  MAX_STAT_VALUE,
-} from '~/worldkit/entity/stats';
+import { SHELL_STAT_NAMES, BASELINE_STAT_VALUE, MAX_STAT_VALUE } from '~/worldkit/entity/actor/new-stats';
+import { getShellNaturalStatValue, setShellNaturalStatValue, refreshShellStats } from '~/worldkit/entity/actor/shell';
 
 /**
  * Safely mutates a shell stat's natural value with validation and refresh
@@ -19,7 +13,7 @@ export const mutateShellStat = (
   operation: StatMutationOperation,
   amount: number
 ): { from: number; to: number } => {
-  const currentNaturalValue = getNaturalStatValue(shell, stat);
+  const currentNaturalValue = getShellNaturalStatValue(shell, stat);
 
   let newNaturalValue: number;
 
@@ -32,11 +26,11 @@ export const mutateShellStat = (
   // Clamp to valid stat range
   newNaturalValue = Math.max(BASELINE_STAT_VALUE, Math.min(MAX_STAT_VALUE, newNaturalValue));
 
-  // Use the generic utility to update the natural value
-  mutateNaturalStatValue(shell, stat, newNaturalValue);
+  // Use the shell utility to update the natural value
+  setShellNaturalStatValue(shell, stat, newNaturalValue);
 
   // Refresh the shell stats to recalculate effective values
-  refreshStats(shell, SHELL_STAT_NAMES);
+  refreshShellStats(shell, SHELL_STAT_NAMES);
 
   return { from: currentNaturalValue, to: newNaturalValue };
 };

@@ -5,12 +5,8 @@ import { TransformerContext } from '~/types/handler';
 import { WorkbenchSession } from '~/types/workbench';
 import { createWorldEvent } from '~/worldkit/event';
 import { ShellPerformanceDependencies } from '~/worldkit/entity/actor/shell/instrumentation';
-import { computeActorEffectiveStatValue, getActorNaturalStatValue, getActorStat } from '~/worldkit/entity/actor';
-import {
-  computeEffectiveStatValue,
-  getNaturalStatValue,
-  getStat,
-} from '~/worldkit/entity/stats';
+import { computeStatValue, getNaturalStatValue, getStat } from '~/worldkit/entity/actor/new-stats';
+import { getShellStatValue, getShellNaturalStatValue } from '~/worldkit/entity/actor/shell';
 import { createShellDiff } from '~/worldkit/workbench/diff';
 
 export type DiffStagedMutationsAction = (trace?: string) => WorldEvent[];
@@ -20,7 +16,6 @@ export const createDiffStagedMutationsAction = (
   session: WorkbenchSession,
   actor: Actor,
   shell: Shell,
-
 ): DiffStagedMutationsAction => {
   const { declareError } = context;
 
@@ -28,11 +23,11 @@ export const createDiffStagedMutationsAction = (
     massApi: context.mass,
     equipmentApi: context.equipmentApi,
     getStat: getStat,
-    getActorStat: getActorStat,
-    getNaturalStatValue: getNaturalStatValue,
-    getActorNaturalStatValue: getActorNaturalStatValue,
-    computeActorEffectiveStatValue: computeActorEffectiveStatValue,
-    computeEffectiveStatValue: computeEffectiveStatValue,
+    getActorStat: getStat,
+    getNaturalStatValue: getShellNaturalStatValue,
+    getActorNaturalStatValue: getNaturalStatValue,
+    computeActorEffectiveStatValue: computeStatValue,
+    computeEffectiveStatValue: (entity, stat) => getShellStatValue(entity as Shell, stat),
   };
 
   return function diffStagedMutations(trace: string = context.uniqid()): WorldEvent[] {
@@ -41,7 +36,7 @@ export const createDiffStagedMutationsAction = (
       return [];
     }
 
-    const shellDiff = createShellDiff(shell, session.data.pendingMutations, shellPerformanceDeps);
+    const shellDiff = createShellDiff(actor, shell, session.data.pendingMutations, shellPerformanceDeps);
 
     // Create event
     const shellMutationsDiffedEvent = createWorldEvent<ActorDidDiffShellMutations>({

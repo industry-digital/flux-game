@@ -1,8 +1,9 @@
-import { BASELINE_STAT_VALUE } from '~/worldkit/entity/stats';
+import { BASELINE_STAT_VALUE } from '~/worldkit/entity/actor/new-stats';
 import { Shell } from '~/types/entity/shell';
 import { ShellMutation, ShellMutationType, StatMutationOperation } from '~/types/workbench';
 import { createShellPreview } from '~/worldkit/workbench/preview';
 import { applyShellMutations } from '~/worldkit/workbench/execution';
+import { getShellStatValue } from '~/worldkit/entity/actor/shell';
 
 /**
  * Compute the resource cost of a single mutation
@@ -10,7 +11,7 @@ import { applyShellMutations } from '~/worldkit/workbench/execution';
 export const calculateMutationCost = (shell: Shell, mutation: ShellMutation): number => {
   switch (mutation.type) {
     case ShellMutationType.STAT: {
-      const currentValue = shell.stats[mutation.stat].eff;
+      const currentValue = getShellStatValue(shell, mutation.stat);
       let targetValue: number;
 
       if (mutation.operation === StatMutationOperation.ADD) {

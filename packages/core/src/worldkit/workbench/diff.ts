@@ -4,7 +4,9 @@ import { ShellPerformanceProfile } from '~/types/entity/shell';
 import { createShellPreview } from '~/worldkit/workbench/preview';
 import { calculateShellPerformance, ShellPerformanceDependencies } from '~/worldkit/entity/actor/shell/instrumentation';
 import { calculateTotalCost } from '~/worldkit/workbench/cost';
-import { SHELL_STAT_NAMES } from '~/worldkit/entity/actor';
+import { SHELL_STAT_NAMES } from '~/worldkit/entity/actor/new-stats';
+import { Actor } from '~/types/entity/actor';
+import { getShellStatValue } from '~/worldkit/entity/actor/shell';
 
 const createDiffValue = (currentVal: number, previewVal: number): DiffValue => {
   if (currentVal !== previewVal) {
@@ -50,8 +52,8 @@ export const createStatDiff = (current: Shell, preview: Shell): StatChanges | un
   let hasChanges = false;
 
   for (const stat of SHELL_STAT_NAMES) {
-    const currentValue = current.stats[stat].eff;
-    const previewValue = preview.stats[stat].eff;
+    const currentValue = getShellStatValue(current, stat);
+    const previewValue = getShellStatValue(preview, stat);
     if (currentValue !== previewValue) {
       statChanges[stat] = `${currentValue} -> ${previewValue}`;
       hasChanges = true;
@@ -65,6 +67,7 @@ export const createStatDiff = (current: Shell, preview: Shell): StatChanges | un
  * Creates a complete shell diff comparing current state with pending mutations applied
  */
 export const createShellDiff = (
+  actor: Actor,
   shell: Shell,
   mutations: ShellMutation[],
   performanceDeps: ShellPerformanceDependencies
