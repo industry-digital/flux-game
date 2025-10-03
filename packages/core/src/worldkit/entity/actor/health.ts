@@ -1,7 +1,6 @@
 import { NormalizedValueBetweenZeroAndOne } from '~/types';
 import { Actor, Stat } from '~/types/entity/actor';
-import { calculateStatBonus } from '../stats';
-import { getActorEffectiveStatValue } from './actor-stats';
+import { calculateStatBonus, getStatValue } from './new-stats';
 
 /**
  * Base HP value before RES modifiers
@@ -110,7 +109,7 @@ export const restoreHpToMax = (actor: Actor): void => {
  * Get the RES stat bonus used for HP calculation
  */
 export const getResBonus = (actor: Actor): number => {
-  const resilience = getActorEffectiveStatValue(actor, Stat.RES);
+  const resilience = getStatValue(actor, Stat.RES);
   return calculateStatBonus(resilience);
 };
 
