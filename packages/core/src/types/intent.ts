@@ -1,6 +1,19 @@
 import { ActorURN, PlaceURN, SessionURN } from '~/types/taxonomy';
 import { InputTypeGuard } from '~/types/handler';
 
+/**
+ * Serializable NLP analysis results from processing the intent text
+ */
+export type NaturalLanguageAnalysis = {
+  verbs: string[]; // downcased, trimmed
+  nouns: string[]; // downcased, trimmed
+  adjectives: string[]; // downcased, trimmed
+  /**
+   * raw compromise.js doc object; untyped because I don't want to include it as a project dependency
+   */
+  doc: any;
+};
+
 export type InputMetadata = { __type: 'command' | 'intent' };
 
 /**

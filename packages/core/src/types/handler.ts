@@ -1,5 +1,5 @@
 import { EventType, WorldEvent, WorldEventInput } from '~/types/event';
-import { Command, CommandType } from '~/types/intent';
+import { Command, CommandType, NaturalLanguageAnalysis } from '~/types/intent';
 import { ActorURN, ItemURN, PlaceURN, SessionURN } from '~/types/taxonomy';
 import { Place } from '~/types/entity/place';
 import { Actor } from '~/types/entity/actor';
@@ -174,6 +174,31 @@ export type CommandReducer<T extends CommandType, A extends Record<string, any>>
 
 export type InputTypeGuard<I extends Command, S extends I> = (input: I) => input is S;
 
+export type Intent = {
+  id: string;
+  actor: ActorURN;
+  location: PlaceURN;
+  /**
+   * Raw string input from the user
+   */
+  text: string;
+  /**
+   * Downcased and trimmed string input from the user
+   */
+  normalized: string;
+  /**
+   * Array of tokens created from `normalized`
+   */
+  tokens: string[];
+
+  /**
+   * NLP analysis of the intent text
+   */
+  nlp: NaturalLanguageAnalysis;
+};
+
+export type IntentParser<TCommand extends Command> = (world: WorldProjection, intent: Intent) => TCommand | undefined;
+
 /** Handler that associates a reducer with its dependencies */
 export type PureHandlerInterface<
   C,
@@ -182,6 +207,13 @@ export type PureHandlerInterface<
   handles: (input: any) => input is I;
   dependencies: PureHandlerImplementation<C, I>[];
   reduce: PureReducer<C, I>;
+
+  /**
+   * Optional function to parse the intent into a well-formed command
+   * All user-facing commands should have a parser
+   * Administrative/system commands don't need one because they don't arrive as raw text intents
+   */
+  parse?: IntentParser<I>;
 }
 
 export type PureHandlerImplementation<
