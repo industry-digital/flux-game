@@ -11,6 +11,7 @@ import {
   removeActorFromPlace,
 } from './place';
 import { createPlaceUrn } from '~/lib/taxonomy';
+import { DEFAULT_FACTORY_DEPS } from '~/worldkit/entity/util';
 
 describe('createPlace', () => {
   describe('basic place creation', () => {
@@ -27,31 +28,18 @@ describe('createPlace', () => {
       expect(Object.keys(place.exits)).toHaveLength(0);
     });
 
-    it('should create a place with all fields specified', () => {
-      const input: PlaceInput = {
-        id: createPlaceUrn('test', 'complete-place'),
-        name: 'Test Place',
-        description: 'A place for testing',
-      };
-
-      const place = createPlace(input);
-
-      expect(place.id).toBe('flux:place:test:complete-place');
-      expect(place.name).toBe('Test Place');
-      expect(place.description).toBe('A place for testing');
-    });
-
     it('should handle empty string values', () => {
       const input: PlaceInput = {
-        id: createPlaceUrn('test', 'empty-strings'),
-        name: '',
-        description: '',
+        id: 'flux:place:test:empty-strings',
+        name: 'Name of Place',
+        description: { base: 'foo', emergent: 'bar' },
       };
 
       const place = createPlace(input);
 
-      expect(place.name).toBe('');
-      expect(place.description).toBe('');
+      expect(place.name).toBe('Name of Place');
+      expect(place.description.base).toBe('foo');
+      expect(place.description.emergent).toBe('bar');
     });
   });
 
@@ -190,49 +178,25 @@ describe('createPlace', () => {
 
   describe('transform function', () => {
     it('should apply transform function to the created place', () => {
-      const input: PlaceInput = {
-        id: createPlaceUrn('test', 'transformable'),
-        name: 'Original Name',
-      };
-
       const transform = (place: any) => ({
         ...place,
         name: 'Transformed Name',
         customField: 'added by transform',
       });
 
-      const place = createPlace(input, transform);
+      const place = createPlace(transform);
 
       expect(place.name).toBe('Transformed Name');
       expect((place as any).customField).toBe('added by transform');
     });
 
     it('should work with identity transform', () => {
-      const input: PlaceInput = {
-        id: createPlaceUrn('test', 'identity'),
-        name: 'Identity Test',
-      };
+      const deps = { ...DEFAULT_FACTORY_DEPS, uniqid: () => 'test-unique-id' };
+      const place1 = createPlace(undefined, deps);
+      const place2 = createPlace((p) => p, deps);
 
-      const place = createPlace(input, (p) => p);
-
-      expect(place.name).toBe('Identity Test');
-    });
-  });
-
-  describe('options parameter', () => {
-    it('should pass options to createEntity', () => {
-      const input: PlaceInput = {
-        id: createPlaceUrn('test', 'options-test'),
-      };
-
-      const mockUniqueId = () => 'test-unique-id';
-      const options = {
-        generateUniqueId: mockUniqueId,
-      };
-
-      const place = createPlace(input, undefined, options);
-
-      expect(place.id).toBe('flux:place:test:options-test');
+      expect(place1.id).toBe('flux:place:test-unique-id');
+      expect(place2.id).toBe('flux:place:test-unique-id');
     });
   });
 });

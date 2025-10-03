@@ -4,14 +4,12 @@ import { PlaceURN } from '~/types/taxonomy';
 import { Actor } from '~/types/entity/actor';
 import { SpecialVisibility } from '~/types/world/visibility';
 import { Direction } from '~/types/world/space';
-import { createEntity, DEFAULT_ACTOR_FACTORY_OPTIONS, FactoryDependencies } from './util';
+import { DEFAULT_FACTORY_DEPS, FactoryDependencies } from './util';
 import { isUrnOfVocabulary } from '~/lib/taxonomy';
 import { ExitInput, Exits, PlaceInput } from '~/types/entity/place';
 import { WellKnownPlace } from '~/types/world/space';
-import { merge } from '~/lib/lang';
 
 const identity = <T>(x: T): T => x;
-
 
 /**
  * Type guard for Place
@@ -22,56 +20,55 @@ export const isPlace = (place: AbstractEntity<EntityType>): place is Place => {
 
 export const isPlaceUrn = (urn: string): urn is PlaceURN => isUrnOfVocabulary(urn, 'place');
 
-export const createPlace = (
-  input: PlaceInput,
-  transform: (place: Place) => Place = identity,
-  options: FactoryDependencies = DEFAULT_ACTOR_FACTORY_OPTIONS,
+export type PlaceTransformer = (place: Place) => Place;
+export function createPlace(): Place;
+export function createPlace(input: PlaceInput | undefined, deps?: FactoryDependencies): Place;
+export function createPlace(transform: PlaceTransformer, deps?: FactoryDependencies): Place;
+
+export function createPlace(
+  inputOrTransform?: PlaceInput | PlaceTransformer | undefined,
+  deps: FactoryDependencies = DEFAULT_FACTORY_DEPS,
+): Place {
+  let transform: PlaceTransformer = identity;
+  if (typeof inputOrTransform === 'function') {
+    transform = inputOrTransform;
+  } else if (inputOrTransform) {
+    transform = (place: Place) => ({ ...place, ...inputOrTransform });
+  } else {
+    transform = (place: Place) => place;
+  }
+
+  const place = createDefaultPlace(deps);
+
+  return transform(place);
+}
+
+const createDefaultPlace = (
+  deps: FactoryDependencies,
 ): Place => {
-  const base = createEntity<EntityType.PLACE, Place>(
-    EntityType.PLACE,
-    (entity) => {
-      const exits = input.exits || {};
-
-      const defaults: Place = {
-        id: entity.id,
-        type: EntityType.PLACE,
-        name: entity.name || '',
-        description: entity.description || '',
-        ecosystem: input.ecosystem || 'flux:eco:forest:temperate', // Use provided ecosystem or fallback
-        coordinates: [0, 0],
-        entities: {},
-        resources: {
-          ts: 0,
-        },
-        weather: {
-          temperature: { seed: 123, value: 20 },
-          pressure: { seed: 456, value: 1013 },
-          humidity: { seed: 789, value: 60 },
-          precipitation: 0,
-          ppfd: 0,
-          clouds: 0,
-          fog: 0,
-          ts: 0,
-        },
-        exits,
-      };
-
-      // Create a copy of input without the exits to avoid any conflicts
-      const { exits: _, ...inputWithoutExits } = input;
-
-      const finalPlace = merge({}, entity, defaults, inputWithoutExits) as Place;
-
-      // Debug logging for ecosystem assignment
-      if (entity.id.includes('jungle') || entity.id.includes('mountain')) {
-        console.log(`🏗️ CREATE_PLACE: ${entity.id} - input.ecosystem=${input.ecosystem}, final.ecosystem=${finalPlace.ecosystem}`);
-      }
-
-      return finalPlace;
+  return {
+    id: `flux:place:${deps.uniqid()}`,
+    type: EntityType.PLACE,
+    name: '',
+    description: { base: '', emergent: '' },
+    ecosystem: 'flux:eco:forest:temperate',
+    coordinates: [0, 0],
+    entities: {},
+    resources: {
+      ts: 0,
     },
-    options,
-  );
-
-  return transform(base);
+    weather: {
+      temperature: { seed: 0, value: 0 },
+      pressure: { seed: 0, value: 0 },
+      humidity: { seed: 0, value: 0 },
+      precipitation: 0,
+      ppfd: 0,
+      clouds: 0,
+      fog: 0,
+      ts: 0,
+    },
+    exits: {},
+  };
 };
 
 /**
