@@ -1,5 +1,5 @@
 import { AbilityType } from '~/types/schema/ability';
-import { ActorStat } from '~/types/entity/actor';
+import { Stat } from '~/types/entity/actor';
 import { SkillSchema } from '~/types/schema/skill';
 import { SpecialDuration } from '~/types/world/time';
 import { createEffectUrn } from '~/lib/taxonomy';
@@ -8,7 +8,7 @@ const Evasion: SkillSchema = {
   id: 'flux:skill:evasion',
   name: 'Evasion',
   description: 'The practice of avoiding incoming attacks through movement and positioning. Practitioners develop reflexive responses that activate automatically when threatened.',
-  stats: [ActorStat.FIN],
+  stats: [Stat.FIN],
   milestones: [
     [10, [
       {

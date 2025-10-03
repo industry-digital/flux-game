@@ -6,7 +6,7 @@
  * propagating to CombatAction payloads.
  */
 
-import { Actor } from '~/types/entity/actor';
+import { Actor, Stat } from '~/types/entity/actor';
 import { CombatAction, CombatSession, FullyQualifiedActionCost } from '~/types/combat';
 import { CommandType } from '~/types/intent';
 import { ActorURN } from '~/types/taxonomy';
@@ -15,6 +15,7 @@ import { ALL_REMAINING_AP } from '~/worldkit/combat/ap';
 import { ActorEquipmentApi } from '~/worldkit/entity/actor/equipment';
 import { calculateWeaponApCost } from '~/worldkit/combat/damage';
 import { roundApCostUp } from '~/worldkit/combat/tactical-rounding';
+import { getActorEffectiveStatValue } from '~/worldkit/entity/actor/actor-stats';
 
 /**
  * Context required for parsing combat intents
@@ -285,7 +286,8 @@ function parseStrikeCommand(
   }
 
   // Calculate tactical AP cost using weapon mass and finesse
-  const preciseApCost = calculateWeaponApCost(weaponMassKg, context.currentActor.stats.fin.eff);
+  const finesse = getActorEffectiveStatValue(context.currentActor, Stat.FIN);
+  const preciseApCost = calculateWeaponApCost(weaponMassKg, finesse);
   const tacticalApCost = roundApCostUp(preciseApCost);
 
   // Note: STRIKE is not in CommandType enum yet, using ATTACK for now

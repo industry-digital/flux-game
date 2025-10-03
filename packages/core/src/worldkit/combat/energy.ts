@@ -1,8 +1,9 @@
-import { Actor, ActorStat } from '~/types/entity/actor';
+import { Actor, Stat } from '~/types/entity/actor';
 import { PotentiallyImpureOperations } from '~/types/handler';
 import { Combatant, ActionCost } from '~/types/combat';
 import { areaUnderCurve } from '~/lib/calculus';
-import { BASELINE_STAT_VALUE, getEffectiveStatValue, MAX_STAT_VALUE } from '~/worldkit/entity/actor/stats';
+import { BASELINE_STAT_VALUE, MAX_STAT_VALUE } from '~/worldkit/entity/stats';
+import { getActorEffectiveStatValue } from '~/worldkit/entity/actor/actor-stats';
 import { extractApCost, extractEnergyCost } from '~/worldkit/combat/ap';
 
 export const DEFAULT_CAPACITOR_ENERGY_PER_RES = 1000; // Base energy scaling factor
@@ -123,7 +124,7 @@ export function calculateMaxRecoveryRate(
  * Position (0-1) represents where the actor is on the energy spectrum
  */
 export function calculateInitialEnergyValue(actor: Actor): number {
-  const resilience = getEffectiveStatValue(actor, ActorStat.RES);
+  const resilience = getActorEffectiveStatValue(actor, Stat.RES);
   const maxEnergy = calculateMaxEnergy(resilience);
   const positionOnCurve = actor.capacitor.position ?? 1;
   const currentEnergy = maxEnergy * positionOnCurve;

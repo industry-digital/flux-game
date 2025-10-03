@@ -42,7 +42,7 @@ export {
   Actor,
   ActorType,
   ActorInput,
-  ActorStat,
+  Stat as ActorStat,
   ActorStats,
   Equipment,
   AppliedAnatomicalDamage as InjuryDescriptor,

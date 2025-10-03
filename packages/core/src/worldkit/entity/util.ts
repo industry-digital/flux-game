@@ -13,12 +13,12 @@ export type EntityCreator<T extends EntityType, E extends AbstractEntity<T> & De
 
 export type FactoryDependencies = Pick<PotentiallyImpureOperations, 'timestamp' | 'uniqid' | 'random'>;
 
-export const DEFAULT_ACTOR_FACTORY_OPTIONS: FactoryDependencies = {...DEFAULT_POTENTIALLY_IMPURE_OPERATIONS};
+export const DEFAULT_FACTORY_DEPS: FactoryDependencies = {...DEFAULT_POTENTIALLY_IMPURE_OPERATIONS};
 
 export const createEntity = <T extends EntityType, E extends AbstractEntity<T> & Describable>(
   type: T,
   transform: EntityCreator<T, E> = identity as EntityCreator<T, E>,
-  { uniqid: uniqidImpl = uniqid }: FactoryDependencies = DEFAULT_ACTOR_FACTORY_OPTIONS,
+  { uniqid: uniqidImpl = uniqid }: FactoryDependencies = DEFAULT_FACTORY_DEPS,
 ): E => {
   const id = uniqidImpl();
   const urn = createEntityUrn(type, id) as `${RootNamespace}:${T}:${string}`;

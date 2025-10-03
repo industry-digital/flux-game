@@ -1,5 +1,5 @@
 import { SkillURN } from '~/types/taxonomy';
-import { ActorStat } from '~/types/entity/actor';
+import { Stat } from '~/types/entity/actor';
 import { AbilityInContainment } from '~/types/schema/ability';
 
 /**
@@ -34,7 +34,7 @@ export type SkillSchema = {
    * - Stealth has an intrinsic affinity to the `AGI` stat
    * - "Magic", or "tech", might have an affinity with the `INT` stat
    */
-  stats: [] | [ActorStat] | [ActorStat, ActorStat];
+  stats: [] | [Stat] | [Stat, Stat];
 
   /**
    * The various abilities that are available at different levels of the skill

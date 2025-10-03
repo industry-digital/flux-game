@@ -15,25 +15,34 @@ import {
   calculateEnergyRecoveryOverTime,
 } from './capacitor';
 import { createTestActor } from '~/testing/world-testing';
-import { Actor, ActorStat } from '~/types/entity/actor';
+import { Actor, Stat } from '~/types/entity/actor';
 import { NormalizedValueBetweenZeroAndOne } from '~/types/entity/attribute';
 
 describe('Capacitor API (Pure Functions)', () => {
   let actor: Actor;
 
   beforeEach(() => {
-    actor = createTestActor(undefined, (a) => ({
-      ...a,
-      stats: {
-        ...a.stats,
-        [ActorStat.RES]: {
-          ...a.stats[ActorStat.RES],
-          nat: 15,
-          eff: 15,
-          mods: {},
+    actor = createTestActor(undefined, (a) => {
+      const currentShell = a.shells[a.currentShell];
+      return {
+        ...a,
+        shells: {
+          ...a.shells,
+          [a.currentShell]: {
+            ...currentShell,
+            stats: {
+              ...currentShell.stats,
+              [Stat.RES]: {
+                ...currentShell.stats[Stat.RES],
+                nat: 15,
+                eff: 15,
+                mods: {},
+              },
+            },
+          },
         },
-      },
-    }));
+      };
+    });
   });
 
   describe('initialization and basic properties', () => {
@@ -68,14 +77,16 @@ describe('Capacitor API (Pure Functions)', () => {
     });
 
     it('should handle zero resilience gracefully', () => {
-      actor.stats[ActorStat.RES].eff = 0;
+      const currentShell = actor.shells[actor.currentShell];
+      currentShell.stats[Stat.RES].eff = 0;
 
       expect(getMaxEnergy(actor)).toBe(10000); // Base energy at RES 0 (clamped to RES 10)
       expect(getMaxRecoveryRate(actor)).toBe(150); // Base recovery at RES 0 (clamped to RES 10)
     });
 
     it('should handle very high resilience values', () => {
-      actor.stats[ActorStat.RES].eff = 100;
+      const currentShell = actor.shells[actor.currentShell];
+      currentShell.stats[Stat.RES].eff = 100;
 
       expect(getMaxEnergy(actor)).toBe(45600); // Power curve: RES 100 → 45,600 J (matches UI!)
       expect(getMaxRecoveryRate(actor)).toBe(500); // Power curve: RES 100 → 500W
@@ -175,7 +186,8 @@ describe('Capacitor API (Pure Functions)', () => {
     });
 
     it('should handle zero max energy in percentage calculation', () => {
-      actor.stats[ActorStat.RES].eff = 0;
+      const currentShell = actor.shells[actor.currentShell];
+      currentShell.stats[Stat.RES].eff = 0;
       setEnergy(actor, 0);
 
       expect(getEnergyPercentage(actor)).toBe(0);
@@ -388,7 +400,8 @@ describe('Capacitor API (Pure Functions)', () => {
       expect(getEnergyPercentage(actor)).toBeCloseTo(10000 / initialMaxEnergy, 3);
 
       // Buff increases RES
-      actor.stats[ActorStat.RES].eff = 20;
+      const currentShell = actor.shells[actor.currentShell];
+      currentShell.stats[Stat.RES].eff = 20;
       const buffedMaxEnergy = getMaxEnergy(actor);
       expect(buffedMaxEnergy).toBeGreaterThan(initialMaxEnergy);
       // Energy stays the same, but percentage changes
@@ -396,7 +409,7 @@ describe('Capacitor API (Pure Functions)', () => {
       expect(getEnergyPercentage(actor)).toBeCloseTo(10000 / buffedMaxEnergy, 3);
 
       // Debuff reduces RES below current energy level
-      actor.stats[ActorStat.RES].eff = 8;
+      currentShell.stats[Stat.RES].eff = 8;
       const debuffedMaxEnergy = getMaxEnergy(actor);
       expect(debuffedMaxEnergy).toBeLessThan(initialMaxEnergy);
       // Energy should be clamped when setting
@@ -681,7 +694,9 @@ describe('Capacitor API (Pure Functions)', () => {
 
   describe('edge cases and error handling', () => {
     it('should throw when actor stats are missing', () => {
-      actor.stats = {} as any;
+      const currentShell = actor.shells[actor.currentShell];
+      // @ts-expect-error: Cannot delete a required property, but this is a test
+      delete currentShell.stats[Stat.RES]
 
       // Should throw when stats are missing - this is correct behavior
       expect(() => getMaxEnergy(actor)).toThrow();

@@ -1,6 +1,6 @@
 import { Shell } from '~/types/entity/shell';
 import { Actor } from '~/types/entity/actor';
-import { ActorStat, ShellStats } from '~/types/entity/actor';
+import { Stat, ShellStats } from '~/types/entity/actor';
 import { createModifiableScalarAttribute } from '~/worldkit/entity';
 import { createInventory } from '~/worldkit/entity/actor/inventory';
 import { hashUnsafeString } from '~/worldkit/hash';
@@ -105,9 +105,9 @@ export function createShell(
     id: input?.id ?? hashUnsafeStringImpl(name),
     name,
     stats: input?.stats ?? {
-      [ActorStat.POW]: createModifiableScalarAttribute((defaults) => ({ ...defaults, nat: 10 })),
-      [ActorStat.FIN]: createModifiableScalarAttribute((defaults) => ({ ...defaults, nat: 10 })),
-      [ActorStat.RES]: createModifiableScalarAttribute((defaults) => ({ ...defaults, nat: 10 })),
+      [Stat.POW]: createModifiableScalarAttribute((defaults) => ({ ...defaults, nat: 10 })),
+      [Stat.FIN]: createModifiableScalarAttribute((defaults) => ({ ...defaults, nat: 10 })),
+      [Stat.RES]: createModifiableScalarAttribute((defaults) => ({ ...defaults, nat: 10 })),
     },
     inventory: input?.inventory ?? createInventoryImpl(),
     equipment: {},
@@ -117,31 +117,31 @@ export function createShell(
 };
 
 export type ShellStatsInput = Partial<{
-  [ActorStat.POW]: number;
-  [ActorStat.FIN]: number;
-  [ActorStat.RES]: number;
+  [Stat.POW]: number;
+  [Stat.FIN]: number;
+  [Stat.RES]: number;
 }>;
 
 /**
  * Directly mutate the shell stats in place (zero-allocation)
  */
 export const mutateShellStats = (stats: ShellStats, input: ShellStatsInput): void => {
-  if (input[ActorStat.POW] !== undefined) {
-    stats[ActorStat.POW].nat = input[ActorStat.POW]!;
-    stats[ActorStat.POW].eff = input[ActorStat.POW]!;
-    delete stats[ActorStat.POW].mods;
+  if (input[Stat.POW] !== undefined) {
+    stats[Stat.POW].nat = input[Stat.POW]!;
+    stats[Stat.POW].eff = input[Stat.POW]!;
+    delete stats[Stat.POW].mods;
   }
 
-  if (input[ActorStat.FIN] !== undefined) {
-    stats[ActorStat.FIN].nat = input[ActorStat.FIN]!;
-    stats[ActorStat.FIN].eff = input[ActorStat.FIN]!;
-    delete stats[ActorStat.FIN].mods;
+  if (input[Stat.FIN] !== undefined) {
+    stats[Stat.FIN].nat = input[Stat.FIN]!;
+    stats[Stat.FIN].eff = input[Stat.FIN]!;
+    delete stats[Stat.FIN].mods;
   }
 
-  if (input[ActorStat.RES] !== undefined) {
-    stats[ActorStat.RES].nat = input[ActorStat.RES]!;
-    stats[ActorStat.RES].eff = input[ActorStat.RES]!;
-    delete stats[ActorStat.RES].mods;
+  if (input[Stat.RES] !== undefined) {
+    stats[Stat.RES].nat = input[Stat.RES]!;
+    stats[Stat.RES].eff = input[Stat.RES]!;
+    delete stats[Stat.RES].mods;
   }
 };
 

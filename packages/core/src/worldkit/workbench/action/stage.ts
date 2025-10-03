@@ -4,7 +4,7 @@ import { Shell } from '~/types/entity/shell';
 import { ActorDidStageShellMutation, EventType, WorldEvent } from '~/types/event';
 import { TransformerContext } from '~/types/handler';
 import { ComponentMutation, InventoryMutation, ShellMutation, ShellMutationType, StatMutation, StatMutationOperation, ValidationResult, WorkbenchSession } from '~/types/workbench';
-import { MAX_STAT_VALUE } from '~/worldkit/entity/actor';
+import { MAX_STAT_VALUE } from '~/worldkit/entity/stats';
 import { createWorldEvent } from '~/worldkit/event';
 import { calculateMutationCost } from '~/worldkit/workbench/cost';
 

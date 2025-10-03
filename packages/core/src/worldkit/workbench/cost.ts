@@ -1,4 +1,4 @@
-import { BASELINE_STAT_VALUE } from '~/worldkit/entity/actor/stats';
+import { BASELINE_STAT_VALUE } from '~/worldkit/entity/stats';
 import { Shell } from '~/types/entity/shell';
 import { ShellMutation, ShellMutationType, StatMutationOperation } from '~/types/workbench';
 import { createShellPreview } from '~/worldkit/workbench/preview';

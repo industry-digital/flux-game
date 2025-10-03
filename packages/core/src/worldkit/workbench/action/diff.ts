@@ -4,8 +4,13 @@ import { ActorDidDiffShellMutations, EventType, WorldEvent } from '~/types/event
 import { TransformerContext } from '~/types/handler';
 import { WorkbenchSession } from '~/types/workbench';
 import { createWorldEvent } from '~/worldkit/event';
-import { ShellPerformanceDependencies } from '~/worldkit/entity/actor/shell/performance';
-import { computeEffectiveStatValue, getNaturalStatValue, getStat } from '~/worldkit/entity/actor';
+import { ShellPerformanceDependencies } from '~/worldkit/entity/actor/shell/instrumentation';
+import { computeActorEffectiveStatValue, getActorNaturalStatValue, getActorStat } from '~/worldkit/entity/actor';
+import {
+  computeEffectiveStatValue,
+  getNaturalStatValue,
+  getStat,
+} from '~/worldkit/entity/stats';
 import { createShellDiff } from '~/worldkit/workbench/diff';
 
 export type DiffStagedMutationsAction = (trace?: string) => WorldEvent[];
@@ -23,7 +28,10 @@ export const createDiffStagedMutationsAction = (
     massApi: context.mass,
     equipmentApi: context.equipmentApi,
     getStat: getStat,
+    getActorStat: getActorStat,
     getNaturalStatValue: getNaturalStatValue,
+    getActorNaturalStatValue: getActorNaturalStatValue,
+    computeActorEffectiveStatValue: computeActorEffectiveStatValue,
     computeEffectiveStatValue: computeEffectiveStatValue,
   };
 

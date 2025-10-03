@@ -1,4 +1,4 @@
-import { Actor, ActorStat, ActorStats } from '~/types/entity/actor';
+import { Actor, Stat, ActorStats } from '~/types/entity/actor';
 import { WeaponSchema } from '~/types/schema/weapon';
 import { ActorURN, PlaceURN, SkillURN, WeaponItemURN, WeaponSchemaURN } from '~/types/taxonomy';
 import { TransformerContext } from '~/types/handler';
@@ -177,12 +177,21 @@ export function useCombatScenario(
         }, {} as Record<SkillURN, SkillState>),
         stats: {
           ...actor.stats,
-          [ActorStat.INT]: processSingleStat(stats?.int, 10),
-          [ActorStat.PER]: processSingleStat(stats?.per, 10),
-          [ActorStat.MEM]: processSingleStat(stats?.mem, 10),
-          [ActorStat.POW]: processSingleStat(stats?.pow, 10),
-          [ActorStat.FIN]: processSingleStat(stats?.fin, 10),
-          [ActorStat.RES]: processSingleStat(stats?.res, 10),
+          [Stat.INT]: processSingleStat(stats?.int, 10),
+          [Stat.PER]: processSingleStat(stats?.per, 10),
+          [Stat.MEM]: processSingleStat(stats?.mem, 10),
+        },
+        shells: {
+          ...actor.shells,
+          [actor.currentShell]: {
+            ...actor.shells[actor.currentShell],
+            stats: {
+              ...actor.shells[actor.currentShell].stats,
+              [Stat.POW]: processSingleStat(stats?.pow, 10),
+              [Stat.FIN]: processSingleStat(stats?.fin, 10),
+              [Stat.RES]: processSingleStat(stats?.res, 10),
+            },
+          },
         },
         hp: processHpSetup(participant.hp, actor.hp),
       };

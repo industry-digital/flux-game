@@ -1,4 +1,4 @@
-import { Actor, ActorStat, ActorStats, ShellStat } from '~/types/entity/actor';
+import { Actor, Stat, ActorStats, ShellStat } from '~/types/entity/actor';
 import { Shell } from '~/types/entity/shell';
 import { ShellMutation, ShellMutationType, StatMutation, StatMutationOperation } from '~/types/workbench';
 import { ActorURN, PlaceURN } from '~/types/taxonomy';
@@ -103,9 +103,9 @@ export function useWorkbenchScenario(
         ...actor,
         stats: {
           ...actor.stats,
-          [ActorStat.POW]: processSingleStat(participant.stats?.pow, 10),
-          [ActorStat.FIN]: processSingleStat(participant.stats?.fin, 10),
-          [ActorStat.RES]: processSingleStat(participant.stats?.res, 10),
+          [Stat.POW]: processSingleStat(participant.stats?.pow, 10),
+          [Stat.FIN]: processSingleStat(participant.stats?.fin, 10),
+          [Stat.RES]: processSingleStat(participant.stats?.res, 10),
         },
       };
 
@@ -117,9 +117,9 @@ export function useWorkbenchScenario(
           updatedActor.shells[currentShellId] = {
             ...currentShell,
             stats: {
-              [ActorStat.POW]: processSingleStat(participant.shellStats?.pow, 10),
-              [ActorStat.FIN]: processSingleStat(participant.shellStats?.fin, 10),
-              [ActorStat.RES]: processSingleStat(participant.shellStats?.res, 10),
+              [Stat.POW]: processSingleStat(participant.shellStats?.pow, 10),
+              [Stat.FIN]: processSingleStat(participant.shellStats?.fin, 10),
+              [Stat.RES]: processSingleStat(participant.shellStats?.res, 10),
             },
           };
         }

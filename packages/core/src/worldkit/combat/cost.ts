@@ -6,12 +6,13 @@
  * implementations (for actual execution).
  */
 
-import { Actor } from '~/types/entity/actor';
+import { Actor, Stat } from '~/types/entity/actor';
 import { FullyQualifiedActionCost } from '~/types/combat';
 import { distanceToAp } from '~/worldkit/physics/movement';
 import { calculateMovementEnergyCost } from '~/worldkit/combat/energy-costs';
 import { MovementType } from '~/worldkit/combat/combatant';
 import { roundApCostUp } from '~/worldkit/combat/tactical-rounding';
+import { getActorEffectiveStatValue } from '~/worldkit/entity/actor/actor-stats';
 
 /**
  * Calculate AP and energy costs for movement actions (ADVANCE/RETREAT)
@@ -22,8 +23,8 @@ export function calculateMovementCosts(
   movementValue: number,
   computeActorMass: (actor: Actor) => number
 ): FullyQualifiedActionCost {
-  const power = actor.stats.pow.eff;
-  const finesse = actor.stats.fin.eff;
+  const power = getActorEffectiveStatValue(actor, Stat.POW);
+  const finesse = getActorEffectiveStatValue(actor, Stat.FIN);
   const massGrams = computeActorMass(actor);
   const massKg = massGrams / 1000;
 

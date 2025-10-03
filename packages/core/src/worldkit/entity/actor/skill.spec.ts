@@ -19,16 +19,17 @@ import {
 
 // Test fixtures
 const createTestActor = (skills: Partial<Record<SkillURN, SkillState>> = {}): Actor => {
-  return createActor({
+  const actor = createActor({
     name: 'Test Actor',
     description: 'Test actor for skill tests',
-  }, (actor) => ({
+  });
+  return {
     ...actor,
     skills: {
       ...actor.skills,
       ...skills,  // This preserves object references!
     },
-  }));
+  };
 };
 
 const createTestModifier = (overrides: Partial<Modifier> = {}): Modifier => ({

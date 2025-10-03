@@ -29,7 +29,8 @@ export const createTestActor = (overrides?: any, transform: ActorTransformer = i
     ...overrides
   };
 
-  return createActor(actorInput, transform);
+  const actor = createActor(actorInput);
+  return transform(actor);
 };
 
 export const createTestPlace = (overrides?: any): Place => {

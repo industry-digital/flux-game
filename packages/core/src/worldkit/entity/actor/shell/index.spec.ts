@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach } from 'vitest';
-import { Actor, ActorStat } from '~/types/entity/actor';
+import { Actor, Stat } from '~/types/entity/actor';
 import { Shell } from '~/types/entity/shell';
 import { ModifiableScalarAttribute } from '~/types/entity/attribute';
 import { createInventory } from '~/worldkit/entity/actor/inventory';
@@ -30,9 +30,9 @@ const createTestShell = (overrides: Partial<Shell> = {}): Shell => {
     id: 'test-shell',
     name: 'Test Shell',
     stats: {
-      [ActorStat.POW]: createModifiableScalarAttribute((attr) => ({ ...attr, nat: 15, eff: 15 })),
-      [ActorStat.FIN]: createModifiableScalarAttribute((attr) => ({ ...attr, nat: 12, eff: 12 })),
-      [ActorStat.RES]: createModifiableScalarAttribute((attr) => ({ ...attr, nat: 18, eff: 18 })),
+      [Stat.POW]: createModifiableScalarAttribute((attr) => ({ ...attr, nat: 15, eff: 15 })),
+      [Stat.FIN]: createModifiableScalarAttribute((attr) => ({ ...attr, nat: 12, eff: 12 })),
+      [Stat.RES]: createModifiableScalarAttribute((attr) => ({ ...attr, nat: 18, eff: 18 })),
     },
     inventory: createInventory(),
     equipment: {},
@@ -126,9 +126,9 @@ describe('Shell Creation', () => {
     const shell = createShell();
     expect(shell.id).toBeDefined();
     expect(shell.name).toBeDefined();
-    expect(shell.stats[ActorStat.POW].nat).toBe(10);
-    expect(shell.stats[ActorStat.FIN].nat).toBe(10);
-    expect(shell.stats[ActorStat.RES].nat).toBe(10);
+    expect(shell.stats[Stat.POW].nat).toBe(10);
+    expect(shell.stats[Stat.FIN].nat).toBe(10);
+    expect(shell.stats[Stat.RES].nat).toBe(10);
   });
 
   it('should create shell with custom input', () => {
@@ -143,14 +143,14 @@ describe('Shell Creation', () => {
 
   it('should use provided stats', () => {
     const customStats = {
-      [ActorStat.POW]: createTestStat({ nat: 20, eff: 20 }),
-      [ActorStat.FIN]: createTestStat({ nat: 15, eff: 15 }),
-      [ActorStat.RES]: createTestStat({ nat: 25, eff: 25 }),
+      [Stat.POW]: createTestStat({ nat: 20, eff: 20 }),
+      [Stat.FIN]: createTestStat({ nat: 15, eff: 15 }),
+      [Stat.RES]: createTestStat({ nat: 25, eff: 25 }),
     };
     const shell = createShell({ stats: customStats });
-    expect(shell.stats[ActorStat.POW].nat).toBe(20);
-    expect(shell.stats[ActorStat.FIN].nat).toBe(15);
-    expect(shell.stats[ActorStat.RES].nat).toBe(25);
+    expect(shell.stats[Stat.POW].nat).toBe(20);
+    expect(shell.stats[Stat.FIN].nat).toBe(15);
+    expect(shell.stats[Stat.RES].nat).toBe(25);
   });
 });
 
@@ -159,74 +159,74 @@ describe('Zero-Allocation Stat Mutations', () => {
 
   beforeEach(() => {
     baseStats = {
-      [ActorStat.POW]: createTestStat({ nat: 15, eff: 15 }),
-      [ActorStat.FIN]: createTestStat({ nat: 12, eff: 12 }),
-      [ActorStat.RES]: createTestStat({ nat: 18, eff: 18 }),
+      [Stat.POW]: createTestStat({ nat: 15, eff: 15 }),
+      [Stat.FIN]: createTestStat({ nat: 12, eff: 12 }),
+      [Stat.RES]: createTestStat({ nat: 18, eff: 18 }),
     };
   });
 
   describe('mutateShellStats', () => {
     it('should mutate stats in place (zero allocations)', () => {
       const statsCopy = {
-        [ActorStat.POW]: { ...baseStats[ActorStat.POW] },
-        [ActorStat.FIN]: { ...baseStats[ActorStat.FIN] },
-        [ActorStat.RES]: { ...baseStats[ActorStat.RES] },
+        [Stat.POW]: { ...baseStats[Stat.POW] },
+        [Stat.FIN]: { ...baseStats[Stat.FIN] },
+        [Stat.RES]: { ...baseStats[Stat.RES] },
       };
-      const originalPowRef = statsCopy[ActorStat.POW];
+      const originalPowRef = statsCopy[Stat.POW];
 
-      mutateShellStats(statsCopy, { [ActorStat.POW]: 20 });
+      mutateShellStats(statsCopy, { [Stat.POW]: 20 });
 
       // Same object reference (zero allocations)
-      expect(statsCopy[ActorStat.POW]).toBe(originalPowRef);
+      expect(statsCopy[Stat.POW]).toBe(originalPowRef);
       // But values updated
-      expect(statsCopy[ActorStat.POW].nat).toBe(20);
-      expect(statsCopy[ActorStat.POW].eff).toBe(20);
+      expect(statsCopy[Stat.POW].nat).toBe(20);
+      expect(statsCopy[Stat.POW].eff).toBe(20);
     });
 
     it('should handle multiple stats', () => {
       const statsCopy = {
-        [ActorStat.POW]: { ...baseStats[ActorStat.POW] },
-        [ActorStat.FIN]: { ...baseStats[ActorStat.FIN] },
-        [ActorStat.RES]: { ...baseStats[ActorStat.RES] },
+        [Stat.POW]: { ...baseStats[Stat.POW] },
+        [Stat.FIN]: { ...baseStats[Stat.FIN] },
+        [Stat.RES]: { ...baseStats[Stat.RES] },
       };
 
       mutateShellStats(statsCopy, {
-        [ActorStat.POW]: 25,
-        [ActorStat.FIN]: 20,
+        [Stat.POW]: 25,
+        [Stat.FIN]: 20,
       });
 
-      expect(statsCopy[ActorStat.POW].nat).toBe(25);
-      expect(statsCopy[ActorStat.FIN].nat).toBe(20);
-      expect(statsCopy[ActorStat.RES].nat).toBe(18); // Unchanged
+      expect(statsCopy[Stat.POW].nat).toBe(25);
+      expect(statsCopy[Stat.FIN].nat).toBe(20);
+      expect(statsCopy[Stat.RES].nat).toBe(18); // Unchanged
     });
 
     it('should clear modifiers for updated stats', () => {
       const statsCopy = {
-        [ActorStat.POW]: createTestStat({
+        [Stat.POW]: createTestStat({
           nat: 15,
           eff: 15,
           mods: { someModifier: { schema: 'test' as any, position: 0.5, value: 5, appliedBy: 'test' as any } }
         }),
-        [ActorStat.FIN]: { ...baseStats[ActorStat.FIN] },
-        [ActorStat.RES]: { ...baseStats[ActorStat.RES] },
+        [Stat.FIN]: { ...baseStats[Stat.FIN] },
+        [Stat.RES]: { ...baseStats[Stat.RES] },
       };
 
-      mutateShellStats(statsCopy, { [ActorStat.POW]: 20 });
+      mutateShellStats(statsCopy, { [Stat.POW]: 20 });
 
-      expect(statsCopy[ActorStat.POW].mods).toBeUndefined();
+      expect(statsCopy[Stat.POW].mods).toBeUndefined();
     });
   });
 
   describe('applyShellStats', () => {
     it('should return shallow copy with mutated stats', () => {
-      const newStats = applyShellStats(baseStats, { [ActorStat.POW]: 20 });
+      const newStats = applyShellStats(baseStats, { [Stat.POW]: 20 });
 
       // Returns shallow copy of stats container
       expect(newStats).not.toBe(baseStats);
       // But individual stat objects are same references (mutated in place)
-      expect(newStats[ActorStat.POW]).toBe(baseStats[ActorStat.POW]);
-      expect(newStats[ActorStat.FIN]).toBe(baseStats[ActorStat.FIN]);
-      expect(newStats[ActorStat.RES]).toBe(baseStats[ActorStat.RES]);
+      expect(newStats[Stat.POW]).toBe(baseStats[Stat.POW]);
+      expect(newStats[Stat.FIN]).toBe(baseStats[Stat.FIN]);
+      expect(newStats[Stat.RES]).toBe(baseStats[Stat.RES]);
     });
   });
 });
@@ -245,7 +245,7 @@ describe('Deep Cloning', () => {
       // Different references at all levels
       expect(clonedShell).not.toBe(shell);
       expect(clonedShell.stats).not.toBe(shell.stats);
-      expect(clonedShell.stats[ActorStat.POW]).not.toBe(shell.stats[ActorStat.POW]);
+      expect(clonedShell.stats[Stat.POW]).not.toBe(shell.stats[Stat.POW]);
       expect(clonedShell.inventory).not.toBe(shell.inventory);
       expect(clonedShell.equipment).not.toBe(shell.equipment);
     });
@@ -255,19 +255,19 @@ describe('Deep Cloning', () => {
 
       expect(clonedShell.id).toBe(shell.id);
       expect(clonedShell.name).toBe(shell.name);
-      expect(clonedShell.stats[ActorStat.POW].nat).toBe(shell.stats[ActorStat.POW].nat);
-      expect(clonedShell.stats[ActorStat.POW].eff).toBe(shell.stats[ActorStat.POW].eff);
+      expect(clonedShell.stats[Stat.POW].nat).toBe(shell.stats[Stat.POW].nat);
+      expect(clonedShell.stats[Stat.POW].eff).toBe(shell.stats[Stat.POW].eff);
     });
 
     it('should allow independent mutations after cloning', () => {
       const clonedShell = cloneShell(shell);
 
-      mutateShellStats(clonedShell.stats, { [ActorStat.POW]: 99 });
+      mutateShellStats(clonedShell.stats, { [Stat.POW]: 99 });
 
       // Original unchanged
-      expect(shell.stats[ActorStat.POW].nat).toBe(15);
+      expect(shell.stats[Stat.POW].nat).toBe(15);
       // Clone changed
-      expect(clonedShell.stats[ActorStat.POW].nat).toBe(99);
+      expect(clonedShell.stats[Stat.POW].nat).toBe(99);
     });
   });
 });
@@ -275,14 +275,14 @@ describe('Deep Cloning', () => {
 describe('Correct Usage Patterns', () => {
   it('should demonstrate performance pattern: direct mutation', () => {
     const shell = createTestShell();
-    const originalPowRef = shell.stats[ActorStat.POW];
+    const originalPowRef = shell.stats[Stat.POW];
 
     // For performance-critical paths: mutate directly
-    mutateShellStats(shell.stats, { [ActorStat.POW]: 30 });
+    mutateShellStats(shell.stats, { [Stat.POW]: 30 });
 
     // Same object, updated values (zero allocations)
-    expect(shell.stats[ActorStat.POW]).toBe(originalPowRef);
-    expect(shell.stats[ActorStat.POW].nat).toBe(30);
+    expect(shell.stats[Stat.POW]).toBe(originalPowRef);
+    expect(shell.stats[Stat.POW].nat).toBe(30);
   });
 
   it('should demonstrate safety pattern: clone then mutate', () => {
@@ -290,12 +290,12 @@ describe('Correct Usage Patterns', () => {
 
     // For workbench scenarios: clone first for safety
     const clonedShell = cloneShell(originalShell);
-    mutateShellStats(clonedShell.stats, { [ActorStat.POW]: 30 });
+    mutateShellStats(clonedShell.stats, { [Stat.POW]: 30 });
 
     // Original completely unchanged
-    expect(originalShell.stats[ActorStat.POW].nat).toBe(15);
+    expect(originalShell.stats[Stat.POW].nat).toBe(15);
     // Clone has new values
-    expect(clonedShell.stats[ActorStat.POW].nat).toBe(30);
+    expect(clonedShell.stats[Stat.POW].nat).toBe(30);
     // Completely independent objects
     expect(clonedShell.stats).not.toBe(originalShell.stats);
   });

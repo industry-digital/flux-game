@@ -10,12 +10,13 @@ import {
 } from '~/types/combat-ai';
 import { classifyWeapon, RangeClassification, canWeaponHitFromDistance } from '~/worldkit/combat/weapon';
 import { computeDistanceBetweenCombatants } from '~/worldkit/combat/range';
-import { isActorAlive } from '~/worldkit/entity/actor';
+import { getActorEffectiveStatValue, isActorAlive } from '~/worldkit/entity/actor';
 import { DEFAULT_ATTACK_AP_COST } from '~/worldkit/combat/ap';
 import { apToDistance, distanceToAp } from '~/worldkit/physics/movement';
 import { areEnemies } from '~/worldkit/combat/team';
 import { targetingApi } from './targeting';
 import { DEFAULT_COMBAT_PLANNING_DEPS, CombatPlanningDependencies } from './deps';
+import { Stat } from '~/types/entity/actor';
 
 /**
  * Calculate AP cost for a given distance using physics
@@ -299,9 +300,13 @@ export function evaluatePositioning(
 
   // Calculate physics-based movement capability
   const availableAP = combatant.ap.eff.cur; // AP as time budget
+
+  const power = getActorEffectiveStatValue(actor, Stat.POW);
+  const finesse = getActorEffectiveStatValue(actor, Stat.FIN);
+
   const maxMovement = apToDistance(
-    actor.stats.pow.eff,
-    actor.stats.fin.eff,
+    power,
+    finesse,
     availableAP,
     70 // baseline mass
   );
@@ -327,7 +332,7 @@ export function evaluatePositioning(
     // Calculate physics-based movement cost for this distance
     const distanceToMove = Math.abs(offset);
     const movementCost = distanceToMove > 0
-      ? calculatePhysicsBasedAPCost(actor.stats.pow.eff, actor.stats.fin.eff, distanceToMove)
+      ? calculatePhysicsBasedAPCost(power, finesse, distanceToMove)
       : 0;
 
     potentialPositions.push({

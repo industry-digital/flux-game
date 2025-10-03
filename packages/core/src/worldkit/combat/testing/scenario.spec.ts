@@ -8,11 +8,12 @@ import {
 import { TransformerContext } from '~/types/handler';
 import { ActorURN } from '~/types/taxonomy';
 import { CombatFacing, Team } from '~/types/combat';
-import { ActorStat } from '~/types/entity/actor';
+import { Stat } from '~/types/entity/actor';
 import { createSwordSchema } from '~/worldkit/schema/weapon/sword';
 import { createModifiableScalarAttribute } from '~/worldkit/entity/attribute';
 import { createTransformerContext } from '~/worldkit/context';
 import { WeaponSchema } from '~/types/schema/weapon';
+import { getActorEffectiveStatValue } from '~/worldkit/entity/actor/actor-stats';
 
 describe('useCombatScenario', () => {
   let context: TransformerContext;
@@ -98,8 +99,54 @@ describe('useCombatScenario', () => {
     });
   });
 
-  describe('stats configuration', () => {
-    it('should apply custom stats', () => {
+  describe('core stats configuration', () => {
+    it('should apply custom core stats (INT, PER, MEM)', () => {
+      const participants = {
+        'flux:actor:test:smart': {
+          team: Team.ALPHA,
+          stats: { int: 15, per: 12, mem: 18 },
+        },
+      };
+
+      const scenario = useCombatScenario(context, {
+        participants,
+        weapons: [testWeapon],
+      });
+
+      const actor = scenario.actors['flux:actor:test:smart'].actor;
+
+      // Core stats should be on actor.stats
+      expect(actor.stats[Stat.INT].nat).toBe(15);
+      expect(actor.stats[Stat.INT].eff).toBe(15);
+      expect(actor.stats[Stat.PER].nat).toBe(12);
+      expect(actor.stats[Stat.PER].eff).toBe(12);
+      expect(actor.stats[Stat.MEM].nat).toBe(18);
+      expect(actor.stats[Stat.MEM].eff).toBe(18);
+    });
+
+    it('should use default core stats when none provided', () => {
+      const participants = {
+        'flux:actor:test:default-core': {
+          team: Team.ALPHA,
+        },
+      };
+
+      const scenario = useCombatScenario(context, {
+        participants,
+        weapons: [testWeapon],
+      });
+
+      const actor = scenario.actors['flux:actor:test:default-core'].actor;
+
+      // Default core stats should be 10
+      expect(actor.stats[Stat.INT].nat).toBe(10);
+      expect(actor.stats[Stat.PER].nat).toBe(10);
+      expect(actor.stats[Stat.MEM].nat).toBe(10);
+    });
+  });
+
+  describe('shell stats configuration', () => {
+    it('should apply custom shell stats (POW, FIN, RES)', () => {
       const participants = {
         'flux:actor:test:strong': {
           team: Team.ALPHA,
@@ -113,17 +160,25 @@ describe('useCombatScenario', () => {
       });
 
       const actor = scenario.actors['flux:actor:test:strong'].actor;
-      expect(actor.stats[ActorStat.POW].nat).toBe(80);
-      expect(actor.stats[ActorStat.POW].eff).toBe(80);
-      expect(actor.stats[ActorStat.FIN].nat).toBe(60);
-      expect(actor.stats[ActorStat.FIN].eff).toBe(60);
-      expect(actor.stats[ActorStat.RES].nat).toBe(70);
-      expect(actor.stats[ActorStat.RES].eff).toBe(70);
+
+      // Shell stats should be accessible via Actor-specific functions
+      expect(getActorEffectiveStatValue(actor, Stat.POW)).toBe(80);
+      expect(getActorEffectiveStatValue(actor, Stat.FIN)).toBe(60);
+      expect(getActorEffectiveStatValue(actor, Stat.RES)).toBe(70);
+
+      // Shell stats should be on the current shell
+      const currentShell = actor.shells[actor.currentShell];
+      expect(currentShell.stats[Stat.POW].nat).toBe(80);
+      expect(currentShell.stats[Stat.POW].eff).toBe(80);
+      expect(currentShell.stats[Stat.FIN].nat).toBe(60);
+      expect(currentShell.stats[Stat.FIN].eff).toBe(60);
+      expect(currentShell.stats[Stat.RES].nat).toBe(70);
+      expect(currentShell.stats[Stat.RES].eff).toBe(70);
     });
 
-    it('should use default stats when none provided', () => {
+    it('should use default shell stats when none provided', () => {
       const participants = {
-        'flux:actor:test:default': {
+        'flux:actor:test:default-shell': {
           team: Team.ALPHA,
         },
       };
@@ -133,15 +188,17 @@ describe('useCombatScenario', () => {
         weapons: [testWeapon],
       });
 
-      const actor = scenario.actors['flux:actor:test:default'].actor;
-      expect(actor.stats[ActorStat.POW].nat).toBe(10);
-      expect(actor.stats[ActorStat.FIN].nat).toBe(10);
-      expect(actor.stats[ActorStat.RES].nat).toBe(10);
+      const actor = scenario.actors['flux:actor:test:default-shell'].actor;
+
+      // Default shell stats should be 10
+      expect(getActorEffectiveStatValue(actor, Stat.POW)).toBe(10);
+      expect(getActorEffectiveStatValue(actor, Stat.FIN)).toBe(10);
+      expect(getActorEffectiveStatValue(actor, Stat.RES)).toBe(10);
     });
 
-    it('should use partial stats with defaults', () => {
+    it('should use partial shell stats with defaults', () => {
       const participants = {
-        'flux:actor:test:partial': {
+        'flux:actor:test:partial-shell': {
           team: Team.ALPHA,
           stats: { pow: 50 }, // Only POW specified
         },
@@ -152,13 +209,16 @@ describe('useCombatScenario', () => {
         weapons: [testWeapon],
       });
 
-      const actor = scenario.actors['flux:actor:test:partial'].actor;
-      expect(actor.stats[ActorStat.POW].nat).toBe(50);
-      expect(actor.stats[ActorStat.FIN].nat).toBe(10); // Default
-      expect(actor.stats[ActorStat.RES].nat).toBe(10); // Default
-    });
+      const actor = scenario.actors['flux:actor:test:partial-shell'].actor;
 
-    it('should handle all 6 actor stats', () => {
+      expect(getActorEffectiveStatValue(actor, Stat.POW)).toBe(50);
+      expect(getActorEffectiveStatValue(actor, Stat.FIN)).toBe(10); // Default
+      expect(getActorEffectiveStatValue(actor, Stat.RES)).toBe(10); // Default
+    });
+  });
+
+  describe('mixed stats configuration', () => {
+    it('should handle all 6 actor stats (core + shell)', () => {
       const participants = {
         'flux:actor:test:all-stats': {
           team: Team.ALPHA,
@@ -177,14 +237,17 @@ describe('useCombatScenario', () => {
         participants,
         weapons: [testWeapon],
       });
-      const actor = scenario.actors['flux:actor:test:all-stats'];
+      const actor = scenario.actors['flux:actor:test:all-stats'].actor;
 
-      expect(actor.actor.stats.int.eff).toBe(12);
-      expect(actor.actor.stats.per.eff).toBe(14);
-      expect(actor.actor.stats.mem.eff).toBe(10);
-      expect(actor.actor.stats.pow.eff).toBe(16);
-      expect(actor.actor.stats.fin.eff).toBe(13);
-      expect(actor.actor.stats.res.eff).toBe(15);
+      // Core stats accessible via Actor functions
+      expect(getActorEffectiveStatValue(actor, Stat.INT)).toBe(12);
+      expect(getActorEffectiveStatValue(actor, Stat.PER)).toBe(14);
+      expect(getActorEffectiveStatValue(actor, Stat.MEM)).toBe(10);
+
+      // Shell stats via Actor functions
+      expect(getActorEffectiveStatValue(actor, Stat.POW)).toBe(16);
+      expect(getActorEffectiveStatValue(actor, Stat.FIN)).toBe(13);
+      expect(getActorEffectiveStatValue(actor, Stat.RES)).toBe(15);
     });
 
     it('should apply complex stat attribute objects', () => {
@@ -194,6 +257,7 @@ describe('useCombatScenario', () => {
           stats: {
             pow: createModifiableScalarAttribute((attr) => ({ ...attr, nat: 18, eff: 16 })),
             fin: 14, // Mix with simple number
+            int: createModifiableScalarAttribute((attr) => ({ ...attr, nat: 13, eff: 15 })),
           },
         },
       };
@@ -204,12 +268,14 @@ describe('useCombatScenario', () => {
       });
       const { actor } = scenario.actors['flux:actor:test:complex-stats'];
 
-      // Complex stat object should be applied
-      expect(actor.stats.pow.nat).toBe(18);
-      expect(actor.stats.pow.eff).toBe(16);
+      // Complex shell stat object should be applied (eff: 16, nat: 18)
+      expect(getActorEffectiveStatValue(actor, Stat.POW)).toBe(16);
 
-      // Simple stat should be applied
-      expect(actor.stats.fin.eff).toBe(14);
+      // Simple shell stat should be applied
+      expect(getActorEffectiveStatValue(actor, Stat.FIN)).toBe(14);
+
+      // Complex core stat object should be applied (eff: 15, nat: 13)
+      expect(getActorEffectiveStatValue(actor, Stat.INT)).toBe(15);
     });
   });
 
@@ -585,6 +651,80 @@ describe('useCombatScenario', () => {
         weapons: [testWeapon],
       });
       expect(scenario.actors).toEqual({});
+    });
+  });
+
+  describe('stat architecture validation', () => {
+    it('should properly separate core and shell stats', () => {
+      const participants = {
+        'flux:actor:test:architecture': {
+          team: Team.ALPHA,
+          stats: {
+            int: 15, per: 12, mem: 18,  // Core stats
+            pow: 20, fin: 16, res: 14,  // Shell stats
+          },
+        },
+      };
+
+      const scenario = useCombatScenario(context, {
+        participants,
+        weapons: [testWeapon],
+      });
+      const { actor } = scenario.actors['flux:actor:test:architecture'];
+
+      // Core stats should be directly on actor.stats
+      expect(actor.stats).toHaveProperty(Stat.INT);
+      expect(actor.stats).toHaveProperty(Stat.PER);
+      expect(actor.stats).toHaveProperty(Stat.MEM);
+
+      // Shell stats should NOT be directly on actor.stats
+      expect(actor.stats).not.toHaveProperty(Stat.POW);
+      expect(actor.stats).not.toHaveProperty(Stat.FIN);
+      expect(actor.stats).not.toHaveProperty(Stat.RES);
+
+      // Shell stats should be on the current shell
+      const currentShell = actor.shells[actor.currentShell];
+      expect(currentShell.stats).toHaveProperty(Stat.POW);
+      expect(currentShell.stats).toHaveProperty(Stat.FIN);
+      expect(currentShell.stats).toHaveProperty(Stat.RES);
+
+      // Shell stats should NOT have core stats
+      expect(currentShell.stats).not.toHaveProperty(Stat.INT);
+      expect(currentShell.stats).not.toHaveProperty(Stat.PER);
+      expect(currentShell.stats).not.toHaveProperty(Stat.MEM);
+    });
+
+    it('should maintain stat values through Actor-specific functions', () => {
+      const participants = {
+        'flux:actor:test:stat-access': {
+          team: Team.ALPHA,
+          stats: {
+            int: 13, per: 11, mem: 17,  // Core stats
+            pow: 19, fin: 15, res: 12,  // Shell stats
+          },
+        },
+      };
+
+      const scenario = useCombatScenario(context, {
+        participants,
+        weapons: [testWeapon],
+      });
+      const { actor } = scenario.actors['flux:actor:test:stat-access'];
+
+      // Core stats accessible directly
+      expect(actor.stats[Stat.INT].eff).toBe(13);
+      expect(actor.stats[Stat.PER].eff).toBe(11);
+      expect(actor.stats[Stat.MEM].eff).toBe(17);
+
+      // Shell stats accessible via Actor functions
+      expect(getActorEffectiveStatValue(actor, Stat.POW)).toBe(19);
+      expect(getActorEffectiveStatValue(actor, Stat.FIN)).toBe(15);
+      expect(getActorEffectiveStatValue(actor, Stat.RES)).toBe(12);
+
+      // Core stats also accessible via Actor functions (for consistency)
+      expect(getActorEffectiveStatValue(actor, Stat.INT)).toBe(13);
+      expect(getActorEffectiveStatValue(actor, Stat.PER)).toBe(11);
+      expect(getActorEffectiveStatValue(actor, Stat.MEM)).toBe(17);
     });
   });
 });

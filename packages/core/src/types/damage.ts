@@ -1,6 +1,6 @@
 import { RollSpecification } from '~/types/dice';
 import { NormalizedValueBetweenZeroAndOne } from '~/types/entity/attribute';
-import { ActorStat } from '~/types/entity/actor';
+import { Stat } from '~/types/entity/actor';
 
 /**
  * Represents all possible damage types in the cyberpunk world.
@@ -31,7 +31,7 @@ export type DamageSpecification = {
   /**
    * The stat that the weapon scales with
    */
-  stat: ActorStat;
+  stat: Stat;
 
   /**
    * The base damage of the weapon

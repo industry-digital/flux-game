@@ -1,5 +1,5 @@
 import { Shell } from '~/types/entity/shell';
-import { Actor, ActorStat } from '~/types/entity/actor';
+import { Actor, Stat } from '~/types/entity/actor';
 import { ShellPerformanceProfile } from '~/types/shell';
 import { calculateMovementTime } from '~/worldkit/physics/movement';
 import { calculateWeaponDamage, calculateWeaponApCost, calculateWeaponDps } from '~/worldkit/combat/damage';
@@ -10,12 +10,12 @@ import {
   computeEffectiveStatValue,
   getNaturalStatValue,
   getStat,
-  getActorStat,
-  getActorNaturalStatValue,
-  computeActorEffectiveStatValue
-} from '~/worldkit/entity/actor/stats';
+} from '~/worldkit/entity/stats';
 import { getMaxEnergy, getMaxRecoveryRate } from '~/worldkit/entity/actor/capacitor';
 import { PerformanceChanges } from '~/types/workbench';
+import { createActor } from '~/worldkit/entity/actor';
+import { ActorURN } from '~/types/taxonomy';
+import { computeActorEffectiveStatValue, getActorNaturalStatValue, getActorStat } from '~/worldkit/entity/actor/actor-stats';
 
 /**
  * Predefined distances for performance analysis, in meters
@@ -32,17 +32,12 @@ export const TACTICAL_DISTANCES = {
 export type ShellPerformanceDependencies = {
   massApi: MassApi;
   equipmentApi: ActorEquipmentApi;
+  /**
+   * @deprecated Use getActorStat instead
+   */
   getStat: typeof getStat;
   getNaturalStatValue: typeof getNaturalStatValue;
   computeEffectiveStatValue: typeof computeEffectiveStatValue;
-};
-
-/**
- * Performance calculation dependencies for the new computed approach
- */
-export type ActorPerformanceDependencies = {
-  massApi: MassApi;
-  equipmentApi: ActorEquipmentApi;
   getActorStat: typeof getActorStat;
   getActorNaturalStatValue: typeof getActorNaturalStatValue;
   computeActorEffectiveStatValue: typeof computeActorEffectiveStatValue;
@@ -56,28 +51,28 @@ export function calculateShellPerformance(
   shell: Shell,
   deps: ShellPerformanceDependencies
 ): ShellPerformanceProfile {
-  const { massApi, equipmentApi, getStat: getStatImpl, getNaturalStatValue: getNaturalStatValueImpl, computeEffectiveStatValue: computeEffectiveStatValueImpl } = deps;
+  const { massApi, equipmentApi, getStat: getStatImpl, getNaturalStatValue: getNaturalStatValueImpl, computeEffectiveStatValue: computeEffectiveStatValueImpl, getStat, getActorStat: getActorStatImpl, getActorNaturalStatValue: getActorNaturalStatValueImpl, computeActorEffectiveStatValue: computeActorEffectiveStatValueImpl } = deps;
 
-  // Create a temporary actor-like object for mass/equipment calculations
-  const tempActor: Actor = {
-    id: shell.id,
-    stats: shell.stats,
-    inventory: shell.inventory,
-    equipment: shell.equipment,
-  } as Actor;
+  const powStat = getStatImpl(shell, Stat.POW);
+  const finStat = getStatImpl(shell, Stat.FIN);
+  const resStat = getStatImpl(shell, Stat.RES,);
 
-  const powStat = getStatImpl(tempActor, ActorStat.POW);
-  const finStat = getStatImpl(tempActor, ActorStat.FIN);
-  const resStat = getStatImpl(tempActor, ActorStat.RES);
-
-  const naturalPowStat = getNaturalStatValueImpl(tempActor, ActorStat.POW, powStat);
-  const naturalFinStat = getNaturalStatValueImpl(tempActor, ActorStat.FIN, finStat);
-  const naturalResStat = getNaturalStatValueImpl(tempActor, ActorStat.RES, resStat);
+  const naturalPowStat = getNaturalStatValueImpl(shell, Stat.POW, powStat);
+  const naturalFinStat = getNaturalStatValueImpl(shell, Stat.FIN, finStat);
+  const naturalResStat = getNaturalStatValueImpl(shell, Stat.RES, resStat);
 
   // Get effective stat values (including modifiers)
-  const effectivePowStat = computeEffectiveStatValueImpl(tempActor, ActorStat.POW, powStat);
-  const effectiveFinStat = computeEffectiveStatValueImpl(tempActor, ActorStat.FIN, finStat);
-  const effectiveResStat = computeEffectiveStatValueImpl(tempActor, ActorStat.RES, resStat);
+  const effectivePowStat = computeEffectiveStatValueImpl(shell, Stat.POW, powStat);
+  const effectiveFinStat = computeEffectiveStatValueImpl(shell, Stat.FIN, finStat);
+  const effectiveResStat = computeEffectiveStatValueImpl(shell, Stat.RES, resStat);
+
+  // Create a temporary actor-like object for mass/equipment calculations
+  const tempActor: Actor = createActor((actor) => ({
+    ...actor,
+    id: shell.id as ActorURN,
+    inventory: shell.inventory,
+    equipment: shell.equipment,
+  }));
 
   // Calculate total mass in kilograms for physics
   const totalMassKg = massApi.computeCombatMass(tempActor);
@@ -171,25 +166,24 @@ export function calculateShellPerformance(
  */
 export function calculateActorPerformance(
   actor: Actor,
-  deps: ActorPerformanceDependencies
+  deps: ShellPerformanceDependencies
 ): ShellPerformanceProfile {
   const {
     massApi,
     equipmentApi,
-    getActorStat: getActorStatImpl,
     getActorNaturalStatValue: getActorNaturalStatValueImpl,
     computeActorEffectiveStatValue: computeActorEffectiveStatValueImpl
   } = deps;
 
   // Get natural stat values using computed getters
-  const naturalPowStat = getActorNaturalStatValueImpl(actor, ActorStat.POW);
-  const naturalFinStat = getActorNaturalStatValueImpl(actor, ActorStat.FIN);
-  const naturalResStat = getActorNaturalStatValueImpl(actor, ActorStat.RES);
+  const naturalPowStat = getActorNaturalStatValueImpl(actor, Stat.POW);
+  const naturalFinStat = getActorNaturalStatValueImpl(actor, Stat.FIN);
+  const naturalResStat = getActorNaturalStatValueImpl(actor, Stat.RES);
 
   // Get effective stat values using computed getters
-  const effectivePowStat = computeActorEffectiveStatValueImpl(actor, ActorStat.POW);
-  const effectiveFinStat = computeActorEffectiveStatValueImpl(actor, ActorStat.FIN);
-  const effectiveResStat = computeActorEffectiveStatValueImpl(actor, ActorStat.RES);
+  const effectivePowStat = computeActorEffectiveStatValueImpl(actor, Stat.POW);
+  const effectiveFinStat = computeActorEffectiveStatValueImpl(actor, Stat.FIN);
+  const effectiveResStat = computeActorEffectiveStatValueImpl(actor, Stat.RES);
 
   // Calculate total mass in kilograms for physics
   const totalMassKg = massApi.computeCombatMass(actor);

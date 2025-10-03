@@ -6,7 +6,7 @@
  * Contains the core hit mechanics that AI-assisted attacks delegate to.
  */
 
-import { Actor } from '~/types/entity/actor';
+import { Actor, Stat } from '~/types/entity/actor';
 import { ATTACK_ROLL_SPECIFICATION, CombatSession, computeDistanceBetweenCombatants, canWeaponHitFromDistance } from '~/worldkit/combat';
 import { ActionCost, Combatant } from '~/types/combat';
 import { EventType, WorldEvent } from '~/types/event';
@@ -21,6 +21,7 @@ import { createStrikeCost } from '~/worldkit/combat/tactical-cost';
 import { calculateAttackRating } from '~/worldkit/combat/attack';
 import { decrementHp } from '~/worldkit/entity/actor/health';
 import { getEffectiveSkillRank } from '~/worldkit/entity/actor/skill';
+import { getActorEffectiveStatValue } from '~/worldkit/entity/actor/actor-stats';
 
 export type StrikeDependencies = {
   createWorldEvent?: typeof createWorldEvent;
@@ -104,7 +105,8 @@ export function createStrikeMethod(
       return [];
     }
 
-    const cost: ActionCost = createStrikeCostImpl(weaponMassKg, actor.stats.fin.eff);
+    const finesse = getActorEffectiveStatValue(actor, Stat.FIN);
+    const cost: ActionCost = createStrikeCostImpl(weaponMassKg, finesse);
     if (cost.ap! > combatant.ap.eff.cur) {
       declareError(`You don't have enough AP to strike.`, trace);
       return [];
@@ -138,7 +140,8 @@ export function createStrikeMethod(
 
     if (!hitResolution.evaded) {
       outcome = 'hit';
-      damage = calculateWeaponDamageImpl(weaponMassKg, actor.stats.pow.eff);
+      const power = getActorEffectiveStatValue(actor, Stat.POW);
+      damage = calculateWeaponDamageImpl(weaponMassKg, power);
     }
 
     deductAp(combatant, cost.ap!);

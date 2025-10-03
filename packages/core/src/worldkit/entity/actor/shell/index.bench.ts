@@ -1,5 +1,5 @@
 import { bench, describe } from 'vitest';
-import { ActorStat } from '~/types/entity/actor';
+import { Stat } from '~/types/entity/actor';
 import { createModifiableScalarAttribute } from '~/worldkit/entity';
 import {
   createShell,
@@ -11,46 +11,46 @@ import {
 
 // Test data setup
 const createBenchmarkStats = () => ({
-  [ActorStat.POW]: createModifiableScalarAttribute((attr) => ({ ...attr, nat: 15, eff: 15 })),
-  [ActorStat.FIN]: createModifiableScalarAttribute((attr) => ({ ...attr, nat: 12, eff: 12 })),
-  [ActorStat.RES]: createModifiableScalarAttribute((attr) => ({ ...attr, nat: 18, eff: 18 })),
+  [Stat.POW]: createModifiableScalarAttribute((attr) => ({ ...attr, nat: 15, eff: 15 })),
+  [Stat.FIN]: createModifiableScalarAttribute((attr) => ({ ...attr, nat: 12, eff: 12 })),
+  [Stat.RES]: createModifiableScalarAttribute((attr) => ({ ...attr, nat: 18, eff: 18 })),
 });
 
 const benchmarkInput: ShellStatsInput = {
-  [ActorStat.POW]: 25,
-  [ActorStat.FIN]: 20,
-  [ActorStat.RES]: 30,
+  [Stat.POW]: 25,
+  [Stat.FIN]: 20,
+  [Stat.RES]: 30,
 };
 
 // Simulate the old allocation-heavy approach for comparison
 const oldApplyShellStats = (stats: any, input: ShellStatsInput) => {
   const newStats = { ...stats }; // 1 allocation
 
-  if (input[ActorStat.POW] !== undefined) {
-    newStats[ActorStat.POW] = { // 2nd allocation
-      ...newStats[ActorStat.POW],
-      nat: input[ActorStat.POW]!,
-      eff: input[ActorStat.POW]!,
+  if (input[Stat.POW] !== undefined) {
+    newStats[Stat.POW] = { // 2nd allocation
+      ...newStats[Stat.POW],
+      nat: input[Stat.POW]!,
+      eff: input[Stat.POW]!,
     };
-    delete newStats[ActorStat.POW].mods;
+    delete newStats[Stat.POW].mods;
   }
 
-  if (input[ActorStat.FIN] !== undefined) {
-    newStats[ActorStat.FIN] = { // 3rd allocation
-      ...newStats[ActorStat.FIN],
-      nat: input[ActorStat.FIN]!,
-      eff: input[ActorStat.FIN]!,
+  if (input[Stat.FIN] !== undefined) {
+    newStats[Stat.FIN] = { // 3rd allocation
+      ...newStats[Stat.FIN],
+      nat: input[Stat.FIN]!,
+      eff: input[Stat.FIN]!,
     };
-    delete newStats[ActorStat.FIN].mods;
+    delete newStats[Stat.FIN].mods;
   }
 
-  if (input[ActorStat.RES] !== undefined) {
-    newStats[ActorStat.RES] = { // 4th allocation
-      ...newStats[ActorStat.RES],
-      nat: input[ActorStat.RES]!,
-      eff: input[ActorStat.RES]!,
+  if (input[Stat.RES] !== undefined) {
+    newStats[Stat.RES] = { // 4th allocation
+      ...newStats[Stat.RES],
+      nat: input[Stat.RES]!,
+      eff: input[Stat.RES]!,
     };
-    delete newStats[ActorStat.RES].mods;
+    delete newStats[Stat.RES].mods;
   }
 
   return newStats;
@@ -148,9 +148,9 @@ describe('Shell Stats Performance Benchmarks', () => {
 
       for (let i = 0; i < 100; i++) {
         oldApplyShellStats(stats, {
-          [ActorStat.POW]: 10 + i,
-          [ActorStat.FIN]: 15 + i,
-          [ActorStat.RES]: 20 + i,
+          [Stat.POW]: 10 + i,
+          [Stat.FIN]: 15 + i,
+          [Stat.RES]: 20 + i,
         });
       }
     });
@@ -160,21 +160,21 @@ describe('Shell Stats Performance Benchmarks', () => {
 
       for (let i = 0; i < 100; i++) {
         mutateShellStats(stats, {
-          [ActorStat.POW]: 10 + i,
-          [ActorStat.FIN]: 15 + i,
-          [ActorStat.RES]: 20 + i,
+          [Stat.POW]: 10 + i,
+          [Stat.FIN]: 15 + i,
+          [Stat.RES]: 20 + i,
         });
       }
     });
 
     bench('Single stat update comparison - OLD', () => {
       const stats = createBenchmarkStats();
-      oldApplyShellStats(stats, { [ActorStat.POW]: 25 });
+      oldApplyShellStats(stats, { [Stat.POW]: 25 });
     });
 
     bench('Single stat update comparison - NEW', () => {
       const stats = createBenchmarkStats();
-      mutateShellStats(stats, { [ActorStat.POW]: 25 });
+      mutateShellStats(stats, { [Stat.POW]: 25 });
     });
   });
 });
@@ -185,15 +185,15 @@ describe('Real-World Gaming Scenarios', () => {
       const shell = createShell();
       // Simulate temporary buff that needs to be fast
       mutateShellStats(shell.stats, {
-        [ActorStat.POW]: shell.stats[ActorStat.POW].nat + 5,
-        [ActorStat.FIN]: shell.stats[ActorStat.FIN].nat + 3,
+        [Stat.POW]: shell.stats[Stat.POW].nat + 5,
+        [Stat.FIN]: shell.stats[Stat.FIN].nat + 3,
       });
     });
 
     bench('Equipment stat recalculation', () => {
       const shell = createShell();
       // Simulate equipment change requiring stat recalculation
-      const equipmentBonus = { [ActorStat.POW]: 8, [ActorStat.RES]: 12 };
+      const equipmentBonus = { [Stat.POW]: 8, [Stat.RES]: 12 };
       mutateShellStats(shell.stats, equipmentBonus);
     });
   });
@@ -204,9 +204,9 @@ describe('Real-World Gaming Scenarios', () => {
       // Simulate player allocating stat points at workbench
       const clonedShell = cloneShell(originalShell);
       mutateShellStats(clonedShell.stats, {
-        [ActorStat.POW]: 22,
-        [ActorStat.FIN]: 18,
-        [ActorStat.RES]: 25,
+        [Stat.POW]: 22,
+        [Stat.FIN]: 18,
+        [Stat.RES]: 25,
       });
     });
 
@@ -215,8 +215,8 @@ describe('Real-World Gaming Scenarios', () => {
       // Simulate live preview of stat changes (needs to be fast)
       const previewStats = { ...shell.stats };
       mutateShellStats(previewStats, {
-        [ActorStat.POW]: 30,
-        [ActorStat.FIN]: 25,
+        [Stat.POW]: 30,
+        [Stat.FIN]: 25,
       });
     });
   });

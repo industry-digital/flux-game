@@ -1,7 +1,9 @@
 import { Actor, ActorStat, ActorURN, RollResult } from '~/types';
 import { Combatant } from '~/types/combat';
+import { Stat } from '~/types/entity/actor';
 import { rollDiceWithRng } from '~/worldkit/dice';
-import { computeEffectiveStatValue, getEffectiveStatBonus } from '~/worldkit/entity/actor/stats';
+import { getEffectiveStatBonus } from '~/worldkit/entity/stats';
+import { getActorEffectiveStatValue } from '~/worldkit/entity/actor/actor-stats';
 
 export const INITIATIVE_ROLL_SPECIFICATION = '1d20';
 
@@ -64,13 +66,17 @@ export const DEFAULT_TIE_BREAKER: InitiativeTieBreaker = (a, b) => {
     return rollDelta;
   }
 
+  const finesseDelta = getActorEffectiveStatValue(b.actor, Stat.FIN) - getActorEffectiveStatValue(a.actor, Stat.FIN);
+  if (finesseDelta !== 0) {
+    return finesseDelta;
+  }
+
   // ASSUMPTION: Perception was already accounted for in the roll
   // We should *not* bonus perception again. Instead we rely on FIN to break ties
   // Use our new utilities for modifier-aware stat comparison
-  const finessDelta = computeEffectiveStatValue(b.actor, ActorStat.FIN) - computeEffectiveStatValue(a.actor, ActorStat.FIN);
-
-  if (finessDelta !== 0) {
-    return finessDelta;
+  const perceptionDelta = getActorEffectiveStatValue(b.actor, Stat.PER) - getActorEffectiveStatValue(a.actor, Stat.PER);
+  if (perceptionDelta !== 0) {
+    return perceptionDelta;
   }
 
   // If all else fails, we pick the attacker.

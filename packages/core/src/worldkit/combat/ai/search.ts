@@ -21,6 +21,8 @@ import { assessWeaponCapabilities } from '~/worldkit/combat/ai/analysis';
 import { targetingApi } from '~/worldkit/combat/ai/targeting';
 import { TARGET_COST } from '~/worldkit/combat/action/target';
 import { CombatPlanningDependencies, DEFAULT_COMBAT_PLANNING_DEPS } from './deps';
+import { Stat } from '~/types/entity/actor';
+import { getActorEffectiveStatValue } from '~/worldkit/entity/actor/actor-stats';
 
 /**
  * Zero-allocation action sequence builder
@@ -423,6 +425,7 @@ export function* getValidActions(
     throw new Error(`Actor ${combatant.actorId} not found`);
   }
 
+  const finesse = getActorEffectiveStatValue(actor, Stat.FIN);
   const actorMassGrams = computeActorMass(actor);
   const actorMassKg = actorMassGrams / 1000;
 
@@ -459,7 +462,7 @@ export function* getValidActions(
   if (hasTarget && assessments.canAttack) {
     // Calculate actual attack cost based on weapon and actor stats with tactical rounding
     // Convert weapon mass from grams to kilograms (weaponSchema.baseMass is in grams)
-    const preciseAttackApCost = calculateWeaponApCostImpl(weaponSchema.baseMass / 1000, actor.stats.fin.eff);
+    const preciseAttackApCost = calculateWeaponApCostImpl(weaponSchema.baseMass / 1000, finesse);
     const tacticalAttackApCost = roundApCostUp(preciseAttackApCost);
     const attackCost = { ap: tacticalAttackApCost, energy: 0 };
 
@@ -475,6 +478,8 @@ export function* getValidActions(
 
   // MOVEMENT actions (only if last action wasn't MOVE to avoid inefficient consecutive movement)
   if (actor && !lastWasMove) {
+    const power = getActorEffectiveStatValue(actor, Stat.POW);
+    const finesse = getActorEffectiveStatValue(actor, Stat.FIN);
     // Move toward target
     if (assessments.primaryTarget) {
       const targetCombatant = situation.validTargets.find(t => t.actorId === assessments.primaryTarget)?.combatant;
@@ -492,7 +497,6 @@ export function* getValidActions(
           const desiredDistance = Math.max(0, distanceToTarget - weaponOptimalRange);  // Where we want to go
           const availableAP = combatant.ap.eff.cur;
 
-
           // Binary search to find maximum distance we can afford this turn
           // Apply tactical rounding: round distances down, AP costs up
           let affordableDistance = 0;
@@ -501,8 +505,8 @@ export function* getValidActions(
           while (high - low > 0.1) {
             const mid = (low + high) / 2;
             const preciseApCost = distanceToAp(
-              actor.stats.pow.eff,
-              actor.stats.fin.eff,
+              power,
+              finesse,
               mid,
               actorMassKg
             );
@@ -520,8 +524,8 @@ export function* getValidActions(
           // Optimize for full AP usage: find distance that uses ALL available AP
           // Use apToDistance to find the maximum distance we can travel with available AP
           const maxDistanceWithFullAP = roundDistanceDown(apToDistance(
-            actor.stats.pow.eff,
-            actor.stats.fin.eff,
+            power,
+            finesse,
             availableAP,
             actorMassKg
           ));
@@ -535,8 +539,8 @@ export function* getValidActions(
           // AI Planning works with tactical values (normalized/rounded) to ensure affordability
           // Calculate maximum tactically affordable distance using tactical rounding from the start
           const maxTacticalDistance = calculateTacticalDistance(
-            actor.stats.pow.eff,
-            actor.stats.fin.eff,
+            power,
+            finesse,
             currentState.ap, // Use available AP directly
             actorMassKg,
             apToDistance
@@ -546,8 +550,8 @@ export function* getValidActions(
           if (desiredDistance > maxTacticalDistance && maxTacticalDistance >= 1) {
             // Calculate tactical AP cost for the tactical distance
             const tacticalApCost = calculateTacticalApCost(
-              actor.stats.pow.eff,
-              actor.stats.fin.eff,
+              power,
+              finesse,
               maxTacticalDistance,
               actorMassKg,
               distanceToAp
@@ -567,8 +571,8 @@ export function* getValidActions(
             // Use tactical rounding for desired distance
             const tacticalDesiredDistance = Math.max(1, Math.ceil(desiredDistance));
             const tacticalApCost = calculateTacticalApCost(
-              actor.stats.pow.eff,
-              actor.stats.fin.eff,
+              power,
+              finesse,
               tacticalDesiredDistance,
               actorMassKg,
               distanceToAp
@@ -603,8 +607,8 @@ export function* getValidActions(
       while (high - low > 0.1) {
         const mid = (low + high) / 2;
         const preciseApCost = distanceToAp(
-          actor.stats.pow.eff,
-          actor.stats.fin.eff,
+          power,
+          finesse,
           mid,
           actorMassKg
         );
@@ -620,8 +624,8 @@ export function* getValidActions(
 
       if (maxKitingDistance > 0) {
         const preciseApCost = distanceToAp(
-          actor.stats.pow.eff,
-          actor.stats.fin.eff,
+          power,
+          finesse,
           maxKitingDistance,
           actorMassKg
         );
@@ -646,7 +650,7 @@ export function* getValidActions(
   // Check if we can afford another STRIKE action
   const canAffordAnotherStrike = hasTarget && assessments.canAttack && (() => {
     // Convert weapon mass from grams to kilograms (weaponSchema.baseMass is in grams)
-    const preciseAttackApCost = calculateWeaponApCostImpl(weaponSchema.baseMass / 1000, actor.stats.fin.eff);
+    const preciseAttackApCost = calculateWeaponApCostImpl(weaponSchema.baseMass / 1000, finesse);
     const tacticalAttackApCost = roundApCostUp(preciseAttackApCost);
     return currentState.ap >= tacticalAttackApCost;
   })();

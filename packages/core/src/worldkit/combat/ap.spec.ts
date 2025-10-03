@@ -2,20 +2,21 @@ import { describe, it, expect } from 'vitest';
 import { calculateMaxAp, DEFAULT_BASE_AP } from './ap';
 import { Actor } from '~/types/entity/actor';
 import { GOLDEN_RATIO } from '~/types/world/constants';
-import { BASELINE_STAT_VALUE, NORMAL_STAT_RANGE } from '~/worldkit/entity/actor/stats';
+import { BASELINE_STAT_VALUE, NORMAL_STAT_RANGE } from '~/worldkit/entity/stats';
 import { createActor } from '~/worldkit/entity/actor';
 
 // Helper to create test actor with specific INT
 function createTestActor(intelligence: number = 10): Actor {
-  return createActor({
+  const actor = createActor({
     id: `flux:actor:test:int-${intelligence}`,
-  }, (actor) => ({
+  });
+  return {
     ...actor,
     stats: {
       ...actor.stats,
       int: { nat: 0, eff: intelligence, mods: {} },
     },
-  }));
+  };
 }
 
 // Helper to generate ASCII visualization of AP growth curve

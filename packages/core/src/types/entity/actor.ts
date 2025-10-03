@@ -32,7 +32,7 @@ export enum ActorType {
  * These are a subset of all possible stats (which are defined in the taxonomy).
  * These represent the core stats that are always present and have special meaning.
  */
-export enum ActorStat {
+export enum Stat {
   /**
    * Power. Capacity to perform work over time.
    * - Increases damage output with attacks
@@ -81,15 +81,15 @@ export type CoreStat = keyof CoreStats;
 export type ShellStat = keyof ShellStats;
 
 export type CoreStats = {
-  [ActorStat.INT]: ModifiableScalarAttribute;
-  [ActorStat.PER]: ModifiableScalarAttribute;
-  [ActorStat.MEM]: ModifiableScalarAttribute;
+  [Stat.INT]: ModifiableScalarAttribute;
+  [Stat.PER]: ModifiableScalarAttribute;
+  [Stat.MEM]: ModifiableScalarAttribute;
 };
 
 export type ShellStats = {
-  [ActorStat.POW]: ModifiableScalarAttribute;
-  [ActorStat.FIN]: ModifiableScalarAttribute;
-  [ActorStat.RES]: ModifiableScalarAttribute;
+  [Stat.POW]: ModifiableScalarAttribute;
+  [Stat.FIN]: ModifiableScalarAttribute;
+  [Stat.RES]: ModifiableScalarAttribute;
 };
 
 export type ActorStats = CoreStats & ShellStats;
@@ -212,7 +212,7 @@ export type Actor =
   /**
    * Intrinsic attributes of the actor, like strength, dexterity, etc.
    */
-  stats: ActorStats;
+  stats: CoreStats;
 
   /**
    * The actor's capacitor state:

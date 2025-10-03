@@ -1,7 +1,7 @@
 import { Shell } from '~/types/entity/shell';
 import { ShellMutation, ShellMutationType, StatMutationOperation } from '~/types/workbench';
-import { ActorStat } from '~/types/entity/actor';
-import { getNaturalStatValue } from '~/worldkit/entity/actor/stats';
+import { Stat } from '~/types/entity/actor';
+import { getNaturalStatValue } from '~/worldkit/entity/stats';
 
 /**
  * Creates a preview of a shell with mutations applied.
@@ -13,9 +13,9 @@ export function createShellPreview(currentShell: Shell, mutations: ShellMutation
     id: currentShell.id,
     name: currentShell.name,
     stats: {
-      [ActorStat.POW]: { ...currentShell.stats[ActorStat.POW] },
-      [ActorStat.FIN]: { ...currentShell.stats[ActorStat.FIN] },
-      [ActorStat.RES]: { ...currentShell.stats[ActorStat.RES] },
+      [Stat.POW]: { ...currentShell.stats[Stat.POW] },
+      [Stat.FIN]: { ...currentShell.stats[Stat.FIN] },
+      [Stat.RES]: { ...currentShell.stats[Stat.RES] },
     },
     inventory: {
       ...currentShell.inventory,

@@ -15,7 +15,7 @@ import { getValidActions } from './search';
 import { createMassApi } from '~/worldkit/physics/mass';
 import { CommandType } from '~/types/intent';
 import { createActor } from '~/worldkit/entity/actor';
-import { Actor, ActorStat } from '~/types/entity/actor';
+import { Actor, Stat } from '~/types/entity/actor';
 import { HumanAnatomy } from '~/types/taxonomy/anatomy';
 import { CombatantDidAttack, EventType } from '~/types/event';
 import { targetingApi } from './targeting';
@@ -86,12 +86,12 @@ describe('AI Combat System Integration', () => {
       id: ATTACKER_ID,
       name: 'Attacker',
       stats: {
-        [ActorStat.POW]: { nat: 10, eff: 10, mods: {} },
-        [ActorStat.FIN]: { nat: 10, eff: 10, mods: {} },
-        [ActorStat.RES]: { nat: 10, eff: 10, mods: {} },
-        [ActorStat.INT]: { nat: 10, eff: 10, mods: {} },
-        [ActorStat.PER]: { nat: 10, eff: 10, mods: {} },
-        [ActorStat.MEM]: { nat: 10, eff: 10, mods: {} },
+        [Stat.POW]: { nat: 10, eff: 10, mods: {} },
+        [Stat.FIN]: { nat: 10, eff: 10, mods: {} },
+        [Stat.RES]: { nat: 10, eff: 10, mods: {} },
+        [Stat.INT]: { nat: 10, eff: 10, mods: {} },
+        [Stat.PER]: { nat: 10, eff: 10, mods: {} },
+        [Stat.MEM]: { nat: 10, eff: 10, mods: {} },
       },
       equipment: { [HumanAnatomy.RIGHT_HAND]: { [TEST_WEAPON_ENTITY_URN]: 1 } },
       inventory: {
@@ -105,12 +105,12 @@ describe('AI Combat System Integration', () => {
       id: DEFENDER_ID,
       name: 'Defender',
       stats: {
-        [ActorStat.POW]: { nat: 10, eff: 10, mods: {} },
-        [ActorStat.FIN]: { nat: 10, eff: 10, mods: {} },
-        [ActorStat.RES]: { nat: 10, eff: 10, mods: {} },
-        [ActorStat.INT]: { nat: 10, eff: 10, mods: {} },
-        [ActorStat.PER]: { nat: 10, eff: 10, mods: {} },
-        [ActorStat.MEM]: { nat: 10, eff: 10, mods: {} },
+        [Stat.POW]: { nat: 10, eff: 10, mods: {} },
+        [Stat.FIN]: { nat: 10, eff: 10, mods: {} },
+        [Stat.RES]: { nat: 10, eff: 10, mods: {} },
+        [Stat.INT]: { nat: 10, eff: 10, mods: {} },
+        [Stat.PER]: { nat: 10, eff: 10, mods: {} },
+        [Stat.MEM]: { nat: 10, eff: 10, mods: {} },
       },
       equipment: { [HumanAnatomy.RIGHT_HAND]: { [TEST_WEAPON_ENTITY_URN]: 1 } },
       inventory: {

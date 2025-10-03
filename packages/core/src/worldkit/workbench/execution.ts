@@ -1,14 +1,14 @@
 import { Shell } from '~/types/entity/shell';
 import { ShellMutation, ShellMutationType, StatMutationOperation } from '~/types/workbench';
 import { WorldEvent } from '~/types/event';
+import { SHELL_STAT_NAMES } from '~/worldkit/entity/actor/actor-stats';
 import {
   getNaturalStatValue,
   mutateNaturalStatValue,
   refreshStats,
   BASELINE_STAT_VALUE,
   MAX_STAT_VALUE,
-  SHELL_STAT_NAMES
-} from '~/worldkit/entity/actor/stats';
+} from '~/worldkit/entity/stats';
 
 /**
  * Safely mutates a shell stat's natural value with validation and refresh

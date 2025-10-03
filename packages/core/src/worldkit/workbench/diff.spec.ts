@@ -1,7 +1,7 @@
 import { describe, expect, it, beforeEach } from 'vitest';
 import { createPerformanceDiff, createStatDiff } from './diff';
 import { Shell, ShellPerformanceProfile } from '~/types/entity/shell';
-import { ActorStat } from '~/types/entity/actor';
+import { Stat } from '~/types/entity/actor';
 
 describe('createShellDiff', () => {
   let mockShell: Shell;
@@ -13,9 +13,9 @@ describe('createShellDiff', () => {
       id: 'test-shell-001',
       name: 'Test Combat Shell',
       stats: {
-        [ActorStat.POW]: { nat: 10, eff: 10, mods: {} },
-        [ActorStat.FIN]: { nat: 8, eff: 8, mods: {} },
-        [ActorStat.RES]: { nat: 12, eff: 12, mods: {} },
+        [Stat.POW]: { nat: 10, eff: 10, mods: {} },
+        [Stat.FIN]: { nat: 8, eff: 8, mods: {} },
+        [Stat.RES]: { nat: 12, eff: 12, mods: {} },
       },
       inventory: { items: {}, mass: 0, ts: 123456790000 },
       equipment: {},
@@ -59,17 +59,17 @@ describe('createShellDiff', () => {
       const previewShell = {
         ...mockShell,
         stats: {
-          [ActorStat.POW]: { nat: 12, eff: 12, mods: {} },
-          [ActorStat.FIN]: { nat: 10, eff: 10, mods: {} },
-          [ActorStat.RES]: { nat: 12, eff: 12, mods: {} },
+          [Stat.POW]: { nat: 12, eff: 12, mods: {} },
+          [Stat.FIN]: { nat: 10, eff: 10, mods: {} },
+          [Stat.RES]: { nat: 12, eff: 12, mods: {} },
         },
       };
 
       // Test createStatDiff
       const statDiff = createStatDiff(mockShell, previewShell);
       expect(statDiff).toEqual({
-        [ActorStat.POW]: '10 -> 12',
-        [ActorStat.FIN]: '8 -> 10',
+        [Stat.POW]: '10 -> 12',
+        [Stat.FIN]: '8 -> 10',
       });
 
       // Test createPerformanceDiff
@@ -115,9 +115,9 @@ describe('createShellDiff', () => {
       const previewShell = {
         ...mockShell,
         stats: {
-          [ActorStat.POW]: { nat: 12, eff: 12, mods: {} },
-          [ActorStat.FIN]: { nat: 10, eff: 10, mods: {} },
-          [ActorStat.RES]: { nat: 12, eff: 12, mods: {} },
+          [Stat.POW]: { nat: 12, eff: 12, mods: {} },
+          [Stat.FIN]: { nat: 10, eff: 10, mods: {} },
+          [Stat.RES]: { nat: 12, eff: 12, mods: {} },
         },
       };
 
@@ -166,17 +166,17 @@ describe('createShellDiff', () => {
       const previewShell = {
         ...mockShell,
         stats: {
-          [ActorStat.POW]: { nat: 12, eff: 12, mods: {} },
-          [ActorStat.FIN]: { nat: 10, eff: 10, mods: {} },
-          [ActorStat.RES]: { nat: 12, eff: 12, mods: {} }, // unchanged
+          [Stat.POW]: { nat: 12, eff: 12, mods: {} },
+          [Stat.FIN]: { nat: 10, eff: 10, mods: {} },
+          [Stat.RES]: { nat: 12, eff: 12, mods: {} }, // unchanged
         },
       };
 
       const result = createStatDiff(mockShell, previewShell);
 
       expect(result).toEqual({
-        [ActorStat.POW]: '10 -> 12',
-        [ActorStat.FIN]: '8 -> 10',
+        [Stat.POW]: '10 -> 12',
+        [Stat.FIN]: '8 -> 10',
       });
     });
 

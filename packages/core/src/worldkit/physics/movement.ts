@@ -1,4 +1,4 @@
-import { MAX_STAT_VALUE } from '~/worldkit/entity/actor/stats';
+import { MAX_STAT_VALUE } from '~/worldkit/entity/stats';
 import { ACTOR_BASE_MASS } from '~/worldkit/physics/mass';
 
 

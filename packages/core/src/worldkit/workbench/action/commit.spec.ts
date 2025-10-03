@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { ActorStat } from '~/types/entity/actor';
+import { Stat } from '~/types/entity/actor';
 import { ActorDidCommitShellMutations, ActorDidSpendCurrency, EventType } from '~/types/event';
 import { TransformerContext } from '~/types/handler';
 import { CurrencyType, TransactionType } from '~/types/currency';
@@ -25,8 +25,8 @@ describe('CommitShellMutationsAction', () => {
     it('should commit pending mutations with sufficient funds', () => {
       const scenario = useSimpleWorkbenchScenario(context, {
         pendingMutations: [
-          createStatMutation(ActorStat.POW, StatMutationOperation.ADD, 2),
-          createStatMutation(ActorStat.FIN, StatMutationOperation.ADD, 1)
+          createStatMutation(Stat.POW, StatMutationOperation.ADD, 2),
+          createStatMutation(Stat.FIN, StatMutationOperation.ADD, 1)
         ]
       });
       const actor = scenario.actors['flux:actor:test-actor'].actor;
@@ -38,8 +38,8 @@ describe('CommitShellMutationsAction', () => {
 
       // Capture initial shell stats
       const shell = actor.shells[actor.currentShell];
-      const initialPow = shell.stats[ActorStat.POW].eff;
-      const initialFin = shell.stats[ActorStat.FIN].eff;
+      const initialPow = shell.stats[Stat.POW].eff;
+      const initialFin = shell.stats[Stat.FIN].eff;
 
       const commitAction = createCommitShellMutationsAction(context, session);
       const events = commitAction(actor, 'test-trace');
@@ -66,8 +66,8 @@ describe('CommitShellMutationsAction', () => {
       expect(commitEvent.payload.mutations).toHaveLength(2);
 
       // Verify mutations were applied to shell
-      expect(shell.stats[ActorStat.POW].eff).toBe(initialPow + 2);
-      expect(shell.stats[ActorStat.FIN].eff).toBe(initialFin + 1);
+      expect(shell.stats[Stat.POW].eff).toBe(initialPow + 2);
+      expect(shell.stats[Stat.FIN].eff).toBe(initialFin + 1);
 
       // Verify wallet was debited
       expect(getBalance(actor, CurrencyType.SCRAP)).toBe(initialBalance - spendEvent.payload.amount);
@@ -79,7 +79,7 @@ describe('CommitShellMutationsAction', () => {
     it('should work with single mutation', () => {
       const scenario = useSimpleWorkbenchScenario(context, {
         pendingMutations: [
-          createStatMutation(ActorStat.RES, StatMutationOperation.ADD, 3)
+          createStatMutation(Stat.RES, StatMutationOperation.ADD, 3)
         ]
       });
       const actor = scenario.actors['flux:actor:test-actor'].actor;
@@ -87,20 +87,20 @@ describe('CommitShellMutationsAction', () => {
 
       setBalance(actor, CurrencyType.SCRAP, 500);
       const shell = actor.shells[actor.currentShell];
-      const initialRes = shell.stats[ActorStat.RES].eff;
+      const initialRes = shell.stats[Stat.RES].eff;
 
       const commitAction = createCommitShellMutationsAction(context, session);
       const events = commitAction(actor);
 
       expect(events).toHaveLength(2);
-      expect(shell.stats[ActorStat.RES].eff).toBe(initialRes + 3);
+      expect(shell.stats[Stat.RES].eff).toBe(initialRes + 3);
       expect(session.data.pendingMutations).toHaveLength(0);
     });
 
     it('should use default trace when none provided', () => {
       const scenario = useSimpleWorkbenchScenario(context, {
         pendingMutations: [
-          createStatMutation(ActorStat.POW, StatMutationOperation.ADD, 1)
+          createStatMutation(Stat.POW, StatMutationOperation.ADD, 1)
         ]
       });
       const actor = scenario.actors['flux:actor:test-actor'].actor;
@@ -133,7 +133,7 @@ describe('CommitShellMutationsAction', () => {
     it('should fail when current shell not found', () => {
       const scenario = useSimpleWorkbenchScenario(context, {
         pendingMutations: [
-          createStatMutation(ActorStat.POW, StatMutationOperation.ADD, 1)
+          createStatMutation(Stat.POW, StatMutationOperation.ADD, 1)
         ]
       });
       const actor = scenario.actors['flux:actor:test-actor'].actor;
@@ -152,7 +152,7 @@ describe('CommitShellMutationsAction', () => {
     it('should fail when insufficient funds', () => {
       const scenario = useSimpleWorkbenchScenario(context, {
         pendingMutations: [
-          createStatMutation(ActorStat.POW, StatMutationOperation.ADD, 5) // Expensive mutation
+          createStatMutation(Stat.POW, StatMutationOperation.ADD, 5) // Expensive mutation
         ]
       });
       const actor = scenario.actors['flux:actor:test-actor'].actor;
@@ -178,7 +178,7 @@ describe('CommitShellMutationsAction', () => {
     it('should provide specific error message with exact amounts', () => {
       const scenario = useSimpleWorkbenchScenario(context, {
         pendingMutations: [
-          createStatMutation(ActorStat.POW, StatMutationOperation.ADD, 2)
+          createStatMutation(Stat.POW, StatMutationOperation.ADD, 2)
         ]
       });
       const actor = scenario.actors['flux:actor:test-actor'].actor;
@@ -203,9 +203,9 @@ describe('CommitShellMutationsAction', () => {
     it('should calculate correct cost for multiple mutations', () => {
       const scenario = useSimpleWorkbenchScenario(context, {
         pendingMutations: [
-          createStatMutation(ActorStat.POW, StatMutationOperation.ADD, 1),
-          createStatMutation(ActorStat.FIN, StatMutationOperation.ADD, 1),
-          createStatMutation(ActorStat.RES, StatMutationOperation.ADD, 1)
+          createStatMutation(Stat.POW, StatMutationOperation.ADD, 1),
+          createStatMutation(Stat.FIN, StatMutationOperation.ADD, 1),
+          createStatMutation(Stat.RES, StatMutationOperation.ADD, 1)
         ]
       });
       const actor = scenario.actors['flux:actor:test-actor'].actor;
@@ -229,7 +229,7 @@ describe('CommitShellMutationsAction', () => {
       // Create a scenario where mutations result in zero cost (e.g., downgrades)
       const scenario = useSimpleWorkbenchScenario(context, {
         pendingMutations: [
-          createStatMutation(ActorStat.POW, StatMutationOperation.REMOVE, 1)
+          createStatMutation(Stat.POW, StatMutationOperation.REMOVE, 1)
         ]
       });
       const actor = scenario.actors['flux:actor:test-actor'].actor;
@@ -253,8 +253,8 @@ describe('CommitShellMutationsAction', () => {
   describe('state management', () => {
     it('should preserve original mutations in commit event before clearing', () => {
       const originalMutations = [
-        createStatMutation(ActorStat.POW, StatMutationOperation.ADD, 2),
-        createStatMutation(ActorStat.FIN, StatMutationOperation.ADD, 1)
+        createStatMutation(Stat.POW, StatMutationOperation.ADD, 2),
+        createStatMutation(Stat.FIN, StatMutationOperation.ADD, 1)
       ];
 
       const scenario = useSimpleWorkbenchScenario(context, {
@@ -282,7 +282,7 @@ describe('CommitShellMutationsAction', () => {
     it('should not modify shell if transaction fails', () => {
       const scenario = useSimpleWorkbenchScenario(context, {
         pendingMutations: [
-          createStatMutation(ActorStat.POW, StatMutationOperation.ADD, 5)
+          createStatMutation(Stat.POW, StatMutationOperation.ADD, 5)
         ]
       });
       const actor = scenario.actors['flux:actor:test-actor'].actor;
@@ -290,7 +290,7 @@ describe('CommitShellMutationsAction', () => {
 
       setBalance(actor, CurrencyType.SCRAP, 1); // Insufficient funds
       const shell = actor.shells[actor.currentShell];
-      const initialPow = shell.stats[ActorStat.POW].eff;
+      const initialPow = shell.stats[Stat.POW].eff;
 
       const commitAction = createCommitShellMutationsAction(context, session);
       const events = commitAction(actor);
@@ -298,7 +298,7 @@ describe('CommitShellMutationsAction', () => {
       expect(events).toHaveLength(0);
 
       // Shell should remain unchanged
-      expect(shell.stats[ActorStat.POW].eff).toBe(initialPow);
+      expect(shell.stats[Stat.POW].eff).toBe(initialPow);
 
       // Mutations should still be pending
       expect(session.data.pendingMutations).toHaveLength(1);
@@ -309,7 +309,7 @@ describe('CommitShellMutationsAction', () => {
     it('should generate proper currency event with transaction details', () => {
       const scenario = useSimpleWorkbenchScenario(context, {
         pendingMutations: [
-          createStatMutation(ActorStat.POW, StatMutationOperation.ADD, 1)
+          createStatMutation(Stat.POW, StatMutationOperation.ADD, 1)
         ]
       });
       const actor = scenario.actors['flux:actor:test-actor'].actor;
@@ -334,7 +334,7 @@ describe('CommitShellMutationsAction', () => {
     it('should generate proper commit event with complete payload', () => {
       const scenario = useSimpleWorkbenchScenario(context, {
         pendingMutations: [
-          createStatMutation(ActorStat.FIN, StatMutationOperation.ADD, 2)
+          createStatMutation(Stat.FIN, StatMutationOperation.ADD, 2)
         ]
       });
       const actor = scenario.actors['flux:actor:test-actor'].actor;
@@ -357,7 +357,7 @@ describe('CommitShellMutationsAction', () => {
       const mutation = commitEvent.payload.mutations[0];
       expect(mutation.type).toBe(ShellMutationType.STAT);
       if (mutation.type === ShellMutationType.STAT) {
-        expect(mutation.stat).toBe(ActorStat.FIN);
+        expect(mutation.stat).toBe(Stat.FIN);
       }
     });
   });
@@ -366,7 +366,7 @@ describe('CommitShellMutationsAction', () => {
     it('should follow complete transaction workflow', () => {
       const scenario = useSimpleWorkbenchScenario(context, {
         pendingMutations: [
-          createStatMutation(ActorStat.POW, StatMutationOperation.ADD, 2)
+          createStatMutation(Stat.POW, StatMutationOperation.ADD, 2)
         ]
       });
       const actor = scenario.actors['flux:actor:test-actor'].actor;
@@ -398,7 +398,7 @@ describe('CommitShellMutationsAction', () => {
     it('should handle edge case of exact balance match', () => {
       const scenario = useSimpleWorkbenchScenario(context, {
         pendingMutations: [
-          createStatMutation(ActorStat.POW, StatMutationOperation.ADD, 1)
+          createStatMutation(Stat.POW, StatMutationOperation.ADD, 1)
         ]
       });
       const actor = scenario.actors['flux:actor:test-actor'].actor;
@@ -413,7 +413,7 @@ describe('CommitShellMutationsAction', () => {
       // Reset scenario with exact balance
       const scenario2 = useSimpleWorkbenchScenario(context, {
         pendingMutations: [
-          createStatMutation(ActorStat.POW, StatMutationOperation.ADD, 1)
+          createStatMutation(Stat.POW, StatMutationOperation.ADD, 1)
         ]
       });
       const actor2 = scenario2.actors['flux:actor:test-actor'].actor;

@@ -19,7 +19,7 @@ import {
   HP_PER_RES_BONUS,
 } from './health';
 import { createActor } from './index';
-import { Actor, ActorType, ActorStat } from '~/types/entity/actor';
+import { Actor, ActorType, Stat } from '~/types/entity/actor';
 import { ActorURN } from '~/types/taxonomy';
 
 describe('Actor Health Pure Functions', () => {
@@ -232,8 +232,9 @@ describe('Actor Health Pure Functions', () => {
   describe('RES-based HP calculations', () => {
     beforeEach(() => {
       // Set up actor with specific RES values for testing
-      actor.stats[ActorStat.RES].nat = 14; // +2 bonus
-      actor.stats[ActorStat.RES].eff = 14;
+      const currentShell = actor.shells[actor.currentShell];
+      currentShell.stats[Stat.RES].nat = 14; // +2 bonus
+      currentShell.stats[Stat.RES].eff = 14;
     });
 
     describe('getResBonus', () => {
@@ -242,17 +243,20 @@ describe('Actor Health Pure Functions', () => {
       });
 
       it('should handle baseline RES (10)', () => {
-        actor.stats[ActorStat.RES].eff = 10;
+        const currentShell = actor.shells[actor.currentShell];
+        currentShell.stats[Stat.RES].eff = 10;
         expect(getResBonus(actor)).toBe(0);
       });
 
       it('should handle low RES values', () => {
-        actor.stats[ActorStat.RES].eff = 8;
+        const currentShell = actor.shells[actor.currentShell];
+        currentShell.stats[Stat.RES].eff = 8;
         expect(getResBonus(actor)).toBe(-1); // (8 - 10) / 2 = -1
       });
 
       it('should handle high RES values', () => {
-        actor.stats[ActorStat.RES].eff = 20;
+        const currentShell = actor.shells[actor.currentShell];
+        currentShell.stats[Stat.RES].eff = 20;
         expect(getResBonus(actor)).toBe(5); // (20 - 10) / 2 = 5
       });
     });
@@ -264,12 +268,14 @@ describe('Actor Health Pure Functions', () => {
       });
 
       it('should handle baseline RES', () => {
-        actor.stats[ActorStat.RES].eff = 10;
+        const currentShell = actor.shells[actor.currentShell];
+        currentShell.stats[Stat.RES].eff = 10;
         expect(calculateMaxHpFromRes(actor)).toBe(BASE_HP); // 50 + (0 * 5) = 50
       });
 
       it('should handle negative RES bonus', () => {
-        actor.stats[ActorStat.RES].eff = 8;
+        const currentShell = actor.shells[actor.currentShell];
+        currentShell.stats[Stat.RES].eff = 8;
         const expectedHp = BASE_HP + (-1 * HP_PER_RES_BONUS); // 50 + (-1 * 5) = 45
         expect(calculateMaxHpFromRes(actor)).toBe(expectedHp);
       });
@@ -290,7 +296,8 @@ describe('Actor Health Pure Functions', () => {
       });
 
       it('should reduce current HP if it exceeds new max', () => {
-        actor.stats[ActorStat.RES].eff = 8; // Low RES = 45 max HP
+        const currentShell = actor.shells[actor.currentShell];
+        currentShell.stats[Stat.RES].eff = 8; // Low RES = 45 max HP
         setCurrentHp(actor, 50);
         updateMaxHpFromRes(actor);
         expect(getCurrentHp(actor)).toBe(45);
@@ -307,7 +314,8 @@ describe('Actor Health Pure Functions', () => {
       });
 
       it('should work with different RES values', () => {
-        actor.stats[ActorStat.RES].eff = 16; // +3 bonus
+        const currentShell = actor.shells[actor.currentShell];
+        currentShell.stats[Stat.RES].eff = 16; // +3 bonus
         initializeHpFromRes(actor);
         const expectedHp = BASE_HP + (3 * HP_PER_RES_BONUS); // 65
         expect(getMaxHp(actor)).toBe(expectedHp);
@@ -349,7 +357,8 @@ describe('Actor Health Pure Functions', () => {
 
     it('should handle RES stat changes during gameplay', () => {
       // Initialize with RES-based HP
-      actor.stats[ActorStat.RES].eff = 16; // +3 bonus
+      const currentShell = actor.shells[actor.currentShell];
+      currentShell.stats[Stat.RES].eff = 16; // +3 bonus
       initializeHpFromRes(actor);
       expect(getMaxHp(actor)).toBe(65);
       expect(getCurrentHp(actor)).toBe(65);
@@ -359,13 +368,13 @@ describe('Actor Health Pure Functions', () => {
       expect(getCurrentHp(actor)).toBe(45);
 
       // RES gets buffed
-      actor.stats[ActorStat.RES].eff = 20; // +5 bonus
+      currentShell.stats[Stat.RES].eff = 20; // +5 bonus
       updateMaxHpFromRes(actor);
       expect(getMaxHp(actor)).toBe(75); // 50 + (5 * 5)
       expect(getCurrentHp(actor)).toBe(45); // Current HP preserved
 
       // RES gets debuffed below current HP
-      actor.stats[ActorStat.RES].eff = 8; // -1 bonus
+      currentShell.stats[Stat.RES].eff = 8; // -1 bonus
       updateMaxHpFromRes(actor);
       expect(getMaxHp(actor)).toBe(45); // 50 + (-1 * 5)
       expect(getCurrentHp(actor)).toBe(45); // Current HP clamped to new max

@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { ActorStat } from '~/types/entity/actor';
+import { Stat } from '~/types/entity/actor';
 import { ActorDidSwapShell, EventType } from '~/types/event';
 import { TransformerContext } from '~/types/handler';
 import { createSwapShellAction } from './swap';
@@ -46,9 +46,9 @@ describe('SwapShellAction', () => {
         id: secondShellId,
         name: 'Combat Shell',
         stats: {
-          [ActorStat.POW]: { nat: 15, eff: 15, mods: {} },
-          [ActorStat.FIN]: { nat: 10, eff: 10, mods: {} },
-          [ActorStat.RES]: { nat: 12, eff: 12, mods: {} },
+          [Stat.POW]: { nat: 15, eff: 15, mods: {} },
+          [Stat.FIN]: { nat: 10, eff: 10, mods: {} },
+          [Stat.RES]: { nat: 12, eff: 12, mods: {} },
         },
         inventory: createInventory(),
         equipment: {},
@@ -76,9 +76,9 @@ describe('SwapShellAction', () => {
         id: secondShellId,
         name: 'Combat Shell',
         stats: {
-          [ActorStat.POW]: { nat: 15, eff: 15, mods: {} },
-          [ActorStat.FIN]: { nat: 10, eff: 10, mods: {} },
-          [ActorStat.RES]: { nat: 12, eff: 12, mods: {} },
+          [Stat.POW]: { nat: 15, eff: 15, mods: {} },
+          [Stat.FIN]: { nat: 10, eff: 10, mods: {} },
+          [Stat.RES]: { nat: 12, eff: 12, mods: {} },
         },
         inventory: createInventory(),
         equipment: {},
@@ -121,7 +121,7 @@ describe('SwapShellAction', () => {
     it('should fail when pending mutations exist without force flag', () => {
       const scenario = useSimpleWorkbenchScenario(context, {
         pendingMutations: [
-          createStatMutation(ActorStat.POW, StatMutationOperation.ADD, 2)
+          createStatMutation(Stat.POW, StatMutationOperation.ADD, 2)
         ]
       });
       const actor = scenario.actors['flux:actor:test-actor'].actor;
@@ -132,9 +132,9 @@ describe('SwapShellAction', () => {
         id: 'shell-2',
         name: 'Combat Shell',
         stats: {
-          [ActorStat.POW]: { nat: 15, eff: 15, mods: {} },
-          [ActorStat.FIN]: { nat: 10, eff: 10, mods: {} },
-          [ActorStat.RES]: { nat: 12, eff: 12, mods: {} },
+          [Stat.POW]: { nat: 15, eff: 15, mods: {} },
+          [Stat.FIN]: { nat: 10, eff: 10, mods: {} },
+          [Stat.RES]: { nat: 12, eff: 12, mods: {} },
         },
         inventory: createInventory(),
         equipment: {},
@@ -152,8 +152,8 @@ describe('SwapShellAction', () => {
     it('should discard pending mutations and swap when force=true', () => {
       const scenario = useSimpleWorkbenchScenario(context, {
         pendingMutations: [
-          createStatMutation(ActorStat.POW, StatMutationOperation.ADD, 2),
-          createStatMutation(ActorStat.FIN, StatMutationOperation.ADD, 1)
+          createStatMutation(Stat.POW, StatMutationOperation.ADD, 2),
+          createStatMutation(Stat.FIN, StatMutationOperation.ADD, 1)
         ]
       });
       const actor = scenario.actors['flux:actor:test-actor'].actor;
@@ -166,9 +166,9 @@ describe('SwapShellAction', () => {
         id: secondShellId,
         name: 'Combat Shell',
         stats: {
-          [ActorStat.POW]: { nat: 15, eff: 15, mods: {} },
-          [ActorStat.FIN]: { nat: 10, eff: 10, mods: {} },
-          [ActorStat.RES]: { nat: 12, eff: 12, mods: {} },
+          [Stat.POW]: { nat: 15, eff: 15, mods: {} },
+          [Stat.FIN]: { nat: 10, eff: 10, mods: {} },
+          [Stat.RES]: { nat: 12, eff: 12, mods: {} },
         },
       }));
 
@@ -196,9 +196,9 @@ describe('SwapShellAction', () => {
         id: secondShellId,
         name: 'Combat Shell',
         stats: {
-          [ActorStat.POW]: { nat: 15, eff: 15, mods: {} },
-          [ActorStat.FIN]: { nat: 10, eff: 10, mods: {} },
-          [ActorStat.RES]: { nat: 12, eff: 12, mods: {} },
+          [Stat.POW]: { nat: 15, eff: 15, mods: {} },
+          [Stat.FIN]: { nat: 10, eff: 10, mods: {} },
+          [Stat.RES]: { nat: 12, eff: 12, mods: {} },
         },
         inventory: createInventory(),
         equipment: {},
@@ -241,7 +241,7 @@ describe('SwapShellAction', () => {
     it('should use custom undo action when provided', () => {
       const scenario = useSimpleWorkbenchScenario(context, {
         pendingMutations: [
-          createStatMutation(ActorStat.POW, StatMutationOperation.ADD, 2)
+          createStatMutation(Stat.POW, StatMutationOperation.ADD, 2)
         ]
       });
       const actor = scenario.actors['flux:actor:test-actor'].actor;
@@ -252,9 +252,9 @@ describe('SwapShellAction', () => {
         id: 'shell-2',
         name: 'Combat Shell',
         stats: {
-          [ActorStat.POW]: { nat: 15, eff: 15, mods: {} },
-          [ActorStat.FIN]: { nat: 10, eff: 10, mods: {} },
-          [ActorStat.RES]: { nat: 12, eff: 12, mods: {} },
+          [Stat.POW]: { nat: 15, eff: 15, mods: {} },
+          [Stat.FIN]: { nat: 10, eff: 10, mods: {} },
+          [Stat.RES]: { nat: 12, eff: 12, mods: {} },
         },
         inventory: createInventory(),
         equipment: {},
@@ -298,9 +298,9 @@ describe('SwapShellAction', () => {
         id: secondShellId,
         name: 'Combat Shell',
         stats: {
-          [ActorStat.POW]: { nat: 15, eff: 15, mods: {} },
-          [ActorStat.FIN]: { nat: 10, eff: 10, mods: {} },
-          [ActorStat.RES]: { nat: 12, eff: 12, mods: {} },
+          [Stat.POW]: { nat: 15, eff: 15, mods: {} },
+          [Stat.FIN]: { nat: 10, eff: 10, mods: {} },
+          [Stat.RES]: { nat: 12, eff: 12, mods: {} },
         },
       }));
 
@@ -332,9 +332,9 @@ describe('SwapShellAction', () => {
         id: secondShellId,
         name: '', // Empty name
         stats: {
-          [ActorStat.POW]: { nat: 15, eff: 15, mods: {} },
-          [ActorStat.FIN]: { nat: 10, eff: 10, mods: {} },
-          [ActorStat.RES]: { nat: 12, eff: 12, mods: {} },
+          [Stat.POW]: { nat: 15, eff: 15, mods: {} },
+          [Stat.FIN]: { nat: 10, eff: 10, mods: {} },
+          [Stat.RES]: { nat: 12, eff: 12, mods: {} },
         },
       }));
 

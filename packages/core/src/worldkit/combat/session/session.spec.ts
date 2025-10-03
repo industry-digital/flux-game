@@ -9,7 +9,7 @@ import {
 import { createCombatant, CreateCombatantDependencies } from '~/worldkit/combat/combatant';
 import { initializeCombatantAttributes } from '~/worldkit/combat/combatant';
 import { createTestActor } from '~/testing/world-testing';
-import { Actor, ActorStat } from '~/types/entity/actor';
+import { Actor, Stat } from '~/types/entity/actor';
 import { ActorURN, PlaceURN, SessionURN } from '~/types/taxonomy';
 import { CombatFacing, Team } from '~/types/combat';
 import { SessionStatus, SessionStrategy } from '~/types/session';
@@ -17,7 +17,7 @@ import { EntityType } from '~/types/entity/entity';
 import { EventType } from '~/types/event';
 import { type RollResult } from '~/types/dice';
 import { createTransformerContext } from '~/worldkit/context';
-import { getEffectiveStatBonus } from '~/worldkit/entity/actor/stats';
+import { getEffectiveStatBonus } from '~/worldkit/entity/stats';
 
 const TEST_PLACE_ID: PlaceURN = 'flux:place:test-place';
 const TEST_SESSION_ID: SessionURN = 'flux:session:combat:test-session';
@@ -35,12 +35,12 @@ describe('session', () => {
         id: TEST_ACTOR_ID,
         location: TEST_PLACE_ID,
         stats: {
-          [ActorStat.POW]: { nat: 15, eff: 15, mods: {} },
-          [ActorStat.FIN]: { nat: 12, eff: 12, mods: {} },
-          [ActorStat.RES]: { nat: 10, eff: 10, mods: {} },
-          [ActorStat.INT]: { nat: 10, eff: 10, mods: {} },
-          [ActorStat.PER]: { nat: 14, eff: 14, mods: {} },
-          [ActorStat.MEM]: { nat: 10, eff: 10, mods: {} },
+          [Stat.POW]: { nat: 15, eff: 15, mods: {} },
+          [Stat.FIN]: { nat: 12, eff: 12, mods: {} },
+          [Stat.RES]: { nat: 10, eff: 10, mods: {} },
+          [Stat.INT]: { nat: 10, eff: 10, mods: {} },
+          [Stat.PER]: { nat: 14, eff: 14, mods: {} },
+          [Stat.MEM]: { nat: 10, eff: 10, mods: {} },
         },
       });
       const team = TEST_TEAM;
@@ -63,22 +63,22 @@ describe('session', () => {
     it('should use perception modifier for initiative', () => {
       const highPerceptionActor = createTestActor({
         stats: {
-          [ActorStat.PER]: { nat: 20, eff: 20, mods: {} },
-          [ActorStat.POW]: { nat: 10, eff: 10, mods: {} },
-          [ActorStat.FIN]: { nat: 10, eff: 10, mods: {} },
-          [ActorStat.RES]: { nat: 10, eff: 10, mods: {} },
-          [ActorStat.INT]: { nat: 10, eff: 10, mods: {} },
-          [ActorStat.MEM]: { nat: 10, eff: 10, mods: {} },
+          [Stat.PER]: { nat: 20, eff: 20, mods: {} },
+          [Stat.POW]: { nat: 10, eff: 10, mods: {} },
+          [Stat.FIN]: { nat: 10, eff: 10, mods: {} },
+          [Stat.RES]: { nat: 10, eff: 10, mods: {} },
+          [Stat.INT]: { nat: 10, eff: 10, mods: {} },
+          [Stat.MEM]: { nat: 10, eff: 10, mods: {} },
         },
       });
       const lowPerceptionActor = createTestActor({
         stats: {
-          [ActorStat.PER]: { nat: 5, eff: 5, mods: {} },
-          [ActorStat.POW]: { nat: 10, eff: 10, mods: {} },
-          [ActorStat.FIN]: { nat: 10, eff: 10, mods: {} },
-          [ActorStat.RES]: { nat: 10, eff: 10, mods: {} },
-          [ActorStat.INT]: { nat: 10, eff: 10, mods: {} },
-          [ActorStat.MEM]: { nat: 10, eff: 10, mods: {} },
+          [Stat.PER]: { nat: 5, eff: 5, mods: {} },
+          [Stat.POW]: { nat: 10, eff: 10, mods: {} },
+          [Stat.FIN]: { nat: 10, eff: 10, mods: {} },
+          [Stat.RES]: { nat: 10, eff: 10, mods: {} },
+          [Stat.INT]: { nat: 10, eff: 10, mods: {} },
+          [Stat.MEM]: { nat: 10, eff: 10, mods: {} },
         },
       });
 
@@ -101,7 +101,7 @@ describe('session', () => {
         computeInitiative: (actor: Actor) => {
           // Use the mock roll result but add perception bonus
           const mockResult = mockExecuteRoll('1d20', []);
-          const bonus = getEffectiveStatBonus(actor, ActorStat.PER);
+          const bonus = getEffectiveStatBonus(actor, Stat.PER);
           return {
             ...mockResult,
             result: mockResult.natural + bonus,

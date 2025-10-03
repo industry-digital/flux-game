@@ -14,7 +14,7 @@ import { getMaxEnergy } from '~/worldkit/entity/actor/capacitor';
 import { createDoneMethod } from '~/worldkit/combat/action/done';
 import { cleanApPrecision } from '~/worldkit/combat/ap';
 import { computeInitiativeRoll } from '~/worldkit/combat/initiative';
-import { getEffectiveStatBonus } from '~/worldkit/entity/actor/stats';
+import { getEffectiveStatBonus } from '~/worldkit/entity/stats';
 export { deductAp } from '~/worldkit/combat/ap';
 
 export const MOVE_BY_AP = 'ap' as const;

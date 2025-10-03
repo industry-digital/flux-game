@@ -1,10 +1,24 @@
 import { describe, expect, it } from 'vitest';
 import { createActor } from '.';
-import { WellKnownPlace } from '~/types/world/space';
 
 describe('createActor', () => {
-  it('should create an actor with the default location', () => {
-    const actor = createActor({});
-    expect(actor.location).toBe(WellKnownPlace.ORIGIN);
+  it('should create an actor no arguments', () => {
+    const actor = createActor();
+    expect(actor.id).toBeDefined();
+  });
+
+  it('should create an actor with a custom input', () => {
+    const actor = createActor({
+      name: 'Test Actor',
+    });
+    expect(actor.name).toBe('Test Actor');
+  });
+
+  it('should create an actor with a custom transform', () => {
+    const actor = createActor((actor) => ({
+      ...actor,
+      name: 'Test Actor',
+    }));
+    expect(actor.name).toBe('Test Actor');
   });
 });

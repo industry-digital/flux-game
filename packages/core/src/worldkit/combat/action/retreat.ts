@@ -5,7 +5,7 @@
  * Mirrors advance.ts but with reversed movement direction.
  */
 
-import { Actor } from '~/types/entity/actor';
+import { Actor, Stat } from '~/types/entity/actor';
 import { Combatant, CombatFacing, CombatSession } from '~/types/combat';
 import { EventType, WorldEvent } from '~/types/event';
 import { createWorldEvent } from '~/worldkit/event';
@@ -17,6 +17,7 @@ import { TransformerContext } from '~/types/handler';
 import { ActorURN } from '~/types/taxonomy';
 import { MovementActionDependencies, DEFAULT_MOVEMENT_DEPS } from './movement-deps';
 import { createMovementCostFromDistance, createMovementCostFromAp } from '~/worldkit/combat/tactical-cost';
+import { getActorEffectiveStatValue } from '~/worldkit/entity/actor/actor-stats';
 
 export type RetreatDependencies = MovementActionDependencies;
 export const DEFAULT_RETREAT_DEPS = DEFAULT_MOVEMENT_DEPS;
@@ -59,8 +60,8 @@ export function createRetreatMethod(
     const actorMassKg = actorMassGrams / 1000;
 
     // Get actor stats
-    const power = actor.stats.pow.eff;
-    const finesse = actor.stats.fin.eff;
+    const power = getActorEffectiveStatValue(actor, Stat.POW);
+    const finesse = getActorEffectiveStatValue(actor, Stat.FIN);
     const currentPosition = combatant.position.coordinate;
 
     // Calculate retreat direction (opposite of current facing)

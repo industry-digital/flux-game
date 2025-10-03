@@ -1,4 +1,4 @@
-import { Actor } from '~/types/entity/actor';
+import { Actor, Stat } from '~/types/entity/actor';
 import { Combatant, CombatFacing, CombatSession } from '~/types/combat';
 import { TransformerContext } from '~/types/handler';
 import { EventType, WorldEvent } from '~/types/event';
@@ -8,6 +8,7 @@ import { calculateTacticalMovement, roundApCostUp } from '~/worldkit/combat/tact
 import { distanceToAp, apToDistance } from '~/worldkit/physics/movement';
 import { checkMovementCollision, createTargetResolver } from '~/worldkit/combat/movement';
 import { deductAp, MOVE_BY_DISTANCE, MovementType } from '~/worldkit/combat/combatant';
+import { getActorEffectiveStatValue } from '~/worldkit/entity/actor/actor-stats';
 import { MovementActionDependencies, DEFAULT_MOVEMENT_DEPS } from './movement-deps';
 import { createMovementCostFromAp } from '~/worldkit/combat/tactical-cost';
 
@@ -81,8 +82,8 @@ export function createAdvanceMethod(
     // Calculate actor's actual mass (body + equipment + inventory)
     const actorMassGrams = computeActorMass(actor);
     const actorMassKg = actorMassGrams / 1000;
-    const power = actor.stats.pow.eff;
-    const finesse = actor.stats.fin.eff;
+    const power = getActorEffectiveStatValue(actor, Stat.POW);
+    const finesse = getActorEffectiveStatValue(actor, Stat.FIN);
 
     let distance: number;
     let ap: number;

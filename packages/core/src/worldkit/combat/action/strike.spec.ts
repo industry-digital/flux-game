@@ -9,6 +9,8 @@ import { CombatantDidAttack, CombatantDidDie, EventType, WorldEvent } from '~/ty
 import { Team } from '~/types/combat';
 import { createStrikeCost } from '~/worldkit/combat/tactical-cost';
 import { calculateWeaponApCost } from '~/worldkit/combat/damage';
+import { getActorEffectiveStatValue } from '~/worldkit/entity/actor/actor-stats';
+import { Stat } from '~/types/entity/actor';
 
 function extractCombatantDidAttackEvent(events: WorldEvent[]): CombatantDidAttack {
   return events.find(e => e.type === EventType.COMBATANT_DID_ATTACK) as CombatantDidAttack;
@@ -164,7 +166,7 @@ describe('Strike Method', () => {
       expect(mockCreateStrikeCost).toHaveBeenCalled();
       const [weaponMassKg, finesse] = mockCreateStrikeCost.mock.calls[0];
       expect(weaponMassKg).toBeGreaterThan(0);
-      expect(finesse).toBe(attacker.actor.stats.fin.eff);
+      expect(finesse).toBe(getActorEffectiveStatValue(attacker.actor, Stat.FIN));
 
       // Verify the tactical AP cost was used
       const finalAP = attackerCombatant.ap.eff.cur;
@@ -312,7 +314,7 @@ describe('Strike Method', () => {
         modifier: 0
       });
 
-      context.executeRoll = mockExecuteRoll;
+      context.rollDice = mockExecuteRoll;
 
       // Mock resolveHitAttempt to ensure the attack always hits
       const mockResolveHitAttempt = vi.fn().mockReturnValue({
