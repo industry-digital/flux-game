@@ -80,8 +80,8 @@ describe('Entity Resolver Benchmarks', () => {
       const resolverApi = createEntityResolverApi(world);
 
       const intents = [
-        createTestIntent('attack knight', ['knight'], sampleActor, sampleLocation),
-        createTestIntent('talk to wizard', ['wizard'], sampleActor, sampleLocation),
+        createTestIntent('attack knight', sampleActor, sampleLocation),
+        createTestIntent('talk to wizard', sampleActor, sampleLocation),
       ];
 
       const metrics = measureThroughput(resolverApi, intents, 50);
