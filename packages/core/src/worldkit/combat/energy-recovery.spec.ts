@@ -7,7 +7,7 @@ import {
   GOLDEN_RATIO_PEAK
 } from './energy';
 
-describe.skip('Phase-Shifted Sine Energy Recovery System', () => {
+describe('Phase-Shifted Sine Energy Recovery System', () => {
   const testActor = {
     resilience: 10,
     maxEnergy: calculateMaxEnergy(10), // Power curve: 10,000J at RES 10

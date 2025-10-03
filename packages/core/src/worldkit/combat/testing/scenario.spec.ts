@@ -13,7 +13,7 @@ import { createSwordSchema } from '~/worldkit/schema/weapon/sword';
 import { createModifiableScalarAttribute } from '~/worldkit/entity/attribute';
 import { createTransformerContext } from '~/worldkit/context';
 import { WeaponSchema } from '~/types/schema/weapon';
-import { getActorEffectiveStatValue } from '~/worldkit/entity/actor/actor-stats';
+import { getStatValue } from '~/worldkit/entity/actor/new-stats';
 
 describe('useCombatScenario', () => {
   let context: TransformerContext;
@@ -162,9 +162,9 @@ describe('useCombatScenario', () => {
       const actor = scenario.actors['flux:actor:test:strong'].actor;
 
       // Shell stats should be accessible via Actor-specific functions
-      expect(getActorEffectiveStatValue(actor, Stat.POW)).toBe(80);
-      expect(getActorEffectiveStatValue(actor, Stat.FIN)).toBe(60);
-      expect(getActorEffectiveStatValue(actor, Stat.RES)).toBe(70);
+      expect(getStatValue(actor, Stat.POW)).toBe(80);
+      expect(getStatValue(actor, Stat.FIN)).toBe(60);
+      expect(getStatValue(actor, Stat.RES)).toBe(70);
 
       // Shell stats should be on the current shell
       const currentShell = actor.shells[actor.currentShell];
@@ -191,9 +191,9 @@ describe('useCombatScenario', () => {
       const actor = scenario.actors['flux:actor:test:default-shell'].actor;
 
       // Default shell stats should be 10
-      expect(getActorEffectiveStatValue(actor, Stat.POW)).toBe(10);
-      expect(getActorEffectiveStatValue(actor, Stat.FIN)).toBe(10);
-      expect(getActorEffectiveStatValue(actor, Stat.RES)).toBe(10);
+      expect(getStatValue(actor, Stat.POW)).toBe(10);
+      expect(getStatValue(actor, Stat.FIN)).toBe(10);
+      expect(getStatValue(actor, Stat.RES)).toBe(10);
     });
 
     it('should use partial shell stats with defaults', () => {
@@ -211,9 +211,9 @@ describe('useCombatScenario', () => {
 
       const actor = scenario.actors['flux:actor:test:partial-shell'].actor;
 
-      expect(getActorEffectiveStatValue(actor, Stat.POW)).toBe(50);
-      expect(getActorEffectiveStatValue(actor, Stat.FIN)).toBe(10); // Default
-      expect(getActorEffectiveStatValue(actor, Stat.RES)).toBe(10); // Default
+      expect(getStatValue(actor, Stat.POW)).toBe(50);
+      expect(getStatValue(actor, Stat.FIN)).toBe(10); // Default
+      expect(getStatValue(actor, Stat.RES)).toBe(10); // Default
     });
   });
 
@@ -240,14 +240,14 @@ describe('useCombatScenario', () => {
       const actor = scenario.actors['flux:actor:test:all-stats'].actor;
 
       // Core stats accessible via Actor functions
-      expect(getActorEffectiveStatValue(actor, Stat.INT)).toBe(12);
-      expect(getActorEffectiveStatValue(actor, Stat.PER)).toBe(14);
-      expect(getActorEffectiveStatValue(actor, Stat.MEM)).toBe(10);
+      expect(getStatValue(actor, Stat.INT)).toBe(12);
+      expect(getStatValue(actor, Stat.PER)).toBe(14);
+      expect(getStatValue(actor, Stat.MEM)).toBe(10);
 
       // Shell stats via Actor functions
-      expect(getActorEffectiveStatValue(actor, Stat.POW)).toBe(16);
-      expect(getActorEffectiveStatValue(actor, Stat.FIN)).toBe(13);
-      expect(getActorEffectiveStatValue(actor, Stat.RES)).toBe(15);
+      expect(getStatValue(actor, Stat.POW)).toBe(16);
+      expect(getStatValue(actor, Stat.FIN)).toBe(13);
+      expect(getStatValue(actor, Stat.RES)).toBe(15);
     });
 
     it('should apply complex stat attribute objects', () => {
@@ -269,13 +269,13 @@ describe('useCombatScenario', () => {
       const { actor } = scenario.actors['flux:actor:test:complex-stats'];
 
       // Complex shell stat object should be applied (eff: 16, nat: 18)
-      expect(getActorEffectiveStatValue(actor, Stat.POW)).toBe(16);
+      expect(getStatValue(actor, Stat.POW)).toBe(16);
 
       // Simple shell stat should be applied
-      expect(getActorEffectiveStatValue(actor, Stat.FIN)).toBe(14);
+      expect(getStatValue(actor, Stat.FIN)).toBe(14);
 
       // Complex core stat object should be applied (eff: 15, nat: 13)
-      expect(getActorEffectiveStatValue(actor, Stat.INT)).toBe(15);
+      expect(getStatValue(actor, Stat.INT)).toBe(15);
     });
   });
 
@@ -717,14 +717,14 @@ describe('useCombatScenario', () => {
       expect(actor.stats[Stat.MEM].eff).toBe(17);
 
       // Shell stats accessible via Actor functions
-      expect(getActorEffectiveStatValue(actor, Stat.POW)).toBe(19);
-      expect(getActorEffectiveStatValue(actor, Stat.FIN)).toBe(15);
-      expect(getActorEffectiveStatValue(actor, Stat.RES)).toBe(12);
+      expect(getStatValue(actor, Stat.POW)).toBe(19);
+      expect(getStatValue(actor, Stat.FIN)).toBe(15);
+      expect(getStatValue(actor, Stat.RES)).toBe(12);
 
       // Core stats also accessible via Actor functions (for consistency)
-      expect(getActorEffectiveStatValue(actor, Stat.INT)).toBe(13);
-      expect(getActorEffectiveStatValue(actor, Stat.PER)).toBe(11);
-      expect(getActorEffectiveStatValue(actor, Stat.MEM)).toBe(17);
+      expect(getStatValue(actor, Stat.INT)).toBe(13);
+      expect(getStatValue(actor, Stat.PER)).toBe(11);
+      expect(getStatValue(actor, Stat.MEM)).toBe(17);
     });
   });
 });

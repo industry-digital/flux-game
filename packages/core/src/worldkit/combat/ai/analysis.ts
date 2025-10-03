@@ -10,7 +10,8 @@ import {
 } from '~/types/combat-ai';
 import { classifyWeapon, RangeClassification, canWeaponHitFromDistance } from '~/worldkit/combat/weapon';
 import { computeDistanceBetweenCombatants } from '~/worldkit/combat/range';
-import { getActorEffectiveStatValue, isActorAlive } from '~/worldkit/entity/actor';
+import { isActorAlive } from '~/worldkit/entity/actor';
+import { getStatValue } from '~/worldkit/entity/actor';
 import { DEFAULT_ATTACK_AP_COST } from '~/worldkit/combat/ap';
 import { apToDistance, distanceToAp } from '~/worldkit/physics/movement';
 import { areEnemies } from '~/worldkit/combat/team';
@@ -301,8 +302,8 @@ export function evaluatePositioning(
   // Calculate physics-based movement capability
   const availableAP = combatant.ap.eff.cur; // AP as time budget
 
-  const power = getActorEffectiveStatValue(actor, Stat.POW);
-  const finesse = getActorEffectiveStatValue(actor, Stat.FIN);
+  const power = getStatValue(actor, Stat.POW);
+  const finesse = getStatValue(actor, Stat.FIN);
 
   const maxMovement = apToDistance(
     power,

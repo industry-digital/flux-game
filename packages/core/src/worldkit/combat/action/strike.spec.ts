@@ -9,7 +9,7 @@ import { CombatantDidAttack, CombatantDidDie, EventType, WorldEvent } from '~/ty
 import { Team } from '~/types/combat';
 import { createStrikeCost } from '~/worldkit/combat/tactical-cost';
 import { calculateWeaponApCost } from '~/worldkit/combat/damage';
-import { getActorEffectiveStatValue } from '~/worldkit/entity/actor/actor-stats';
+import { getStatValue } from '~/worldkit/entity/actor/new-stats';
 import { Stat } from '~/types/entity/actor';
 
 function extractCombatantDidAttackEvent(events: WorldEvent[]): CombatantDidAttack {
@@ -166,7 +166,7 @@ describe('Strike Method', () => {
       expect(mockCreateStrikeCost).toHaveBeenCalled();
       const [weaponMassKg, finesse] = mockCreateStrikeCost.mock.calls[0];
       expect(weaponMassKg).toBeGreaterThan(0);
-      expect(finesse).toBe(getActorEffectiveStatValue(attacker.actor, Stat.FIN));
+      expect(finesse).toBe(getStatValue(attacker.actor, Stat.FIN));
 
       // Verify the tactical AP cost was used
       const finalAP = attackerCombatant.ap.eff.cur;

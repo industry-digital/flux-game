@@ -2,7 +2,7 @@ import { describe, it, expect } from 'vitest';
 import { calculateMovementTime, calculateMovementEnergyCost, calculateDashEnergyCost } from './energy-costs';
 import { calculateMaxEnergy } from '~/worldkit/combat/energy';
 
-describe.skip('Physics-Based Energy Cost Analysis', () => {
+describe('Physics-Based Energy Cost Analysis', () => {
   it('should calculate realistic energy costs using movement physics', () => {
     console.log('\n⚡ PHYSICS-BASED ENERGY COST ANALYSIS\n');
 

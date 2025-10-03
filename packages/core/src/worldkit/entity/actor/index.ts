@@ -127,6 +127,6 @@ export { createActorInventoryApi, type ActorInventoryApi } from './inventory';
 export { createActorEquipmentApi, type ActorEquipmentApi } from './equipment';
 
 export * from './health';
-export * from './actor-stats';
 export * from './skill';
 export * from './wallet';
+export * from './new-stats';

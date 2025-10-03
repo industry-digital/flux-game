@@ -17,7 +17,7 @@ import { TransformerContext } from '~/types/handler';
 import { ActorURN } from '~/types/taxonomy';
 import { MovementActionDependencies, DEFAULT_MOVEMENT_DEPS } from './movement-deps';
 import { createMovementCostFromDistance, createMovementCostFromAp } from '~/worldkit/combat/tactical-cost';
-import { getActorEffectiveStatValue } from '~/worldkit/entity/actor/actor-stats';
+import { getStatValue } from '~/worldkit/entity/actor/new-stats';
 
 export type RetreatDependencies = MovementActionDependencies;
 export const DEFAULT_RETREAT_DEPS = DEFAULT_MOVEMENT_DEPS;
@@ -60,8 +60,8 @@ export function createRetreatMethod(
     const actorMassKg = actorMassGrams / 1000;
 
     // Get actor stats
-    const power = getActorEffectiveStatValue(actor, Stat.POW);
-    const finesse = getActorEffectiveStatValue(actor, Stat.FIN);
+    const power = getStatValue(actor, Stat.POW);
+    const finesse = getStatValue(actor, Stat.FIN);
     const currentPosition = combatant.position.coordinate;
 
     // Calculate retreat direction (opposite of current facing)

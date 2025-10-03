@@ -22,7 +22,7 @@ import { targetingApi } from '~/worldkit/combat/ai/targeting';
 import { TARGET_COST } from '~/worldkit/combat/action/target';
 import { CombatPlanningDependencies, DEFAULT_COMBAT_PLANNING_DEPS } from './deps';
 import { Stat } from '~/types/entity/actor';
-import { getActorEffectiveStatValue } from '~/worldkit/entity/actor/actor-stats';
+import { getStatValue } from '~/worldkit/entity/actor/new-stats';
 
 /**
  * Zero-allocation action sequence builder
@@ -425,7 +425,7 @@ export function* getValidActions(
     throw new Error(`Actor ${combatant.actorId} not found`);
   }
 
-  const finesse = getActorEffectiveStatValue(actor, Stat.FIN);
+  const finesse = getStatValue(actor, Stat.FIN);
   const actorMassGrams = computeActorMass(actor);
   const actorMassKg = actorMassGrams / 1000;
 
@@ -478,8 +478,8 @@ export function* getValidActions(
 
   // MOVEMENT actions (only if last action wasn't MOVE to avoid inefficient consecutive movement)
   if (actor && !lastWasMove) {
-    const power = getActorEffectiveStatValue(actor, Stat.POW);
-    const finesse = getActorEffectiveStatValue(actor, Stat.FIN);
+    const power = getStatValue(actor, Stat.POW);
+    const finesse = getStatValue(actor, Stat.FIN);
     // Move toward target
     if (assessments.primaryTarget) {
       const targetCombatant = situation.validTargets.find(t => t.actorId === assessments.primaryTarget)?.combatant;

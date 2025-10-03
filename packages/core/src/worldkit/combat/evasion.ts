@@ -1,7 +1,7 @@
 import { Actor, Stat } from '~/types/entity/actor';
 import { PotentiallyImpureOperations } from '~/types/handler';
 import { getActorSkill, MAX_SKILL_RANK } from '~/worldkit/entity/actor/skill';
-import { getActorEffectiveStatValue } from '~/worldkit/entity/actor/actor-stats';
+import { getStatValue } from '~/worldkit/entity/actor/new-stats';
 import { calculateInertialMass, calculatePeakPowerOutput } from '~/worldkit/physics/physics';
 
 /**
@@ -205,8 +205,8 @@ export function calculateActorEvasionRating(
 ): number {
   const evasionSkill = getActorSkill(actor, 'flux:skill:evasion');
   const naturalMass = computeActorMass(actor);
-  const finesse = getActorEffectiveStatValue(actor, Stat.FIN);
-  const power = getActorEffectiveStatValue(actor, Stat.POW);
+  const finesse = getStatValue(actor, Stat.FIN);
+  const power = getStatValue(actor, Stat.POW);
   const effectiveMass = calculateInertialMass(finesse, naturalMass);
   const powerOutput = calculatePeakPowerOutput(power);
 

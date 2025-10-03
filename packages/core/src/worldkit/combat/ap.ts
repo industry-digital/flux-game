@@ -1,6 +1,6 @@
 import { Actor } from '~/types/entity/actor';
 import { PotentiallyImpureOperations } from '~/types/handler';
-import { BASELINE_STAT_VALUE, NORMAL_STAT_RANGE } from '~/worldkit/entity/stats';
+import { BASELINE_STAT_VALUE, NORMAL_STAT_RANGE } from '~/worldkit/entity/actor/new-stats';
 import { GOLDEN_RATIO } from '~/types/world/constants';
 import { ActionCost, Combatant } from '~/types/combat';
 import { TACTICAL_AP_PRECISION_FACTOR } from '~/worldkit/combat/tactical-rounding';

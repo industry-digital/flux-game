@@ -15,7 +15,7 @@ import { ALL_REMAINING_AP } from '~/worldkit/combat/ap';
 import { ActorEquipmentApi } from '~/worldkit/entity/actor/equipment';
 import { calculateWeaponApCost } from '~/worldkit/combat/damage';
 import { roundApCostUp } from '~/worldkit/combat/tactical-rounding';
-import { getActorEffectiveStatValue } from '~/worldkit/entity/actor/actor-stats';
+import { getStatValue } from '~/worldkit/entity/actor/new-stats';
 
 /**
  * Context required for parsing combat intents
@@ -286,7 +286,7 @@ function parseStrikeCommand(
   }
 
   // Calculate tactical AP cost using weapon mass and finesse
-  const finesse = getActorEffectiveStatValue(context.currentActor, Stat.FIN);
+  const finesse = getStatValue(context.currentActor, Stat.FIN);
   const preciseApCost = calculateWeaponApCost(weaponMassKg, finesse);
   const tacticalApCost = roundApCostUp(preciseApCost);
 

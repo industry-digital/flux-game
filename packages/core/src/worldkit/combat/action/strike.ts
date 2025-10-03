@@ -21,7 +21,7 @@ import { createStrikeCost } from '~/worldkit/combat/tactical-cost';
 import { calculateAttackRating } from '~/worldkit/combat/attack';
 import { decrementHp } from '~/worldkit/entity/actor/health';
 import { getEffectiveSkillRank } from '~/worldkit/entity/actor/skill';
-import { getActorEffectiveStatValue } from '~/worldkit/entity/actor/actor-stats';
+import { getStatValue } from '~/worldkit/entity/actor/new-stats';
 
 export type StrikeDependencies = {
   createWorldEvent?: typeof createWorldEvent;
@@ -105,7 +105,7 @@ export function createStrikeMethod(
       return [];
     }
 
-    const finesse = getActorEffectiveStatValue(actor, Stat.FIN);
+      const finesse = getStatValue(actor, Stat.FIN);
     const cost: ActionCost = createStrikeCostImpl(weaponMassKg, finesse);
     if (cost.ap! > combatant.ap.eff.cur) {
       declareError(`You don't have enough AP to strike.`, trace);
@@ -140,7 +140,7 @@ export function createStrikeMethod(
 
     if (!hitResolution.evaded) {
       outcome = 'hit';
-      const power = getActorEffectiveStatValue(actor, Stat.POW);
+      const power = getStatValue(actor, Stat.POW);
       damage = calculateWeaponDamageImpl(weaponMassKg, power);
     }
 
