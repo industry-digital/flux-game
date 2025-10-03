@@ -17,7 +17,7 @@ import { EntityType } from '~/types/entity/entity';
 import { EventType } from '~/types/event';
 import { type RollResult } from '~/types/dice';
 import { createTransformerContext } from '~/worldkit/context';
-import { getEffectiveStatBonus } from '~/worldkit/entity/stats';
+import { calculateStatBonus, getStatValue } from '~/worldkit/entity/actor/new-stats';
 
 const TEST_PLACE_ID: PlaceURN = 'flux:place:test-place';
 const TEST_SESSION_ID: SessionURN = 'flux:session:combat:test-session';
@@ -97,11 +97,11 @@ describe('session', () => {
 
       // Create dependencies with controlled RNG
       const testDeps: CreateCombatantDependencies = {
-        getEffectiveStatBonus: getEffectiveStatBonus,
         computeInitiative: (actor: Actor) => {
           // Use the mock roll result but add perception bonus
           const mockResult = mockExecuteRoll('1d20', []);
-          const bonus = getEffectiveStatBonus(actor, Stat.PER);
+          const perceptionValue = getStatValue(actor, Stat.PER);
+          const bonus = calculateStatBonus(perceptionValue);
           return {
             ...mockResult,
             result: mockResult.natural + bonus,

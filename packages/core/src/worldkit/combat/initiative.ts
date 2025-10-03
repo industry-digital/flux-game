@@ -1,21 +1,22 @@
-import { Actor, ActorStat, ActorURN, RollResult } from '~/types';
+import { Actor, ActorURN, RollResult } from '~/types';
 import { Combatant } from '~/types/combat';
 import { Stat } from '~/types/entity/actor';
 import { rollDiceWithRng } from '~/worldkit/dice';
-import { getEffectiveStatBonus } from '~/worldkit/entity/stats';
-import { getActorEffectiveStatValue } from '~/worldkit/entity/actor/actor-stats';
+import { calculateStatBonus, getStatValue } from '~/worldkit/entity/actor/new-stats';
 
 export const INITIATIVE_ROLL_SPECIFICATION = '1d20';
 
 export type InitiativeDependencies = {
   random: () => number;
-  getEffectiveStatBonus: typeof getEffectiveStatBonus;
+  calculateStatBonus: typeof calculateStatBonus;
+  getStatValue: typeof getStatValue;
   rollDiceWithRng: typeof rollDiceWithRng;
 }
 
 const DEFAULT_INITIATIVE_DEPS: InitiativeDependencies = {
   random: () => Math.random(),
-  getEffectiveStatBonus: getEffectiveStatBonus,
+  calculateStatBonus: calculateStatBonus,
+  getStatValue: getStatValue,
   rollDiceWithRng: rollDiceWithRng,
 }
 
@@ -23,7 +24,8 @@ export function computeInitiativeRoll(
   actor: Actor,
   deps: InitiativeDependencies = DEFAULT_INITIATIVE_DEPS,
 ): RollResult {
-  const bonus = deps.getEffectiveStatBonus(actor, ActorStat.PER);
+  const perceptionValue = deps.getStatValue(actor, Stat.PER);
+  const bonus = deps.calculateStatBonus(perceptionValue);
   const { values, sum: natural } = deps.rollDiceWithRng('1d20', deps.random);
   const result = natural + bonus;
 
@@ -66,7 +68,7 @@ export const DEFAULT_TIE_BREAKER: InitiativeTieBreaker = (a, b) => {
     return rollDelta;
   }
 
-  const finesseDelta = getActorEffectiveStatValue(b.actor, Stat.FIN) - getActorEffectiveStatValue(a.actor, Stat.FIN);
+  const finesseDelta = getStatValue(b.actor, Stat.FIN) - getStatValue(a.actor, Stat.FIN);
   if (finesseDelta !== 0) {
     return finesseDelta;
   }
@@ -74,7 +76,7 @@ export const DEFAULT_TIE_BREAKER: InitiativeTieBreaker = (a, b) => {
   // ASSUMPTION: Perception was already accounted for in the roll
   // We should *not* bonus perception again. Instead we rely on FIN to break ties
   // Use our new utilities for modifier-aware stat comparison
-  const perceptionDelta = getActorEffectiveStatValue(b.actor, Stat.PER) - getActorEffectiveStatValue(a.actor, Stat.PER);
+  const perceptionDelta = getStatValue(b.actor, Stat.PER) - getStatValue(a.actor, Stat.PER);
   if (perceptionDelta !== 0) {
     return perceptionDelta;
   }

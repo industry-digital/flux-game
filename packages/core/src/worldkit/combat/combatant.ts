@@ -14,7 +14,6 @@ import { getMaxEnergy } from '~/worldkit/entity/actor/capacitor';
 import { createDoneMethod } from '~/worldkit/combat/action/done';
 import { cleanApPrecision } from '~/worldkit/combat/ap';
 import { computeInitiativeRoll } from '~/worldkit/combat/initiative';
-import { getEffectiveStatBonus } from '~/worldkit/entity/stats';
 export { deductAp } from '~/worldkit/combat/ap';
 
 export const MOVE_BY_AP = 'ap' as const;
@@ -148,7 +147,6 @@ export function createCombatantSummary(combatant: Combatant): CombatantSummary {
 export type CreateCombatantDependencies = {
   computeInitiative: typeof computeInitiativeRoll;
   initializeCombatantAttributes: typeof initializeCombatantAttributes;
-  getEffectiveStatBonus: typeof getEffectiveStatBonus;
 }
 
 type Transformer = <T>(input: T) => T;
@@ -157,7 +155,6 @@ const identity: Transformer = (input) => input;
 export const DEFAULT_CREATE_COMBATANT_DEPS: Readonly<CreateCombatantDependencies> = {
   computeInitiative: computeInitiativeRoll,
   initializeCombatantAttributes: initializeCombatantAttributes,
-  getEffectiveStatBonus: getEffectiveStatBonus,
 };
 
 /**
