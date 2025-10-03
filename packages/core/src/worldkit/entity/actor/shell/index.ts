@@ -219,3 +219,69 @@ export const generateRandomShellName = (
   const noun = SHELL_NAME_NOUNS[Math.floor(random() * SHELL_NAME_NOUNS.length)];
   return `${adjective}${noun}${randomNumber}`;
 };
+
+type ShellStatKey = Stat.POW | Stat.FIN | Stat.RES;
+
+/**
+ * Helper function to get effective stat value from a shell
+ * This provides a consistent interface for shell stat access
+ */
+export const getShellStatValue = (shell: Shell, stat: ShellStatKey): number => {
+  const attr = shell.stats[stat];
+  if (!attr) {
+    throw new Error(`Shell does not have stat ${stat}`);
+  }
+  return attr.eff;
+};
+
+/**
+ * Helper function to get natural stat value from a shell
+ */
+export const getShellNaturalStatValue = (shell: Shell, stat: ShellStatKey): number => {
+  const attr = shell.stats[stat];
+  if (!attr) {
+    throw new Error(`Shell does not have stat ${stat}`);
+  }
+  return attr.nat;
+};
+
+/**
+ * Helper function to set effective stat value on a shell
+ * Useful for mutations and test setup
+ */
+export const setShellStatValue = (shell: Shell, stat: ShellStatKey, value: number): void => {
+  const attr = shell.stats[stat];
+  if (!attr) {
+    throw new Error(`Shell does not have stat ${stat}`);
+  }
+  attr.eff = value;
+};
+
+/**
+ * Helper function to set natural stat value on a shell
+ * Useful for mutations and test setup
+ */
+export const setShellNaturalStatValue = (shell: Shell, stat: ShellStatKey, value: number): void => {
+  const attr = shell.stats[stat];
+  if (!attr) {
+    throw new Error(`Shell does not have stat ${stat}`);
+  }
+  attr.nat = value;
+};
+
+/**
+ * Refresh shell stats by recalculating effective values from natural + modifiers
+ * This is a simplified version for shells only
+ */
+export const refreshShellStats = (shell: Shell, statNames?: readonly ShellStatKey[]): void => {
+  const statsToRefresh = statNames || [Stat.POW, Stat.FIN, Stat.RES];
+
+  for (const stat of statsToRefresh) {
+    const attr = shell.stats[stat];
+    if (attr) {
+      // Simple refresh: for shells, we typically just copy nat to eff
+      // In a more complex system, this would apply modifiers
+      attr.eff = attr.nat;
+    }
+  }
+};
