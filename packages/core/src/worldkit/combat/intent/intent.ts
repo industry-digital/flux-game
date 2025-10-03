@@ -541,68 +541,6 @@ function parseMovementArgs(
 }
 
 /**
- * Resolve target name to ActorURN with fuzzy matching
- * Security: Only returns validated ActorURN from available targets
- */
-function resolveTarget(
-  targetName: string,
-  availableTargets: Actor[]
-): { success: true; target: ResolvedTarget } | { success: false; error: string } {
-  if (!targetName || targetName.trim().length === 0) {
-    return { success: false, error: 'Target name cannot be empty' };
-  }
-
-  const originalName = targetName.trim(); // Preserve original case for error messages
-  const normalizedName = originalName.toLowerCase();
-
-  // First try exact match
-  for (const target of availableTargets) {
-    if (target.name.toLowerCase() === normalizedName) {
-      return {
-        success: true,
-        target: { actorId: target.id, name: target.name }
-      };
-    }
-  }
-
-  // Then try prefix match
-  const prefixMatches = availableTargets.filter(target =>
-    target.name.toLowerCase().startsWith(normalizedName)
-  );
-
-  if (prefixMatches.length === 1) {
-    return {
-      success: true,
-      target: { actorId: prefixMatches[0].id, name: prefixMatches[0].name }
-    };
-  }
-
-  if (prefixMatches.length > 1) {
-    const names = prefixMatches.map(t => t.name).join(', ');
-    return { success: false, error: `Ambiguous target "${originalName}". Could be: ${names}` };
-  }
-
-  // Finally try substring match
-  const substringMatches = availableTargets.filter(target =>
-    target.name.toLowerCase().includes(normalizedName)
-  );
-
-  if (substringMatches.length === 1) {
-    return {
-      success: true,
-      target: { actorId: substringMatches[0].id, name: substringMatches[0].name }
-    };
-  }
-
-  if (substringMatches.length > 1) {
-    const names = substringMatches.map(t => t.name).join(', ');
-    return { success: false, error: `Ambiguous target "${originalName}". Could be: ${names}` };
-  }
-
-  return { success: false, error: `Target "${originalName}" not found` };
-}
-
-/**
  * Validate that a value is a finite number
  */
 function isValidNumber(value: number): boolean {

@@ -11,11 +11,11 @@ describe('Entity Resolver Benchmarks', () => {
       const resolverApi = createEntityResolverApi(world);
 
       const intents = [
-        createTestIntent('attack knight', ['knight'], sampleActor, sampleLocation),
-        createTestIntent('talk to wizard', ['wizard'], sampleActor, sampleLocation),
-        createTestIntent('look at swift', ['swift'], sampleActor, sampleLocation),
-        createTestIntent('cast spell on mighty', ['mighty'], sampleActor, sampleLocation),
-        createTestIntent('quickly strike the ancient paladin', ['ancient', 'paladin'], sampleActor, sampleLocation, ['strike'], ['quickly']),
+        createTestIntent('attack knight', sampleActor, sampleLocation),
+        createTestIntent('talk to wizard', sampleActor, sampleLocation),
+        createTestIntent('look at swift', sampleActor, sampleLocation),
+        createTestIntent('cast spell on mighty', sampleActor, sampleLocation),
+        createTestIntent('quickly strike the ancient paladin', sampleActor, sampleLocation),
       ];
 
       const metrics = measureThroughput(resolverApi, intents, 100);
@@ -46,10 +46,10 @@ describe('Entity Resolver Benchmarks', () => {
     const resolverApi = createEntityResolverApi(world);
 
     const intents = [
-      createTestIntent('attack knight', ['knight'], sampleActor, sampleLocation),
-      createTestIntent('talk to wizard', ['wizard'], sampleActor, sampleLocation),
-      createTestIntent('look at archer', ['archer'], sampleActor, sampleLocation),
-      createTestIntent('cast spell on rogue', ['rogue'], sampleActor, sampleLocation),
+      createTestIntent('attack knight', sampleActor, sampleLocation),
+      createTestIntent('talk to wizard', sampleActor, sampleLocation),
+      createTestIntent('look at archer', sampleActor, sampleLocation),
+      createTestIntent('cast spell on rogue', sampleActor, sampleLocation),
     ];
 
     console.log('\n=== 1000-Intent Batch Simulation ===');

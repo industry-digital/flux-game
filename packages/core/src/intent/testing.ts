@@ -11,22 +11,19 @@ import { createPlaceUrn } from '~/lib/taxonomy';
  */
 export const createTestIntent = (
   text: string,
-  nouns: string[],
   actor: ActorURN,
-  location: PlaceURN,
-  verbs: string[] = [],
-  adjectives: string[] = []
+  location: PlaceURN
 ): Intent => ({
   id: 'test-intent',
   actor,
   location,
   text,
   normalized: text.toLowerCase(),
-  tokens: text.toLowerCase().split(' '),
+  tokens: new Set(text.toLowerCase().split(/\s+/).filter(token => token.length >= 2)),
   nlp: {
-    verbs,
-    nouns,
-    adjectives,
+    verbs: [],
+    nouns: [],
+    adjectives: [],
     doc: null
   }
 });
@@ -88,14 +85,16 @@ export const createStandardTestWorld = (): {
   return { world, testPlace1, testPlace2, knight, wizard, archer };
 };
 
-/**
- * Creates a benchmark world with the specified number of actors
- */
-export const createBenchmarkWorld = (actorCount: number): {
+export type BenchmarkWorld = {
   world: WorldProjection;
   sampleActor: ActorURN;
   sampleLocation: PlaceURN;
-} => {
+};
+
+/**
+ * Creates a benchmark world with the specified number of actors
+ */
+export const createBenchmarkWorld = (actorCount: number): BenchmarkWorld => {
   const testPlace = {
     id: createPlaceUrn('bench', 'test-place') as PlaceURN,
     name: 'Benchmark Place',

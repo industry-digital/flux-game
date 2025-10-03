@@ -14,6 +14,7 @@ import { ActorCapacitorApi } from '~/worldkit/entity/actor/capacitor';
 import { ActorSkillApi } from '~/worldkit/entity/actor/skill';
 import { rollDiceWithRng } from '~/worldkit/dice';
 import { ActorSessionApi } from '~/worldkit/entity/actor/session';
+import { EntityResolverApi } from '~/intent/resolvers';
 
 /** Combat metrics collection interface for performance monitoring and telemetry */
 export type CombatMetrics = {
@@ -187,17 +188,27 @@ export type Intent = {
    */
   normalized: string;
   /**
-   * Array of tokens created from `normalized`
+   * Pre-sorted unique tokens created from `normalized`
    */
-  tokens: string[];
+  tokens: Set<string>;
 
   /**
    * NLP analysis of the intent text
+   * @deprecated
    */
   nlp: NaturalLanguageAnalysis;
 };
 
-export type IntentParser<TCommand extends Command> = (world: WorldProjection, intent: Intent) => TCommand | undefined;
+export type IntentParserContext = {
+  world: WorldProjection;
+  resolvers: EntityResolverApi;
+  uniqid: Pick<PotentiallyImpureOperations, 'uniqid'>;
+};
+
+export type IntentParser<TCommand extends Command> = (
+  context: IntentParserContext,
+  intent: Intent,
+) => TCommand | undefined;
 
 /** Handler that associates a reducer with its dependencies */
 export type PureHandlerInterface<

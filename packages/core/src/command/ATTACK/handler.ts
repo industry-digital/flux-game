@@ -1,4 +1,11 @@
-import { PureHandlerInterface, PureReducer, TransformerContext } from '~/types/handler';
+import {
+  Intent,
+  IntentParser,
+  IntentParserContext,
+  PureHandlerInterface,
+  PureReducer,
+  TransformerContext,
+} from '~/types/handler';
 import { CommandType, Command, ActorCommand } from '~/types/intent';
 import { isCommandOfType } from '~/lib/intent';
 import { ActorURN } from '~/types/taxonomy';
@@ -62,9 +69,53 @@ export const attackReducer: PureReducer<TransformerContext, AttackCommand> = (co
   return context;
 };
 
+export const attackIntentParser: IntentParser<AttackCommand> = (
+  context: IntentParserContext,
+  intent: Intent,
+): AttackCommand | undefined => {
+  const { world, resolvers, uniqid } = context;
+
+  // Check if this is an attack command
+  if (!intent.tokens[0]?.startsWith('attack')) {
+    return undefined;
+  }
+
+  // Use the blazing-fast entity resolver to find the target
+  const target = resolvers.resolveActor(intent);
+  if (!target) {
+    // No valid target found in the intent
+    return undefined;
+  }
+
+  // Ensure the attacking actor exists
+  const attacker = world.actors[intent.actor];
+  if (!attacker) {
+    return undefined;
+  }
+
+  // Validate that attacker and target are in the same location
+  if (attacker.location !== target.location) {
+    return undefined;
+  }
+
+  // Return the properly formed AttackCommand
+  return {
+    __type: 'command',
+    id: uniqid.uniqid(),
+    ts: Date.now(),
+    actor: intent.actor,
+    location: intent.location,
+    type: CommandType.ATTACK,
+    args: {
+      target: target.id
+    }
+  };
+};
+
 export class ATTACK implements PureHandlerInterface<TransformerContext, AttackCommand> {
-  reduce = attackReducer;
   dependencies = [];
+  reduce = attackReducer;
+  parse = attackIntentParser;
   handles = (command: Command): command is AttackCommand => {
     return isCommandOfType<CommandType.ATTACK, AttackCommandArgs>(command, CommandType.ATTACK);
   };
