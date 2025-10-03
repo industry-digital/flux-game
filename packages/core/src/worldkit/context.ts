@@ -11,6 +11,7 @@ import { createActorEquipmentApi } from '~/worldkit/entity/actor/equipment';
 import { createActorCapacitorApi } from '~/worldkit/entity/actor/capacitor';
 import { createCombatMetricsApi } from '~/worldkit/combat/metrics';
 import { createActorSkillApi } from '~/worldkit/entity/actor/skill';
+import { createActorSessionApi } from '~/worldkit/entity/actor/session';
 
 export type MapFunction<T> = (context: T) => T;
 const identity = <T extends any>(context: T): T => context;
@@ -60,6 +61,7 @@ export const createTransformerContext = (
   actorSkillApi = createActorSkillApi(),
   capacitorApi = createActorCapacitorApi(),
   metrics = createCombatMetricsApi(),
+  actorSessionApi = createActorSessionApi(world.sessions),
 ): TransformerContext => {
   const declaredEvents: WorldEvent[] = [];
   const declaredEventsByType: Map<EventType, WorldEvent[]> = new Map();
@@ -138,7 +140,7 @@ export const createTransformerContext = (
     equipmentApi,
     capacitorApi,
     actorSkillApi,
-
+    actorSessionApi,
     metrics,
 
     ...deps,

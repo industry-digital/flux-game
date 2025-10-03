@@ -6,19 +6,20 @@ import { createActor, ActorTransformer } from '~/worldkit/entity/actor';
 import { createPlace } from '~/worldkit/entity/place';
 import { createWorldProjection } from '~/worldkit/context';
 import { identity } from '~/types/testing';
+import { WorldProjection } from '~/types/handler';
+
+export type WorldProjectionInput = Partial<WorldProjection>;
 
 /**
  * Hook-style utility for creating mock world states
  * Pure function that returns a new world projection each time
  */
-export const createWorld = (overrides?: {
-  actors?: Record<ActorURN, Actor>;
-  places?: Record<PlaceURN, Place>;
-}) => {
+export const createWorld = (overrides?: WorldProjectionInput) => {
   return createWorldProjection((world) => ({
     ...world,
     actors: { ...world.actors, ...overrides?.actors },
     places: { ...world.places, ...overrides?.places },
+    sessions: { ...world.sessions, ...overrides?.sessions },
     ...overrides,
   }));
 };

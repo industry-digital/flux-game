@@ -42,24 +42,25 @@ export const DEFAULT_ACTOR_FACTORY_DEPS: ActorFactoryDependencies = {
 
 export function createActor(): Actor;
 export function createActor(input: ActorInput, deps?: ActorFactoryDependencies): Actor;
-export function createActor(transfor: ActorTransformer, deps?: ActorFactoryDependencies): Actor;
+export function createActor(transform: ActorTransformer, deps?: ActorFactoryDependencies): Actor;
 
 export function createActor(
-  input?: ActorInput | ActorTransformer | undefined,
+  inputOrTransform?: ActorInput | ActorTransformer | undefined,
   deps: ActorFactoryDependencies = DEFAULT_ACTOR_FACTORY_DEPS,
 ): Actor {
   const actor = createDefaultActor(deps);
 
-  if (typeof input === 'function') {
+  if (typeof inputOrTransform === 'function') {
     // Input is a transformer function
-    const transform = input;
+    const transform = inputOrTransform as ActorTransformer;
     deps.refreshCapacitorEnergy(actor);
     deps.initializeWallet(actor);
     return transform(actor);
   }
 
-  if (input) {
+  if (inputOrTransform) {
     // Input is ActorInput data
+    const input = inputOrTransform as ActorInput;
     merge(actor, input);
   }
 
@@ -113,6 +114,7 @@ const createDefaultActor = (deps: ActorFactoryDependencies): Actor => {
     shells: {
       [defaultShell.id]: defaultShell,
     },
+    sessions: {},
   };
 };
 

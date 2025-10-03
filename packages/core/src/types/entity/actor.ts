@@ -1,4 +1,4 @@
-import { Taxonomy, ItemURN, PlaceURN, ActorURN, GroupURN, SchemaURN, SkillURN } from '~/types/taxonomy';
+import { Taxonomy, ItemURN, PlaceURN, GroupURN, SchemaURN, SkillURN, SessionURN } from '~/types/taxonomy';
 import { AppliedEffects } from '~/types/taxonomy/effect';
 import { EntityType, AbstractEntity, Describable } from '~/types/entity/entity';
 import { SkillState, Specializations } from '~/types/entity/skill';
@@ -153,20 +153,7 @@ export type CapacitorState = CurvePosition & {
  * The input type for creating a new Actor, containing only the required fields
  * that need to be provided when creating an Actor.
  */
-export type ActorInput = {
-  id?: ActorURN;
-  name?: string;
-  kind?: ActorType;
-  description?: string;
-  location?: PlaceURN;
-  subtype?: ActorType;
-  hp?: Actor['hp'];
-  stats?: Actor['stats'];
-  equipment?: Actor['equipment'];
-  inventory?: Actor['inventory'];
-  capacitor?: Actor['capacitor'];
-  skills?: Actor['skills'];
-};
+export type ActorInput = Partial<Actor>;
 
 /**
  * An actor is any kind of entity that has the ability to act "autonomously" in the world.
@@ -272,6 +259,11 @@ export type Actor =
 
   currentShell: string;
   shells: Record<string, Shell>;
+
+  /**
+   * Currently active sessions
+   */
+  sessions: Record<SessionURN, 1>;
 };
 
 export type Autonomous = {

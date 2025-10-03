@@ -13,6 +13,7 @@ import { ActorInventoryApi } from '~/worldkit/entity/actor/inventory';
 import { ActorCapacitorApi } from '~/worldkit/entity/actor/capacitor';
 import { ActorSkillApi } from '~/worldkit/entity/actor/skill';
 import { rollDiceWithRng } from '~/worldkit/dice';
+import { ActorSessionApi } from '~/worldkit/entity/actor/session';
 
 /** Combat metrics collection interface for performance monitoring and telemetry */
 export type CombatMetrics = {
@@ -142,6 +143,7 @@ export type TransformerContext<W extends WorldProjection = WorldProjection> =
     inventoryApi: ActorInventoryApi;
     equipmentApi: ActorEquipmentApi;
     actorSkillApi: ActorSkillApi;
+    actorSessionApi: ActorSessionApi;
     /**
      * @deprecated Use the pure functions directly instead
      */

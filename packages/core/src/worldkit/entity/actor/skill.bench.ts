@@ -44,7 +44,9 @@ const createBenchmarkActor = (skillRank: number, modifierCount: number): Actor =
 
   return createActor({
     name: 'Benchmark Actor',
-    description: 'Actor for performance testing',
+    description: {
+      base: 'Actor for performance testing',
+    },
     skills: { 'flux:skill:benchmark': skillState } as Record<SkillURN, SkillState>,
   });
 };
