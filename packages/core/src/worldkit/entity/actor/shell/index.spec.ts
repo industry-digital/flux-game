@@ -13,15 +13,17 @@ import {
   applyShellStats,
   cloneShell,
   generateRandomShellName,
-  CreateShellInput
+  ShellInput
 } from './index';
 import { createActor } from '../index';
+
+const DEFAULT_TIMESTAMP = 1234567890000;
 
 // Test fixtures
 const createTestActor = (): Actor => {
   return createActor({
     name: 'Test Actor',
-    description: 'Test actor for shell tests',
+    description: { base: 'Test actor for shell tests' },
   });
 };
 
@@ -34,7 +36,7 @@ const createTestShell = (overrides: Partial<Shell> = {}): Shell => {
       [Stat.FIN]: createModifiableScalarAttribute((attr) => ({ ...attr, nat: 12, eff: 12 })),
       [Stat.RES]: createModifiableScalarAttribute((attr) => ({ ...attr, nat: 18, eff: 18 })),
     },
-    inventory: createInventory(),
+    inventory: createInventory(DEFAULT_TIMESTAMP),
     equipment: {},
     ...overrides,
   };
@@ -46,6 +48,20 @@ const createTestStat = (overrides: Partial<ModifiableScalarAttribute> = {}): Mod
   mods: {},
   ...overrides,
 });
+
+const createShellFactoryDependencies = (overrides: any = {}) => {
+  return {
+    hashUnsafeString: () => 'deterministic-id',
+    createInventory: () => ({
+      mass: 100,
+      items: {},
+      ts: DEFAULT_TIMESTAMP,
+    }),
+    generateRandomShellName: () => 'Test Shell',
+    timestamp: () => DEFAULT_TIMESTAMP,
+    ...overrides,
+  };
+};
 
 describe('Shell Management Functions', () => {
   let actor: Actor;
@@ -122,35 +138,227 @@ describe('Shell Management Functions', () => {
 });
 
 describe('Shell Creation', () => {
-  it('should create shell with no arguments', () => {
-    const shell = createShell();
-    expect(shell.id).toBeDefined();
-    expect(shell.name).toBeDefined();
-    expect(shell.stats[Stat.POW].nat).toBe(10);
-    expect(shell.stats[Stat.FIN].nat).toBe(10);
-    expect(shell.stats[Stat.RES].nat).toBe(10);
+  describe('createShell() - no arguments', () => {
+    it('should create shell with default values', () => {
+      const shell = createShell();
+      expect(shell.id).toBeDefined();
+      expect(shell.name).toBeDefined();
+      expect(shell.stats[Stat.POW].nat).toBe(10);
+      expect(shell.stats[Stat.FIN].nat).toBe(10);
+      expect(shell.stats[Stat.RES].nat).toBe(10);
+      expect(shell.inventory).toBeDefined();
+      expect(shell.equipment).toEqual({});
+    });
+
+    it('should generate unique IDs for multiple shells', () => {
+      const shell1 = createShell();
+      const shell2 = createShell();
+      expect(shell1.id).not.toBe(shell2.id);
+      expect(shell1.name).not.toBe(shell2.name);
+    });
   });
 
-  it('should create shell with custom input', () => {
-    const input: CreateShellInput = {
-      id: 'custom-id',
-      name: 'Custom Shell',
-    };
-    const shell = createShell(input);
-    expect(shell.id).toBe('custom-id');
-    expect(shell.name).toBe('Custom Shell');
+  describe('createShell(input, deps?) - input with optional dependencies', () => {
+    it('should create shell with custom input', () => {
+      const input: ShellInput = {
+        id: 'custom-id',
+        name: 'Custom Shell',
+      };
+      const shell = createShell(input);
+      expect(shell.id).toBe('custom-id');
+      expect(shell.name).toBe('Custom Shell');
+    });
+
+    it('should use provided stats from input', () => {
+      const customStats = {
+        [Stat.POW]: createTestStat({ nat: 20, eff: 20 }),
+        [Stat.FIN]: createTestStat({ nat: 15, eff: 15 }),
+        [Stat.RES]: createTestStat({ nat: 25, eff: 25 }),
+      };
+      const shell = createShell({ stats: customStats });
+      expect(shell.stats[Stat.POW].nat).toBe(20);
+      expect(shell.stats[Stat.FIN].nat).toBe(15);
+      expect(shell.stats[Stat.RES].nat).toBe(25);
+    });
+
+    it('should use provided inventory from input', () => {
+      const customInventory = createInventory();
+      customInventory.mass = 500;
+      const shell = createShell({ inventory: customInventory });
+      expect(shell.inventory.mass).toBe(500);
+    });
+
+    it('should use custom dependencies for deterministic creation', () => {
+      const input: ShellInput = {
+        name: 'Test Shell'
+      };
+      const deps = {
+        hashUnsafeString: () => 'deterministic-id',
+        createInventory: () => ({
+          mass: 100,
+          items: {},
+          ts: DEFAULT_TIMESTAMP,
+        }),
+        generateRandomShellName: () => 'Test Shell',
+        timestamp: () => DEFAULT_TIMESTAMP,
+      };
+
+      const shell = createShell(input, deps);
+      expect(shell.id).toBe('deterministic-id');
+      expect(shell.name).toBe('Test Shell');
+      expect(shell.inventory.mass).toBe(100);
+      expect(shell.inventory.ts).toBe(DEFAULT_TIMESTAMP);
+    });
+
+    it('should fall back to hashUnsafeString when no id provided in input', () => {
+      const input: ShellInput = {
+        name: 'No ID Shell'
+      };
+      const deps = createShellFactoryDependencies({
+        hashUnsafeString: (name: string) => `hashed-${name}`,
+        createInventory: () => createInventory()
+      });
+
+      const shell = createShell(input, deps);
+      expect(shell.id).toBe('hashed-No ID Shell');
+      expect(shell.name).toBe('No ID Shell');
+    });
   });
 
-  it('should use provided stats', () => {
-    const customStats = {
-      [Stat.POW]: createTestStat({ nat: 20, eff: 20 }),
-      [Stat.FIN]: createTestStat({ nat: 15, eff: 15 }),
-      [Stat.RES]: createTestStat({ nat: 25, eff: 25 }),
-    };
-    const shell = createShell({ stats: customStats });
-    expect(shell.stats[Stat.POW].nat).toBe(20);
-    expect(shell.stats[Stat.FIN].nat).toBe(15);
-    expect(shell.stats[Stat.RES].nat).toBe(25);
+  describe('createShell(transform, deps?) - transform with optional dependencies', () => {
+    it('should apply transform function to default shell', () => {
+      const transform = (shell: Shell): Shell => ({
+        ...shell,
+        name: 'Transformed Shell',
+        stats: {
+          ...shell.stats,
+          [Stat.POW]: createTestStat({ nat: 99, eff: 99 })
+        }
+      });
+
+      const shell = createShell(transform);
+      expect(shell.name).toBe('Transformed Shell');
+      expect(shell.stats[Stat.POW].nat).toBe(99);
+      expect(shell.stats[Stat.FIN].nat).toBe(10); // Unchanged
+    });
+
+    it('should apply transform with custom dependencies', () => {
+      const transform = (shell: Shell): Shell => ({
+        ...shell,
+        name: 'Transformed Shell'
+      });
+
+      const deps = createShellFactoryDependencies({
+        hashUnsafeString: () => 'transform-id',
+        generateRandomShellName: () => 'transform-name',
+        createInventory: () => ({
+          mass: 200,
+          items: {},
+          ts: 9876543210
+        })
+      });
+
+      const shell = createShell(transform, deps);
+      expect(shell.id).toBe('transform-id');
+      expect(shell.name).toBe('Transformed Shell');
+      expect(shell.inventory.mass).toBe(200);
+      expect(shell.inventory.ts).toBe(9876543210);
+    });
+
+    it('should allow complex transformations', () => {
+      const transform = (shell: Shell): Shell => {
+        // Zero-allocation mutation pattern
+        mutateShellStats(shell.stats, {
+          [Stat.POW]: 50,
+          [Stat.FIN]: 30,
+          [Stat.RES]: 70
+        });
+        return {
+          ...shell,
+          name: 'Combat Shell'
+        };
+      };
+
+      const shell = createShell(transform);
+      expect(shell.name).toBe('Combat Shell');
+      expect(shell.stats[Stat.POW].nat).toBe(50);
+      expect(shell.stats[Stat.FIN].nat).toBe(30);
+      expect(shell.stats[Stat.RES].nat).toBe(70);
+    });
+  });
+
+  describe('Dependency injection patterns', () => {
+    it('should use deterministic dependencies for testing', () => {
+      const deterministicDeps = createShellFactoryDependencies({
+        hashUnsafeString: () => 'test-id',
+        createInventory: () => ({
+          mass: 0,
+          items: {},
+          ts: 1234567890
+        })
+      });
+
+      // Use the transform overload: createShell(transform, deps)
+      const identityTransform = (shell: Shell): Shell => shell;
+      const shell1 = createShell(identityTransform, deterministicDeps);
+      const shell2 = createShell(identityTransform, deterministicDeps);
+
+      // Same dependencies should produce identical results
+      expect(shell1.id).toBe(shell2.id);
+      expect(shell1.inventory.ts).toBe(shell2.inventory.ts);
+    });
+
+    it('should handle custom inventory creation', () => {
+      const customInventoryCreator = () => ({
+        mass: 999,
+        items: { 'test-item': { id: 'test-item' as any, schema: 'test-schema' as any } },
+        ts: 5555555555
+      });
+
+      const deps = createShellFactoryDependencies({
+        hashUnsafeString: (name: string) => `custom-${name}`,
+        createInventory: customInventoryCreator
+      });
+
+      // Use the transform overload: createShell(transform, deps)
+      const identityTransform = (shell: Shell): Shell => shell;
+      const shell = createShell(identityTransform, deps);
+      expect(shell.inventory.mass).toBe(999);
+      expect(shell.inventory.items['test-item']).toBeDefined();
+      expect(shell.inventory.ts).toBe(5555555555);
+    });
+  });
+
+  describe('Edge cases and error handling', () => {
+    it('should handle empty input object', () => {
+      const shell = createShell({});
+      expect(shell.id).toBeDefined();
+      expect(shell.name).toBeDefined();
+      expect(shell.stats).toBeDefined();
+      expect(shell.inventory).toBeDefined();
+      expect(shell.equipment).toEqual({});
+    });
+
+    it('should handle partial stats in input', () => {
+      const partialStats = {
+        [Stat.POW]: createTestStat({ nat: 25, eff: 25 })
+        // Missing FIN and RES
+      };
+
+      const shell = createShell({ stats: partialStats });
+      expect(shell.stats[Stat.POW].nat).toBe(25);
+      expect(shell.stats[Stat.FIN].nat).toBe(10); // Default
+      expect(shell.stats[Stat.RES].nat).toBe(10); // Default
+    });
+
+    it('should handle identity transform', () => {
+      const identityTransform = (shell: Shell): Shell => shell;
+      const shell = createShell(identityTransform);
+
+      expect(shell.id).toBeDefined();
+      expect(shell.name).toBeDefined();
+      expect(shell.stats[Stat.POW].nat).toBe(10);
+    });
   });
 });
 

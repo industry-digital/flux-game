@@ -16,7 +16,7 @@ export type SkillState = {
   /**
    * The modifiers affecting this skill
    */
-  mods: AppliedModifiers;
+  mods?: AppliedModifiers;
 
   /**
    * Permanently acquired experience in this skill

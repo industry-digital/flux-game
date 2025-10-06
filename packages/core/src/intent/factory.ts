@@ -4,6 +4,7 @@ import { ActorURN, PlaceURN } from '~/types/taxonomy';
 
 export type IntentInput = {
   id: string;
+  ts?: number;
   actor: ActorURN;
   location: PlaceURN;
   text: string;

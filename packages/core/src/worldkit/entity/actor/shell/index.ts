@@ -4,6 +4,11 @@ import { Stat, ShellStats } from '~/types/entity/actor';
 import { createModifiableScalarAttribute } from '~/worldkit/entity';
 import { createInventory } from '~/worldkit/entity/actor/inventory';
 import { hashUnsafeString } from '~/worldkit/hash';
+import { PotentiallyImpureOperations } from '~/types';
+import { generateRandomShellName } from './name';
+
+// Re-export for testing
+export { generateRandomShellName };
 
 export const addShellToActor = (actor: Actor, shell: Shell = createShell()) => {
   actor.shells[shell.id] = shell;
@@ -41,75 +46,64 @@ export const findShellByNameOrId = (actor: Actor, input: string): { shell: any; 
 };
 
 
-export type CreateShellInput = {
+export type ShellInput = {
   id?: Shell['id'];
   name?: Shell['name'];
   inventory?: Shell['inventory'];
   equipment?: Shell['equipment'];
-  stats?: ShellStats;
+  stats?: Partial<ShellStats>;
 };
 
 export type ShellTransformer = (shell: Shell) => Shell;
 const identity: ShellTransformer = (shell: Shell) => shell;
 
-export type CreateShellDependencies = {
+export type ShellFactoryDependencies = {
   hashUnsafeString: typeof hashUnsafeString;
   createInventory: typeof createInventory;
+  generateRandomShellName: typeof generateRandomShellName;
+  timestamp: PotentiallyImpureOperations['timestamp'],
 };
 
-export const DEFAULT_CREATE_SHELL_DEPS: CreateShellDependencies = {
+export const DEFAULT_SHELL_FACTORY_DEPS: ShellFactoryDependencies = {
   hashUnsafeString,
   createInventory,
+  generateRandomShellName,
+  timestamp: () => Date.now(),
 };
 
-export function createShell(input: CreateShellInput, transform?: ShellTransformer, deps?: CreateShellDependencies): Shell;
-export function createShell(transform: ShellTransformer, deps?: CreateShellDependencies): Shell;
-export function createShell(deps?: CreateShellDependencies): Shell;
+export function createShell(): Shell;
+export function createShell(input: ShellInput, deps?: ShellFactoryDependencies): Shell;
+export function createShell(transform: ShellTransformer, deps?: ShellFactoryDependencies): Shell;
 
 export function createShell(
-  inputOrTransformOrDeps?: CreateShellInput | ShellTransformer | CreateShellDependencies,
-  transformOrDeps?: ShellTransformer | CreateShellDependencies,
-  deps: CreateShellDependencies = DEFAULT_CREATE_SHELL_DEPS,
+  inputOrTransform?: ShellInput | ShellTransformer | undefined,
+  deps: ShellFactoryDependencies = DEFAULT_SHELL_FACTORY_DEPS,
 ): Shell {
-  // Determine the actual arguments based on types
-  let input: CreateShellInput | undefined;
+  // Determine the actual arguments based on types - same pattern as createActor
+  let input: ShellInput | undefined;
   let transform: ShellTransformer = identity;
 
-  // Case 1: createShell(transform) - first arg is function
-  if (typeof inputOrTransformOrDeps === 'function') {
-    transform = inputOrTransformOrDeps;
-    deps = (transformOrDeps as CreateShellDependencies) ?? DEFAULT_CREATE_SHELL_DEPS;
-  }
-  // Case 2: createShell(deps) - first arg is deps object
-  else if (inputOrTransformOrDeps && 'hashUnsafeString' in inputOrTransformOrDeps) {
-    deps = inputOrTransformOrDeps;
-  }
-  // Case 3: createShell(input, transform?, deps?) - first arg is input object or undefined
-  else {
-    input = inputOrTransformOrDeps as CreateShellInput | undefined;
-    if (typeof transformOrDeps === 'function') {
-      transform = transformOrDeps;
-      deps = deps ?? DEFAULT_CREATE_SHELL_DEPS;
-    } else if (transformOrDeps) {
-      deps = transformOrDeps;
-    }
+  if (typeof inputOrTransform === 'function') {
+    // Input is a transformer function
+    transform = inputOrTransform as ShellTransformer;
+  } else if (inputOrTransform) {
+    // Input is CreateShellInput data
+    input = inputOrTransform as ShellInput;
   }
 
-  const {
-    hashUnsafeString: hashUnsafeStringImpl,
-    createInventory: createInventoryImpl,
-  } = deps;
-  const name = input?.name ?? generateRandomShellName();
+  const name = input?.name ?? deps.generateRandomShellName();
+
+  const defaultStats = {
+    [Stat.POW]: createModifiableScalarAttribute((defaults) => ({ ...defaults, nat: 10 })),
+    [Stat.FIN]: createModifiableScalarAttribute((defaults) => ({ ...defaults, nat: 10 })),
+    [Stat.RES]: createModifiableScalarAttribute((defaults) => ({ ...defaults, nat: 10 })),
+  };
 
   const defaults: Shell = {
-    id: input?.id ?? hashUnsafeStringImpl(name),
+    id: input?.id ?? deps.hashUnsafeString(name),
     name,
-    stats: input?.stats ?? {
-      [Stat.POW]: createModifiableScalarAttribute((defaults) => ({ ...defaults, nat: 10 })),
-      [Stat.FIN]: createModifiableScalarAttribute((defaults) => ({ ...defaults, nat: 10 })),
-      [Stat.RES]: createModifiableScalarAttribute((defaults) => ({ ...defaults, nat: 10 })),
-    },
-    inventory: input?.inventory ?? createInventoryImpl(),
+    stats: input?.stats ? { ...defaultStats, ...input.stats } : defaultStats,
+    inventory: input?.inventory ?? deps.createInventory(),
     equipment: {},
   };
 
@@ -165,59 +159,6 @@ export const applyShellStats = (stats: ShellStats, input: ShellStatsInput): Shel
  */
 export const cloneShell = (shell: Shell): Shell => {
   return JSON.parse(JSON.stringify(shell));
-};
-
-const SHELL_NAME_ADJECTIVES = [
-  'Impetuous',
-  'Nimble',
-  'Rapid',
-  'Swift',
-  'Agile',
-  'Lethal',
-  'Deadly',
-  'Ruthless',
-  'Ferocious',
-  'Violent',
-  'Ruthless',
-  'Ferocious',
-  'Violent',
-  'Ruthless',
-];
-
-const SHELL_NAME_NOUNS = [
-  'Bolt',
-  'Bullet',
-  'Eagle',
-  'Falcon',
-  'Hawk',
-  'Jackdaw',
-  'Osprey',
-  'Otter',
-  'Owl',
-  'Vulture',
-  'Wolf',
-  'Bear',
-  'Lion',
-  'Tiger',
-  'Leopard',
-  'Panther',
-  'Jaguar',
-  'Cheetah',
-  'Fox',
-  'Dog',
-  'Cat',
-  'Mouse',
-  'Rat',
-  'Squirrel',
-];
-
-export const generateRandomShellName = (
-  random = () => Math.random(),
-): string => {
-  const randomNumber = Math.floor(random() * 1000);
-  const adjective = SHELL_NAME_ADJECTIVES[Math.floor(random() * SHELL_NAME_ADJECTIVES.length)];
-  const noun = SHELL_NAME_NOUNS[Math.floor(random() * SHELL_NAME_NOUNS.length)];
-  return `${adjective}${noun}${randomNumber}`;
 };
 
 type ShellStatKey = Stat.POW | Stat.FIN | Stat.RES;

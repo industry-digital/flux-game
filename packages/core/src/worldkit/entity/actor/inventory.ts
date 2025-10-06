@@ -6,11 +6,11 @@ import { MassApi } from '~/worldkit/physics/mass';
 
 const ITEM_TYPE_REGEX = /flux:schema:(.*)$/;
 
-export const createInventory = (): Inventory => {
+export const createInventory = (now: number = Date.now()): Inventory => {
   return {
     mass: 0,
     items: {},
-    ts: 0,
+    ts: now,
   };
 };
 

@@ -464,13 +464,11 @@ describe('useCombatScenario', () => {
         xp: 0,
         pxp: 0,
         rank: 3,
-        mods: {},
       });
       expect(actor.skills['flux:skill:combat:strike']).toEqual({
         xp: 0,
         pxp: 0,
         rank: 2,
-        mods: {},
       });
     });
 

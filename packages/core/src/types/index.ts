@@ -42,13 +42,19 @@ export {
   Actor,
   ActorType,
   ActorInput,
-  Stat as ActorStat,
+  Stat,
   ActorStats,
   Equipment,
-  AppliedAnatomicalDamage as InjuryDescriptor,
+  AppliedAnatomicalDamage,
   Inventory,
   Skills,
+  CoreStat,
+  CoreStats,
 } from './entity/actor';
+
+export {
+  Shell,
+} from './entity/shell';
 
 export {
   Party,
@@ -326,3 +332,5 @@ export {
 export * from './session';
 
 export * from './narrative';
+
+export * from './currency';

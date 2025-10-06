@@ -132,3 +132,4 @@ export * from './health';
 export * from './skill';
 export * from './wallet';
 export * from './new-stats';
+export * from './shell';

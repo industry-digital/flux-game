@@ -10,7 +10,6 @@ export const createDefaultSkillState = (): SkillState => ({
   xp: 0,
   pxp: 0,
   rank: 0,
-  mods: {},
 });
 
 export function getActorSkill(

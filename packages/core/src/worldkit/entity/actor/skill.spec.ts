@@ -19,12 +19,11 @@ import {
 
 // Test fixtures
 const createTestActor = (skills: Partial<Record<SkillURN, SkillState>> = {}): Actor => {
-  const actor = createActor({
-    name: 'Test Actor',
-    description: 'Test actor for skill tests',
-  });
+  const actor = createActor();
   return {
     ...actor,
+    name: 'Test Actor',
+    description: { base: 'Test actor for skill tests' },
     skills: {
       ...actor.skills,
       ...skills,  // This preserves object references!
@@ -51,7 +50,6 @@ describe('skill.ts', () => {
         xp: 0,
         pxp: 0,
         rank: 0,
-        mods: {},
       });
     });
   });

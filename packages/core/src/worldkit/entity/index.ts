@@ -24,3 +24,7 @@ export {
 } from './util';
 
 export type { EntityCreator, FactoryDependencies as FactoryOptions } from './util';
+
+export {
+  parseEntityTypeFromURN,
+} from './urn';
