@@ -46,9 +46,7 @@ export {
   LookCommandArgs,
 } from '~/command';
 
-export {
-  createEntityResolverApi,
-} from '~/intent/resolvers';
+export * from './intent';
 
 // Begin game logic DAG exports
 
