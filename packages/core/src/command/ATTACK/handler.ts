@@ -73,36 +73,31 @@ export const attackIntentParser: IntentParser<AttackCommand> = (
   context: IntentParserContext,
   intent: Intent,
 ): AttackCommand | undefined => {
-  const { world, resolvers, uniqid } = context;
+  const { world, resolveActor } = context;
 
   // Check if this is an attack command
-  if (!intent.tokens[0]?.startsWith('attack')) {
+  if (!intent.verb.startsWith('attack')) {
     return undefined;
   }
 
-  // Use the blazing-fast entity resolver to find the target
-  const target = resolvers.resolveActor(intent);
+  const target = resolveActor(intent);
   if (!target) {
-    // No valid target found in the intent
     return undefined;
   }
 
-  // Ensure the attacking actor exists
   const attacker = world.actors[intent.actor];
   if (!attacker) {
     return undefined;
   }
 
-  // Validate that attacker and target are in the same location
   if (attacker.location !== target.location) {
     return undefined;
   }
 
-  // Return the properly formed AttackCommand
   return {
     __type: 'command',
-    id: uniqid.uniqid(),
-    ts: Date.now(),
+    id: context.uniqid(),
+    ts: context.timestamp(),
     actor: intent.actor,
     location: intent.location,
     type: CommandType.ATTACK,

@@ -1,7 +1,5 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { useCombatScenario } from '../testing/scenario';
-import { createCombatSessionApi } from '../session/session';
-import { createIntentExecutionApi } from '../intent/execution';
 import { createTransformerContext } from '~/worldkit/context';
 import { createSwordSchema } from '~/worldkit/schema/weapon/sword';
 import { createSpearSchema } from '~/worldkit/schema/weapon/spear';
@@ -15,9 +13,8 @@ import { getValidActions } from './search';
 import { createMassApi } from '~/worldkit/physics/mass';
 import { CommandType } from '~/types/intent';
 import { createActor } from '~/worldkit/entity/actor';
-import { Actor, Stat } from '~/types/entity/actor';
+import { Actor } from '~/types/entity/actor';
 import { HumanAnatomy } from '~/types/taxonomy/anatomy';
-import { CombatantDidAttack, EventType } from '~/types/event';
 import { targetingApi } from './targeting';
 import { HeuristicProfile, SearchConfig, TacticalSituation } from '~/types/combat-ai';
 import { TransformerContext } from '~/types/handler';
@@ -85,14 +82,6 @@ describe('AI Combat System Integration', () => {
     alice = createActor({
       id: ATTACKER_ID,
       name: 'Attacker',
-      stats: {
-        [Stat.POW]: { nat: 10, eff: 10, mods: {} },
-        [Stat.FIN]: { nat: 10, eff: 10, mods: {} },
-        [Stat.RES]: { nat: 10, eff: 10, mods: {} },
-        [Stat.INT]: { nat: 10, eff: 10, mods: {} },
-        [Stat.PER]: { nat: 10, eff: 10, mods: {} },
-        [Stat.MEM]: { nat: 10, eff: 10, mods: {} },
-      },
       equipment: { [HumanAnatomy.RIGHT_HAND]: { [TEST_WEAPON_ENTITY_URN]: 1 } },
       inventory: {
         mass: 0,
@@ -104,14 +93,6 @@ describe('AI Combat System Integration', () => {
     bob = createActor({
       id: DEFENDER_ID,
       name: 'Defender',
-      stats: {
-        [Stat.POW]: { nat: 10, eff: 10, mods: {} },
-        [Stat.FIN]: { nat: 10, eff: 10, mods: {} },
-        [Stat.RES]: { nat: 10, eff: 10, mods: {} },
-        [Stat.INT]: { nat: 10, eff: 10, mods: {} },
-        [Stat.PER]: { nat: 10, eff: 10, mods: {} },
-        [Stat.MEM]: { nat: 10, eff: 10, mods: {} },
-      },
       equipment: { [HumanAnatomy.RIGHT_HAND]: { [TEST_WEAPON_ENTITY_URN]: 1 } },
       inventory: {
         mass: 0,
@@ -200,171 +181,6 @@ describe('AI Combat System Integration', () => {
         action.command === CommandType.STRIKE || action.command === CommandType.DEFEND
       );
       expect(hasMovement || hasCombatAction).toBe(true);
-    });
-
-    it('should simulate full AI vs AI combat until one combatant dies', () => {
-      // Inject controlled RNG to ensure some hits land for deterministic test
-      let rollCount = 0;
-      const controlledRandom = () => {
-        rollCount++;
-        // Alternate between high rolls (hits) and low rolls (misses)
-        // Every 3rd roll is a high roll (15+) to ensure some hits land
-        return rollCount % 3 === 0 ? 0.8 : 0.2; // 0.8 = ~16 on d20, 0.2 = ~4 on d20
-      };
-
-      // Override the context's random function
-      context.random = controlledRandom;
-
-      // Create a close-range melee scenario for faster combat resolution
-      const scenario = useCombatScenario(context, {
-        weapons: [swordSchema],
-        schemaManager: context.schemaManager,
-        participants: {
-          [ATTACKER_ID]: {
-            team: Team.ALPHA,
-            stats: { pow: 12, fin: 10, res: 8 }, // Balanced stats
-            equipment: { weapon: swordSchema.urn },
-            position: { coordinate: 100, facing: CombatFacing.RIGHT, speed: 0 },
-            ap: 6.0,
-            energy: 20000,
-            hp: 30, // Reasonable HP
-          },
-          [DEFENDER_ID]: {
-            team: Team.BRAVO,
-            stats: { pow: 10, fin: 10, res: 8 }, // Balanced stats
-            equipment: { weapon: swordSchema.urn },
-            position: { coordinate: 102, facing: CombatFacing.LEFT, speed: 0 }, // Close range (2m)
-            ap: 6.0,
-            energy: 20000,
-            hp: 25, // Reasonable HP
-          },
-        },
-      });
-
-      const session = scenario.session;
-      let turnCount = 0;
-      const maxTurns = 30; // Controlled RNG ensures faster resolution
-      let combatLog: string[] = [];
-
-      const testDeps = {
-        ...DEFAULT_COMBAT_PLANNING_DEPS,
-        timestamp: () => DEFAULT_TIMESTAMP,
-      };
-
-      console.log('\n🥊 Starting AI vs AI Deathmatch:');
-      console.log(`  ${ATTACKER_ID}: HP=${context.world.actors[ATTACKER_ID].hp.eff.cur}`);
-      console.log(`  ${DEFENDER_ID}: HP=${context.world.actors[DEFENDER_ID].hp.eff.cur}`);
-
-      // Initialize combat by starting it - this sets up the turn system
-      const sessionHook = createCombatSessionApi(scenario.context, session.data.location, session.id);
-      sessionHook.startCombat();
-      console.log(`  Combat started! Current actor: ${session.data.rounds.current.turns.current.actor}`);
-
-      // Simulate combat turns until someone dies or max turns reached
-      while (turnCount < maxTurns) {
-        turnCount++;
-
-        // Get current turn actor
-        const currentActorId = session.data.rounds.current.turns.current.actor;
-        const currentCombatant = session.data.combatants.get(currentActorId);
-
-        if (!currentCombatant) {
-          console.log(`❌ Turn ${turnCount}: Current actor ${currentActorId} not found`);
-          break;
-        }
-
-        // Check if current actor is alive
-        const currentActor = context.world.actors[currentActorId];
-        const currentHealth = currentActor.hp.eff.cur;
-        if (currentHealth <= 0) {
-          console.log(`💀 Turn ${turnCount}: ${currentActorId} is dead (HP: ${currentHealth})`);
-          break;
-        }
-
-        console.log(`\n⚔️  Turn ${turnCount}: ${currentActorId} (HP: ${currentHealth}, AP: ${currentCombatant.ap.eff.cur})`);
-
-        // Generate AI plan for current actor
-        const aiPlan = generateCombatPlan(scenario.context, session, currentCombatant, `turn-${turnCount}`, testDeps);
-
-        if (aiPlan.length === 0) {
-          console.log(`  No actions generated, advancing turn manually`);
-          // Advance turn manually using sessionHook
-          const turnEvents = sessionHook.advanceTurn(`manual-advance-${turnCount}`);
-          console.log(`  Turn advanced: ${turnEvents.length} events`);
-          continue;
-        }
-
-        // Create intent executor for current combatant
-        const combatantHook = sessionHook.getCombatantApi(currentActorId);
-        const intentExecutor = createIntentExecutionApi(scenario.context, session, combatantHook);
-
-        // Execute AI plan through real combat system
-        console.log(`  Executing ${aiPlan.length} actions:`);
-        aiPlan.forEach((action, i) => {
-          console.log(`    ${i + 1}. ${action.command} (AP: ${action.cost?.ap || 0})`);
-          combatLog.push(`Turn ${turnCount}: ${currentActorId} -> ${action.command}`);
-        });
-
-        try {
-          const events = intentExecutor.executeActions(aiPlan, `turn-${turnCount}`);
-          console.log(`  ✅ Executed successfully: ${events.length} events generated`);
-
-          // Log important events (damage, death, turn changes)
-          for (const event of events) {
-            if (event.type === EventType.COMBATANT_DID_ATTACK) {
-              const typedEvent = event as CombatantDidAttack;
-              console.log(`    💥 ${event.actor} took damage`);
-            } else if (event.type === EventType.COMBAT_TURN_DID_START) {
-              console.log(`    🔄 Turn advanced to ${event.actor}`);
-            }
-          }
-        } catch (error) {
-          console.log(`  ❌ Action execution failed: ${error}`);
-          // Try to advance turn manually if execution fails
-          const turnEvents = sessionHook.advanceTurn(`error-advance-${turnCount}`);
-          console.log(`  Turn advanced after error: ${turnEvents.length} events`);
-        }
-
-        // Check if either combatant died after actions
-        const attackerHP = context.world.actors[ATTACKER_ID].hp.eff.cur;
-        const defenderHP = context.world.actors[DEFENDER_ID].hp.eff.cur;
-
-        console.log(`  Post-action HP: ${ATTACKER_ID}=${attackerHP}, ${DEFENDER_ID}=${defenderHP}`);
-
-        if (attackerHP <= 0) {
-          console.log(`\n🏆 VICTORY: ${DEFENDER_ID} defeats ${ATTACKER_ID} in ${turnCount} turns!`);
-          expect(attackerHP).toBeLessThanOrEqual(0);
-          expect(defenderHP).toBeGreaterThan(0);
-          return; // Test passes - someone died
-        }
-
-        if (defenderHP <= 0) {
-          console.log(`\n🏆 VICTORY: ${ATTACKER_ID} defeats ${DEFENDER_ID} in ${turnCount} turns!`);
-          expect(defenderHP).toBeLessThanOrEqual(0);
-          expect(attackerHP).toBeGreaterThan(0);
-          return; // Test passes - someone died
-        }
-
-        // Small delay to prevent infinite loops in case of issues
-        if (turnCount > 1 && session.data.rounds.current.turns.current.actor === currentActorId) {
-          console.log(`  ⚠️  Turn didn't advance, forcing advancement`);
-          const turnEvents = sessionHook.advanceTurn(`forced-advance-${turnCount}`);
-          console.log(`  Forced turn advance: ${turnEvents.length} events`);
-        }
-      }
-
-      // If we get here, combat didn't resolve in maxTurns
-      console.log(`\n⏰ Combat simulation reached ${maxTurns} turn limit without resolution`);
-      console.log('Combat Log:', combatLog);
-
-      const finalAttackerHP = context.world.actors[ATTACKER_ID].hp.eff.cur;
-      const finalDefenderHP = context.world.actors[DEFENDER_ID].hp.eff.cur;
-      console.log(`Final HP: ${ATTACKER_ID}=${finalAttackerHP}, ${DEFENDER_ID}=${finalDefenderHP}`);
-
-      // Test should fail if no one died within the turn limit
-      expect(finalAttackerHP).toBeLessThanOrEqual(0);
-      expect(finalDefenderHP).toBeLessThanOrEqual(0);
-      // At least one should be dead (this will fail if both are alive, which is what we want)
     });
   });
 

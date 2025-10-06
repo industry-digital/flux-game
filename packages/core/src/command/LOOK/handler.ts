@@ -1,17 +1,26 @@
 import { isCommandOfType } from '~/lib/intent';
 import { ActorCommand, Command, CommandType } from '~/types/intent';
-import { PureReducer, TransformerContext, PureHandlerInterface } from '~/types/handler';
+import { PureReducer, TransformerContext, PureHandlerInterface, IntentParser, Intent, IntentParserContext } from '~/types/handler';
 import { ActorURN, ItemURN, PlaceURN } from '~/types/taxonomy';
 import { EntityType } from '~/types/entity/entity';
 import { lookAtActorReducer, lookAtPlaceReducer, lookAtItemReducer } from './reducers';
+import { parseEntityTypeFromURN } from '~/worldkit/entity/urn';
 
 export type LookCommandArgs =
-  | { type: EntityType.ACTOR, id: ActorURN }
-  | { type: EntityType.PLACE, id: PlaceURN }
-  | { type: EntityType.ITEM, id: ItemURN, self: boolean };
+  | { target: ActorURN }
+  | { target: PlaceURN }
+  | { target: ItemURN };
 
 export type LookCommand = ActorCommand<CommandType.LOOK, LookCommandArgs>;
 
+/**
+ * Rules for looking at an entity:
+ * - Actor may look only at Actors in the same `location` as the actor
+ * - Actor may look only at the Place that the actor is in
+ * - Actor may look only at these items:
+ *   - Items in the actor's inventory
+ *   - Items in the same `location` as the actor
+ */
 export const lookReducer: PureReducer<TransformerContext, LookCommand> = (context, command) => {
   const { declareError } = context;
   const { places, actors } = context.world;
@@ -23,14 +32,14 @@ export const lookReducer: PureReducer<TransformerContext, LookCommand> = (contex
   }
 
   const actor = actors[command.actor!];
-
   if (!actor) {
     declareError('Could not find actor in world project', command.id);
     return context;
   }
 
-  // Dispatch to appropriate focused reducer
-  switch (command.args.type) {
+  const entityType = parseEntityTypeFromURN(command.args.target);
+
+  switch (entityType) {
     case EntityType.ACTOR:
       return lookAtActorReducer(context, command);
 
@@ -44,6 +53,64 @@ export const lookReducer: PureReducer<TransformerContext, LookCommand> = (contex
       declareError('Invalid look command arguments', command.id);
       return context;
   }
+};
+
+export const lookIntentParser: IntentParser<LookCommand> = (
+  context: IntentParserContext,
+  intent: Intent,
+): LookCommand | undefined => {
+  const { world, resolveActor, resolveItem, resolvePlace } = context;
+
+  if (!intent.verb.startsWith('look')) {
+    return undefined;
+  }
+
+  const targetActor = resolveActor(intent)
+  if (targetActor) {
+    return {
+      __type: 'command',
+      id: context.uniqid(),
+      ts: context.timestamp(),
+      actor: intent.actor,
+      location: intent.location,
+      type: CommandType.LOOK,
+      args: {
+        target: targetActor.id,
+      },
+    };
+  }
+
+  const targetPlace = resolvePlace(intent);
+  if (targetPlace) {
+    return {
+      __type: 'command',
+      id: context.uniqid(),
+      ts: context.timestamp(),
+      actor: intent.actor,
+      location: intent.location,
+      type: CommandType.LOOK,
+      args: {
+        target: targetPlace.id,
+      },
+    };
+  }
+
+  const targetItem = resolveItem(intent);
+  if (targetItem) {
+    return {
+      __type: 'command',
+      id: context.uniqid(),
+      ts: context.timestamp(),
+      actor: intent.actor,
+      location: intent.location,
+      type: CommandType.LOOK,
+      args: {
+        target: targetItem.id,
+      },
+    };
+  }
+
+  return undefined;
 };
 
 export class LOOK implements PureHandlerInterface<TransformerContext, LookCommand> {

@@ -26,7 +26,8 @@
     "build:esm": "tsc --project tsconfig.esm.json && tsc-alias -p tsconfig.esm.json && node scripts/fix-esm-extensions.js && echo '{\"type\":\"module\"}' > dist/esm/package.json",
     "build:types": "tsc --project tsconfig.types.json && tsc-alias -p tsconfig.types.json",
     "test": "vitest run",
-    "benchmark:mass": "vitest run src/worldkit/physics/mass.benchmark.spec.ts"
+    "benchmark:mass": "vitest run src/worldkit/physics/mass.benchmark.spec.ts",
+    "benchmark:urn": "npx vitest bench --run urn-final.bench.ts"
   },
   "volta": {
     "node": "22.15.0",

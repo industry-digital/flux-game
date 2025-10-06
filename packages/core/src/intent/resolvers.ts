@@ -1,4 +1,6 @@
 import { Actor } from '~/types/entity/actor';
+import { Item } from '~/types/entity/item';
+import { Place } from '~/types/entity/place';
 import { Intent, WorldProjection } from '~/types/handler';
 import { ActorURN, PlaceURN } from '~/types/taxonomy';
 
@@ -64,6 +66,8 @@ class ActorTrie {
 
 export type EntityResolverApi = {
   resolveActor: (intent: Intent, matchLocation?: boolean) => Actor | undefined;
+  resolveItem: (intent: Intent) => Item | undefined;
+  resolvePlace: (intent: Intent) => Place | undefined;
 };
 
 type EntityResolverConfig = {
@@ -170,7 +174,17 @@ export const createEntityResolverApi = (
     return bestMatch;
   };
 
+  const resolveItem = (intent: Intent): Item | undefined => {
+    return undefined;
+  };
+
+  const resolvePlace = (intent: Intent): Place | undefined => {
+    return undefined;
+  };
+
   return {
     resolveActor,
+    resolveItem,
+    resolvePlace,
   };
 };

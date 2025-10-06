@@ -23,44 +23,19 @@ export type CombatMetrics = {
   recordValue(metric: string, value: number): void;
 }
 
-/** Minimum required properties for all world projections */
-export type MinimalWorldProjection = {
+/**
+ * Minimum required properties for all world projections
+ * @deprecated Use `WorldProjection` instead
+ */
+export type MinimalWorldProjection = WorldProjection;
+
+/** Union of all possible projections satisfied by the Flux World Server */
+export type WorldProjection = {
   actors: Record<ActorURN, Actor>;
   places: Record<PlaceURN, Place>;
   items: Record<ItemURN, Item>;
   sessions: Record<SessionURN, AbstractSession<any, any>>;
-
-  /**
-   * @deprecated Directly iterate over `actors` via `for..in`
-   */
-  actorIds: ActorURN[];
-  /**
-   * @deprecated Directly iterate over `places` via `for..in`
-   */
-  placeIds: PlaceURN[];
-  /**
-   * @deprecated Directly iterate over `items` via `for..in`
-   */
-  itemIds: ItemURN[];
-  /**
-   * @deprecated Directly iterate over `sessions` via `for..in`
-   */
-  sessionIds: SessionURN[];
 };
-
-export type CombatProjectionMixin = {
-  // add combat-specific fields
-};
-
-export type TradeProjectionMixin = {
-  // add vendor-specific fields
-};
-
-/** Union of all possible projections satisfied by the Flux World Server */
-export type WorldProjection =
-  | MinimalWorldProjection
-  | MinimalWorldProjection & CombatProjectionMixin
-  | MinimalWorldProjection & TradeProjectionMixin;
 
 export type ExecutionError = {
   /** Timestamp in milliseconds since Unix epoch */
@@ -187,6 +162,12 @@ export type Intent = {
    * Downcased and trimmed string input from the user
    */
   normalized: string;
+
+  /**
+   * The first token of the intent
+   */
+  verb: string;
+
   /**
    * Pre-sorted unique tokens created from `normalized`
    */
@@ -199,10 +180,10 @@ export type Intent = {
   nlp: NaturalLanguageAnalysis;
 };
 
-export type IntentParserContext = {
+export type IntentParserContext = EntityResolverApi & {
   world: WorldProjection;
-  resolvers: EntityResolverApi;
-  uniqid: Pick<PotentiallyImpureOperations, 'uniqid'>;
+  uniqid: PotentiallyImpureOperations['uniqid'];
+  timestamp: PotentiallyImpureOperations['timestamp'];
 };
 
 export type IntentParser<TCommand extends Command> = (

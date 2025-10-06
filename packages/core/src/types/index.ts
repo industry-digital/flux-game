@@ -114,7 +114,6 @@ export {
 export * from './event';
 
 export {
-  CombatProjectionMixin,
   ErrorDeclarationConsumer,
   ErrorDeclarationProducer,
   EventDeclarationConsumer,
@@ -132,7 +131,6 @@ export {
   TransformerInterface,
   WorldProjection,
   WorldProjectionConsumer,
-  TradeProjectionMixin as VendorProjectionMixin,
 } from './handler';
 
 export {

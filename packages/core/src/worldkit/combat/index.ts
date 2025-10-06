@@ -115,12 +115,3 @@ export type {
   TacticalSituationFactory,
   WeaponAssessment,
 } from '~/types/combat-ai';
-
-export {
-  createIntentExecutionApi,
-  ActionExecutionError,
-} from './intent/execution';
-
-export type {
-  IntentExecutionApi,
-} from './intent/execution';

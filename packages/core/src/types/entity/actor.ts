@@ -153,7 +153,7 @@ export type CapacitorState = CurvePosition & {
  * The input type for creating a new Actor, containing only the required fields
  * that need to be provided when creating an Actor.
  */
-export type ActorInput = Partial<Actor>;
+export type ActorInput = Partial<Omit<Actor, 'type'>>;
 
 /**
  * An actor is any kind of entity that has the ability to act "autonomously" in the world.
