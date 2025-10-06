@@ -27,14 +27,11 @@ import {
   renderActorMoveNarrative,
   renderActorArriveNarrative,
   renderActorDepartNarrative,
-  renderLookAtActorNarrative,
-  renderLookAtPlaceNarrative,
-  renderLookAtPlaceItemNarrative,
-  renderLookAtSelfItemNarrative,
   renderSwapShellNarrative,
   renderHelpFileNarrative,
   renderSpendCurrencyNarrative,
   renderGainCurrencyNarrative,
+  narrateActorDidLook,
 } from '~/narrative/locale/en_US/actor';
 
 import {
@@ -68,11 +65,7 @@ export const en_US: LanguageTemplates = {
   [EventType.ACTOR_DID_QUERY_HELPFILE]: renderHelpFileNarrative,
 
   // Look Events
-  [EventType.ACTOR_DID_LOOK_AT_ACTOR]: renderLookAtActorNarrative,
-  [EventType.ACTOR_DID_LOOK_AT_PLACE]: renderLookAtPlaceNarrative,
-  [EventType.ACTOR_DID_LOOK_AT_PLACE_ITEM]: renderLookAtPlaceItemNarrative,
-  [EventType.ACTOR_DID_LOOK_AT_SELF]: renderLookAtActorNarrative,
-  [EventType.ACTOR_DID_LOOK_AT_SELF_ITEM]: renderLookAtSelfItemNarrative,
+  [EventType.ACTOR_DID_LOOK]: narrateActorDidLook,
   [EventType.ACTOR_DID_EXAMINE_SHELL]: NOT_IMPLEMENTED,
 
   // Combat Events

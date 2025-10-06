@@ -37,13 +37,9 @@ export const DEFAULT_POTENTIALLY_IMPURE_OPERATIONS: Readonly<PotentiallyImpureOp
 export const createWorldProjection = (map: MapFunction<WorldProjection> = identity): WorldProjection => {
   return map({
     actors: {},
-    actorIds: [],
     places: {},
-    placeIds: [],
     items: {},
-    itemIds: [],
     sessions: {},
-    sessionIds: [],
   });
 };
 

@@ -5,17 +5,11 @@ import {
   ActorDidMove,
   ActorDidArrive,
   ActorDidDepart,
-  ActorDidLookAtActor,
-  ActorDidLookAtPlace,
-  ActorDidLookAtPlaceItem,
-  ActorDidLookAtSelfItem,
   ActorDidSwapShell,
-  ActorDidOpenHelpFile
+  ActorDidOpenHelpFile,
+  ActorDidLook
 } from '~/types/event';
 
-// Note: ACTOR_DID_DIE and ACTOR_DID_RECOVER_ENERGY events don't exist in the EventType enum
-// They are handled by COMBATANT_DID_DIE and other combat events
-// ACTOR_DID_EXAMINE_SHELL is handled by the existing ACTOR_DID_LOOK_AT_SELF event
 import { TemplateFunction } from '~/types/narrative';
 import { ActorURN } from '~/types/taxonomy';
 
@@ -88,120 +82,9 @@ export const renderActorDepartNarrative: TemplateFunction<ActorDidDepart, ActorU
   return `${actor.name} departs for ${destination?.name || 'an unknown destination'}.`;
 };
 
-export const renderLookAtActorNarrative: TemplateFunction<ActorDidLookAtActor, ActorURN> = (context, event, recipientId) => {
+export const narrateActorDidLook: TemplateFunction<ActorDidLook, ActorURN> = (context, event, recipientId) => {
   const { world } = context;
-  const actor = world.actors[event.actor!];
-  const target = world.actors[event.payload.target];
-
-  const lookingAtSelf = event.actor === event.payload.target;
-
-  if (recipientId === event.actor) {
-    // The actor is the recipient - show what they see
-    if (lookingAtSelf) {
-      return `You are ${actor.name}.`;
-    }
-    return `You look at ${target.name}.`;
-  }
-
-  if (recipientId === event.payload.target && !lookingAtSelf) {
-    // The target is the recipient (and it's not self-examination)
-    return `${actor.name} looks at you intently.`;
-  }
-
-  // Observer perspective (or target in self-examination case)
-  if (lookingAtSelf) {
-    return '';
-  }
-
-  return `${actor.name} looks at ${target.name}.`;
-};
-
-const PREALLOCATED_OCCUPANT_NAMES: string[] = [];
-const PREALLOCATED_ITEM_NAMES: string[] = [];
-
-export const renderLookAtPlaceNarrative: TemplateFunction<ActorDidLookAtPlace, ActorURN> = (
-  context,
-  event,
-  recipientId,
-
-  /**
-   * @internal
-   */
-  occupantNames: string[] = PREALLOCATED_OCCUPANT_NAMES,
-  /**
-   * @internal
-   */
-  itemNames: string[] = PREALLOCATED_ITEM_NAMES,
-
-) => {
-  const { world } = context;
-  const actor = world.actors[event.actor!];
-  const place = world.places[event.payload.target];
-
-  if (recipientId === event.actor) {
-    occupantNames.length = 0;
-    itemNames.length = 0;
-
-    // Build comprehensive place description
-    let description = `${place.name}\n\n${place.description.base}`;
-
-    for (const entityId in place.entities) {
-      if (entityId.startsWith('flux:actor:') && entityId !== event.actor) {
-        const actor = world.actors[entityId as any];
-        if (actor) {
-          occupantNames.push(actor.name);
-        }
-      } else if (entityId.startsWith('flux:item:')) {
-        const item = world.items[entityId as any];
-        if (item) {
-          itemNames.push(item.name);
-        }
-      }
-    }
-
-    // Add occupants description
-    if (occupantNames.length === 1) {
-      description += `\n\n${occupantNames[0]} is here.`;
-    } else if (occupantNames.length > 1) {
-      const lastOccupant = occupantNames.pop()!;
-      description += `\n\n${occupantNames.join(', ')} and ${lastOccupant} are here.`;
-    }
-
-    // Add items description
-    if (itemNames.length > 0) {
-      description += `\n\nYou see: ${itemNames.join(', ')}.`;
-    }
-
-    return description;
-  }
-
-  return `${actor.name} looks around.`;
-};
-
-export const renderLookAtPlaceItemNarrative: TemplateFunction<ActorDidLookAtPlaceItem, ActorURN> = (context, event, recipientId) => {
-  const { world } = context;
-  const actor = world.actors[event.actor!];
-  const item = world.items[event.payload.target];
-
-  if (recipientId === event.actor) {
-    const description = (item as any)?.description?.base || 'You see nothing special about it.';
-    return `You examine ${item.name}.\n\n${description}`;
-  }
-
-  return `${actor.name} examines ${item.name}.`;
-};
-
-export const renderLookAtSelfItemNarrative: TemplateFunction<ActorDidLookAtSelfItem, ActorURN> = (context, event, recipientId) => {
-  const { world } = context;
-  const actor = world.actors[event.actor!];
-  const item = world.items[event.payload.target];
-
-  if (recipientId === event.actor) {
-    const description = (item as any)?.description?.base || 'You see nothing special about it.';
-    return `You examine your ${item.name}.\n\n${description}`;
-  }
-
-  return `${actor.name} examines their ${item.name}.`;
+  return `narrateActorDidLook`;
 };
 
 export const renderSwapShellNarrative: TemplateFunction<ActorDidSwapShell, ActorURN> = (context, event, recipientId) => {

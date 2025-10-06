@@ -41,13 +41,9 @@ describe('createTransformerContext', () => {
 
     mockWorld = {
       actors: {},
-      actorIds: [],
       places: {},
-      placeIds: [],
       items: {},
-      itemIds: [],
       sessions: {},
-      sessionIds: []
     };
 
     mockSchemaManager = createSchemaManager();
@@ -72,13 +68,9 @@ describe('createTransformerContext', () => {
       const context = createTransformerContext();
 
       expect(context.world.actors).toEqual({});
-      expect(context.world.actorIds).toEqual([]);
       expect(context.world.places).toEqual({});
-      expect(context.world.placeIds).toEqual([]);
       expect(context.world.items).toEqual({});
-      expect(context.world.itemIds).toEqual([]);
       expect(context.world.sessions).toEqual({});
-      expect(context.world.sessionIds).toEqual([]);
     });
 
     it('should include all required combat infrastructure', () => {
@@ -107,13 +99,11 @@ describe('createTransformerContext', () => {
       const customWorld: WorldProjection = {
         ...mockWorld,
         actors: { 'flux:actor:test': { id: 'flux:actor:test' as ActorURN } as any },
-        actorIds: ['flux:actor:test' as ActorURN]
       };
 
       const context = createTransformerContext(undefined, customWorld);
 
       expect(context.world.actors).toEqual(customWorld.actors);
-      expect(context.world.actorIds).toEqual(customWorld.actorIds);
     });
 
     it('should accept custom schema manager', () => {
@@ -199,7 +189,6 @@ describe('createTransformerContext', () => {
 
       const context = createTransformerContext(mapFn);
 
-      expect(context.world.actorIds).toEqual(['test-actor']);
       expect(context.declareEvent).toBeTypeOf('function');
       expect(context.declareError).toBeTypeOf('function');
       expect(context.getDeclaredEvents).toBeTypeOf('function');
@@ -489,13 +478,9 @@ describe('createWorldProjection', () => {
 
     expect(world).toEqual({
       actors: {},
-      actorIds: [],
       places: {},
-      placeIds: [],
       items: {},
-      itemIds: [],
       sessions: {},
-      sessionIds: []
     });
   });
 
@@ -509,7 +494,6 @@ describe('createWorldProjection', () => {
     const world = createWorldProjection(mapFn);
 
     expect(world.actors).toHaveProperty('flux:actor:test');
-    expect(world.actorIds).toEqual(['flux:actor:test']);
   });
 });
 

@@ -1,6 +1,6 @@
 import { isCommandOfType } from '~/lib/intent';
 import { ActorCommand, Command, CommandType } from '~/types/intent';
-import { PureReducer, TransformerContext, PureHandlerInterface } from '~/types/handler';
+import { PureReducer, TransformerContext, PureHandlerInterface, IntentParser, Intent, IntentParserContext } from '~/types/handler';
 import { SessionURN } from '~/types/taxonomy';
 import { EventType } from '~/types/event';
 import { createWorkbenchSessionApi } from '~/worldkit/workbench/session/session';
@@ -48,14 +48,33 @@ export const useWorkbenchReducer: PureReducer<TransformerContext, UseWorkbenchCo
   return context;
 };
 
+const NO_ARGS: Readonly<UseWorkbenchCommandArgs> = {};
+
+export const useWorkbenchIntentParser: IntentParser<UseWorkbenchCommand> = (
+  context: IntentParserContext,
+  intent: Intent,
+): UseWorkbenchCommand | undefined => {
+  if (!intent.verb.startsWith('use')) {
+    return undefined;
+  }
+
+  return {
+    __type: 'command',
+    id: context.uniqid(),
+    ts: context.timestamp(),
+    actor: intent.actor,
+    location: intent.location,
+    type: CommandType.USE_WORKBENCH,
+    args: NO_ARGS,
+  };
+
+};
+
 export class USE_WORKBENCH implements PureHandlerInterface<TransformerContext, UseWorkbenchCommand> {
+  parse = useWorkbenchIntentParser;
   reduce = useWorkbenchReducer;
   dependencies = [];
   handles = (command: Command): command is UseWorkbenchCommand => {
     return isCommandOfType<CommandType.USE_WORKBENCH, UseWorkbenchCommandArgs>(command, CommandType.USE_WORKBENCH);
   };
-
-  parse (intent: string): UseWorkbenchCommand | undefined {
-    return undefined;
-  }
 }

@@ -74,11 +74,6 @@ export enum EventType {
   ACTOR_DID_EXAMINE_SHELL = 'actor:shell:examined',
   ACTOR_DID_GAIN_CURRENCY = 'actor:currency:credited',
   ACTOR_DID_LOOK = 'actor:looked',
-  ACTOR_DID_LOOK_AT_ACTOR = 'actor:looked:actor',
-  ACTOR_DID_LOOK_AT_PLACE = 'actor:looked:place',
-  ACTOR_DID_LOOK_AT_PLACE_ITEM = 'actor:looked:place:item',
-  ACTOR_DID_LOOK_AT_SELF = 'actor:looked:self',
-  ACTOR_DID_LOOK_AT_SELF_ITEM = 'actor:looked:self:item',
   ACTOR_DID_MATERIALIZE = 'actor:materialized',
   ACTOR_DID_MOVE = 'actor:moved',
   ACTOR_DID_QUERY_HELPFILE = 'actor:helpfile:queried',
@@ -157,55 +152,6 @@ export type ActorDidDepartInput = RequiresActor & AbstractWorldEventInput<
 
 export type ActorDidArrive = EventBase & ActorDidArriveInput;
 export type ActorDidArriveInput = RequiresActor & AbstractWorldEventInput<EventType.ACTOR_DID_ARRIVE, { origin: PlaceURN }>;
-
-
-/**
- * @deprecated
- */
-export type ActorDidLookAtActor = EventBase & ActorDidLookAtActorInput;
-/**
- * @deprecated
- */
-export type ActorDidLookAtActorInput = RequiresActor & AbstractWorldEventInput<
-  EventType.ACTOR_DID_LOOK_AT_ACTOR,
-  { target: ActorURN }
->;
-
-/**
- * @deprecated
- */
-export type ActorDidLookAtPlace = EventBase & ActorDidLookAtPlaceInput;
-/**
- * @deprecated
- */
-export type ActorDidLookAtPlaceInput = RequiresActor & AbstractWorldEventInput<
-  EventType.ACTOR_DID_LOOK_AT_PLACE,
-  { target: PlaceURN }
->;
-
-/**
- * @deprecated
- */
-export type ActorDidLookAtPlaceItem = EventBase & ActorDidLookAtPlaceItemInput;
-/**
- * @deprecated
- */
-export type ActorDidLookAtPlaceItemInput = RequiresActor & AbstractWorldEventInput<
-  EventType.ACTOR_DID_LOOK_AT_PLACE_ITEM,
-  { target: ItemURN }
->;
-
-/**
- * @deprecated
- */
-export type ActorDidLookAtSelfItem = EventBase & ActorDidLookAtSelfItemInput;
-/**
- * @deprecated
- */
-export type ActorDidLookAtSelfItemInput = RequiresActor & AbstractWorldEventInput<
-  EventType.ACTOR_DID_LOOK_AT_SELF_ITEM,
-  { target: ItemURN }
->;
 
 export type ActorDidLook = EventBase & ActorDidLookInput;
 export type ActorDidLookInput = RequiresActor & AbstractWorldEventInput<
@@ -470,10 +416,6 @@ export type WorldEventInput =
   | ActorDidArriveInput
   | ActorDidDepartInput
   | ActorDidLookInput
-  | ActorDidLookAtActorInput
-  | ActorDidLookAtPlaceInput
-  | ActorDidLookAtPlaceItemInput
-  | ActorDidLookAtSelfItemInput
   | ResourcesDidChangeInput
   | WeatherDidChangeInput
   | CombatSessionStatusDidChangeInput

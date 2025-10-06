@@ -1,6 +1,5 @@
 import { EventType } from '~/types/event';
 import { PureReducer, TransformerContext } from '~/types/handler';
-import { EntityType } from '~/types/entity/entity';
 import type { LookCommand } from './handler';
 import { ActorURN, ItemURN, PlaceURN } from '~/types/taxonomy';
 
@@ -22,14 +21,10 @@ const declareLookEvent = (context: TransformerContext, command: LookCommand, tar
  * - Actor may look at another Actor in the same `location`
  */
 export const lookAtActorReducer: PureReducer<TransformerContext, LookCommand> = (context, command) => {
-  if (command.args.type !== EntityType.ACTOR) {
-    context.declareError('lookAtActorReducer received a command with invalid arguments', command.id);
-    return context;
-  }
-
   const { actors } = context.world;
   const actor = actors[command.actor!];
-  const targetActor = actors[command.args.id];
+  const targetActorId = command.args.target as ActorURN;
+  const targetActor = actors[targetActorId];
 
   if (!targetActor) {
     context.declareError('Target actor not found in world projection', command.id);
@@ -51,14 +46,9 @@ export const lookAtActorReducer: PureReducer<TransformerContext, LookCommand> = 
  * - Actor may look only at the Place that the actor is in
  */
 export const lookAtPlaceReducer: PureReducer<TransformerContext, LookCommand> = (context, command) => {
-  if (command.args.type !== EntityType.PLACE) {
-    context.declareError('lookAtPlaceReducer received invalid arguments', command.id);
-    return context;
-  }
-
   const { actors } = context.world;
   const actor = actors[command.actor!];
-  const targetPlaceId = command.location ?? command.args.id;
+  const targetPlaceId = command.args.target as PlaceURN;
 
   if (targetPlaceId !== actor.location) {
     context.declareError('Target place not in the same location as the actor', command.id);
@@ -76,18 +66,15 @@ export const lookAtPlaceReducer: PureReducer<TransformerContext, LookCommand> = 
  * - Actor may look at a loose item in the same `location` as the actor
  */
 export const lookAtItemReducer: PureReducer<TransformerContext, LookCommand> = (context, command) => {
-  if (command.args.type !== EntityType.ITEM) {
-    return context;
-  }
-
   const { actors, items } = context.world;
   const actor = actors[command.actor!];
+  const targetItemId = command.args.target as ItemURN;
 
-  let targetItem = actor.inventory.items[command.args.id];
+  let targetItem = actor.inventory.items[targetItemId];
 
   // Fell through, so we're looking at an item in the same place as the actor
   if (!targetItem) {
-    targetItem = items[command.args.id];
+    targetItem = items[targetItemId];
   }
 
   if (!targetItem) {

@@ -6,11 +6,7 @@ import { EntityType } from '~/types/entity/entity';
 import { lookAtActorReducer, lookAtPlaceReducer, lookAtItemReducer } from './reducers';
 import { parseEntityTypeFromURN } from '~/worldkit/entity/urn';
 
-export type LookCommandArgs =
-  | { target: ActorURN }
-  | { target: PlaceURN }
-  | { target: ItemURN };
-
+export type LookCommandArgs = { target: ActorURN | PlaceURN | ItemURN }
 export type LookCommand = ActorCommand<CommandType.LOOK, LookCommandArgs>;
 
 /**
@@ -59,13 +55,11 @@ export const lookIntentParser: IntentParser<LookCommand> = (
   context: IntentParserContext,
   intent: Intent,
 ): LookCommand | undefined => {
-  const { world, resolveActor, resolveItem, resolvePlace } = context;
-
   if (!intent.verb.startsWith('look')) {
     return undefined;
   }
 
-  const targetActor = resolveActor(intent)
+  const targetActor = context.resolveActor(intent)
   if (targetActor) {
     return {
       __type: 'command',
@@ -80,7 +74,7 @@ export const lookIntentParser: IntentParser<LookCommand> = (
     };
   }
 
-  const targetPlace = resolvePlace(intent);
+  const targetPlace = context.resolvePlace(intent);
   if (targetPlace) {
     return {
       __type: 'command',
@@ -95,7 +89,7 @@ export const lookIntentParser: IntentParser<LookCommand> = (
     };
   }
 
-  const targetItem = resolveItem(intent);
+  const targetItem = context.resolveItem(intent);
   if (targetItem) {
     return {
       __type: 'command',

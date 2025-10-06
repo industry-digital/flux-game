@@ -13,20 +13,21 @@ export const createTestIntent = (
   text: string,
   actor: ActorURN,
   location: PlaceURN
-): Intent => ({
-  id: 'test-intent',
-  actor,
-  location,
-  text,
-  normalized: text.toLowerCase(),
-  tokens: new Set(text.toLowerCase().split(/\s+/).filter(token => token.length >= 2)),
-  nlp: {
-    verbs: [],
-    nouns: [],
-    adjectives: [],
-    doc: null
-  }
-});
+): Intent => {
+  const normalized = text.toLowerCase();
+  const tokens = normalized.split(/\s+/).filter(token => token.length >= 2);
+  const verb = tokens[0];
+
+  return {
+    id: 'test-intent',
+    actor,
+    location,
+    text,
+    normalized: text.toLowerCase(),
+    verb,
+    tokens: new Set(tokens),
+  };
+};
 
 /**
  * Creates a standard test world with common actors and places

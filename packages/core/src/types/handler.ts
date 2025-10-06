@@ -177,7 +177,7 @@ export type Intent = {
    * NLP analysis of the intent text
    * @deprecated
    */
-  nlp: NaturalLanguageAnalysis;
+  nlp?: NaturalLanguageAnalysis;
 };
 
 export type IntentParserContext = EntityResolverApi & {
