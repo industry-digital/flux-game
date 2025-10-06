@@ -1,16 +1,12 @@
 import { ActorURN } from '~/types/taxonomy';
-import { BASE62_CHARSET, uniqid } from '~/lib/random';
 import {
   Command,
   CommandInput,
   CommandType,
   SystemCommandTypeGuard,
-  InputMetadata,
   ActorCommand,
   SystemCommand,
 } from '~/types/intent';
-
-const generateUniqueId = () => uniqid(24, BASE62_CHARSET);
 
 const identity = <I, O = I>(x: I): O => x as unknown as O;
 
@@ -86,49 +82,13 @@ export const createCommand = <
 };
 
 /**
- * Type guard to check if input has the command metadata type
- */
-export const isCommand = (input: unknown): input is Command => {
-  return (
-    typeof input === 'object' &&
-    input !== null &&
-    '__type' in input &&
-    (input as InputMetadata).__type === 'command' &&
-    'type' in input &&
-    'args' in input &&
-    'id' in input &&
-    'ts' in input
-  );
-};
-
-export const isActorCommand = (input: unknown): input is ActorCommand<CommandType.CREATE_ACTOR> => {
-  return isCommand(input) && typeof input.actor === 'string';
-};
-
-/**
- * Type guard to check if input is a CommandInput (before validation)
- */
-export const isCommandInput = (input: unknown): input is CommandInput => {
-  return (
-    typeof input === 'object' &&
-    input !== null &&
-    'type' in input &&
-    'args' in input &&
-    typeof (input as CommandInput).args === 'object' &&
-    (input as CommandInput).args !== null &&
-    (!('id' in input) || typeof (input as CommandInput).id === 'string') &&
-    (!('ts' in input) || typeof (input as CommandInput).ts === 'number')
-  );
-};
-
-/**
  * Type guard for specific command types with full validation
  */
 export const isCommandOfType = <T extends CommandType, A extends Record<string, any> = Record<string, any>>(
   input: unknown,
   type: T
 ): input is Command<T, A> => {
-  return isCommand(input) && input.type === type;
+  return (input as Command<T, A>)?.type === type;
 };
 
 /**

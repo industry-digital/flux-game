@@ -131,6 +131,9 @@ export {
   TransformerInterface,
   WorldProjection,
   WorldProjectionConsumer,
+  IntentParser,
+  IntentParserContext,
+  Intent,
 } from './handler';
 
 export {
@@ -220,7 +223,7 @@ export {
   Weather,
   WeatherPropertySpecification,
   WeatherPropertySpecificationInput,
-} from './schema/weather';
+} from './entity/weather';
 
 export {
   ResourceNodes,

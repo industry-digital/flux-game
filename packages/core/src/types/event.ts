@@ -1,4 +1,4 @@
-import { Weather } from '~/types/schema/weather';
+import { Weather } from '~/types/entity/weather';
 import { ResourceNodes } from '~/types/entity/resource';
 import { ActorURN, ItemURN, PlaceURN, SessionURN } from '~/types/taxonomy';
 import { ActionCost, BattlefieldPositionSummary, CombatantSummary } from '~/types/combat';

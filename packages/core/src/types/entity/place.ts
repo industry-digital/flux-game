@@ -3,7 +3,7 @@ import { EntityType, AbstractEntity, Describable, EmergentNarrative } from './en
 import { Direction } from '~/types/world/space';
 import { SpecialVisibility } from '~/types/world/visibility';
 import { ResourceNodes } from './resource';
-import { Weather } from '~/types/schema/weather';
+import { Weather } from '~/types/entity/weather';
 
 export type PlaceVisibilityRules = Record<EntityURN, 1>;
 

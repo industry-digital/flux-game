@@ -25,10 +25,7 @@ export {
 
 // Command type guards and utilities
 export {
-  isCommand,
-  isCommandInput,
   isCommandOfType,
-  isValidatedCommandOfType,
   createCommandTypeGuard,
   createCommand,
   createActorCommand,
@@ -49,6 +46,9 @@ export {
   LookCommandArgs,
 } from '~/command';
 
+export {
+  createEntityResolverApi,
+} from '~/intent/resolvers';
 
 // Begin game logic DAG exports
 

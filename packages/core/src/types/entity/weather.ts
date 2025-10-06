@@ -1,7 +1,6 @@
 import { EasingFunctionName, SeedWithValue } from '~/types/easing';
 import { WellKnownDuration } from '~/types/world/time';
 
-
 export type WeatherPropertySpecificationInput = {
   /**
    * The baseline value of the property

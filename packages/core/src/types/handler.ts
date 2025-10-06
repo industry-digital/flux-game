@@ -186,7 +186,7 @@ export type IntentParserContext = EntityResolverApi & {
   timestamp: PotentiallyImpureOperations['timestamp'];
 };
 
-export type IntentParser<TCommand extends Command> = (
+export type IntentParser<TCommand extends Command = Command> = (
   context: IntentParserContext,
   intent: Intent,
 ) => TCommand | undefined;

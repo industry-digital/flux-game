@@ -1,5 +1,5 @@
 import { isCommandOfType } from '~/lib/intent';
-import { Weather } from '~/types/schema/weather';
+import { Weather } from '~/types/entity/weather';
 import {
   Command,
   CommandType,
@@ -40,8 +40,8 @@ export const mutateWeatherReducer: PureReducer<TransformerContext, MutateWeather
   place.weather = command.args.weather;
 
   declareEvent({
-    type: EventType.WEATHER_DID_CHANGE,
     trace: command.id,
+    type: EventType.WEATHER_DID_CHANGE,
     location: placeId,
     payload: {
       from: currentWeather,

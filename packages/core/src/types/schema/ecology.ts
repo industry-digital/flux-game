@@ -1,5 +1,5 @@
 import { NormalizedValueBetweenZeroAndOne } from '~/types/entity/attribute';
-import { WeatherPropertySpecification } from '~/types/schema/weather';
+import { WeatherPropertySpecification } from '~/types/entity/weather';
 import { EcosystemURN } from '~/types/taxonomy';
 
 export type SoilTexture = 'clay' | 'sand' | 'loam' | 'silt';
