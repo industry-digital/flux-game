@@ -152,6 +152,10 @@ export type InputTypeGuard<I extends Command, S extends I> = (input: I) => input
 
 export type Intent = {
   id: string;
+  /**
+   * The moment the intent was created; epoch milliseconds
+   */
+  ts: number;
   actor: ActorURN;
   location: PlaceURN;
   /**
@@ -169,9 +173,14 @@ export type Intent = {
   verb: string;
 
   /**
-   * Pre-sorted unique tokens created from `normalized`
+   * Tokens created from `normalized`, unsorted
    */
-  tokens: Set<string>;
+  tokens: string[];
+
+  /**
+   * Unique tokens created from `normalized`
+   */
+  uniques: Set<string>;
 
   /**
    * NLP analysis of the intent text

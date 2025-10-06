@@ -12,7 +12,8 @@ import { createPlaceUrn } from '~/lib/taxonomy';
 export const createTestIntent = (
   text: string,
   actor: ActorURN,
-  location: PlaceURN
+  location: PlaceURN,
+  ts = 1234567890000,
 ): Intent => {
   const normalized = text.toLowerCase();
   const tokens = normalized.split(/\s+/).filter(token => token.length >= 2);
@@ -20,12 +21,14 @@ export const createTestIntent = (
 
   return {
     id: 'test-intent',
+    ts,
     actor,
     location,
     text,
-    normalized: text.toLowerCase(),
+    normalized,
     verb,
-    tokens: new Set(tokens),
+    tokens,
+    uniques: new Set(tokens),
   };
 };
 

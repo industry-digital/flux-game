@@ -113,7 +113,7 @@ export const createEntityResolverApi = (
   const resolveActor = (intent: Intent, matchLocation = true): Actor | undefined => {
     // ASSUMPTION: Server provides tokens as Set<string> with duplicates removed and 1-char tokens filtered
     // Fast path: Check exact matches first using O(1) lookup
-    for (const token of intent.tokens) {
+    for (const token of intent.uniques) {
       const exactMatchId = exactNameLookup.get(token);
       if (exactMatchId) {
         const actor = world.actors[exactMatchId];
@@ -127,7 +127,7 @@ export const createEntityResolverApi = (
     let bestScore = 0;
 
     // O(log N) prefix matching using trie
-    for (const token of intent.tokens) {
+    for (const token of intent.uniques) {
       // Find all actors with this token as prefix - O(token_length + results)
       const candidateIds = actorTrie.findByPrefix(token, 2);
 

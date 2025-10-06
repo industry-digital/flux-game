@@ -1,6 +1,6 @@
 {
   "name": "@flux/core",
-  "version": "0.10.1",
+  "version": "0.10.2",
   "description": "Core game logic for the Flux Simulation Project",
   "license": "UNLICENCED",
   "author": "",
