@@ -35,7 +35,7 @@ describe('useCombatScenario', () => {
     });
 
     return {
-      useLocalStorage: vi.fn(() => [mockStorage, mockSetStorage]),
+      useLocalStorage: vi.fn(() => [mockStorage, mockSetStorage]) as any,
       useLogger: vi.fn(() => ({
         info: vi.fn(),
         debug: vi.fn(),
@@ -43,7 +43,7 @@ describe('useCombatScenario', () => {
         error: vi.fn(),
         child: vi.fn().mockReturnThis(),
       })),
-      setTimeout: vi.fn((callback: () => void, delay: number) => {
+      setTimeout: vi.fn((_callback: () => void, _delay: number) => {
         // Don't execute callback immediately - let the test control timing
         return 'mock-timeout' as any;
       }),
