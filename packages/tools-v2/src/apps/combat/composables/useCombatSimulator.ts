@@ -17,7 +17,8 @@ import {
   Stat,
   createShell,
   TransformerContext,
-  PotentiallyImpureOperations
+  PotentiallyImpureOperations,
+  executeIntent
 } from '@flux/core';
 
 /**
@@ -53,7 +54,8 @@ export type CombatSimulatorDependencies = {
   createCombatSessionApi: typeof createCombatSessionApi;
   createActor: typeof createActor;
   isActorAlive: typeof isActorAlive;
-  timestamp: PotentiallyImpureOperations['timestamp'],
+  executeIntent: typeof executeIntent;
+  timestamp: PotentiallyImpureOperations['timestamp'];
 };
 
 export const DEFAULT_COMBAT_SIMULATOR_DEPS: CombatSimulatorDependencies = {
@@ -65,6 +67,7 @@ export const DEFAULT_COMBAT_SIMULATOR_DEPS: CombatSimulatorDependencies = {
   createCombatSessionApi,
   createActor,
   isActorAlive,
+  executeIntent,
   timestamp: () => Date.now(),
 };
 
@@ -97,55 +100,37 @@ export function useCombatSimulator(
   /**
    * Helper to execute combat actions and capture WorldEvents for reactivity
    */
-  const executeWithEventCapture = async <T>(
+  const executeWithEventCapture = <T>(
     action: () => T,
     onSuccess?: (result: T, events: WorldEvent[]) => void
-  ): Promise<{ success: boolean; result?: T; events: WorldEvent[] }> => {
+  ): { success: boolean; result?: T; events: WorldEvent[] } => {
     if (!transformerContext.context.value) {
       return { success: false, events: [] };
     }
 
     try {
       const context = transformerContext.context.value;
-      const capturedEvents: WorldEvent[] = [];
+      const beforeCount = context.getDeclaredEvents().length;
 
-      // Capture events by stubbing declareEvent (like legacy useCombatState)
-      const originalDeclareEvent = context.declareEvent;
+      const result = action();
 
-      // @ts-expect-error: `declareEvent` is a read-only property
-      context.declareEvent = (event: WorldEvent) => {
-        capturedEvents.push(event);
-        return originalDeclareEvent.call(context, event);
-      };
+      const allEvents = context.getDeclaredEvents();
+      const newEvents = allEvents.slice(beforeCount);
 
-      let result: T;
-      try {
-        result = action();
-      } finally {
-        // Always restore original declareEvent
-      // @ts-expect-error: `declareEvent` is a read-only property
-        context.declareEvent = originalDeclareEvent;
-      }
-
-      // Update reactivity trigger if we captured events
-      if (capturedEvents.length > 0) {
-        const latestEvent = capturedEvents[capturedEvents.length - 1];
+      if (newEvents.length > 0) {
+        const latestEvent = newEvents[newEvents.length - 1];
         lastEventId.value = latestEvent.id;
-
-        // Add events to combat log
-        combatLog.addEvents(capturedEvents);
+        combatLog.addEvents(newEvents);
       } else {
-        // In mocked environments, no events may be generated
-        // Still trigger reactivity by updating lastEventId with a dummy value
+        // Fallback trigger for environments where event emission is suppressed
         lastEventId.value = `mock-event-${deps.timestamp()}`;
       }
 
-      // Call success callback if provided
       if (onSuccess) {
-        onSuccess(result, capturedEvents);
+        onSuccess(result, newEvents);
       }
 
-      return { success: true, result, events: capturedEvents };
+      return { success: true, result, events: newEvents };
     } catch (error) {
       log.error('Combat action failed:', error);
       lastError.value = error instanceof Error ? error.message : String(error);
@@ -323,7 +308,7 @@ export function useCombatSimulator(
   /**
    * Start combat simulation
    */
-  const startSimulation = async (): Promise<boolean> => {
+  const startSimulation = (): boolean => {
     // Check basic preconditions first
     if (simulationState.value !== 'idle') {
       log.warn('Cannot start simulation: not in idle state:', simulationState.value);
@@ -352,9 +337,7 @@ export function useCombatSimulator(
       lastError.value = null;
 
       // Create actors from scenario
-      console.log('🔍 DEBUG: About to create actors from scenario');
       const actors = createActorsFromScenario();
-      console.log('🔍 DEBUG: Created actors:', actors.length);
       if (actors.length === 0) {
         lastError.value = 'No actors available for combat';
         simulationState.value = 'error';
@@ -362,26 +345,21 @@ export function useCombatSimulator(
       }
 
       // Create combat session
-      console.log('🔍 DEBUG: About to create combat session API');
       const api = deps.createCombatSessionApi(
         transformerContext.context.value! as TransformerContext,
         config.location,
         config.sessionId
       );
-      console.log('🔍 DEBUG: Created combat session API');
 
       // Add all actors as combatants
-      console.log('🔍 DEBUG: About to add combatants');
       for (const [index, actor] of actors.entries()) {
         // Assign teams alternately: first actor to 'alpha', second to 'bravo', etc.
         const team = index % 2 === 0 ? 'alpha' : 'bravo';
-        console.log('🔍 DEBUG: Adding combatant:', actor.id, 'to team:', team);
         api.addCombatant(actor.id, team);
       }
-      console.log('🔍 DEBUG: Finished adding combatants');
 
       // Use event-based execution for combat start
-      const result = await executeWithEventCapture(() => {
+      const result = executeWithEventCapture(() => {
         // Start combat - this generates WorldEvents
         api.startCombat();
         return api;
@@ -413,7 +391,7 @@ export function useCombatSimulator(
   /**
    * Advance to the next turn
    */
-  const advanceTurn = async (): Promise<boolean> => {
+  const advanceTurn = (): boolean => {
     if (!sessionApi.value || !isSimulationActive.value) {
       log.warn('Cannot advance turn: no active session');
       return false;
@@ -422,24 +400,17 @@ export function useCombatSimulator(
     try {
       const currentActor = currentTurnActor.value;
 
-      // Check if current actor is AI-controlled
+      // If current actor is AI-controlled, kick off AI turn asynchronously (do not await)
       if (currentActor && combatAI.value?.isAIControlled(currentActor)) {
         log.debug('Executing AI turn for:', currentActor);
-
-        // Execute AI turn
-        const commands = await combatAI.value.executeAITurn(currentActor);
-
-        // Execute commands (this would integrate with the Universal Intent System)
-        for (const command of commands) {
-          log.debug('Executing AI command:', command);
-          // TODO: Integrate with Universal Intent System
-        }
+        // Fire-and-forget; AI composable manages its own timing
+        void combatAI.value.executeAITurn(currentActor);
       }
 
       // Use event-based execution for turn advancement
-      const result = await executeWithEventCapture(() => {
+      const result = executeWithEventCapture(() => {
         return sessionApi.value!.advanceTurn('useCombatSimulator.advanceTurn');
-      }, (events, capturedEvents) => {
+      }, () => {
         // Success callback - turn/round are now computed from session state automatically
       });
 
@@ -449,15 +420,9 @@ export function useCombatSimulator(
 
       // Check victory conditions
       if (sessionApi.value.checkVictoryConditions()) {
-        await endSimulation();
+        endSimulation();
         return true;
       }
-
-      log.debug('Turn advanced:', {
-        turn: currentTurn.value,
-        round: currentRound.value,
-        currentActor: currentTurnActor.value
-      });
 
       return true;
 
@@ -503,7 +468,7 @@ export function useCombatSimulator(
   /**
    * End combat simulation
    */
-  const endSimulation = async (): Promise<boolean> => {
+  const endSimulation = (): boolean => {
     if (!canEndSimulation.value) {
       log.warn('Cannot end simulation in current state:', simulationState.value);
       return false;
@@ -515,7 +480,7 @@ export function useCombatSimulator(
 
       // Use event-based execution for combat end
       if (sessionApi.value) {
-        await executeWithEventCapture(() => {
+        executeWithEventCapture(() => {
           return sessionApi.value!.endCombat('useCombatSimulator.endSimulation');
         });
       }
@@ -578,7 +543,7 @@ export function useCombatSimulator(
   };
 
   // Auto-advance turns if configured
-  watch([isSimulationActive, currentTurnActor], async ([active, actor]) => {
+  watch([isSimulationActive, currentTurnActor], ([active, actor]) => {
     if (active && actor && config.autoAdvanceTurns && combatAI.value?.isAIControlled(actor)) {
       // Small delay to allow UI updates
       setTimeout(() => {
@@ -588,6 +553,58 @@ export function useCombatSimulator(
       }, 100);
     }
   });
+
+  /**
+   * Execute a player command using the Universal Intent System
+   *
+   * @param intentText - Natural language command (e.g., "attack bob", "defend")
+   * @returns Array of WorldEvents generated by the command
+   */
+  const executePlayerCommand = (intentText: string): WorldEvent[] => {
+    if (!isSimulationActive.value) {
+      log.warn('Cannot execute command: simulation not active');
+      return [];
+    }
+
+    if (!currentTurnActor.value) {
+      log.warn('Cannot execute command: no current turn actor');
+      return [];
+    }
+
+    if (!transformerContext.context.value) {
+      log.warn('Cannot execute command: no transformer context');
+      return [];
+    }
+
+    // Use synchronous event capture since flux/core is completely synchronous
+    const context = transformerContext.context.value! as TransformerContext;
+    const actorId = currentTurnActor.value!;
+
+    try {
+      // Compute event delta without stubbing declareEvent
+      const beforeCount = context.getDeclaredEvents().length;
+
+      // Execute raw intent (resolve + execute); mutates context in-place
+      deps.executeIntent(context as any, actorId, intentText);
+
+      const allEvents = context.getDeclaredEvents();
+      const newEvents = allEvents.slice(beforeCount);
+
+      if (newEvents.length > 0) {
+        const latestEvent = newEvents[newEvents.length - 1];
+        lastEventId.value = latestEvent.id;
+      } else {
+        // Fallback reactivity tick if nothing was emitted
+        lastEventId.value = `intent-${deps.timestamp()}`;
+      }
+
+      return newEvents;
+    } catch (error) {
+      log.error('Command execution failed:', error);
+      lastError.value = error instanceof Error ? error.message : String(error);
+      return [];
+    }
+  };
 
   return {
     // Reactive state (readonly to prevent external mutation)
@@ -652,6 +669,12 @@ export function useCombatSimulator(
     resumeSimulation,
     endSimulation,
     resetSimulation,
+
+    // Command execution (Universal Intent System)
+    executePlayerCommand,
+    canExecuteCommand: computed(() =>
+      isSimulationActive.value && !!currentTurnActor.value
+    ),
 
     // Utilities
     getSimulationStats,

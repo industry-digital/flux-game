@@ -12,6 +12,7 @@ import {
   createActorCommand,
   createActor,
   createCombatSessionApi,
+  executeIntent,
   type ActorURN,
   type PlaceURN,
 } from '@flux/core';
@@ -107,6 +108,7 @@ describe('useCombatSimulator', () => {
       createCombatSessionApi: createCombatSessionApi, // Use the real implementation
       createActor: createActor, // Use the real createActor function
       isActorAlive: vi.fn(() => true),
+      executeIntent: executeIntent, // Use the real executeIntent function
       timestamp: vi.fn(() => Date.now()),
     };
 
@@ -183,11 +185,11 @@ describe('useCombatSimulator', () => {
   });
 
   describe('context initialization', () => {
-    it('should initialize transformer context', async () => {
-      await runWithContext(async () => {
+    it('should initialize transformer context', () => {
+      runWithContext(() => {
         const simulator = useCombatSimulator(mockConfig, mockDeps);
 
-        const success = await simulator.startSimulation();
+        const success = simulator.startSimulation();
 
         // With real implementation, we test observable behavior
         expect(success).toBe(true);
@@ -195,8 +197,8 @@ describe('useCombatSimulator', () => {
       });
     });
 
-    it('should handle context initialization failure', async () => {
-      await runWithContext(async () => {
+    it('should handle context initialization failure', () => {
+      runWithContext(() => {
         // Create a mock useTransformerContext that fails initialization
         const mockFailingTransformerContext = vi.fn(() => ({
           context: ref(null),
@@ -233,7 +235,7 @@ describe('useCombatSimulator', () => {
         const failingDeps = { ...mockDeps, useTransformerContext: mockFailingTransformerContext };
         const simulator = useCombatSimulator(mockConfig, failingDeps);
 
-        const success = await simulator.startSimulation();
+        const success = simulator.startSimulation();
 
         expect(success).toBe(false);
         expect(simulator.simulationState.value).toBe('error');
@@ -243,11 +245,11 @@ describe('useCombatSimulator', () => {
   });
 
   describe('simulation lifecycle', () => {
-    it('should start simulation successfully', async () => {
-      await runWithContext(async () => {
+    it('should start simulation successfully', () => {
+      runWithContext(() => {
         const simulator = useCombatSimulator(mockConfig, mockDeps);
 
-        const success = await simulator.startSimulation();
+        const success = simulator.startSimulation();
 
         // Test observable behavior with real implementations
         expect(success).toBe(true);
@@ -261,16 +263,16 @@ describe('useCombatSimulator', () => {
       });
     });
 
-    it('should not start simulation when not ready', async () => {
-      await runWithContext(async () => {
+    it('should not start simulation when not ready', () => {
+      runWithContext(() => {
         const simulator = useCombatSimulator(mockConfig, mockDeps);
 
         // Start simulation once to get to active state
-        await simulator.startSimulation();
+        simulator.startSimulation();
         expect(simulator.simulationState.value).toBe('active');
 
         // Try to start again - should fail
-        const success = await simulator.startSimulation();
+        const success = simulator.startSimulation();
 
         expect(success).toBe(false);
         // State should remain active, not change
@@ -278,12 +280,12 @@ describe('useCombatSimulator', () => {
       });
     });
 
-    it('should pause and resume simulation', async () => {
-      await runWithContext(async () => {
+    it('should pause and resume simulation', () => {
+      runWithContext(() => {
         const simulator = useCombatSimulator(mockConfig, mockDeps);
 
         // Start simulation first
-        await simulator.startSimulation();
+        simulator.startSimulation();
         expect(simulator.simulationState.value).toBe('active');
 
         // Test pause functionality
@@ -301,15 +303,15 @@ describe('useCombatSimulator', () => {
       });
     });
 
-    it('should end simulation successfully', async () => {
-      await runWithContext(async () => {
+    it('should end simulation successfully', () => {
+      runWithContext(() => {
         const simulator = useCombatSimulator(mockConfig, mockDeps);
 
         // Start simulation first
-        await simulator.startSimulation();
+        simulator.startSimulation();
         expect(simulator.simulationState.value).toBe('active');
 
-        const success = await simulator.endSimulation();
+        const success = simulator.endSimulation();
 
         expect(success).toBe(true);
         expect(simulator.simulationState.value).toBe('completed');
@@ -317,13 +319,13 @@ describe('useCombatSimulator', () => {
       });
     });
 
-    it('should reset simulation completely', async () => {
-      await runWithContext(async () => {
+    it('should reset simulation completely', () => {
+      runWithContext(() => {
         const simulator = useCombatSimulator(mockConfig, mockDeps);
 
         // Start and then end simulation to get some state
-        await simulator.startSimulation();
-        await simulator.endSimulation();
+        simulator.startSimulation();
+        simulator.endSimulation();
 
         simulator.resetSimulation();
 
@@ -338,15 +340,15 @@ describe('useCombatSimulator', () => {
   });
 
   describe('turn management', () => {
-    it('should advance turn successfully', async () => {
-      await runWithContext(async () => {
+    it('should advance turn successfully', () => {
+      runWithContext(() => {
         const simulator = useCombatSimulator(mockConfig, mockDeps);
 
         // Start simulation first
-        await simulator.startSimulation();
+        simulator.startSimulation();
         expect(simulator.simulationState.value).toBe('active');
 
-        const success = await simulator.advanceTurn();
+        const success = simulator.advanceTurn();
 
         expect(success).toBe(true);
         expect(simulator.lastError.value).toBe(null);
@@ -355,15 +357,15 @@ describe('useCombatSimulator', () => {
       });
     });
 
-    it('should handle AI turns', async () => {
-      await runWithContext(async () => {
+    it('should handle AI turns', () => {
+      runWithContext(() => {
         // Using real useTransformerContext - no mock setup needed
         mockCombatAI.isAIControlled.mockReturnValue(true);
 
         const simulator = useCombatSimulator(mockConfig, mockDeps);
 
         // Start simulation first
-        const startSuccess = await simulator.startSimulation();
+        const startSuccess = simulator.startSimulation();
         console.log('🔍 startSimulation result:', startSuccess);
 
         if (!startSuccess) {
@@ -386,7 +388,7 @@ describe('useCombatSimulator', () => {
         console.log('  session actor:', simulator.currentSession.value?.data?.rounds?.current?.turns?.current?.actor);
         console.log('  currentTurnActor:', simulator.currentTurnActor.value);
 
-        const success = await simulator.advanceTurn();
+        const success = simulator.advanceTurn();
 
         // Debug: Check what happened
         if (!success) {
@@ -402,15 +404,15 @@ describe('useCombatSimulator', () => {
       });
     });
 
-    it('should handle victory conditions', async () => {
-      await runWithContext(async () => {
+    it('should handle victory conditions', () => {
+      runWithContext(() => {
         const simulator = useCombatSimulator(mockConfig, mockDeps);
 
         // Start simulation first
-        await simulator.startSimulation();
+        simulator.startSimulation();
         expect(simulator.simulationState.value).toBe('active');
 
-        const success = await simulator.advanceTurn();
+        const success = simulator.advanceTurn();
 
         expect(success).toBe(true);
         expect(simulator.lastError.value).toBe(null);
@@ -419,14 +421,14 @@ describe('useCombatSimulator', () => {
       });
     });
 
-    it('should not advance turn when not active', async () => {
-      await runWithContext(async () => {
+    it('should not advance turn when not active', () => {
+      runWithContext(() => {
         const simulator = useCombatSimulator(mockConfig, mockDeps);
 
         // Don't start simulation - should be in idle state
         expect(simulator.simulationState.value).toBe('idle');
 
-        const success = await simulator.advanceTurn();
+        const success = simulator.advanceTurn();
 
         expect(success).toBe(false);
         // State should remain idle
@@ -436,8 +438,8 @@ describe('useCombatSimulator', () => {
   });
 
   describe('error handling', () => {
-    it('should handle actor creation failure', async () => {
-      await runWithContext(async () => {
+    it('should handle actor creation failure', () => {
+      runWithContext(() => {
         // Create a mock createActor that throws an error
         const mockCreateActor = vi.fn(() => {
           throw new Error('Actor creation failed');
@@ -446,7 +448,7 @@ describe('useCombatSimulator', () => {
         const failingDeps = { ...mockDeps, createActor: mockCreateActor };
         const simulator = useCombatSimulator(mockConfig, failingDeps);
 
-        const success = await simulator.startSimulation();
+        const success = simulator.startSimulation();
 
         expect(success).toBe(false);
         expect(simulator.simulationState.value).toBe('error');
@@ -455,8 +457,8 @@ describe('useCombatSimulator', () => {
       });
     });
 
-    it('should handle turn advancement failure', async () => {
-      await runWithContext(async () => {
+    it('should handle turn advancement failure', () => {
+      runWithContext(() => {
         // Create a wrapper that injects a failing advanceTurn dependency
         const mockCreateCombatSessionApi = vi.fn((context, location, sessionId, battlefield, initiative) => {
           const failingAdvanceTurn = vi.fn(() => {
@@ -472,9 +474,9 @@ describe('useCombatSimulator', () => {
         const simulator = useCombatSimulator(mockConfig, failingDeps);
 
         // Start simulation first
-        await simulator.startSimulation();
+        simulator.startSimulation();
 
-        const success = await simulator.advanceTurn();
+        const success = simulator.advanceTurn();
 
         expect(success).toBe(false);
         expect(simulator.lastError.value).toBeTruthy();
@@ -515,15 +517,15 @@ describe('useCombatSimulator', () => {
   });
 
   describe('auto-advance functionality', () => {
-    it('should auto-advance AI turns when configured', async () => {
-      await runWithContext(async () => {
+    it('should auto-advance AI turns when configured', () => {
+      runWithContext(() => {
         const autoConfig = { ...mockConfig, autoAdvanceTurns: true };
         mockCombatAI.isAIControlled.mockReturnValue(true);
 
         const simulator = useCombatSimulator(autoConfig, mockDeps);
 
         // Start simulation to get active state
-        await simulator.startSimulation();
+        simulator.startSimulation();
 
         // Note: The actual auto-advance happens in a setTimeout,
         // so we can't easily test it synchronously in this test
@@ -531,6 +533,87 @@ describe('useCombatSimulator', () => {
         expect(simulator.config.value.autoAdvanceTurns).toBe(true);
         expect(simulator.simulationState.value).toBe('active');
         expect(simulator.lastError.value).toBe(null);
+      });
+    });
+  });
+
+  describe('intent execution (Universal Intent System)', () => {
+    it('should execute player commands when simulation is active', () => {
+      runWithContext(() => {
+        const simulator = useCombatSimulator(mockConfig, mockDeps);
+
+        // Start simulation first
+        simulator.startSimulation();
+        expect(simulator.simulationState.value).toBe('active');
+
+        // Execute a command
+        const events = simulator.executePlayerCommand('defend');
+
+        // Should return events (exact events depend on real implementation)
+        expect(Array.isArray(events)).toBe(true);
+        expect(simulator.lastError.value).toBe(null);
+      });
+    });
+
+    it('should not execute commands when simulation is not active', () => {
+      runWithContext(() => {
+        const simulator = useCombatSimulator(mockConfig, mockDeps);
+
+        // Don't start simulation - should be in idle state
+        expect(simulator.simulationState.value).toBe('idle');
+
+        const events = simulator.executePlayerCommand('attack bob');
+
+        // Should return empty array and not execute
+        expect(events).toEqual([]);
+      });
+    });
+
+    it('should provide canExecuteCommand computed property', () => {
+      runWithContext(() => {
+        const simulator = useCombatSimulator(mockConfig, mockDeps);
+
+        // Initially should not be able to execute commands
+        expect(simulator.canExecuteCommand.value).toBe(false);
+
+        // After starting simulation, should be able to execute commands
+        simulator.startSimulation();
+        expect(simulator.canExecuteCommand.value).toBe(true);
+
+        // After ending simulation, should not be able to execute commands
+        simulator.endSimulation();
+        expect(simulator.canExecuteCommand.value).toBe(false);
+      });
+    });
+
+    it('should handle invalid intents gracefully', () => {
+      runWithContext(() => {
+        const simulator = useCombatSimulator(mockConfig, mockDeps);
+
+        simulator.startSimulation();
+
+        // Execute an invalid command
+        const events = simulator.executePlayerCommand('dance a jig');
+
+        // Should return empty array (resolveIntent returns null for invalid intents)
+        expect(events).toEqual([]);
+        // Should not cause errors in the simulator
+        expect(simulator.simulationState.value).toBe('active');
+      });
+    });
+
+    it('should handle empty command text', () => {
+      runWithContext(() => {
+        const simulator = useCombatSimulator(mockConfig, mockDeps);
+
+        simulator.startSimulation();
+
+        // Execute empty command
+        const events = simulator.executePlayerCommand('');
+
+        // Should return empty array
+        expect(events).toEqual([]);
+        expect(simulator.simulationState.value).toBe('active');
       });
     });
   });
