@@ -1,13 +1,13 @@
 import {
-    Intent,
-    IntentParser,
-    IntentParserContext,
-    PureHandlerInterface,
-    PureReducer,
-    TransformerContext,
+  Intent,
+  IntentParser,
+  IntentParserContext,
+  PureHandlerInterface,
+  PureReducer,
+  TransformerContext,
 } from '~/types/handler';
 import { CommandType, Command, ActorCommand } from '~/types/intent';
-import { isCommandOfType } from '~/lib/intent';
+import { isCommandOfType, createActorCommand } from '~/lib/intent';
 import { ActorURN } from '~/types/taxonomy';
 import { createCombatSessionApi } from '~/worldkit/combat/session/session';
 import { CombatCommand, Team } from '~/types/combat';
@@ -94,17 +94,15 @@ export const attackIntentParser: IntentParser<AttackCommand> = (
     return undefined;
   }
 
-  return {
-    __type: 'command',
-    id: context.uniqid(),
-    ts: context.timestamp(),
+  return createActorCommand({
+    trace: intent.id,
     actor: intent.actor,
     location: intent.location,
     type: CommandType.ATTACK,
     args: {
       target: target.id
-    }
-  };
+    },
+  });
 };
 
 export class ATTACK implements PureHandlerInterface<TransformerContext, AttackCommand> {
