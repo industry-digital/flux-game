@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { nextTick } from 'vue';
+import { ref, nextTick } from 'vue';
 import { useCombatAI, type CombatAIDependencies, type AITimingConfig } from './useCombatAI';
 import { createComposableTestSuite } from '~/testing/vue-test-utils';
 import { createMockCombatSession, createMockTransformerContext } from '../testing/combat-helpers';
@@ -11,15 +11,15 @@ const BOB_ID: ActorURN = 'flux:actor:bob';
 describe('useCombatAI', () => {
   const { setup, teardown, runWithContext } = createComposableTestSuite();
 
-  let mockContext: ReturnType<typeof createMockTransformerContext>;
-  let mockSession: ReturnType<typeof createMockCombatSession>;
+  let mockContextRef: ReturnType<typeof ref<any>>;
+  let mockSessionRef: ReturnType<typeof ref<any>>;
   let mockDeps: CombatAIDependencies;
   let customTiming: AITimingConfig;
 
   beforeEach(() => {
     setup();
-    mockContext = createMockTransformerContext();
-    mockSession = createMockCombatSession();
+    mockContextRef = ref(createMockTransformerContext());
+    mockSessionRef = ref(createMockCombatSession());
 
     // Mock dependencies
     mockDeps = {
@@ -56,7 +56,7 @@ describe('useCombatAI', () => {
   describe('initialization', () => {
     it('should initialize with empty AI state', () => {
       runWithContext(() => {
-        const ai = useCombatAI(mockContext, mockSession, customTiming, mockDeps);
+        const ai = useCombatAI(mockContextRef, mockSessionRef, customTiming, mockDeps);
 
         expect(ai.aiControlledActors.value.size).toBe(0);
         expect(ai.currentThinkingActor.value).toBeNull();
@@ -68,7 +68,7 @@ describe('useCombatAI', () => {
 
     it('should use provided timing configuration', () => {
       runWithContext(() => {
-        const ai = useCombatAI(mockContext, mockSession, customTiming, mockDeps);
+        const ai = useCombatAI(mockContextRef, mockSessionRef, customTiming, mockDeps);
 
         expect(ai.timingConfig).toEqual(customTiming);
       });
@@ -78,7 +78,7 @@ describe('useCombatAI', () => {
   describe('AI control management', () => {
     it('should add and remove AI-controlled actors', () => {
       runWithContext(() => {
-        const ai = useCombatAI(mockContext, mockSession, customTiming, mockDeps);
+        const ai = useCombatAI(mockContextRef, mockSessionRef, customTiming, mockDeps);
 
         // Add AI control
         ai.setAIControlled(ALICE_ID, true);
@@ -96,7 +96,7 @@ describe('useCombatAI', () => {
 
     it('should handle multiple AI-controlled actors', () => {
       runWithContext(() => {
-        const ai = useCombatAI(mockContext, mockSession, customTiming, mockDeps);
+        const ai = useCombatAI(mockContextRef, mockSessionRef, customTiming, mockDeps);
 
         ai.setMultipleAIControlled([
           { actorId: ALICE_ID, isAI: true },
@@ -111,7 +111,7 @@ describe('useCombatAI', () => {
 
     it('should clear thinking state when removing AI control for thinking actor', () => {
       runWithContext(() => {
-        const ai = useCombatAI(mockContext, mockSession, customTiming, mockDeps);
+        const ai = useCombatAI(mockContextRef, mockSessionRef, customTiming, mockDeps);
 
         ai.setAIControlled(ALICE_ID, true);
 
@@ -130,7 +130,7 @@ describe('useCombatAI', () => {
   describe('AI execution', () => {
     it('should reject execution for non-AI actors', async () => {
       runWithContext(async () => {
-        const ai = useCombatAI(mockContext, mockSession, customTiming, mockDeps);
+        const ai = useCombatAI(mockContextRef, mockSessionRef, customTiming, mockDeps);
 
         const commands = await ai.executeAITurn(ALICE_ID);
         expect(commands).toEqual([]);
@@ -140,7 +140,7 @@ describe('useCombatAI', () => {
 
     it('should prevent duplicate executions for the same actor', async () => {
       runWithContext(async () => {
-        const ai = useCombatAI(mockContext, mockSession, customTiming, mockDeps);
+        const ai = useCombatAI(mockContextRef, mockSessionRef, customTiming, mockDeps);
 
         ai.setAIControlled(ALICE_ID, true);
 
@@ -156,7 +156,7 @@ describe('useCombatAI', () => {
 
     it('should set thinking state during AI execution', () => {
       runWithContext(() => {
-        const ai = useCombatAI(mockContext, mockSession, customTiming, mockDeps);
+        const ai = useCombatAI(mockContextRef, mockSessionRef, customTiming, mockDeps);
 
         ai.setAIControlled(ALICE_ID, true);
         ai.executeAITurn(ALICE_ID);
@@ -169,7 +169,7 @@ describe('useCombatAI', () => {
 
     it('should use correct timing delays', () => {
       runWithContext(() => {
-        const ai = useCombatAI(mockContext, mockSession, customTiming, mockDeps);
+        const ai = useCombatAI(mockContextRef, mockSessionRef, customTiming, mockDeps);
 
         ai.setAIControlled(ALICE_ID, true);
         ai.executeAITurn(ALICE_ID);
@@ -187,8 +187,9 @@ describe('useCombatAI', () => {
         // Mock session without the combatant
         const emptySession = createMockCombatSession();
         emptySession.data.combatants.clear();
+        const emptySessionRef = ref(emptySession);
 
-        const ai = useCombatAI(mockContext, emptySession, customTiming, mockDeps);
+        const ai = useCombatAI(mockContextRef, emptySessionRef, customTiming, mockDeps);
 
         ai.setAIControlled(ALICE_ID, true);
 
@@ -207,7 +208,7 @@ describe('useCombatAI', () => {
   describe('AI state management', () => {
     it('should cancel AI execution and clear timeouts', () => {
       runWithContext(() => {
-        const ai = useCombatAI(mockContext, mockSession, customTiming, mockDeps);
+        const ai = useCombatAI(mockContextRef, mockSessionRef, customTiming, mockDeps);
 
         ai.setAIControlled(ALICE_ID, true);
         ai.executeAITurn(ALICE_ID);
@@ -222,7 +223,7 @@ describe('useCombatAI', () => {
 
     it('should reset AI state completely', () => {
       runWithContext(() => {
-        const ai = useCombatAI(mockContext, mockSession, customTiming, mockDeps);
+        const ai = useCombatAI(mockContextRef, mockSessionRef, customTiming, mockDeps);
 
         ai.setAIControlled(ALICE_ID, true);
         ai.executeAITurn(ALICE_ID);
@@ -236,7 +237,7 @@ describe('useCombatAI', () => {
 
     it('should provide comprehensive AI statistics', () => {
       runWithContext(() => {
-        const ai = useCombatAI(mockContext, mockSession, customTiming, mockDeps);
+        const ai = useCombatAI(mockContextRef, mockSessionRef, customTiming, mockDeps);
 
         ai.setAIControlled(ALICE_ID, true);
         ai.executeAITurn(ALICE_ID);
@@ -258,7 +259,7 @@ describe('useCombatAI', () => {
   describe('session integration', () => {
     it('should reset state when session changes', async () => {
       runWithContext(async () => {
-        const ai = useCombatAI(mockContext, mockSession, customTiming, mockDeps);
+        const ai = useCombatAI(mockContextRef, mockSessionRef, customTiming, mockDeps);
 
         ai.setAIControlled(ALICE_ID, true);
         ai.executeAITurn(ALICE_ID);
@@ -278,7 +279,7 @@ describe('useCombatAI', () => {
   describe('cleanup', () => {
     it('should clear all timeouts on cleanup', () => {
       runWithContext(() => {
-        const ai = useCombatAI(mockContext, mockSession, customTiming, mockDeps);
+        const ai = useCombatAI(mockContextRef, mockSessionRef, customTiming, mockDeps);
 
         ai.setAIControlled(ALICE_ID, true);
         ai.executeAITurn(ALICE_ID);
@@ -293,7 +294,7 @@ describe('useCombatAI', () => {
   describe('reactive properties', () => {
     it('should update computed properties reactively', () => {
       runWithContext(() => {
-        const ai = useCombatAI(mockContext, mockSession, customTiming, mockDeps);
+        const ai = useCombatAI(mockContextRef, mockSessionRef, customTiming, mockDeps);
 
         // Initially empty
         expect(ai.aiControlledActorsList.value).toEqual([]);

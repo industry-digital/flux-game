@@ -1,4 +1,4 @@
-import { ref, computed, readonly, watch } from 'vue';
+import { ref, computed, readonly, watch, type Ref } from 'vue';
 import { useLogger } from '~/infrastructure/logging/composables';
 import {
   type TransformerContext,
@@ -55,8 +55,8 @@ export const DEFAULT_AI_TIMING: AITimingConfig = {
  * Single Responsibility: AI behavior management and UX integration
  */
 export function useCombatAI(
-  context: TransformerContext,
-  session: CombatSession,
+  context: Ref<TransformerContext | null>,
+  session: Ref<CombatSession | null>,
   timingConfig: AITimingConfig = DEFAULT_AI_TIMING,
   deps: CombatAIDependencies = DEFAULT_COMBAT_AI_DEPS
 ) {
@@ -145,7 +145,18 @@ export function useCombatAI(
           aiExecutionState.value = 'executing';
 
           // Get the combatant for this actor
-          const combatant = session.data.combatants.get(actorId);
+          const currentSession = session.value;
+          const currentContext = context.value;
+
+          if (!currentSession || !currentContext) {
+            log.error('Session or context not available for AI execution');
+            aiExecutionState.value = 'error';
+            currentThinkingActor.value = null;
+            resolve([]);
+            return;
+          }
+
+          const combatant = currentSession.data.combatants.get(actorId);
           if (!combatant) {
             log.error(`Combatant not found for actor: ${actorId}`);
             aiExecutionState.value = 'error';
@@ -156,10 +167,10 @@ export function useCombatAI(
 
           // Generate combat plan using core AI system
           const commands = deps.generateCombatPlan(
-            context,
-            session,
+            currentContext,
+            currentSession,
             combatant,
-            context.uniqid()
+            currentContext.uniqid()
           );
 
           log.debug('AI plan generated:', {
@@ -244,7 +255,7 @@ export function useCombatAI(
   };
 
   // Watch for session changes to reset state
-  watch(() => session.id, () => {
+  watch(() => session.value?.id, () => {
     resetAIState();
   });
 
