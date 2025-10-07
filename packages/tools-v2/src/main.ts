@@ -1,4 +1,15 @@
-import { createApp } from "vue";
-import App from "./App.vue";
+import { createApp } from 'vue';
+import { router } from './router';
+import { useTheme } from '~/infrastructure/theme/composables';
+import App from './App.vue';
 
-createApp(App).mount("#app");
+const app = createApp(App);
+
+// Install router
+app.use(router);
+
+// Initialize theme system
+useTheme('dark');
+
+// Mount app
+app.mount('#app');
