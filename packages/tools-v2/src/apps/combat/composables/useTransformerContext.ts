@@ -1,4 +1,4 @@
-import { ref, computed, readonly } from 'vue';
+import { shallowRef, ref, computed, readonly, markRaw } from 'vue';
 import { useLogger } from '~/infrastructure/logging/composables';
 import { createTransformerContext } from '@flux/core';
 import type {
@@ -35,7 +35,7 @@ export function useTransformerContext(
   const log = deps.useLogger('useTransformerContext');
 
   // Reactive state
-  const context = ref<TransformerContext | null>(null);
+  const context = shallowRef<TransformerContext | null>(null);
   const isInitialized = ref(false);
   const eventCount = ref(0);
 
@@ -61,7 +61,8 @@ export function useTransformerContext(
       log.debug('Initializing transformer context');
 
       const newContext = deps.createTransformerContext();
-      context.value = newContext;
+      // Keep core context non-reactive for in-place mutation performance
+      context.value = markRaw(newContext as unknown as TransformerContext);
       isInitialized.value = true;
       eventCount.value = 0;
 
