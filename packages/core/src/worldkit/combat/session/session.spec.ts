@@ -17,7 +17,7 @@ import { EntityType } from '~/types/entity/entity';
 import { EventType } from '~/types/event';
 import { type RollResult } from '~/types/dice';
 import { createTransformerContext } from '~/worldkit/context';
-import { calculateStatBonus, getStatValue } from '~/worldkit/entity/actor/new-stats';
+import { calculateStatBonus, getStatValue } from '~/worldkit/entity/actor/stats';
 
 const TEST_PLACE_ID: PlaceURN = 'flux:place:test-place';
 const TEST_SESSION_ID: SessionURN = 'flux:session:combat:test-session';

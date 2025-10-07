@@ -12,7 +12,7 @@ import { distanceToAp } from '~/worldkit/physics/movement';
 import { calculateMovementEnergyCost } from '~/worldkit/combat/energy-costs';
 import { MovementType } from '~/worldkit/combat/combatant';
 import { roundApCostUp } from '~/worldkit/combat/tactical-rounding';
-import { getStatValue } from '~/worldkit/entity/actor/new-stats';
+import { getStatValue } from '~/worldkit/entity/actor/stats';
 
 /**
  * Calculate AP and energy costs for movement actions (ADVANCE/RETREAT)

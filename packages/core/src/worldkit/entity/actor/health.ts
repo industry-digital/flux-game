@@ -1,6 +1,6 @@
 import { NormalizedValueBetweenZeroAndOne } from '~/types';
 import { Actor, Stat } from '~/types/entity/actor';
-import { calculateStatBonus, getStatValue } from './new-stats';
+import { calculateStatBonus, getStatValue } from './stats';
 
 /**
  * Base HP value before RES modifiers

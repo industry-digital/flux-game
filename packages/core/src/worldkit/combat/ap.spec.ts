@@ -2,7 +2,7 @@ import { describe, it, expect } from 'vitest';
 import { calculateMaxAp, DEFAULT_BASE_AP } from './ap';
 import { Actor } from '~/types/entity/actor';
 import { GOLDEN_RATIO } from '~/types/world/constants';
-import { BASELINE_STAT_VALUE, NORMAL_STAT_RANGE } from '~/worldkit/entity/actor/new-stats';
+import { BASELINE_STAT_VALUE, NORMAL_STAT_RANGE } from '~/worldkit/entity/actor/stats';
 import { createActor } from '~/worldkit/entity/actor';
 
 // Helper to create test actor with specific INT

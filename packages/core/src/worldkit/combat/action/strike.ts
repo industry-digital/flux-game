@@ -21,7 +21,7 @@ import { createStrikeCost } from '~/worldkit/combat/tactical-cost';
 import { calculateAttackRating } from '~/worldkit/combat/attack';
 import { decrementHp } from '~/worldkit/entity/actor/health';
 import { getEffectiveSkillRank } from '~/worldkit/entity/actor/skill';
-import { getStatValue } from '~/worldkit/entity/actor/new-stats';
+import { getStatValue } from '~/worldkit/entity/actor/stats';
 
 export type StrikeDependencies = {
   createWorldEvent?: typeof createWorldEvent;

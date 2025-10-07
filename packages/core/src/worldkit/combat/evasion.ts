@@ -1,7 +1,7 @@
 import { Actor, Stat } from '~/types/entity/actor';
 import { PotentiallyImpureOperations } from '~/types/handler';
 import { getActorSkill, MAX_SKILL_RANK } from '~/worldkit/entity/actor/skill';
-import { getStatValue } from '~/worldkit/entity/actor/new-stats';
+import { getStatValue } from '~/worldkit/entity/actor/stats';
 import { calculateInertialMass, calculatePeakPowerOutput } from '~/worldkit/physics/physics';
 
 /**

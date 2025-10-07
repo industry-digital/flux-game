@@ -5,11 +5,19 @@ import { useCombatScenario } from './useCombatScenario';
 import { useTransformerContext } from './useTransformerContext';
 import { useCombatAI, type AITimingConfig } from './useCombatAI';
 import {
-  type CombatSession, type PlaceURN,
-  type SessionURN, type Actor,
+  type CombatSession,
+  type PlaceURN,
+  type SessionURN,
+  type Actor,
+  type WorldEvent,
   createCombatSessionApi,
   createActor,
-  isActorAlive
+  isActorAlive,
+  ActorURN,
+  Stat,
+  createShell,
+  TransformerContext,
+  PotentiallyImpureOperations
 } from '@flux/core';
 
 /**
@@ -45,6 +53,7 @@ export type CombatSimulatorDependencies = {
   createCombatSessionApi: typeof createCombatSessionApi;
   createActor: typeof createActor;
   isActorAlive: typeof isActorAlive;
+  timestamp: PotentiallyImpureOperations['timestamp'],
 };
 
 export const DEFAULT_COMBAT_SIMULATOR_DEPS: CombatSimulatorDependencies = {
@@ -56,6 +65,7 @@ export const DEFAULT_COMBAT_SIMULATOR_DEPS: CombatSimulatorDependencies = {
   createCombatSessionApi,
   createActor,
   isActorAlive,
+  timestamp: () => Date.now(),
 };
 
 /**
@@ -82,8 +92,63 @@ export function useCombatSimulator(
   const currentSession = ref<CombatSession | null>(null);
   const sessionApi = ref<ReturnType<typeof createCombatSessionApi> | null>(null);
   const lastError = ref<string | null>(null);
-  const currentTurn = ref(0);
-  const currentRound = ref(0);
+  const lastEventId = ref<string | null>(null); // Track last WorldEvent for reactivity
+
+  /**
+   * Helper to execute combat actions and capture WorldEvents for reactivity
+   */
+  const executeWithEventCapture = async <T>(
+    action: () => T,
+    onSuccess?: (result: T, events: WorldEvent[]) => void
+  ): Promise<{ success: boolean; result?: T; events: WorldEvent[] }> => {
+    if (!transformerContext.context.value) {
+      return { success: false, events: [] };
+    }
+
+    try {
+      const context = transformerContext.context.value;
+      const capturedEvents: WorldEvent[] = [];
+
+      // Capture events by stubbing declareEvent (like legacy useCombatState)
+      const originalDeclareEvent = context.declareEvent;
+      context.declareEvent = (event: WorldEvent) => {
+        capturedEvents.push(event);
+        return originalDeclareEvent.call(context, event);
+      };
+
+      let result: T;
+      try {
+        result = action();
+      } finally {
+        // Always restore original declareEvent
+        context.declareEvent = originalDeclareEvent;
+      }
+
+      // Update reactivity trigger if we captured events
+      if (capturedEvents.length > 0) {
+        const latestEvent = capturedEvents[capturedEvents.length - 1];
+        lastEventId.value = latestEvent.id;
+
+        // Add events to combat log
+        combatLog.addEvents(capturedEvents);
+      } else {
+        // In mocked environments, no events may be generated
+        // Still trigger reactivity by updating lastEventId with a dummy value
+        lastEventId.value = `mock-event-${deps.timestamp()}`;
+      }
+
+      // Call success callback if provided
+      if (onSuccess) {
+        onSuccess(result, capturedEvents);
+      }
+
+      return { success: true, result, events: capturedEvents };
+    } catch (error) {
+      log.error('Combat action failed:', error);
+      lastError.value = error instanceof Error ? error.message : String(error);
+      return { success: false, events: [] };
+    }
+  };
 
   // Initialize AI composable when we have a session
   const combatAI = computed(() => {
@@ -97,13 +162,35 @@ export function useCombatSimulator(
     );
   });
 
+  // Reactive state that updates when events occur
+  const reactiveState = computed(() => {
+    // This computed will re-run whenever lastEventId changes
+    const eventId = lastEventId.value;
+    const session = currentSession.value;
+
+    if (!session) {
+      return {
+        hasActiveSession: false,
+        currentTurnActor: null,
+        combatantCount: 0
+      };
+    }
+
+    return {
+      hasActiveSession: true,
+      currentTurnActor: session.data?.rounds?.current?.turns?.current?.actor || null,
+      combatantCount: session.data?.combatants?.size || 0,
+      eventId // Include eventId to ensure reactivity
+    };
+  });
+
   // Computed properties
   const isSimulationActive = computed(() => simulationState.value === 'active');
   const isSimulationPaused = computed(() => simulationState.value === 'paused');
   const canStartSimulation = computed(() => {
     return simulationState.value === 'idle' &&
            transformerContext.isInitialized.value &&
-           scenario.scenarioData.value.actors.length > 0;
+           Object.keys(scenario.scenarioData.value.actors).length > 0;
   });
   const canPauseSimulation = computed(() => simulationState.value === 'active');
   const canResumeSimulation = computed(() => simulationState.value === 'paused');
@@ -124,9 +211,20 @@ export function useCombatSimulator(
   });
 
   const currentTurnActor = computed(() => {
-    if (!sessionApi.value) return null;
-    const session = sessionApi.value.session;
-    return session.data.turnOrder[session.data.currentTurnIndex] || null;
+    // Use reactiveState to ensure updates when events occur
+    return reactiveState.value.currentTurnActor;
+  });
+
+  const currentTurn = computed(() => {
+    // Access lastEventId to ensure reactivity when events occur
+    lastEventId.value;
+    return currentSession.value?.data?.rounds?.current?.turns?.current?.number || 0;
+  });
+
+  const currentRound = computed(() => {
+    // Access lastEventId to ensure reactivity when events occur
+    lastEventId.value;
+    return currentSession.value?.data?.rounds?.current?.number || 0;
   });
 
   /**
@@ -159,22 +257,50 @@ export function useCombatSimulator(
 
     const actors: Actor[] = [];
 
-    for (const actorData of scenario.scenarioData.value.actors) {
+    for (const [actorId, actorData] of Object.entries(scenario.scenarioData.value.actors)) {
       try {
-        // Create actor using core factory
+        // Create actor using core factory with proper data transformation
         const actor = deps.createActor({
-          id: actorData.id,
-          name: actorData.name,
+          id: actorId as ActorURN,
+          name: actorId.split(':').pop() || actorId, // Extract name from URN
           location: config.location,
-          stats: actorData.stats,
-          hp: actorData.hp,
-          skills: actorData.skills || {},
-          equipment: actorData.equipment || {},
-          inventory: actorData.inventory || {
+          // Core stats (stored on actor.stats)
+          stats: {
+            [Stat.INT]: { nat: actorData.stats.int || 10, eff: actorData.stats.int || 10, mods: {} },
+            [Stat.PER]: { nat: actorData.stats.per || 10, eff: actorData.stats.per || 10, mods: {} },
+            [Stat.MEM]: { nat: actorData.stats.mem || 10, eff: actorData.stats.mem || 10, mods: {} },
+          },
+          hp: {
+            nat: { max: 100, cur: 100 },
+            eff: { max: 100, cur: 100 },
+            mods: {}
+          },
+          // Transform skills from numbers to proper skill objects
+          skills: Object.fromEntries(
+            Object.entries(actorData.skills || {}).map(([skillId, rank]) => [
+              skillId,
+              { rank: rank || 0, mods: {}, xp: 0, pxp: 0 }
+            ])
+          ),
+          equipment: {},
+          inventory: {
             mass: 1000,
             ts: Date.now(),
             items: {}
-          }
+          },
+          currentShell: 'default-shell',
+          // Shell system - shell stats (POW, FIN, RES) are stored here
+          shells: {
+            'default-shell': createShell({
+              id: 'default-shell',
+              name: 'Default Shell',
+              stats: {
+                [Stat.POW]: { nat: actorData.stats.pow || 10, eff: actorData.stats.pow || 10, mods: {} },
+                [Stat.FIN]: { nat: actorData.stats.fin || 10, eff: actorData.stats.fin || 10, mods: {} },
+                [Stat.RES]: { nat: actorData.stats.res || 10, eff: actorData.stats.res || 10, mods: {} },
+              },
+            }),
+          },
         });
 
         // Add to transformer context
@@ -195,22 +321,37 @@ export function useCombatSimulator(
    * Start combat simulation
    */
   const startSimulation = async (): Promise<boolean> => {
-    if (!canStartSimulation.value) {
-      log.warn('Cannot start simulation in current state:', simulationState.value);
+    // Check basic preconditions first
+    if (simulationState.value !== 'idle') {
+      log.warn('Cannot start simulation: not in idle state:', simulationState.value);
+      return false;
+    }
+
+    if (Object.keys(scenario.scenarioData.value.actors).length === 0) {
+      log.warn('Cannot start simulation: no actors available');
       return false;
     }
 
     try {
-      simulationState.value = 'preparing';
-      lastError.value = null;
-
-      // Initialize context if needed
+      // Initialize context if needed first
       if (!initializeContext()) {
         return false;
       }
 
+      // Check if we can start BEFORE changing state to 'preparing'
+      if (!canStartSimulation.value) {
+        log.warn('Cannot start simulation: preconditions not met');
+        return false;
+      }
+
+      // Now we can safely set state to preparing
+      simulationState.value = 'preparing';
+      lastError.value = null;
+
       // Create actors from scenario
+      console.log('🔍 DEBUG: About to create actors from scenario');
       const actors = createActorsFromScenario();
+      console.log('🔍 DEBUG: Created actors:', actors.length);
       if (actors.length === 0) {
         lastError.value = 'No actors available for combat';
         simulationState.value = 'error';
@@ -218,47 +359,45 @@ export function useCombatSimulator(
       }
 
       // Create combat session
+      console.log('🔍 DEBUG: About to create combat session API');
       const api = deps.createCombatSessionApi(
-        transformerContext.context.value!,
+        transformerContext.context.value! as TransformerContext,
         config.location,
         config.sessionId
       );
+      console.log('🔍 DEBUG: Created combat session API');
 
       // Add all actors as combatants
-      for (const actor of actors) {
-        api.addCombatant(actor.id);
+      console.log('🔍 DEBUG: About to add combatants');
+      for (const [index, actor] of actors.entries()) {
+        // Assign teams alternately: first actor to 'alpha', second to 'bravo', etc.
+        const team = index % 2 === 0 ? 'alpha' : 'bravo';
+        console.log('🔍 DEBUG: Adding combatant:', actor.id, 'to team:', team);
+        api.addCombatant(actor.id, team);
       }
+      console.log('🔍 DEBUG: Finished adding combatants');
 
-      // Start combat
-      api.startCombat();
+      // Use event-based execution for combat start
+      const result = await executeWithEventCapture(() => {
+        // Start combat - this generates WorldEvents
+        api.startCombat();
+        return api;
+      }, (api, events) => {
+        // Success callback - update state after events are captured
+        currentSession.value = api.session;
+        sessionApi.value = api;
+        simulationState.value = 'active';
 
-      currentSession.value = api.session;
-      sessionApi.value = api;
-      simulationState.value = 'active';
-      currentTurn.value = 1;
-      currentRound.value = 1;
+        // Turn/round are now computed from session state automatically
 
-      // Log combat start
-      combatLog.addEvents([
-        {
-          id: transformerContext.context.value!.uniqid(),
-          type: 'COMBAT_STARTED',
-          ts: Date.now(),
-          actor: null,
-          location: config.location,
-          data: {
-            sessionId: api.session.id,
-            combatantCount: actors.length
-          }
-        }
-      ]);
-
-      log.info('Combat simulation started:', {
-        sessionId: api.session.id,
-        combatants: actors.length
+        log.info('Combat simulation started successfully', {
+          sessionId: api.session.id,
+          combatantCount: actors.length,
+          eventsGenerated: events.length
+        });
       });
 
-      return true;
+      return result.success;
 
     } catch (error) {
       log.error('Failed to start simulation:', error);
@@ -294,18 +433,15 @@ export function useCombatSimulator(
         }
       }
 
-      // Advance turn in session
-      const events = sessionApi.value.advanceTurn('useCombatSimulator.advanceTurn');
+      // Use event-based execution for turn advancement
+      const result = await executeWithEventCapture(() => {
+        return sessionApi.value!.advanceTurn('useCombatSimulator.advanceTurn');
+      }, (events, capturedEvents) => {
+        // Success callback - turn/round are now computed from session state automatically
+      });
 
-      // Log events
-      if (events.length > 0) {
-        combatLog.addEvents(events);
-      }
-
-      // Update turn/round counters
-      currentTurn.value++;
-      if (sessionApi.value.session.data.currentTurnIndex === 0) {
-        currentRound.value++;
+      if (!result.success) {
+        return false;
       }
 
       // Check victory conditions
@@ -374,38 +510,18 @@ export function useCombatSimulator(
       // Cancel AI execution
       combatAI.value?.cancelAIExecution();
 
-      // End combat session if active
+      // Use event-based execution for combat end
       if (sessionApi.value) {
-        const events = sessionApi.value.endCombat('useCombatSimulator.endSimulation');
-        if (events.length > 0) {
-          combatLog.addEvents(events);
-        }
-      }
-
-      // Log combat end
-      if (transformerContext.context.value) {
-        combatLog.addEvents([
-          {
-            id: transformerContext.context.value.uniqid(),
-            type: 'COMBAT_ENDED',
-            ts: Date.now(),
-            actor: null,
-            location: config.location,
-            data: {
-              sessionId: currentSession.value?.id,
-              turns: currentTurn.value,
-              rounds: currentRound.value
-            }
-          }
-        ]);
+        await executeWithEventCapture(() => {
+          return sessionApi.value!.endCombat('useCombatSimulator.endSimulation');
+        });
       }
 
       // Reset state
       simulationState.value = 'completed';
       currentSession.value = null;
       sessionApi.value = null;
-      currentTurn.value = 0;
-      currentRound.value = 0;
+      // currentTurn and currentRound are computed, will be 0 when session is null
 
       log.info('Combat simulation ended');
       return true;
@@ -430,8 +546,7 @@ export function useCombatSimulator(
     currentSession.value = null;
     sessionApi.value = null;
     lastError.value = null;
-    currentTurn.value = 0;
-    currentRound.value = 0;
+    // currentTurn and currentRound are computed, will be 0 when session is null
 
     // Reset transformer context
     transformerContext.resetContext();
@@ -492,9 +607,10 @@ export function useCombatSimulator(
 
     // Domain composables (readonly access)
     combatLog: {
-      events: combatLog.events,
-      eventCount: combatLog.eventCount,
-      categorizedEvents: combatLog.categorizedEvents,
+      entries: combatLog.entries,
+      entryCount: combatLog.entryCount,
+      filteredEntries: combatLog.filteredEntries,
+      addEvents: combatLog.addEvents,
       clearLog: combatLog.clearLog,
     },
     scenario: {

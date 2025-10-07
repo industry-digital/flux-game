@@ -7,7 +7,8 @@ import type {
   CombatSession,
   WeaponSchema,
   WeaponSchemaURN,
-  WorldEvent
+  WorldEvent,
+  createActor,
 } from '@flux/core';
 
 /**

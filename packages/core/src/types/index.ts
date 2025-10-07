@@ -241,6 +241,7 @@ export {
 export {
   AbilityURN,
   ActorURN,
+  AnatomyURN,
   ArmorItemURN,
   DirectionURN,
   EcosystemURN,

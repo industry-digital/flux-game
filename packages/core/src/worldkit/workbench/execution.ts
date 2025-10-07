@@ -1,7 +1,7 @@
 import { Shell } from '~/types/entity/shell';
 import { ShellMutation, ShellMutationType, StatMutationOperation } from '~/types/workbench';
 import { WorldEvent } from '~/types/event';
-import { SHELL_STAT_NAMES, BASELINE_STAT_VALUE, MAX_STAT_VALUE } from '~/worldkit/entity/actor/new-stats';
+import { SHELL_STAT_NAMES, BASELINE_STAT_VALUE, MAX_STAT_VALUE } from '~/worldkit/entity/actor/stats';
 import { getShellNaturalStatValue, setShellNaturalStatValue, refreshShellStats } from '~/worldkit/entity/actor/shell';
 
 /**

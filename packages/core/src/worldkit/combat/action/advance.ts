@@ -8,7 +8,7 @@ import { calculateTacticalMovement, roundApCostUp } from '~/worldkit/combat/tact
 import { distanceToAp, apToDistance } from '~/worldkit/physics/movement';
 import { checkMovementCollision, createTargetResolver } from '~/worldkit/combat/movement';
 import { deductAp, MOVE_BY_DISTANCE, MovementType } from '~/worldkit/combat/combatant';
-import { getStatValue } from '~/worldkit/entity/actor/new-stats';
+import { getStatValue } from '~/worldkit/entity/actor/stats';
 import { MovementActionDependencies, DEFAULT_MOVEMENT_DEPS } from './movement-deps';
 import { createMovementCostFromAp } from '~/worldkit/combat/tactical-cost';
 

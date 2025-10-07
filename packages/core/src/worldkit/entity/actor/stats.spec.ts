@@ -17,7 +17,7 @@ import {
   calculateStatBonus,
   BASELINE_STAT_VALUE,
   MAX_STAT_VALUE,
-} from './new-stats';
+} from './stats';
 
 describe('Actor Stats Module', () => {
   let actor: Actor;

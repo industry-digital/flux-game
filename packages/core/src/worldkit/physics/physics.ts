@@ -10,7 +10,7 @@
  */
 
 import { GOLDEN_RATIO } from '~/types/world/constants';
-import { BASELINE_STAT_VALUE, NORMAL_STAT_RANGE } from '~/worldkit/entity/actor/new-stats';
+import { BASELINE_STAT_VALUE, NORMAL_STAT_RANGE } from '~/worldkit/entity/actor/stats';
 
 /**
  * Top speed scaling - purely POW based

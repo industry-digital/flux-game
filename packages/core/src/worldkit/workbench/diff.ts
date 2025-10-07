@@ -4,7 +4,7 @@ import { ShellPerformanceProfile } from '~/types/entity/shell';
 import { createShellPreview } from '~/worldkit/workbench/preview';
 import { calculateShellPerformance, ShellPerformanceDependencies } from '~/worldkit/entity/actor/shell/instrumentation';
 import { calculateTotalCost } from '~/worldkit/workbench/cost';
-import { SHELL_STAT_NAMES } from '~/worldkit/entity/actor/new-stats';
+import { SHELL_STAT_NAMES } from '~/worldkit/entity/actor/stats';
 import { Actor } from '~/types/entity/actor';
 import { getShellStatValue } from '~/worldkit/entity/actor/shell';
 

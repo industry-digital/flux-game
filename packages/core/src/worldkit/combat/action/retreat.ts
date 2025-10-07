@@ -17,7 +17,7 @@ import { TransformerContext } from '~/types/handler';
 import { ActorURN } from '~/types/taxonomy';
 import { MovementActionDependencies, DEFAULT_MOVEMENT_DEPS } from './movement-deps';
 import { createMovementCostFromDistance, createMovementCostFromAp } from '~/worldkit/combat/tactical-cost';
-import { getStatValue } from '~/worldkit/entity/actor/new-stats';
+import { getStatValue } from '~/worldkit/entity/actor/stats';
 
 export type RetreatDependencies = MovementActionDependencies;
 export const DEFAULT_RETREAT_DEPS = DEFAULT_MOVEMENT_DEPS;

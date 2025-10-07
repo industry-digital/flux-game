@@ -111,11 +111,15 @@ export type CombatSessionApi = {
   isNew: boolean;
   addCombatant: CombatantManager['addCombatant'];
   removeCombatant: CombatantManager['removeCombatant'];
-  startCombat: () => void;
+  startCombat: () => WorldEvent[];
   advanceTurn: (trace?: string) => WorldEvent[];
   checkVictoryConditions: () => boolean;
   endCombat: (trace?: string) => WorldEvent[];
   getCombatantApi: (actorId: ActorURN) => CombatantApi;
+};
+
+export type CombatSessionFactoryDependencies = {
+  advanceTurn?: (trace?: string) => WorldEvent[];
 };
 
 /**
@@ -127,6 +131,7 @@ export const createCombatSessionApi = (
   sessionId?: SessionURN,
   battlefield?: Battlefield,
   initiative?: Map<ActorURN, RollResult>,
+  deps?: CombatSessionFactoryDependencies,
 ): CombatSessionApi => {
   const { world } = context;
 
@@ -161,7 +166,7 @@ export const createCombatSessionApi = (
   /**
    * Enhanced turn advancement that handles resource recovery and checks victory conditions
    */
-  function advanceTurn(trace?: string): WorldEvent[] {
+  const advanceTurn = deps?.advanceTurn ?? ((trace?: string): WorldEvent[] => {
     // Record session-level turn processing metrics
     context.metrics?.incrementCounter('combat.session_turns_processed');
 
@@ -189,7 +194,7 @@ export const createCombatSessionApi = (
     context.metrics?.recordValue('combat.events_per_turn', events.length);
 
     return events;
-  };
+  });
 
   const createCombatantApiDeps = { advanceTurn };
   const combatantApis = new Map<ActorURN, CombatantApi>();

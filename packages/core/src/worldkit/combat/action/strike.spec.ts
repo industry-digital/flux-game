@@ -9,7 +9,7 @@ import { CombatantDidAttack, CombatantDidDie, EventType, WorldEvent } from '~/ty
 import { Team } from '~/types/combat';
 import { createStrikeCost } from '~/worldkit/combat/tactical-cost';
 import { calculateWeaponApCost } from '~/worldkit/combat/damage';
-import { getStatValue } from '~/worldkit/entity/actor/new-stats';
+import { getStatValue } from '~/worldkit/entity/actor/stats';
 import { Stat } from '~/types/entity/actor';
 
 function extractCombatantDidAttackEvent(events: WorldEvent[]): CombatantDidAttack {

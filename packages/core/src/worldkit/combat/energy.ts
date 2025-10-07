@@ -2,8 +2,8 @@ import { Actor, Stat } from '~/types/entity/actor';
 import { PotentiallyImpureOperations } from '~/types/handler';
 import { Combatant, ActionCost } from '~/types/combat';
 import { areaUnderCurve } from '~/lib/calculus';
-import { BASELINE_STAT_VALUE, MAX_STAT_VALUE } from '~/worldkit/entity/actor/new-stats';
-import { getStatValue } from '~/worldkit/entity/actor/new-stats';
+import { BASELINE_STAT_VALUE, MAX_STAT_VALUE } from '~/worldkit/entity/actor/stats';
+import { getStatValue } from '~/worldkit/entity/actor/stats';
 import { extractApCost, extractEnergyCost } from '~/worldkit/combat/ap';
 
 export const DEFAULT_CAPACITOR_ENERGY_PER_RES = 1000; // Base energy scaling factor

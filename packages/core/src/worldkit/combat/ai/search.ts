@@ -23,7 +23,7 @@ import { targetingApi } from '~/worldkit/combat/ai/targeting';
 import { TARGET_COST } from '~/worldkit/combat/action/target';
 import { CombatPlanningDependencies, DEFAULT_COMBAT_PLANNING_DEPS } from './deps';
 import { Stat } from '~/types/entity/actor';
-import { getStatValue } from '~/worldkit/entity/actor/new-stats';
+import { getStatValue } from '~/worldkit/entity/actor/stats';
 
 /**
  * Zero-allocation action sequence builder

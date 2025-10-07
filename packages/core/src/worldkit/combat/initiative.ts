@@ -2,7 +2,7 @@ import { Actor, ActorURN, RollResult } from '~/types';
 import { Combatant } from '~/types/combat';
 import { Stat } from '~/types/entity/actor';
 import { rollDiceWithRng } from '~/worldkit/dice';
-import { calculateStatBonus, getStatValue } from '~/worldkit/entity/actor/new-stats';
+import { calculateStatBonus, getStatValue } from '~/worldkit/entity/actor/stats';
 
 export const INITIATIVE_ROLL_SPECIFICATION = '1d20';
 

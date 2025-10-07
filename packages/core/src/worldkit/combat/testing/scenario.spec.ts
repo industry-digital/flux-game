@@ -13,7 +13,7 @@ import { createSwordSchema } from '~/worldkit/schema/weapon/sword';
 import { createModifiableScalarAttribute } from '~/worldkit/entity/attribute';
 import { createTransformerContext } from '~/worldkit/context';
 import { WeaponSchema } from '~/types/schema/weapon';
-import { getStatValue } from '~/worldkit/entity/actor/new-stats';
+import { getStatValue } from '~/worldkit/entity/actor/stats';
 
 describe('useCombatScenario', () => {
   let context: TransformerContext;

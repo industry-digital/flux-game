@@ -127,5 +127,5 @@ export { createActorEquipmentApi, type ActorEquipmentApi } from './equipment';
 export * from './health';
 export * from './skill';
 export * from './wallet';
-export * from './new-stats';
+export * from './stats';
 export * from './shell';

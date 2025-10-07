@@ -1,7 +1,7 @@
 import { Actor } from '~/types/entity/actor';
 import { NormalizedValueBetweenZeroAndOne } from '~/types/entity/attribute';
 import { Stat } from '~/types/entity/actor';
-import { BASELINE_STAT_VALUE, MAX_STAT_VALUE, getStatValue } from './new-stats';
+import { BASELINE_STAT_VALUE, MAX_STAT_VALUE, getStatValue } from './stats';
 
 /**
  * Pure functions for actor energy management
