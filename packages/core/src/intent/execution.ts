@@ -123,9 +123,8 @@ const DEFAULT_INTENT_EXECUTION_DEPENDENCIES: IntentExecutionDependencies = {
  * Useful for simple cases where you just want to execute an intent immediately
  *
  * @param context - Full transformer context
- * @param intentText - Raw text intent (e.g., "attack bob")
  * @param actorId - Actor performing the intent
- * @param location - Optional location context
+ * @param intentText - Raw text intent (e.g., "attack bob")
  * @returns Updated transformer context with intent effects applied
  */
 export function executeIntent(
