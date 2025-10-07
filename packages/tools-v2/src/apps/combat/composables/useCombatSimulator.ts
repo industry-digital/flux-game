@@ -58,7 +58,7 @@ export type CombatSimulatorDependencies = {
   timestamp: PotentiallyImpureOperations['timestamp'];
 };
 
-export const DEFAULT_COMBAT_SIMULATOR_DEPS: CombatSimulatorDependencies = {
+export const DEFAULT_COMBAT_SIMULATOR_DEPS: Readonly<CombatSimulatorDependencies> = Object.freeze({
   useLogger,
   useCombatLog,
   useCombatScenario,
@@ -69,7 +69,7 @@ export const DEFAULT_COMBAT_SIMULATOR_DEPS: CombatSimulatorDependencies = {
   isActorAlive,
   executeIntent,
   timestamp: () => Date.now(),
-};
+});
 
 /**
  * Combat Simulator orchestrator composable

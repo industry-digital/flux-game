@@ -100,7 +100,12 @@ describe('useCombatSimulator', () => {
 
     // Mock dependencies
     mockDeps = {
-      useLogger: vi.fn(() => console),
+      useLogger: vi.fn(() => ({
+        debug: vi.fn(),
+        info: vi.fn(),
+        warn: vi.fn(),
+        error: vi.fn(),
+      })),
       useCombatLog: vi.fn(() => mockCombatLog),
       useCombatScenario: vi.fn(() => mockScenario),
       useTransformerContext: useTransformerContext, // Use the real implementation
@@ -365,36 +370,8 @@ describe('useCombatSimulator', () => {
         const simulator = useCombatSimulator(mockConfig, mockDeps);
 
         // Start simulation first
-        const startSuccess = simulator.startSimulation();
-        console.log('🔍 startSimulation result:', startSuccess);
-
-        if (!startSuccess) {
-          console.log('❌ startSimulation failed with error:', simulator.lastError.value);
-          console.log('❌ simulationState after start:', simulator.simulationState.value);
-          console.log('🔍 canStartSimulation conditions:');
-          console.log('  simulationState === idle:', simulator.simulationState.value === 'idle');
-          console.log('  isInitialized:', simulator.transformerContext.isInitialized.value);
-          console.log('  actors count:', Object.keys(simulator.scenario.scenarioData.value.actors).length);
-          console.log('  canStartSimulation:', simulator.canStartSimulation.value);
-          console.log('🔍 Scenario actors:', simulator.scenario.scenarioData.value.actors);
-        }
-
-        // Real implementations will handle session and actor management
-
-        // Debug: Check state before advanceTurn
-        console.log('🔍 Debug state before advanceTurn:');
-        console.log('  simulationState:', simulator.simulationState.value);
-        console.log('  isSimulationActive:', simulator.isSimulationActive.value);
-        console.log('  session actor:', simulator.currentSession.value?.data?.rounds?.current?.turns?.current?.actor);
-        console.log('  currentTurnActor:', simulator.currentTurnActor.value);
-
+        simulator.startSimulation();
         const success = simulator.advanceTurn();
-
-        // Debug: Check what happened
-        if (!success) {
-          console.log('❌ advanceTurn failed');
-          console.log('  lastError:', simulator.lastError.value);
-        }
 
         expect(success).toBe(true);
         // The real initiative system determines turn order, so we just verify AI was called

@@ -31,12 +31,12 @@ export type CombatAIDependencies = {
   generateCombatPlan: typeof generateCombatPlan;
 };
 
-export const DEFAULT_COMBAT_AI_DEPS: CombatAIDependencies = {
+export const DEFAULT_COMBAT_AI_DEPS: Readonly<CombatAIDependencies> = Object.freeze({
   useLogger,
   setTimeout: (callback: () => void, delay: number) => setTimeout(callback, delay),
   clearTimeout: (timeout: NodeJS.Timeout) => clearTimeout(timeout),
   generateCombatPlan,
-};
+});
 
 /**
  * Default AI timing for UX pacing

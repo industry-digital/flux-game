@@ -16,10 +16,10 @@ export type TransformerContextDependencies = {
   createTransformerContext: typeof createTransformerContext;
 };
 
-export const DEFAULT_TRANSFORMER_CONTEXT_DEPS: TransformerContextDependencies = {
+export const DEFAULT_TRANSFORMER_CONTEXT_DEPS: Readonly<TransformerContextDependencies> = Object.freeze({
   useLogger,
   createTransformerContext,
-};
+});
 
 /**
  * Transformer context management composable

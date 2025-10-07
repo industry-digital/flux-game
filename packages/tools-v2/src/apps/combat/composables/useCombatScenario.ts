@@ -15,12 +15,12 @@ export type CombatScenarioDependencies = {
   clearTimeout: (timeout: NodeJS.Timeout) => void;
 };
 
-export const DEFAULT_COMBAT_SCENARIO_DEPS: CombatScenarioDependencies = {
+export const DEFAULT_COMBAT_SCENARIO_DEPS: Readonly<CombatScenarioDependencies> = Object.freeze({
   useLocalStorage: useLocalStorage,
   useLogger: useLogger,
   setTimeout: (callback: () => void, delay: number) => setTimeout(callback, delay),
   clearTimeout: (timeout: NodeJS.Timeout) => clearTimeout(timeout),
-};
+});
 
 // Default scenario configuration
 const createDefaultScenario = (): CombatScenarioData => ({
