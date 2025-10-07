@@ -40,12 +40,8 @@ export const DEFAULT_ACTOR_FACTORY_DEPS: ActorFactoryDependencies = {
   initializeWallet,
 };
 
-export function createActor(): Actor;
-export function createActor(input: ActorInput, deps?: ActorFactoryDependencies): Actor;
-export function createActor(transform: ActorTransformer, deps?: ActorFactoryDependencies): Actor;
-
 export function createActor(
-  inputOrTransform?: ActorInput | ActorTransformer | undefined,
+  inputOrTransform?: ActorInput | ActorTransformer,
   deps: ActorFactoryDependencies = DEFAULT_ACTOR_FACTORY_DEPS,
 ): Actor {
   const actor = createDefaultActor(deps);

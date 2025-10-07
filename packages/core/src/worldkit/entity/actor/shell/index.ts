@@ -71,12 +71,8 @@ export const DEFAULT_SHELL_FACTORY_DEPS: ShellFactoryDependencies = {
   timestamp: () => Date.now(),
 };
 
-export function createShell(): Shell;
-export function createShell(input: ShellInput, deps?: ShellFactoryDependencies): Shell;
-export function createShell(transform: ShellTransformer, deps?: ShellFactoryDependencies): Shell;
-
 export function createShell(
-  inputOrTransform?: ShellInput | ShellTransformer | undefined,
+  inputOrTransform?: ShellInput | ShellTransformer,
   deps: ShellFactoryDependencies = DEFAULT_SHELL_FACTORY_DEPS,
 ): Shell {
   // Determine the actual arguments based on types - same pattern as createActor
@@ -103,7 +99,7 @@ export function createShell(
     id: input?.id ?? deps.hashUnsafeString(name),
     name,
     stats: input?.stats ? { ...defaultStats, ...input.stats } : defaultStats,
-    inventory: input?.inventory ?? deps.createInventory(),
+    inventory: input?.inventory ?? deps.createInventory(deps.timestamp()),
     equipment: {},
   };
 

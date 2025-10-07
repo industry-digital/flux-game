@@ -45,7 +45,7 @@ type ModifiedBoundedAttribute = {
   /**
    * Active modifiers affecting this bounded value
    */
-  mods: AppliedModifiers;
+  mods?: AppliedModifiers;
 };
 
 type UnmodifiedStatefulValueWithFloor = {

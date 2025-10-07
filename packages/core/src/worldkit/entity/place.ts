@@ -21,12 +21,9 @@ export const isPlace = (place: AbstractEntity<EntityType>): place is Place => {
 export const isPlaceUrn = (urn: string): urn is PlaceURN => isUrnOfVocabulary(urn, 'place');
 
 export type PlaceTransformer = (place: Place) => Place;
-export function createPlace(): Place;
-export function createPlace(input: PlaceInput | undefined, deps?: FactoryDependencies): Place;
-export function createPlace(transform: PlaceTransformer, deps?: FactoryDependencies): Place;
 
 export function createPlace(
-  inputOrTransform?: PlaceInput | PlaceTransformer | undefined,
+  inputOrTransform?: PlaceInput | PlaceTransformer,
   deps: FactoryDependencies = DEFAULT_FACTORY_DEPS,
 ): Place {
   let transform: PlaceTransformer = identity;
