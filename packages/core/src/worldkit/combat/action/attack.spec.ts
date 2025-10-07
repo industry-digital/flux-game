@@ -10,7 +10,7 @@ import { createAttackMethod, CombatPlanExecutor } from './attack';
 import { useCombatScenario } from '~/worldkit/combat/testing/scenario';
 import { generateCombatPlan } from '~/worldkit/combat/ai';
 import { Actor } from '~/types/entity/actor';
-import { CombatSession, Combatant, CombatAction, CombatFacing, Team } from '~/types/combat';
+import { CombatSession, Combatant, CombatCommand, CombatFacing, Team } from '~/types/combat';
 import { CommandType } from '~/types/intent';
 import { WorldEvent, EventType } from '~/types/event';
 import { ActorURN } from '~/types/taxonomy';
@@ -23,6 +23,7 @@ import { createTransformerContext } from '~/worldkit/context';
 import { createSwordSchema } from '~/worldkit/schema/weapon/sword';
 import { registerWeapons } from '~/worldkit/combat/testing/schema';
 import { DEFAULT_COMBAT_PLANNING_DEPS } from '~/worldkit/combat/ai/deps';
+import { createActorCommand } from '~/lib/intent';
 
 describe('Attack Method with AI Integration', () => {
   const DEFAULT_TIMESTAMP = 1234567890000;
@@ -132,12 +133,21 @@ describe('Attack Method with AI Integration', () => {
     it('should use injected executeCombatPlan function', () => {
       // Create mock dependencies
       const mockGenerateCombatPlan = vi.fn().mockReturnValue([
-        {
-          actorId: actor.id,
-          command: CommandType.ATTACK,
-          args: { target: 'flux:actor:bob' },
-          cost: { ap: 2.0, energy: 1000 }
-        } as CombatAction
+        createActorCommand({
+          actor: actor.id,
+          location: actor.location,
+          type: CommandType.ATTACK,
+          args: {
+            target: 'flux:actor:bob',
+            cost: { ap: 2.0, energy: 1000 },
+          },
+        }),
+        createActorCommand({
+          actor: actor.id,
+          location: actor.location,
+          type: CommandType.ATTACK,
+          args: { target: 'flux:actor:bob', cost: { ap: 2.0, energy: 1000 } },
+        }),
       ]);
 
       const mockExecuteCombatPlan: CombatPlanExecutor = vi.fn().mockReturnValue(
@@ -178,7 +188,17 @@ describe('Attack Method with AI Integration', () => {
         session,
         actor,
         combatant,
-        [{ actorId: actor.id, command: CommandType.ATTACK, args: { target: 'flux:actor:bob' }, cost: { ap: 2.0, energy: 1000 } }],
+        expect.arrayContaining([
+          expect.objectContaining({
+            __type: 'command',
+            actor: actor.id,
+            type: CommandType.ATTACK,
+            args: expect.objectContaining({
+              target: 'flux:actor:bob',
+              cost: { ap: 2.0, energy: 1000 }
+            })
+          })
+        ]),
         expect.any(String),
         {
           strike: mockStrike,
@@ -196,12 +216,12 @@ describe('Attack Method with AI Integration', () => {
 
     it('should use default executeCombatPlan when not injected', () => {
       const mockGenerateCombatPlan = vi.fn().mockReturnValue([
-        {
-          actorId: actor.id,
-          command: CommandType.ATTACK,
-          args: { target: 'flux:actor:bob' },
-          cost: { ap: 2.0, energy: 1000 }
-        } as CombatAction
+        createActorCommand({
+          actor: actor.id,
+          location: actor.location,
+          type: CommandType.ATTACK,
+          args: { target: 'flux:actor:bob', cost: { ap: 2.0, energy: 1000 } },
+        }),
       ]);
 
       const mockStrike = vi.fn().mockReturnValue([
@@ -289,12 +309,12 @@ describe('Attack Method with AI Integration', () => {
       ]);
 
       const mockGenerateCombatPlan = vi.fn().mockReturnValue([
-        {
-          actorId: actor.id,
-          command: CommandType.ADVANCE,
-          args: { distance: 10 },
-          cost: { ap: 1.0 }
-        } as CombatAction
+        createActorCommand({
+          actor: actor.id,
+          location: actor.location,
+          type: CommandType.ADVANCE,
+          args: { distance: 10, cost: { ap: 1.0 } },
+        }),
       ]);
 
       const attack = createAttackMethod(
@@ -323,12 +343,12 @@ describe('Attack Method with AI Integration', () => {
       ]);
 
       const mockGenerateCombatPlan = vi.fn().mockReturnValue([
-        {
-          actorId: actor.id,
-          command: CommandType.RETREAT,
-          args: { distance: 5 },
-          cost: { ap: 1.0 }
-        } as CombatAction
+        createActorCommand({
+          actor: actor.id,
+          location: actor.location,
+          type: CommandType.RETREAT,
+          args: { distance: 5, cost: { ap: 1.0 } },
+        }),
       ]);
 
       const attack = createAttackMethod(
@@ -360,19 +380,19 @@ describe('Attack Method with AI Integration', () => {
       ]);
 
       const mockGenerateCombatPlan = vi.fn().mockReturnValue([
-        {
-          actorId: actor.id,
-          command: CommandType.ADVANCE,
-          args: { distance: 5 },
-          cost: { ap: 1.0 }
-        },
-        {
-          actorId: actor.id,
-          command: CommandType.STRIKE,
-          args: { target: 'flux:actor:bob' },
-          cost: { ap: 2.0 }
-        }
-      ] as CombatAction[]);
+        createActorCommand( {
+          actor: actor.id,
+          location: actor.location,
+          type: CommandType.ADVANCE,
+          args: { distance: 5, cost: { ap: 1.0 } },
+        }),
+        createActorCommand({
+          actor: actor.id,
+          location: actor.location,
+          type: CommandType.STRIKE,
+          args: { target: 'flux:actor:bob', cost: { ap: 2.0 } },
+        }),
+      ]);
 
       const attack = createAttackMethod(
         context,
@@ -401,12 +421,12 @@ describe('Attack Method with AI Integration', () => {
   describe('Plan Generation and Execution Flow', () => {
     it('should call generateCombatPlan with correct parameters', () => {
       const mockGenerateCombatPlan = vi.fn().mockReturnValue([
-        {
-          actorId: actor.id,
-          command: CommandType.STRIKE,
-          args: { target: 'flux:actor:bob' },
-          cost: { ap: 2.0 }
-        } as CombatAction
+        createActorCommand({
+          actor: actor.id,
+          location: actor.location,
+          type: CommandType.STRIKE,
+          args: { target: 'flux:actor:bob', cost: { ap: 2.0 } },
+        }),
       ]);
 
       const mockStrike = vi.fn().mockReturnValue([
@@ -498,12 +518,12 @@ describe('Attack Method with AI Integration', () => {
       ]);
 
       const mockGenerateCombatPlan = vi.fn().mockReturnValue([
-        {
-          actorId: actor.id,
-          command: CommandType.STRIKE,
-          args: { target: 'flux:actor:charlie' }, // Explicit target different from combatant's current target
-          cost: { ap: 2.0 }
-        } as CombatAction
+        createActorCommand({
+          actor: actor.id,
+          location: actor.location,
+          type: CommandType.STRIKE,
+          args: { target: 'flux:actor:charlie', cost: { ap: 2.0 } }, // Explicit target different from combatant's current target
+        }),
       ]);
 
       const attack = createAttackMethod(
@@ -541,12 +561,12 @@ describe('Attack Method with AI Integration', () => {
       ]);
 
       const mockGenerateCombatPlan = vi.fn().mockReturnValue([
-        {
-          actorId: actor.id,
-          command: CommandType.ATTACK, // Using ATTACK instead of STRIKE
-          args: { target: 'flux:actor:dave' },
-          cost: { ap: 2.0 }
-        } as CombatAction
+        createActorCommand({
+          actor: actor.id,
+          location: actor.location,
+          type: CommandType.ATTACK, // Using ATTACK instead of STRIKE
+          args: { target: 'flux:actor:dave', cost: { ap: 2.0 } },
+        }),
       ]);
 
       const attack = createAttackMethod(
@@ -576,12 +596,12 @@ describe('Attack Method with AI Integration', () => {
       ]);
 
       const mockGenerateCombatPlan = vi.fn().mockReturnValue([
-        {
-          actorId: actor.id,
-          command: CommandType.STRIKE,
-          args: {}, // No target specified
-          cost: { ap: 2.0 }
-        } as CombatAction
+        createActorCommand({
+          actor: actor.id,
+          location: actor.location,
+          type: CommandType.STRIKE,
+          args: { cost: { ap: 2.0 } }, // No target specified
+        }),
       ]);
 
       const attack = createAttackMethod(
@@ -614,12 +634,12 @@ describe('Attack Method with AI Integration', () => {
       ]);
 
       const mockGenerateCombatPlan = vi.fn().mockReturnValue([
-        {
-          actorId: actor.id,
-          command: CommandType.STRIKE,
-          args: { target: null }, // Explicit null target
-          cost: { ap: 2.0 }
-        } as CombatAction
+        createActorCommand({
+          actor: actor.id,
+          location: actor.location,
+          type: CommandType.STRIKE,
+          args: { target: null, cost: { ap: 2.0 } }, // Explicit null target
+        }),
       ]);
 
       const attack = createAttackMethod(
@@ -652,13 +672,13 @@ describe('Attack Method with AI Integration', () => {
       // Use the hoisted shortRangeScenario instead of creating inline
 
       // Mock generateCombatPlan to return what it SHOULD return
-      const expectedPlan: CombatAction[] = [
-        {
-          actorId: shortRangeScenario.actors['flux:actor:test:attacker'].actor.id,
-          command: CommandType.ADVANCE,
-          args: { distance: 42 }, // Move as far as possible with 6 AP
-          cost: { ap: 6, energy: 0 }
-        }
+      const expectedPlan: CombatCommand[] = [
+        createActorCommand({
+          actor: shortRangeScenario.actors['flux:actor:test:attacker'].actor.id,
+          location: shortRangeScenario.actors['flux:actor:test:attacker'].actor.location,
+          type: CommandType.ADVANCE,
+          args: { distance: 42, cost: { ap: 6, energy: 0 } }, // Move as far as possible with 6 AP
+        }),
       ];
 
       const mockGenerateCombatPlan = vi.fn().mockReturnValue(expectedPlan);
@@ -700,18 +720,21 @@ describe('Attack Method with AI Integration', () => {
             roll: { result: 15, dice: '1d20' },
             outcome: 'hit',
             damage: { amount: 8, type: 'slashing' }
-          }
+          } as any,
         })
       ]);
 
       // Mock generateCombatPlan to return a simple attack plan
       const mockGenerateCombatPlan = vi.fn().mockReturnValue([
-        {
-          actorId: actor.id,
-          command: CommandType.ATTACK,
-          args: { target: 'flux:actor:bob' },
-          cost: { ap: 2.0, energy: 1000 }
-        }
+        createActorCommand({
+          actor: actor.id,
+          location: actor.location,
+          type: CommandType.ATTACK,
+          args: {
+            target: 'flux:actor:bob',
+            cost: { ap: 2.0, energy: 1000 }
+          },
+        })
       ]);
 
       const attackMethod = createAttackMethod(
@@ -748,12 +771,12 @@ describe('Attack Method with AI Integration', () => {
 
       // Mock generateCombatPlan to return a simple plan
       const mockGenerateCombatPlan = vi.fn().mockReturnValue([
-        {
-          actorId: actor.id,
-          command: CommandType.ATTACK,
-          args: { target: 'flux:actor:bob' },
-          cost: { ap: 2.0, energy: 1000 }
-        } as CombatAction
+        createActorCommand({
+          actor: actor.id,
+          location: actor.location,
+          type: CommandType.ATTACK,
+          args: { target: 'flux:actor:bob', cost: { ap: 2.0, energy: 1000 } },
+        }),
       ]);
 
       const mockExecuteCombatPlan = vi.fn().mockReturnValue([
@@ -770,7 +793,7 @@ describe('Attack Method with AI Integration', () => {
             roll: { result: 15, dice: '1d20' },
             outcome: 'hit',
             damage: { amount: 8, type: 'slashing' }
-          }
+          } as any,
         })
       ]);
 
@@ -845,18 +868,17 @@ describe('Attack Method with AI Integration', () => {
         testDeps
       );
 
-      console.log(`📋 Generated plan:`, plan.map(a => a.command));
+      console.log(`📋 Generated plan:`, plan.map(a => a.type));
       console.log(`📋 Plan length: ${plan.length}`);
       console.log(`📋 Full plan details:`, plan.map(a => ({
-        command: a.command,
-        ap: a.cost.ap,
+        command: a.type,
         args: a.args
       })));
 
       if (plan.length > 0) {
         console.log('✅ AI generated actions!');
         plan.forEach((action, i) => {
-          console.log(`  ${i + 1}. ${action.command} (AP: ${action.cost.ap || 0})`);
+          console.log(`  ${i + 1}. ${action.type} (AP: ${action.args.cost?.ap || 0})`);
         });
       } else {
         console.log('❌ AI generated no actions - this is the problem!');

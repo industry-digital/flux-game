@@ -1,4 +1,4 @@
-import { CombatAction, Combatant, CombatSession } from '~/types/combat';
+import { CombatCommand, Combatant, CombatSession } from '~/types/combat';
 import { analyzeBattlefield } from '~/worldkit/combat/ai/analysis';
 import { createHeuristicProfile } from '~/worldkit/combat/ai/heuristics';
 import { findOptimalPlan, DEFAULT_SEARCH_CONFIG } from '~/worldkit/combat/ai/search';
@@ -17,8 +17,8 @@ export function computeRangedCombatPlan(
   session: CombatSession,
   combatant: Combatant,
   trace: string,
-): CombatAction[] {
-  const { world, declareError, schemaManager } = context;
+): CombatCommand[] {
+  const { world, declareError } = context;
   const actor = world.actors[combatant.actorId];
 
   if (!actor) {
@@ -39,7 +39,7 @@ export function computeRangedCombatPlan(
   const profile = createHeuristicProfile(weaponSchema);
 
   // Use exhaustive search to find optimal plan
-  const optimalPlan = findOptimalPlan(context, situation, profile, RANGED_SEARCH_CONFIG);
+  const optimalPlan = findOptimalPlan(context, situation, profile, trace, RANGED_SEARCH_CONFIG);
 
   return optimalPlan?.actions ?? [];
 }

@@ -1,4 +1,5 @@
 import { ActorURN } from '~/types/taxonomy';
+import { BASE62_CHARSET, uniqid as uniqidImpl } from '~/lib/random';
 import {
   Command,
   CommandInput,
@@ -10,13 +11,18 @@ import {
 
 const identity = <I, O = I>(x: I): O => x as unknown as O;
 
-export type FactoryOptions = {
-  now?: number;
-  generateUniqueId?: () => string;
+export type CommandFactoryDependencies = {
+  timestamp: () => number;
+  uniqid: () => string;
 };
 
 type Transformer<I, O = I> = (input: I) => O;
 type CommandTransformer = Transformer<Command>;
+
+export const DEFAULT_COMMAND_FACTORY_DEPS: CommandFactoryDependencies = {
+  timestamp: () => Date.now(),
+  uniqid: () => uniqidImpl(24, BASE62_CHARSET),
+};
 
 /**
  * Creates an ActorCommand from CommandInput
@@ -27,15 +33,15 @@ export const createActorCommand = <
 >(
   input: CommandInput<T, A> & { actor: ActorURN },
   transform: CommandTransformer = identity,
-  { now = Date.now(), generateUniqueId = () => generateUniqueId() }: FactoryOptions = {},
+  deps: CommandFactoryDependencies = DEFAULT_COMMAND_FACTORY_DEPS,
 ): ActorCommand<T, A> => {
   const actorDefaults: ActorCommand<T, A> = {
     __type: 'command',
-    id: input.id || generateUniqueId(),
+    id: input.id || deps.uniqid(),
     actor: input.actor,
     location: input.location,
     type: input.type,
-    ts: input.ts || now,
+    ts: input.ts || deps.timestamp(),
     args: input.args as A,
     trace: input.trace,
   };
@@ -51,14 +57,14 @@ export const createSystemCommand = <
 >(
   input: Omit<CommandInput<T, A>, 'actor'> & { actor?: `flux:sys:${string}` },
   transform: CommandTransformer = identity,
-  { now = Date.now(), generateUniqueId = () => generateUniqueId() }: FactoryOptions = {},
+  deps: CommandFactoryDependencies = DEFAULT_COMMAND_FACTORY_DEPS,
 ): SystemCommand<T, A> => {
   const systemDefaults: SystemCommand<T, A> = {
     __type: 'command',
-    id: input.id || generateUniqueId(),
+    id: input.id || deps.uniqid(),
     actor: input.actor || ('flux:sys:server' as const),
     type: input.type,
-    ts: input.ts || now,
+    ts: input.ts || deps.timestamp(),
     args: input.args as A,
     location: input.location,
     trace: input.trace,
@@ -76,9 +82,9 @@ export const createCommand = <
 >(
   input: CommandInput<T, A>,
   transform: CommandTransformer = identity,
-  options: FactoryOptions = {},
+  deps: CommandFactoryDependencies = DEFAULT_COMMAND_FACTORY_DEPS,
 ): Command<T, A> => {
-  return createActorCommand(input as CommandInput<T, A> & { actor: ActorURN }, transform, options);
+  return createActorCommand(input as CommandInput<T, A> & { actor: ActorURN }, transform, deps);
 };
 
 /**

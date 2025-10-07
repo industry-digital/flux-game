@@ -1,5 +1,6 @@
-import { CombatAction } from '~/types/combat';
+import { CombatCommand } from '~/types/combat';
 import { CommandType } from '~/types/intent';
+import { createActorCommand } from '~/lib/intent';
 import {
   TacticalSituation,
   PlanNode,
@@ -29,9 +30,9 @@ import { getStatValue } from '~/worldkit/entity/actor/new-stats';
  * Avoids array spreading by building sequences incrementally
  */
 class ActionSequenceBuilder {
-  private actions: CombatAction[] = [];
+  private actions: CombatCommand[] = [];
 
-  constructor(baseActions?: CombatAction[]) {
+  constructor(baseActions?: CombatCommand[]) {
     if (baseActions && baseActions.length > 0) {
       // Pre-allocate with some extra capacity to avoid frequent resizing
       this.actions = new Array(baseActions.length + 4);
@@ -42,12 +43,12 @@ class ActionSequenceBuilder {
     }
   }
 
-  add(action: CombatAction): this {
+  add(action: CombatCommand): this {
     this.actions.push(action);
     return this;
   }
 
-  build(): CombatAction[] {
+  build(): CombatCommand[] {
     // Return a copy to maintain immutability
     return this.actions.slice();
   }
@@ -80,6 +81,7 @@ export function* generateAndEvaluatePlans(
   context: TransformerContext,
   situation: TacticalSituation,
   profile: HeuristicProfile,
+  trace: string,
   config: SearchConfig = DEFAULT_SEARCH_CONFIG,
   deps: CombatPlanningDependencies = DEFAULT_COMBAT_PLANNING_DEPS,
 ): Generator<ScoredPlan> {
@@ -118,9 +120,9 @@ export function* generateAndEvaluatePlans(
 
     // Check if we have any affordable actions left
     let hasAffordableActions = false;
-    for (const action of getValidActions(context, currentNode, situation, deps)) {
-      const apCost = action.cost.ap || 0;
-      const energyCost = action.cost.energy || 0;
+    for (const action of getValidActions(context, currentNode, situation, trace, deps)) {
+      const apCost = action.args.cost?.ap || 0;
+      const energyCost = action.args.cost?.energy || 0;
       if (currentNode.combatantState.ap >= apCost && currentNode.combatantState.energy >= energyCost) {
         hasAffordableActions = true;
         break;
@@ -138,8 +140,8 @@ export function* generateAndEvaluatePlans(
     }
 
     // Generate child nodes for all valid actions
-    for (const action of getValidActions(context, currentNode, situation, deps)) {
-      const childNode = applyAction(currentNode, action, situation, config);
+    for (const action of getValidActions(context, currentNode, situation, trace, deps)) {
+      const childNode = applyAction(currentNode, action, situation, trace, config);
 
       // Early termination optimization (with bias for offensive sequences)
       if (config.enableEarlyTermination) {
@@ -147,7 +149,7 @@ export function* generateAndEvaluatePlans(
 
         // Give offensive actions (STRIKE) more leeway in early termination
         // This encourages exploration of multi-strike sequences
-        const isOffensiveAction = action.command === CommandType.STRIKE;
+        const isOffensiveAction = action.type === CommandType.STRIKE;
         const effectiveThreshold = isOffensiveAction
           ? config.minScoreThreshold * 0.7  // 30% lower threshold for offensive actions
           : config.minScoreThreshold;
@@ -170,6 +172,7 @@ export function findOptimalPlan(
   context: TransformerContext,
   situation: TacticalSituation,
   profile: HeuristicProfile,
+  trace: string,
   config: SearchConfig = DEFAULT_SEARCH_CONFIG,
   deps: CombatPlanningDependencies = DEFAULT_COMBAT_PLANNING_DEPS,
 ): ScoredPlan | null {
@@ -191,7 +194,7 @@ export function findOptimalPlan(
   let bestPlan: ScoredPlan | null = null;
   let bestScore = -1;
 
-  for (const plan of generateAndEvaluatePlans(context, situation, profile, config, deps)) {
+  for (const plan of generateAndEvaluatePlans(context, situation, profile, trace, config, deps)) {
     allPlans.push(plan);
     if (plan.score > bestScore) {
       bestScore = plan.score;
@@ -217,7 +220,7 @@ export function findOptimalPlan(
 
   // Enforce plan termination invariant: every plan must end with a plan-ending action
   if (bestPlan) {
-    bestPlan = ensurePlanTermination(bestPlan, situation, config);
+    bestPlan = ensurePlanTermination(bestPlan, situation, trace, config);
   }
 
   return bestPlan;
@@ -232,16 +235,21 @@ export function findOptimalPlan(
 function ensurePlanTermination(
   plan: ScoredPlan,
   situation: TacticalSituation,
+  trace: string,
   config: SearchConfig,
 ): ScoredPlan {
   if (plan.actions.length === 0) {
     // Empty plan - add a DEFEND action
-    const defendAction: CombatAction = {
-      actorId: situation.combatant.actorId,
-      command: CommandType.DEFEND,
-      args: { autoDone: true },
-      cost: { ap: 0, energy: 0 }, // 0 AP cost - defensive stance only
-    };
+    const defendAction: CombatCommand = createActorCommand({
+      trace,
+      actor: situation.combatant.actorId,
+      location: situation.session.data.location,
+      type: CommandType.DEFEND,
+      args: {
+        autoDone: true,
+        cost: { ap: 0, energy: 0 },
+      },
+    });
 
     return {
       ...plan,
@@ -250,16 +258,18 @@ function ensurePlanTermination(
   }
 
   const lastAction = plan.actions[plan.actions.length - 1];
-  const endsWithPlanEndingAction = lastAction.command in config.planEndingActions;
+  const endsWithPlanEndingAction = lastAction.type in config.planEndingActions;
 
   if (!endsWithPlanEndingAction) {
     // Plan doesn't end with plan-ending action - append DEFEND with 0 AP cost
-    const defendAction: CombatAction = {
-      actorId: situation.combatant.actorId,
-      command: CommandType.DEFEND,
+    const defendAction: CombatCommand = createActorCommand({
+      trace,
+      actor: situation.combatant.actorId,
+      location: situation.session.data.location,
+      type: CommandType.DEFEND,
       args: { autoDone: true },
-      cost: { ap: 0, energy: 0 }, // 0 AP cost - just concludes the plan
-    };
+    });
+    defendAction.cost = { ap: 0, energy: 0 }; // 0 AP cost - just concludes the plan
 
     return {
       ...plan,
@@ -297,13 +307,14 @@ export function createInitialNode(situation: TacticalSituation): PlanNode {
  */
 export function applyAction(
   node: PlanNode,
-  action: CombatAction,
+  action: CombatCommand,
   situation: TacticalSituation,
+  trace: string,
   config: SearchConfig = DEFAULT_SEARCH_CONFIG,
 ): PlanNode {
   // Calculate new combatant state after applying action cost
-  const newAp = node.combatantState.ap - (action.cost.ap || 0);
-  const newEnergy = node.combatantState.energy - (action.cost.energy || 0);
+  const newAp = node.combatantState.ap - (action.args.cost?.ap || 0);
+  const newEnergy = node.combatantState.energy - (action.args.cost?.energy || 0);
 
   // Calculate state changes for different action types
   let newPosition = node.combatantState.position;
@@ -312,19 +323,19 @@ export function applyAction(
   // Track target assignment internally for planning purposes (not exposed in public interface)
   let currentTarget = (node.combatantState as any).target || null;
 
-  if (action.command === CommandType.ADVANCE) {
+  if (action.type === CommandType.ADVANCE) {
     // Extract movement from action args (simplified)
     const moveDistance = (action.args as any)?.distance || 1;
     const direction = (action.args as any)?.direction || 1;
     newPosition = Math.max(0, Math.min(299, newPosition + (moveDistance * direction)));
     newFacing = direction;
-  } else if (action.command === CommandType.RETREAT) {
+  } else if (action.type === CommandType.RETREAT) {
     // Extract retreat movement from action args
     const moveDistance = (action.args as any)?.distance || 1;
     const direction = -1; // Retreat is always backwards
     newPosition = Math.max(0, Math.min(299, newPosition + (moveDistance * direction)));
     newFacing = direction;
-  } else if (action.command === CommandType.TARGET) {
+  } else if (action.type === CommandType.TARGET) {
     // Update target assignment for planning purposes
     currentTarget = (action.args as any)?.target || null;
   }
@@ -335,7 +346,7 @@ export function applyAction(
   actionBuilder.add(action);
 
   const newNode: PlanNode = {
-    id: `${node.id}-${action.command}-${node.actions.length}`,
+    id: `${node.id}-${action.type}-${node.actions.length}`,
     parent: node,
     depth: node.depth + 1,
     actions: actionBuilder.build(),
@@ -359,8 +370,9 @@ export function* getValidActions(
   context: TransformerContext,
   node: PlanNode,
   situation: TacticalSituation,
+  trace: string,
   deps: CombatPlanningDependencies = DEFAULT_COMBAT_PLANNING_DEPS,
-): Generator<CombatAction> {
+): Generator<CombatCommand> {
   const {
     calculateWeaponApCost: calculateWeaponApCostImpl = calculateWeaponApCost,
   } = deps;
@@ -444,17 +456,21 @@ export function* getValidActions(
   // Check both the original combatant target and any target assigned in the current plan
   const currentTarget = (currentState as any).target || combatant.target;
   if (assessments.primaryTarget && !currentTarget) {
-    yield {
-      actorId: combatant.actorId,
-      command: CommandType.TARGET,
-      args: { target: assessments.primaryTarget },
-      cost: TARGET_COST,
-    };
+    yield createActorCommand({
+      trace,
+      actor: combatant.actorId,
+      location: situation.session.data.location,
+      type: CommandType.TARGET,
+      args: {
+        target: assessments.primaryTarget,
+        cost: TARGET_COST,
+      },
+    });
   }
 
   // Check if last action was movement to avoid consecutive movement (inefficient due to acceleration/deceleration)
   const lastAction = node.actions[node.actions.length - 1];
-  const lastWasMove = lastAction?.command === CommandType.ADVANCE || lastAction?.command === CommandType.RETREAT;
+  const lastWasMove = lastAction?.type === CommandType.ADVANCE || lastAction?.type === CommandType.RETREAT;
 
   // ATTACK action (if target available and in range)
   // Consider both original target and any target assigned in the current plan
@@ -467,12 +483,19 @@ export function* getValidActions(
     const attackCost = { ap: tacticalAttackApCost, energy: 0 };
 
     if (canAfford(attackCost.ap, attackCost.energy)) {
-      yield {
-        actorId: combatant.actorId,
-        command: CommandType.STRIKE,
-        args: { target: hasTarget },
-        cost: attackCost,
-      };
+      yield createActorCommand({
+        trace,
+        actor: combatant.actorId,
+        location: situation.session.data.location,
+        type: CommandType.STRIKE,
+        args: {
+          target: hasTarget,
+          cost: {
+            ap: attackCost.ap,
+            energy: attackCost.energy,
+          },
+        },
+      });
     }
   }
 
@@ -559,12 +582,18 @@ export function* getValidActions(
 
             const moveCost = { ap: tacticalApCost, energy: 0 };
 
-            yield {
-              actorId: combatant.actorId,
-              command: CommandType.ADVANCE,
-              args: { type: 'distance', distance: maxTacticalDistance, direction },
-              cost: moveCost,
-            };
+            yield createActorCommand({
+              trace,
+              actor: combatant.actorId,
+              location: situation.session.data.location,
+              type: CommandType.ADVANCE,
+              args: {
+                type: 'distance',
+                distance: maxTacticalDistance,
+                direction,
+                cost: { ap: moveCost.ap, energy: moveCost.energy },
+              },
+            });
           }
           // If we can reach target this turn, move exactly to target
           else if (desiredDistance <= maxTacticalDistance && desiredDistance >= 1) {
@@ -582,12 +611,18 @@ export function* getValidActions(
             if (tacticalApCost <= currentState.ap) {
               const moveCost = { ap: tacticalApCost, energy: 0 };
 
-              yield {
-                actorId: combatant.actorId,
-                command: CommandType.ADVANCE,
-                args: { type: 'distance', distance: tacticalDesiredDistance, direction },
-                cost: moveCost,
-              };
+              yield createActorCommand({
+                trace,
+                actor: combatant.actorId,
+                location: situation.session.data.location,
+                type: CommandType.ADVANCE,
+                args: {
+                  type: 'distance',
+                  distance: tacticalDesiredDistance,
+                  direction,
+                  cost: { ap: moveCost.ap, energy: moveCost.energy },
+                },
+              });
             }
           }
         }
@@ -635,12 +670,17 @@ export function* getValidActions(
         const kitingCost = { ap: tacticalApCost, energy: 0 };
 
         if (canAfford(kitingCost.ap, kitingCost.energy)) {
-          yield {
-            actorId: combatant.actorId,
-            command: CommandType.RETREAT,
-            args: { type: 'distance', distance: tacticalDistance },
-            cost: kitingCost,
-          };
+          yield createActorCommand({
+            trace,
+            actor: combatant.actorId,
+            location: situation.session.data.location,
+            type: CommandType.RETREAT,
+            args: {
+              type: 'distance',
+              distance: tacticalDistance,
+              cost: { ap: kitingCost.ap, energy: kitingCost.energy },
+            },
+          });
         }
       }
     }
@@ -687,12 +727,16 @@ export function* getValidActions(
 
   if (hasNoMeaningfulActions && hasRemainingAP) {
     const tacticalApCost = roundApCostUp(currentState.ap);
-    yield {
-      actorId: combatant.actorId,
-      command: CommandType.DEFEND,
-      args: { autoDone: true },
-      cost: { ap: tacticalApCost, energy: 0 }, // Spends all remaining AP (tactically rounded)
-    };
+    yield createActorCommand({
+      trace,
+      actor: combatant.actorId,
+      location: situation.session.data.location,
+      type: CommandType.DEFEND,
+      args: {
+        autoDone: true,
+        cost: { ap: tacticalApCost, energy: 0 },
+      },
+    });
   }
 }
 
@@ -711,14 +755,14 @@ export function isTerminalNode(node: PlanNode, config: SearchConfig): boolean {
 
   // Check if it's a resource-exhausting action (making it effectively terminal)
   const remainingAP = node.combatantState.ap;
-  return isResourceExhaustingAction(lastAction, remainingAP + extractApCost(lastAction.cost));
+  return isResourceExhaustingAction(lastAction, remainingAP + extractApCost(lastAction.args.cost));
 }
 
 /**
  * Check if action terminates a combat plan using config
  */
-function isTerminalAction(action: CombatAction, config: SearchConfig): boolean {
-  return action.command in config.planEndingActions;
+function isTerminalAction(action: CombatCommand, config: SearchConfig): boolean {
+  return action.type in config.planEndingActions;
 }
 
 
@@ -726,8 +770,8 @@ function isTerminalAction(action: CombatAction, config: SearchConfig): boolean {
  * Check if action would be terminal due to resource exhaustion
  * Any action that exhausts all available AP is turn-ending and should terminate the plan
  */
-function isResourceExhaustingAction(action: CombatAction, availableAP: number): boolean {
-  const apCost = extractApCost(action.cost);
+function isResourceExhaustingAction(action: CombatCommand, availableAP: number): boolean {
+  const apCost = extractApCost(action.args.cost);
   // Any action that uses all (or more than) available AP is terminal
   return apCost >= availableAP - 0.05; // Small tolerance for floating point precision
 }
@@ -744,23 +788,23 @@ function createStateKey(node: PlanNode): string {
  * Optimize movement sequences by collapsing consecutive MOVE actions into single efficient moves
  * This handles edge cases where consecutive MOVEs somehow get generated despite prevention logic
  */
-export function optimizeMovementSequence(actions: CombatAction[]): CombatAction[] {
-  const optimized: CombatAction[] = [];
+export function optimizeMovementSequence(trace: string, actions: CombatCommand[]): CombatCommand[] {
+  const optimized: CombatCommand[] = [];
   let i = 0;
 
   while (i < actions.length) {
     const action = actions[i];
 
-    if (action.command === CommandType.ADVANCE || action.command === CommandType.RETREAT) {
+    if (action.type === CommandType.ADVANCE || action.type === CommandType.RETREAT) {
       // Collect consecutive movement actions in same direction
       let totalDistance = (action.args as any)?.distance || 0;
-      const direction = action.command === CommandType.RETREAT ? -1 : ((action.args as any)?.direction || 1);
+      const direction = action.type === CommandType.RETREAT ? -1 : ((action.args as any)?.direction || 1);
       let j = i + 1;
 
-      while (j < actions.length && (actions[j].command === CommandType.ADVANCE || actions[j].command === CommandType.RETREAT)) {
+      while (j < actions.length && (actions[j].type === CommandType.ADVANCE || actions[j].type === CommandType.RETREAT)) {
         const nextMove = actions[j];
         const nextDistance = (nextMove.args as any)?.distance || 0;
-        const nextDirection = nextMove.command === CommandType.RETREAT ? -1 : ((nextMove.args as any)?.direction || 1);
+        const nextDirection = nextMove.type === CommandType.RETREAT ? -1 : ((nextMove.args as any)?.direction || 1);
 
         // Only collapse if same direction (don't collapse forward + backward movement)
         if (nextDirection === direction) {
@@ -777,17 +821,22 @@ export function optimizeMovementSequence(actions: CombatAction[]): CombatAction[
         // For now, use the sum of individual costs as approximation
         let totalApCost = 0;
         for (let k = i; k < j; k++) {
-          totalApCost += actions[k].cost.ap || 0;
+          totalApCost += actions[k].args.cost?.ap || 0;
         }
 
         // Use the appropriate command type based on direction
         const commandType = direction < 0 ? CommandType.RETREAT : CommandType.ADVANCE;
-        const optimizedMove: CombatAction = {
-          ...action,
-          command: commandType,
-          args: { ...action.args, distance: totalDistance },
-          cost: { ap: totalApCost, energy: action.cost.energy || 0 },
-        };
+        const optimizedMove: CombatCommand = createActorCommand({
+          trace,
+          actor: action.actor,
+          location: action.location,
+          type: commandType,
+          args: {
+            ...action.args,
+            distance: totalDistance,
+            cost: { ap: totalApCost, energy: action.args.cost?.energy || 0 },
+          },
+        });
 
         optimized.push(optimizedMove);
       } else {
@@ -864,22 +913,22 @@ export function createSearchEngine(
   deps: CombatPlanningDependencies = DEFAULT_COMBAT_PLANNING_DEPS,
 ): SearchEngine {
   return {
-    generatePlans: (situation: TacticalSituation, searchConfig: SearchConfig) => {
+    generatePlans: (trace: string, situation: TacticalSituation, searchConfig: SearchConfig) => {
       const profile = { priorities: { damageWeight: 0.3, efficiencyWeight: 0.2, positioningWeight: 0.2, momentumWeight: 0.15, riskWeight: 0.15 } } as HeuristicProfile;
-      return generateAndEvaluatePlans(context, situation, profile, searchConfig, deps);
+      return generateAndEvaluatePlans(context, situation, profile, trace, searchConfig, deps);
     },
 
-    findOptimalPlan: (situation: TacticalSituation, searchConfig: SearchConfig) => {
+    findOptimalPlan: (trace: string, situation: TacticalSituation, searchConfig: SearchConfig) => {
       const profile = { priorities: { damageWeight: 0.3, efficiencyWeight: 0.2, positioningWeight: 0.2, momentumWeight: 0.15, riskWeight: 0.15 } } as HeuristicProfile;
-      return findOptimalPlan(context, situation, profile, searchConfig, deps);
+      return findOptimalPlan(context, situation, profile, trace, searchConfig, deps);
     },
 
     createRootNode: createInitialNode,
 
-    applyAction: (node: PlanNode, action: CombatAction) => {
+    applyAction: (node: PlanNode, action: CombatCommand) => {
       // Need situation for proper application - this is a simplified version
       const mockSituation = {} as TacticalSituation;
-      return applyAction(node, action, mockSituation);
+      return applyAction(node, action, mockSituation, action.id);
     },
   };
 }
@@ -891,6 +940,7 @@ export function measureSearchPerformance(
   context: TransformerContext,
   situation: TacticalSituation,
   profile: HeuristicProfile,
+  trace: string,
   config: SearchConfig = DEFAULT_SEARCH_CONFIG,
   {
     hrtime = () => performance.now(),
@@ -904,7 +954,7 @@ export function measureSearchPerformance(
   let earlyTerminations = 0;
 
   // Run search and count metrics
-  for (const _ of generateAndEvaluatePlans(context, situation, profile, config)) {
+  for (const _ of generateAndEvaluatePlans(context, situation, profile, trace, config)) {
     terminalPlans++;
     nodesEvaluated++; // Simplified counting
   }

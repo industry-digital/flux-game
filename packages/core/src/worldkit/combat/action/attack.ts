@@ -1,6 +1,6 @@
 import { Actor } from '~/types/entity/actor';
 import { CombatSession, generateCombatPlan } from '~/worldkit/combat';
-import { ActionCost, CombatAction, Combatant } from '~/types/combat';
+import { ActionCost, CombatCommand, Combatant } from '~/types/combat';
 import { WorldEvent } from '~/types/event';
 import { createStrikeMethod } from '~/worldkit/combat/action/strike';
 import { ActorURN } from '~/types/taxonomy';
@@ -30,7 +30,7 @@ export type CombatPlanExecutor = (
   session: CombatSession,
   actor: Actor,
   combatant: Combatant,
-  plan: CombatAction[],
+  plan: CombatCommand[],
   trace: string,
   deps: CombatPlanDependencies
 ) => WorldEvent[];
@@ -50,7 +50,7 @@ const internalExecuteCombatPlan: CombatPlanExecutor = (
   session: CombatSession,
   actor: Actor,
   combatant: Combatant,
-  plan: CombatAction[],
+  plan: CombatCommand[],
   trace: string,
   deps: CombatPlanDependencies
 ): WorldEvent[] => {
@@ -63,7 +63,7 @@ const internalExecuteCombatPlan: CombatPlanExecutor = (
     let actionEvents: WorldEvent[] = [];
 
     // Route action by command type - big inlined switch
-    switch (action.command) {
+    switch (action.type) {
       case CommandType.ATTACK: //--> This should never happen, but if we get it, we treat it like a STRIKE
       case CommandType.STRIKE:
         // Handle explicit target assignment if provided
@@ -124,12 +124,12 @@ const internalExecuteCombatPlan: CombatPlanExecutor = (
       case CommandType.DASH:
       case CommandType.CHARGE:
         // Movement actions not yet supported in combat plans
-        context.declareError(`Movement action ${action.command} not yet supported in AI combat plans`, trace);
+        context.declareError(`Movement action ${action.type} not yet supported in AI combat plans`, trace);
         break;
 
       default:
         // Unsupported action type
-        context.declareError(`Unsupported action in combat plan: ${action.command}`, trace);
+        context.declareError(`Unsupported action in combat plan: ${action.type}`, trace);
         break;
     }
 

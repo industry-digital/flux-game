@@ -1,4 +1,4 @@
-import { CombatAction, Combatant } from '~/types/combat';
+import { Combatant, CombatCommand } from '~/types/combat';
 import { WeaponSchema } from '~/types/schema/weapon';
 
 /**
@@ -7,7 +7,8 @@ import { WeaponSchema } from '~/types/schema/weapon';
 export function createAmmoManagementActions(
   combatant: Combatant,
   weapon: WeaponSchema,
-): CombatAction[] {
+  trace: string,
+): CombatCommand[] {
   // TODO: Implement ammunition management
   // - Track current ammunition
   // - Reload when necessary

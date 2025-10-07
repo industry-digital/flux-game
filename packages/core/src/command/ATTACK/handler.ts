@@ -1,16 +1,16 @@
 import {
-  Intent,
-  IntentParser,
-  IntentParserContext,
-  PureHandlerInterface,
-  PureReducer,
-  TransformerContext,
+    Intent,
+    IntentParser,
+    IntentParserContext,
+    PureHandlerInterface,
+    PureReducer,
+    TransformerContext,
 } from '~/types/handler';
 import { CommandType, Command, ActorCommand } from '~/types/intent';
 import { isCommandOfType } from '~/lib/intent';
 import { ActorURN } from '~/types/taxonomy';
 import { createCombatSessionApi } from '~/worldkit/combat/session/session';
-import { CombatAction, Team } from '~/types/combat';
+import { CombatCommand, Team } from '~/types/combat';
 import { generateCombatPlan } from '~/worldkit/combat/ai';
 
 export type AttackCommandArgs = {
@@ -50,12 +50,12 @@ export const attackReducer: PureReducer<TransformerContext, AttackCommand> = (co
 
   // TODO: Replace this logic with useIntentExecution
   const { combatant, target, attack, defend } = useCombatant(actor.id);
-  const plan: CombatAction[] = generateCombatPlan(context, session, combatant, command.id);
+  const plan: CombatCommand[] = generateCombatPlan(context, session, combatant, command.id);
 
-  for (const action of plan) {
-    switch (action.command) {
+  for (const cmd of plan) {
+    switch (cmd.type) {
       case CommandType.TARGET:
-        target(action.args.target, command.id);
+        target(cmd.args.target, command.id);
         break;
       case CommandType.ATTACK:
         attack(targetActor.id, command.id);

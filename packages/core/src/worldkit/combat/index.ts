@@ -94,7 +94,7 @@ export type {
   CombatSession,
   CombatSessionData,
   Combatant,
-  CombatAction,
+  CombatCommand,
   Battlefield,
   BattlefieldPosition,
   ActionCost,

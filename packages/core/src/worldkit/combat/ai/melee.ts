@@ -1,4 +1,4 @@
-import { CombatSession, Combatant, CombatAction } from '~/types/combat';
+import { CombatCommand, CombatSession, Combatant } from '~/types/combat';
 import { analyzeBattlefield } from '~/worldkit/combat/ai/analysis';
 import { createHeuristicProfile } from '~/worldkit/combat/ai/heuristics';
 import { findOptimalPlan, DEFAULT_SEARCH_CONFIG } from '~/worldkit/combat/ai/search';
@@ -20,7 +20,7 @@ export function computeMeleeCombatPlan(
   session: CombatSession,
   combatant: Combatant,
   trace: string,
-): CombatAction[] {
+): CombatCommand[] {
   const { world, declareError } = context;
   const actor = world.actors[combatant.actorId];
 
@@ -42,7 +42,7 @@ export function computeMeleeCombatPlan(
   const profile = createHeuristicProfile(weaponSchema);
 
   // Use exhaustive search to find optimal plan
-  const optimalPlan = findOptimalPlan(context, situation, profile, MELEE_SEARCH_CONFIG);
+  const optimalPlan = findOptimalPlan(context, situation, profile, trace, MELEE_SEARCH_CONFIG);
 
   return optimalPlan?.actions ?? [];
 }

@@ -1,4 +1,4 @@
-import { Combatant, CombatSession, CombatAction } from '~/types/combat';
+import { Combatant, CombatSession, CombatCommand } from '~/types/combat';
 import { TransformerContext } from '~/types/handler';
 import { analyzeBattlefield } from '~/worldkit/combat/ai/analysis';
 import { createHeuristicProfile } from '~/worldkit/combat/ai/heuristics';
@@ -17,7 +17,7 @@ export function generateCombatPlan(
   combatant: Combatant,
   trace: string,
   deps: CombatPlanningDependencies = DEFAULT_COMBAT_PLANNING_DEPS,
-): CombatAction[] {
+): CombatCommand[] {
   const {
     analyzeBattlefield: analyzeBattlefieldImpl = analyzeBattlefield,
     optimizeMovementSequence: optimizeMovementSequenceImpl = optimizeMovementSequence,
@@ -56,14 +56,14 @@ export function generateCombatPlan(
   const profile = createHeuristicProfileImpl(weaponSchema);
 
   // Use natural search with no plan-ending constraints
-  const optimalPlan = findOptimalPlanImpl(context, situation, profile, DEFAULT_SEARCH_CONFIG, deps);
+  const optimalPlan = findOptimalPlanImpl(context, situation, profile, trace, DEFAULT_SEARCH_CONFIG, deps);
 
   if (!optimalPlan) {
     return [];
   }
 
   // Optimize movement sequences (fallback safety for any consecutive MOVEs)
-  const optimizedActions = optimizeMovementSequenceImpl(optimalPlan.actions);
+  const optimizedActions = optimizeMovementSequenceImpl(trace, optimalPlan.actions);
 
   return optimizedActions;
 }

@@ -1,4 +1,4 @@
-import { CombatAction, Combatant, CombatSession } from '~/types/combat';
+import { CombatCommand, Combatant, CombatSession } from '~/types/combat';
 import { WeaponSchema } from '~/types/schema/weapon';
 import { ActorURN } from '~/types/taxonomy';
 import { CHANCE_ACTIONS, PLAN_ENDING_ACTIONS } from '~/worldkit/combat/action/constants';
@@ -147,7 +147,7 @@ export type PlanNode = {
   /**
    * Action sequence from root to this node
    */
-  actions: CombatAction[];
+  actions: CombatCommand[];
   /**
    * Combatant state after applying all actions
    */
@@ -174,7 +174,7 @@ export type ScoredPlan = {
   /**
    * Complete action sequence
    */
-  actions: CombatAction[];
+  actions: CombatCommand[];
   /**
    * Composite evaluation score
    */
@@ -325,11 +325,11 @@ export type SearchEngine = {
   /**
    * Generate all valid plans lazily
    */
-  generatePlans: (situation: TacticalSituation, config: SearchConfig) => Generator<ScoredPlan>;
+  generatePlans: (trace: string, situation: TacticalSituation, config: SearchConfig) => Generator<ScoredPlan>;
   /**
    * Find single optimal plan with memoization
    */
-  findOptimalPlan: (situation: TacticalSituation, config: SearchConfig) => ScoredPlan | null;
+  findOptimalPlan: (trace: string, situation: TacticalSituation, config: SearchConfig) => ScoredPlan | null;
   /**
    * Create initial search node
    */
@@ -337,7 +337,7 @@ export type SearchEngine = {
   /**
    * Apply action to node (returns new node)
    */
-  applyAction: (node: PlanNode, action: CombatAction) => PlanNode;
+  applyAction: (node: PlanNode, action: CombatCommand) => PlanNode;
 };
 
 /**

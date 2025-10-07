@@ -24,7 +24,7 @@ export function evaluateDamageHeuristic(
 
   // Check if plan ends with an attack action
   const lastAction = node.actions[node.actions.length - 1];
-  if (lastAction?.command === CommandType.ATTACK || lastAction?.command === CommandType.STRIKE) {
+  if (lastAction?.type === CommandType.ATTACK || lastAction?.type === CommandType.STRIKE) {
     const { primaryTarget, primaryTargetDistance } = situation.assessments;
 
     if (primaryTarget && primaryTargetDistance !== null) {
@@ -35,11 +35,11 @@ export function evaluateDamageHeuristic(
         // Calculate final position after all movement actions in the plan
         let finalPosition = situation.combatant.position.coordinate;
         for (const action of node.actions) {
-          if (action.command === CommandType.ADVANCE) {
+          if (action.type === CommandType.ADVANCE) {
             const moveDistance = (action.args as any)?.distance || 0;
             const direction = (action.args as any)?.direction || 1;
             finalPosition += moveDistance * direction;
-          } else if (action.command === CommandType.RETREAT) {
+          } else if (action.type === CommandType.RETREAT) {
             const moveDistance = (action.args as any)?.distance || 0;
             finalPosition -= moveDistance; // Retreat is always backwards
           }
@@ -61,11 +61,11 @@ export function evaluateDamageHeuristic(
       // Calculate distance to target after plan execution for weapon assessment
       let finalPosition = situation.combatant.position.coordinate;
       for (const action of node.actions) {
-        if (action.command === CommandType.ADVANCE) {
+        if (action.type === CommandType.ADVANCE) {
           const moveDistance = (action.args as any)?.distance || 0;
           const direction = (action.args as any)?.direction || 1;
           finalPosition += moveDistance * direction;
-        } else if (action.command === CommandType.RETREAT) {
+        } else if (action.type === CommandType.RETREAT) {
           const moveDistance = (action.args as any)?.distance || 0;
           finalPosition -= moveDistance;
         }
@@ -88,7 +88,7 @@ export function evaluateDamageHeuristic(
 
       // Bonus for multiple attacks in sequence (momentum)
       const attackCount = node.actions.filter(a =>
-        a.command === CommandType.ATTACK || a.command === CommandType.STRIKE
+        a.type === CommandType.ATTACK || a.type === CommandType.STRIKE
       ).length;
       damageScore += Math.min(attackCount - 1, 2) * 15; // Max +30 for follow-up attacks
     }
@@ -249,10 +249,10 @@ export function evaluateMomentum(
     const currentAction = actions[i];
 
     // Good sequences: GO -> ATTACK, DASH -> ATTACK, TARGET -> ATTACK
-    if (currentAction.command === CommandType.ATTACK) {
-      if (prevAction.command === CommandType.ADVANCE || prevAction.command === CommandType.DASH) {
+    if (currentAction.type === CommandType.ATTACK) {
+      if (prevAction.type === CommandType.ADVANCE || prevAction.type === CommandType.DASH) {
         momentumScore += 25; // Good positioning before attack
-      } else if (prevAction.command === CommandType.TARGET) {
+      } else if (prevAction.type === CommandType.TARGET) {
         momentumScore += 15; // Good targeting before attack
       }
     }
@@ -260,7 +260,7 @@ export function evaluateMomentum(
     // Remove old bonus for GO -> GO (now handled by efficiency heuristic)
 
     // Penalty for inefficient sequences: ATTACK -> GO (unless kiting)
-    if (currentAction.command === CommandType.ADVANCE && prevAction.command === CommandType.ATTACK) {
+    if (currentAction.type === CommandType.ADVANCE && prevAction.type === CommandType.ATTACK) {
       const weaponClass = classifyWeapon(situation.weapon);
       if (weaponClass !== RangeClassification.RANGED) {
         momentumScore -= 15; // Moving after attack is usually inefficient
@@ -270,19 +270,19 @@ export function evaluateMomentum(
 
   // Bonus for decisive plans (end with attack)
   const lastAction = actions[actions.length - 1];
-  if (lastAction?.command === CommandType.ATTACK || lastAction?.command === CommandType.STRIKE) {
+  if (lastAction?.type === CommandType.ATTACK || lastAction?.type === CommandType.STRIKE) {
     momentumScore += 30;
   }
 
   // Bonus for gap-closing movement with non-ranged weapons
   const isNonRangedWeapon = !situation.weapon.range.falloff;
   if (isNonRangedWeapon && actions.length > 0) {
-    const hasMovement = actions.some(a => a.command === CommandType.ADVANCE);
+    const hasMovement = actions.some(a => a.type === CommandType.ADVANCE);
     if (hasMovement) {
       // Calculate if movement makes meaningful progress toward optimal range
       let finalPosition = situation.combatant.position.coordinate;
       for (const action of actions) {
-        if (action.command === CommandType.ADVANCE) {
+        if (action.type === CommandType.ADVANCE) {
           const moveDistance = (action.args as any)?.distance || 0;
           const direction = (action.args as any)?.direction || 1;
           finalPosition += moveDistance * direction;

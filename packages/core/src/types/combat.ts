@@ -1,6 +1,6 @@
 import { AbstractSession, SessionStrategy } from '~/types/session';
 import { ActorURN, PlaceURN, SkillURN } from '~/types/taxonomy';
-import { CommandType } from '~/types/intent';
+import { CommandType, ActorCommand } from '~/types/intent';
 import { RollResult } from '~/types/dice';
 import { CurvePosition } from '~/types/easing';
 import { ModifiableBoundedAttribute } from '~/types/entity/attribute';
@@ -72,31 +72,23 @@ export type FullyQualifiedActionCost = {
   energy: number;
 };
 
-export type CombatAction<TArgs = any> = {
+/**
+ * A Command enhanced with combat execution metadata
+ * This unifies the combat system with the broader command architecture
+ */
+export type CombatCommand<
+  T extends CommandType = CommandType,
+  A extends Record<string, any> = Record<string, any>
+> = ActorCommand<T, A> & {
   /**
-   * The actor performing the action
-   */
-  actorId: ActorURN;
-
-  /**
-   * The command that was issued
-   */
-  command: CommandType;
-
-  /**
-   * The command arguments
-   */
-  args: TArgs;
-
-  /**
-   * If a roll was made, the result of the roll
+   * Combat execution results (added after command execution)
    */
   roll?: RollResult;
 
   /**
    * The cost paid by the actor for performing the action
    */
-  cost: ActionCost;
+  cost?: ActionCost;
 };
 
 /**
@@ -114,9 +106,9 @@ export type CombatTurn = {
   actor: ActorURN;
 
   /**
-   * The actions performed by the Actor in the turn
+   * The commands executed by the Actor in the turn
    */
-  actions: CombatAction[];
+  actions: CombatCommand[];
 };
 
 export type CombatTurns = {
@@ -317,7 +309,7 @@ export type Combatant = CombatantSummary & {
   /**
    * The actor's current plan
    */
-  plan?: CombatPlan;
+  plan?: CombatCommandPlan;
 };
 
 export type ResolvedTarget = {
@@ -325,4 +317,13 @@ export type ResolvedTarget = {
   distance: number;
 };
 
-export type CombatPlan = CombatAction[];
+/**
+ * @deprecated - REMOVED. Use CombatCommandPlan instead.
+ */
+
+/**
+ * A sequence of combat commands to be executed
+ */
+export type CombatCommandPlan = CombatCommand[];
+
+// CombatAction has been completely removed - combat system now uses Commands directly
