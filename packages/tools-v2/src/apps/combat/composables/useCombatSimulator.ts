@@ -111,6 +111,8 @@ export function useCombatSimulator(
 
       // Capture events by stubbing declareEvent (like legacy useCombatState)
       const originalDeclareEvent = context.declareEvent;
+
+      // @ts-expect-error: `declareEvent` is a read-only property
       context.declareEvent = (event: WorldEvent) => {
         capturedEvents.push(event);
         return originalDeclareEvent.call(context, event);
@@ -121,6 +123,7 @@ export function useCombatSimulator(
         result = action();
       } finally {
         // Always restore original declareEvent
+      // @ts-expect-error: `declareEvent` is a read-only property
         context.declareEvent = originalDeclareEvent;
       }
 
