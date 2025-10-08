@@ -215,11 +215,14 @@ import { useCombatSession } from './composables/useCombatSession';
 import { useCombatScenario } from './composables/useCombatScenario';
 import { useActorSetup } from './composables/useActorSetup';
 import { useTransformerContext } from './composables/useTransformerContext';
-import { SessionStatus, Team, TransformerContext, WorldEvent, executeIntent } from '@flux/core';
-import { Terminal, useTerminal, useVirtualizedList, useTheme } from '@flux/ui';
+import { SessionStatus, Team, TransformerContext, WorldEvent, executeIntent, NarrativeRecipient } from '@flux/core';
+import { Terminal, useTerminal, useVirtualizedList, useTheme, useLogger } from '@flux/ui';
+import { useNarration } from '../../composables/narrative';
 import type {
   CombatScenario
 } from './types';
+
+const log = useLogger('CombatSimulator');
 
 // Composables
 const transformerContext = useTransformerContext();
@@ -262,6 +265,9 @@ const terminal = useTerminal({
   showTimestamps: false,
 }, virtualization as any, theme);
 
+// Narrative generation
+const narration = useNarration(transformerContext.context.value as TransformerContext);
+
 // Local state
 const setupActors = ref<any[]>([]); // Actors being configured in setup phase
 
@@ -299,9 +305,16 @@ const getTeamActorCount = (team: Team) => {
 
 // Terminal integration - convert WorldEvents to terminal entries
 const convertEventToTerminalEntries = (event: WorldEvent) => {
-  // Display event details (type and payload)
-  const eventDetails = `${event.type}: ${JSON.stringify(event.payload || {})}`;
-  terminal.print(`event-${event.id}`, eventDetails);
+  try {
+    // Generate narrative text using the core narrative system
+    const narrativeText = narration.narrateEvent(event, 'flux:actor:observer' as NarrativeRecipient);
+    terminal.print(`narrative-${event.id}`, narrativeText);
+  } catch (error) {
+    // Fallback to technical details if narrative generation fails
+    log.warn(`Narrative generation failed for ${event.type}:`, error);
+    const eventDetails = `${event.type}: ${JSON.stringify(event.payload || {})}`;
+    terminal.print(`event-${event.id}`, eventDetails);
+  }
 
   // Add battlefield visualization for all events (simplified for now)
   const battlefieldComponent = h('div', { class: 'terminal-battlefield' }, [
@@ -401,7 +414,7 @@ const handleToggleActorAI = (actorId: string, isAI: boolean) => {
 const handleStartSession = async () => {
   try {
     if (setupActors.value.length < 2) {
-      console.warn('Need at least 2 combatants to start combat');
+      log.warn('Need at least 2 combatants to start combat');
       return;
     }
 
@@ -417,7 +430,7 @@ const handleStartSession = async () => {
 
     await startSession(setupActors.value, battlefield);
   } catch (error) {
-    console.error('Failed to start combat session:', error);
+    log.error('Failed to start combat session:', error);
     // TODO: Show error notification
   }
 };
@@ -428,7 +441,7 @@ const handleBeginCombat = async () => {
   try {
     await beginCombatSession();
   } catch (error) {
-    console.error('Failed to begin combat:', error);
+    log.error('Failed to begin combat:', error);
   }
 };
 
@@ -447,7 +460,7 @@ const handleCommand = (intentText: string) => {
 
   const actorId = currentActorId.value;
   if (!actorId) {
-    console.warn('No current actor for command execution');
+    log.warn('No current actor for command execution');
     return;
   }
 
@@ -470,11 +483,11 @@ const handleCommand = (intentText: string) => {
     if (errorsAfter.length > errorsBefore.length) {
       const newErrors = errorsAfter.slice(errorsBefore.length);
       newErrors.forEach(error => {
-        console.error('Intent execution error:', error.error || error);
+        log.error('Intent execution error:', error.error || error);
       });
     }
   } catch (error) {
-    console.error('Failed to execute intent:', error);
+    log.error('Failed to execute intent:', error);
   }
 };
 
@@ -486,7 +499,7 @@ const handleCommand = (intentText: string) => {
 
 const handleTerminalReady = (terminalInstance: any) => {
   // Terminal is ready, we can use it if needed
-  console.log('Terminal ready:', terminalInstance);
+  log.info('Terminal ready:', terminalInstance);
 };
 
 // Note: handleLogClear removed - log clearing handled differently in new terminal UI

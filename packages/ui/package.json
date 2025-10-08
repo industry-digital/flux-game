@@ -23,6 +23,7 @@
   "files": ["dist"],
   "scripts": {
     "build": "vite build",
+    "type-check": "tsc --noEmit",
     "dev": "vite build --watch",
     "test": "vitest",
     "test:run": "vitest run"

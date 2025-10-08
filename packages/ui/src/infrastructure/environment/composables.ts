@@ -15,8 +15,7 @@ const validateRuntimeEnvironment = (env: any): void => {
   }
 };
 
-// @ts-expect-error import.meta.env is a valid property
-const DEFAULT_ENV = import.meta.env;
+const DEFAULT_ENV = import.meta.env || process.env;
 
 export const createRuntimeEnvironmentResolver = (env: any = DEFAULT_ENV): RuntimeEnvironmentResolver => {
   let computedEnv: RuntimeEnvironment;
