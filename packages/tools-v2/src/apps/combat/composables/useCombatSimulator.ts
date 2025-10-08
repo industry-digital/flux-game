@@ -1,24 +1,21 @@
-import { ref, computed, readonly, watch } from 'vue';
+import { ref, computed, readonly, watch, type Ref, type ComputedRef } from 'vue';
 import { useLogger } from '@flux/ui';
 import { useCombatLog } from './useCombatLog';
 import { useCombatScenario } from './useCombatScenario';
 import { useTransformerContext } from './useTransformerContext';
 import { useCombatAI, type AITimingConfig } from './useCombatAI';
 import {
-  type CombatSession,
+  type CombatSession as CoreCombatSession,
   type PlaceURN,
   type SessionURN,
   type Actor,
-  type WorldEvent,
   createCombatSessionApi,
   createActor,
   isActorAlive,
-  ActorURN,
-  Stat,
-  createShell,
   TransformerContext,
   PotentiallyImpureOperations,
-  executeIntent
+  executeIntent,
+  WorldEvent,
 } from '@flux/core';
 
 /**
@@ -49,7 +46,6 @@ export type CombatSimulatorDependencies = {
   useLogger: typeof useLogger;
   useCombatLog: typeof useCombatLog;
   useCombatScenario: typeof useCombatScenario;
-  useTransformerContext: typeof useTransformerContext;
   useCombatAI: typeof useCombatAI;
   createCombatSessionApi: typeof createCombatSessionApi;
   createActor: typeof createActor;
@@ -62,7 +58,6 @@ export const DEFAULT_COMBAT_SIMULATOR_DEPS: Readonly<CombatSimulatorDependencies
   useLogger,
   useCombatLog,
   useCombatScenario,
-  useTransformerContext,
   useCombatAI,
   createCombatSessionApi,
   createActor,
@@ -70,6 +65,49 @@ export const DEFAULT_COMBAT_SIMULATOR_DEPS: Readonly<CombatSimulatorDependencies
   executeIntent,
   timestamp: () => Date.now(),
 });
+
+/**
+ * Combat Simulator API interface
+ */
+export interface CombatSimulatorAPI {
+  // Reactive state (readonly)
+  simulationState: Readonly<Ref<CombatSimulationState>>;
+  currentSession: Readonly<Ref<CoreCombatSession | null>>;
+  lastError: Readonly<Ref<string | null>>;
+  currentTurn: Readonly<Ref<number>>;
+  currentRound: Readonly<Ref<number>>;
+
+  // Computed properties
+  isSimulationActive: ComputedRef<boolean>;
+  isSimulationPaused: ComputedRef<boolean>;
+  canStartSimulation: ComputedRef<boolean>;
+  canPauseSimulation: ComputedRef<boolean>;
+  canResumeSimulation: ComputedRef<boolean>;
+  canEndSimulation: ComputedRef<boolean>;
+  activeCombatants: ComputedRef<any[]>;
+  aliveCombatants: ComputedRef<any[]>;
+  currentTurnActor: ComputedRef<string | null>;
+
+  // Domain composables are internal - not exposed to consumers
+
+  // Simulation control
+  startSimulation: () => boolean;
+  advanceTurn: () => boolean;
+  pauseSimulation: () => boolean;
+  resumeSimulation: () => boolean;
+  endSimulation: () => boolean;
+  resetSimulation: () => void;
+
+  // Command execution (Universal Intent System)
+  executePlayerCommand: (intentText: string) => WorldEvent[];
+  canExecuteCommand: ComputedRef<boolean>;
+
+  // Utilities
+  getSimulationStats: () => any;
+
+  // Configuration
+  config: Readonly<Ref<CombatSimulationConfig>>;
+}
 
 /**
  * Combat Simulator orchestrator composable
@@ -81,18 +119,19 @@ export const DEFAULT_COMBAT_SIMULATOR_DEPS: Readonly<CombatSimulatorDependencies
  */
 export function useCombatSimulator(
   config: CombatSimulationConfig,
+  transformerContext: ReturnType<typeof useTransformerContext>,
   deps: CombatSimulatorDependencies = DEFAULT_COMBAT_SIMULATOR_DEPS
-) {
+): CombatSimulatorAPI {
   const log = deps.useLogger('useCombatSimulator');
 
   // Initialize domain composables
   const combatLog = deps.useCombatLog();
   const scenario = deps.useCombatScenario();
-  const transformerContext = deps.useTransformerContext();
+  // transformerContext is now injected as a required parameter
 
   // Reactive simulation state
   const simulationState = ref<CombatSimulationState>('idle');
-  const currentSession = ref<CombatSession | null>(null);
+  const currentSession = ref<CoreCombatSession | null>(null);
   const sessionApi = ref<ReturnType<typeof createCombatSessionApi> | null>(null);
   const lastError = ref<string | null>(null);
   const lastEventId = ref<string | null>(null); // Track last WorldEvent for reactivity
@@ -178,7 +217,7 @@ export function useCombatSimulator(
   const canStartSimulation = computed(() => {
     return simulationState.value === 'idle' &&
            transformerContext.isInitialized.value &&
-           Object.keys(scenario.scenarioData.value.actors).length > 0;
+           scenario.availableScenarios.value.length > 0;
   });
   const canPauseSimulation = computed(() => simulationState.value === 'active');
   const canResumeSimulation = computed(() => simulationState.value === 'paused');
@@ -243,52 +282,29 @@ export function useCombatSimulator(
       throw new Error('Transformer context not initialized');
     }
 
+    // Use the first available scenario as default for now
+    const defaultScenario = scenario.availableScenarios.value[0];
+    if (!defaultScenario) {
+      throw new Error('No scenarios available');
+    }
+
     const actors: Actor[] = [];
 
-    for (const [actorId, actorData] of Object.entries(scenario.scenarioData.value.actors)) {
+    for (const actorData of defaultScenario.actors) {
       try {
-        // Create actor using core factory with proper data transformation
+        // ActorSetupData extends Actor, so we can use it directly
         const actor = deps.createActor({
-          id: actorId as ActorURN,
-          name: actorId.split(':').pop() || actorId, // Extract name from URN
+          id: actorData.id,
+          name: actorData.name,
           location: config.location,
-          // Core stats (stored on actor.stats)
-          stats: {
-            [Stat.INT]: { nat: actorData.stats.int || 10, eff: actorData.stats.int || 10, mods: {} },
-            [Stat.PER]: { nat: actorData.stats.per || 10, eff: actorData.stats.per || 10, mods: {} },
-            [Stat.MEM]: { nat: actorData.stats.mem || 10, eff: actorData.stats.mem || 10, mods: {} },
-          },
-          hp: {
-            nat: { max: 100, cur: 100 },
-            eff: { max: 100, cur: 100 },
-            mods: {}
-          },
-          // Transform skills from numbers to proper skill objects
-          skills: Object.fromEntries(
-            Object.entries(actorData.skills || {}).map(([skillId, rank]) => [
-              skillId,
-              { rank: rank || 0, mods: {}, xp: 0, pxp: 0 }
-            ])
-          ),
-          equipment: {},
-          inventory: {
-            mass: 1000,
-            ts: Date.now(),
-            items: {}
-          },
-          currentShell: 'default-shell',
-          // Shell system - shell stats (POW, FIN, RES) are stored here
-          shells: {
-            'default-shell': createShell({
-              id: 'default-shell',
-              name: 'Default Shell',
-              stats: {
-                [Stat.POW]: { nat: actorData.stats.pow || 10, eff: actorData.stats.pow || 10, mods: {} },
-                [Stat.FIN]: { nat: actorData.stats.fin || 10, eff: actorData.stats.fin || 10, mods: {} },
-                [Stat.RES]: { nat: actorData.stats.res || 10, eff: actorData.stats.res || 10, mods: {} },
-              },
-            }),
-          },
+          // Use the actor data directly since it's already properly typed
+          stats: actorData.stats,
+          hp: actorData.hp,
+          skills: actorData.skills,
+          equipment: actorData.equipment,
+          inventory: actorData.inventory,
+          currentShell: actorData.currentShell,
+          shells: actorData.shells,
         });
 
         // Add to transformer context
@@ -315,7 +331,8 @@ export function useCombatSimulator(
       return false;
     }
 
-    if (Object.keys(scenario.scenarioData.value.actors).length === 0) {
+    const defaultScenario = scenario.availableScenarios.value[0];
+    if (!defaultScenario || defaultScenario.actors.length === 0) {
       log.warn('Cannot start simulation: no actors available');
       return false;
     }
@@ -609,7 +626,7 @@ export function useCombatSimulator(
   return {
     // Reactive state (readonly to prevent external mutation)
     simulationState: readonly(simulationState),
-    currentSession: readonly(currentSession),
+    currentSession: readonly(currentSession) as Readonly<Ref<CoreCombatSession | null>>,
     lastError: readonly(lastError),
     currentTurn: readonly(currentTurn),
     currentRound: readonly(currentRound),
@@ -625,42 +642,7 @@ export function useCombatSimulator(
     aliveCombatants,
     currentTurnActor,
 
-    // Domain composables (readonly access)
-    combatLog: {
-      entries: combatLog.entries,
-      entryCount: combatLog.entryCount,
-      filteredEntries: combatLog.filteredEntries,
-      addEvents: combatLog.addEvents,
-      clearLog: combatLog.clearLog,
-    },
-    scenario: {
-      scenarioData: scenario.scenarioData,
-      isLoaded: scenario.isLoaded,
-      isDirty: scenario.isDirty,
-      lastSaved: scenario.lastSaved,
-      updateActorData: scenario.updateActorData,
-      addActor: scenario.addActor,
-      removeActor: scenario.removeActor,
-      resetToDefaults: scenario.resetToDefaults,
-    },
-    transformerContext: {
-      isInitialized: transformerContext.isInitialized,
-      eventCount: transformerContext.eventCount,
-      actors: transformerContext.actors,
-      places: transformerContext.places,
-      getActor: transformerContext.getActor,
-      hasActor: transformerContext.hasActor,
-    },
-    combatAI: computed(() => combatAI.value ? {
-      aiControlledActors: combatAI.value.aiControlledActors,
-      currentThinkingActor: combatAI.value.currentThinkingActor,
-      aiExecutionState: combatAI.value.aiExecutionState,
-      isAnyAIThinking: combatAI.value.isAnyAIThinking,
-      aiActorCount: combatAI.value.aiActorCount,
-      setAIControlled: combatAI.value.setAIControlled,
-      isAIControlled: combatAI.value.isAIControlled,
-      setMultipleAIControlled: combatAI.value.setMultipleAIControlled,
-    } : null),
+    // Domain composables (combatLog, scenario, combatAI) are internal - not exposed
 
     // Simulation control
     startSimulation,

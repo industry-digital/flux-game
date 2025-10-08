@@ -1,4 +1,4 @@
-import { ref } from 'vue';
+import { ref, type Ref } from 'vue';
 import type { CombatScenario } from '../types';
 
 // Mock scenarios for demo purposes
@@ -53,7 +53,25 @@ const mockScenarios: CombatScenario[] = [
 const availableScenarios = ref<CombatScenario[]>(mockScenarios);
 const selectedScenario = ref<string>('');
 
-export function useCombatScenario() {
+/**
+ * Combat scenario management composable
+ *
+ * Provides access to predefined combat scenarios and utilities for
+ * loading, creating, and managing custom scenarios.
+ */
+export interface CombatScenarioAPI {
+  // Reactive state
+  availableScenarios: Ref<CombatScenario[]>;
+  selectedScenario: Ref<string>;
+
+  // Actions
+  loadScenario: (scenarioId: string) => Promise<CombatScenario>;
+  createCustomScenario: () => CombatScenario;
+  addScenario: (scenario: CombatScenario) => void;
+  removeScenario: (scenarioId: string) => void;
+}
+
+export function useCombatScenario(): CombatScenarioAPI {
   const loadScenario = async (scenarioId: string): Promise<CombatScenario> => {
     const scenario = availableScenarios.value.find(s => s.id === scenarioId);
     if (!scenario) {

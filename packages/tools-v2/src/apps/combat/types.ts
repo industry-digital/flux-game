@@ -1,10 +1,11 @@
 import type {
-  WorldEvent,
+  EnrichedWorldEvent,
   Actor,
   Combatant,
   CombatSession as CoreCombatSession,
   Battlefield as CoreBattlefield,
   WeaponSchema,
+  WorldEvent,
 } from '@flux/core';
 import { Team } from '@flux/core';
 import { SessionStatus } from '@flux/core';
@@ -89,7 +90,7 @@ export interface CombatScenario {
 export interface IntentResult {
   success: boolean;
   message: string;
-  events?: WorldEvent[];
+  events?: EnrichedWorldEvent[];
   error?: string;
 }
 

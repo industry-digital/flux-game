@@ -2,7 +2,7 @@ import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { createComposableTestSuite } from '~/testing';
 import { createTestActor, createMockWorldEvent, ALICE_ID, BOB_ID } from '../testing';
 import { useTransformerContext, type TransformerContextDependencies } from './useTransformerContext';
-import type { TransformerContext, WorldEvent } from '@flux/core';
+import type { TransformerContext, EnrichedWorldEvent } from '@flux/core';
 
 describe('useTransformerContext', () => {
   const { setup, teardown, runWithContext } = createComposableTestSuite();
@@ -12,7 +12,7 @@ describe('useTransformerContext', () => {
 
   // Create mock dependencies for each test
   const createMockDeps = (): TransformerContextDependencies => {
-    const mockEvents: WorldEvent[] = [];
+    const mockEvents: EnrichedWorldEvent[] = [];
 
     const mockContext: TransformerContext = {
       world: {
@@ -23,7 +23,7 @@ describe('useTransformerContext', () => {
       },
       uniqid: vi.fn(() => `test-id-${Math.random().toString(36).substr(2, 9)}`),
       timestamp: vi.fn(() => Date.now()),
-      declareEvent: vi.fn((event: WorldEvent) => {
+      declareEvent: vi.fn((event: EnrichedWorldEvent) => {
         mockEvents.push(event);
         return event;
       }),

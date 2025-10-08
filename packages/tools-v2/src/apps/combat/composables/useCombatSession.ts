@@ -87,34 +87,7 @@ export function useCombatSession(location: PlaceURN = WellKnownPlace.ORIGIN) {
     }
   };
 
-  const executeCommand = async (command: string): Promise<void> => {
-    if (!sessionApi.value || !session.value) return;
-
-    // Get current actor's combatant API
-    const currentActorId = session.value.data.rounds.current.turns.current.actor;
-    if (!currentActorId) return;
-
-    const combatantApi = sessionApi.value.getCombatantApi(currentActorId);
-
-    // Simple command parsing (this would be enhanced with proper intent system)
-    let events: any[] = [];
-
-    if (command.toLowerCase().includes('attack')) {
-      events = combatantApi.attack();
-    } else if (command.toLowerCase().includes('defend')) {
-      events = combatantApi.defend();
-    } else if (command.toLowerCase().includes('done') || command.toLowerCase().includes('end turn')) {
-      events = combatantApi.done('user-end-turn');
-    } else {
-      // Default to ending turn
-      events = combatantApi.done('user-command');
-    }
-
-    // Add events to log
-    events.forEach(event => {
-      addLogEntry(event);
-    });
-  };
+  // Note: executeCommand removed - use @flux/core executeIntent instead
 
   const addLogEntry = (entry: CombatLogEntry): void => {
     if (!session.value) return;
@@ -135,7 +108,6 @@ export function useCombatSession(location: PlaceURN = WellKnownPlace.ORIGIN) {
     endSession,
     pauseSession,
     resumeSession,
-    executeCommand,
     addLogEntry,
     clearLog
   };

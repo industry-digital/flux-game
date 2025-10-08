@@ -23,7 +23,7 @@ export function useCombatLog(maxEntries: number = 1000) {
 
     return entries.value.filter(entry =>
       filters.value.has(entry.type) ||
-      (entry.category && filters.value.has(entry.category))
+      (entry.type && filters.value.has(entry.type))
     );
   });
 
@@ -37,7 +37,7 @@ export function useCombatLog(maxEntries: number = 1000) {
     if (events.length === 0) return;
 
     // Convert WorldEvents to CombatLogEntries with enhanced metadata
-    const newEntries: CombatLogEntry[] = events.map(event => ({
+    const newEntries: WorldEvent[] = events.map(event => ({
       ...event,
       category: categorizeEvent(event),
       narrative: generateNarrative(event),
@@ -140,7 +140,7 @@ export function useCombatLog(maxEntries: number = 1000) {
 /**
  * Categorize events for better filtering and display
  */
-function categorizeEvent(event: WorldEvent): CombatLogEntry['category'] {
+function categorizeEvent(event: WorldEvent): WorldEvent['type'] {
   const type = event.type.toLowerCase();
 
   if (type.includes('damage') || type.includes('hit') || type.includes('die')) {

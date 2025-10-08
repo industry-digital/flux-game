@@ -63,80 +63,48 @@
       </div>
     </div>
 
-    <!-- Main combat interface -->
-    <div v-if="session" class="combat-app__main">
-      <!-- Left panel: Battlefield and controls -->
-      <div class="combat-app__left-panel">
-        <!-- Battlefield notation -->
-        <div class="combat-app__battlefield-section">
-          <div class="combat-app__battlefield-container">
-            <h3 class="combat-app__battlefield-title">Battlefield (300m)</h3>
-            <BattlefieldNotation
-              v-if="battlefieldCombatants.length > 0 && session && (isInActiveCombat || isInPausedCombat) && battlefieldCombatants.every(c => c && c.name && typeof c.name === 'string')"
-              :combatants="battlefieldCombatants"
-              :current-actor="currentActorId || ''"
-              :subject-team="'alpha'"
-              :color-scheme="'gruvbox'"
-              :show-controls="false"
-            />
-            <div v-else class="combat-app__battlefield-empty">
-              <p>No combatants on battlefield</p>
-              <p>Debug: battlefieldCombatants.length = {{ battlefieldCombatants.length }}</p>
-              <p>Debug: session = {{ !!session }}</p>
-              <p>Debug: isInActiveCombat = {{ isInActiveCombat }}</p>
-              <p>Debug: battlefieldCombatants = {{ JSON.stringify(battlefieldCombatants) }}</p>
+    <!-- Terminal Combat Interface (only shown when combat is active) -->
+    <div v-if="session && (isInActiveCombat || isInPausedCombat)" class="combat-terminal">
+      <Terminal
+        :config="{
+          maxEntries: 1000,
+          autoScroll: true,
+          showTimestamps: false,
+        }"
+        :virtualization-config="{
+          itemHeight: 24,
+          overscan: 5,
+          viewportHeight: 600,
+        }"
+        theme-name="dark"
+        :viewport-height="600"
+        @terminal-ready="handleTerminalReady"
+        class="combat-terminal__main"
+      >
+        <template #header>
+          <div class="terminal-header">
+            <span class="terminal-title">FLUX COMBAT TERMINAL v2.0</span>
+            <span class="terminal-session">Session: {{ session.id }}</span>
+            <span v-if="currentActorId" class="terminal-current-turn">
+              Round {{ currentRound }} | {{ getCombatantName(currentActorId) }}'s Turn
+            </span>
+          </div>
+        </template>
+
+        <template #footer>
+          <div class="terminal-input">
+            <div v-if="currentActorId" class="turn-indicator">
+              ── {{ getCombatantName(currentActorId).toUpperCase() }}'S TURN ──
             </div>
-          </div>
-        </div>
-
-        <!-- Command input -->
-        <div class="combat-app__command-section">
-          <CommandInput
-            :placeholder="commandPlaceholder"
-            :disabled="!isInActiveCombat"
-            @command-submitted="handleCommand"
-          />
-        </div>
-      </div>
-
-      <!-- Right panel: Combatants and log -->
-      <div class="combat-app__right-panel">
-        <!-- Combatants list -->
-        <div class="combat-app__combatants-section">
-          <h3 class="combat-app__section-title">Combatants</h3>
-          <div class="combat-app__combatants-grid">
-            <CombatantCard
-              v-for="combatant in currentCombatants"
-              :key="combatant.actorId"
-              :actor="getMockActor(combatant)"
-              :combatant="{
-                currentHP: 100,
-                maxHP: 100,
-                currentAP: combatant.ap?.eff?.cur || 0,
-                maxAP: combatant.ap?.eff?.max || 10
-              }"
-              :is-active="combatant.actorId === currentActorId"
-              :is-ai-controlled="false"
-              :weapon-schema="undefined"
-              @ai-toggle="(actorId) => handleAIToggle(actorId, true)"
-              @target-selected="(actorId) => handleTargetSelect(actorId, '')"
+            <CommandInput
+              :placeholder="currentActorId ? `[${getCombatantName(currentActorId)}] > ` : '> '"
+              :disabled="!isInActiveCombat"
+              class="terminal-command-input"
+              @command-submitted="handleCommand"
             />
           </div>
-        </div>
-
-        <!-- Combat log -->
-        <div class="combat-app__log-section">
-          <CombatLog
-            :entries="session.log"
-            :max-entries="1000"
-            :show-details="true"
-            :auto-scroll="true"
-            @entry-clicked="handleLogEntryClick"
-            @filter-changed="handleLogFilter"
-            @clear-requested="handleLogClear"
-          />
-        </div>
-      </div>
+        </template>
+      </Terminal>
     </div>
 
     <!-- Setup screen (when no session or in setup phase) -->
@@ -240,22 +208,22 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, onUnmounted } from 'vue';
-import { BattlefieldNotation } from '@flux/ui';
-import CombatantCard from './components/CombatantCard.vue';
+import { ref, computed, onMounted, onUnmounted, watch, h } from 'vue';
 import CommandInput from './components/CommandInput.vue';
-import CombatLog from './components/CombatLog.vue';
 import ActorSetupForm from './components/ActorSetupForm.vue';
 import { useCombatSession } from './composables/useCombatSession';
 import { useCombatScenario } from './composables/useCombatScenario';
 import { useActorSetup } from './composables/useActorSetup';
-import { SessionStatus, EntityType, Team } from '@flux/core';
+import { useTransformerContext } from './composables/useTransformerContext';
+import { SessionStatus, Team, TransformerContext, WorldEvent, executeIntent } from '@flux/core';
+import { Terminal, useTerminal, useVirtualizedList, useTheme } from '@flux/ui';
 import type {
-  CombatScenario,
-  CombatLogEntry
+  CombatScenario
 } from './types';
 
 // Composables
+const transformerContext = useTransformerContext();
+
 const {
   session,
   context,
@@ -263,9 +231,7 @@ const {
   beginCombat: beginCombatSession,
   endSession,
   pauseSession,
-  resumeSession,
-  executeCommand,
-  clearLog
+  resumeSession
 } = useCombatSession();
 
 const {
@@ -283,8 +249,20 @@ const {
   createAdditionalActor
 } = useActorSetup();
 
+// Terminal setup
+const theme = useTheme('dark');
+const virtualization = useVirtualizedList<any>([], {
+  itemHeight: 24,
+  overscan: 5,
+  viewportHeight: 600,
+});
+const terminal = useTerminal({
+  maxEntries: 1000,
+  autoScroll: true,
+  showTimestamps: false,
+}, virtualization as any, theme);
+
 // Local state
-const logFilter = ref('');
 const setupActors = ref<any[]>([]); // Actors being configured in setup phase
 
 // Computed properties
@@ -308,18 +286,6 @@ const currentRound = computed(() => session.value?.data.rounds?.current?.number 
 
 const currentTurn = computed(() => session.value?.data.rounds?.current?.turns?.current?.number || 1);
 
-const commandPlaceholder = computed(() => {
-  if (!session.value) return 'No active session';
-  if (!isInActiveCombat.value) return 'Combat not active';
-
-  const actorId = currentActorId.value;
-  if (actorId) {
-    return `Enter command for ${getCombatantName(actorId)}...`;
-  }
-
-  return 'Enter combat command...';
-});
-
 // Setup phase computed properties
 const getTeamActors = (team: Team) => {
   return setupActors.value.filter(actor => actor.team === team);
@@ -329,58 +295,37 @@ const getTeamActorCount = (team: Team) => {
   return getTeamActors(team).length;
 };
 
-// Transform combatants for BattlefieldNotation component
-const battlefieldCombatants = computed(() => {
-  console.log('=== battlefieldCombatants computed ===');
-  console.log('currentCombatants.value:', currentCombatants.value);
-  console.log('context.value:', context.value);
+// Note: battlefieldCombatants removed - will be recreated when we integrate actual BattlefieldNotation
 
-  if (!currentCombatants.value?.length) {
-    console.log('No combatants, returning empty array');
-    return [];
+// Terminal integration - convert WorldEvents to terminal entries
+const convertEventToTerminalEntries = (event: WorldEvent) => {
+  // Display event details (type and payload)
+  const eventDetails = `${event.type}: ${JSON.stringify(event.payload || {})}`;
+  terminal.print(`event-${event.id}`, eventDetails);
+
+  // Add battlefield visualization for all events (simplified for now)
+  const battlefieldComponent = h('div', { class: 'terminal-battlefield' }, [
+    h('div', { class: 'battlefield-label' }, 'Battlefield State:'),
+    // TODO: Add actual BattlefieldNotation component here
+    h('div', { class: 'battlefield-placeholder' }, '[Battlefield visualization would go here]')
+  ]);
+
+  terminal.render(`battlefield-${event.id}`, battlefieldComponent);
+};
+
+// Watch for new log entries and convert them to terminal entries
+const lastProcessedLogLength = ref(0);
+const syncLogToTerminal = () => {
+  if (!session.value?.log) return;
+
+  const currentLogLength = session.value.log.length;
+  if (currentLogLength > lastProcessedLogLength.value) {
+    // Process new entries
+    const newEntries = session.value.log.slice(lastProcessedLogLength.value);
+    newEntries.forEach(convertEventToTerminalEntries);
+    lastProcessedLogLength.value = currentLogLength;
   }
-
-  const result = [];
-  for (let i = 0; i < currentCombatants.value.length; i++) {
-    const c = currentCombatants.value[i];
-    console.log(`Processing combatant ${i}:`, c);
-
-    if (!c.actorId || !c.position || !c.position?.coordinate) {
-      console.log(`Skipping combatant ${i} - invalid data`);
-      continue;
-    }
-
-    // Get actor name from context or fallback to ID parsing
-    const contextName = context.value?.world?.actors?.[c.actorId]?.name;
-    const idPart = c.actorId.split(':').pop();
-    const actorName = contextName || idPart || 'Unknown';
-
-    console.log(`Actor name resolution for ${c.actorId}:`, {
-      contextName,
-      idPart,
-      finalName: actorName
-    });
-
-    // Safety check - never pass undefined names
-    if (!actorName || typeof actorName !== 'string' || actorName.length === 0) {
-      console.error('Invalid actor name for combatant:', c.actorId, 'skipping');
-      continue;
-    }
-
-    const combatantData = {
-      name: actorName,
-      position: Math.round(c.position.coordinate),
-      facing: c.position.facing === 1 ? 'right' : 'left',
-      team: (c.team || 'neutral').toLowerCase()
-    };
-
-    console.log(`Adding combatant data:`, combatantData);
-    result.push(combatantData);
-  }
-
-  console.log('Final result:', result);
-  return result;
-});
+};
 
 // Methods
 const getCombatantName = (actorId: string): string => {
@@ -389,15 +334,7 @@ const getCombatantName = (actorId: string): string => {
   return actorName || actorId.split(':').pop() || 'Unknown';
 };
 
-const getMockActor = (combatant: any) => {
-  // Create a mock Actor object for the CombatantCard component
-  return {
-    id: combatant.actorId,
-    name: getCombatantName(combatant.actorId),
-    type: EntityType.ACTOR,
-    // Add other required Actor properties as needed
-  } as any; // TODO: Create proper Actor object with all required properties
-};
+// Note: getMockActor removed - no longer needed with new terminal UI
 
 const getScenario = (scenarioId: string): CombatScenario | undefined => {
   return availableScenarios.value.find((s: any) => s.id === scenarioId);
@@ -505,13 +442,39 @@ const resumeCombat = async () => {
   await resumeSession();
 };
 
-const handleCommand = async (command: string) => {
-  if (!session.value || !isInActiveCombat.value) return;
+const handleCommand = (intentText: string) => {
+  if (!session.value || !isInActiveCombat.value || !transformerContext.context.value) return;
+
+  const actorId = currentActorId.value;
+  if (!actorId) {
+    console.warn('No current actor for command execution');
+    return;
+  }
+
 
   try {
-    await executeCommand(command);
+    // Use the properly designed transformer context (already markRaw'd)
+    // No need for toRaw() since useTransformerContext handles this correctly
+    const rawContext = transformerContext.context.value as TransformerContext;
+    const errorsBefore = rawContext.getDeclaredErrors();
+
+    // Use proper intent execution from @flux/core
+    executeIntent(rawContext, actorId, intentText);
+
+    // The context is mutated in-place by @flux/core, but we need to sync event count
+    transformerContext.syncEventCount();
+
+    const errorsAfter = rawContext.getDeclaredErrors();
+
+    // Check for new errors that occurred during intent execution
+    if (errorsAfter.length > errorsBefore.length) {
+      const newErrors = errorsAfter.slice(errorsBefore.length);
+      newErrors.forEach(error => {
+        console.error('Intent execution error:', error.error || error);
+      });
+    }
   } catch (error) {
-    console.error('Failed to execute command:', error);
+    console.error('Failed to execute intent:', error);
   }
 };
 
@@ -519,30 +482,14 @@ const handleCommand = async (command: string) => {
 
 // Removed actor selection handling - battlefield is display-only
 
-const handleAIToggle = (combatantId: string, isAI: boolean) => {
-  // TODO: Implement AI toggle through session API
-  console.log(`Toggle AI for ${combatantId}: ${isAI}`);
+// Note: handleAIToggle and handleTargetSelect removed - not needed with new terminal UI
+
+const handleTerminalReady = (terminalInstance: any) => {
+  // Terminal is ready, we can use it if needed
+  console.log('Terminal ready:', terminalInstance);
 };
 
-const handleTargetSelect = (combatantId: string, targetId: string) => {
-  // TODO: Implement target selection through session API
-  console.log(`Set target for ${combatantId}: ${targetId}`);
-};
-
-const handleLogEntryClick = (entry: CombatLogEntry) => {
-  // Could show detailed event information or jump to related combatant
-  console.log('Log entry clicked:', entry);
-};
-
-const handleLogFilter = (filter: string) => {
-  logFilter.value = filter;
-};
-
-const handleLogClear = () => {
-  if (session.value) {
-    clearLog();
-  }
-};
+// Note: handleLogClear removed - log clearing handled differently in new terminal UI
 
 // Keyboard shortcuts
 const handleKeydown = (event: KeyboardEvent) => {
@@ -562,10 +509,17 @@ const handleKeydown = (event: KeyboardEvent) => {
   }
 };
 
+// Watch for log changes and sync to terminal
+watch(() => session.value?.log, () => {
+  syncLogToTerminal();
+}, { deep: true });
+
 onMounted(() => {
   document.addEventListener('keydown', handleKeydown);
   // Initialize with default actors for setup
   setupActors.value = createDefaultActors();
+  // Sync any existing log entries to terminal
+  syncLogToTerminal();
 });
 
 onUnmounted(() => {

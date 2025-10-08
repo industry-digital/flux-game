@@ -1,14 +1,13 @@
 import { vi, expect } from 'vitest';
 import type {
-  TransformerContext,
-  Actor,
-  ActorURN,
-  PlaceURN,
-  CombatSession,
-  WeaponSchema,
-  WeaponSchemaURN,
-  WorldEvent,
-  createActor,
+    TransformerContext,
+    Actor,
+    ActorURN,
+    PlaceURN,
+    CombatSession,
+    WeaponSchema,
+    WeaponSchemaURN,
+    EnrichedWorldEvent
 } from '@flux/core';
 
 /**
@@ -25,7 +24,7 @@ export const CHARLIE_ID: ActorURN = 'flux:actor:charlie';
  * Creates a mock TransformerContext for testing
  */
 export function createMockTransformerContext(): TransformerContext {
-  const declaredEvents: WorldEvent[] = [];
+  const declaredEvents: EnrichedWorldEvent[] = [];
 
   return {
     world: {
@@ -36,7 +35,7 @@ export function createMockTransformerContext(): TransformerContext {
     },
     uniqid: vi.fn(() => `test-id-${Math.random().toString(36).substr(2, 9)}`),
     timestamp: vi.fn(() => Date.now()),
-    declareEvent: vi.fn((event: WorldEvent) => {
+    declareEvent: vi.fn((event: EnrichedWorldEvent) => {
       declaredEvents.push(event);
       return event;
     }),
@@ -181,14 +180,14 @@ export function createMockWorldEvent(
   type: string,
   actor?: ActorURN,
   data: Record<string, any> = {}
-): WorldEvent {
+): EnrichedWorldEvent {
   return {
     id: `test-event-${Math.random().toString(36).substr(2, 9)}`,
     type,
     ts: Date.now(),
     actor,
     ...data
-  } as WorldEvent;
+  } as EnrichedWorldEvent;
 }
 
 /**
@@ -212,7 +211,7 @@ export const combatAssertions = {
   /**
    * Assert that events contain specific types
    */
-  expectEventTypes: (events: WorldEvent[], expectedTypes: string[]) => {
+  expectEventTypes: (events: EnrichedWorldEvent[], expectedTypes: string[]) => {
     const eventTypes = events.map(e => e.type);
     expectedTypes.forEach(type => {
       expect(eventTypes).toContain(type);

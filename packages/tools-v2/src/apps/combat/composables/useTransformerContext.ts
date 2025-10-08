@@ -7,6 +7,7 @@ import type {
   ActorURN,
   PlaceURN
 } from '@flux/core';
+import type { Ref, ComputedRef } from 'vue';
 
 /**
  * Dependencies for useTransformerContext composable
@@ -22,6 +23,37 @@ export const DEFAULT_TRANSFORMER_CONTEXT_DEPS: Readonly<TransformerContextDepend
 });
 
 /**
+ * Transformer context management API interface
+ */
+export interface TransformerContextAPI {
+  // Reactive state (readonly to prevent external mutation)
+  context: Readonly<Ref<TransformerContext | null>>;
+  isInitialized: Readonly<Ref<boolean>>;
+  eventCount: Readonly<Ref<number>>;
+
+  // Computed world state
+  worldState: ComputedRef<any | null>;
+  actors: ComputedRef<Record<string, any>>;
+  places: ComputedRef<Record<string, any>>;
+  declaredEvents: ComputedRef<WorldEvent[]>;
+  actorIds: ComputedRef<ActorURN[]>;
+  placeIds: ComputedRef<PlaceURN[]>;
+
+  // Actions
+  initializeContext: () => boolean;
+  resetContext: () => boolean;
+  syncEventCount: () => number;
+  declareEvent: (event: WorldEvent) => WorldEvent | null;
+  declareError: (message: string, eventId?: string) => void;
+  addActor: (actor: any) => boolean;
+  removeActor: (actorId: ActorURN) => boolean;
+  getActor: (actorId: ActorURN) => any;
+  hasActor: (actorId: ActorURN) => boolean;
+  getEventsSince: (sinceCount: number) => WorldEvent[];
+  getLatestEvents: (count: number) => WorldEvent[];
+}
+
+/**
  * Transformer context management composable
  *
  * Handles world state management, event tracking, and context lifecycle.
@@ -31,7 +63,7 @@ export const DEFAULT_TRANSFORMER_CONTEXT_DEPS: Readonly<TransformerContextDepend
  */
 export function useTransformerContext(
   deps: TransformerContextDependencies = DEFAULT_TRANSFORMER_CONTEXT_DEPS
-) {
+): TransformerContextAPI {
   const log = deps.useLogger('useTransformerContext');
 
   // Reactive state
@@ -214,7 +246,7 @@ export function useTransformerContext(
 
   return {
     // Reactive state (readonly to prevent external mutation)
-    context: readonly(context),
+    context: readonly(context) as Readonly<Ref<TransformerContext | null>>,
     isInitialized: readonly(isInitialized),
     eventCount: readonly(eventCount),
 
