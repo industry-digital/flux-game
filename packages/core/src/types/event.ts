@@ -6,7 +6,6 @@ import { RollResult } from '~/types/dice';
 import { SessionStatus } from '~/types/session';
 import { ShellDiff, ShellMutation } from '~/types/workbench';
 import { CurrencyTransaction } from '~/types/currency';
-import { NarrativeSequence } from '~/types/narrative';
 
 export type EventPayload = Record<string, any>;
 
@@ -489,9 +488,6 @@ export type PlaceBoundEnvelope = WorldEventEnvelopeBase & {
   placeId: PlaceURN;
 };
 
-/**
- * The server adds narrative to the WorldEvent before sending it to the client
- */
-export type WorldEvent = WorldEvent & {
-  narrative: string | NarrativeSequence;
+export type EnrichedWorldEvent = WorldEvent & {
+  narrative: any;
 };

@@ -14,7 +14,6 @@ import { createCombatLifecycle } from '~/worldkit/combat/session/combat-lifecycl
 import { createTurnManager } from '~/worldkit/combat/session/turn-manager';
 import { CombatPlanningDependencies } from '~/worldkit/combat/ai/deps';
 import { createCombatGameStateApi } from '~/worldkit/combat/session/game-state';
-import { WorldEvent } from '~/types/client';
 
 const uniqid = () => uniqidImpl(16, BASE62_CHARSET);
 
