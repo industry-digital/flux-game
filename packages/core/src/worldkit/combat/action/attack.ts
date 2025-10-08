@@ -168,6 +168,7 @@ export function createAttackMethod (
   } = deps;
 
   return (target?: ActorURN, trace: string = context.uniqid()): WorldEvent[] => {
+console.log(`combat: attack action: target=${target}`);
     const { declareError } = context;
     const allEvents: WorldEvent[] = [];
 
@@ -186,6 +187,7 @@ export function createAttackMethod (
       return allEvents;
     }
 
+console.log(`combat: attack action: combatant.target=${combatant.target}`);
     // Generate AI combat plan
     const plan = generateCombatPlanImpl(context, session, combatant, trace);
 

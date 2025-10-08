@@ -143,6 +143,7 @@ export function executeIntent(
   const command = deps.resolveIntent(context, actorId, intentText);
 
   if (!command) {
+    context.declareError(`No command found for intent: ${intentText}`);
     // Error already declared in resolveIntent
     return context;
   }

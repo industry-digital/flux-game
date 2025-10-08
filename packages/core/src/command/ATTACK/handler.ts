@@ -12,6 +12,7 @@ import { ActorURN } from '~/types/taxonomy';
 import { createCombatSessionApi } from '~/worldkit/combat/session/session';
 import { CombatCommand, Team } from '~/types/combat';
 import { generateCombatPlan } from '~/worldkit/combat/ai';
+import { executeCombatPlan } from '~/worldkit/combat/execution';
 
 export type AttackCommandArgs = {
   target: ActorURN;
@@ -48,25 +49,9 @@ export const attackReducer: PureReducer<TransformerContext, AttackCommand> = (co
     addCombatant(targetActor.id, Team.ALPHA);
   }
 
-  // TODO: Replace this logic with useIntentExecution
-  const { combatant, target, attack, defend } = useCombatant(actor.id);
-  const plan: CombatCommand[] = generateCombatPlan(context, session, combatant, command.id);
-
-  for (const cmd of plan) {
-    switch (cmd.type) {
-      case CommandType.TARGET:
-        target(cmd.args.target, command.id);
-        break;
-      case CommandType.ATTACK:
-        attack(targetActor.id, command.id);
-        break;
-      case CommandType.DEFEND:
-        defend(command.id);
-        break;
-    }
-  }
-
-  return context;
+  const combatantApi = useCombatant(actor.id);
+  const plan: CombatCommand[] = generateCombatPlan(context, session, combatantApi.combatant, command.id);
+  return executeCombatPlan(context, combatantApi, plan);
 };
 
 export const attackIntentParser: IntentParser<AttackCommand> = (
