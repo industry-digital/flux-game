@@ -1,6 +1,7 @@
-import { WorldEvent, WorldEventInput } from '~/types/event';
+import { WorldEventInput } from '~/types/event';
 import { PotentiallyImpureOperations } from '~/types/handler';
 import { uniqid as uniqidImpl, BASE62_CHARSET } from '~/lib/random';
+import { WorldEvent } from '~/types/event';
 
 export type CreateWorldEventDependencies = Pick<PotentiallyImpureOperations, 'timestamp' | 'uniqid'>;
 

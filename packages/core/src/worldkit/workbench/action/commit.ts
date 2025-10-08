@@ -3,10 +3,10 @@ import { ActorDidCommitShellMutations, EventType, WorldEvent } from '~/types/eve
 import { TransformerContext } from '~/types/handler';
 import { WorkbenchSession } from '~/types/workbench';
 import {
-  hasEnoughFunds,
-  getBalance,
-  createCurrencyTransaction,
-  executeCurrencyTransaction
+    hasEnoughFunds,
+    getBalance,
+    createCurrencyTransaction,
+    executeCurrencyTransaction
 } from '~/worldkit/entity/actor/wallet';
 import { CurrencyType, TransactionType } from '~/types/currency';
 import { calculateTotalCost } from '~/worldkit/workbench/cost';

@@ -100,6 +100,7 @@ export type WorldProjectionConsumer<W extends WorldProjection = WorldProjection>
 export type TransformerContext<W extends WorldProjection = WorldProjection> =
   & PotentiallyImpureOperations
   & ErrorDeclarationProducer
+  & ErrorDeclarationConsumer
   & EventDeclarationProducer
   & EventDeclarationConsumer
   & SchemaConsumer

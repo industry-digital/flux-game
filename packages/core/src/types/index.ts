@@ -321,10 +321,6 @@ export {
   EntityTransformer,
 } from './testing';
 
-export {
-  EnrichedWorldEvent,
-  WorldEventNarrativeDictionary,
-} from './client';
 
 export {
   Template,

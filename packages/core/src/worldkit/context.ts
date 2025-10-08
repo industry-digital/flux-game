@@ -102,6 +102,8 @@ export const createTransformerContext = (
     declaredErrors.push(executionError);
   };
 
+  const getDeclaredErrors = () => declaredErrors;
+
   const getDeclaredEvents = (pattern?: RegExp | EventType): WorldEvent[] => {
     if (!pattern) return declaredEvents;
     if (pattern instanceof RegExp) {
@@ -120,6 +122,8 @@ export const createTransformerContext = (
     schemaManager,
     declareEvent,
     declareError,
+    getDeclaredErrors,
+
     getDeclaredEvents,
     getDeclaredEventsByCommand,
 

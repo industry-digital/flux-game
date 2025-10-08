@@ -1,10 +1,10 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import {
-  initializeCombatantAttributes,
-  createCombatantApi,
-  createCombatantApiFactory,
-  MOVE_BY_DISTANCE,
-  MOVE_BY_AP,
+    initializeCombatantAttributes,
+    createCombatantApi,
+    createCombatantApiFactory,
+    MOVE_BY_DISTANCE,
+    MOVE_BY_AP,
 } from './combatant';
 import { useCombatScenario } from './testing/scenario';
 import { createTransformerContext } from '~/worldkit/context';

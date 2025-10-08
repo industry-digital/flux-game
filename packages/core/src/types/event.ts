@@ -492,6 +492,6 @@ export type PlaceBoundEnvelope = WorldEventEnvelopeBase & {
 /**
  * The server adds narrative to the WorldEvent before sending it to the client
  */
-export type EnrichedWorldEvent = WorldEvent & {
+export type WorldEvent = WorldEvent & {
   narrative: string | NarrativeSequence;
 };

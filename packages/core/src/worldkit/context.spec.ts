@@ -7,11 +7,11 @@
 
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import {
-  createTransformerContext,
-  createWorldProjection,
-  createPotentiallyImpureOperations,
-  DEFAULT_POTENTIALLY_IMPURE_OPERATIONS,
-  MapFunction
+    createTransformerContext,
+    createWorldProjection,
+    createPotentiallyImpureOperations,
+    DEFAULT_POTENTIALLY_IMPURE_OPERATIONS,
+    MapFunction
 } from './context';
 import { TransformerContext, WorldProjection, PotentiallyImpureOperations, ProfileResult } from '~/types/handler';
 import { EventType, WorldEvent, WorldEventInput } from '~/types/event';
