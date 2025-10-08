@@ -215,7 +215,7 @@ export function useCombatSimulator(
   const canStartSimulation = computed(() => {
     return simulationState.value === 'idle' &&
            transformerContext.isInitialized.value &&
-           scenario.availableScenarios.value.length > 0;
+           scenario.actorConfig.value.length >= 2;
   });
   const canPauseSimulation = computed(() => simulationState.value === 'active');
   const canResumeSimulation = computed(() => simulationState.value === 'paused');
@@ -273,22 +273,21 @@ export function useCombatSimulator(
   };
 
   /**
-   * Create actors from scenario data and add them to the world
+   * Create actors from setup data and add them to the world
    */
   const createActorsFromScenario = (): Actor[] => {
     if (!transformerContext.context.value) {
       throw new Error('Transformer context not initialized');
     }
 
-    // Use the first available scenario as default for now
-    const defaultScenario = scenario.availableScenarios.value[0];
-    if (!defaultScenario) {
-      throw new Error('No scenarios available');
+    const setupActors = scenario.actorConfig.value;
+    if (setupActors.length < 2) {
+      throw new Error('Need at least 2 actors to start combat');
     }
 
     const actors: Actor[] = [];
 
-    for (const actorData of defaultScenario.actors) {
+    for (const actorData of setupActors) {
       try {
         // ActorSetupData extends Actor, so we can use it directly
         const actor = deps.createActor({
@@ -329,9 +328,9 @@ export function useCombatSimulator(
       return false;
     }
 
-    const defaultScenario = scenario.availableScenarios.value[0];
-    if (!defaultScenario || defaultScenario.actors.length === 0) {
-      log.warn('Cannot start simulation: no actors available');
+    const setupActors = scenario.actorConfig.value;
+    if (setupActors.length < 2) {
+      log.warn('Cannot start simulation: need at least 2 actors');
       return false;
     }
 

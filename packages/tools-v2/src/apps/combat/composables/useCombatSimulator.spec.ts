@@ -74,7 +74,7 @@ describe('useCombatSimulator', () => {
 
         expect(simulator.isSimulationActive.value).toBe(false);
         expect(simulator.isSimulationPaused.value).toBe(false);
-        expect(simulator.canStartSimulation.value).toBe(true); // Context is initialized
+        expect(simulator.canStartSimulation.value).toBe(false); // No actors configured initially
         expect(simulator.canPauseSimulation.value).toBe(false);
         expect(simulator.canResumeSimulation.value).toBe(false);
         expect(simulator.canEndSimulation.value).toBe(false);
@@ -84,15 +84,15 @@ describe('useCombatSimulator', () => {
   });
 
   describe('simulation lifecycle', () => {
-    it('should not start simulation when no scenarios available', () => {
+    it('should not start simulation when no actors configured', () => {
       runWithContext(() => {
         const simulator = useCombatSimulator(mockConfig, transformerContext, mockDeps);
 
         const success = simulator.startSimulation();
 
         expect(success).toBe(false);
-        expect(simulator.simulationState.value).toBe('error'); // Failed to start due to no scenarios
-        expect(simulator.lastError.value).toBeTruthy();
+        expect(simulator.simulationState.value).toBe('idle'); // Stays idle when preconditions not met
+        expect(simulator.lastError.value).toBeNull(); // No error set for precondition failures
       });
     });
 

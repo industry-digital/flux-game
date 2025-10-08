@@ -21,21 +21,14 @@
         <!-- Session controls -->
         <button
           v-if="!session"
-          @click="handleStartSession"
-          class="combat-app__btn combat-app__btn--primary"
+          @click="handleBeginCombat"
+          class="combat-app__btn combat-app__btn--success"
+          :disabled="setupActors.length < 2"
         >
-          Start Combat
+          Begin Combat
         </button>
 
         <template v-else>
-          <button
-            v-if="isInSetupPhase"
-            @click="handleBeginCombat"
-            class="combat-app__btn combat-app__btn--success"
-            :disabled="combatantCount < 2"
-          >
-            Begin Combat
-          </button>
 
           <button
             v-if="isInActiveCombat"
@@ -107,31 +100,13 @@
       </Terminal>
     </div>
 
-    <!-- Setup screen (when no session or in setup phase) -->
-    <div v-else-if="!session || isInSetupPhase" class="combat-app__setup">
+    <!-- Setup screen (when no session) -->
+    <div v-else-if="!session" class="combat-app__setup">
       <div class="combat-app__setup-header">
         <h3>Combat Sandbox Setup</h3>
         <p>Configure combatants, weapons, and stats before starting combat.</p>
 
-        <!-- Scenario selection -->
-        <div class="combat-app__scenario-selection">
-          <label for="scenario-select">Choose Scenario:</label>
-          <select
-            id="scenario-select"
-            v-model="selectedScenario"
-            class="combat-app__scenario-select"
-            @change="handleScenarioChange"
-          >
-            <option value="">Custom Setup</option>
-            <option
-              v-for="scenario in availableScenarios"
-              :key="scenario.id"
-              :value="scenario.id"
-            >
-              {{ scenario.name }}
-            </option>
-          </select>
-        </div>
+        <!-- Scenario selection removed - now using persistent custom setup -->
       </div>
 
       <!-- Actor Setup Grid -->
@@ -195,13 +170,9 @@
 
       <!-- Setup Actions -->
       <div class="combat-app__setup-actions">
-        <button
-          @click="handleStartSession"
-          class="combat-app__btn combat-app__btn--primary"
-          :disabled="setupActors.length < 2"
-        >
-          Start Combat Session
-        </button>
+        <p class="combat-app__setup-hint">
+          Configure your combatants above, then click "Begin Combat" to start the battle.
+        </p>
       </div>
     </div>
   </div>
@@ -218,9 +189,6 @@ import { useTransformerContext } from './composables/useTransformerContext';
 import { SessionStatus, Team, TransformerContext, WorldEvent, executeIntent, NarrativeRecipient } from '@flux/core';
 import { Terminal, useTerminal, useVirtualizedList, useTheme, useLogger } from '@flux/ui';
 import { useNarration } from '../../composables/narrative';
-import type {
-  CombatScenario
-} from './types';
 
 const log = useLogger('CombatSimulator');
 
@@ -238,8 +206,9 @@ const {
 } = useCombatSession();
 
 const {
-  availableScenarios,
-  selectedScenario
+  actorConfig,
+  getBattlefieldConfig,
+  saveSetup
 } = useCombatScenario();
 
 const {
@@ -268,20 +237,12 @@ const terminal = useTerminal({
 // Narrative generation
 const narration = useNarration(transformerContext.context.value as TransformerContext);
 
-// Local state
-const setupActors = ref<any[]>([]); // Actors being configured in setup phase
+// Local state - initialize from localStorage or defaults
+const setupActors = ref<any[]>([]);
 
 // Computed properties
-const isInSetupPhase = computed(() => session.value?.phase === 'setup');
 const isInActiveCombat = computed(() => session.value?.status === SessionStatus.RUNNING);
 const isInPausedCombat = computed(() => session.value?.status === SessionStatus.PAUSED);
-
-const currentCombatants = computed(() => {
-  if (!session.value?.data.combatants) return [];
-  return Array.from(session.value.data.combatants.values());
-});
-
-const combatantCount = computed(() => currentCombatants.value.length);
 
 const currentActorId = computed(() => {
   if (!session.value?.data.rounds?.current?.turns?.current) return null;
@@ -349,22 +310,7 @@ const getCombatantName = (actorId: string): string => {
 
 // Note: getMockActor removed - no longer needed with new terminal UI
 
-const getScenario = (scenarioId: string): CombatScenario | undefined => {
-  return availableScenarios.value.find((s: any) => s.id === scenarioId);
-};
-
 // Setup phase methods
-const handleScenarioChange = () => {
-  if (selectedScenario.value) {
-    const scenario = getScenario(selectedScenario.value);
-    if (scenario) {
-      setupActors.value = [...scenario.actors];
-    }
-  } else {
-    // Reset to default actors for custom setup
-    setupActors.value = createDefaultActors();
-  }
-};
 
 const handleAddCombatant = (team: Team) => {
   if (getTeamActorCount(team) >= 3) return;
@@ -411,34 +357,23 @@ const handleToggleActorAI = (actorId: string, isAI: boolean) => {
   }
 };
 
-const handleStartSession = async () => {
+// handleStartSession removed - now handled directly in handleBeginCombat
+
+const handleBeginCombat = async () => {
   try {
     if (setupActors.value.length < 2) {
       log.warn('Need at least 2 combatants to start combat');
       return;
     }
 
-    // Create battlefield configuration
-    const battlefield = {
-      length: 300,
-      margin: 100,
-      cover: [],
-      width: 800,
-      height: 600,
-      gridSize: 40
-    };
+    // If no session exists, create it first
+    if (!session.value) {
+      // Get battlefield configuration from composable
+      const battlefield = getBattlefieldConfig();
+      await startSession(setupActors.value, battlefield);
+    }
 
-    await startSession(setupActors.value, battlefield);
-  } catch (error) {
-    log.error('Failed to start combat session:', error);
-    // TODO: Show error notification
-  }
-};
-
-const handleBeginCombat = async () => {
-  if (!session.value) return;
-
-  try {
+    // Now begin combat
     await beginCombatSession();
   } catch (error) {
     log.error('Failed to begin combat:', error);
@@ -527,10 +462,20 @@ watch(() => session.value?.log, () => {
   syncLogToTerminal();
 }, { deep: true });
 
+// Watch for setup actor changes and persist to localStorage
+watch(setupActors, (newActors) => {
+  saveSetup(newActors);
+}, { deep: true });
+
 onMounted(() => {
   document.addEventListener('keydown', handleKeydown);
-  // Initialize with default actors for setup
-  setupActors.value = createDefaultActors();
+  // Initialize with persisted actors or defaults
+  if (actorConfig.value.length > 0) {
+    setupActors.value = [...actorConfig.value];
+  } else {
+    setupActors.value = createDefaultActors();
+    saveSetup(setupActors.value); // Save defaults to localStorage
+  }
   // Sync any existing log entries to terminal
   syncLogToTerminal();
 });
@@ -836,6 +781,13 @@ onUnmounted(() => {
   justify-content: center;
   padding-top: 24px;
   border-top: 2px solid var(--color-border);
+}
+
+.combat-app__setup-hint {
+  margin: 0;
+  color: var(--color-text-secondary);
+  font-style: italic;
+  text-align: center;
 }
 
 .combat-app__scenario-selection {
