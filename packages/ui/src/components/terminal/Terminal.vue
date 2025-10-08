@@ -72,6 +72,16 @@ import { useTheme } from '../../infrastructure/theme/composables';
 import type { TerminalEntry, TerminalConfig } from './composables/useTerminal';
 import type { VirtualizationConfig } from './composables/useVirtualizedList';
 
+const formatTimestamp = (timestamp: number): string => {
+  const date = new Date(timestamp);
+  return date.toLocaleTimeString([], {
+    hour12: false,
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit'
+  });
+};
+
 interface Props {
   config?: TerminalConfig;
   virtualizationConfig?: VirtualizationConfig;
@@ -110,7 +120,7 @@ const terminalClasses = computed(() => [
   'terminal--virtualized'
 ]);
 
-const showTimestamps = computed(() => terminal.config.showTimestamps);
+const showTimestamps = computed(() => props.config?.showTimestamps);
 
 const visibleEntries = computed(() => virtualization.visibleItems.value);
 

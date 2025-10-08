@@ -1,5 +1,5 @@
 // Composables
-export { useTerminal, formatTimestamp } from './composables/useTerminal';
+export { useTerminal } from './composables/useTerminal';
 export { useVirtualizedList } from './composables/useVirtualizedList';
 
 // Component

@@ -8,12 +8,21 @@ export interface LoggerInterface {
 
 export type LoggerResolver = (context: string) => LoggerInterface;
 
-const createConsoleLogger = (context: string): LoggerInterface => ({
-  debug: (message: string, ...args: any[]) => console.debug(`[${context}] ${message}`, ...args),
-  info: (message: string, ...args: any[]) => console.info(`[${context}] ${message}`, ...args),
-  warn: (message: string, ...args: any[]) => console.warn(`[${context}] ${message}`, ...args),
-  error: (message: string, ...args: any[]) => console.error(`[${context}] ${message}`, ...args),
-});
+type ConsoleLike = {
+  debug: (message: string, ...args: any[]) => void;
+  info: (message: string, ...args: any[]) => void;
+  warn: (message: string, ...args: any[]) => void;
+  error: (message: string, ...args: any[]) => void;
+};
+
+const createConsoleLogger = (context: string, console: ConsoleLike = window.console ): LoggerInterface => {
+  return {
+    debug: (message: string, ...args: any[]) => console.debug(`[${context}] ${message}`, ...args),
+    info: (message: string, ...args: any[]) => console.info(`[${context}] ${message}`, ...args),
+    warn: (message: string, ...args: any[]) => console.warn(`[${context}] ${message}`, ...args),
+    error: (message: string, ...args: any[]) => console.error(`[${context}] ${message}`, ...args),
+  };
+};
 
 /**
  * Simple logger composable for UI package
