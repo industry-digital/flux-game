@@ -384,8 +384,9 @@ const battlefieldCombatants = computed(() => {
 
 // Methods
 const getCombatantName = (actorId: string): string => {
-  // TODO: Get actual actor name from context or store
-  return actorId.split(':').pop() || actorId;
+  // Get actor name from context or fallback to ID parsing
+  const actorName = context.value?.world?.actors?.[actorId]?.name;
+  return actorName || actorId.split(':').pop() || 'Unknown';
 };
 
 const getMockActor = (combatant: any) => {

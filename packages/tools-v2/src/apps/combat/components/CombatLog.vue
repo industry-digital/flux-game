@@ -45,7 +45,7 @@
       class="combat-log__container"
       @scroll="handleScroll"
     >
-      <CleanList
+      <div
         v-if="displayedEntries.length > 0"
         class="combat-log__list"
       >
@@ -97,7 +97,7 @@
             </div>
           </div>
         </div>
-      </CleanList>
+      </div>
 
       <!-- Empty state -->
       <div v-else class="combat-log__empty">
@@ -155,7 +155,7 @@
 
 <script setup lang="ts">
 import { ref, computed, watch, nextTick, onMounted, onUnmounted } from 'vue';
-import { CleanList, MonoText } from '@flux/ui';
+import { MonoText } from '@flux/ui';
 import type { CombatLogEntry } from '../types';
 
 interface Props {

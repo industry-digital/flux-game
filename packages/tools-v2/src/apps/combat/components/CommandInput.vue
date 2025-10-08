@@ -38,7 +38,7 @@
           class="command-input__suggestion"
           :class="{ 'command-input__suggestion--highlighted': index === selectedSuggestionIndex }"
         >
-          <CommandSyntax :command="suggestion.command" />
+          <CommandSyntax :command="parseCommandString(suggestion.command)" />
           <span class="command-input__suggestion-desc">{{ suggestion.description }}</span>
         </div>
       </div>
@@ -99,6 +99,23 @@ const inputRef = ref<HTMLInputElement>();
 const currentInput = ref('');
 const history = ref<string[]>([]);
 const selectedSuggestionIndex = ref(-1);
+
+// Helper function to parse command string into CommandSyntax format
+const parseCommandString = (commandStr: string) => {
+  const parts = commandStr.split(' ');
+  const intent = parts[0];
+  const args = [];
+
+  // Extract arguments in [brackets]
+  for (let i = 1; i < parts.length; i++) {
+    const part = parts[i];
+    if (part.startsWith('[') && part.endsWith(']')) {
+      args.push({ symbol: part.slice(1, -1) });
+    }
+  }
+
+  return { intent, args: args.length > 0 ? args : undefined };
+};
 
 // Command suggestions based on Universal Intent System
 const baseSuggestions: CommandSuggestion[] = [

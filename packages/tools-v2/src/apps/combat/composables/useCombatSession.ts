@@ -1,5 +1,5 @@
 import { ref } from 'vue';
-import { createCombatSessionApi, createTransformerContext } from '@flux/core';
+import { createCombatSessionApi, createTransformerContext, PlaceURN, WellKnownPlace } from '@flux/core';
 import type { CombatSession, CombatLogEntry, ActorSetupData } from '../types';
 
 // Global session state
@@ -7,7 +7,7 @@ const session = ref<CombatSession | null>(null);
 const sessionApi = ref<any>(null); // Will hold the CombatSessionApi
 const context = ref<any>(null); // Will hold the TransformerContext
 
-export function useCombatSession() {
+export function useCombatSession(location: PlaceURN = WellKnownPlace.ORIGIN) {
   const startSession = async (actors: ActorSetupData[], battlefield: any): Promise<void> => {
     // Create transformer context
     context.value = createTransformerContext();
@@ -18,7 +18,6 @@ export function useCombatSession() {
     });
 
     // Create combat session API
-    const location = 'flux:place:combat-sandbox' as any;
     sessionApi.value = createCombatSessionApi(
       context.value,
       location,

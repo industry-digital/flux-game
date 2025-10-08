@@ -10,6 +10,8 @@ import {
 } from '@flux/core';
 import type { ActorSetupData } from '../types';
 
+const ACTOR_NAMES = ['Alice', 'Bob', 'Charlie', 'Dave', 'Eve', 'Frank', 'George', 'Harry', 'Ivy', 'Jack', 'Liam', 'Mason', 'Noah', 'Oliver', 'Parker', 'Quinn', 'Ryan', 'Samuel', 'Thomas', 'William'];
+
 // Create properly typed weapon schemas using core utilities
 const createLongswordSchema = (): WeaponSchema => createWeaponSchema({
   urn: 'flux:schema:weapon:longsword' as any,
