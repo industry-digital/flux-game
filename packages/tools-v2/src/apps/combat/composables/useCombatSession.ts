@@ -50,9 +50,15 @@ export function useCombatSession(location: PlaceURN = WellKnownPlace.ORIGIN) {
       addLogEntry(event);
     });
 
-    // Update session phase
+    // Update session phase and status
     if (session.value) {
       session.value.phase = 'active' as any;
+      // Update the session with the latest data from sessionApi which should have the correct status
+      session.value = {
+        ...sessionApi.value.session,
+        phase: 'active' as any,
+        log: session.value.log
+      };
     }
   };
 
