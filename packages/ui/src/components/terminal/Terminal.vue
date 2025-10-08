@@ -12,7 +12,7 @@
     <div
       ref="viewportRef"
       class="terminal__viewport"
-      :style="{ height: `${viewportHeight}px` }"
+      :style="viewportHeight ? { height: `${viewportHeight}px` } : DEFAULT_VIEWPORT_STYLE"
       @scroll="handleScroll"
     >
       <!-- Virtual Content Container -->
@@ -65,12 +65,14 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, nextTick } from 'vue';
+import { ref, computed, onMounted, onUnmounted, nextTick } from 'vue';
 import { useTerminal } from './composables/useTerminal';
 import { useVirtualizedList } from './composables/useVirtualizedList';
 import { useTheme } from '../../infrastructure/theme/composables';
 import type { TerminalEntry, TerminalConfig } from './composables/useTerminal';
 import type { VirtualizationConfig } from './composables/useVirtualizedList';
+
+const DEFAULT_VIEWPORT_STYLE = { height: '100%' };
 
 const formatTimestamp = (timestamp: number): string => {
   const date = new Date(timestamp);
@@ -98,7 +100,6 @@ const props = withDefaults(defineProps<Props>(), {
   config: () => ({}),
   virtualizationConfig: () => ({}),
   themeName: 'dark',
-  viewportHeight: 400,
 });
 
 const emit = defineEmits<Emits>();
@@ -109,7 +110,7 @@ const viewportRef = ref<HTMLElement>();
 // Setup dependencies
 const theme = useTheme(props.themeName as any);
 const virtualization = useVirtualizedList<TerminalEntry>([], {
-  viewportHeight: props.viewportHeight,
+  viewportHeight: props.viewportHeight || 400, // Fallback for virtualization
   ...props.virtualizationConfig,
 });
 const terminal = useTerminal(props.config, virtualization, theme);
@@ -162,7 +163,7 @@ const getEntryClasses = (entry: TerminalEntry) => [
   }
 ];
 
-const getEntryStyle = (entry: TerminalEntry, index: number) => {
+const getEntryStyle = (_entry: TerminalEntry, index: number) => {
   const itemHeight = props.virtualizationConfig.itemHeight || 24;
 
   if (typeof itemHeight === 'number') {
@@ -181,6 +182,21 @@ onMounted(async () => {
   // Sync viewport dimensions
   if (viewportRef.value) {
     virtualization.containerHeight.value = viewportRef.value.clientHeight;
+
+    // If no fixed viewportHeight is provided, update virtualization when container resizes
+    if (!props.viewportHeight) {
+      const resizeObserver = new ResizeObserver((entries) => {
+        for (const entry of entries) {
+          virtualization.containerHeight.value = entry.contentRect.height;
+        }
+      });
+      resizeObserver.observe(viewportRef.value);
+
+      // Cleanup on unmount
+      onUnmounted(() => {
+        resizeObserver.disconnect();
+      });
+    }
   }
 
   // Emit terminal instance for parent access

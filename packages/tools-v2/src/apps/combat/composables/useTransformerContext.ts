@@ -1,6 +1,5 @@
-import { shallowRef, ref, computed, readonly, markRaw } from 'vue';
+import { ref, computed, readonly } from 'vue';
 import { useLogger } from '@flux/ui';
-import { createTransformerContext } from '@flux/core';
 import type {
   TransformerContext,
   WorldEvent,
@@ -14,12 +13,10 @@ import type { Ref, ComputedRef } from 'vue';
  */
 export type TransformerContextDependencies = {
   useLogger: typeof useLogger;
-  createTransformerContext: typeof createTransformerContext;
 };
 
 export const DEFAULT_TRANSFORMER_CONTEXT_DEPS: Readonly<TransformerContextDependencies> = Object.freeze({
   useLogger,
-  createTransformerContext,
 });
 
 /**
@@ -27,8 +24,7 @@ export const DEFAULT_TRANSFORMER_CONTEXT_DEPS: Readonly<TransformerContextDepend
  */
 export interface TransformerContextAPI {
   // Reactive state (readonly to prevent external mutation)
-  context: Readonly<Ref<TransformerContext | null>>;
-  isInitialized: Readonly<Ref<boolean>>;
+  isInitialized: ComputedRef<boolean>;
   eventCount: Readonly<Ref<number>>;
 
   // Computed world state
@@ -40,8 +36,6 @@ export interface TransformerContextAPI {
   placeIds: ComputedRef<PlaceURN[]>;
 
   // Actions
-  initializeContext: () => boolean;
-  resetContext: () => boolean;
   syncEventCount: () => number;
   declareEvent: (event: WorldEvent) => WorldEvent | null;
   declareError: (message: string, eventId?: string) => void;
@@ -54,21 +48,21 @@ export interface TransformerContextAPI {
 }
 
 /**
- * Transformer context management composable
+ * Reactive wrapper composable for TransformerContext
  *
- * Handles world state management, event tracking, and context lifecycle.
- * Provides reactive access to world state and event history.
+ * Provides reactive access to world state and event history for an existing context.
+ * Does NOT create or manage the context lifecycle - that's the caller's responsibility.
  *
- * Single Responsibility: TransformerContext lifecycle and world state management
+ * Single Responsibility: Reactive wrapper around existing TransformerContext
  */
 export function useTransformerContext(
+  context: Ref<TransformerContext>,
   deps: TransformerContextDependencies = DEFAULT_TRANSFORMER_CONTEXT_DEPS
 ): TransformerContextAPI {
   const log = deps.useLogger('useTransformerContext');
 
-  // Reactive state
-  const context = shallowRef<TransformerContext | null>(null);
-  const isInitialized = ref(false);
+  // Reactive state based on the passed context
+  const isInitialized = computed(() => !!context.value);
   const eventCount = ref(0);
 
   // Computed properties
@@ -85,39 +79,6 @@ export function useTransformerContext(
     Object.keys(places.value) as PlaceURN[]
   );
 
-  /**
-   * Initialize a new transformer context
-   */
-  const initializeContext = (): boolean => {
-    try {
-      log.debug('Initializing transformer context');
-
-      const newContext = deps.createTransformerContext();
-      // Keep core context non-reactive for in-place mutation performance
-      context.value = markRaw(newContext as unknown as TransformerContext);
-      isInitialized.value = true;
-      eventCount.value = 0;
-
-      log.info('Transformer context initialized successfully');
-      return true;
-    } catch (error) {
-      log.error('Failed to initialize transformer context:', error);
-      return false;
-    }
-  };
-
-  /**
-   * Reset the context to a fresh state
-   */
-  const resetContext = (): boolean => {
-    log.debug('Resetting transformer context');
-
-    context.value = null;
-    isInitialized.value = false;
-    eventCount.value = 0;
-
-    return initializeContext();
-  };
 
   /**
    * Get current event count and update reactive state
@@ -246,8 +207,7 @@ export function useTransformerContext(
 
   return {
     // Reactive state (readonly to prevent external mutation)
-    context: readonly(context) as Readonly<Ref<TransformerContext | null>>,
-    isInitialized: readonly(isInitialized),
+    isInitialized,
     eventCount: readonly(eventCount),
 
     // Computed world state
@@ -259,8 +219,6 @@ export function useTransformerContext(
     placeIds,
 
     // Actions
-    initializeContext,
-    resetContext,
     syncEventCount,
     declareEvent,
     declareError,

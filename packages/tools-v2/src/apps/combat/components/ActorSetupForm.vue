@@ -202,8 +202,22 @@ const handleStatChange = (stat: string, event: Event) => {
 };
 
 const handleWeaponChange = (event: Event) => {
+  console.log('[ActorSetupForm] handleWeaponChange called:', {
+    actorId: props.actor.id,
+    actorName: props.actor.name,
+    event: event.type
+  });
+
   const target = event.target as HTMLSelectElement;
+  console.log('[ActorSetupForm] Weapon selection changed:', {
+    actorId: props.actor.id,
+    oldWeaponUrn: props.actor.weaponUrn,
+    newWeaponUrn: target.value
+  });
+
   emit('weapon-change', props.actor.id, target.value);
+
+  console.log('[ActorSetupForm] weapon-change event emitted');
 };
 
 const handleSkillChange = (skillUrn: string, event: Event) => {

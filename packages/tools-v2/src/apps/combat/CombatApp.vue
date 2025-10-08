@@ -21,12 +21,12 @@
         <!-- Session controls -->
         <button
           v-if="!session"
-          @click="handleBeginCombat"
-          class="combat-app__btn combat-app__btn--success"
+            @click="handleBeginCombat"
+            class="combat-app__btn combat-app__btn--success"
           :disabled="setupActors.length < 2"
-        >
-          Begin Combat
-        </button>
+          >
+            Begin Combat
+          </button>
 
         <template v-else>
 
@@ -67,10 +67,8 @@
         :virtualization-config="{
           itemHeight: 24,
           overscan: 5,
-          viewportHeight: 600,
         }"
         theme-name="dark"
-        :viewport-height="600"
         @terminal-ready="handleTerminalReady"
         class="combat-terminal__main"
       >
@@ -81,7 +79,7 @@
             <span v-if="currentActorId" class="terminal-current-turn">
               Round {{ currentRound }} | {{ getCombatantName(currentActorId) }}'s Turn
             </span>
-          </div>
+            </div>
         </template>
 
         <template #footer>
@@ -89,16 +87,16 @@
             <div v-if="currentActorId" class="turn-indicator">
               ── {{ getCombatantName(currentActorId).toUpperCase() }}'S TURN ──
             </div>
-            <CommandInput
+          <CommandInput
               :placeholder="currentActorId ? `[${getCombatantName(currentActorId)}] > ` : '> '"
-              :disabled="!isInActiveCombat"
+            :disabled="!isInActiveCombat"
               class="terminal-command-input"
-              @command-submitted="handleCommand"
-            />
-          </div>
+            @command-submitted="handleCommand"
+          />
+        </div>
         </template>
       </Terminal>
-    </div>
+      </div>
 
     <!-- Setup screen (when no session) -->
     <div v-else-if="!session" class="combat-app__setup">
@@ -131,7 +129,7 @@
               :actor="actor"
               :available-weapons="availableWeapons"
               @update-stat="handleUpdateActorStat"
-              @update-weapon="handleUpdateActorWeapon"
+              @weapon-change="handleUpdateActorWeapon"
               @update-skill="handleUpdateActorSkill"
               @toggle-ai="handleToggleActorAI"
               @remove="handleRemoveCombatant"
@@ -159,7 +157,7 @@
               :actor="actor"
               :available-weapons="availableWeapons"
               @update-stat="handleUpdateActorStat"
-              @update-weapon="handleUpdateActorWeapon"
+              @weapon-change="handleUpdateActorWeapon"
               @update-skill="handleUpdateActorSkill"
               @toggle-ai="handleToggleActorAI"
               @remove="handleRemoveCombatant"
@@ -179,38 +177,52 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, onUnmounted, watch, h } from 'vue';
+import { ref, computed, onMounted, onUnmounted, watch, h, Ref } from 'vue';
 import CommandInput from './components/CommandInput.vue';
 import ActorSetupForm from './components/ActorSetupForm.vue';
 import { useCombatSession } from './composables/useCombatSession';
 import { useCombatScenario } from './composables/useCombatScenario';
 import { useActorSetup } from './composables/useActorSetup';
-import { useTransformerContext } from './composables/useTransformerContext';
-import { SessionStatus, Team, TransformerContext, WorldEvent, executeIntent, NarrativeRecipient } from '@flux/core';
+import { SessionStatus, Team, TransformerContext, WorldEvent, resolveIntent, executeCommand, NarrativeRecipient, ActorURN, createTransformerContext } from '@flux/core';
 import { Terminal, useTerminal, useVirtualizedList, useTheme, useLogger } from '@flux/ui';
 import { useNarration } from '../../composables/narrative';
 
 const log = useLogger('CombatSimulator');
 
-// Composables
-const transformerContext = useTransformerContext();
+// Create and own the TransformerContext
+const context = ref<TransformerContext>(createTransformerContext()) as Ref<TransformerContext>;
 
+// Create and own the session ID - single source of truth
+const sessionId = ref<string | null>(null);
+
+// Composables - pass the context and sessionId to those that need it
 const {
   session,
-  context,
   startSession,
   beginCombat: beginCombatSession,
   endSession,
   pauseSession,
   resumeSession
-} = useCombatSession();
+} = useCombatSession(context, sessionId);
+
+// Create a simple wrapper for the transformer context
+const transformerContext = {
+  context,
+  syncEventCount: () => 0, // Not needed since we're using the session context directly
+  eventCount: computed(() => context.value?.getDeclaredEvents()?.length || 0),
+  getEventsSince: (sinceCount: number) => {
+    const allEvents = context.value?.getDeclaredEvents() || [];
+    return allEvents.slice(sinceCount);
+  }
+};
 
 const {
   actorConfig,
-  getBattlefieldConfig,
-  saveSetup
+  battlefield,
+  saveSetup: saveSetup
 } = useCombatScenario();
 
+// Actor setup - use the main context
 const {
   availableWeapons,
   createDefaultActors,
@@ -219,7 +231,7 @@ const {
   updateActorSkill,
   toggleActorAI,
   createAdditionalActor
-} = useActorSetup();
+} = useActorSetup(context.value);
 
 // Terminal setup
 const theme = useTheme('dark');
@@ -269,11 +281,13 @@ const convertEventToTerminalEntries = (event: WorldEvent) => {
   try {
     // Generate narrative text using the core narrative system
     const narrativeText = narration.narrateEvent(event, 'flux:actor:observer' as NarrativeRecipient);
+    log.info('Generated narrative text:', narrativeText);
     terminal.print(`narrative-${event.id}`, narrativeText);
   } catch (error) {
     // Fallback to technical details if narrative generation fails
     log.warn(`Narrative generation failed for ${event.type}:`, error);
     const eventDetails = `${event.type}: ${JSON.stringify(event.payload || {})}`;
+    log.info('Using fallback event details:', eventDetails);
     terminal.print(`event-${event.id}`, eventDetails);
   }
 
@@ -285,24 +299,32 @@ const convertEventToTerminalEntries = (event: WorldEvent) => {
   ]);
 
   terminal.render(`battlefield-${event.id}`, battlefieldComponent);
+  log.info(`Added terminal entries for event: ${event.id} type=${event.type}`);
 };
 
 // Watch for new log entries and convert them to terminal entries
 const lastProcessedLogLength = ref(0);
 const syncLogToTerminal = () => {
-  if (!session.value?.log) return;
+  if (!session.value?.log) {
+    return;
+  }
 
   const currentLogLength = session.value.log.length;
+
   if (currentLogLength > lastProcessedLogLength.value) {
     // Process new entries
     const newEntries = session.value.log.slice(lastProcessedLogLength.value);
-    newEntries.forEach(convertEventToTerminalEntries);
+    newEntries.forEach((event) => {
+      convertEventToTerminalEntries(event);
+    });
     lastProcessedLogLength.value = currentLogLength;
+  } else {
+    log.info('syncLogToTerminal: No new events to process');
   }
 };
 
 // Methods
-const getCombatantName = (actorId: string): string => {
+const getCombatantName = (actorId: ActorURN): string => {
   // Get actor name from context or fallback to ID parsing
   const actorName = context.value?.world?.actors?.[actorId]?.name;
   return actorName || actorId.split(':').pop() || 'Unknown';
@@ -337,9 +359,27 @@ const handleUpdateActorStat = (actorId: string, stat: any, value: number) => {
 };
 
 const handleUpdateActorWeapon = (actorId: string, weaponUrn: string) => {
+  log.info('handleUpdateActorWeapon: Weapon change requested', { actorId, weaponUrn });
+
   const actor = setupActors.value.find(a => a.id === actorId);
   if (actor) {
+    log.info('handleUpdateActorWeapon: Actor found, current weapon state:', {
+      actorId,
+      currentWeaponUrn: actor.weaponUrn,
+      currentWeapon: actor.weapon,
+      hasWeapon: !!actor.weapon
+    });
+
     updateActorWeapon(actor, weaponUrn);
+
+    log.info('handleUpdateActorWeapon: After weapon update:', {
+      actorId,
+      newWeaponUrn: actor.weaponUrn,
+      newWeapon: actor.weapon,
+      hasWeapon: !!actor.weapon
+    });
+  } else {
+    log.warn('handleUpdateActorWeapon: Actor not found', { actorId });
   }
 };
 
@@ -366,15 +406,36 @@ const handleBeginCombat = async () => {
       return;
     }
 
+    // Debug: Log setupActors before session creation
+    log.info('handleBeginCombat: setupActors before session creation:', setupActors.value.map(actor => ({
+      id: actor.id,
+      name: actor.name,
+      weaponUrn: actor.weaponUrn,
+      weapon: actor.weapon,
+      hasWeapon: !!actor.weapon,
+      inventory: actor.inventory,
+      equipment: actor.equipment
+    })));
+
     // If no session exists, create it first
     if (!session.value) {
       // Get battlefield configuration from composable
-      const battlefield = getBattlefieldConfig();
-      await startSession(setupActors.value, battlefield);
+      await startSession(setupActors.value, battlefield, availableWeapons.value);
+
+      // Debug: Log actors in context immediately after startSession
+      if (context.value) {
+        log.info('handleBeginCombat: actors in context after startSession:', Object.entries(context.value.world.actors).map(([id, actor]) => ({
+          id,
+          name: actor.name,
+          inventory: actor.inventory,
+          equipment: actor.equipment
+        })));
+      }
     }
 
     // Now begin combat
     await beginCombatSession();
+
   } catch (error) {
     log.error('Failed to begin combat:', error);
   }
@@ -391,7 +452,16 @@ const resumeCombat = async () => {
 };
 
 const handleCommand = (intentText: string) => {
-  if (!session.value || !isInActiveCombat.value || !transformerContext.context.value) return;
+  log.info('handleCommand: Received command:', intentText);
+
+  if (!session.value || !isInActiveCombat.value || !transformerContext.context.value) {
+    log.warn('handleCommand: Preconditions not met', {
+      hasSession: !!session.value,
+      isInActiveCombat: isInActiveCombat.value,
+      hasContext: !!transformerContext.context.value
+    });
+    return;
+  }
 
   const actorId = currentActorId.value;
   if (!actorId) {
@@ -399,28 +469,101 @@ const handleCommand = (intentText: string) => {
     return;
   }
 
+  log.info('handleCommand: Executing intent', { actorId, intentText });
 
   try {
     // Use the properly designed transformer context (already markRaw'd)
     // No need for toRaw() since useTransformerContext handles this correctly
     const rawContext = transformerContext.context.value as TransformerContext;
     const errorsBefore = rawContext.getDeclaredErrors();
+    const eventCountBefore = transformerContext.eventCount.value;
 
-    // Use proper intent execution from @flux/core
-    executeIntent(rawContext, actorId, intentText);
+    const declaredEventsBefore = rawContext.getDeclaredEvents();
+
+    // Debug: Log existing errors
+    if (errorsBefore.length > 0) {
+      log.warn('handleCommand: Pre-existing errors found:', errorsBefore.length);
+      errorsBefore.forEach((error, index) => {
+        log.warn(`Pre-existing error ${index + 1}:`, {
+          message: error.error.message || 'No message',
+          error: error.error || error,
+          fullError: error
+        });
+      });
+    }
+
+    // Debug: Log available actors in the context
+    const availableActors = Object.keys(rawContext.world.actors);
+    const actorNames = Object.entries(rawContext.world.actors).map(([id, actor]) => ({
+      id,
+      name: actor.name || 'No name'
+    }));
+    log.info('handleCommand: Pre-execution state', {
+      errorsBefore: errorsBefore.length,
+      eventCountBefore,
+      declaredEventsBefore: declaredEventsBefore.length,
+      availableActors,
+      actorNames,
+      currentActorId: actorId,
+      intentText
+    });
+
+    // Resolve intent to command first
+    const command = resolveIntent(rawContext, actorId, intentText);
+
+    if (command && sessionId.value) {
+      // Add session ID to prevent duplicate session creation
+      command.session = sessionId.value as any;
+    }
+
+    if (command) {
+      // Execute the command with session ID
+      executeCommand(rawContext, command);
+    } else {
+      log.warn('No command resolved for intent:', intentText);
+    }
 
     // The context is mutated in-place by @flux/core, but we need to sync event count
     transformerContext.syncEventCount();
 
-    const errorsAfter = rawContext.getDeclaredErrors();
+    const declaredEventsAfter = rawContext.getDeclaredEvents();
 
-    // Check for new errors that occurred during intent execution
-    if (errorsAfter.length > errorsBefore.length) {
-      const newErrors = errorsAfter.slice(errorsBefore.length);
-      newErrors.forEach(error => {
-        log.error('Intent execution error:', error.error || error);
-      });
+    log.info('handleCommand: Detailed event analysis:', {
+      declaredEventsBefore: declaredEventsBefore.length,
+      declaredEventsAfter: declaredEventsAfter.length,
+      beforeEventIds: declaredEventsBefore.map(e => e.id),
+      afterEventIds: declaredEventsAfter.map(e => e.id),
+      potentialNewEvents: declaredEventsAfter.slice(declaredEventsBefore.length).map(e => ({ id: e.id, type: e.type }))
+    });
+
+    // Debug: Check what sessions are registered in the world context
+    const worldSessions = Object.keys(rawContext.world.sessions || {});
+    const worldPlaces = Object.keys(rawContext.world.places || {});
+    log.info('handleCommand: World sessions debug:', {
+      sessionCount: worldSessions.length,
+      sessionIds: worldSessions,
+      currentSessionId: session.value?.id,
+      sessionInWorld: session.value?.id ? !!rawContext.world.sessions[session.value.id] : false,
+      worldActorCount: Object.keys(rawContext.world.actors || {}).length,
+      worldPlaceCount: worldPlaces.length,
+      worldPlaceIds: worldPlaces,
+      hasOriginPlace: !!rawContext.world.places['flux:place:origin'],
+      actorLocations: Object.values(rawContext.world.actors || {}).map(a => ({ id: a.id, name: a.name, location: a.location }))
+    });
+
+    // Check if new events were generated
+
+    // Get new events from transformer context and add them to session log
+    if (declaredEventsAfter.length > declaredEventsBefore.length) {
+      const newEvents = declaredEventsAfter.slice(declaredEventsBefore.length);
+
+      if (session.value && newEvents.length > 0) {
+        session.value.log = [...session.value.log, ...newEvents];
+      }
     }
+
+    syncLogToTerminal();
+
   } catch (error) {
     log.error('Failed to execute intent:', error);
   }
@@ -458,7 +601,11 @@ const handleKeydown = (event: KeyboardEvent) => {
 };
 
 // Watch for log changes and sync to terminal
-watch(() => session.value?.log, () => {
+watch(() => session.value?.log, (newLog, oldLog) => {
+  log.info('watch: Session log changed', {
+    newLogLength: newLog?.length || 0,
+    oldLogLength: oldLog?.length || 0
+  });
   syncLogToTerminal();
 }, { deep: true });
 
@@ -473,11 +620,19 @@ onMounted(() => {
   if (actorConfig.value.length > 0) {
     setupActors.value = [...actorConfig.value];
   } else {
-    setupActors.value = createDefaultActors();
+  setupActors.value = createDefaultActors();
     saveSetup(setupActors.value); // Save defaults to localStorage
   }
   // Sync any existing log entries to terminal
+  log.info('onMounted: Initial sync to terminal');
   syncLogToTerminal();
+
+  // Log initial state
+  log.info('onMounted: Initial state', {
+    hasSession: !!session.value,
+    hasContext: !!transformerContext.context.value,
+    eventCount: transformerContext.eventCount.value
+  });
 });
 
 onUnmounted(() => {
@@ -831,6 +986,69 @@ onUnmounted(() => {
   color: var(--color-text-secondary);
   font-size: 0.875rem;
   line-height: 1.4;
+}
+
+/* Terminal layout */
+.combat-terminal {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0; /* Allow flex child to shrink */
+  overflow: hidden;
+}
+
+.combat-terminal__main {
+  flex: 1;
+  min-height: 0; /* Allow flex child to shrink */
+}
+
+/* Terminal styling */
+.terminal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 16px;
+  background: rgba(0, 0, 0, 0.2);
+  border-bottom: 1px solid var(--color-border);
+  font-family: 'Inconsolata', 'Courier New', monospace;
+  font-size: 12px;
+  color: var(--color-text-secondary);
+}
+
+.terminal-title {
+  font-weight: bold;
+  color: var(--color-success);
+}
+
+.terminal-session {
+  color: var(--color-text-secondary);
+}
+
+.terminal-current-turn {
+  color: var(--color-warning);
+  font-weight: bold;
+}
+
+.terminal-input {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 12px 16px;
+  background: rgba(0, 0, 0, 0.3);
+  border-top: 1px solid var(--color-border);
+}
+
+.turn-indicator {
+  font-family: 'Inconsolata', 'Courier New', monospace;
+  font-size: 11px;
+  color: var(--color-warning);
+  text-align: center;
+  font-weight: bold;
+  letter-spacing: 1px;
+}
+
+.terminal-command-input {
+  width: 100%;
 }
 
 /* Responsive design */

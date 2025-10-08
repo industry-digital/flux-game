@@ -21,6 +21,7 @@ export type AttackCommandArgs = {
 export type AttackCommand =ActorCommand<CommandType.ATTACK, AttackCommandArgs>;
 
 export const attackReducer: PureReducer<TransformerContext, AttackCommand> = (context, command) => {
+  console.log('🎯 ATTACK REDUCER CALLED:', { actor: command.actor, target: command.args.target, session: command.session });
   const { declareError } = context;
   const { actors } = context.world;
   const targetActor = actors[command.args.target!];

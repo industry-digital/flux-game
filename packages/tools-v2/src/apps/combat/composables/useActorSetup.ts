@@ -6,9 +6,11 @@ import {
   Stat,
   Team,
   createWeaponSchema,
-  type WeaponSchema
+  type WeaponSchema,
+  TransformerContext
 } from '@flux/core';
 import type { ActorSetupData } from '../types';
+import { useActorEquipment } from './useActorEquipment';
 
 // Removed unused ACTOR_NAMES constant
 
@@ -60,8 +62,9 @@ const mockWeapons: WeaponSchema[] = [
   createDaggerSchema()
 ];
 
-export function useActorSetup() {
+export function useActorSetup(context: TransformerContext) {
   const availableWeapons = ref(mockWeapons);
+  const equipment = useActorEquipment(context);
 
   const createDefaultActors = (): ActorSetupData[] => {
     // Create Alice (Team Alpha, not removable)
@@ -87,22 +90,28 @@ export function useActorSetup() {
       'flux:skill:evasion': { rank: 2, xp: 0, pxp: 0 }
     };
 
-    return [
-      {
-        ...alice,
-        team: Team.ALPHA,
-        isAI: false,
-        weaponUrn: mockWeapons[0].urn, // Longsword
-        canRemove: false
-      },
-      {
-        ...bob,
-        team: Team.BRAVO,
-        isAI: true,
-        weaponUrn: mockWeapons[1].urn, // Bow
-        canRemove: false
-      }
-    ];
+    // Create ActorSetupData objects first
+    const aliceSetup: ActorSetupData = {
+      ...alice,
+      team: Team.ALPHA,
+      isAI: false,
+      weaponUrn: mockWeapons[0].urn, // Longsword
+      canRemove: false
+    };
+
+    const bobSetup: ActorSetupData = {
+      ...bob,
+      team: Team.BRAVO,
+      isAI: true,
+      weaponUrn: mockWeapons[1].urn, // Bow
+      canRemove: false
+    };
+
+    // Equip weapons properly
+    equipment.equipWeapon(aliceSetup, mockWeapons[0]); // Longsword
+    equipment.equipWeapon(bobSetup, mockWeapons[1]);   // Bow
+
+    return [aliceSetup, bobSetup];
   };
 
   const updateActorStat = (actor: ActorSetupData, stat: Stat, value: number): void => {
@@ -111,7 +120,7 @@ export function useActorSetup() {
   };
 
   const updateActorWeapon = (actor: ActorSetupData, weaponUrn: string): void => {
-    actor.weaponUrn = weaponUrn;
+    equipment.updateActorWeapon(actor, weaponUrn, availableWeapons.value);
   };
 
   const updateActorSkill = (actor: ActorSetupData, skillUrn: string, rank: number): void => {
@@ -138,13 +147,19 @@ export function useActorSetup() {
       'flux:skill:evasion': { rank: 1, xp: 0, pxp: 0 }
     };
 
-    return {
+    // Create ActorSetupData object first
+    const actorSetup: ActorSetupData = {
       ...actor,
       team,
       isAI: true,
       weaponUrn: mockWeapons[2].urn, // Dagger
       canRemove: true
     };
+
+    // Equip weapon properly
+    equipment.equipWeapon(actorSetup, mockWeapons[2]); // Dagger
+
+    return actorSetup;
   };
 
   return {

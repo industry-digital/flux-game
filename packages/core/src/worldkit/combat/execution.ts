@@ -18,6 +18,10 @@ export const executeCombatPlan = (
 
   for (const command of plan) {
     switch (command.type) {
+      case CommandType.ATTACK: {
+        events.push(...combatant.attack(command.args.target, command.id));
+        break;
+      }
       case CommandType.TARGET: {
         events.push(...combatant.target(command.args.target, command.id));
         break;
@@ -40,10 +44,6 @@ export const executeCombatPlan = (
       }
       case CommandType.STRIKE: {
         events.push(...combatant.strike(command.args.target, command.id));
-        break;
-      }
-      default: {
-        console.warn(`Unhandled combat command type: ${command.type}`);
         break;
       }
     }

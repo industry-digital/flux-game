@@ -26,14 +26,17 @@ export enum CombatPhase {
 }
 
 /**
- * Actor setup data for the setup phase (extends core Actor)
+ * Actor setup data for the setup phase (strict superset of core Actor)
+ * Contains all Actor properties plus UI-specific setup properties
  */
-export type ActorSetupData = Actor & {
-  team: Team;
+export interface ActorSetupData extends Actor {
+  // UI-specific setup properties
+  team: string | Team;
   isAI: boolean;
-  weaponUrn: string;
+  weaponUrn?: string;
   canRemove: boolean; // Alice and Bob cannot be removed
-};
+  weapon?: any; // Currently equipped weapon item
+}
 
 /**
  * Extended combat session for UI purposes

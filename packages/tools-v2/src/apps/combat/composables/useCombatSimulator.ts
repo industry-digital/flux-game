@@ -2,7 +2,6 @@ import { ref, computed, readonly, watch, type Ref, type ComputedRef } from 'vue'
 import { useLogger } from '@flux/ui';
 import { useCombatLog } from './useCombatLog';
 import { useCombatScenario } from './useCombatScenario';
-import { useTransformerContext } from './useTransformerContext';
 import { useCombatAI, type AITimingConfig } from './useCombatAI';
 import {
   type CombatSession as CoreCombatSession,
@@ -116,8 +115,8 @@ export interface CombatSimulatorAPI {
  * Single Responsibility: Combat simulation orchestration and lifecycle management
  */
 export function useCombatSimulator(
+  context: Ref<TransformerContext>,
   config: CombatSimulationConfig,
-  transformerContext: ReturnType<typeof useTransformerContext>,
   deps: CombatSimulatorDependencies = DEFAULT_COMBAT_SIMULATOR_DEPS
 ): CombatSimulatorAPI {
   const log = deps.useLogger('useCombatSimulator');
@@ -141,17 +140,17 @@ export function useCombatSimulator(
     action: () => T,
     onSuccess?: (result: T, events: WorldEvent[]) => void
   ): { success: boolean; result?: T; events: WorldEvent[] } => {
-    if (!transformerContext.context.value) {
+    if (!context.value) {
       return { success: false, events: [] };
     }
 
     try {
-      const context = transformerContext.context.value;
-      const beforeCount = context.getDeclaredEvents().length;
+      const transformerContext = context.value;
+      const beforeCount = transformerContext.getDeclaredEvents().length;
 
       const result = action();
 
-      const allEvents = context.getDeclaredEvents();
+      const allEvents = transformerContext.getDeclaredEvents();
       const newEvents = allEvents.slice(beforeCount);
 
       if (newEvents.length > 0) {
@@ -177,11 +176,11 @@ export function useCombatSimulator(
 
   // Initialize AI composable when we have a session
   const combatAI = computed(() => {
-    if (!transformerContext.context.value || !currentSession.value) {
+    if (!context.value || !currentSession.value) {
       return null;
     }
     return deps.useCombatAI(
-      transformerContext.context as any, // Cast to bypass readonly
+      context as any, // Cast to bypass readonly
       currentSession,
       config.aiTiming
     );
@@ -214,7 +213,7 @@ export function useCombatSimulator(
   const isSimulationPaused = computed(() => simulationState.value === 'paused');
   const canStartSimulation = computed(() => {
     return simulationState.value === 'idle' &&
-           transformerContext.isInitialized.value &&
+           !!context.value &&
            scenario.actorConfig.value.length >= 2;
   });
   const canPauseSimulation = computed(() => simulationState.value === 'active');
@@ -230,7 +229,7 @@ export function useCombatSimulator(
 
   const aliveCombatants = computed(() => {
     return activeCombatants.value.filter(combatant => {
-      const actor = transformerContext.getActor(combatant.actorId);
+      const actor = context.value?.world.actors[combatant.actorId];
       return actor ? deps.isActorAlive(actor) : false;
     });
   });
@@ -256,19 +255,13 @@ export function useCombatSimulator(
    * Initialize the transformer context
    */
   const initializeContext = (): boolean => {
-    if (transformerContext.isInitialized.value) {
-      log.debug('Transformer context already initialized');
-      return true;
-    }
-
-    const success = transformerContext.initializeContext();
-    if (!success) {
-      lastError.value = 'Failed to initialize transformer context';
+    if (!context.value) {
+      lastError.value = 'No transformer context provided';
       simulationState.value = 'error';
       return false;
     }
 
-    log.info('Transformer context initialized');
+    log.debug('Transformer context is ready');
     return true;
   };
 
@@ -276,7 +269,7 @@ export function useCombatSimulator(
    * Create actors from setup data and add them to the world
    */
   const createActorsFromScenario = (): Actor[] => {
-    if (!transformerContext.context.value) {
+    if (!context.value) {
       throw new Error('Transformer context not initialized');
     }
 
@@ -305,7 +298,7 @@ export function useCombatSimulator(
         });
 
         // Add to transformer context
-        transformerContext.addActor(actor);
+        context.value!.world.actors[actor.id] = actor;
         actors.push(actor);
 
         log.debug('Created actor:', { id: actor.id, name: actor.name });
@@ -360,7 +353,7 @@ export function useCombatSimulator(
 
       // Create combat session
       const api = deps.createCombatSessionApi(
-        transformerContext.context.value! as TransformerContext,
+        context.value! as TransformerContext,
         config.location,
         config.sessionId
       );
@@ -530,8 +523,7 @@ export function useCombatSimulator(
     lastError.value = null;
     // currentTurn and currentRound are computed, will be 0 when session is null
 
-    // Reset transformer context
-    transformerContext.resetContext();
+    // Note: We don't reset the transformer context - that's owned by the caller
 
     // Clear combat log
     combatLog.clearLog();
@@ -585,23 +577,23 @@ export function useCombatSimulator(
       return [];
     }
 
-    if (!transformerContext.context.value) {
+    if (!context.value) {
       log.warn('Cannot execute command: no transformer context');
       return [];
     }
 
     // Use synchronous event capture since flux/core is completely synchronous
-    const context = transformerContext.context.value! as TransformerContext;
+    const transformerContext = context.value! as TransformerContext;
     const actorId = currentTurnActor.value!;
 
     try {
       // Compute event delta without stubbing declareEvent
-      const beforeCount = context.getDeclaredEvents().length;
+      const beforeCount = transformerContext.getDeclaredEvents().length;
 
       // Execute raw intent (resolve + execute); mutates context in-place
-      deps.executeIntent(context as any, actorId, intentText);
+      deps.executeIntent(transformerContext as any, actorId, intentText);
 
-      const allEvents = context.getDeclaredEvents();
+      const allEvents = transformerContext.getDeclaredEvents();
       const newEvents = allEvents.slice(beforeCount);
 
       if (newEvents.length > 0) {
