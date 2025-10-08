@@ -1,13 +1,24 @@
-import { ref } from 'vue';
+import { Ref, ref } from 'vue';
 import { createCombatSessionApi, createTransformerContext, PlaceURN, WellKnownPlace } from '@flux/core';
-import type { CombatSession, CombatLogEntry, ActorSetupData } from '../types';
+import type { CombatSession, ActorSetupData } from '../types';
 
 // Global session state
 const session = ref<CombatSession | null>(null);
 const sessionApi = ref<any>(null); // Will hold the CombatSessionApi
 const context = ref<any>(null); // Will hold the TransformerContext
 
-export function useCombatSession(location: PlaceURN = WellKnownPlace.ORIGIN) {
+export type CombatSessionAPI = {
+  session: Ref<CombatSession | null>;
+  core: Ref<ReturnType<typeof createCombatSessionApi>>;
+  context: Ref<any>;
+  startSession: (actors: ActorSetupData[], battlefield: any) => Promise<void>;
+  beginCombat: () => Promise<void>;
+  endSession: () => Promise<void>;
+  pauseSession: () => Promise<void>;
+  resumeSession: () => Promise<void>;
+};
+
+export function useCombatSession(location: PlaceURN = WellKnownPlace.ORIGIN): CombatSessionAPI {
   const startSession = async (actors: ActorSetupData[], battlefield: any): Promise<void> => {
     // Create transformer context
     context.value = createTransformerContext();
@@ -42,14 +53,6 @@ export function useCombatSession(location: PlaceURN = WellKnownPlace.ORIGIN) {
   const beginCombat = async (): Promise<void> => {
     if (!sessionApi.value) return;
 
-    // Start combat using the core API
-    const events = sessionApi.value.startCombat();
-
-    // Add events to log
-    events.forEach((event: any) => {
-      addLogEntry(event);
-    });
-
     // Update session phase and status
     if (session.value) {
       session.value.phase = 'active' as any;
@@ -63,13 +66,6 @@ export function useCombatSession(location: PlaceURN = WellKnownPlace.ORIGIN) {
   };
 
   const endSession = async (): Promise<void> => {
-    if (sessionApi.value) {
-      const events = sessionApi.value.endCombat('user-ended-session');
-      events.forEach((event: any) => {
-        addLogEntry(event);
-      });
-    }
-
     session.value = null;
     sessionApi.value = null;
     context.value = null;
@@ -87,28 +83,14 @@ export function useCombatSession(location: PlaceURN = WellKnownPlace.ORIGIN) {
     }
   };
 
-  // Note: executeCommand removed - use @flux/core executeIntent instead
-
-  const addLogEntry = (entry: CombatLogEntry): void => {
-    if (!session.value) return;
-    session.value.log.push(entry);
-  };
-
-  const clearLog = (): void => {
-    if (!session.value) return;
-    session.value.log = [];
-  };
-
   return {
     session,
-    sessionApi,
+    core: sessionApi,
     context,
     startSession,
     beginCombat,
     endSession,
     pauseSession,
     resumeSession,
-    addLogEntry,
-    clearLog
   };
 }

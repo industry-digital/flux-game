@@ -140,23 +140,7 @@ export function useCombatLog(maxEntries: number = 1000) {
 /**
  * Categorize events for better filtering and display
  */
-function categorizeEvent(event: WorldEvent): WorldEvent['type'] {
-  const type = event.type.toLowerCase();
-
-  if (type.includes('damage') || type.includes('hit') || type.includes('die')) {
-    return 'damage';
-  }
-
-  if (type.includes('turn') || type.includes('initiative')) {
-    return 'turn';
-  }
-
-  if (type.includes('attack') || type.includes('defend') || type.includes('move')) {
-    return 'action';
-  }
-
-  return 'system';
-}
+const categorizeEvent = (event: WorldEvent): WorldEvent['type']  => event?.type;
 
 /**
  * Generate human-readable narrative for events

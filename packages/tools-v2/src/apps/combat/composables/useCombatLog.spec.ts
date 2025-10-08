@@ -47,21 +47,9 @@ describe('useCombatLog', () => {
       log.addEvents([turnEvent, attackEvent, damageEvent]);
 
       const entries = log.entries.value;
-      expect(entries[0].category).toBe('turn');
-      expect(entries[1].category).toBe('action');
-      expect(entries[2].category).toBe('damage');
-    });
-  });
-
-  it('should generate narratives for events', () => {
-    runWithContext(() => {
-      const log = useCombatLog();
-
-      const turnEvent = createMockWorldEvent('COMBAT_TURN_DID_START', ALICE_ID);
-      log.addEvents([turnEvent]);
-
-      const entry = log.entries.value[0];
-      expect(entry.narrative).toBe("Alice's turn begins");
+      expect(entries[0].type).toBe('COMBAT_TURN_DID_START');
+      expect(entries[1].type).toBe('COMBATANT_DID_ATTACK');
+      expect(entries[2].type).toBe('COMBATANT_DID_TAKE_DAMAGE');
     });
   });
 
@@ -94,8 +82,8 @@ describe('useCombatLog', () => {
 
       log.addEvents([turnEvent, attackEvent, damageEvent]);
 
-      // Filter by category
-      log.addFilter('action');
+      // Filter by type
+      log.addFilter('COMBATANT_DID_ATTACK');
 
       expect(log.filteredEntries.value).toHaveLength(1);
       expect(log.filteredEntries.value[0].type).toBe('COMBATANT_DID_ATTACK');

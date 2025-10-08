@@ -88,8 +88,6 @@ export interface CombatSimulatorAPI {
   aliveCombatants: ComputedRef<any[]>;
   currentTurnActor: ComputedRef<string | null>;
 
-  // Domain composables are internal - not exposed to consumers
-
   // Simulation control
   startSimulation: () => boolean;
   advanceTurn: () => boolean;

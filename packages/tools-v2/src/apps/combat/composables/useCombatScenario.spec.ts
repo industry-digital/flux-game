@@ -1,237 +1,260 @@
-import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
-import { nextTick, ref } from 'vue';
+import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { createComposableTestSuite } from '~/testing';
-import { ALICE_ID, BOB_ID } from '../testing';
-import { useCombatScenario, type CombatScenarioDependencies } from './useCombatScenario';
-import type { CombatScenarioActorData, CombatScenarioData } from '../types';
+import { useCombatScenario } from './useCombatScenario';
+import type { CombatScenario } from '../types';
 
 describe('useCombatScenario', () => {
   const { setup, teardown, runWithContext } = createComposableTestSuite();
 
-  beforeEach(setup);
+  beforeEach(() => {
+    setup();
+    // Reset scenario state for each test since it's module-level
+    const scenario = useCombatScenario();
+    // Clear and re-add default scenarios
+    scenario.availableScenarios.value = [
+      {
+        id: 'duel',
+        name: 'Simple Duel',
+        description: 'Two combatants face off in a basic arena',
+        battlefield: {
+          length: 300,
+          margin: 100,
+          cover: [],
+          width: 800,
+          height: 600,
+          gridSize: 40
+        },
+        actors: [
+          {
+            id: 'actor:alice',
+            name: 'Alice',
+            team: 'ALPHA' as any,
+            isAI: false,
+            weaponUrn: 'flux:schema:weapon:longsword',
+            canRemove: false
+          } as any,
+          {
+            id: 'actor:bob',
+            name: 'Bob',
+            team: 'BETA' as any,
+            isAI: true,
+            weaponUrn: 'flux:schema:weapon:bow',
+            canRemove: false
+          } as any
+        ]
+      },
+      {
+        id: 'squad-battle',
+        name: 'Squad Battle',
+        description: 'Two teams of three combatants each',
+        battlefield: {
+          length: 400,
+          margin: 100,
+          cover: [],
+          width: 1000,
+          height: 800,
+          gridSize: 50
+        },
+        actors: []
+      }
+    ];
+    scenario.selectedScenario.value = '';
+  });
+
   afterEach(teardown);
 
-  // Create mock dependencies for each test
-  const createMockDeps = (): CombatScenarioDependencies => {
-    const mockStorage = ref<CombatScenarioData>({
-      actors: {
-        [ALICE_ID]: {
-          stats: { pow: 10, fin: 10, res: 10, per: 10 },
-          aiControlled: false,
-          weapon: 'flux:schema:weapon:longsword' as any,
-          skills: { 'flux:skill:evasion': 0, 'flux:skill:weapon:melee': 0 }
-        },
-        [BOB_ID]: {
-          stats: { pow: 10, fin: 10, res: 10 },
-          aiControlled: true,
-          weapon: 'flux:schema:weapon:longsword' as any,
-          skills: { 'flux:skill:evasion': 0, 'flux:skill:weapon:melee': 0 }
-        }
-      }
+  describe('initialization', () => {
+    it('should initialize with predefined scenarios', () => {
+      runWithContext(() => {
+        const scenario = useCombatScenario();
+
+        expect(scenario.availableScenarios.value).toHaveLength(2);
+        const scenarioIds = scenario.availableScenarios.value.map(s => s.id);
+        expect(scenarioIds).toContain('duel');
+        expect(scenarioIds).toContain('squad-battle');
+        expect(scenario.selectedScenario.value).toBe('');
+      });
     });
 
-    const mockSetStorage = vi.fn((newValue: CombatScenarioData) => {
-      mockStorage.value = newValue;
-    });
+    it('should provide scenario details', () => {
+      runWithContext(() => {
+        const scenario = useCombatScenario();
 
-    return {
-      useLocalStorage: vi.fn(() => [mockStorage, mockSetStorage]) as any,
-      useLogger: vi.fn(() => ({
-        info: vi.fn(),
-        debug: vi.fn(),
-        warn: vi.fn(),
-        error: vi.fn(),
-        child: vi.fn().mockReturnThis(),
-      })),
-      setTimeout: vi.fn((_callback: () => void, _delay: number) => {
-        // Don't execute callback immediately - let the test control timing
-        return 'mock-timeout' as any;
-      }),
-      clearTimeout: vi.fn()
-    };
-  };
-
-  it('should initialize with default scenario', () => {
-    runWithContext(() => {
-      const mockDeps = createMockDeps();
-      const scenario = useCombatScenario('test-scenario', mockDeps);
-
-      expect(scenario.isLoaded.value).toBe(true);
-      expect(scenario.actorCount.value).toBe(2);
-      expect(scenario.hasActor(ALICE_ID)).toBe(true);
-      expect(scenario.hasActor(BOB_ID)).toBe(true);
-      expect(scenario.isDirty.value).toBe(false);
+        const duelScenario = scenario.availableScenarios.value.find(s => s.id === 'duel');
+        expect(duelScenario).toBeDefined();
+        expect(duelScenario!.name).toBe('Simple Duel');
+        expect(duelScenario!.description).toBe('Two combatants face off in a basic arena');
+        expect(duelScenario!.battlefield).toBeDefined();
+        expect(duelScenario!.actors).toHaveLength(2);
+      });
     });
   });
 
-  it('should provide actor IDs and count', () => {
-    runWithContext(() => {
-      const mockDeps = createMockDeps();
-      const scenario = useCombatScenario('test-scenario', mockDeps);
+  describe('scenario loading', () => {
+    it('should load existing scenario by ID', async () => {
+      runWithContext(async () => {
+        const scenario = useCombatScenario();
 
-      expect(scenario.actorIds.value).toContain(ALICE_ID);
-      expect(scenario.actorIds.value).toContain(BOB_ID);
-      expect(scenario.actorCount.value).toBe(2);
+        const loadedScenario = await scenario.loadScenario('duel');
+
+        expect(loadedScenario.id).toBe('duel');
+        expect(loadedScenario.name).toBe('Simple Duel');
+        expect(loadedScenario.actors).toHaveLength(2);
+      });
+    });
+
+    it('should throw error for non-existent scenario', async () => {
+      runWithContext(async () => {
+        const scenario = useCombatScenario();
+
+        await expect(scenario.loadScenario('non-existent')).rejects.toThrow(
+          'Scenario not found: non-existent'
+        );
+      });
     });
   });
 
-  it('should get actor data by ID', () => {
-    runWithContext(() => {
-      const mockDeps = createMockDeps();
-      const scenario = useCombatScenario('test-scenario', mockDeps);
+  describe('custom scenario creation', () => {
+    it('should create custom scenario with default structure', () => {
+      runWithContext(() => {
+        const scenario = useCombatScenario();
 
-      const aliceData = scenario.getActorData(ALICE_ID);
-      expect(aliceData).toBeTruthy();
-      expect(aliceData?.aiControlled).toBe(false);
+        const customScenario = scenario.createCustomScenario();
 
-      const bobData = scenario.getActorData(BOB_ID);
-      expect(bobData).toBeTruthy();
-      expect(bobData?.aiControlled).toBe(true);
+        expect(customScenario.id).toBe('custom');
+        expect(customScenario.name).toBe('Custom Scenario');
+        expect(customScenario.description).toBe('A custom combat scenario');
+        expect(customScenario.battlefield).toBeDefined();
+        expect(customScenario.actors).toEqual([]);
+      });
+    });
 
-      const nonExistentData = scenario.getActorData('flux:actor:nonexistent' as any);
-      expect(nonExistentData).toBeNull();
+    it('should create scenario with proper battlefield configuration', () => {
+      runWithContext(() => {
+        const scenario = useCombatScenario();
+
+        const customScenario = scenario.createCustomScenario();
+
+        expect(customScenario.battlefield).toMatchObject({
+          length: 300,
+          margin: 100,
+          cover: [],
+          width: 800,
+          height: 600,
+          gridSize: 40
+        });
+      });
     });
   });
 
-  it('should update actor data', async () => {
-    runWithContext(async () => {
-      const mockDeps = createMockDeps();
-      const scenario = useCombatScenario('test-scenario', mockDeps);
+  describe('scenario management', () => {
+    it('should add new scenario to available list', () => {
+      runWithContext(() => {
+        const scenario = useCombatScenario();
+        const initialCount = scenario.availableScenarios.value.length;
 
-      const updates: Partial<CombatScenarioActorData> = {
-        stats: { pow: 15, fin: 12 },
-        aiControlled: true
-      };
+        const newScenario: CombatScenario = {
+          id: 'test-scenario',
+          name: 'Test Scenario',
+          description: 'A test scenario for unit tests',
+          battlefield: {
+            length: 200,
+            margin: 50,
+            cover: [],
+            width: 600,
+            height: 400,
+            gridSize: 30
+          },
+          actors: []
+        };
 
-      scenario.updateActorData(ALICE_ID, updates);
-      await nextTick();
+        scenario.addScenario(newScenario);
 
-      const aliceData = scenario.getActorData(ALICE_ID);
-      expect(aliceData?.stats.pow).toBe(15);
-      expect(aliceData?.stats.fin).toBe(12);
-      expect(aliceData?.aiControlled).toBe(true);
-      expect(scenario.isDirty.value).toBe(true);
+        expect(scenario.availableScenarios.value).toHaveLength(initialCount + 1);
+        const addedScenario = scenario.availableScenarios.value.find(s => s.id === 'test-scenario');
+        expect(addedScenario).toBeDefined();
+        expect(addedScenario?.name).toBe('Test Scenario');
+      });
+    });
+
+    it('should remove scenario from available list', () => {
+      runWithContext(() => {
+        const scenario = useCombatScenario();
+        const initialCount = scenario.availableScenarios.value.length;
+
+        scenario.removeScenario('duel');
+
+        expect(scenario.availableScenarios.value).toHaveLength(initialCount - 1);
+        expect(scenario.availableScenarios.value.find(s => s.id === 'duel')).toBeUndefined();
+      });
+    });
+
+    it('should handle removal of non-existent scenario gracefully', () => {
+      runWithContext(() => {
+        const scenario = useCombatScenario();
+        const initialCount = scenario.availableScenarios.value.length;
+
+        scenario.removeScenario('non-existent');
+
+        expect(scenario.availableScenarios.value).toHaveLength(initialCount);
+      });
     });
   });
 
-  it('should add new actors', async () => {
-    runWithContext(async () => {
-      const mockDeps = createMockDeps();
-      const scenario = useCombatScenario('test-scenario', mockDeps);
+  describe('selected scenario tracking', () => {
+    it('should allow setting selected scenario', () => {
+      runWithContext(() => {
+        const scenario = useCombatScenario();
 
-      const charlieId = 'flux:actor:charlie' as any;
-      const charlieData: CombatScenarioActorData = {
-        stats: { pow: 12, fin: 11, res: 10 },
-        aiControlled: true,
-        weapon: 'flux:schema:weapon:longsword' as any,
-        skills: {
-          'flux:skill:evasion': 1,
-          'flux:skill:weapon:melee': 2
-        }
-      };
+        scenario.selectedScenario.value = 'duel';
 
-      const success = scenario.addActor(charlieId, charlieData);
-      await nextTick();
+        expect(scenario.selectedScenario.value).toBe('duel');
+      });
+    });
 
-      expect(success).toBe(true);
-      expect(scenario.hasActor(charlieId)).toBe(true);
-      expect(scenario.actorCount.value).toBe(3);
-      expect(scenario.isDirty.value).toBe(true);
+    it('should start with empty selected scenario', () => {
+      runWithContext(() => {
+        const scenario = useCombatScenario();
+
+        // Reset to ensure clean state
+        scenario.selectedScenario.value = '';
+        expect(scenario.selectedScenario.value).toBe('');
+      });
     });
   });
 
-  it('should not add duplicate actors', () => {
-    runWithContext(() => {
-      const mockDeps = createMockDeps();
-      const scenario = useCombatScenario('test-scenario', mockDeps);
+  describe('scenario structure validation', () => {
+    it('should have valid battlefield configuration in predefined scenarios', () => {
+      runWithContext(() => {
+        const scenario = useCombatScenario();
 
-      const duplicateData: CombatScenarioActorData = {
-        stats: { pow: 10 },
-        aiControlled: false,
-        weapon: 'flux:schema:weapon:longsword' as any,
-        skills: {}
-      };
-
-      const success = scenario.addActor(ALICE_ID, duplicateData);
-      expect(success).toBe(false);
-      expect(scenario.actorCount.value).toBe(2); // Should remain unchanged
+        scenario.availableScenarios.value.forEach(s => {
+          expect(s.battlefield.length).toBeGreaterThan(0);
+          expect(s.battlefield.width).toBeGreaterThan(0);
+          expect(s.battlefield.height).toBeGreaterThan(0);
+          expect(s.battlefield.gridSize).toBeGreaterThan(0);
+          expect(Array.isArray(s.battlefield.cover)).toBe(true);
+        });
+      });
     });
-  });
 
-  it('should remove actors', async () => {
-    runWithContext(async () => {
-      const mockDeps = createMockDeps();
-      const scenario = useCombatScenario('test-scenario', mockDeps);
+    it('should have valid actor configuration in duel scenario', () => {
+      runWithContext(() => {
+        const scenario = useCombatScenario();
 
-      const success = scenario.removeActor(BOB_ID);
-      await nextTick();
+        const duelScenario = scenario.availableScenarios.value.find(s => s.id === 'duel');
+        expect(duelScenario).toBeDefined();
+        expect(duelScenario!.actors).toHaveLength(2);
 
-      expect(success).toBe(true);
-      expect(scenario.hasActor(BOB_ID)).toBe(false);
-      expect(scenario.actorCount.value).toBe(1);
-      expect(scenario.isDirty.value).toBe(true);
-    });
-  });
+        const [alice, bob] = duelScenario!.actors;
+        expect(alice.id).toBe('actor:alice');
+        expect(alice.name).toBe('Alice');
+        expect(alice.isAI).toBe(false);
 
-  it('should not remove non-existent actors', () => {
-    runWithContext(() => {
-      const mockDeps = createMockDeps();
-      const scenario = useCombatScenario('test-scenario', mockDeps);
-
-      const success = scenario.removeActor('flux:actor:nonexistent' as any);
-      expect(success).toBe(false);
-      expect(scenario.actorCount.value).toBe(2); // Should remain unchanged
-    });
-  });
-
-  it('should reset to defaults', async () => {
-    runWithContext(async () => {
-      const mockDeps = createMockDeps();
-      const scenario = useCombatScenario('test-scenario', mockDeps);
-
-      // Modify the scenario
-      scenario.updateActorData(ALICE_ID, { aiControlled: true });
-      await nextTick();
-      expect(scenario.isDirty.value).toBe(true);
-
-      // Reset to defaults
-      scenario.resetToDefaults();
-      await nextTick();
-
-      const aliceData = scenario.getActorData(ALICE_ID);
-      expect(aliceData?.aiControlled).toBe(false); // Back to default
-      expect(scenario.isDirty.value).toBe(true); // Should be dirty after reset
-    });
-  });
-
-  it('should track unsaved changes', async () => {
-    runWithContext(async () => {
-      const mockDeps = createMockDeps();
-      const scenario = useCombatScenario('test-scenario', mockDeps);
-
-      expect(scenario.hasUnsavedChanges.value).toBe(false);
-
-      scenario.updateActorData(ALICE_ID, { aiControlled: true });
-      await nextTick();
-
-      expect(scenario.hasUnsavedChanges.value).toBe(true);
-    });
-  });
-
-  it('should save scenario', () => {
-    runWithContext(() => {
-      const mockDeps = createMockDeps();
-      const scenario = useCombatScenario('test-scenario', mockDeps);
-
-      // Make a change to mark as dirty
-      scenario.updateActorData(ALICE_ID, { aiControlled: true });
-      expect(scenario.isDirty.value).toBe(true);
-
-      const success = scenario.saveScenario();
-
-      expect(success).toBe(true);
-      expect(scenario.isDirty.value).toBe(false);
-      expect(scenario.lastSaved.value).toBeInstanceOf(Date);
+        expect(bob.id).toBe('actor:bob');
+        expect(bob.name).toBe('Bob');
+        expect(bob.isAI).toBe(true);
+      });
     });
   });
 });
