@@ -1,4 +1,4 @@
-import { AppEnvironment, RuntimeEnvironment, RuntimeEnvironmentResolver } from '~/types/infrastructure/environment';
+import { AppEnvironment, RuntimeEnvironment, RuntimeEnvironmentResolver } from './types';
 
 const REQUIRED_ENV_VARS = [
   'VITE_APP_ENV',

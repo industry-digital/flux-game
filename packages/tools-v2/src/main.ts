@@ -1,6 +1,6 @@
 import { createApp } from 'vue';
 import { router } from './router';
-import { useTheme } from '~/infrastructure/theme/composables';
+import { useTheme } from '@flux/ui';
 import App from './App.vue';
 
 const app = createApp(App);

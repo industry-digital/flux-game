@@ -1,6 +1,5 @@
 import { ref, computed, readonly, watch } from 'vue';
-import { useLocalStorage } from '~/infrastructure/storage/storage';
-import { useLogger } from '~/infrastructure/logging/composables';
+import { useLocalStorage, useLogger } from '@flux/ui';
 import type {
   CombatScenarioData,
   CombatScenarioActorData,

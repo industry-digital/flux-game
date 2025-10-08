@@ -1,4 +1,4 @@
-import { ref, computed, onUnmounted, type ComputedRef } from 'vue';
+import { ref, computed, onUnmounted, getCurrentInstance, type ComputedRef } from 'vue';
 
 export type NormalizedValueBetweenZeroAndOne = number;
 export type EasingFunction = (position: NormalizedValueBetweenZeroAndOne) => number;
@@ -188,8 +188,10 @@ export function useTimingBackoff(
     attempts.value = 0;
   }
 
-  // Cleanup on unmount
-  onUnmounted(cleanup);
+  // Cleanup on unmount (only if in component context)
+  if (getCurrentInstance()) {
+    onUnmounted(cleanup);
+  }
 
   return {
     // Essential state (readonly)

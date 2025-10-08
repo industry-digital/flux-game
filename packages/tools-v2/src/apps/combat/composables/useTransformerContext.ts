@@ -1,5 +1,5 @@
 import { shallowRef, ref, computed, readonly, markRaw } from 'vue';
-import { useLogger } from '~/infrastructure/logging/composables';
+import { useLogger } from '@flux/ui';
 import { createTransformerContext } from '@flux/core';
 import type {
   TransformerContext,

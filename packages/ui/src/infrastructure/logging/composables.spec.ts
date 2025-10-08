@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { useLogger } from './composables';
-import { createComposableTestSuite } from '~/testing';
+import { createComposableTestSuite } from '../../testing';
 
 describe('useLogger', () => {
   const testSuite = createComposableTestSuite();

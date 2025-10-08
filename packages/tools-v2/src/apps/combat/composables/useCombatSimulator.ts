@@ -1,5 +1,5 @@
 import { ref, computed, readonly, watch } from 'vue';
-import { useLogger } from '~/infrastructure/logging/composables';
+import { useLogger } from '@flux/ui';
 import { useCombatLog } from './useCombatLog';
 import { useCombatScenario } from './useCombatScenario';
 import { useTransformerContext } from './useTransformerContext';

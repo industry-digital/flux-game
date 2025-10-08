@@ -1,15 +1,15 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { useStorage, useLocalStorage, useSessionStorage, StorageDependencies } from './storage';
-import { createComposableTestSuite } from '~/testing';
-import { createMockLogger } from '~/testing/logging';
-import { LoggerInterface } from '~/types/infrastructure/logging';
+import { createComposableTestSuite } from '../../testing';
+import { createMockLogger } from '../../testing/logging';
+import { LoggerInterface } from '../logging/composables';
 
 // Mock localStorage and sessionStorage
 const createMockStorage = (): Storage => {
   let store: Record<string, string> = {};
 
   return {
-    getItem: vi.fn((key: string) => store[key] || null),
+    getItem: vi.fn((key: string) => store[key] ?? null), // Return null for missing keys (like real storage)
     setItem: vi.fn((key: string, value: string) => {
       store[key] = value;
     }),

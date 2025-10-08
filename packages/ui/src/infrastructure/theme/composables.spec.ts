@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { useTheme, type ThemeDependencies } from './composables';
-import { createComposableTestSuite } from '~/testing';
+import { createComposableTestSuite } from '../../testing';
 
 describe('useTheme', () => {
   const testSuite = createComposableTestSuite();

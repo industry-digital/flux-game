@@ -17,7 +17,9 @@
     /* Path aliases */
     "baseUrl": ".",
     "paths": {
-      "~/*": ["src/*"]
+      "~/*": ["src/*"],
+      "@flux/ui": ["../ui/src/index.ts"],
+      "@flux/ui/*": ["../ui/src/*"]
     },
 
     /* Linting */

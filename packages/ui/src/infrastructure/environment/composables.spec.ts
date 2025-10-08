@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { AppEnvironment, RuntimeEnvironment } from '~/types/infrastructure/environment';
+import { RuntimeEnvironment, AppEnvironment } from './types';
 import { createRuntimeEnvironmentResolver } from './composables';
 
 describe('useEnvironment', () => {

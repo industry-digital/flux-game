@@ -1,7 +1,8 @@
 import { ref, watch, onUnmounted, getCurrentInstance, type Ref } from 'vue';
-import { useLogger } from '~/infrastructure/logging/composables';
-import { LoggerInterface } from '~/types/infrastructure/logging';
-import type { StorageResolver } from '~/types/infrastructure/storage';
+import { useLogger, type LoggerInterface } from '../logging/composables';
+
+// Local types for UI package
+export type StorageResolver = () => Storage;
 
 export const LOCAL_STORAGE_RESOLVER: StorageResolver = () => localStorage;
 export const SESSION_STORAGE_RESOLVER: StorageResolver = () => sessionStorage;

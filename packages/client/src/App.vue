@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue';
-import { useEnvironment } from '~/infrastructure/environment/composables';
-import { useTheme } from '~/infrastructure/theme/composables';
+import { useEnvironment, useTheme } from '@flux/ui';
 import { useAuth } from '~/auth/composables';
 import { useXmppClient } from '~/xmpp/composables/client';
 import { useWorldServerProtocol } from '~/server/composables/protocol';

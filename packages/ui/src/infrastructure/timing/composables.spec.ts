@@ -1,9 +1,9 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import {
-  useExponentialBackoff,
-  type TimingDependencies, type ExponentialBackoffConfig
+    useExponentialBackoff,
+    type TimingDependencies, type ExponentialBackoffConfig
 } from './composables';
-import { createComposableTestSuite } from '~/testing';
+import { createComposableTestSuite } from '../../testing';
 
 describe('useExponentialBackoff', () => {
   const testSuite = createComposableTestSuite();

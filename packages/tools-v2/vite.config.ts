@@ -12,6 +12,7 @@ export default defineConfig(async () => ({
   resolve: {
     alias: {
       "~": resolve(__dirname, "./src"),
+      "@flux/ui": resolve(__dirname, "../ui/src/index.ts"),
     },
   },
 
