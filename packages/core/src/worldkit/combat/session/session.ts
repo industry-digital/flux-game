@@ -22,7 +22,6 @@ const createDefaultBattlefield = (): Battlefield => ({
   margin: 100,
   cover: [],
 });
-
 export type CreateCombatSessionDependencies = {
   uniqid?: () => string;
   executeRoll?: (spec: RollSpecification, mods: Modifiers, ...args: any[]) => RollResult;
