@@ -1,135 +1,97 @@
 import type {
-  ActorURN,
-  PlaceURN,
-  SessionURN,
-  WeaponSchemaURN,
-  SkillURN,
-  TransformerContext,
-  CombatSession,
   WorldEvent,
-  WeaponSchema
+  Actor,
+  Combatant,
+  CombatSession as CoreCombatSession,
+  Battlefield as CoreBattlefield,
+  WeaponSchema,
 } from '@flux/core';
+import { Team } from '@flux/core';
+import { SessionStatus } from '@flux/core';
 
 /**
- * Combat-specific types for the Vue implementation
- * Adapted from the React version but optimized for Vue's reactivity system
+ * Combat log entry is just a WorldEvent
  */
-
-// Re-export commonly used types for convenience
-export type { ActorURN, PlaceURN, SessionURN, WeaponSchemaURN, SkillURN, WorldEvent };
+export type CombatLogEntry = WorldEvent;
 
 /**
- * Actor stat input for scenario customization
- */
-export interface ActorStatsInput {
-  pow?: number;
-  fin?: number;
-  res?: number;
-  int?: number;
-  per?: number;
-  mem?: number;
-}
-
-/**
- * Combat scenario actor configuration
- */
-export interface CombatScenarioActorData {
-  stats: ActorStatsInput;
-  aiControlled: boolean;
-  weapon: WeaponSchemaURN;
-  skills: {
-    'flux:skill:evasion'?: number;
-    'flux:skill:weapon:melee'?: number;
-  };
-}
-
-/**
- * Complete combat scenario data for persistence
- */
-export interface CombatScenarioData {
-  actors: Record<ActorURN, CombatScenarioActorData>;
-}
-
-/**
- * Weapon map type for available weapons
- */
-export type WeaponMap = Map<WeaponSchemaURN, WeaponSchema>;
-
-/**
- * Combat phase enumeration
+ * Combat phase enum - maps to SessionStatus for consistency
  */
 export enum CombatPhase {
-  SETUP = 'setup',
-  ACTIVE = 'active',
-  PAUSED = 'paused',
-  ENDED = 'ended'
+  SETUP = 'setup', // Custom setup phase before combat
+  ACTIVE = SessionStatus.RUNNING,
+  PAUSED = SessionStatus.PAUSED,
+  ENDED = SessionStatus.TERMINATED
 }
 
 /**
- * Combat log entry with enhanced metadata
+ * Actor setup data for the setup phase (extends core Actor)
  */
-export interface CombatLogEntry extends WorldEvent {
-  // Additional UI-specific properties can be added here
-  narrative?: string;
-  category?: 'action' | 'damage' | 'turn' | 'system';
-}
+export type ActorSetupData = Actor & {
+  team: Team;
+  isAI: boolean;
+  weaponUrn: string;
+  canRemove: boolean; // Alice and Bob cannot be removed
+};
 
 /**
- * Optional combatant names for dynamic roster management
+ * Extended combat session for UI purposes
  */
-export type OptionalCombatantName = 'charlie' | 'eric' | 'dave' | 'franz';
-
-/**
- * Combat simulator state interface
- */
-export interface CombatSimulatorState {
-  // Initialization
-  isInitialized: boolean;
-
-  // Core entities
-  context: TransformerContext | null;
-  session: CombatSession | null;
-  sessionId: SessionURN | null;
-
-  // Actor management
-  actors: Record<ActorURN, any>; // Using any for now, will be typed properly
-  currentActorId: ActorURN | null;
-
-  // Phase management
+export type CombatSession = CoreCombatSession & {
   phase: CombatPhase;
+  log: CombatLogEntry[];
+  // UI-specific extensions
+  uiState?: {
+    aiThinking?: string | null;
+  };
+};
 
-  // AI control
-  aiControlled: Record<ActorURN, boolean>;
-  aiThinking: ActorURN | null;
+/**
+ * Extended combatant data for UI display
+ */
+export type CombatantData = Combatant & {
+  name: string; // Actor name for UI display
+  isAIThinking: boolean;
+  weaponSchema?: WeaponSchema;
+};
 
-  // Equipment and skills
-  availableWeapons: WeaponMap;
+/**
+ * Battlefield configuration for UI (extends core battlefield)
+ */
+export type BattlefieldData = CoreBattlefield & {
+  // UI needs 2D representation on top of core linear battlefield
+  width: number;
+  height: number;
+  gridSize: number;
+  obstacles?: Array<{
+    x: number;
+    y: number;
+    width: number;
+    height: number;
+    type: string;
+  }>;
+};
 
-  // Event tracking for reactivity
-  eventCount: number;
+/**
+ * Combat scenario configuration
+ */
+export interface CombatScenario {
+  id: string;
+  name: string;
+  description: string;
+  battlefield: BattlefieldData;
+  actors: ActorSetupData[];
 }
 
 /**
- * Combat state management interface
+ * Universal Intent execution result
  */
-export interface CombatStateInterface {
-  session: CombatSession | null;
-  eventCount: number;
-}
-
-/**
- * Combat log management interface
- */
-export interface CombatLogInterface {
-  entries: CombatLogEntry[];
-  maxEntries: number;
-}
-
-/**
- * Universal Intent System integration types
- */
-export interface IntentExecutionResult {
-  events: WorldEvent[];
+export interface IntentResult {
   success: boolean;
+  message: string;
+  events?: WorldEvent[];
   error?: string;
 }
+
+// Re-export core types for convenience
+export { Team, type WeaponSchema };

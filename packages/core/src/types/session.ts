@@ -29,10 +29,6 @@ export enum SessionStatus {
   TERMINATED = 'terminated',
 }
 
-export type AbstractSessionData<TSessionStrategy extends SessionStrategy> = {
-  strategy: TSessionStrategy;
-};
-
 export type AbstractSession<
   TSessionStrategy extends SessionStrategy,
   TSessionData,

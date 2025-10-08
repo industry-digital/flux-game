@@ -1,3 +1,4 @@
+import { vi } from 'vitest';
 import type { LoggerInterface } from '../infrastructure/logging/composables';
 
 /**

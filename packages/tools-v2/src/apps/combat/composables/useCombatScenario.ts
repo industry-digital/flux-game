@@ -1,242 +1,101 @@
-import { ref, computed, readonly, watch } from 'vue';
-import { useLocalStorage, useLogger } from '@flux/ui';
-import type {
-  CombatScenarioData,
-  CombatScenarioActorData,
-  ActorURN,
-  WeaponSchemaURN
-} from '../types';
+import { ref } from 'vue';
+import type { CombatScenario } from '../types';
 
-export type CombatScenarioDependencies = {
-  useLocalStorage: typeof useLocalStorage;
-  useLogger: typeof useLogger;
-  setTimeout: (callback: () => void, delay: number) => NodeJS.Timeout;
-  clearTimeout: (timeout: NodeJS.Timeout) => void;
-};
-
-export const DEFAULT_COMBAT_SCENARIO_DEPS: Readonly<CombatScenarioDependencies> = Object.freeze({
-  useLocalStorage: useLocalStorage,
-  useLogger: useLogger,
-  setTimeout: (callback: () => void, delay: number) => setTimeout(callback, delay),
-  clearTimeout: (timeout: NodeJS.Timeout) => clearTimeout(timeout),
-});
-
-// Default scenario configuration
-const createDefaultScenario = (): CombatScenarioData => ({
-  actors: {
-    'flux:actor:alice': {
-      stats: { pow: 10, fin: 10, res: 10, per: 10 },
-      aiControlled: false,
-      weapon: 'flux:schema:weapon:longsword' as WeaponSchemaURN,
-      skills: {
-        'flux:skill:evasion': 0,
-        'flux:skill:weapon:melee': 0
-      }
+// Mock scenarios for demo purposes
+const mockScenarios: CombatScenario[] = [
+  {
+    id: 'duel',
+    name: 'Simple Duel',
+    description: 'Two combatants face off in a basic arena',
+    battlefield: {
+      length: 300,
+      margin: 100,
+      cover: [],
+      width: 800,
+      height: 600,
+      gridSize: 40
     },
-    'flux:actor:bob': {
-      stats: { pow: 10, fin: 10, res: 10 },
-      aiControlled: true, // Bob is AI-controlled by default
-      weapon: 'flux:schema:weapon:longsword' as WeaponSchemaURN,
-      skills: {
-        'flux:skill:evasion': 0,
-        'flux:skill:weapon:melee': 0
-      }
-    }
+    actors: [
+      {
+        id: 'actor:alice',
+        name: 'Alice',
+        team: 'ALPHA' as any,
+        isAI: false,
+        weaponUrn: 'flux:schema:weapon:longsword',
+        canRemove: false
+      } as any,
+      {
+        id: 'actor:bob',
+        name: 'Bob',
+        team: 'BETA' as any,
+        isAI: true,
+        weaponUrn: 'flux:schema:weapon:bow',
+        canRemove: false
+      } as any
+    ]
+  },
+  {
+    id: 'squad-battle',
+    name: 'Squad Battle',
+    description: 'Two teams of three combatants each',
+    battlefield: {
+      length: 400,
+      margin: 100,
+      cover: [],
+      width: 1000,
+      height: 800,
+      gridSize: 50
+    },
+    actors: [] // Simplified for now
   }
-});
-/**
- * Combat scenario data management composable
- *
- * Handles scenario persistence, default creation, and data validation.
- * Provides reactive scenario data with automatic localStorage synchronization.
- *
- * Single Responsibility: Scenario data persistence and management
- */
-export function useCombatScenario(
-  storageKey: string = 'combat-sandbox-scenario',
-  deps: CombatScenarioDependencies = DEFAULT_COMBAT_SCENARIO_DEPS,
-) {
-  const log = deps.useLogger('useCombatScenario');
+];
 
+const availableScenarios = ref<CombatScenario[]>(mockScenarios);
+const selectedScenario = ref<string>('');
 
-  // Storage integration - reactive localStorage
-  const [storedScenario, setStoredScenario] = deps.useLocalStorage<CombatScenarioData>(
-    storageKey,
-    createDefaultScenario()
-  );
-
-  // Reactive state
-  const isLoaded = ref(true); // Always loaded since useLocalStorage handles initialization
-  const lastSaved = ref<Date | null>(null);
-  const isDirty = ref(false);
-
-  // Computed properties
-  const actorIds = computed(() =>
-    Object.keys(storedScenario.value.actors) as ActorURN[]
-  );
-
-  const actorCount = computed(() => actorIds.value.length);
-
-  const hasUnsavedChanges = computed(() => isDirty.value);
-
-  /**
-   * Load scenario from localStorage (already handled by useLocalStorage)
-   */
-  const loadScenario = async (): Promise<boolean> => {
-    // useLocalStorage automatically handles loading, so this is mostly for API compatibility
-    isDirty.value = false;
-    return true;
-  };
-
-  /**
-   * Save scenario to localStorage (triggers automatic save via useLocalStorage)
-   */
-  const saveScenario = (): boolean => {
-    try {
-      // Force a save by updating the stored value
-      setStoredScenario(storedScenario.value);
-      lastSaved.value = new Date();
-      isDirty.value = false;
-      return true;
-    } catch (error) {
-      log.error('Failed to save combat scenario:', error);
-      return false;
+export function useCombatScenario() {
+  const loadScenario = async (scenarioId: string): Promise<CombatScenario> => {
+    const scenario = availableScenarios.value.find(s => s.id === scenarioId);
+    if (!scenario) {
+      throw new Error(`Scenario not found: ${scenarioId}`);
     }
+    return scenario;
   };
 
-  /**
-   * Reset scenario to defaults
-   */
-  const resetToDefaults = () => {
-    setStoredScenario(createDefaultScenario());
-    isDirty.value = true;
-  };
-
-  /**
-   * Update actor data in scenario
-   */
-  const updateActorData = (
-    actorId: ActorURN,
-    updates: Partial<CombatScenarioActorData>
-  ) => {
-    if (!storedScenario.value.actors[actorId]) {
-      log.warn(`Actor ${actorId} not found in scenario`);
-      return;
-    }
-
-    const updatedScenario = {
-      ...storedScenario.value,
-      actors: {
-        ...storedScenario.value.actors,
-        [actorId]: {
-          ...storedScenario.value.actors[actorId],
-          ...updates
-        }
-      }
+  const createCustomScenario = (): CombatScenario => {
+    return {
+      id: 'custom',
+      name: 'Custom Scenario',
+      description: 'A custom combat scenario',
+      battlefield: {
+        length: 300,
+        margin: 100,
+        cover: [],
+        width: 800,
+        height: 600,
+        gridSize: 40
+      },
+      actors: [] // Will be populated by useActorSetup
     };
-
-    setStoredScenario(updatedScenario);
-    isDirty.value = true;
   };
 
-  /**
-   * Add new actor to scenario
-   */
-  const addActor = (actorId: ActorURN, actorData: CombatScenarioActorData) => {
-    if (storedScenario.value.actors[actorId]) {
-      log.warn(`Actor ${actorId} already exists in scenario`);
-      return false;
+  const addScenario = (scenario: CombatScenario): void => {
+    availableScenarios.value.push(scenario);
+  };
+
+  const removeScenario = (scenarioId: string): void => {
+    const index = availableScenarios.value.findIndex(s => s.id === scenarioId);
+    if (index !== -1) {
+      availableScenarios.value.splice(index, 1);
     }
-
-    const updatedScenario = {
-      ...storedScenario.value,
-      actors: {
-        ...storedScenario.value.actors,
-        [actorId]: actorData
-      }
-    };
-
-    setStoredScenario(updatedScenario);
-    isDirty.value = true;
-    return true;
   };
-
-  /**
-   * Remove actor from scenario
-   */
-  const removeActor = (actorId: ActorURN): boolean => {
-    if (!storedScenario.value.actors[actorId]) {
-      log.warn(`Actor ${actorId} not found in scenario`);
-      return false;
-    }
-
-    const { [actorId]: removed, ...remainingActors } = storedScenario.value.actors;
-    const updatedScenario = {
-      ...storedScenario.value,
-      actors: remainingActors
-    };
-
-    setStoredScenario(updatedScenario);
-    isDirty.value = true;
-    return true;
-  };
-
-  /**
-   * Get actor data by ID
-   */
-  const getActorData = (actorId: ActorURN): CombatScenarioActorData | null => {
-    return storedScenario.value.actors[actorId] || null;
-  };
-
-  /**
-   * Check if actor exists in scenario
-   */
-  const hasActor = (actorId: ActorURN): boolean => {
-    return actorId in storedScenario.value.actors;
-  };
-
-  // Auto-save when data changes (debounced) - useLocalStorage handles persistence automatically
-  let saveTimeout: NodeJS.Timeout | null = null;
-  watch(
-    () => storedScenario.value,
-    () => {
-      isDirty.value = true;
-
-      // Debounced save state update after 1 second of inactivity
-      if (saveTimeout) {
-        deps.clearTimeout(saveTimeout);
-      }
-
-      saveTimeout = deps.setTimeout(() => {
-        isDirty.value = false;
-        lastSaved.value = new Date();
-      }, 1000);
-    },
-    { deep: true }
-  );
 
   return {
-    // Reactive state (readonly to prevent external mutation)
-    scenarioData: readonly(storedScenario),
-    isLoaded: readonly(isLoaded),
-    lastSaved: readonly(lastSaved),
-    isDirty: readonly(isDirty),
-
-    // Computed properties
-    actorIds,
-    actorCount,
-    hasUnsavedChanges,
-
-    // Actions
+    availableScenarios,
+    selectedScenario,
     loadScenario,
-    saveScenario,
-    resetToDefaults,
-    updateActorData,
-    addActor,
-    removeActor,
-    getActorData,
-    hasActor,
+    createCustomScenario,
+    addScenario,
+    removeScenario
   };
 }
-
-// Validation is handled by TypeScript types and useLocalStorage
