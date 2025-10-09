@@ -1,22 +1,30 @@
-import { defineConfig } from 'vite'
-import vue from '@vitejs/plugin-vue'
-import { resolve } from 'path'
+import { defineConfig } from 'vite';
+import react from '@vitejs/plugin-react';
+import { resolve } from 'path';
 
 export default defineConfig({
-  plugins: [vue()],
+  plugins: [react()],
   build: {
     lib: {
       entry: resolve(__dirname, 'src/index.ts'),
       name: 'FluxUI',
-      fileName: 'index'
+      formats: ['es', 'umd'],
+      fileName: (format) => `index.${format === 'es' ? 'js' : 'umd.cjs'}`
     },
     rollupOptions: {
-      external: ['vue'],
+      external: ['react', 'react-dom'],
       output: {
         globals: {
-          vue: 'Vue'
+          react: 'React',
+          'react-dom': 'ReactDOM'
         }
       }
     }
+  },
+  resolve: {
+    alias: {
+      '@': resolve(__dirname, 'src')
+    }
   }
-})
+});
+

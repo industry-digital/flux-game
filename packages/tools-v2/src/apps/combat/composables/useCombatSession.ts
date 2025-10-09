@@ -20,6 +20,7 @@ export type CombatSessionAPI = {
 export function useCombatSession(
   context: Ref<TransformerContext>,
   sessionId: Ref<string | null>,
+  forceUpdate?: () => void,
   location: PlaceURN = WellKnownPlace.ORIGIN
 ): CombatSessionAPI {
   const startSession = async (actors: ActorSetupData[], battlefield: any, weaponSchemas?: any[]): Promise<void> => {
@@ -29,16 +30,24 @@ export function useCombatSession(
       equipment.registerWeaponSchemas(weaponSchemas);
     }
 
-    // Add actors to the world context
+    // Add actors to the world context - actors should already be plain objects from CombatApp
     actors.forEach(actor => {
       context.value.world.actors[actor.id] = actor;
+      console.log('[useCombatSession] Added plain actor:', {
+        actorId: actor.id,
+        hasInventory: !!actor.inventory,
+        hasEquipment: !!actor.equipment,
+        inventoryType: typeof actor.inventory,
+        equipmentType: typeof actor.equipment,
+        isPlainObject: actor.constructor === Object
+      });
     });
 
-    // Create combat session API - use existing sessionId or let it generate
+    // Create combat session API - always create new session, don't pass sessionId
     sessionApi.value = createCombatSessionApi(
       context.value,
       location,
-      sessionId.value as any || undefined, // Use existing sessionId if available
+      undefined, // Always let core generate new sessionId
       battlefield, // battlefield
       undefined // initiative - let it compute
     );
@@ -46,17 +55,20 @@ export function useCombatSession(
     // Update our sessionId ref with the actual session ID (in case it was generated)
     sessionId.value = sessionApi.value.session.id;
 
-    console.log('[useCombatSession] Created session API:', {
-      sessionId: sessionApi.value.session.id,
-      isNew: sessionApi.value.isNew,
-      worldSessionsCount: Object.keys(context.value.world.sessions || {}).length,
-      sessionRegistered: !!context.value.world.sessions[sessionApi.value.session.id]
-    });
-
     // Add combatants to the session
     actors.forEach(actor => {
       sessionApi.value.addCombatant(actor.id, actor.team);
     });
+
+    console.log('[useCombatSession] initialized session API:', {
+      sessionId: sessionApi.value.session.id,
+      isNew: sessionApi.value.isNew,
+      worldSessionsCount: Object.keys(context.value.world.sessions || {}).length,
+      sessionRegistered: !!context.value.world.sessions[sessionApi.value.session.id],
+      combatants: sessionApi.value.session.data.combatants,
+      actors: actors.map(actor => ({...actor})),
+    });
+
 
     // Update our session reference
     session.value = {

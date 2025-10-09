@@ -1,17 +1,17 @@
 import { defineConfig } from 'vitest/config';
-import react from '@vitejs/plugin-react';
+import vue from '@vitejs/plugin-vue';
 import { resolve } from 'path';
 
 export default defineConfig({
-  plugins: [react()],
+  plugins: [vue()],
   test: {
-    globals: true,
     environment: 'jsdom',
+    globals: true,
     setupFiles: ['./src/testing/setup.ts'],
   },
   resolve: {
     alias: {
-      '@flux/ui': resolve(__dirname, 'src')
-    }
-  }
+      '~': resolve(__dirname, './src'),
+    },
+  },
 });

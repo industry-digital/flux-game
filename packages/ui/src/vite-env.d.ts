@@ -1,14 +1,14 @@
 /// <reference types="vite/client" />
 
-declare module '*.vue' {
-  import type { DefineComponent } from 'vue';
-  const component: DefineComponent<{}, {}, any>
-  export default component
-}
-
 interface ImportMetaEnv {
-  readonly VITE_APP_TITLE?: string;
-  // Add other environment variables as needed
+  readonly VITE_APP_ENV: string;
+  readonly VITE_XMPP_SERVICE: string;
+  readonly VITE_XMPP_DOMAIN: string;
+  readonly VITE_TEST_JWTS: string;
+  readonly VITE_DEBUG_MODE: string;
+  readonly VITE_API_TIMEOUT: string;
+  // Add more environment variables as needed
+  readonly [key: string]: string | undefined;
 }
 
 interface ImportMeta {

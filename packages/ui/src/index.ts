@@ -1,19 +1,16 @@
-// Vue Components
-export { default as CommandSyntax } from './components/CommandSyntax.vue'
-export { default as BattlefieldNotation } from './components/BattlefieldNotation.vue'
-export { default as CombatantGlyph } from './components/CombatantGlyph.vue'
-export { default as MonoText } from './components/MonoText.vue'
-export { default as CleanList } from './components/CleanList.vue'
+// @flux/ui - React 19 UI Library
+// Export all components and hooks
 
-// Terminal components
-export {
-  Terminal,
-  useTerminal,
-  useVirtualizedList,
-  type TerminalEntry,
-  type TerminalConfig,
-  type VirtualizationConfig,
-} from './components/terminal'
+// Components
+export * from './components/Terminal';
+
+// Hooks
+export * from './hooks/useVirtualizedList';
+export * from './hooks/useTerminal';
 
 // Infrastructure
-export * from './infrastructure'
+export * from './infrastructure/theme';
+
+// Types
+export * from './types';
+
