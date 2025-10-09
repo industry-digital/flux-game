@@ -27,5 +27,31 @@ export const lightTheme: ThemeConfig = {
     borderFocus: '#79740e',   // Dark olive for focus
     hover: '#ebdbb2',         // Very light brown for hover
     active: '#d5c4a1',        // Light brown for active states
+  },
+  typography: {
+    // Font families (same as dark theme for consistency)
+    fontFamily: '"Zilla Slab", Georgia, serif',
+    fontFamilyMono: '"JetBrains Mono", "Fira Code", Consolas, monospace',
+    fontFamilyHeading: '"Zilla Slab", Georgia, serif',
+
+    // Font sizes
+    fontSizeXs: '0.75rem',    // 12px
+    fontSizeSm: '0.875rem',   // 14px
+    fontSizeBase: '1rem',     // 16px
+    fontSizeLg: '1.125rem',   // 18px
+    fontSizeXl: '1.25rem',    // 20px
+    fontSize2xl: '1.5rem',    // 24px
+    fontSize3xl: '1.875rem',  // 30px
+
+    // Font weights
+    fontWeightNormal: '400',
+    fontWeightMedium: '500',
+    fontWeightSemibold: '600',
+    fontWeightBold: '700',
+
+    // Line heights
+    lineHeightTight: '1.25',
+    lineHeightNormal: '1.5',
+    lineHeightRelaxed: '1.75',
   }
 };

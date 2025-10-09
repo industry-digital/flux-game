@@ -35,6 +35,9 @@ export function createMockThemeConfig(
       ...darkTheme.colors,
       ...colorOverrides,
     },
+    typography: {
+      ...darkTheme.typography,
+    },
   };
 }
 

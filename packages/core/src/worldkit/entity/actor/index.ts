@@ -129,3 +129,4 @@ export * from './skill';
 export * from './wallet';
 export * from './stats';
 export * from './shell';
+export * from './capacitor';

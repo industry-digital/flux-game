@@ -25,9 +25,37 @@ export interface ThemeColors {
   active: string;
 }
 
+export interface ThemeTypography {
+  // Font families
+  fontFamily: string;
+  fontFamilyMono: string;
+  fontFamilyHeading: string;
+
+  // Font sizes
+  fontSizeXs: string;
+  fontSizeSm: string;
+  fontSizeBase: string;
+  fontSizeLg: string;
+  fontSizeXl: string;
+  fontSize2xl: string;
+  fontSize3xl: string;
+
+  // Font weights
+  fontWeightNormal: string;
+  fontWeightMedium: string;
+  fontWeightSemibold: string;
+  fontWeightBold: string;
+
+  // Line heights
+  lineHeightTight: string;
+  lineHeightNormal: string;
+  lineHeightRelaxed: string;
+}
+
 export interface ThemeConfig {
   name: string;
   colors: ThemeColors;
+  typography: ThemeTypography;
 }
 
 export type ThemeName = 'dark' | 'light' | 'accessibility';
