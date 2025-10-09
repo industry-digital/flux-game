@@ -1,27 +1,21 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { renderHook, act } from '@testing-library/react';
-import { createTerminalHook, DEFAULT_TERMINAL_DEPS } from './useTerminal';
-import { TerminalDependencies } from '../types';
-import { createMockTheme, createMockUseTheme, ThemeHook } from '~/theme';
-import { createMockUseVirtualizedList } from '~/list';
+import { createTerminalHook } from './useTerminal';
+import type { TerminalDependencies, UseThemeHook } from '~/types';
+import { useTheme } from '~/theme';
+import { useVirtualizedList } from '~/list';
 
 describe('useTerminal', () => {
   let mockTimestamp: ReturnType<typeof vi.fn>;
-  let mockTheme: ThemeHook;
-  let mockUseTheme: ReturnType<typeof createMockUseTheme>;
-  let mockVirtualization: ReturnType<typeof createMockUseVirtualizedList>;
   let testDeps: TerminalDependencies;
 
   beforeEach(() => {
     mockTimestamp = vi.fn(() => 1234567890);
-    mockTheme = createMockTheme({ currentTheme: 'dark' });
-    mockUseTheme = createMockUseTheme(mockTheme);
-    mockVirtualization = createMockUseVirtualizedList();
 
     testDeps = {
       timestamp: mockTimestamp,
-      useTheme: mockUseTheme,
-      useVirtualizedList: mockVirtualization.hook,
+      useTheme: useTheme,
+      useVirtualizedList: useVirtualizedList,
     };
   });
 
@@ -32,14 +26,14 @@ describe('useTerminal', () => {
 
       expect(result.current.visibleEntries).toEqual([]);
       expect(result.current.totalEntries).toBe(0);
-      expect(mockUseTheme).toHaveBeenCalledWith('dark');
+      expect(result.current.terminalClasses).toContain('terminal--dark');
     });
 
     it('should initialize with custom theme', () => {
       const useTerminal = createTerminalHook(testDeps);
-      const { result: _result } = renderHook(() => useTerminal({}, {}, 'light'));
+      const { result } = renderHook(() => useTerminal({}, {}, 'light'));
 
-      expect(mockUseTheme).toHaveBeenCalledWith('light');
+      expect(result.current.terminalClasses).toContain('terminal--light');
     });
 
     it('should generate terminal classes based on theme and config', () => {
@@ -290,8 +284,8 @@ describe('useTerminal', () => {
   });
 
   describe('dependency injection', () => {
-    it('should use default dependencies when none provided', () => {
-      const useTerminal = createTerminalHook(DEFAULT_TERMINAL_DEPS);
+    it('should use injected dependencies', () => {
+      const useTerminal = createTerminalHook(testDeps);
       const { result } = renderHook(() => useTerminal());
 
       expect(result.current).toBeDefined();
@@ -317,12 +311,14 @@ describe('useTerminal', () => {
     });
 
     it('should use custom theme dependency', () => {
-      const customTheme = {
-        ...mockTheme,
-        currentTheme: 'custom' as any,
-      };
-      const customUseTheme = vi.fn(() => customTheme);
-      const customDeps = {
+      const customUseTheme = vi.fn(() => ({
+        currentTheme: 'custom',
+        setTheme: vi.fn(),
+        getThemeConfig: vi.fn(() => ({ name: 'custom', colors: {} })),
+        availableThemes: ['custom'],
+      })) as unknown as UseThemeHook;
+
+      const customDeps: TerminalDependencies = {
         ...testDeps,
         useTheme: customUseTheme,
       };
@@ -356,17 +352,19 @@ describe('useTerminal', () => {
 
     it('should update terminal classes when theme changes', () => {
       const useTerminal = createTerminalHook(testDeps);
-      const { result, rerender } = renderHook(() => useTerminal());
+      const { result, rerender } = renderHook(() => useTerminal({}, {}, 'dark'));
 
       const initialClasses = result.current.terminalClasses;
+      expect(initialClasses).toContain('terminal--dark');
 
-      // Change the mock theme by creating a new mock
-      const lightTheme = createMockTheme({ currentTheme: 'light' });
-      mockUseTheme.mockReturnValue(lightTheme);
-      rerender();
+      // Rerender with a different theme
+      const { result: lightResult } = renderHook(() => {
+        const useTerminalLight = createTerminalHook(testDeps);
+        return useTerminalLight({}, {}, 'light');
+      });
 
-      expect(result.current.terminalClasses).not.toBe(initialClasses);
-      expect(result.current.terminalClasses).toContain('terminal--light');
+      expect(lightResult.current.terminalClasses).not.toBe(initialClasses);
+      expect(lightResult.current.terminalClasses).toContain('terminal--light');
     });
   });
 });

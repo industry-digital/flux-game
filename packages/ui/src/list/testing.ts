@@ -6,10 +6,22 @@ import type { VirtualizationAPI } from './types';
  * Returns both the hook function and API instance separately
  */
 export function createMockUseVirtualizedList<T = any>() {
+  // Internal state for the mock
+  const items: T[] = [];
+
   const mockAPI: VirtualizationAPI<T> = {
-    // Core operations
-    addItem: vi.fn(),
-    clear: vi.fn(),
+    // Core operations - make them functional
+    addItem: vi.fn((item: T) => {
+      items.push(item);
+      // Update the visible items and total count
+      (mockAPI as any).visibleItems = [...items];
+      (mockAPI as any).totalItems = items.length;
+    }),
+    clear: vi.fn(() => {
+      items.length = 0;
+      (mockAPI as any).visibleItems = [];
+      (mockAPI as any).totalItems = 0;
+    }),
     scrollToBottom: vi.fn(),
     scrollToTop: vi.fn(),
 

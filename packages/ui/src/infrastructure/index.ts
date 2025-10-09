@@ -1,4 +1,3 @@
-export * from './environment';
 export * from './hooks/useEnvironment';
-export * from './hooks/logging';
+export * from './hooks/useLogger';
 export * from './hooks/useStorage';

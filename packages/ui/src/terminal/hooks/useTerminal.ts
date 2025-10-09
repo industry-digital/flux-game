@@ -1,7 +1,5 @@
 import { useMemo, useCallback, ReactNode } from 'react';
-import { useVirtualizedList, VirtualizationConfig } from '~/list';
-import { useTheme, ThemeName } from '~/theme';
-import type { TerminalEntry, TerminalConfig, TerminalDependencies } from '../types';
+import type { TerminalEntry, TerminalConfig, TerminalDependencies, VirtualizationConfig, ThemeName } from '~/types';
 
 const DEFAULT_CONFIG: Required<TerminalConfig> = {
   maxEntries: 10_000,
@@ -9,13 +7,10 @@ const DEFAULT_CONFIG: Required<TerminalConfig> = {
   showTimestamps: false,
 };
 
-export const DEFAULT_TERMINAL_DEPS: TerminalDependencies = {
-  timestamp: () => Date.now(),
-  useTheme,
-  useVirtualizedList,
-};
+// DEFAULT_TERMINAL_DEPS removed - would cross domain boundaries
+// Use composition.ts for convenience APIs that wire up dependencies
 
-export const createTerminalHook = (deps: TerminalDependencies = DEFAULT_TERMINAL_DEPS) => {
+export const createTerminalHook = (deps: TerminalDependencies) => {
 
   /**
    * Terminal hook for managing terminal-like interfaces
@@ -30,9 +25,9 @@ export const createTerminalHook = (deps: TerminalDependencies = DEFAULT_TERMINAL
   ) {
     const mergedConfig = { ...DEFAULT_CONFIG, ...config };
 
-    // Setup dependencies
+    // Setup dependencies - hooks are called here, inside the React component
     const theme = deps.useTheme(themeName);
-    const virtualization = useVirtualizedList<TerminalEntry>([], {
+    const virtualization = deps.useVirtualizedList<TerminalEntry>([], {
       itemHeight: 24, // Default text line height
       ...virtualizationConfig,
     });
@@ -106,5 +101,3 @@ export const createTerminalHook = (deps: TerminalDependencies = DEFAULT_TERMINAL
     };
   }
 };
-
-export const useTerminal = createTerminalHook(DEFAULT_TERMINAL_DEPS);
