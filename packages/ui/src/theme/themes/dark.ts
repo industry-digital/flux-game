@@ -1,5 +1,6 @@
 import type { ThemeConfig } from '../types';
 
+// Gruvbox Material Dark
 export const darkTheme: ThemeConfig = {
   name: 'dark',
   colors: {

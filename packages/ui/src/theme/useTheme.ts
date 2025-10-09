@@ -1,11 +1,12 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
-import type { ThemeColors, ThemeConfig, ThemeName } from './types';
+import type { ThemeColors, ThemeConfig, ThemeName, ThemeDependencies, ThemeHook } from './types';
 import { darkTheme } from './themes/dark';
+import { lightTheme } from './themes/light';
 
 // Available themes registry
 const themes: Record<ThemeName, ThemeConfig> = {
   dark: darkTheme,
-  light: darkTheme, // TODO: implement light theme
+  light: lightTheme,
   accessibility: darkTheme, // TODO: implement accessibility theme
 };
 
@@ -15,13 +16,11 @@ const convertColorNameToCssVar = (colorName: string) => {
   return `--color-${colorName.replace(/([A-Z])/g, '-$1').toLowerCase()}`;
 };
 
-export type ThemeDependencies = {
-  documentRootResolver: () => typeof document.documentElement;
-};
-
 export const DEFAULT_THEME_DEPENDENCIES: ThemeDependencies = {
   documentRootResolver: () => document.documentElement,
 };
+
+export const DEFAULT_THEME: ThemeName = 'dark';
 
 /**
  * Theme hook for managing application theming
@@ -30,9 +29,9 @@ export const DEFAULT_THEME_DEPENDENCIES: ThemeDependencies = {
  * by components using var(--color-*) syntax.
  */
 export function useTheme(
-  initialTheme: ThemeName = 'dark',
+  initialTheme: ThemeName = DEFAULT_THEME,
   deps: ThemeDependencies = DEFAULT_THEME_DEPENDENCIES,
-) {
+): ThemeHook {
   const [currentTheme, setCurrentTheme] = useState<ThemeName>(initialTheme);
   const root = useMemo(() => deps.documentRootResolver(), [deps]);
 

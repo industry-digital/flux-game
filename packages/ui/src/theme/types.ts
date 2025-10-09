@@ -31,3 +31,15 @@ export interface ThemeConfig {
 }
 
 export type ThemeName = 'dark' | 'light' | 'accessibility';
+
+
+export type ThemeDependencies = {
+  documentRootResolver: () => typeof document.documentElement;
+};
+
+export type ThemeHook = {
+  currentTheme: ThemeName;
+  setTheme: (themeName: ThemeName) => void;
+  getThemeConfig: () => ThemeConfig;
+  availableThemes: ThemeName[];
+};

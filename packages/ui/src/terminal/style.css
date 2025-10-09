@@ -1,0 +1,101 @@
+.terminal {
+  --terminal-font-family: 'Inconsolata', 'Courier New', monospace;
+  --terminal-font-size: 14px;
+  --terminal-line-height: 1.4;
+
+  display: flex;
+  flex-direction: column;
+  background: var(--color-surface);
+  color: var(--color-text);
+  font-family: var(--terminal-font-family);
+  font-size: var(--terminal-font-size);
+  border: 1px solid var(--color-border);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.terminal__header,
+.terminal__footer {
+  flex-shrink: 0;
+  padding: 0.5rem;
+  background: var(--color-hover);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.terminal__footer {
+  border-bottom: none;
+  border-top: 1px solid var(--color-border);
+}
+
+.terminal__viewport {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  position: relative;
+}
+
+.terminal__content {
+  position: relative;
+  width: 100%;
+}
+
+.terminal__entry {
+  display: flex;
+  align-items: flex-start;
+  padding: 0.25rem 0.5rem;
+  border-bottom: 1px solid transparent;
+  min-height: 24px;
+}
+
+.terminal__entry:hover {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.terminal__entry--with-timestamp {
+  padding-left: 5rem; /* Space for timestamp */
+}
+
+.terminal__timestamp {
+  position: absolute;
+  left: 0.5rem;
+  top: 0.25rem;
+  width: 4rem;
+  font-size: 0.75rem;
+  color: var(--color-text-secondary);
+  user-select: none;
+}
+
+.terminal__text {
+  flex: 1;
+  white-space: pre-wrap;
+  word-break: break-word;
+  line-height: var(--terminal-line-height);
+}
+
+.terminal__element {
+  flex: 1;
+  /* Allow elements to define their own styling */
+}
+
+/* Scrollbar styling for webkit browsers */
+.terminal__viewport::-webkit-scrollbar {
+  width: 8px;
+}
+
+.terminal__viewport::-webkit-scrollbar-track {
+  background: var(--color-surface);
+}
+
+.terminal__viewport::-webkit-scrollbar-thumb {
+  background: var(--color-border);
+  border-radius: 4px;
+}
+
+.terminal__viewport::-webkit-scrollbar-thumb:hover {
+  background: var(--color-text-secondary);
+}
+
+/* Auto-scroll indicator */
+.terminal--auto-scroll .terminal__viewport {
+  scroll-behavior: smooth;
+}

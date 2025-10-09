@@ -23,7 +23,7 @@
     /* Path mapping */
     "baseUrl": ".",
     "paths": {
-      "@/*": ["src/*"]
+      "~/*": ["src/*"]
     },
 
     /* React 19 specific */
@@ -32,7 +32,6 @@
     "forceConsistentCasingInFileNames": true,
     "resolveJsonModule": true
   },
-  "include": ["src/**/*"],
+  "include": ["src/**/*", "vite-env.d.ts"],
   "exclude": ["node_modules", "dist"]
 }
-

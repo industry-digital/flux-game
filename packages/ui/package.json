@@ -28,8 +28,8 @@
     "build": "vite build",
     "type-check": "tsc --noEmit",
     "dev": "vite build --watch",
-    "test": "vitest",
-    "test:run": "vitest run"
+    "test": "vitest run",
+    "test:watch": "vitest"
   },
   "peerDependencies": {
     "react": "^19.0.0",

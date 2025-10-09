@@ -11,7 +11,7 @@ export default defineConfig({
   },
   resolve: {
     alias: {
-      '@flux/ui': resolve(__dirname, 'src')
+      '~/*': resolve(__dirname, 'src/*'),
     }
   }
 });

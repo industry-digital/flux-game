@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { createEnvironmentHook, EnvironmentLike, EnvironmentConfig } from './useEnvironment';
+import { createEnvironmentHook, EnvironmentLike, EnvironmentConfig } from './environment';
 
 describe('createEnvironmentHook', () => {
   describe('basic functionality', () => {
