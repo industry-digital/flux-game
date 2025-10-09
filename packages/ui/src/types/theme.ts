@@ -43,8 +43,7 @@ export type ThemeHook = {
   availableThemes: ThemeName[];
 };
 
-// Hook function signature for dependency injection
-export type UseThemeHook = (
+export type UseTheme = (
   initialTheme?: ThemeName,
-  deps?: ThemeDependencies
+  deps?: ThemeDependencies,
 ) => ThemeHook;

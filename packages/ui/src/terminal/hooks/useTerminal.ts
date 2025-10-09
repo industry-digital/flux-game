@@ -1,16 +1,18 @@
 import { useMemo, useCallback, ReactNode } from 'react';
-import type { TerminalEntry, TerminalConfig, TerminalDependencies, VirtualizationConfig, ThemeName } from '~/types';
+import type { TerminalEntry, TerminalConfig, TerminalDependencies, VirtualizationConfig, ThemeName, TerminalHook, UseTerminal } from '~/types';
 
-const DEFAULT_CONFIG: Required<TerminalConfig> = {
+const DEFAULT_TERMINAL_CONFIG: Required<TerminalConfig> = Object.freeze({
   maxEntries: 10_000,
   autoScroll: true,
   showTimestamps: false,
-};
+});
+
+const DEFAULT_LINE_HEIGHT = 24;
 
 // DEFAULT_TERMINAL_DEPS removed - would cross domain boundaries
 // Use composition.ts for convenience APIs that wire up dependencies
 
-export const createTerminalHook = (deps: TerminalDependencies) => {
+export const createTerminalHook = (deps: TerminalDependencies): UseTerminal => {
 
   /**
    * Terminal hook for managing terminal-like interfaces
@@ -19,17 +21,18 @@ export const createTerminalHook = (deps: TerminalDependencies) => {
    * Supports auto-scrolling and theme integration via dependency injection.
    */
   return function useTerminal(
-    config: TerminalConfig = {},
-    virtualizationConfig: VirtualizationConfig = {},
+    config?: TerminalConfig,
+    virtualizationConfig?: VirtualizationConfig,
     themeName: ThemeName = 'dark',
-  ) {
-    const mergedConfig = { ...DEFAULT_CONFIG, ...config };
+  ): TerminalHook {
+    const mergedVirtualizationConfig = { ...virtualizationConfig };
+    const mergedConfig = { ...DEFAULT_TERMINAL_CONFIG, ...config };
 
     // Setup dependencies - hooks are called here, inside the React component
     const theme = deps.useTheme(themeName);
     const virtualization = deps.useVirtualizedList<TerminalEntry>([], {
-      itemHeight: 24, // Default text line height
-      ...virtualizationConfig,
+      itemHeight: DEFAULT_LINE_HEIGHT,
+      ...mergedVirtualizationConfig,
     });
 
     // Computed properties
@@ -43,13 +46,18 @@ export const createTerminalHook = (deps: TerminalDependencies) => {
     ], [theme.currentTheme, mergedConfig.autoScroll, mergedConfig.showTimestamps]);
 
     // Methods
+    /**
+     * Adds a text entry to the terminal
+     * @param id - Unique identifier for the entry
+     * @param text - Text content to display
+     */
     const print = useCallback((id: string, text: string): void => {
       const entry: TerminalEntry = {
         id,
         type: 'text',
         content: text,
         timestamp: deps.timestamp(),
-        height: 24, // Default text line height
+        height: DEFAULT_LINE_HEIGHT,
       };
 
       virtualization.addItem(entry);
@@ -57,8 +65,13 @@ export const createTerminalHook = (deps: TerminalDependencies) => {
       if (mergedConfig.autoScroll) {
         virtualization.scrollToBottom();
       }
-    }, [virtualization, mergedConfig.autoScroll, deps]);
+    }, [virtualization, mergedConfig.autoScroll]);
 
+    /**
+     * Adds a React component entry to the terminal
+     * @param id - Unique identifier for the entry
+     * @param component - React component to render
+     */
     const render = useCallback((id: string, component: ReactNode): void => {
       const entry: TerminalEntry = {
         id,
@@ -73,7 +86,7 @@ export const createTerminalHook = (deps: TerminalDependencies) => {
       if (mergedConfig.autoScroll) {
         virtualization.scrollToBottom();
       }
-    }, [virtualization, mergedConfig.autoScroll, deps]);
+    }, [virtualization, mergedConfig.autoScroll]);
 
     const clear = useCallback((): void => {
       virtualization.clear();
@@ -95,9 +108,6 @@ export const createTerminalHook = (deps: TerminalDependencies) => {
 
       // Component integration
       terminalClasses,
-
-      // Internal virtualization access (for Terminal component)
-      __virtualization: virtualization,
     };
   }
 };

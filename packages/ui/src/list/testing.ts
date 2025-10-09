@@ -1,5 +1,5 @@
 import { vi } from 'vitest';
-import type { VirtualizationAPI } from './types';
+import type { ListVirtualizationHook } from './types';
 
 /**
  * Creates a mock implementation of useVirtualizedList for testing
@@ -9,7 +9,7 @@ export function createMockUseVirtualizedList<T = any>() {
   // Internal state for the mock
   const items: T[] = [];
 
-  const mockAPI: VirtualizationAPI<T> = {
+  const mockAPI: ListVirtualizationHook<T> = {
     // Core operations - make them functional
     addItem: vi.fn((item: T) => {
       items.push(item);

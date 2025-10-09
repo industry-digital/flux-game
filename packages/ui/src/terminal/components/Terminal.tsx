@@ -1,8 +1,5 @@
 import React, { useRef, useEffect, useCallback, ReactNode } from 'react';
-import { useTerminal } from '../hooks';
-import { TerminalConfig, TerminalEntry } from '../types';
-import { VirtualizationConfig } from '~/list';
-import { ThemeName } from '~/theme';
+import { TerminalEntry, TerminalHook, ListVirtualizationHook } from '~/types';
 import '../style.css';
 
 const DEFAULT_VIEWPORT_STYLE = { height: '100%' };
@@ -18,36 +15,25 @@ const formatTimestamp = (timestamp: number): string => {
 };
 
 interface TerminalProps {
-  config?: TerminalConfig;
-  virtualizationConfig?: VirtualizationConfig;
-  themeName?: ThemeName;
+  terminal: TerminalHook;
+  virtualization: ListVirtualizationHook<TerminalEntry>;
+  itemHeight?: number | ((index: number) => number);
   viewportHeight?: number;
-  header?: ReactNode;
-  footer?: ReactNode;
-  onTerminalReady?: (terminal: ReturnType<typeof useTerminal>) => void;
+  onTerminalReady?: (terminal: TerminalHook) => void;
   onScroll?: (event: { scrollTop: number; scrollHeight: number; clientHeight: number }) => void;
 }
 
 export function Terminal({
-  config = {},
-  virtualizationConfig = {},
-  themeName = 'dark',
+  terminal,
+  virtualization,
+  itemHeight = 24,
   viewportHeight,
-  header,
-  footer,
   onTerminalReady,
   onScroll,
 }: TerminalProps) {
   const viewportRef = useRef<HTMLDivElement>(null);
 
-  // Setup terminal
-  const terminal = useTerminal(config, {
-    viewportHeight: viewportHeight || 400,
-    ...virtualizationConfig,
-  }, themeName);
-
   // Get virtualization internals for component integration
-  const virtualization = terminal.__virtualization;
   const { contentHeight, visibleRange } = virtualization.__internal;
 
   // Handle scroll events
@@ -66,7 +52,6 @@ export function Terminal({
   // Calculate offset for virtualization
   const offsetTop = (() => {
     const { start } = visibleRange;
-    const itemHeight = virtualizationConfig.itemHeight || 24;
 
     if (typeof itemHeight === 'number') {
       return start * itemHeight;
@@ -85,13 +70,13 @@ export function Terminal({
     'terminal__entry',
     `terminal__entry--${entry.type}`,
     {
-      'terminal__entry--with-timestamp': config.showTimestamps,
+      'terminal__entry--with-timestamp': terminal.terminalClasses.some(cls =>
+        typeof cls === 'object' && cls['terminal--show-timestamps']
+      ),
     }
   ].filter(Boolean);
 
   const getEntryStyle = (_entry: TerminalEntry, index: number) => {
-    const itemHeight = virtualizationConfig.itemHeight || 24;
-
     if (typeof itemHeight === 'number') {
       return { height: `${itemHeight}px` };
     }
@@ -128,67 +113,52 @@ export function Terminal({
   }, [terminal, onTerminalReady]);
 
   return (
-    <div className={`terminal ${terminal.terminalClasses.join(' ')}`}>
-      {/* Terminal Header */}
-      {header && (
-        <div className="terminal__header">
-          {header}
-        </div>
-      )}
-
-      {/* Terminal Viewport */}
+    <div
+      ref={viewportRef}
+      className={`terminal ${terminal.terminalClasses.join(' ')}`}
+      style={viewportHeight ? { height: `${viewportHeight}px` } : DEFAULT_VIEWPORT_STYLE}
+      onScroll={handleScroll}
+    >
+      {/* Virtual Content Container */}
       <div
-        ref={viewportRef}
-        className="terminal__viewport"
-        style={viewportHeight ? { height: `${viewportHeight}px` } : DEFAULT_VIEWPORT_STYLE}
-        onScroll={handleScroll}
+        className="terminal__content"
+        style={{
+          height: `${contentHeight}px`,
+          paddingTop: `${offsetTop}px`
+        }}
       >
-        {/* Virtual Content Container */}
-        <div
-          className="terminal__content"
-          style={{
-            height: `${contentHeight}px`,
-            paddingTop: `${offsetTop}px`
-          }}
-        >
-          {/* Visible Terminal Entries */}
-          {terminal.visibleEntries.map((entry, index) => (
-            <div
-              key={entry.id}
-              className={getEntryClasses(entry).join(' ')}
-              style={getEntryStyle(entry, index)}
-            >
-              {/* Timestamp (if enabled) */}
-              {config.showTimestamps && (
-                <div className="terminal__timestamp">
-                  {formatTimestamp(entry.timestamp)}
-                </div>
-              )}
+        {/* Visible Terminal Entries */}
+        {terminal.visibleEntries.map((entry, index) => (
+          <div
+            key={entry.id}
+            className={getEntryClasses(entry).join(' ')}
+            style={getEntryStyle(entry, index)}
+          >
+            {/* Timestamp (if enabled) */}
+            {terminal.terminalClasses.some(cls =>
+              typeof cls === 'object' && cls['terminal--show-timestamps']
+            ) && (
+              <div className="terminal__timestamp">
+                {formatTimestamp(entry.timestamp)}
+              </div>
+            )}
 
-              {/* Text Entry */}
-              {entry.type === 'text' && (
-                <div className="terminal__text">
-                  {entry.content as string}
-                </div>
-              )}
+            {/* Text Entry */}
+            {entry.type === 'text' && (
+              <div className="terminal__text">
+                {entry.content as string}
+              </div>
+            )}
 
-              {/* Element Entry */}
-              {entry.type === 'element' && (
-                <div className="terminal__element">
-                  {entry.content as ReactNode}
-                </div>
-              )}
-            </div>
-          ))}
-        </div>
+            {/* Element Entry */}
+            {entry.type === 'element' && (
+              <div className="terminal__element">
+                {entry.content as ReactNode}
+              </div>
+            )}
+          </div>
+        ))}
       </div>
-
-      {/* Terminal Footer */}
-      {footer && (
-        <div className="terminal__footer">
-          {footer}
-        </div>
-      )}
     </div>
   );
 }

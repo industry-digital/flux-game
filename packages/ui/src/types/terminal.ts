@@ -1,6 +1,6 @@
 import { ReactNode } from 'react';
-import type { UseThemeHook } from './theme';
-import type { UseVirtualizedListHook } from './list';
+import type { ThemeName, UseTheme } from './theme';
+import type { UseVirtualizedList, VirtualizationConfig } from './list';
 
 export type TerminalEntry = {
   id: string;
@@ -20,6 +20,30 @@ export type TerminalConfig = {
 // Hook signatures are strongly typed by referencing the centralized type definitions
 export type TerminalDependencies = {
   timestamp: () => number;
-  useTheme: UseThemeHook;
-  useVirtualizedList: UseVirtualizedListHook;
+  useTheme: UseTheme;
+  useVirtualizedList: UseVirtualizedList;
+};
+
+export type UseTerminal = (
+  config?: TerminalConfig,
+  virtualizationConfig?: VirtualizationConfig,
+  themeName?: ThemeName,
+) => TerminalHook;
+
+export type TerminalHook = {
+  // Core methods
+  print: (id: string, text: string) => void;
+  render: (id: string, component: ReactNode) => void;
+  clear: () => void;
+
+  // Scroll control
+  scrollToBottom: () => void;
+  scrollToTop: () => void;
+
+  // State access
+  visibleEntries: TerminalEntry[];
+  totalEntries: number;
+
+  // Component integration
+  terminalClasses: (string | Record<string, boolean>)[];
 };

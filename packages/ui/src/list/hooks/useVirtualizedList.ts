@@ -1,5 +1,5 @@
 import { useState, useMemo, useCallback, useRef } from 'react';
-import type { VirtualizationConfig, VirtualizationAPI } from '../types';
+import type { VirtualizationConfig, ListVirtualizationHook } from '../types';
 
 const DEFAULT_CONFIG: Required<VirtualizationConfig> = {
   itemHeight: 24,
@@ -18,7 +18,7 @@ const DEFAULT_CONFIG: Required<VirtualizationConfig> = {
 export function useVirtualizedList<T>(
   initialItems: T[] = [],
   config: VirtualizationConfig = {}
-): VirtualizationAPI<T> {
+): ListVirtualizationHook<T> {
   const mergedConfig = { ...DEFAULT_CONFIG, ...config };
   const scrollElementRef = useRef<HTMLElement | null>(null);
 

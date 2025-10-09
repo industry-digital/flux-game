@@ -5,7 +5,7 @@ export type VirtualizationConfig = {
   scrollBehavior?: 'smooth' | 'auto';
 };
 
-export interface VirtualizationAPI<T> {
+export type ListVirtualizationHook<T> = {
   // Core operations
   addItem: (item: T) => void;
   clear: () => void;
@@ -26,10 +26,10 @@ export interface VirtualizationAPI<T> {
     visibleRange: { start: number; end: number };
     setScrollElement: (element: HTMLElement | null) => void;
   };
-}
+};
 
 // Hook function signature for dependency injection
-export type UseVirtualizedListHook = <T>(
+export type UseVirtualizedList = <T>(
   items: T[],
   config?: VirtualizationConfig
-) => VirtualizationAPI<T>;
+) => ListVirtualizationHook<T>;

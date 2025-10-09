@@ -1,23 +1,7 @@
 import { useMemo } from 'react';
+import type { LoggerInterface } from '~/types/infrastructure';
 
-// Simple logger interface for UI package
-export interface LoggerInterface {
-  debug(message: string, ...args: any[]): void;
-  info(message: string, ...args: any[]): void;
-  warn(message: string, ...args: any[]): void;
-  error(message: string, ...args: any[]): void;
-}
-
-export type LoggerResolver = (context: string) => LoggerInterface;
-
-type ConsoleLike = {
-  debug: (message: string, ...args: any[]) => void;
-  info: (message: string, ...args: any[]) => void;
-  warn: (message: string, ...args: any[]) => void;
-  error: (message: string, ...args: any[]) => void;
-};
-
-const createConsoleLogger = (context: string, console: ConsoleLike = window.console): LoggerInterface => {
+const createConsoleLogger = (context: string, console: LoggerInterface = window.console): LoggerInterface => {
   return {
     debug: (message: string, ...args: any[]) => console.debug(`[${context}] ${message}`, ...args),
     info: (message: string, ...args: any[]) => console.info(`[${context}] ${message}`, ...args),

@@ -1,23 +1,10 @@
-export type EnvironmentLike = Record<string, string | undefined>;
-
-export type EnvironmentResolver<TInput extends EnvironmentLike, TOutput> = (
-  input: TInput
-) => TOutput;
-
-export type EnvironmentConfig<T> = {
-  [K in keyof T]: {
-    key: string;
-    required?: boolean;
-    defaultValue?: T[K];
-    transform?: (value: string) => T[K];
-  };
-};
+import type { EnvironmentLike, EnvironmentConfig, EnvironmentHookOutput } from '~/types/infrastructure';
 
 // Type-safe environment configuration helper
-export const createEnvironmentHook = <T extends Record<string, any>>(
+export const createEnvironmentHook = <T>(
   rawEnv: EnvironmentLike,
   config: EnvironmentConfig<T>,
-): (() => T) => {
+): EnvironmentHookOutput<T> => {
   const environment = {} as T;
   const entries = Object.entries(config) as [keyof T, EnvironmentConfig<T>[keyof T]][];
   const missingRequiredVariables = new Set<string>();
