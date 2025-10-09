@@ -1,6 +1,6 @@
 import { useMemo, useCallback, ReactNode } from 'react';
-import { useVirtualizedList, VirtualizationConfig } from '../../list';
-import { useTheme, ThemeName } from '../../theme';
+import { useVirtualizedList, VirtualizationConfig } from '~/list';
+import { useTheme, ThemeName } from '~/theme';
 import type { TerminalEntry, TerminalConfig, TerminalDependencies } from '../types';
 
 const DEFAULT_CONFIG: Required<TerminalConfig> = {

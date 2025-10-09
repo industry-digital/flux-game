@@ -1,8 +1,8 @@
 import React, { useRef, useEffect, useCallback, ReactNode } from 'react';
 import { useTerminal } from '../hooks';
 import { TerminalConfig, TerminalEntry } from '../types';
-import { VirtualizationConfig } from '../../list';
-import { ThemeName } from '../../theme';
+import { VirtualizationConfig } from '~/list';
+import { ThemeName } from '~/theme';
 import '../style.css';
 
 const DEFAULT_VIEWPORT_STYLE = { height: '100%' };

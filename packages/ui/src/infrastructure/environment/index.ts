@@ -1,1 +1,1 @@
-export * from '../hooks/environment';
+export * from '../hooks/useEnvironment';

@@ -1,6 +1,6 @@
 import { vi, describe, it, expect, beforeEach } from 'vitest';
 import { renderHook, act } from '@testing-library/react';
-import { useStorage, useLocalStorage, useSessionStorage } from './storage';
+import { useStorage } from './useStorage';
 
 // Create a mock storage that behaves like the real Storage interface
 const createMockStorage = (): Storage => {
@@ -122,97 +122,6 @@ describe('useStorage', () => {
     });
 
     expect(result.current[0]).toBeUndefined();
-  });
-});
-
-describe('useLocalStorage', () => {
-  beforeEach(() => {
-    // Mock localStorage globally
-    const mockLocalStorage = createMockStorage();
-    Object.defineProperty(window, 'localStorage', {
-      value: mockLocalStorage,
-      writable: true,
-    });
-  });
-
-  it('provides a convenient wrapper for localStorage', () => {
-    const { result } = renderHook(() =>
-      useLocalStorage('local-key', 'local-initial')
-    );
-
-    expect(result.current[0]).toBe('local-initial');
-
-    act(() => {
-      result.current[1]('local-updated');
-    });
-
-    expect(result.current[0]).toBe('local-updated');
-    expect(window.localStorage.setItem).toHaveBeenCalledWith('local-key', '"local-updated"');
-  });
-
-  it('persists data across hook instances', () => {
-    // First hook instance sets a value
-    const { result: result1 } = renderHook(() =>
-      useLocalStorage('persistent-key', 'initial')
-    );
-
-    act(() => {
-      result1.current[1]('persisted-value');
-    });
-
-    // Mock localStorage to return the persisted value
-    vi.mocked(window.localStorage.getItem).mockReturnValue('"persisted-value"');
-
-    // Second hook instance should read the persisted value
-    const { result: result2 } = renderHook(() =>
-      useLocalStorage('persistent-key', 'initial')
-    );
-
-    expect(result2.current[0]).toBe('persisted-value');
-  });
-});
-
-describe('useSessionStorage', () => {
-  beforeEach(() => {
-    // Mock sessionStorage globally
-    const mockSessionStorage = createMockStorage();
-    Object.defineProperty(window, 'sessionStorage', {
-      value: mockSessionStorage,
-      writable: true,
-    });
-  });
-
-  it('provides a convenient wrapper for sessionStorage', () => {
-    const { result } = renderHook(() =>
-      useSessionStorage('session-key', 'session-initial')
-    );
-
-    expect(result.current[0]).toBe('session-initial');
-
-    act(() => {
-      result.current[1]('session-updated');
-    });
-
-    expect(result.current[0]).toBe('session-updated');
-    expect(window.sessionStorage.setItem).toHaveBeenCalledWith('session-key', '"session-updated"');
-  });
-
-  it('handles session-specific data', () => {
-    const sessionData = { userId: 123, isAuthenticated: true };
-
-    const { result } = renderHook(() =>
-      useSessionStorage('auth-session', {})
-    );
-
-    act(() => {
-      result.current[1](sessionData);
-    });
-
-    expect(result.current[0]).toEqual(sessionData);
-    expect(window.sessionStorage.setItem).toHaveBeenCalledWith(
-      'auth-session',
-      JSON.stringify(sessionData)
-    );
   });
 });
 

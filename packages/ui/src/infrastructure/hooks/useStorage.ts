@@ -59,12 +59,3 @@ export const useStorage = <T = any>(key: string, initialValue: T, storage: Stora
 
   return useMemo(() => [storedValue, setValue], [storedValue, setValue]);
 };
-
-
-export const useLocalStorage = <T>(key: string, initialValue: T) => {
-  return useStorage<T>(key, initialValue, window.localStorage);
-};
-
-export const useSessionStorage = <T>(key: string, initialValue: T) => {
-  return useStorage<T>(key, initialValue, window.sessionStorage);
-};
