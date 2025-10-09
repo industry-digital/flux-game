@@ -2,15 +2,19 @@
   "name": "flux-monorepo",
   "private": true,
   "workspaces": [
-    "packages/*"
+    "packages/core",
+    "packages/ui",
+    "packages/tools"
   ],
   "scripts": {
     "build": "npm run build --workspaces",
     "test": "npm run test --workspaces",
-    "dev:guide": "npm run dev --workspace=@flux/guide",
-    "dev:client": "npm run tauri:dev --workspace=@flux/client",
-    "dev:tools": "npm run dev --workspace=@flux/tools",
-    "clean": "npm run clean --workspaces --if-present"
+    "clean": "npm run clean --workspaces --if-present",
+    "postinstall": "./scripts/postinst core ui tools"
+  },
+  "overrides": {
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0"
   },
   "devDependencies": {
     "concurrently": "^8.2.2",

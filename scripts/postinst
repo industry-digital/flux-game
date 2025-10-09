@@ -1,0 +1,33 @@
+#!/usr/bin/env bash
+
+# Fix npm workspace symlinks that point to wrong relative paths
+# Usage: ./scripts/postinst core ui tools
+
+set -e
+
+if [ ! -d "node_modules/@flux" ]; then
+    echo "Error: node_modules/@flux directory not found"
+    exit 1
+fi
+
+cd node_modules/@flux
+
+# Remove existing broken symlinks
+for package in "$@"; do
+    if [ -L "$package" ] || [ -e "$package" ]; then
+        echo "Removing existing symlink: $package"
+        rm -f "$package"
+    fi
+done
+
+# Create correct symlinks
+for package in "$@"; do
+    if [ -d "../../packages/$package" ]; then
+        echo "Creating symlink: $package -> ../../packages/$package"
+        ln -sf "../../packages/$package" "$package"
+    else
+        echo "Warning: packages/$package directory not found, skipping"
+    fi
+done
+
+echo "✅ Fixed workspace symlinks for: $*"
