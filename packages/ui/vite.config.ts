@@ -19,7 +19,8 @@ export default defineConfig({
           'react-dom': 'ReactDOM'
         }
       }
-    }
+    },
+    emptyOutDir: true
   },
   resolve: {
     alias: {

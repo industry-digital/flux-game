@@ -25,7 +25,7 @@
   },
   "files": ["dist"],
   "scripts": {
-    "build": "vite build",
+    "build": "vite build && tsc --emitDeclarationOnly --outDir dist",
     "type-check": "tsc --noEmit",
     "dev": "vite build --watch",
     "test": "vitest run",
