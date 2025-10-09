@@ -1,0 +1,10 @@
+{
+  "extends": "./node_modules/astro/tsconfigs/strict.json",
+  "compilerOptions": {
+    "baseUrl": ".",
+    "paths": {
+      "@flux/core": ["../core/dist/types/index.d.ts"],
+      "@flux/ui": ["../ui/dist/index.d.ts"]
+    }
+  }
+}
