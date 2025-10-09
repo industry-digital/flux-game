@@ -12,9 +12,10 @@ const DEFAULT_CONFIG: Required<TerminalConfig> = {
 export const DEFAULT_TERMINAL_DEPS: TerminalDependencies = {
   timestamp: () => Date.now(),
   useTheme,
+  useVirtualizedList,
 };
 
-export const createTerminalHook = (deps: TerminalDependencies) => {
+export const createTerminalHook = (deps: TerminalDependencies = DEFAULT_TERMINAL_DEPS) => {
 
   /**
    * Terminal hook for managing terminal-like interfaces

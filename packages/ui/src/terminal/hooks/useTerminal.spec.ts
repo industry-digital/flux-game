@@ -2,8 +2,8 @@ import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { renderHook, act } from '@testing-library/react';
 import { createTerminalHook, DEFAULT_TERMINAL_DEPS } from './useTerminal';
 import { TerminalDependencies } from '../types';
-import { createMockTheme, createMockUseTheme, ThemeHook } from '../../theme';
-import { createMockUseVirtualizedList } from '../../list';
+import { createMockTheme, createMockUseTheme, ThemeHook } from '~/theme';
+import { createMockUseVirtualizedList } from '~/list';
 
 describe('useTerminal', () => {
   let mockTimestamp: ReturnType<typeof vi.fn>;
@@ -37,7 +37,7 @@ describe('useTerminal', () => {
 
     it('should initialize with custom theme', () => {
       const useTerminal = createTerminalHook(testDeps);
-      const { result } = renderHook(() => useTerminal({}, {}, 'light'));
+      const { result: _result } = renderHook(() => useTerminal({}, {}, 'light'));
 
       expect(mockUseTheme).toHaveBeenCalledWith('light');
     });

@@ -89,7 +89,7 @@ export function Terminal({
     }
   ].filter(Boolean);
 
-  const getEntryStyle = (entry: TerminalEntry, index: number) => {
+  const getEntryStyle = (_entry: TerminalEntry, index: number) => {
     const itemHeight = virtualizationConfig.itemHeight || 24;
 
     if (typeof itemHeight === 'number') {
