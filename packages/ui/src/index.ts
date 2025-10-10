@@ -6,6 +6,7 @@ export * from './types';
 
 // Domain modules
 export * from './theme';
+export * from './combat';
 export * from './terminal';
 export * from './list';
 export * from './infrastructure';

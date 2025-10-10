@@ -9,3 +9,6 @@ export * from './list';
 
 // Terminal types
 export * from './terminal';
+
+// Combat types
+export * from './combat';

@@ -1,0 +1,64 @@
+/* Battlefield Notation Component Styles */
+
+.battlefield-notation {
+  font-family: 'Courier New', 'Monaco', 'Menlo', monospace;
+  font-size: 14px;
+  line-height: 1.4;
+  white-space: pre;
+  margin: 0;
+  padding: 8px 12px;
+  background-color: var(--theme-bg-secondary, #1d2021);
+  border: 1px solid var(--theme-border, #3c3836);
+  border-radius: 4px;
+  overflow-x: auto;
+}
+
+/* Team color classes for HTML rendering */
+.battlefield-notation .subject-team {
+  color: var(--theme-accent-green, #b8bb26);
+  font-weight: 500;
+}
+
+.battlefield-notation .enemy-team {
+  color: var(--theme-accent-red, #fb4934);
+  font-weight: 500;
+}
+
+.battlefield-notation .current-actor {
+  background-color: var(--theme-accent-yellow, #fabd2f);
+  color: var(--theme-bg-primary, #282828);
+  padding: 0 2px;
+  border-radius: 2px;
+  font-weight: bold;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .battlefield-notation {
+    font-size: 12px;
+    padding: 6px 8px;
+  }
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+  .battlefield-notation .subject-team {
+    color: #00ff00;
+  }
+
+  .battlefield-notation .enemy-team {
+    color: #ff0000;
+  }
+
+  .battlefield-notation .current-actor {
+    background-color: #ffff00;
+    color: #000000;
+  }
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+  .battlefield-notation * {
+    transition: none !important;
+  }
+}
