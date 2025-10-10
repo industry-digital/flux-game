@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo, useRef } from 'react';
 import type { BattlefieldNotationProps, ColorStrategy } from '~/types/combat';
 
 /**
@@ -36,36 +36,70 @@ const ColorStrategies = {
   } as ColorStrategy,
 } as const;
 
-
 const DEFAULT_SUBSCRIPTS = ['₀', '₁', '₂', '₃', '₄', '₅', '₆', '₇', '₈', '₉'];
 
+// Pre-compute common subscripts for faster access
+const SUBSCRIPT_CACHE = new Map<number, string>();
+
 /**
- * Generate Unicode subscript numbers for actor symbols
+ * Generate Unicode subscript numbers with caching for common values
  */
 function generateSubscript(num: number, subscripts: string[] = DEFAULT_SUBSCRIPTS): string {
-  const digits = num.toString().split('');
-  const output = Array(digits.length);
-
-  for (let i = 0; i < digits.length; i++) {
-    output[i] = subscripts[parseInt(digits[i])];
+  // Cache hit for common single digits and small numbers
+  if (num < 100) {
+    const cached = SUBSCRIPT_CACHE.get(num);
+    if (cached) return cached;
   }
 
-  return output.join('');
+  const digits = num.toString();
+  let output = '';
+
+  // Direct string building instead of array operations
+  for (let i = 0; i < digits.length; i++) {
+    output += subscripts[parseInt(digits[i])];
+  }
+
+  // Cache small numbers
+  if (num < 100) {
+    SUBSCRIPT_CACHE.set(num, output);
+  }
+
+  return output;
 }
 
+type PositionMapValue = { leftGlyphs: string[], rightGlyphs: string[] };
+
+const LEFT = 'left';
+const RIGHT = 'right';
+
+// Production-only optimizations
+const IS_PRODUCTION = process.env.NODE_ENV === 'production';
+
+// Optimized color strategies for production
+const OptimizedColorStrategies = IS_PRODUCTION ? {
+  ...ColorStrategies,
+  // Inline simple functions for better performance
+  PLAIN: {
+    subject: (text: string) => text,
+    enemy: (text: string) => text,
+    neutral: (text: string) => text,
+    currentActorBackground: (text: string) => `**${text}**`,
+  }
+} : ColorStrategies;
+
 export const createBattleFieldNotationRenderer = () => {
-  const leftBoundaries = new Set();
-  const rightBoundaries = new Set();
+  // Pre-allocate reusable arrays for better memory management
+  const leftBoundaries = new Set<number>();
+  const rightBoundaries = new Set<number>();
   const letterCounts = new Map<string, number>();
-  const positionMap = new Map<number, { leftGlyphs: string[], rightGlyphs: string[] }>();
+  const positionMap = new Map<number, PositionMapValue>();
   const parts: string[] = [];
 
   /**
    * Render the complete battlefield notation (optimized single-pass)
    */
-  return function renderBattlefieldNotation(
-    props: BattlefieldNotationProps,
-  ): string {
+  return function renderBattlefieldNotation(props: BattlefieldNotationProps): string {
+    // Reset collections efficiently
     parts.length = 0;
     positionMap.clear();
     letterCounts.clear();
@@ -77,97 +111,97 @@ export const createBattleFieldNotationRenderer = () => {
       subjectTeam,
       currentActor,
       boundaries = [],
-      colorStrategy = ColorStrategies.PLAIN,
+      colorStrategy = OptimizedColorStrategies.PLAIN,
       battlefieldLength = 300,
     } = props;
 
-    if (combatants.length === 0) {
-      return '';
-    }
+    // Fast path for empty combatants
+    if (combatants.length === 0) return '';
 
-    // Create boundary lookup maps for O(1) access
-    for (const boundary of boundaries) {
-      if (boundary.side === 'left') {
+    // Pre-compute boundary sets with cached length
+    for (let i = 0, len = boundaries.length; i < len; i++) {
+      const boundary = boundaries[i];
+      if (boundary.side === LEFT) {
         leftBoundaries.add(boundary.position);
       } else {
         rightBoundaries.add(boundary.position);
       }
     }
 
-    for (const actor of combatants) {
-      // Generate symbol (inline glyph generation)
-      const firstLetter = actor.name.charAt(0).toUpperCase();
-      const count = letterCounts.get(firstLetter) || 0;
-      letterCounts.set(firstLetter, count + 1);
-      const symbol = `${firstLetter}${generateSubscript(count + 1)}`;
+    // Inline critical path for actor processing with cached length
+    for (let i = 0, len = combatants.length; i < len; i++) {
+      const actor = combatants[i];
 
-      // Determine colors and highlighting
-      const isCurrentActor = actor.id === currentActor;
-      const isSubjectTeam = subjectTeam ? actor.team === subjectTeam : false;
+      // Generate symbol with minimal allocations
+      const firstChar = actor.name.charAt(0);
+      const firstLetter = firstChar >= 'A' && firstChar <= 'Z' ? firstChar : firstChar.toUpperCase();
+      const count = (letterCounts.get(firstLetter) || 0) + 1;
+      letterCounts.set(firstLetter, count);
+      const symbol = `${firstLetter}${generateSubscript(count)}`;
 
+      // Determine coloring (optimize condition checks)
       let colorFn = colorStrategy.neutral;
-      if (isSubjectTeam) {
-        colorFn = colorStrategy.subject;
-      } else if (actor.team) {
-        colorFn = colorStrategy.enemy;
+      if (subjectTeam) {
+        if (actor.team === subjectTeam) {
+          colorFn = colorStrategy.subject;
+        } else if (actor.team) {
+          colorFn = colorStrategy.enemy;
+        }
       }
 
-      // Create the glyph with facing indicator
-      const facingChar = actor.facing === 'right' ? '>' : '<';
-      const glyphText = actor.facing === 'right'
-        ? `${symbol}${facingChar}`
-        : `${facingChar}${symbol}`;
+      // Create glyph with minimal string operations
+      const isRightFacing = actor.facing === RIGHT;
+      const glyphText = isRightFacing ? `${symbol}>` : `<${symbol}`;
+      let finalGlyph = colorFn(glyphText);
 
-      const coloredGlyph = colorFn(glyphText);
-      const finalGlyph = isCurrentActor && colorStrategy.currentActorBackground
-        ? colorStrategy.currentActorBackground(coloredGlyph)
-        : coloredGlyph;
+      // Apply current actor highlighting
+      if (actor.id === currentActor && colorStrategy.currentActorBackground) {
+        finalGlyph = colorStrategy.currentActorBackground(finalGlyph);
+      }
 
-      // Group by position (inline grouping)
+      // Group by position
       const pos = actor.position;
-      if (!positionMap.has(pos)) {
-        positionMap.set(pos, { leftGlyphs: [], rightGlyphs: [] });
+      let group = positionMap.get(pos);
+      if (!group) {
+        group = { leftGlyphs: [], rightGlyphs: [] };
+        positionMap.set(pos, group);
       }
 
-      const group = positionMap.get(pos)!;
-      if (actor.facing === 'left') {
-        group.leftGlyphs.push(finalGlyph);
-      } else {
+      if (isRightFacing) {
         group.rightGlyphs.push(finalGlyph);
+      } else {
+        group.leftGlyphs.push(finalGlyph);
       }
     }
 
-    // Linear scan through battlefield positions (O(300) = O(1) constant time)
-    // Early exit optimization: break when all positions processed
+    // Sort positions once instead of scanning 300 positions
+    const sortedPositions = Array.from(positionMap.keys()).sort((a, b) => a - b);
     let prevPosition = -1;
-    let processedPositions = 0;
-    const totalPositions = positionMap.size;
 
-    for (let position = 0; position <= battlefieldLength; position++) {
-      if (!positionMap.has(position)) continue;
+    for (let i = 0, len = sortedPositions.length; i < len; i++) {
+      const position = sortedPositions[i];
+      const group = positionMap.get(position)!;
 
-      processedPositions++;
-
-      const group = positionMap.get(position)!
-
-      // Add left boundary marker
-      if (leftBoundaries.has(position)) {
+      // Add left boundary marker (optimized for rare boundaries)
+      if (leftBoundaries.size > 0 && leftBoundaries.has(position)) {
         parts.push('▌');
       }
 
-      // Render position group inline
-      const groupParts: string[] = [];
+      // Build group content efficiently
+      let groupContent = '';
+      const hasLeftGlyphs = group.leftGlyphs.length > 0;
+      const hasRightGlyphs = group.rightGlyphs.length > 0;
 
-      if (group.leftGlyphs.length > 0) {
-        groupParts.push(group.leftGlyphs.join(''));
+      if (hasLeftGlyphs) {
+        groupContent += group.leftGlyphs.join('');
       }
 
-      if (group.leftGlyphs.length > 0 && group.rightGlyphs.length > 0) {
-        groupParts.push(' '); // Boundary space
+      if (hasLeftGlyphs && hasRightGlyphs) {
+        groupContent += ' ';
       }
 
-      if (group.rightGlyphs.length > 0) {
-        groupParts.push(group.rightGlyphs.join(''));
+      if (hasRightGlyphs) {
+        groupContent += group.rightGlyphs.join('');
       }
 
       // Add distance from previous group
@@ -176,17 +210,12 @@ export const createBattleFieldNotationRenderer = () => {
         parts.push(`─${distance}m─`);
       }
 
-      parts.push(`[ ${groupParts.join('')} ]`);
+      parts.push(`[ ${groupContent} ]`);
       prevPosition = position;
 
       // Add right boundary marker
       if (rightBoundaries.has(position)) {
         parts.push('▌');
-      }
-
-      // Early exit: all positions processed
-      if (processedPositions === totalPositions) {
-        break;
       }
     }
 
@@ -206,17 +235,25 @@ const renderBattlefieldNotation = createBattleFieldNotationRenderer();
  * - Team-based coloring
  * - Current actor highlighting
  */
-export function BattlefieldNotation(props: BattlefieldNotationProps): React.JSX.Element {
-  const { useHtml = false, className = '' } = props;
+export const BattlefieldNotation: React.FC<BattlefieldNotationProps> = React.memo((props) => {
+  const rendererRef = useRef(createBattleFieldNotationRenderer());
 
-  // Choose appropriate color strategy
-  const colorStrategy = props.colorStrategy || (useHtml ? ColorStrategies.HTML : ColorStrategies.PLAIN);
+  const { useHtml, className, colorStrategy } = useMemo(() => ({
+    useHtml: props.useHtml ?? false,
+    className: props.className ?? '',
+    colorStrategy: props.colorStrategy || (props.useHtml ? OptimizedColorStrategies.HTML : OptimizedColorStrategies.PLAIN),
+  }), [props.useHtml, props.className, props.colorStrategy]);
 
-  // Generate the notation string
-  const notation = renderBattlefieldNotation({
-    ...props,
-    colorStrategy,
-  });
+  const notation = useMemo(() => {
+    return rendererRef.current({ ...props, colorStrategy });
+  }, [
+    props.combatants,
+    props.subjectTeam,
+    props.currentActor,
+    props.boundaries,
+    props.battlefieldLength,
+    colorStrategy
+  ]);
 
   // Render based on format preference
   if (useHtml) {
@@ -233,16 +270,12 @@ export function BattlefieldNotation(props: BattlefieldNotationProps): React.JSX.
       {notation}
     </pre>
   );
-}
-
-/**
- * Export color strategies for external use
- */
-export { ColorStrategies };
+});
 
 /**
  * Export utility functions for testing and advanced usage
  */
 export {
+  ColorStrategies,
   renderBattlefieldNotation
 };
