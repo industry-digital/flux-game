@@ -6,12 +6,7 @@
     "outDir": "dist"
   },
   "include": [
-    "src/index.ts",
-    "src/infrastructure/**/*",
-    "src/list/**/*",
-    "src/terminal/**/*",
-    "src/theme/**/*",
-    "src/types/**/*"
+    "src/index.ts"
   ],
   "exclude": [
     "node_modules",
