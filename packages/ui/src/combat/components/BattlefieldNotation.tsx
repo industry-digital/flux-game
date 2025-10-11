@@ -2,17 +2,17 @@ import React, { useMemo, useRef } from 'react';
 import type { BattlefieldNotationProps, ColorStrategy } from '~/types/combat';
 
 /**
- * Default color strategies for battlefield notation
+ * Color strategies matching the legacy Vue implementation
  */
 const ColorStrategies = {
   /**
-   * Standard battlefield colors: green subject, red enemies
+   * Gruvbox color scheme (default, matching legacy)
    */
-  DEFAULT: {
-    subject: (text: string) => `\x1b[38;5;46m${text}\x1b[0m`,
-    enemy: (text: string) => `\x1b[91m${text}\x1b[0m`,
-    neutral: (text: string) => text,
-    currentActorBackground: (text: string) => `\x1b[7m${text}\x1b[0m`,
+  GRUVBOX: {
+    subject: (text: string) => `<span style="color: #b8bb26">${text}</span>`,
+    enemy: (text: string) => `<span style="color: #fb4934">${text}</span>`,
+    neutral: (text: string) => `<span style="color: #ebdbb2">${text}</span>`,
+    currentActorBackground: (text: string) => `<span style="font-weight: 900">${text}</span>`,
   } as ColorStrategy,
 
   /**
@@ -26,13 +26,13 @@ const ColorStrategies = {
   } as ColorStrategy,
 
   /**
-   * No coloring - plain text output
+   * No coloring - HTML output without colors
    */
   PLAIN: {
     subject: (text: string) => text,
     enemy: (text: string) => text,
     neutral: (text: string) => text,
-    currentActorBackground: (text: string) => `**${text}**`,
+    currentActorBackground: (text: string) => `<span style="font-weight: 900">${text}</span>`,
   } as ColorStrategy,
 } as const;
 
@@ -111,8 +111,7 @@ export const createBattleFieldNotationRenderer = () => {
       subjectTeam,
       currentActor,
       boundaries = [],
-      colorStrategy = OptimizedColorStrategies.PLAIN,
-      battlefieldLength = 300,
+      colorStrategy = OptimizedColorStrategies.GRUVBOX,
     } = props;
 
     // Fast path for empty combatants
@@ -132,12 +131,22 @@ export const createBattleFieldNotationRenderer = () => {
     for (let i = 0, len = combatants.length; i < len; i++) {
       const actor = combatants[i];
 
+      // Debug logging
+      if (typeof window !== 'undefined') {
+        console.log(`Processing actor ${i}:`, actor);
+      }
+
       // Generate symbol with minimal allocations
       const firstChar = actor.name.charAt(0);
       const firstLetter = firstChar >= 'A' && firstChar <= 'Z' ? firstChar : firstChar.toUpperCase();
       const count = (letterCounts.get(firstLetter) || 0) + 1;
       letterCounts.set(firstLetter, count);
       const symbol = `${firstLetter}${generateSubscript(count)}`;
+
+      // Debug logging
+      if (typeof window !== 'undefined') {
+        console.log(`Generated symbol for ${actor.name}:`, symbol);
+      }
 
       // Determine coloring (optimize condition checks)
       let colorFn = colorStrategy.neutral;
@@ -172,11 +181,26 @@ export const createBattleFieldNotationRenderer = () => {
       } else {
         group.leftGlyphs.push(finalGlyph);
       }
+
+      // Debug logging
+      if (typeof window !== 'undefined') {
+        console.log(`Added ${actor.name} to position ${pos}:`, {
+          finalGlyph,
+          isRightFacing,
+          group: { ...group }
+        });
+      }
     }
 
     // Sort positions once instead of scanning 300 positions
     const sortedPositions = Array.from(positionMap.keys()).sort((a, b) => a - b);
     let prevPosition = -1;
+
+    // Debug logging
+    if (typeof window !== 'undefined') {
+      console.log('Final position map:', Object.fromEntries(positionMap));
+      console.log('Sorted positions:', sortedPositions);
+    }
 
     for (let i = 0, len = sortedPositions.length; i < len; i++) {
       const position = sortedPositions[i];
@@ -204,10 +228,10 @@ export const createBattleFieldNotationRenderer = () => {
         groupContent += group.rightGlyphs.join('');
       }
 
-      // Add distance from previous group
+      // Add distance from previous group (matching Vue format)
       if (prevPosition >= 0) {
         const distance = position - prevPosition;
-        parts.push(`─${distance}m─`);
+        parts.push(`─<span class="distance-number">${distance}</span>─`);
       }
 
       parts.push(`[ ${groupContent} ]`);
@@ -238,11 +262,10 @@ const renderBattlefieldNotation = createBattleFieldNotationRenderer();
 export const BattlefieldNotation: React.FC<BattlefieldNotationProps> = React.memo((props) => {
   const rendererRef = useRef(createBattleFieldNotationRenderer());
 
-  const { useHtml, className, colorStrategy } = useMemo(() => ({
-    useHtml: props.useHtml ?? false,
+  const { className, colorStrategy } = useMemo(() => ({
     className: props.className ?? '',
-    colorStrategy: props.colorStrategy || (props.useHtml ? OptimizedColorStrategies.HTML : OptimizedColorStrategies.PLAIN),
-  }), [props.useHtml, props.className, props.colorStrategy]);
+    colorStrategy: props.colorStrategy || OptimizedColorStrategies.GRUVBOX, // Default to Gruvbox like Vue
+  }), [props.className, props.colorStrategy]);
 
   const notation = useMemo(() => {
     return rendererRef.current({ ...props, colorStrategy });
@@ -255,20 +278,12 @@ export const BattlefieldNotation: React.FC<BattlefieldNotationProps> = React.mem
     colorStrategy
   ]);
 
-  // Render based on format preference
-  if (useHtml) {
-    return (
-      <div
-        className={`battlefield-notation ${className}`}
-        dangerouslySetInnerHTML={{ __html: notation }}
-      />
-    );
-  }
-
+  // Always render as HTML since we're using HTML-based notation
   return (
-    <pre className={`battlefield-notation ${className}`}>
-      {notation}
-    </pre>
+    <div
+      className={`battlefield-notation ${className}`}
+      dangerouslySetInnerHTML={{ __html: notation }}
+    />
   );
 });
 

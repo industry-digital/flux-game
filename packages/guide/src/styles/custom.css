@@ -1,0 +1,457 @@
+/**
+ * Custom theme for FSP Player Guide - Starlight Edition
+ * Replicating the exact VitePress theme styling
+ * - Zilla Slab font family
+ * - Gruvbox Dark Material color scheme
+ * - Exact typography and spacing
+ */
+
+/* Import Zilla Slab font from Google Fonts */
+@import url('https://fonts.googleapis.com/css2?family=Zilla+Slab:ital,wght@0,300;0,400;0,500;0,600;0,700;1,300;1,400;1,500;1,600;1,700&display=swap');
+
+/* Import KaTeX CSS for LaTeX math rendering */
+@import url('https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css');
+
+/* Gruvbox Dark Material Color Palette */
+:root {
+  /* Gruvbox Dark Material Colors */
+  --gruvbox-bg0: #1d2021;
+  --gruvbox-bg1: #282828;
+  --gruvbox-bg2: #32302f;
+  --gruvbox-bg3: #3c3836;
+  --gruvbox-bg4: #504945;
+  --gruvbox-fg0: #fbf1c7;
+  --gruvbox-fg1: #ebdbb2;
+  --gruvbox-fg2: #d5c4a1;
+  --gruvbox-fg3: #bdae93;
+  --gruvbox-fg4: #a89984;
+
+  /* Gruvbox Accent Colors */
+  --gruvbox-red: #fb4934;
+  --gruvbox-green: #b8bb26;
+  --gruvbox-yellow: #fabd2f;
+  --gruvbox-blue: #83a598;
+  --gruvbox-purple: #d3869b;
+  --gruvbox-aqua: #8ec07c;
+  --gruvbox-orange: #fe8019;
+
+  /* Gruvbox Muted Colors */
+  --gruvbox-red-muted: #cc241d;
+  --gruvbox-green-muted: #98971a;
+  --gruvbox-yellow-muted: #d79921;
+  --gruvbox-blue-muted: #458588;
+  --gruvbox-purple-muted: #b16286;
+  --gruvbox-aqua-muted: #689d6a;
+  --gruvbox-orange-muted: #d65d0e;
+}
+
+/* Override Starlight default colors with Gruvbox Dark Material */
+:root {
+  /* Base colors */
+  --sl-color-bg: var(--gruvbox-bg0);
+  --sl-color-bg-nav: var(--gruvbox-bg0);
+  --sl-color-bg-sidebar: var(--gruvbox-bg0);
+  --sl-color-bg-inline-code: var(--gruvbox-bg2);
+
+  /* Text colors */
+  --sl-color-text: var(--gruvbox-fg0);
+  --sl-color-text-accent: var(--gruvbox-aqua);
+  --sl-color-text-invert: var(--gruvbox-bg0);
+
+  /* Primary colors */
+  --sl-color-accent: var(--gruvbox-aqua);
+  --sl-color-accent-low: var(--gruvbox-bg2);
+  --sl-color-accent-high: var(--gruvbox-aqua);
+
+  /* State colors */
+  --sl-color-green: var(--gruvbox-green);
+  --sl-color-green-low: var(--gruvbox-bg2);
+  --sl-color-green-high: var(--gruvbox-green);
+
+  --sl-color-orange: var(--gruvbox-orange);
+  --sl-color-orange-low: var(--gruvbox-bg2);
+  --sl-color-orange-high: var(--gruvbox-orange);
+
+  --sl-color-red: var(--gruvbox-red);
+  --sl-color-red-low: var(--gruvbox-bg2);
+  --sl-color-red-high: var(--gruvbox-red);
+
+  --sl-color-blue: var(--gruvbox-blue);
+  --sl-color-blue-low: var(--gruvbox-bg2);
+  --sl-color-blue-high: var(--gruvbox-blue);
+
+  /* Border colors */
+  --sl-color-gray-1: var(--gruvbox-bg3);
+  --sl-color-gray-2: var(--gruvbox-bg2);
+  --sl-color-gray-3: var(--gruvbox-bg1);
+  --sl-color-gray-4: var(--gruvbox-bg0);
+  --sl-color-gray-5: var(--gruvbox-bg0);
+  --sl-color-gray-6: var(--gruvbox-bg0);
+
+  /* Typography */
+  --sl-font: "Zilla Slab", Georgia, serif;
+  --sl-font-mono: "Inconsolata", "Fira Code", "JetBrains Mono", "Consolas", "Monaco", monospace;
+  --sl-font-system: "Zilla Slab", Georgia, serif;
+
+  /* Font sizes - matching VitePress exactly */
+  --sl-text-xs: 18px;
+  --sl-text-sm: 20px;
+  --sl-text-base: 24px;
+  --sl-text-lg: 28px;
+  --sl-text-xl: 32px;
+  --sl-text-2xl: 40px;
+  --sl-text-3xl: 48px;
+
+  /* Line heights */
+  --sl-line-height: 1.6;
+  --sl-line-height-headings: 1.2;
+}
+
+/* Apply Zilla Slab font family and exact sizing */
+body {
+  font-family: 'Zilla Slab', serif !important;
+  background-color: var(--gruvbox-bg0) !important;
+  color: var(--gruvbox-fg0) !important;
+  font-size: 24px !important;
+  line-height: 1.6 !important;
+}
+
+/* Headers with exact VitePress colors */
+h1, h2, h3, h4, h5, h6 {
+  font-family: 'Zilla Slab', serif !important;
+}
+
+h1 {
+  color: var(--gruvbox-yellow) !important;
+  font-size: 48px !important;
+  margin-bottom: 1rem !important;
+  margin-top: 0 !important;
+  padding-bottom: 1rem !important;
+}
+
+h2 {
+  color: var(--gruvbox-green) !important;
+  font-size: 40px !important;
+  padding-top: 2rem !important;
+  padding-bottom: 1rem !important;
+}
+
+h3 {
+  color: var(--gruvbox-yellow) !important;
+  font-size: 26px !important;
+}
+
+h4 {
+  color: var(--gruvbox-orange) !important;
+  font-size: 26px !important;
+}
+
+h5 {
+  color: var(--gruvbox-purple) !important;
+  font-size: 26px !important;
+}
+
+h6 {
+  color: var(--gruvbox-blue) !important;
+  font-size: 26px !important;
+}
+
+/* Paragraphs and content */
+p, li {
+  font-size: 24px !important;
+  line-height: 1.6 !important;
+}
+
+/* Links */
+a {
+  color: var(--gruvbox-blue) !important;
+  text-decoration: none !important;
+}
+
+a:hover {
+  color: var(--gruvbox-aqua) !important;
+  text-decoration: underline !important;
+}
+
+/* Code blocks - exact VitePress styling */
+pre {
+  background-color: var(--gruvbox-bg1) !important;
+  border: 1px solid var(--gruvbox-bg3) !important;
+  border-radius: 6px !important;
+}
+
+code {
+  background-color: var(--gruvbox-bg2) !important;
+  color: var(--gruvbox-fg1) !important;
+  padding: 0.2em 0.4em !important;
+  border-radius: 3px !important;
+  font-family: 'Inconsolata', 'JetBrains Mono', 'Fira Code', 'Consolas', 'Monaco', monospace !important;
+}
+
+/* Inline code in paragraphs */
+p code, li code {
+  background-color: var(--gruvbox-bg2) !important;
+  color: var(--gruvbox-orange) !important;
+  font-weight: 500 !important;
+}
+
+pre code {
+  color: var(--gruvbox-fg1) !important;
+  background: transparent !important;
+  padding: 0 !important;
+}
+
+/* Blockquotes */
+blockquote {
+  border-left: 4px solid var(--gruvbox-aqua) !important;
+  background-color: var(--gruvbox-bg1) !important;
+  color: var(--gruvbox-fg1) !important;
+  padding: 1rem !important;
+  margin: 1rem 0 !important;
+}
+
+/* Tables */
+table {
+  border-collapse: collapse !important;
+  background-color: var(--gruvbox-bg1) !important;
+}
+
+th {
+  background-color: var(--gruvbox-bg2) !important;
+  color: var(--gruvbox-fg0) !important;
+  font-weight: 600 !important;
+}
+
+td, th {
+  border: 1px solid var(--gruvbox-bg3) !important;
+  padding: 0.5rem 1rem !important;
+}
+
+tr:nth-child(even) {
+  background-color: var(--gruvbox-bg0) !important;
+}
+
+/* Starlight-specific overrides */
+.sl-markdown-content {
+  font-size: 24px !important;
+  line-height: 1.6 !important;
+}
+
+/* Navigation styling */
+.header {
+  background-color: var(--gruvbox-bg0) !important;
+  border-bottom: 1px solid var(--gruvbox-bg3) !important;
+}
+
+.site-title {
+  font-size: 28px !important;
+  color: var(--gruvbox-fg0) !important;
+}
+
+/* Sidebar styling */
+.sidebar {
+  background-color: var(--gruvbox-bg0) !important;
+  border-right: 1px solid var(--gruvbox-bg3) !important;
+}
+
+.sidebar nav a {
+  font-size: 18px !important;
+  color: var(--gruvbox-fg3) !important;
+}
+
+.sidebar nav a[aria-current="page"] {
+  color: var(--gruvbox-aqua) !important;
+}
+
+.sidebar nav .group-label {
+  font-weight: 600 !important;
+  color: var(--gruvbox-fg0) !important;
+  font-size: 20px !important;
+}
+
+/* Content area */
+.main-frame {
+  background-color: var(--gruvbox-bg0) !important;
+}
+
+.content-panel {
+  max-width: 1200px !important;
+  padding: 0 24px !important;
+}
+
+/* Right sidebar (table of contents) */
+.right-sidebar {
+  background-color: var(--gruvbox-bg0) !important;
+}
+
+.right-sidebar .sl-toc a {
+  font-size: 20px !important;
+  color: var(--gruvbox-fg3) !important;
+  padding: 4px 8px !important;
+  margin: 2px 0 !important;
+  border-radius: 4px !important;
+  transition: all 0.2s ease !important;
+}
+
+.right-sidebar .sl-toc a:hover {
+  background-color: var(--gruvbox-bg2) !important;
+  color: var(--gruvbox-fg1) !important;
+}
+
+.right-sidebar .sl-toc a[aria-current="true"] {
+  background-color: var(--gruvbox-green-muted) !important;
+  color: var(--gruvbox-bg0) !important;
+  font-weight: 600 !important;
+}
+
+/* Callouts - VitePress style */
+.starlight-aside {
+  border-radius: 6px !important;
+  padding: 1rem !important;
+  margin: 1rem 0 !important;
+  background-color: var(--gruvbox-bg1) !important;
+}
+
+.starlight-aside--tip {
+  border-left: 4px solid var(--gruvbox-aqua) !important;
+}
+
+.starlight-aside--caution {
+  border-left: 4px solid var(--gruvbox-yellow) !important;
+}
+
+.starlight-aside--danger {
+  border-left: 4px solid var(--gruvbox-red) !important;
+}
+
+/* Custom battlefield notation styling - matching Vue implementation */
+.battlefield-notation {
+  margin: 1rem 0 !important;
+  font-family: 'Inconsolata', 'JetBrains Mono', 'Fira Code', 'Consolas', 'Monaco', monospace !important;
+  font-size: 1.1rem !important;
+  line-height: 1.5 !important;
+  padding: 1rem !important;
+  background-color: #1a1a1a !important;
+  border-radius: 4px !important;
+  overflow-x: auto !important;
+  white-space: nowrap !important;
+  display: flex !important;
+  align-items: center !important;
+}
+
+/* Structure elements (brackets, distances) */
+.battlefield-notation .structure {
+  color: #665c54 !important; /* Gruvbox bg4 but slightly brighter */
+  opacity: 0.8 !important;
+}
+
+/* Distance number styling */
+.battlefield-notation .distance-number {
+  margin: 0 2px !important;
+  display: inline-block !important;
+  color: #928374 !important; /* Override faint structure color */
+  opacity: 1 !important;
+  filter: brightness(1.4) !important;
+}
+
+/* Team color styling for battlefield notation */
+.battlefield-notation .subject-team {
+  color: var(--gruvbox-aqua) !important;
+}
+
+.battlefield-notation .enemy-team {
+  color: var(--gruvbox-orange) !important;
+}
+
+.battlefield-notation .current-actor {
+  background-color: var(--gruvbox-bg2) !important;
+  font-weight: 600 !important;
+  padding: 0 2px !important;
+  border-radius: 2px !important;
+}
+
+/* Character-specific colors for battlefield notation */
+.alice { color: var(--gruvbox-aqua) !important; }
+.bob { color: var(--gruvbox-orange) !important; }
+.charlie { color: var(--gruvbox-green) !important; }
+.david { color: var(--gruvbox-purple) !important; }
+.eve { color: var(--gruvbox-yellow) !important; }
+.frank { color: var(--gruvbox-blue) !important; }
+
+/* Generic team colors */
+.team-alpha { color: var(--gruvbox-aqua) !important; }
+.team-bravo { color: var(--gruvbox-orange) !important; }
+.team-charlie { color: var(--gruvbox-green) !important; }
+
+/* Scrollbar styling */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--gruvbox-bg1);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--gruvbox-bg3);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--gruvbox-bg4);
+}
+
+/* Card grid improvements */
+.card-grid .card {
+  background-color: var(--gruvbox-bg1) !important;
+  border: 1px solid var(--gruvbox-bg3) !important;
+  border-radius: 6px !important;
+}
+
+.card-grid .card h3 {
+  color: var(--gruvbox-yellow) !important;
+  font-size: 28px !important;
+}
+
+.card-grid .card p {
+  font-size: 20px !important;
+  color: var(--gruvbox-fg2) !important;
+}
+
+/* Hero section */
+.hero h1 {
+  color: var(--gruvbox-yellow) !important;
+}
+
+.hero .tagline {
+  color: var(--gruvbox-fg2) !important;
+  font-size: 28px !important;
+}
+
+/* Ensure proper spacing and layout */
+.sl-container {
+  max-width: 1800px !important;
+}
+
+/* LaTeX math styling to match Gruvbox theme */
+.katex {
+  color: var(--gruvbox-fg0) !important;
+  font-size: 1.1em !important;
+}
+
+.katex .mord {
+  color: var(--gruvbox-fg0) !important;
+}
+
+.katex .mbin, .katex .mrel {
+  color: var(--gruvbox-blue) !important;
+}
+
+.katex .mop {
+  color: var(--gruvbox-green) !important;
+}
+
+.katex .mpunct {
+  color: var(--gruvbox-fg3) !important;
+}

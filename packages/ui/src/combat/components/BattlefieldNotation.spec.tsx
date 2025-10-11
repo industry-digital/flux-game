@@ -68,7 +68,7 @@ describe('BattlefieldNotation Utilities', () => {
         colorStrategy: ColorStrategies.PLAIN
       });
 
-      expect(notation).toBe('[ A₁> ]─75m─[ B₁> ]─25m─[ C₁> ]');
+      expect(notation).toBe('[ A₁> ]─<span class="distance-number">75</span>─[ B₁> ]─<span class="distance-number">25</span>─[ C₁> ]');
     });
   });
 
@@ -107,7 +107,7 @@ describe('BattlefieldNotation Utilities', () => {
           currentActor: 'alice'
         });
 
-        expect(notation).toBe('[ **A₁>** ]');
+        expect(notation).toBe('[ <span style="font-weight: 900">A₁></span> ]');
     });
 
     it('applies HTML color strategy correctly', () => {
