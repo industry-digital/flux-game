@@ -6,6 +6,7 @@ import { ActionCost, Combatant } from '~/types/combat';
 import { TACTICAL_AP_PRECISION_FACTOR } from '~/worldkit/combat/tactical-rounding';
 
 export const TURN_DURATION_SECONDS = 6;
+export const MAX_AP = TURN_DURATION_SECONDS;
 export const DEFAULT_BASE_AP = TURN_DURATION_SECONDS;
 export const DEFAULT_ATTACK_AP_COST = 2.0;
 export const DEFAULT_MOVEMENT_AP_COST = 1.0; // Distance depends on actor's Shell stats

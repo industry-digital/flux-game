@@ -1,3 +1,4 @@
+import { HumanAnatomy } from '~/types';
 import { createWeaponSchema, WeaponSchemaInput } from './index';
 import { WeaponSchema } from '~/types/schema/weapon';
 
@@ -9,6 +10,10 @@ export const createSpearSchema = (input: WeaponSchemaInput): WeaponSchema => {
     range: {
       optimal: 2,
       max: 2,
+    },
+    fit: {
+      [HumanAnatomy.RIGHT_HAND]: 1,
+      [HumanAnatomy.LEFT_HAND]: 1,
     },
   });
 };

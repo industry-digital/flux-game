@@ -25,6 +25,7 @@ export enum CommandType {
   ADVANCE = 'ADVANCE',
   ATTACK = 'ATTACK',
   CHARGE = 'CHARGE',
+  CLEAVE = 'CLEAVE',
   CREATE_ACTOR = 'CREATE_ACTOR',
   CREATE_PLACE = 'CREATE_PLACE',
   DASH = 'DASH',

@@ -88,3 +88,26 @@ export function createDefendCost(remainingAp: number): FullyQualifiedActionCost 
     energy: 0,
   };
 }
+
+/**
+ * Calculate CLEAVE cost - same AP as STRIKE but adds energy cost
+ */
+export function createCleaveCost(
+  weaponMassKg: number,
+  finesse: number,
+  targetCount: number
+): FullyQualifiedActionCost {
+  // Same AP cost as a regular strike
+  const baseCost = createStrikeCost(weaponMassKg, finesse);
+
+  // Energy cost for special attack capability
+  // Base energy cost that scales with weapon mass (heavier weapons = more stamina)
+  const baseEnergyCost = 200; // Base energy for any cleave
+  const weaponMassEnergy = weaponMassKg * 100; // Additional energy per kg of weapon
+  const totalEnergyCost = baseEnergyCost + weaponMassEnergy;
+
+  return {
+    ap: baseCost.ap!, // Same AP cost as STRIKE
+    energy: Math.round(totalEnergyCost), // Energy cost for special ability
+  };
+}
