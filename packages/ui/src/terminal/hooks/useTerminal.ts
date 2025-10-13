@@ -5,6 +5,7 @@ const DEFAULT_TERMINAL_CONFIG: Required<TerminalConfig> = Object.freeze({
   maxEntries: 10_000,
   autoScroll: true,
   showTimestamps: false,
+  gameMode: false,
 });
 
 const DEFAULT_LINE_HEIGHT = 24;
@@ -42,8 +43,9 @@ export const createTerminalHook = (deps: TerminalDependencies): UseTerminal => {
       {
         'terminal--auto-scroll': mergedConfig.autoScroll,
         'terminal--show-timestamps': mergedConfig.showTimestamps,
+        'terminal--game-mode': mergedConfig.gameMode,
       }
-    ], [theme.currentTheme, mergedConfig.autoScroll, mergedConfig.showTimestamps]);
+    ], [theme.currentTheme, mergedConfig.autoScroll, mergedConfig.showTimestamps, mergedConfig.gameMode]);
 
     // Methods
     /**
@@ -92,11 +94,89 @@ export const createTerminalHook = (deps: TerminalDependencies): UseTerminal => {
       virtualization.clear();
     }, [virtualization]);
 
+    /**
+     * Adds a generic entry to the terminal
+     * @param entry - Complete terminal entry
+     */
+    const addEntry = useCallback((entry: TerminalEntry): void => {
+      virtualization.addItem(entry);
+
+      if (mergedConfig.autoScroll) {
+        virtualization.scrollToBottom();
+      }
+    }, [virtualization, mergedConfig.autoScroll]);
+
+    /**
+     * Convenience methods for different entry types
+     */
+    const addText = useCallback((id: string, text: string, metadata?: TerminalEntry['metadata']): void => {
+      const entry: TerminalEntry = {
+        id,
+        type: 'text',
+        content: text,
+        timestamp: deps.timestamp(),
+        metadata,
+      };
+      addEntry(entry);
+    }, [addEntry]);
+
+    const addInput = useCallback((id: string, input: string, metadata?: TerminalEntry['metadata']): void => {
+      const entry: TerminalEntry = {
+        id,
+        type: 'input',
+        content: input,
+        timestamp: deps.timestamp(),
+        metadata,
+      };
+      addEntry(entry);
+    }, [addEntry]);
+
+    const addSystem = useCallback((id: string, message: string, metadata?: TerminalEntry['metadata']): void => {
+      const entry: TerminalEntry = {
+        id,
+        type: 'system',
+        content: message,
+        timestamp: deps.timestamp(),
+        metadata,
+      };
+      addEntry(entry);
+    }, [addEntry]);
+
+    const addError = useCallback((id: string, error: string, metadata?: TerminalEntry['metadata']): void => {
+      const entry: TerminalEntry = {
+        id,
+        type: 'error',
+        content: error,
+        timestamp: deps.timestamp(),
+        metadata,
+      };
+      addEntry(entry);
+    }, [addEntry]);
+
+    const addElement = useCallback((id: string, element: ReactNode, metadata?: TerminalEntry['metadata']): void => {
+      const entry: TerminalEntry = {
+        id,
+        type: 'element',
+        content: element,
+        timestamp: deps.timestamp(),
+        metadata,
+      };
+      addEntry(entry);
+    }, [addEntry]);
+
     return {
       // Core methods
       print,
       render,
+      addEntry,
       clear,
+
+      // Convenience methods for different entry types
+      addText,
+      addInput,
+      addSystem,
+      addError,
+      addElement,
 
       // Scroll control
       scrollToBottom: virtualization.scrollToBottom,
