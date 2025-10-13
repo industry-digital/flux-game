@@ -14,6 +14,7 @@ import {
   type TransformerContext,
   setHealthPercentage,
   HumanAnatomy,
+  refreshStats,
 } from '@flux/core';
 import type { CombatScenarioData } from './useCombatScenario';
 
@@ -74,6 +75,7 @@ export function useCombatActors(
         }
 
         const actor = createActorFromScenarioData(
+          context,
           actorId,
           actorData,
           weaponSchema,
@@ -157,8 +159,10 @@ const TEST_WEAPON_ENTITY_URN: ItemURN = 'flux:item:weapon:test';
 
 /**
  * Create an actor from scenario data using @flux/core utilities
+ * Enhanced to use TransformerContext APIs for proper customization
  */
 function createActorFromScenarioData(
+  context: TransformerContext,
   actorId: ActorURN,
   actorData: any,
   weaponSchema: WeaponSchema,
@@ -172,24 +176,14 @@ function createActorFromScenarioData(
     name: getActorNameFromId(actorId),
   });
 
-  // Apply stats to shell
+  // Apply physical stats to shell (POW, FIN, RES)
   deps.mutateShellStats(shell.stats, {
     [Stat.POW]: pow,
     [Stat.FIN]: fin,
     [Stat.RES]: res,
   });
 
-  // Convert skill ranks to skill state objects
-  const skillStates: Record<SkillURN, any> = {};
-  for (const [skillUrn, rank] of Object.entries(actorData.skills || {})) {
-    skillStates[skillUrn as SkillURN] = {
-      xp: 0,
-      pxp: 0,
-      rank: rank
-    };
-  }
-
-  // Create actor with shell, equipment, and inventory
+  // Create actor with basic setup
   const actor = deps.createActor({
     id: actorId,
     name: getActorNameFromId(actorId),
@@ -199,7 +193,7 @@ function createActorFromScenarioData(
       [Stat.PER]: { nat: per, eff: per, mods: {} },
       [Stat.MEM]: { nat: mem, eff: mem, mods: {} },
     },
-    skills: skillStates,
+    skills: {}, // Start with empty skills, will be set via context API
     currentShell: shell.id,
     shells: {
       [shell.id]: shell,
@@ -223,7 +217,19 @@ function createActorFromScenarioData(
     },
   });
 
-  // Set full health
+  // Apply skill customizations using context API
+  if (actorData.skills && Object.keys(actorData.skills).length > 0) {
+    context.actorSkillApi.setActorSkillRanks(actor, actorData.skills);
+  }
+
+  // Apply stat customizations using context utilities
+  // Note: Physical stats (POW, FIN, RES) are already applied to shell above
+  // Mental stats (INT, PER, MEM) are applied during actor creation above
+
+  // Refresh stats to ensure derived values (HP, etc.) are calculated correctly
+  refreshStats(actor);
+
+  // Set full health based on updated stats
   deps.setHealthPercentage(actor, 1.0);
 
   return actor;

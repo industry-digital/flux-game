@@ -73,7 +73,11 @@ export function createCombatTool(_deps: CombatToolDependencies = DEFAULT_COMBAT_
       addOptionalActor,
       removeOptionalActor,
       getTeamActors,
-      getAvailableOptionalActors
+      getAvailableOptionalActors,
+      updateActorStats,
+      updateActorSkill,
+      updateActorWeapon,
+      calculateDerivedStats,
     } = useCombatScenario(defaultScenario);
     const actors = useCombatActors(context, scenarioData, TEST_PLACE_ID);
     const session = useCombatSession(context, TEST_PLACE_ID);
@@ -126,6 +130,51 @@ export function createCombatTool(_deps: CombatToolDependencies = DEFAULT_COMBAT_
       session.currentActorId,
       handleEventsGenerated
     );
+
+    // Helper function to render enhanced CombatantCard with all necessary props
+    const renderCombatantCard = useCallback((actorId: ActorURN) => {
+      const actor = actors.actors[actorId];
+      if (!actor) return null;
+
+      const actorData = scenarioData.actors[actorId];
+      if (!actorData) return null;
+
+      return (
+        <CombatantCard
+          key={actorId}
+          actor={actor}
+          actorId={actorId}
+          isActive={session.currentActorId === actorId}
+          isAiControlled={aiControl.aiControlled[actorId] || false}
+          onAiToggle={aiControl.setAiControlled}
+          isAiThinking={aiControl.aiThinking === actorId}
+
+          // Editing props (only active during setup phase)
+          isInSetupPhase={session.isInSetupPhase}
+          scenarioStats={actorData.stats}
+          scenarioSkills={actorData.skills}
+          selectedWeapon={actorData.weapon}
+          availableWeapons={actors.availableWeapons}
+          derivedStats={calculateDerivedStats(actorId)}
+          onStatsChange={updateActorStats}
+          onSkillChange={updateActorSkill}
+          onWeaponChange={updateActorWeapon}
+        />
+      );
+    }, [
+      actors.actors,
+      actors.availableWeapons,
+      scenarioData.actors,
+      session.currentActorId,
+      session.isInSetupPhase,
+      aiControl.aiControlled,
+      aiControl.setAiControlled,
+      aiControl.aiThinking,
+      calculateDerivedStats,
+      updateActorStats,
+      updateActorSkill,
+      updateActorWeapon,
+    ]);
 
     const handleCommand = useCallback((command: string) => {
       console.log(`🎮 CombatTool: Executing command "${command}"`);
@@ -224,22 +273,7 @@ export function createCombatTool(_deps: CombatToolDependencies = DEFAULT_COMBAT_
 
             {/* Team Alpha Combatants */}
             <div>
-              {getTeamActors('ALPHA').map((actorId) => {
-                const actor = actors.actors[actorId];
-                if (!actor) return null;
-
-                return (
-                  <CombatantCard
-                    key={actorId}
-                    actor={actor}
-                    actorId={actorId}
-                    isActive={session.currentActorId === actorId}
-                    isAiControlled={aiControl.aiControlled[actorId] || false}
-                    onAiToggle={aiControl.setAiControlled}
-                    isAiThinking={aiControl.aiThinking === actorId}
-                  />
-                );
-              })}
+              {getTeamActors('ALPHA').map(renderCombatantCard)}
             </div>
           </div>
 
@@ -339,22 +373,7 @@ export function createCombatTool(_deps: CombatToolDependencies = DEFAULT_COMBAT_
 
             {/* Team Bravo Combatants */}
             <div>
-              {getTeamActors('BRAVO').map((actorId) => {
-                const actor = actors.actors[actorId];
-                if (!actor) return null;
-
-                return (
-                  <CombatantCard
-                    key={actorId}
-                    actor={actor}
-                    actorId={actorId}
-                    isActive={session.currentActorId === actorId}
-                    isAiControlled={aiControl.aiControlled[actorId] || false}
-                    onAiToggle={aiControl.setAiControlled}
-                    isAiThinking={aiControl.aiThinking === actorId}
-                  />
-                );
-              })}
+              {getTeamActors('BRAVO').map(renderCombatantCard)}
             </div>
 
             {/* Combat Status Panel - moved to bottom of right column */}

@@ -1,5 +1,8 @@
-import type { Actor, ActorURN } from '@flux/core';
+import { useState } from 'react';
+import type { Actor, ActorURN, WeaponSchemaURN, SkillURN, WeaponSchema } from '@flux/core';
 import { getCurrentHp, getMaxHp, getStatValue, isActorAlive, Stat, getHealthPercentage, getCurrentEnergy, getMaxEnergy } from '@flux/core';
+import type { ActorStatsInput, DerivedStats } from '../hooks/useCombatScenario';
+import { CombatantForm } from './CombatantForm';
 import './CombatantCard.css';
 
 export interface CombatantCardProps {
@@ -9,6 +12,17 @@ export interface CombatantCardProps {
   isAiControlled?: boolean;
   onAiToggle?: (actorId: ActorURN, enabled: boolean) => void;
   isAiThinking?: boolean;
+
+  // Editing props (only used during setup phase)
+  isInSetupPhase?: boolean;
+  scenarioStats?: ActorStatsInput;
+  scenarioSkills?: Record<SkillURN, number>;
+  selectedWeapon?: WeaponSchemaURN;
+  availableWeapons?: Map<WeaponSchemaURN, WeaponSchema>;
+  derivedStats?: DerivedStats;
+  onStatsChange?: (actorId: ActorURN, stats: Partial<ActorStatsInput>) => void;
+  onSkillChange?: (actorId: ActorURN, skillUrn: SkillURN, rank: number) => void;
+  onWeaponChange?: (actorId: ActorURN, weaponUrn: WeaponSchemaURN) => void;
 }
 
 /**
@@ -20,8 +34,20 @@ export function CombatantCard({
   isActive = false,
   isAiControlled = false,
   onAiToggle,
-  isAiThinking = false
+  isAiThinking = false,
+
+  // Editing props
+  isInSetupPhase = false,
+  scenarioStats,
+  scenarioSkills,
+  selectedWeapon,
+  availableWeapons,
+  derivedStats,
+  onStatsChange,
+  onSkillChange,
+  onWeaponChange,
 }: CombatantCardProps) {
+  const [isExpanded, setIsExpanded] = useState(false);
   const alive = isActorAlive(actor);
   const healthPercent = getHealthPercentage(actor);
   const currentHp = getCurrentHp(actor);
@@ -84,20 +110,39 @@ export function CombatantCard({
           )}
         </div>
 
-        {/* AI Control Toggle */}
-        {onAiToggle && (
-          <div className="ai-control-toggle">
-            <label className="ai-control-label">
-              <input
-                type="checkbox"
-                checked={isAiControlled}
-                onChange={(e) => onAiToggle(actorId, e.target.checked)}
-                className="ai-control-checkbox"
-              />
-              <span className="ai-control-text">AI Control</span>
-            </label>
-          </div>
-        )}
+        {/* Controls Section */}
+        <div className="card-controls">
+          {/* AI Control Toggle */}
+          {onAiToggle && (
+            <div className="ai-control-toggle">
+              <label className="ai-control-label">
+                <input
+                  type="checkbox"
+                  checked={isAiControlled}
+                  onChange={(e) => onAiToggle(actorId, e.target.checked)}
+                  className="ai-control-checkbox"
+                />
+                <span className="ai-control-text">AI Control</span>
+              </label>
+            </div>
+          )}
+
+          {/* Expand/Collapse Toggle (only during setup phase) */}
+          {isInSetupPhase && (
+            <button
+              onClick={() => setIsExpanded(!isExpanded)}
+              className="expand-toggle"
+              aria-label={isExpanded ? 'Collapse customization' : 'Expand customization'}
+            >
+              <span className="expand-icon" data-expanded={isExpanded}>
+                {isExpanded ? '▼' : '▶'}
+              </span>
+              <span className="expand-text">
+                {isExpanded ? 'Collapse' : 'Customize'}
+              </span>
+            </button>
+          )}
+        </div>
       </div>
 
       {/* Health and Energy with enhanced visual indicators */}
@@ -151,6 +196,23 @@ export function CombatantCard({
           </div>
         ))}
       </div>
+
+      {/* Expandable Customization Form (only during setup phase) */}
+      {isInSetupPhase && scenarioStats && scenarioSkills && selectedWeapon && availableWeapons && derivedStats && (
+        <CombatantForm
+          actorId={actorId}
+          actorName={actor.name}
+          stats={scenarioStats}
+          skills={scenarioSkills}
+          selectedWeapon={selectedWeapon}
+          availableWeapons={availableWeapons}
+          derivedStats={derivedStats}
+          onStatsChange={onStatsChange!}
+          onSkillChange={onSkillChange!}
+          onWeaponChange={onWeaponChange!}
+          isExpanded={isExpanded}
+        />
+      )}
     </div>
   );
 }

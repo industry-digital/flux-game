@@ -86,10 +86,7 @@ const internalExecuteCombatPlan: CombatPlanExecutor = (
       case CommandType.DEFEND:
         // Defensive action - pass through autoDone option from command args
         const defendOptions = action.args ? { autoDone: action.args.autoDone } : undefined;
-        console.log(`🛡️ DEFEND action: autoDone=${defendOptions?.autoDone}, remaining AP=${combatant.ap.eff.cur}`);
         actionEvents = deps.defend(trace, defendOptions);
-        console.log(`🛡️ DEFEND completed: remaining AP=${combatant.ap.eff.cur}, events generated=${actionEvents.length}`);
-        console.log(`🛡️ DEFEND events:`, actionEvents.map(e => ({ type: e.type, actor: e.actor })));
         break;
 
       case CommandType.TARGET:
@@ -141,10 +138,8 @@ const internalExecuteCombatPlan: CombatPlanExecutor = (
     // Accumulate events from this action
     allEvents.push(...actionEvents);
 
-    // Check if we've run out of AP - stop execution if so
-    if (combatant.ap.eff.cur <= 0) {
-      break;
-    }
+    // Note: No AP exhaustion check here - individual actions validate their own AP costs
+    // This allows 0-cost plan-ending actions (like DEFEND with autoDone) to execute properly
   }
 
   // Turn ending is handled by individual actions (e.g., DEFEND with autoDone: true)
@@ -176,7 +171,6 @@ export function createAttackMethod (
   } = deps;
 
   return (target?: ActorURN, trace: string = context.uniqid()): WorldEvent[] => {
-console.log(`combat: attack action: target=${target}`);
     const { declareError } = context;
     const allEvents: WorldEvent[] = [];
 
@@ -195,14 +189,8 @@ console.log(`combat: attack action: target=${target}`);
       return allEvents;
     }
 
-console.log(`combat: attack action: combatant.target=${combatant.target}`);
     // Generate AI combat plan
     const plan = generateCombatPlanImpl(context, session, combatant, trace);
-    console.log(`🤖 Generated combat plan:`, plan.map(action => ({
-      type: action.type,
-      args: action.args,
-      autoDone: action.args?.autoDone
-    })));
 
     if (plan.length === 0) {
       declareError('Unable to generate combat plan. No valid actions available.', trace);
@@ -220,19 +208,6 @@ console.log(`combat: attack action: combatant.target=${combatant.target}`);
     });
 
     allEvents.push(...planEvents);
-
-    console.log(`🎯 Attack method returning ${allEvents.length} total events:`,
-      allEvents.map(e => ({ type: e.type, actor: e.actor })));
-
-    // Debug initiative order and session state
-    const initiativeOrder = Array.from(session.data.initiative.keys());
-    const currentActor = session.data.rounds.current.turns.current.actor;
-    const currentIndex = initiativeOrder.indexOf(currentActor);
-    console.log(`🎲 Initiative order: ${initiativeOrder.join(', ')}`);
-    console.log(`🎲 Current actor: ${currentActor} (index ${currentIndex}/${initiativeOrder.length - 1})`);
-    console.log(`🎲 Session ID: ${session.id}`);
-    console.log(`🎲 Session combatants: ${session.data.combatants.size}`);
-    console.log(`🎲 Session status: ${session.status}`);
 
     return allEvents;
   };

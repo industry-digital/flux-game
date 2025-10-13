@@ -109,6 +109,12 @@ export const createTransformerContext = (
       trace,
     };
 
+    // Log all declared errors to console for debugging
+    console.error(`❌ TransformerContext Error [${trace}]:`, errorObj.message);
+    if (errorObj.stack) {
+      console.error(`   Stack:`, errorObj.stack);
+    }
+
     declaredErrors.push(executionError);
   };
 
