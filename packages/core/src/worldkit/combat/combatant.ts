@@ -14,6 +14,7 @@ import { getMaxEnergy } from '~/worldkit/entity/actor/capacitor';
 import { createDoneMethod } from '~/worldkit/combat/action/done';
 import { cleanApPrecision } from '~/worldkit/combat/ap';
 import { computeInitiativeRoll } from '~/worldkit/combat/initiative';
+import { CleaveDependencies, createCleaveMethod } from '~/worldkit/combat/action/cleave';
 export { deductAp } from '~/worldkit/combat/ap';
 
 export const MOVE_BY_AP = 'ap' as const;
@@ -35,6 +36,7 @@ export interface CombatantApi {
   attack: (target?: ActorURN, trace?: string) => WorldEvent[];
   defend: DefendMethod;
   strike: (target?: ActorURN, trace?: string) => WorldEvent[];
+  cleave: (trace?: string) => WorldEvent[];
   done: (trace?: string) => WorldEvent[];
 }
 
@@ -48,6 +50,7 @@ export type ActionDependencies = {
   advanceDeps?: Partial<AdvanceDependencies>;
   retreatDeps?: Partial<RetreatDependencies>;
   attackDeps?: Partial<AttackDependencies>;
+  cleaveDeps?: Partial<CleaveDependencies>;
 };
 
 const COMBATANT_API_DEPS: CombatantApiDependencies = {
@@ -75,6 +78,7 @@ export function createCombatantApiFactory(actionDeps: ActionDependencies = {}) {
     const retreat = createRetreatMethod(context, session, actor, combatant, actionDeps.retreatDeps);
     const done = createDoneMethod(context, session, actor, combatant, { advanceTurn });
     const defend = createDefendMethod(context, session, actor, combatant, { ...actionDeps.defendDeps, done });
+    const cleave = createCleaveMethod(context, session, actor, combatant, { ...actionDeps.cleaveDeps });
     const attack = createAttackMethod(context, session, actor, combatant, {
       ...actionDeps.attackDeps,
       target, strike, defend, advance, retreat, done,
@@ -91,6 +95,7 @@ export function createCombatantApiFactory(actionDeps: ActionDependencies = {}) {
       attack,
       defend,
       strike,
+      cleave,
       done,
     };
   };

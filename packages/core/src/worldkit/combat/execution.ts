@@ -46,6 +46,10 @@ export const executeCombatPlan = (
         events.push(...combatant.strike(command.args.target, command.id));
         break;
       }
+      case CommandType.CLEAVE: {
+        events.push(...combatant.cleave(command.id));
+        break;
+      }
     }
   }
 
