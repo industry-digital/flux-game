@@ -115,7 +115,10 @@ export function createCombatTool(_deps: CombatToolDependencies = DEFAULT_COMBAT_
     const handleEventsGenerated = useCallback((events: any[]) => {
       addEvents(events);
       actors.syncActorsFromContext();
-    }, [addEvents, actors]);
+
+      // Process new events to update session state (turn advancement, etc.)
+      session.processNewEvents();
+    }, [addEvents, actors, session]);
 
     const aiControl = useAiControl(
       context,

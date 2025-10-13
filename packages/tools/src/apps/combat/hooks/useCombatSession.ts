@@ -10,6 +10,8 @@ import {
   type WorldEvent,
   Team,
   SessionStatus,
+  EventType,
+  type CombatTurnDidStart,
 } from '@flux/core';
 
 export interface UseCombatSessionResult {
@@ -25,6 +27,7 @@ export interface UseCombatSessionResult {
   advanceTurn: (trace?: string) => WorldEvent[];
   addCombatant: (actorId: ActorURN, team: Team | string) => void;
   removeCombatant: (actorId: ActorURN) => void;
+  processNewEvents: () => void;
 }
 
 export interface CombatSessionDependencies {
@@ -48,6 +51,7 @@ export function useCombatSession(
   const [sessionId, setSessionId] = useState<SessionURN | null>(null);
   const [currentActorId, setCurrentActorId] = useState<ActorURN | null>(null);
   const [sessionApi, setSessionApi] = useState<CombatSessionApi | null>(null);
+  const [lastProcessedEventId, setLastProcessedEventId] = useState<string | null>(null);
 
   // Derived state
   const isInSetupPhase = !session || session.status === SessionStatus.PENDING;
@@ -63,6 +67,57 @@ export function useCombatSession(
       setSessionId(api.session.id);
     }
   }, [context, placeId, sessionApi, deps]);
+
+  // Extract event processing logic into a separate function
+  const processNewEvents = useCallback(() => {
+    if (!session) return;
+
+    // Get all declared events and look for turn events
+    const allEvents = context.getDeclaredEvents();
+
+    console.log('🔄 processNewEvents called - total events:', allEvents.length, 'lastProcessedEventId:', lastProcessedEventId);
+
+    if (allEvents.length === 0) return;
+
+    // Find the most recent event ID to track what we've processed
+    const latestEvent = allEvents[allEvents.length - 1];
+
+    // Skip if we've already processed this event
+    if (latestEvent.id === lastProcessedEventId) {
+      console.log('🔄 No new events to process');
+      return;
+    }
+
+    console.log('🔄 Processing new events, latest ID:', latestEvent.id);
+    console.log('🔄 All event types:', allEvents.map(e => e.type));
+
+    // Look for turn start events for this session that we haven't processed yet
+    const newTurnEvents = allEvents.filter(event =>
+      event.type === EventType.COMBAT_TURN_DID_START &&
+      event.id !== lastProcessedEventId
+    ) as CombatTurnDidStart[];
+
+    console.log('🔄 Found turn events:', newTurnEvents.length);
+
+    if (newTurnEvents.length > 0) {
+      // Use the most recent turn started event
+      const latestTurnEvent = newTurnEvents[newTurnEvents.length - 1];
+      const newActorId = latestTurnEvent.actor;
+
+        if (newActorId && newActorId !== currentActorId) {
+          console.log(`🔄 Turn changed to: ${newActorId}`);
+          setCurrentActorId(newActorId);
+        }
+    }
+
+    // Update the last processed event ID
+    setLastProcessedEventId(latestEvent.id);
+  }, [session, currentActorId, lastProcessedEventId, context]);
+
+  // Process events on initial load and when dependencies change
+  useEffect(() => {
+    processNewEvents();
+  }, [processNewEvents]);
 
   const startCombat = useCallback(() => {
     if (!sessionApi || !isInSetupPhase) return;
@@ -173,5 +228,6 @@ export function useCombatSession(
     advanceTurn,
     addCombatant,
     removeCombatant,
+    processNewEvents,
   };
 }
