@@ -5,8 +5,7 @@ import { useCombatSession } from './hooks/useCombatSession';
 import { useCombatState } from './hooks/useCombatState';
 import { useCombatLog } from './hooks/useCombatLog';
 import { useAiControl } from './hooks/useAiControl';
-import { CombatLog } from './components/CombatLog';
-import { CommandInput } from './components/CommandInput';
+import { CombatTerminal } from './components/CombatTerminal';
 import { CombatantCard } from './components/CombatantCard';
 import { TeamManager } from './components/TeamManager';
 import { createTransformerContext, Team, type TransformerContext } from '@flux/core';
@@ -326,19 +325,22 @@ export function createCombatTool(_deps: CombatToolDependencies = DEFAULT_COMBAT_
                 </div>
               ) : (
                 <div className="combat-interface">
-                  {/* Combat log with terminal styling */}
-                  <div className="combat-log-container">
-                    <div className="combat-log-header">
-                      <h3 className="combat-log-title">Combat Log</h3>
-                    </div>
-                    <CombatLog entries={combatLog} />
-                  </div>
-
-                  {/* Command input with enhanced styling */}
-                  <div className="command-input-container">
-                    <CommandInput
+                  {/* Enhanced Combat Terminal with integrated input */}
+                  <div
+                    className="combat-terminal-container"
+                    style={{
+                      height: '500px', // Fixed height to contain the terminal
+                      display: 'flex',
+                      flexDirection: 'column',
+                    }}
+                  >
+                    <CombatTerminal
+                      events={combatLog}
                       onCommand={handleCommand}
-                      placeholder="Enter command (e.g., 'attack bob', 'move closer', 'defend')"
+                      currentActor={session.currentActorId || undefined}
+                      maxEntries={1000}
+                      isSetupPhase={session.isInSetupPhase}
+                      showWelcomeMessage={combatLog.length === 0}
                     />
                   </div>
                 </div>

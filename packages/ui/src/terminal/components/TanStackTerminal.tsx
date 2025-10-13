@@ -1,7 +1,7 @@
 import React, { useRef, useEffect, useCallback } from 'react';
-import type { Virtualizer } from '@tanstack/react-virtual';
 import type { TerminalEntry } from '../../types/terminal';
-import type { TerminalHook } from '~/types/terminal';
+import type { ListVirtualizationHook } from '../../types/list';
+import type { TerminalHook } from '../types/terminal';
 
 const formatTimestamp = (timestamp: number): string => {
   return new Date(timestamp).toLocaleTimeString('en-US', {
@@ -13,8 +13,7 @@ const formatTimestamp = (timestamp: number): string => {
 
 interface TerminalProps {
   terminal: TerminalHook;
-  virtualizer: Virtualizer<HTMLDivElement, Element>;
-  entries: TerminalEntry[];
+  virtualization: ListVirtualizationHook<TerminalEntry>;
   onTerminalReady?: (terminal: TerminalHook) => void;
   onScroll?: (event: {
     scrollTop: number;
@@ -25,12 +24,14 @@ interface TerminalProps {
 
 export function Terminal({
   terminal,
-  virtualizer,
-  entries,
+  virtualization,
   onTerminalReady,
   onScroll,
 }: TerminalProps) {
   const containerRef = useRef<HTMLDivElement>(null);
+
+  // Get TanStack Virtual specific internals
+  const { virtualizer, parentRef } = virtualization.__internal as any;
 
   // Handle scroll events
   const handleScroll = useCallback((event: React.UIEvent<HTMLDivElement>) => {
@@ -53,7 +54,12 @@ export function Terminal({
     }
   ].filter(Boolean);
 
-  // No setup needed - TanStack Virtual handles this automatically
+  // Setup container reference for TanStack Virtual
+  useEffect(() => {
+    if (containerRef.current) {
+      virtualization.__internal.setScrollElement(containerRef.current);
+    }
+  }, [virtualization]);
 
   useEffect(() => {
     onTerminalReady?.(terminal);
@@ -79,8 +85,8 @@ export function Terminal({
           position: 'relative',
         }}
       >
-        {virtualItems.map((virtualItem: any) => {
-          const entry = entries[virtualItem.index];
+        {virtualItems.map((virtualItem) => {
+          const entry = virtualization.visibleItems[virtualItem.index - virtualItems[0]?.index || 0];
           if (!entry) return null;
 
           return (

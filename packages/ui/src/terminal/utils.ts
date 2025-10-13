@@ -149,3 +149,6 @@ export function createWorldEventEntry(
  *   </div>
  * );
  */
+
+// Export height calculation utilities
+export * from './utils/heightCalculation';

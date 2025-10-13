@@ -25,6 +25,9 @@ export type ListVirtualizationHook<T> = {
     contentHeight: number;
     visibleRange: { start: number; end: number };
     setScrollElement: (element: HTMLElement | null) => void;
+    // TanStack Virtual specific properties
+    virtualizer?: any;
+    parentRef?: any;
   };
 };
 

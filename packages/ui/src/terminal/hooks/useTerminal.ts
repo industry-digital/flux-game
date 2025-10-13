@@ -1,5 +1,5 @@
-import { useMemo, useCallback, ReactNode } from 'react';
-import type { TerminalEntry, TerminalConfig, TerminalDependencies, VirtualizationConfig, ThemeName, TerminalHook, UseTerminal } from '~/types';
+import { useMemo, useCallback, ReactNode, useRef, useState } from 'react';
+import type { TerminalEntry, TerminalConfig, TerminalDependencies, ThemeName, TerminalHook, UseTerminal } from '~/types';
 
 const DEFAULT_TERMINAL_CONFIG: Required<TerminalConfig> = Object.freeze({
   maxEntries: 10_000,
@@ -23,17 +23,23 @@ export const createTerminalHook = (deps: TerminalDependencies): UseTerminal => {
    */
   return function useTerminal(
     config?: TerminalConfig,
-    virtualizationConfig?: VirtualizationConfig,
     themeName: ThemeName = 'dark',
   ): TerminalHook {
-    const mergedVirtualizationConfig = { ...virtualizationConfig };
     const mergedConfig = { ...DEFAULT_TERMINAL_CONFIG, ...config };
 
     // Setup dependencies - hooks are called here, inside the React component
     const theme = deps.useTheme(themeName);
-    const virtualization = deps.useVirtualizedList<TerminalEntry>([], {
-      itemHeight: DEFAULT_LINE_HEIGHT,
-      ...mergedVirtualizationConfig,
+
+    // State management
+    const [entries, setEntries] = useState<TerminalEntry[]>([]);
+    const parentRef = useRef<HTMLDivElement>(null);
+
+    // TanStack Virtual setup
+    const virtualizer = deps.useVirtualizer({
+      count: entries.length,
+      getScrollElement: () => parentRef.current,
+      estimateSize: () => DEFAULT_LINE_HEIGHT, // Can be made dynamic later
+      overscan: 10,
     });
 
     // Computed properties
@@ -62,12 +68,8 @@ export const createTerminalHook = (deps: TerminalDependencies): UseTerminal => {
         height: DEFAULT_LINE_HEIGHT,
       };
 
-      virtualization.addItem(entry);
-
-      if (mergedConfig.autoScroll) {
-        virtualization.scrollToBottom();
-      }
-    }, [virtualization, mergedConfig.autoScroll]);
+      setEntries(prev => [...prev, entry].slice(-mergedConfig.maxEntries));
+    }, [mergedConfig.maxEntries]);
 
     /**
      * Adds a React component entry to the terminal
@@ -83,28 +85,31 @@ export const createTerminalHook = (deps: TerminalDependencies): UseTerminal => {
         // Height will be determined dynamically by the component
       };
 
-      virtualization.addItem(entry);
-
-      if (mergedConfig.autoScroll) {
-        virtualization.scrollToBottom();
-      }
-    }, [virtualization, mergedConfig.autoScroll]);
+      setEntries(prev => [...prev, entry].slice(-mergedConfig.maxEntries));
+    }, [mergedConfig.maxEntries]);
 
     const clear = useCallback((): void => {
-      virtualization.clear();
-    }, [virtualization]);
+      setEntries([]);
+    }, []);
 
     /**
      * Adds a generic entry to the terminal
      * @param entry - Complete terminal entry
      */
     const addEntry = useCallback((entry: TerminalEntry): void => {
-      virtualization.addItem(entry);
+      setEntries(prev => [...prev, entry].slice(-mergedConfig.maxEntries));
+    }, [mergedConfig.maxEntries]);
 
-      if (mergedConfig.autoScroll) {
-        virtualization.scrollToBottom();
+    // Auto-scroll effect
+    const scrollToBottom = useCallback((): void => {
+      if (entries.length > 0) {
+        virtualizer.scrollToIndex(entries.length - 1, { align: 'end' });
       }
-    }, [virtualization, mergedConfig.autoScroll]);
+    }, [virtualizer, entries.length]);
+
+    const scrollToTop = useCallback((): void => {
+      virtualizer.scrollToIndex(0, { align: 'start' });
+    }, [virtualizer]);
 
     return {
       // Core methods - actually used in codebase
@@ -116,15 +121,20 @@ export const createTerminalHook = (deps: TerminalDependencies): UseTerminal => {
       addEntry,
 
       // Scroll control
-      scrollToBottom: virtualization.scrollToBottom,
-      scrollToTop: virtualization.scrollToTop,
+      scrollToBottom,
+      scrollToTop,
 
       // State access
-      visibleEntries: virtualization.visibleItems,
-      totalEntries: virtualization.totalItems,
+      visibleEntries: entries, // All entries are visible in TanStack Virtual
+      totalEntries: entries.length,
 
       // Component integration
       terminalClasses,
+
+      // TanStack Virtual integration
+      virtualizer,
+      entries,
+      parentRef,
     };
   }
 };

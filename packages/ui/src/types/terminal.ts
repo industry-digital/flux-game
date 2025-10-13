@@ -1,6 +1,7 @@
 import { ReactNode } from 'react';
 import type { ThemeName, UseTheme } from './theme';
-import type { UseVirtualizedList, VirtualizationConfig } from './list';
+import type { UseVirtualizedList } from './list';
+import type { useVirtualizer } from '@tanstack/react-virtual';
 
 export type TerminalEntry = {
   id: string;
@@ -27,12 +28,15 @@ export type TerminalConfig = {
 export type TerminalDependencies = {
   timestamp: () => number;
   useTheme: UseTheme;
-  useVirtualizedList: UseVirtualizedList;
+  /**
+   * @deprecated Use useVirtualizer instead
+   */
+  useVirtualizedList?: UseVirtualizedList;
+  useVirtualizer: typeof useVirtualizer;
 };
 
 export type UseTerminal = (
   config?: TerminalConfig,
-  virtualizationConfig?: VirtualizationConfig,
   themeName?: ThemeName,
 ) => TerminalHook;
 
@@ -55,4 +59,9 @@ export type TerminalHook = {
 
   // Component integration
   terminalClasses: (string | Record<string, boolean>)[];
+
+  // TanStack Virtual integration
+  virtualizer: any; // TanStack virtualizer instance
+  entries: TerminalEntry[]; // All terminal entries
+  parentRef: any; // Ref for the scroll container
 };

@@ -38,6 +38,8 @@ export function useVirtualizedList<T>(
       return mergedConfig.itemHeight(index);
     },
     overscan: mergedConfig.overscan,
+    // Enable smooth scrolling
+    scrollBehavior: mergedConfig.scrollBehavior,
   });
 
   // Computed properties matching our original API
@@ -114,9 +116,9 @@ export function useVirtualizedList<T>(
       contentHeight,
       visibleRange,
       setScrollElement,
-      // TanStack Virtual specific (not in type definition)
-      virtualizer: virtualizer as any,
-      parentRef: parentRef as any,
+      // TanStack Virtual specific
+      virtualizer,
+      parentRef,
     },
   };
 }
