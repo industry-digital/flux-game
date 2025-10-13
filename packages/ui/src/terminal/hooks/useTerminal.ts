@@ -1,4 +1,4 @@
-import { useMemo, useCallback, ReactNode, useRef, useState } from 'react';
+import { useMemo, useCallback, ReactNode, useRef, useState, useEffect } from 'react';
 import type { TerminalEntry, TerminalConfig, TerminalDependencies, ThemeName, TerminalHook, UseTerminal } from '~/types';
 
 const DEFAULT_TERMINAL_CONFIG: Required<TerminalConfig> = Object.freeze({
@@ -25,7 +25,7 @@ export const createTerminalHook = (deps: TerminalDependencies): UseTerminal => {
     config?: TerminalConfig,
     themeName: ThemeName = 'dark',
   ): TerminalHook {
-    const mergedConfig = { ...DEFAULT_TERMINAL_CONFIG, ...config };
+    const mergedConfig = useMemo(() => ({ ...DEFAULT_TERMINAL_CONFIG, ...config }), [config]);
 
     // Setup dependencies - hooks are called here, inside the React component
     const theme = deps.useTheme(themeName);
@@ -105,13 +105,23 @@ export const createTerminalHook = (deps: TerminalDependencies): UseTerminal => {
       if (entries.length > 0) {
         virtualizer.scrollToIndex(entries.length - 1, { align: 'end' });
       }
-    }, [virtualizer, entries.length]);
+    }, [entries.length]); // Remove virtualizer dependency
 
     const scrollToTop = useCallback((): void => {
       virtualizer.scrollToIndex(0, { align: 'start' });
-    }, [virtualizer]);
+    }, []); // Remove virtualizer dependency
 
-    return {
+    // Auto-scroll effect when entries change and autoScroll is enabled
+    useEffect(() => {
+      if (mergedConfig.autoScroll && entries.length > 0) {
+        // Use setTimeout to ensure DOM is updated
+        setTimeout(() => {
+          virtualizer.scrollToIndex(entries.length - 1, { align: 'end' });
+        }, 0);
+      }
+    }, [entries.length, mergedConfig.autoScroll]);
+
+    return useMemo(() => ({
       // Core methods - actually used in codebase
       print,
       render,
@@ -135,6 +145,10 @@ export const createTerminalHook = (deps: TerminalDependencies): UseTerminal => {
       virtualizer,
       entries,
       parentRef,
-    };
+    }), [
+      print, render, clear, addEntry,
+      scrollToBottom, scrollToTop,
+      entries, terminalClasses, parentRef
+    ]);
   }
 };

@@ -1,15 +1,8 @@
-import { useMemo, useCallback, useEffect } from 'react';
-import { Terminal, useVirtualizedList, createHeightCalculator, DEFAULT_HEIGHT_CONFIG } from '@flux/ui';
-import { useTerminal } from '../hooks/useTerminal';
-import {
-  worldEventsToTerminalEntries,
-  createCombatInputEntry,
-  createCombatWelcomeEntries,
-  createSetupPhaseEntries,
-  createCombatErrorEntry
-} from '../adapters/worldEventToTerminal';
-import type { WorldEvent, ActorURN } from '@flux/core';
+import { useCallback, useEffect, useMemo } from 'react';
+import { Terminal, useTerminal } from '../../../shared/terminal';
+import { createCombatInputEntry, createCombatErrorEntry, createSetupPhaseEntries, createCombatWelcomeEntries, worldEventsToTerminalEntries } from '../adapters/worldEventToTerminal';
 import type { TerminalEntry } from '@flux/ui';
+import type { WorldEvent, ActorURN } from '@flux/core';
 
 export interface CombatTerminalProps {
   events: WorldEvent[];
@@ -31,69 +24,38 @@ export function CombatTerminal({
   className,
 }: CombatTerminalProps) {
 
-  // Convert WorldEvents to TerminalEntries using adapter pattern
-  const terminalEntries = useMemo(() => {
-    const entries: TerminalEntry[] = [];
+  // Memoize terminal config to prevent recreation on every render
+  const terminalConfig = useMemo(() => ({
+    maxEntries,
+    autoScroll: true,
+    showTimestamps: false, // We handle timestamps in narratives/formatting
+    gameMode: true, // Enable Zilla Slab and comfortable styling
+  }), [maxEntries]);
+
+  // Initialize terminal with game mode enabled for proportional fonts
+  const terminal = useTerminal(terminalConfig, 'dark');
+
+  // Extract stable methods to avoid infinite loops
+  const { clear, addEntry } = terminal;
+
+  // Update terminal when events change
+  useEffect(() => {
+    // Clear and repopulate terminal efficiently
+    clear();
 
     // Add welcome/setup messages if needed
     if (showWelcomeMessage) {
       if (isSetupPhase) {
-        entries.push(...createSetupPhaseEntries());
+        createSetupPhaseEntries().forEach((entry: TerminalEntry) => addEntry(entry));
       } else {
-        entries.push(...createCombatWelcomeEntries());
+        createCombatWelcomeEntries().forEach((entry: TerminalEntry) => addEntry(entry));
       }
     }
 
-    // Convert events to terminal entries
-    entries.push(...worldEventsToTerminalEntries(events, currentActor));
-
-    return entries;
-  }, [events, currentActor, isSetupPhase, showWelcomeMessage]);
-
-  // Create dynamic height calculator based on terminal entries
-  const heightCalculator = useMemo(() => {
-    const config = {
-      ...DEFAULT_HEIGHT_CONFIG,
-      baseLineHeight: 22, // Slightly larger for Zilla Slab readability
-      charactersPerLine: 70, // Conservative estimate for terminal width
-      minHeight: 36, // Minimum height for game mode
-      entryPadding: 16, // Account for our CSS padding and margins
-    };
-    return createHeightCalculator(terminalEntries, config);
-  }, [terminalEntries]);
-
-  // Create virtualization for performance with dynamic sizing
-  const virtualization = useVirtualizedList<TerminalEntry>([], {
-    itemHeight: heightCalculator, // Use dynamic height calculation
-    viewportHeight: 400,
-    overscan: 10, // Good buffer for smooth scrolling
-  });
-
-  // Initialize terminal with game mode enabled for proportional fonts
-  const terminal = useTerminal(
-    {
-      maxEntries,
-      autoScroll: true,
-      showTimestamps: false, // We handle timestamps in narratives/formatting
-      gameMode: true, // Enable Zilla Slab and comfortable styling
-    },
-    {
-      itemHeight: heightCalculator, // Use dynamic height calculation
-      viewportHeight: 400,
-      overscan: 10,
-    },
-    'dark'
-  );
-
-
-  // Update terminal when entries change - use effect for proper timing
-  useEffect(() => {
-    // Clear and repopulate terminal efficiently
-    terminal.clear();
-    terminalEntries.forEach(entry => {
-      terminal.addEntry(entry);
-    });
-  }, [terminalEntries, terminal]);
+    // Convert and add events
+    const eventEntries = worldEventsToTerminalEntries(events, currentActor);
+    eventEntries.forEach((entry: TerminalEntry) => addEntry(entry));
+  }, [events, currentActor, isSetupPhase, showWelcomeMessage, clear, addEntry]);
 
   // Handle command input with proper error handling
   const handleCommand = useCallback((command: string) => {
@@ -145,9 +107,8 @@ export function CombatTerminal({
       }}>
         <Terminal
           terminal={terminal}
-          virtualization={virtualization}
-          itemHeight={heightCalculator} // Use dynamic height calculation
-          // Remove fixed viewportHeight to let it fill parent
+          virtualizer={terminal.virtualizer}
+          entries={terminal.entries}
         />
       </div>
 

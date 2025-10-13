@@ -4,9 +4,6 @@
 // Theme types
 export * from './theme';
 
-// List/Virtualization types
-export * from './list';
-
 // Terminal types
 export * from './terminal';
 

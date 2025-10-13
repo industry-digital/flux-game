@@ -32,11 +32,9 @@
   "devDependencies": {
     "@testing-library/jest-dom": "^6.6.3",
     "@testing-library/react": "^16.1.0",
+    "@tanstack/react-virtual": "^3.13.12",
     "@types/react": "^19.0.0",
     "@types/react-dom": "^19.0.0",
     "jsdom": "^26.1.0"
-  },
-  "dependencies": {
-    "@tanstack/react-virtual": "^3.13.12"
   }
 }

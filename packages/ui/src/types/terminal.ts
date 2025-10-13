@@ -1,6 +1,5 @@
 import { ReactNode } from 'react';
 import type { ThemeName, UseTheme } from './theme';
-import type { UseVirtualizedList } from './list';
 import type { useVirtualizer } from '@tanstack/react-virtual';
 
 export type TerminalEntry = {
@@ -28,10 +27,6 @@ export type TerminalConfig = {
 export type TerminalDependencies = {
   timestamp: () => number;
   useTheme: UseTheme;
-  /**
-   * @deprecated Use useVirtualizer instead
-   */
-  useVirtualizedList?: UseVirtualizedList;
   useVirtualizer: typeof useVirtualizer;
 };
 
