@@ -19,6 +19,8 @@ import { ADVANCE } from '~/command/ADVANCE/handler';
 import { RETREAT } from '~/command/RETREAT/handler';
 import { TARGET } from '~/command/TARGET/handler';
 import { LOOK } from '~/command/LOOK/handler';
+import { STRIKE } from '~/command/STRIKE/handler';
+import { CLEAVE } from '~/command/CLEAVE/handler';
 
 /**
  * The Flux World Server literally spreads this array into the Transformation stage.
@@ -28,17 +30,19 @@ import { LOOK } from '~/command/LOOK/handler';
 export const PURE_GAME_LOGIC_HANDLERS: PureHandlerImplementation<TransformerContext, any>[]
 = safeTopologicalSort(
   [
+    ADVANCE,
+    ATTACK,
+    CLEAVE,
     CREATE_ACTOR,
     CREATE_PLACE,
+    DEFEND,
     DEMATERIALIZE_ACTOR,
     LOOK,
     MATERIALIZE_ACTOR,
     MUTATE_RESOURCES,
     MUTATE_WEATHER,
-    ATTACK,
-    DEFEND,
-    ADVANCE,
     RETREAT,
+    STRIKE,
     TARGET,
   ],
   (Handler) => Handler.prototype.dependencies ?? [],

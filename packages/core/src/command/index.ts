@@ -8,6 +8,8 @@ import { lookReducer } from '~/command/LOOK/handler';
 import { PureReducer, TransformerContext } from '~/types/handler';
 import { CommandType, Command, CommandTypeGuard } from '~/types/intent';
 import { actorMovementReducer } from '~/command/MOVE/handler';
+import { strikeReducer } from '~/command/STRIKE/handler';
+import { cleaveReducer } from '~/command/CLEAVE/handler';
 
 /**
  * Helper function to create a command type guard for any command type (system or actor)
@@ -30,6 +32,8 @@ export const COMMAND_TRANSFORMERS: Partial<Record<CommandType, PureReducer<Trans
   [CommandType.MUTATE_RESOURCES]: mutateResourcesReducer,
   [CommandType.LOOK]: lookReducer,
   [CommandType.MOVE]: actorMovementReducer,
+  [CommandType.STRIKE]: strikeReducer,
+  [CommandType.CLEAVE]: cleaveReducer,
 };
 
 /**
@@ -52,3 +56,5 @@ export { MUTATE_WEATHER, MutateWeatherCommand } from './MUTATE_WEATHER/handler';
 export { MUTATE_RESOURCES, MutateResourcesCommand } from './MUTATE_RESOURCES/handler';
 export { LOOK, LookCommand, LookCommandArgs } from './LOOK/handler';
 export { MOVE, MoveCommand, MoveCommandArgs } from './MOVE/handler';
+export { STRIKE, StrikeCommand, StrikeCommandArgs } from './STRIKE/handler';
+export { CLEAVE, CleaveCommand, CleaveCommandArgs } from './CLEAVE/handler';
