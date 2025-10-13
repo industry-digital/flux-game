@@ -1,10 +1,10 @@
 import {
-    Intent,
-    IntentParser,
-    IntentParserContext,
-    PureHandlerInterface,
-    PureReducer,
-    TransformerContext,
+  Intent,
+  IntentParser,
+  IntentParserContext,
+  PureHandlerInterface,
+  PureReducer,
+  TransformerContext,
 } from '~/types/handler';
 import { CommandType, Command, ActorCommand } from '~/types/intent';
 import { isCommandOfType, createActorCommand } from '~/lib/intent';
@@ -44,12 +44,8 @@ export const cleaveReducer: PureReducer<TransformerContext, CleaveCommand> = (co
   const combatantApi = useCombatant(actor.id);
 
   // Use the combatant API's cleave method (primitive multi-target action)
-  const events = combatantApi.cleave(command.id);
-
-  // Declare all events through the context
-  for (const event of events) {
-    context.declareEvent(event);
-  }
+  // Note: The cleave method already declares events internally, so we don't need to declare them again
+  combatantApi.cleave(command.id);
 
   return context;
 };

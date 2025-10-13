@@ -83,14 +83,6 @@ export function createCombatTool(_deps: CombatToolDependencies = DEFAULT_COMBAT_
 
     // Sync initial actors with combat session
     useEffect(() => {
-      console.log('🔄 useEffect triggered:', {
-        hasSession: !!session.session,
-        isInSetupPhase: session.isInSetupPhase,
-        isInitialized: actors.isInitialized,
-        actorCount: Object.keys(scenarioData.actors).length,
-        alreadyAdded: initialActorsAddedRef.current
-      });
-
       if (session.session && session.isInSetupPhase && actors.isInitialized && !initialActorsAddedRef.current) {
         console.log('✅ Adding actors to combat session...');
         initialActorsAddedRef.current = true;
@@ -133,9 +125,25 @@ export function createCombatTool(_deps: CombatToolDependencies = DEFAULT_COMBAT_
     );
 
     const handleCommand = useCallback((command: string) => {
+      console.log(`🎮 CombatTool: Executing command "${command}"`);
+
+      // Log combat session state before command
+      if (session.session) {
+        const initiativeOrder = Array.from(session.session.data.initiative.keys());
+        const currentActor = session.session.data.rounds.current.turns.current.actor;
+        const currentRound = session.session.data.rounds.current.number;
+        const currentTurn = session.session.data.rounds.current.turns.current.number;
+
+        console.log(`🎮 Combat session state:`);
+        console.log(`  Initiative order: [${initiativeOrder.join(', ')}]`);
+        console.log(`  Current actor: ${currentActor}`);
+        console.log(`  Round ${currentRound}, Turn ${currentTurn}`);
+        console.log(`  Total combatants: ${session.session.data.combatants.size}`);
+      }
+
       const events = combatState.executeCommand(command);
       handleEventsGenerated(events);
-    }, [combatState, handleEventsGenerated]);
+    }, [combatState, handleEventsGenerated, session.session]);
 
     // Create integrated add/remove functions that sync scenario and session
     const handleAddOptionalActor = useCallback((name: OptionalActorName) => {

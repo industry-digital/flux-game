@@ -465,6 +465,12 @@ describe('Attack Method with AI Integration', () => {
       const mockStrike = vi.fn().mockReturnValue([
         { type: 'combat:actor:attacked', actor: actor.id } as WorldEvent
       ]);
+      const mockDefend = vi.fn().mockReturnValue([
+        { type: 'combat:actor:defended', actor: actor.id } as WorldEvent
+      ]);
+      const mockDone = vi.fn().mockReturnValue([
+        { type: 'combat:turn:ended', actor: actor.id } as WorldEvent
+      ]);
 
       const attack = createAttackMethod(
         context,
@@ -473,6 +479,8 @@ describe('Attack Method with AI Integration', () => {
         combatant,
         {
           strike: mockStrike,
+          defend: mockDefend,
+          done: mockDone,
           // No generateCombatPlan injected - should use default
         }
       );

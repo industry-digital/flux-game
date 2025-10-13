@@ -63,6 +63,7 @@ export const createTransformerContext = (
   const declaredEventsByType: Map<EventType, WorldEvent[]> = new Map();
   const declaredEventsByCommand: Map<string, WorldEvent[]> = new Map();
   const declaredErrors: ExecutionError[] = [];
+  const declaredEventIds: Set<string> = new Set();
 
   const declareEvent = (input : WorldEvent | WorldEventInput): void => {
     const event: WorldEvent = {
@@ -71,6 +72,15 @@ export const createTransformerContext = (
       ...input
     };
 
+    // Architectural safeguard: prevent duplicate event declarations
+    if (declaredEventIds.has(event.id)) {
+      throw new Error(
+        `Duplicate event declaration detected: Event with ID "${event.id}" (type: ${event.type}) has already been declared. ` +
+        `This indicates a bug in the event handling system where the same event is being declared multiple times.`
+      );
+    }
+
+    declaredEventIds.add(event.id);
     declaredEvents.push(event);
 
     if (!declaredEventsByType.has(event.type)) {
@@ -116,7 +126,20 @@ export const createTransformerContext = (
     return (declaredEventsByCommand.get(trace) || []) as TEventType[];
   };
 
+  const resetErrors = () => {
+    declaredErrors.length = 0;
+  };
+
+  const resetEvents = () => {
+    declaredEvents.length = 0;
+    declaredEventsByType.clear();
+    declaredEventsByCommand.clear();
+    declaredEventIds.clear();
+  };
+
   const transformerContext: TransformerContext = {
+    resetEvents,
+    resetErrors,
     world,
     mass,
     schemaManager,

@@ -61,12 +61,8 @@ export const strikeReducer: PureReducer<TransformerContext, StrikeCommand> = (co
   const combatantApi = useCombatant(actor.id);
 
   // Use the combatant API's strike method (primitive action)
-  const events = combatantApi.strike(command.args.target, command.id);
-
-  // Declare all events through the context
-  for (const event of events) {
-    context.declareEvent(event);
-  }
+  // Note: The strike method already declares events internally, so we don't need to declare them again
+  combatantApi.strike(command.args.target, command.id);
 
   return context;
 };

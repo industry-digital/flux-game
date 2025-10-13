@@ -53,6 +53,7 @@ export type ErrorDeclarationProducer = {
 
 export type ErrorDeclarationConsumer = {
   getDeclaredErrors(): ExecutionError[];
+  resetErrors(): void;
 };
 
 export type EventDeclarationConsumer = {
@@ -61,6 +62,7 @@ export type EventDeclarationConsumer = {
   getDeclaredEvents(regex: RegExp): WorldEvent[];
   /** Get events declared by a specific command */
   getDeclaredEventsByCommand<TEventType extends WorldEvent = WorldEvent>(commandId: string): TEventType[];
+  resetEvents(): void;
 };
 
 export type EventDeclarationProducer = {

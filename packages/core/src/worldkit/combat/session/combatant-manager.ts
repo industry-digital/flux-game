@@ -110,6 +110,9 @@ export function createCombatantManager(
 
     session.data.combatants.set(actorId, combatant);
 
+    // Register the combat session with the actor
+    context.actorSessionApi.addToActiveSessions(actor, session.id);
+
     // Invalidate initiative cache since combatants changed
     session.data.initiativeSorted = false;
   };
@@ -118,6 +121,13 @@ export function createCombatantManager(
     if (session.status === SessionStatus.RUNNING) {
       throw new Error('Cannot remove combatants after combat has started');
     }
+
+    const actor = world.actors[actorId];
+    if (actor) {
+      // Unregister the combat session from the actor
+      context.actorSessionApi.removeFromActiveSessions(actor, session.id);
+    }
+
     session.data.combatants.delete(actorId);
 
     // Invalidate initiative cache since combatants changed
