@@ -20,7 +20,7 @@ export const ATTACK_COST: Readonly<ActionCost> = createZeroCost();
 /**
  * Combat actions needed for plan execution
  */
-export type CombatPlanDependencies = Pick<CombatantApi, 'strike' | 'defend' | 'target' | 'advance' | 'retreat'>;
+export type CombatPlanDependencies = Pick<CombatantApi, 'strike' | 'defend' | 'target' | 'advance' | 'retreat' | 'done'>;
 
 /**
  * Function signature for executing a combat plan
@@ -43,6 +43,7 @@ export type AttackDependencies = {
   defend?: ReturnType<typeof createDefendMethod>;
   advance?: ReturnType<typeof createAdvanceMethod>;
   retreat?: ReturnType<typeof createRetreatMethod>;
+  done?: ReturnType<typeof createDoneMethod>;
 };
 
 const internalExecuteCombatPlan: CombatPlanExecutor = (
@@ -142,6 +143,12 @@ const internalExecuteCombatPlan: CombatPlanExecutor = (
     }
   }
 
+  // If actor is out of AP after executing the plan, automatically end turn
+  if (combatant.ap.eff.cur <= 0) {
+    const doneEvents = deps.done(trace);
+    allEvents.push(...doneEvents);
+  }
+
   return allEvents;
 };
 
@@ -165,6 +172,7 @@ export function createAttackMethod (
     defend: defendImpl = deps.defend || createDefendMethod(context, session, actor, combatant, { done: createDoneMethod(context, session, actor, combatant, { advanceTurn: () => [] }) }),
     advance: advanceImpl = deps.advance || createAdvanceMethod(context, session, actor, combatant),
     retreat: retreatImpl = deps.retreat || createRetreatMethod(context, session, actor, combatant),
+    done: doneImpl = deps.done || createDoneMethod(context, session, actor, combatant, { advanceTurn: () => [] }),
   } = deps;
 
   return (target?: ActorURN, trace: string = context.uniqid()): WorldEvent[] => {
@@ -203,6 +211,7 @@ console.log(`combat: attack action: combatant.target=${combatant.target}`);
       target: targetImpl,
       advance: advanceImpl,
       retreat: retreatImpl,
+      done: doneImpl,
     });
 
     allEvents.push(...planEvents);

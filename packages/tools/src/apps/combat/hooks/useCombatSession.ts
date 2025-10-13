@@ -1,0 +1,177 @@
+import { useState, useCallback, useEffect } from 'react';
+import {
+  createCombatSessionApi,
+  type CombatSessionApi,
+  type TransformerContext,
+  type CombatSession,
+  type ActorURN,
+  type PlaceURN,
+  type SessionURN,
+  type WorldEvent,
+  Team,
+  SessionStatus,
+} from '@flux/core';
+
+export interface UseCombatSessionResult {
+  session: CombatSession | null;
+  sessionId: SessionURN | null;
+  isInSetupPhase: boolean;
+  isPaused: boolean;
+  isRunning: boolean;
+  currentActorId: ActorURN | null;
+  startCombat: () => void;
+  pauseCombat: () => WorldEvent[];
+  resumeCombat: () => WorldEvent[];
+  advanceTurn: (trace?: string) => WorldEvent[];
+  addCombatant: (actorId: ActorURN, team: Team | string) => void;
+  removeCombatant: (actorId: ActorURN) => void;
+}
+
+export interface CombatSessionDependencies {
+  createCombatSessionApi: typeof createCombatSessionApi;
+}
+
+export const DEFAULT_COMBAT_SESSION_DEPS: CombatSessionDependencies = {
+  createCombatSessionApi,
+};
+
+/**
+ * Hook for managing combat session lifecycle and phase transitions
+ * Handles setup → active → paused states and combatant management
+ */
+export function useCombatSession(
+  context: TransformerContext,
+  placeId: PlaceURN,
+  deps: CombatSessionDependencies = DEFAULT_COMBAT_SESSION_DEPS
+): UseCombatSessionResult {
+  const [session, setSession] = useState<CombatSession | null>(null);
+  const [sessionId, setSessionId] = useState<SessionURN | null>(null);
+  const [currentActorId, setCurrentActorId] = useState<ActorURN | null>(null);
+  const [sessionApi, setSessionApi] = useState<CombatSessionApi | null>(null);
+
+  // Derived state
+  const isInSetupPhase = !session || session.status === SessionStatus.PENDING;
+  const isPaused = session?.status === SessionStatus.PAUSED;
+  const isRunning = session?.status === SessionStatus.RUNNING;
+
+  // Initialize session API with the provided context
+  useEffect(() => {
+    if (!sessionApi) {
+      const api = deps.createCombatSessionApi(context, placeId);
+      setSessionApi(api);
+      setSession(api.session);
+      setSessionId(api.session.id);
+    }
+  }, [context, placeId, sessionApi, deps]);
+
+  const startCombat = useCallback(() => {
+    if (!sessionApi || !isInSetupPhase) return;
+
+    try {
+      // Start combat and handle events
+      const events = sessionApi.startCombat();
+
+      // Get the first actor from initiative order
+      const firstActorId = session?.data.initiative.keys().next().value as ActorURN;
+      setCurrentActorId(firstActorId);
+
+      // Session status is updated by the API
+      setSession({ ...sessionApi.session });
+    } catch (error) {
+      console.error('❌ Combat start failed:', error);
+    }
+  }, [sessionApi, isInSetupPhase, session]);
+
+  const pauseCombat = useCallback((): WorldEvent[] => {
+    if (!sessionApi || !isRunning) return [];
+
+    try {
+      // Note: pauseCombat method would need to be added to CombatSessionApi
+      // For now, we'll manually update the session status
+      if (session) {
+        session.status = SessionStatus.PAUSED;
+        setSession({ ...session });
+      }
+      return [];
+    } catch (error) {
+      console.error('❌ Combat pause failed:', error);
+      return [];
+    }
+  }, [sessionApi, isRunning, session]);
+
+  const resumeCombat = useCallback((): WorldEvent[] => {
+    if (!sessionApi || !isPaused) return [];
+
+    try {
+      // Note: resumeCombat method would need to be added to CombatSessionApi
+      // For now, we'll manually update the session status
+      if (session) {
+        session.status = SessionStatus.RUNNING;
+        setSession({ ...session });
+      }
+      return [];
+    } catch (error) {
+      console.error('❌ Combat resume failed:', error);
+      return [];
+    }
+  }, [sessionApi, isPaused, session]);
+
+  const advanceTurn = useCallback((trace?: string): WorldEvent[] => {
+    if (!sessionApi) return [];
+
+    try {
+      const events = sessionApi.advanceTurn(trace);
+
+      // Update current actor from session state
+      const newActorId = session?.data.rounds.current.turns.current.actor;
+      if (newActorId) {
+        setCurrentActorId(newActorId);
+      }
+
+      // Update session reference
+      setSession({ ...sessionApi.session });
+
+      return events;
+    } catch (error) {
+      console.error('❌ Turn advancement failed:', error);
+      return [];
+    }
+  }, [sessionApi, session]);
+
+  const addCombatant = useCallback((actorId: ActorURN, team: Team | string) => {
+    if (!sessionApi || !isInSetupPhase) return;
+
+    try {
+      sessionApi.addCombatant(actorId, team);
+      setSession({ ...sessionApi.session });
+    } catch (error) {
+      console.error('❌ Add combatant failed:', error);
+    }
+  }, [sessionApi, isInSetupPhase]);
+
+  const removeCombatant = useCallback((actorId: ActorURN) => {
+    if (!sessionApi || !isInSetupPhase) return;
+
+    try {
+      sessionApi.removeCombatant(actorId);
+      setSession({ ...sessionApi.session });
+    } catch (error) {
+      console.error('❌ Remove combatant failed:', error);
+    }
+  }, [sessionApi, isInSetupPhase]);
+
+  return {
+    session,
+    sessionId,
+    isInSetupPhase,
+    isPaused,
+    isRunning,
+    currentActorId,
+    startCombat,
+    pauseCombat,
+    resumeCombat,
+    advanceTurn,
+    addCombatant,
+    removeCombatant,
+  };
+}

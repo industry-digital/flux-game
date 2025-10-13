@@ -1,0 +1,274 @@
+/**
+ * Combatant Card Component Styles
+ * Displays individual fighter information and status
+ */
+
+.combatant-card {
+  position: relative;
+  padding: 1rem;
+  background: var(--color-surface);
+  border: 2px solid var(--color-border);
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  transition: all 0.2s ease-in-out;
+  overflow: hidden;
+}
+
+.combatant-card:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.combatant-card[data-active="true"] {
+  border-color: var(--color-border-focus);
+  box-shadow: 0 4px 20px rgba(169, 182, 101, 0.2), 0 0 0 2px var(--color-border-focus);
+}
+
+.combatant-card[data-alive="false"] {
+  opacity: 0.6;
+  filter: grayscale(0.5);
+}
+
+.combatant-card-active-indicator {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: linear-gradient(90deg, var(--color-border-focus), var(--color-accent));
+  border-radius: 12px 12px 0 0;
+}
+
+.combatant-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 1rem;
+}
+
+.combatant-info {
+  flex: 1;
+}
+
+.combatant-name-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.25rem;
+}
+
+.combatant-name {
+  color: var(--color-text);
+  font-family: var(--font-family-heading);
+  font-size: var(--font-size-lg);
+  font-weight: var(--font-weight-semibold);
+  margin: 0;
+  line-height: var(--line-height-tight);
+}
+
+.combatant-name[data-alive="false"] {
+  color: var(--color-error);
+}
+
+.combatant-death-indicator {
+  font-size: var(--font-size-sm);
+  opacity: 0.8;
+}
+
+.ai-thinking-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.125rem 0.5rem;
+  background: var(--color-warning);
+  color: var(--color-text-on-primary);
+  border-radius: 12px;
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-medium);
+  animation: pulse 2s infinite;
+}
+
+.active-turn-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.125rem 0.5rem;
+  background: var(--color-border-focus);
+  color: var(--color-text-on-primary);
+  border-radius: 8px;
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-medium);
+  text-transform: uppercase;
+  letter-spacing: 0.025em;
+}
+
+.active-turn-dot {
+  width: 6px;
+  height: 6px;
+  background: currentColor;
+  border-radius: 50%;
+  animation: pulse 2s infinite;
+}
+
+.ai-control-toggle {
+  display: flex;
+  align-items: center;
+}
+
+.ai-control-label {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  cursor: pointer;
+  padding: 0.25rem;
+  border-radius: 6px;
+  font-size: var(--font-size-xs);
+  color: var(--color-text-secondary);
+  transition: background-color 0.2s ease;
+}
+
+.ai-control-label:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.ai-control-checkbox {
+  accent-color: var(--color-accent);
+  transform: scale(1.1);
+}
+
+.ai-control-text {
+  font-family: var(--font-family-heading);
+  font-weight: var(--font-weight-medium);
+}
+
+/* Health and Energy Bars */
+.vitals-section {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+}
+
+.vital-stat {
+  display: flex;
+  flex-direction: column;
+}
+
+.vital-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.5rem;
+}
+
+.vital-label {
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-xs);
+  font-family: var(--font-family-heading);
+  font-weight: var(--font-weight-medium);
+  text-transform: uppercase;
+  letter-spacing: 0.025em;
+}
+
+.vital-value {
+  font-size: var(--font-size-sm);
+  font-family: var(--font-family-mono);
+  font-weight: var(--font-weight-semibold);
+}
+
+.health-value {
+  color: var(--health-color);
+}
+
+.energy-value {
+  color: var(--color-info);
+}
+
+.vital-bar {
+  width: 100%;
+  background: var(--color-border);
+  border-radius: 4px;
+  overflow: hidden;
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+.health-bar {
+  height: 8px;
+}
+
+.energy-bar {
+  height: 6px;
+}
+
+.vital-bar-fill {
+  height: 100%;
+  border-radius: 4px;
+  transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+}
+
+.health-bar-fill {
+  background: var(--health-gradient);
+}
+
+.energy-bar-fill {
+  background: linear-gradient(90deg, var(--color-info), #89c4c7);
+  transition: width 0.3s ease;
+}
+
+.vital-bar-shine {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 50%;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.2), transparent);
+  border-radius: 4px 4px 0 0;
+}
+
+/* Stats Row - Compact horizontal layout */
+.stats-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.5rem 0.75rem;
+  background: var(--color-background);
+  border-radius: 8px;
+  border: 1px solid var(--color-border);
+  gap: 0.5rem;
+}
+
+.stat-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.125rem;
+  flex: 1;
+  min-width: 0; /* Allow flex items to shrink */
+}
+
+.stat-label {
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-xs);
+  font-family: var(--font-family-heading);
+  font-weight: var(--font-weight-medium);
+  text-transform: uppercase;
+  letter-spacing: 0.025em;
+}
+
+.stat-value {
+  color: var(--color-text);
+  font-size: var(--font-size-sm);
+  font-family: var(--font-family-mono);
+  font-weight: var(--font-weight-semibold);
+  line-height: 1;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}

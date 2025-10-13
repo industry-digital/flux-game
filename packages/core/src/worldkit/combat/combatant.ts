@@ -77,7 +77,7 @@ export function createCombatantApiFactory(actionDeps: ActionDependencies = {}) {
     const defend = createDefendMethod(context, session, actor, combatant, { ...actionDeps.defendDeps, done });
     const attack = createAttackMethod(context, session, actor, combatant, {
       ...actionDeps.attackDeps,
-      target, strike, defend, advance, retreat,
+      target, strike, defend, advance, retreat, done,
     });
 
     const canAct = (): boolean => cleanApPrecision(combatant.ap.eff.cur || 0) > 0;

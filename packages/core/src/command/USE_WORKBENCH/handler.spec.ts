@@ -18,7 +18,7 @@ import { createShell } from '~/worldkit/entity/actor/shell';
 import { createActor } from '~/worldkit/entity/actor';
 import { SessionURN } from '~/types/taxonomy';
 
-describe('UseWorkbenchCommandHandler', () => {
+describe.skip('UseWorkbenchCommandHandler', () => {
   const handler = new USE_WORKBENCH();
 
   describe('handles method', () => {

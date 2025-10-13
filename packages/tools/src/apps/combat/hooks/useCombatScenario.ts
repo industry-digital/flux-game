@@ -1,0 +1,248 @@
+import { useCallback } from 'react';
+import { useStorage } from '@flux/ui';
+import type { ActorURN, WeaponSchemaURN, SkillURN } from '@flux/core';
+
+export type TeamName = 'ALPHA' | 'BRAVO';
+export type OptionalActorName = 'charlie' | 'eric' | 'dave' | 'franz';
+
+export interface ActorStatsInput {
+  pow?: number;
+  fin?: number;
+  res?: number;
+  int?: number;
+  per?: number;
+  mem?: number;
+}
+
+export interface CombatScenarioActorData {
+  stats: ActorStatsInput;
+  aiControlled: boolean;
+  weapon: WeaponSchemaURN;
+  skills: Record<SkillURN, number>;
+  team: TeamName;
+}
+
+export interface CombatScenarioData {
+  actors: Record<ActorURN, CombatScenarioActorData>;
+}
+
+// Actor URNs for the combat scenario
+export const ALICE_ID: ActorURN = 'flux:actor:alice';
+export const BOB_ID: ActorURN = 'flux:actor:bob';
+export const CHARLIE_ID: ActorURN = 'flux:actor:charlie';
+export const ERIC_ID: ActorURN = 'flux:actor:eric';
+export const DAVE_ID: ActorURN = 'flux:actor:dave';
+export const FRANZ_ID: ActorURN = 'flux:actor:franz';
+
+// Team assignments
+export const TEAM_ASSIGNMENTS: Record<ActorURN, TeamName> = {
+  [ALICE_ID]: 'ALPHA',
+  [BOB_ID]: 'BRAVO',
+  [CHARLIE_ID]: 'ALPHA',
+  [ERIC_ID]: 'ALPHA',
+  [DAVE_ID]: 'BRAVO',
+  [FRANZ_ID]: 'BRAVO',
+};
+
+// Helper functions
+export const getActorIdFromName = (name: OptionalActorName): ActorURN => {
+  switch (name) {
+    case 'charlie': return CHARLIE_ID;
+    case 'eric': return ERIC_ID;
+    case 'dave': return DAVE_ID;
+    case 'franz': return FRANZ_ID;
+  }
+};
+
+export const getNameFromActorId = (actorId: ActorURN): string => {
+  switch (actorId) {
+    case ALICE_ID: return 'Alice';
+    case BOB_ID: return 'Bob';
+    case CHARLIE_ID: return 'Charlie';
+    case ERIC_ID: return 'Eric';
+    case DAVE_ID: return 'Dave';
+    case FRANZ_ID: return 'Franz';
+    default: return actorId;
+  }
+};
+
+export const getTeamActors = (scenarioData: CombatScenarioData, team: TeamName): ActorURN[] => {
+  return Object.entries(scenarioData.actors)
+    .filter(([, data]) => data.team === team)
+    .map(([actorId]) => actorId as ActorURN);
+};
+
+export const getAvailableOptionalActors = (scenarioData: CombatScenarioData, team: TeamName): OptionalActorName[] => {
+  const teamActors = getTeamActors(scenarioData, team);
+  const optionalActors: OptionalActorName[] = team === 'ALPHA' ? ['charlie', 'eric'] : ['dave', 'franz'];
+
+  return optionalActors.filter(name => {
+    const actorId = getActorIdFromName(name);
+    return !teamActors.includes(actorId);
+  });
+};
+
+export interface UseCombatScenarioResult {
+  scenarioData: CombatScenarioData;
+  updateActorStats: (actorId: ActorURN, stats: Partial<ActorStatsInput>) => void;
+  updateActorWeapon: (actorId: ActorURN, weaponUrn: WeaponSchemaURN) => void;
+  updateActorSkill: (actorId: ActorURN, skillUrn: SkillURN, rank: number) => void;
+  updateActorAiControl: (actorId: ActorURN, enabled: boolean) => void;
+  addOptionalActor: (name: OptionalActorName, onSessionAdd?: (actorId: ActorURN, team: TeamName) => void) => void;
+  removeOptionalActor: (name: OptionalActorName, onSessionRemove?: (actorId: ActorURN) => void) => void;
+  resetScenario: () => void;
+  getTeamActors: (team: TeamName) => ActorURN[];
+  getAvailableOptionalActors: (team: TeamName) => OptionalActorName[];
+}
+
+export interface CombatScenarioDependencies {
+  storage: Storage;
+}
+
+export const DEFAULT_COMBAT_SCENARIO_DEPS: CombatScenarioDependencies = {
+  storage: typeof window !== 'undefined' ? window.localStorage : {} as Storage,
+};
+
+/**
+ * Hook for managing combat scenario data persistence
+ * Handles localStorage operations and scenario data mutations
+ */
+export function useCombatScenario(
+  defaultScenario: CombatScenarioData,
+  storageKey = 'combat-sandbox-scenario',
+  deps: CombatScenarioDependencies = DEFAULT_COMBAT_SCENARIO_DEPS
+): UseCombatScenarioResult {
+  const [scenarioData, setScenarioData] = useStorage(
+    storageKey,
+    defaultScenario,
+    deps.storage
+  );
+
+  const updateActorStats = useCallback((actorId: ActorURN, stats: Partial<ActorStatsInput>) => {
+    setScenarioData(prev => ({
+      ...prev,
+      actors: {
+        ...prev.actors,
+        [actorId]: {
+          ...prev.actors[actorId],
+          stats: {
+            ...prev.actors[actorId]?.stats,
+            ...stats
+          }
+        }
+      }
+    }));
+  }, [setScenarioData]);
+
+  const updateActorWeapon = useCallback((actorId: ActorURN, weaponUrn: WeaponSchemaURN) => {
+    setScenarioData(prev => ({
+      ...prev,
+      actors: {
+        ...prev.actors,
+        [actorId]: {
+          ...prev.actors[actorId],
+          weapon: weaponUrn
+        }
+      }
+    }));
+  }, [setScenarioData]);
+
+  const updateActorSkill = useCallback((actorId: ActorURN, skillUrn: SkillURN, rank: number) => {
+    setScenarioData(prev => ({
+      ...prev,
+      actors: {
+        ...prev.actors,
+        [actorId]: {
+          ...prev.actors[actorId],
+          skills: {
+            ...prev.actors[actorId]?.skills,
+            [skillUrn]: rank
+          }
+        }
+      }
+    }));
+  }, [setScenarioData]);
+
+  const updateActorAiControl = useCallback((actorId: ActorURN, enabled: boolean) => {
+    setScenarioData(prev => ({
+      ...prev,
+      actors: {
+        ...prev.actors,
+        [actorId]: {
+          ...prev.actors[actorId],
+          aiControlled: enabled
+        }
+      }
+    }));
+  }, [setScenarioData]);
+
+  const addOptionalActor = useCallback((name: OptionalActorName, onSessionAdd?: (actorId: ActorURN, team: TeamName) => void) => {
+    const actorId = getActorIdFromName(name);
+    const team = TEAM_ASSIGNMENTS[actorId];
+
+    const defaultData: CombatScenarioActorData = {
+      stats: { pow: 10, fin: 10, res: 10, int: 10, per: 10, mem: 10 },
+      aiControlled: true, // Optional actors are AI-controlled by default
+      weapon: 'flux:schema:weapon:longsword' as WeaponSchemaURN,
+      skills: {
+        'flux:skill:evasion': 0,
+        'flux:skill:weapon:melee': 0
+      },
+      team
+    };
+
+    setScenarioData(prev => ({
+      ...prev,
+      actors: {
+        ...prev.actors,
+        [actorId]: defaultData
+      }
+    }));
+
+    // Notify session to add combatant
+    if (onSessionAdd) {
+      onSessionAdd(actorId, team);
+    }
+  }, [setScenarioData]);
+
+  const removeOptionalActor = useCallback((name: OptionalActorName, onSessionRemove?: (actorId: ActorURN) => void) => {
+    const actorId = getActorIdFromName(name);
+
+    setScenarioData(prev => {
+      const newActors = { ...prev.actors };
+      delete newActors[actorId];
+      return {
+        ...prev,
+        actors: newActors
+      };
+    });
+
+    // Notify session to remove combatant
+    if (onSessionRemove) {
+      onSessionRemove(actorId);
+    }
+  }, [setScenarioData]);
+
+  const resetScenario = useCallback(() => {
+    setScenarioData(defaultScenario);
+  }, [setScenarioData, defaultScenario]);
+
+  const getTeamActorsCallback = useCallback((team: TeamName) =>
+    getTeamActors(scenarioData, team), [scenarioData]);
+
+  const getAvailableOptionalActorsCallback = useCallback((team: TeamName) =>
+    getAvailableOptionalActors(scenarioData, team), [scenarioData]);
+
+  return {
+    scenarioData,
+    updateActorStats,
+    updateActorWeapon,
+    updateActorSkill,
+    updateActorAiControl,
+    addOptionalActor,
+    removeOptionalActor,
+    resetScenario,
+    getTeamActors: getTeamActorsCallback,
+    getAvailableOptionalActors: getAvailableOptionalActorsCallback,
+  };
+}

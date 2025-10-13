@@ -10,9 +10,7 @@ import { CommandType, Command, ActorCommand } from '~/types/intent';
 import { isCommandOfType, createActorCommand } from '~/lib/intent';
 import { ActorURN } from '~/types/taxonomy';
 import { createCombatSessionApi } from '~/worldkit/combat/session/session';
-import { CombatCommand, Team } from '~/types/combat';
-import { generateCombatPlan } from '~/worldkit/combat/ai';
-import { executeCombatPlan } from '~/worldkit/combat/execution';
+import { Team } from '~/types/combat';
 
 export type AttackCommandArgs = {
   target: ActorURN;
@@ -51,8 +49,16 @@ export const attackReducer: PureReducer<TransformerContext, AttackCommand> = (co
   }
 
   const combatantApi = useCombatant(actor.id);
-  const plan: CombatCommand[] = generateCombatPlan(context, session, combatantApi.combatant, command.id);
-  return executeCombatPlan(context, combatantApi, plan);
+
+  // Use the combatant API's attack method which includes turn advancement
+  const events = combatantApi.attack(command.args.target, command.id);
+
+  // Declare all events through the context
+  for (const event of events) {
+    context.declareEvent(event);
+  }
+
+  return context;
 };
 
 export const attackIntentParser: IntentParser<AttackCommand> = (

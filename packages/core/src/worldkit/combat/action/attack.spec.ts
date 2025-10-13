@@ -206,6 +206,7 @@ describe('Attack Method with AI Integration', () => {
           target: mockTarget,
           advance: mockAdvance,
           retreat: mockRetreat,
+          done: expect.any(Function),
         }
       );
 
