@@ -261,9 +261,9 @@ export type Actor =
   shells: Record<string, Shell>;
 
   /**
-   * Currently active sessions
+   * Currently active sessions with join timestamps
    */
-  sessions: Record<SessionURN, 1>;
+  sessions: Record<SessionURN, number>;
 };
 
 export type Autonomous = {

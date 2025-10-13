@@ -1,5 +1,5 @@
 import { Actor } from '~/types/entity/actor';
-import { WorldProjection } from '~/types/handler';
+import { PotentiallyImpureOperations, WorldProjection } from '~/types/handler';
 import { Session, SessionStatus } from '~/types/session';
 import { SessionURN } from '~/types/taxonomy';
 
@@ -37,7 +37,15 @@ const findSessionByStrategy = (
   return null;
 };
 
-export const createActorSessionApi = (sessions: WorldProjection['sessions'], deps = {}): ActorSessionApi => {
+export type ActorSessionApiDependencies = {
+  timestamp: PotentiallyImpureOperations['timestamp'];
+};
+
+export const DEFAULT_ACTOR_SESSION_API_DEPS: Readonly<ActorSessionApiDependencies> = {
+  timestamp: () => Date.now(),
+};
+
+export const createActorSessionApi = (sessions: WorldProjection['sessions'], deps = DEFAULT_ACTOR_SESSION_API_DEPS): ActorSessionApi => {
 
   const getActiveSessions = (actor: Actor, output: Session[] = []): Session[] => {
     output.length = 0;
@@ -51,6 +59,7 @@ export const createActorSessionApi = (sessions: WorldProjection['sessions'], dep
 
     return output;
   };
+
 
   const addToActiveSessions = (actor: Actor, sessionId: SessionURN): void => {
     // Get the session to check its strategy
@@ -66,8 +75,8 @@ export const createActorSessionApi = (sessions: WorldProjection['sessions'], dep
       delete actor.sessions[existingSessionOfStrategy];
     }
 
-    // Add the new session
-    actor.sessions[sessionId] = 1;
+    // Add the new session with current timestamp
+    actor.sessions[sessionId] = deps.timestamp();
   };
 
   const removeFromActiveSessions = (actor: Actor, sessionId: SessionURN): void => {
