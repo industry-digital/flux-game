@@ -61,6 +61,7 @@ export {
 export {
   calculateMaxAp,
   cleanApPrecision,
+  DEFAULT_BASE_AP,
 } from './ap';
 
 export {

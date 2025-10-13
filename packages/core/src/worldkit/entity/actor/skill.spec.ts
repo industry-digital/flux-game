@@ -15,6 +15,8 @@ import {
   createDefaultSkillState,
   createActorSkillApi,
   type ActorSkillApi,
+  setActorSkillRank,
+  setActorSkillRanks,
 } from './skill';
 
 // Test fixtures
@@ -43,13 +45,43 @@ const TEST_SKILL_URN: SkillURN = 'flux:skill:test' as SkillURN;
 
 describe('skill.ts', () => {
   describe('createDefaultSkillState', () => {
-    it('should create a default skill state with zero values', () => {
+    it('should create a default skill state with zero values when no rank provided', () => {
       const result = createDefaultSkillState();
 
       expect(result).toEqual({
         xp: 0,
         pxp: 0,
         rank: 0,
+      });
+    });
+
+    it('should create a skill state with specified rank', () => {
+      const result = createDefaultSkillState(50);
+
+      expect(result).toEqual({
+        xp: 0,
+        pxp: 0,
+        rank: 50,
+      });
+    });
+
+    it('should clamp rank to MIN_SKILL_RANK', () => {
+      const result = createDefaultSkillState(-10);
+
+      expect(result).toEqual({
+        xp: 0,
+        pxp: 0,
+        rank: MIN_SKILL_RANK,
+      });
+    });
+
+    it('should clamp rank to MAX_SKILL_RANK', () => {
+      const result = createDefaultSkillState(150);
+
+      expect(result).toEqual({
+        xp: 0,
+        pxp: 0,
+        rank: MAX_SKILL_RANK,
       });
     });
   });
@@ -457,6 +489,186 @@ describe('skill.ts', () => {
     });
   });
 
+  describe('setActorSkillRank', () => {
+    it('should set skill rank for new skill', () => {
+      const actor = createTestActor();
+
+      setActorSkillRank(actor, TEST_SKILL_URN, 75);
+
+      const skill = getActorSkill(actor, TEST_SKILL_URN);
+      expect(skill.rank).toBe(75);
+      expect(skill.xp).toBe(0);
+      expect(skill.pxp).toBe(0);
+    });
+
+    it('should update existing skill rank', () => {
+      const actor = createTestActor({
+        [TEST_SKILL_URN]: { xp: 100, pxp: 50, rank: 25 }
+      });
+
+      setActorSkillRank(actor, TEST_SKILL_URN, 80);
+
+      const skill = getActorSkill(actor, TEST_SKILL_URN);
+      expect(skill.rank).toBe(80);
+      expect(skill.xp).toBe(100); // Should preserve existing xp
+      expect(skill.pxp).toBe(50); // Should preserve existing pxp
+    });
+
+    it('should clamp rank to MIN_SKILL_RANK', () => {
+      const actor = createTestActor();
+
+      setActorSkillRank(actor, TEST_SKILL_URN, -20);
+
+      const skill = getActorSkill(actor, TEST_SKILL_URN);
+      expect(skill.rank).toBe(MIN_SKILL_RANK);
+    });
+
+    it('should clamp rank to MAX_SKILL_RANK', () => {
+      const actor = createTestActor();
+
+      setActorSkillRank(actor, TEST_SKILL_URN, 150);
+
+      const skill = getActorSkill(actor, TEST_SKILL_URN);
+      expect(skill.rank).toBe(MAX_SKILL_RANK);
+    });
+
+    it('should preserve existing modifiers when updating rank', () => {
+      const existingModifier = createTestModifier({ value: 15 });
+      const actor = createTestActor({
+        [TEST_SKILL_URN]: {
+          xp: 100,
+          pxp: 50,
+          rank: 25,
+          mods: { 'existing': existingModifier }
+        }
+      });
+
+      setActorSkillRank(actor, TEST_SKILL_URN, 60);
+
+      const skill = getActorSkill(actor, TEST_SKILL_URN);
+      expect(skill.rank).toBe(60);
+      expect(skill.mods?.['existing']).toStrictEqual(existingModifier);
+    });
+  });
+
+  describe('setActorSkillRanks', () => {
+    it('should set multiple skill ranks', () => {
+      const actor = createTestActor();
+      const skillUrn1: SkillURN = 'flux:skill:test1' as SkillURN;
+      const skillUrn2: SkillURN = 'flux:skill:test2' as SkillURN;
+
+      setActorSkillRanks(actor, {
+        [skillUrn1]: 30,
+        [skillUrn2]: 70,
+        [TEST_SKILL_URN]: 50,
+      });
+
+      expect(getActorSkill(actor, skillUrn1).rank).toBe(30);
+      expect(getActorSkill(actor, skillUrn2).rank).toBe(70);
+      expect(getActorSkill(actor, TEST_SKILL_URN).rank).toBe(50);
+    });
+
+    it('should update existing skills and create new ones', () => {
+      const skillUrn1: SkillURN = 'flux:skill:existing' as SkillURN;
+      const skillUrn2: SkillURN = 'flux:skill:new' as SkillURN;
+
+      const actor = createTestActor({
+        [skillUrn1]: { xp: 200, pxp: 100, rank: 40 }
+      });
+
+      setActorSkillRanks(actor, {
+        [skillUrn1]: 80, // Update existing
+        [skillUrn2]: 60, // Create new
+      });
+
+      const existingSkill = getActorSkill(actor, skillUrn1);
+      const newSkill = getActorSkill(actor, skillUrn2);
+
+      expect(existingSkill.rank).toBe(80);
+      expect(existingSkill.xp).toBe(200); // Preserved
+      expect(existingSkill.pxp).toBe(100); // Preserved
+
+      expect(newSkill.rank).toBe(60);
+      expect(newSkill.xp).toBe(0); // Default
+      expect(newSkill.pxp).toBe(0); // Default
+    });
+
+    it('should clamp all ranks to valid range', () => {
+      const actor = createTestActor();
+      const skillUrn1: SkillURN = 'flux:skill:low' as SkillURN;
+      const skillUrn2: SkillURN = 'flux:skill:high' as SkillURN;
+
+      setActorSkillRanks(actor, {
+        [skillUrn1]: -10, // Below min
+        [skillUrn2]: 150, // Above max
+        [TEST_SKILL_URN]: 50, // Valid
+      });
+
+      expect(getActorSkill(actor, skillUrn1).rank).toBe(MIN_SKILL_RANK);
+      expect(getActorSkill(actor, skillUrn2).rank).toBe(MAX_SKILL_RANK);
+      expect(getActorSkill(actor, TEST_SKILL_URN).rank).toBe(50);
+    });
+
+    it('should handle empty skills object', () => {
+      const actor = createTestActor();
+
+      expect(() => {
+        setActorSkillRanks(actor, {});
+      }).not.toThrow();
+
+      // Actor should remain unchanged
+      const skill = getActorSkill(actor, TEST_SKILL_URN);
+      expect(skill).toStrictEqual(createDefaultSkillState());
+    });
+  });
+
+  describe('mutation function integration', () => {
+    it('should work correctly with existing skill API functions', () => {
+      const actor = createTestActor();
+
+      // Set initial skill ranks
+      setActorSkillRanks(actor, {
+        [TEST_SKILL_URN]: 60,
+      });
+
+      // Verify with existing API functions
+      const skill = getActorSkill(actor, TEST_SKILL_URN);
+      const effectiveRank = getEffectiveSkillRank(actor, TEST_SKILL_URN);
+      const hasModifiers = hasActiveSkillModifiers(actor, TEST_SKILL_URN);
+
+      expect(skill.rank).toBe(60);
+      expect(effectiveRank).toBe(60); // No modifiers
+      expect(hasModifiers).toBe(false);
+    });
+
+    it('should preserve modifiers when updating ranks', () => {
+      const modifier = createTestModifier({ position: 0.5, value: 20 });
+      const actor = createTestActor({
+        [TEST_SKILL_URN]: {
+          xp: 100,
+          pxp: 50,
+          rank: 40,
+          mods: { 'test-mod': modifier }
+        }
+      });
+
+      // Update rank using mutation function
+      setActorSkillRank(actor, TEST_SKILL_URN, 70);
+
+      // Verify modifiers are preserved and effective rank is correct
+      const skill = getActorSkill(actor, TEST_SKILL_URN);
+      const effectiveRank = getEffectiveSkillRank(actor, TEST_SKILL_URN);
+      const hasModifiers = hasActiveSkillModifiers(actor, TEST_SKILL_URN);
+      const modifierBonus = getSkillModifierBonus(actor, TEST_SKILL_URN);
+
+      expect(skill.rank).toBe(70);
+      expect(skill.mods?.['test-mod']).toStrictEqual(modifier);
+      expect(effectiveRank).toBe(90); // 70 + 20
+      expect(hasModifiers).toBe(true);
+      expect(modifierBonus).toBe(20);
+    });
+  });
+
   describe('createActorSkillApi', () => {
     let actors: Record<string, Actor>;
     let api: ActorSkillApi;
@@ -517,6 +729,62 @@ describe('skill.ts', () => {
         const bonus1 = getSkillModifierBonus(alice, TEST_SKILL_URN);
         const bonus2 = api.getSkillModifierBonus(alice, TEST_SKILL_URN);
         expect(bonus2).toBe(bonus1);
+
+        // Test mutation functions
+        const testActor = createTestActor();
+        api.setActorSkillRank(testActor, TEST_SKILL_URN, 45);
+        expect(api.getActorSkill(testActor, TEST_SKILL_URN).rank).toBe(45);
+
+        api.setActorSkillRanks(testActor, { [TEST_SKILL_URN]: 65 });
+        expect(api.getActorSkill(testActor, TEST_SKILL_URN).rank).toBe(65);
+
+        const defaultSkill = api.createDefaultSkillState(30);
+        expect(defaultSkill.rank).toBe(30);
+      });
+    });
+
+    describe('mutation functions via API', () => {
+      it('should provide access to mutation functions', () => {
+        const testActor = createTestActor();
+        const skillUrn1: SkillURN = 'flux:skill:api-test1' as SkillURN;
+        const skillUrn2: SkillURN = 'flux:skill:api-test2' as SkillURN;
+
+        // Test setActorSkillRank
+        api.setActorSkillRank(testActor, skillUrn1, 55);
+        expect(api.getActorSkill(testActor, skillUrn1).rank).toBe(55);
+
+        // Test setActorSkillRanks
+        api.setActorSkillRanks(testActor, {
+          [skillUrn1]: 75, // Update existing
+          [skillUrn2]: 40, // Create new
+        });
+        expect(api.getActorSkill(testActor, skillUrn1).rank).toBe(75);
+        expect(api.getActorSkill(testActor, skillUrn2).rank).toBe(40);
+
+        // Test createDefaultSkillState
+        const defaultSkill = api.createDefaultSkillState(85);
+        expect(defaultSkill).toEqual({
+          xp: 0,
+          pxp: 0,
+          rank: 85,
+        });
+      });
+
+      it('should invalidate cache when skills are mutated', () => {
+        const testActor = createTestActor({
+          [TEST_SKILL_URN]: { xp: 0, pxp: 0, rank: 30 }
+        });
+
+        // Get initial cached result
+        const initialRank = api.getEffectiveSkillRank(testActor, TEST_SKILL_URN);
+        expect(initialRank).toBe(30);
+
+        // Mutate skill rank
+        api.setActorSkillRank(testActor, TEST_SKILL_URN, 70);
+
+        // Verify the API reflects the change (cache should be invalidated or updated)
+        const updatedRank = api.getEffectiveSkillRank(testActor, TEST_SKILL_URN);
+        expect(updatedRank).toBe(70);
       });
     });
 

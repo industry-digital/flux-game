@@ -6,10 +6,10 @@ import { AppliedModifiers } from '~/types/modifier';
 export const MIN_SKILL_RANK = 0;
 export const MAX_SKILL_RANK = 100;
 
-export const createDefaultSkillState = (): SkillState => ({
+export const createDefaultSkillState = (rank: number = 0): SkillState => ({
   xp: 0,
   pxp: 0,
-  rank: 0,
+  rank: Math.max(MIN_SKILL_RANK, Math.min(MAX_SKILL_RANK, rank)),
 });
 
 export function getActorSkill(
@@ -109,12 +109,47 @@ export function getSkillModifierBonus(
   return totalBonus;
 }
 
+
+/**
+ * Set an actor's skill rank directly
+ * Directly mutates the actor's skill state
+ */
+export function setActorSkillRank(
+  actor: Actor,
+  skillUrn: SkillURN,
+  rank: number,
+): void {
+  const clampedRank = Math.max(MIN_SKILL_RANK, Math.min(MAX_SKILL_RANK, rank));
+
+  if (!actor.skills[skillUrn]) {
+    actor.skills[skillUrn] = createDefaultSkillState(clampedRank);
+  } else {
+    actor.skills[skillUrn].rank = clampedRank;
+  }
+}
+
+/**
+ * Set multiple actor skills from a record
+ * Directly mutates the actor's skill state
+ */
+export function setActorSkillRanks(
+  actor: Actor,
+  skills: Record<SkillURN, number>,
+): void {
+  for (const [skillUrn, rank] of Object.entries(skills)) {
+    setActorSkillRank(actor, skillUrn as SkillURN, rank);
+  }
+}
+
 export type ActorSkillApi = {
   getActorSkill: typeof getActorSkill;
   getActorSkillModifiers: typeof getActorSkillModifiers;
   getEffectiveSkillRank: typeof getEffectiveSkillRank;
   hasActiveSkillModifiers: typeof hasActiveSkillModifiers;
   getSkillModifierBonus: typeof getSkillModifierBonus;
+  setActorSkillRank: typeof setActorSkillRank;
+  setActorSkillRanks: typeof setActorSkillRanks;
+  createDefaultSkillState: typeof createDefaultSkillState;
 };
 
 export const createActorSkillApi = (
@@ -173,5 +208,10 @@ export const createActorSkillApi = (
     ): number => {
       return getSkillModifierBonus(actor, skillUrn, modifiers);
     },
+
+    // Mutation functions
+    setActorSkillRank,
+    setActorSkillRanks,
+    createDefaultSkillState,
   };
 };

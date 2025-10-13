@@ -1,6 +1,7 @@
 import { useCallback } from 'react';
 import { useStorage } from '@flux/ui';
 import type { ActorURN, WeaponSchemaURN, SkillURN } from '@flux/core';
+import { BASE_HP, HP_PER_RES_BONUS, DEFAULT_BASE_AP, calculateStatBonus } from '@flux/core';
 
 export type TeamName = 'ALPHA' | 'BRAVO';
 export type OptionalActorName = 'charlie' | 'eric' | 'dave' | 'franz';
@@ -12,6 +13,14 @@ export interface ActorStatsInput {
   int?: number;
   per?: number;
   mem?: number;
+}
+
+/**
+ * Derived stats calculated from base stats
+ */
+export interface DerivedStats {
+  hp: number;
+  ap: number;
 }
 
 export interface CombatScenarioActorData {
@@ -42,6 +51,15 @@ export const TEAM_ASSIGNMENTS: Record<ActorURN, TeamName> = {
   [ERIC_ID]: 'ALPHA',
   [DAVE_ID]: 'BRAVO',
   [FRANZ_ID]: 'BRAVO',
+};
+
+// Default combat skills for new actors
+export const DEFAULT_COMBAT_SKILLS: Record<SkillURN, number> = {
+  'flux:skill:evasion': 0,
+  'flux:skill:weapon:melee': 0,
+  'flux:skill:weapon:ranged': 0,
+  'flux:skill:athletics': 0,
+  'flux:skill:perception': 0,
 };
 
 // Helper functions
@@ -93,6 +111,8 @@ export interface UseCombatScenarioResult {
   resetScenario: () => void;
   getTeamActors: (team: TeamName) => ActorURN[];
   getAvailableOptionalActors: (team: TeamName) => OptionalActorName[];
+  calculateDerivedStats: (actorId: ActorURN) => DerivedStats;
+  getActorStats: (actorId: ActorURN) => ActorStatsInput;
 }
 
 export interface CombatScenarioDependencies {
@@ -115,11 +135,11 @@ export function useCombatScenario(
   const [scenarioData, setScenarioData] = useStorage(
     storageKey,
     defaultScenario,
-    deps.storage
+    deps.storage,
   );
 
   const updateActorStats = useCallback((actorId: ActorURN, stats: Partial<ActorStatsInput>) => {
-    setScenarioData(prev => ({
+    setScenarioData((prev: CombatScenarioData) => ({
       ...prev,
       actors: {
         ...prev.actors,
@@ -135,7 +155,7 @@ export function useCombatScenario(
   }, [setScenarioData]);
 
   const updateActorWeapon = useCallback((actorId: ActorURN, weaponUrn: WeaponSchemaURN) => {
-    setScenarioData(prev => ({
+    setScenarioData((prev: CombatScenarioData) => ({
       ...prev,
       actors: {
         ...prev.actors,
@@ -148,7 +168,7 @@ export function useCombatScenario(
   }, [setScenarioData]);
 
   const updateActorSkill = useCallback((actorId: ActorURN, skillUrn: SkillURN, rank: number) => {
-    setScenarioData(prev => ({
+    setScenarioData((prev: CombatScenarioData) => ({
       ...prev,
       actors: {
         ...prev.actors,
@@ -164,7 +184,7 @@ export function useCombatScenario(
   }, [setScenarioData]);
 
   const updateActorAiControl = useCallback((actorId: ActorURN, enabled: boolean) => {
-    setScenarioData(prev => ({
+    setScenarioData((prev: CombatScenarioData) => ({
       ...prev,
       actors: {
         ...prev.actors,
@@ -184,14 +204,11 @@ export function useCombatScenario(
       stats: { pow: 10, fin: 10, res: 10, int: 10, per: 10, mem: 10 },
       aiControlled: true, // Optional actors are AI-controlled by default
       weapon: 'flux:schema:weapon:longsword' as WeaponSchemaURN,
-      skills: {
-        'flux:skill:evasion': 0,
-        'flux:skill:weapon:melee': 0
-      },
+      skills: { ...DEFAULT_COMBAT_SKILLS },
       team
     };
 
-    setScenarioData(prev => ({
+    setScenarioData((prev: CombatScenarioData) => ({
       ...prev,
       actors: {
         ...prev.actors,
@@ -208,7 +225,7 @@ export function useCombatScenario(
   const removeOptionalActor = useCallback((name: OptionalActorName, onSessionRemove?: (actorId: ActorURN) => void) => {
     const actorId = getActorIdFromName(name);
 
-    setScenarioData(prev => {
+    setScenarioData((prev: CombatScenarioData) => {
       const newActors = { ...prev.actors };
       delete newActors[actorId];
       return {
@@ -233,6 +250,35 @@ export function useCombatScenario(
   const getAvailableOptionalActorsCallback = useCallback((team: TeamName) =>
     getAvailableOptionalActors(scenarioData, team), [scenarioData]);
 
+  const calculateDerivedStats = useCallback((actorId: ActorURN): DerivedStats => {
+    const actorData = scenarioData.actors[actorId];
+    if (!actorData) {
+      throw new Error(`Actor ${actorId} not found in scenario data`);
+    }
+
+    const { res = 10 } = actorData.stats;
+
+    // Calculate HP using the same formula as the core game logic
+    const resBonus = calculateStatBonus(res);
+    const hp = BASE_HP + (resBonus * HP_PER_RES_BONUS);
+
+    // AP is fixed at MAX_AP for all actors
+    const ap = DEFAULT_BASE_AP;
+
+    return {
+      hp,
+      ap,
+    };
+  }, [scenarioData]);
+
+  const getActorStats = useCallback((actorId: ActorURN): ActorStatsInput => {
+    const actorData = scenarioData.actors[actorId];
+    if (!actorData) {
+      throw new Error(`Actor ${actorId} not found in scenario data`);
+    }
+    return { ...actorData.stats };
+  }, [scenarioData]);
+
   return {
     scenarioData,
     updateActorStats,
@@ -244,5 +290,7 @@ export function useCombatScenario(
     resetScenario,
     getTeamActors: getTeamActorsCallback,
     getAvailableOptionalActors: getAvailableOptionalActorsCallback,
+    calculateDerivedStats,
+    getActorStats,
   };
 }

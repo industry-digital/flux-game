@@ -1,7 +1,5 @@
 import { Actor } from '~/types/entity/actor';
 import { PotentiallyImpureOperations } from '~/types/handler';
-import { BASELINE_STAT_VALUE, NORMAL_STAT_RANGE } from '~/worldkit/entity/actor/stats';
-import { GOLDEN_RATIO } from '~/types/world/constants';
 import { ActionCost, Combatant } from '~/types/combat';
 import { TACTICAL_AP_PRECISION_FACTOR } from '~/worldkit/combat/tactical-rounding';
 
@@ -18,14 +16,10 @@ export const ALL_REMAINING_AP = -1;
 
 export type ApCalculationOptions = Partial<PotentiallyImpureOperations> & {
   baseAp?: number;
-  statRange?: number;
-  baseStatValue?: number;
 };
 
 export const DEFAULT_AP_CALCULATION_OPTIONS: ApCalculationOptions = {
   baseAp: DEFAULT_BASE_AP,
-  statRange: NORMAL_STAT_RANGE,
-  baseStatValue: BASELINE_STAT_VALUE,
 };
 
 /**
@@ -37,20 +31,9 @@ export function calculateMaxAp(
   actor: Actor,
   {
     baseAp = DEFAULT_BASE_AP,
-    statRange = NORMAL_STAT_RANGE,
-    baseStatValue = BASELINE_STAT_VALUE,
   }: ApCalculationOptions = DEFAULT_AP_CALCULATION_OPTIONS,
 ): number {
-  // Logarithmic growth from INT 10 to 100
-  const intAboveBaseline = Math.max(0, actor.stats.int.eff - baseStatValue);
-  const normalizedInt = intAboveBaseline / statRange; // 0 to 1
-
-  // Logarithmic scaling factor (0 to 1)
-  const logFactor = Math.log(1 + normalizedInt * (Math.E - 1)) / Math.log(Math.E);
-
-  // Scale from base (6.0) to max (6.0 * φ)
-  const maxAp = baseAp * GOLDEN_RATIO;
-  return baseAp + (maxAp - baseAp) * logFactor;
+  return baseAp;
 }
 
 export function extractApCost(cost: ActionCost): number {
