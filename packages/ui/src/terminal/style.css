@@ -79,3 +79,72 @@
 .terminal--auto-scroll {
   scroll-behavior: smooth;
 }
+
+/* Game Mode Styling - Proportional fonts and comfortable reading */
+.terminal--game-mode {
+  --terminal-font-family: 'Zilla Slab', serif;
+  --terminal-font-size: 20px;
+  --terminal-line-height: 1.6;
+
+  /* Gruvbox color scheme for game mode */
+  --color-surface: #282828;
+  --color-text: #ebdbb2;
+  --color-text-secondary: #a89984;
+  --color-border: #3c3836;
+  --color-accent: #b8bb26;
+  --color-error: #fb4934;
+  --color-warning: #fabd2f;
+  --color-info: #83a598;
+}
+
+.terminal--game-mode .terminal__entry {
+  min-height: 32px; /* Larger for proportional fonts */
+  padding: 0.375rem 0.75rem; /* More comfortable spacing */
+}
+
+/* Input Entry Styling */
+.terminal__input {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  white-space: pre-wrap;
+  word-break: break-word;
+  line-height: var(--terminal-line-height);
+}
+
+.terminal__input-prompt {
+  color: var(--color-accent, #b8bb26);
+  margin-right: 0.5rem;
+  font-weight: bold;
+}
+
+.terminal__input-text {
+  flex: 1;
+}
+
+/* System Entry Styling */
+.terminal__system {
+  flex: 1;
+  white-space: pre-wrap;
+  word-break: break-word;
+  line-height: var(--terminal-line-height);
+  color: var(--color-info, #83a598);
+  font-style: italic;
+}
+
+/* Error Entry Styling */
+.terminal__error {
+  flex: 1;
+  white-space: pre-wrap;
+  word-break: break-word;
+  line-height: var(--terminal-line-height);
+  color: var(--color-error, #fb4934);
+  font-weight: 500;
+}
+
+/* Element Entry - Preserves full React component flexibility */
+.terminal__element {
+  flex: 1;
+  /* Allow React components to define their own styling completely */
+  /* This preserves the ability to render arbitrary React elements */
+}

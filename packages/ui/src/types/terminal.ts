@@ -4,9 +4,14 @@ import type { UseVirtualizedList, VirtualizationConfig } from './list';
 
 export type TerminalEntry = {
   id: string;
-  timestamp: number;
-  type: 'text' | 'element';
+  type: 'text' | 'input' | 'system' | 'error' | 'element';
   content: string | ReactNode;
+  timestamp: number;
+  metadata?: {
+    actor?: string;
+    trace?: string;
+    [key: string]: any;
+  };
   height?: number;
 };
 
@@ -14,6 +19,7 @@ export type TerminalConfig = {
   maxEntries?: number;
   autoScroll?: boolean;
   showTimestamps?: boolean;
+  gameMode?: boolean;
 };
 
 // Dependencies are injected as hook functions - this allows for proper React hook usage
@@ -34,7 +40,15 @@ export type TerminalHook = {
   // Core methods
   print: (id: string, text: string) => void;
   render: (id: string, component: ReactNode) => void;
+  addEntry: (entry: TerminalEntry) => void;
   clear: () => void;
+
+  // Convenience methods for different entry types
+  addText: (id: string, text: string, metadata?: TerminalEntry['metadata']) => void;
+  addInput: (id: string, input: string, metadata?: TerminalEntry['metadata']) => void;
+  addSystem: (id: string, message: string, metadata?: TerminalEntry['metadata']) => void;
+  addError: (id: string, error: string, metadata?: TerminalEntry['metadata']) => void;
+  addElement: (id: string, element: ReactNode, metadata?: TerminalEntry['metadata']) => void;
 
   // Scroll control
   scrollToBottom: () => void;

@@ -150,7 +150,29 @@ export function Terminal({
               </div>
             )}
 
-            {/* Element Entry */}
+            {/* Input Entry */}
+            {entry.type === 'input' && (
+              <div className="terminal__input">
+                <span className="terminal__input-prompt">{'>'}</span>
+                <span className="terminal__input-text">{entry.content as string}</span>
+              </div>
+            )}
+
+            {/* System Entry */}
+            {entry.type === 'system' && (
+              <div className="terminal__system">
+                {entry.content as string}
+              </div>
+            )}
+
+            {/* Error Entry */}
+            {entry.type === 'error' && (
+              <div className="terminal__error">
+                {entry.content as string}
+              </div>
+            )}
+
+            {/* Element Entry - Preserves arbitrary React components */}
             {entry.type === 'element' && (
               <div className="terminal__element">
                 {entry.content as ReactNode}
