@@ -37,18 +37,13 @@ export type UseTerminal = (
 ) => TerminalHook;
 
 export type TerminalHook = {
-  // Core methods
+  // Core methods - actually used in codebase
   print: (id: string, text: string) => void;
   render: (id: string, component: ReactNode) => void;
-  addEntry: (entry: TerminalEntry) => void;
   clear: () => void;
 
-  // Convenience methods for different entry types
-  addText: (id: string, text: string, metadata?: TerminalEntry['metadata']) => void;
-  addInput: (id: string, input: string, metadata?: TerminalEntry['metadata']) => void;
-  addSystem: (id: string, message: string, metadata?: TerminalEntry['metadata']) => void;
-  addError: (id: string, error: string, metadata?: TerminalEntry['metadata']) => void;
-  addElement: (id: string, element: ReactNode, metadata?: TerminalEntry['metadata']) => void;
+  // Generic entry method for advanced usage
+  addEntry: (entry: TerminalEntry) => void;
 
   // Scroll control
   scrollToBottom: () => void;
