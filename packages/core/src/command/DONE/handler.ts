@@ -13,7 +13,3 @@ export class DONE implements PureHandlerInterface<TransformerContext, DoneComman
     return isCommandOfType<CommandType.DONE, DoneCommandArgs>(command, CommandType.DONE);
   };
 }
-
-// Re-export types and reducer for consistency with other command handlers
-export { DoneCommand, DoneCommandArgs } from './types';
-export { doneReducer } from './reducer';

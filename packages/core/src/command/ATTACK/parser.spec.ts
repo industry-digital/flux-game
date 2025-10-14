@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach } from 'vitest';
-import { attackIntentParser } from './handler';
+import { attackIntentParser } from './parser';
 import { CommandType } from '~/types/intent';
 import { createTestTransformerContext } from '~/testing/context-testing';
 import { createTestActor } from '~/testing/world-testing';
