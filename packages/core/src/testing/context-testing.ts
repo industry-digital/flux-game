@@ -3,7 +3,7 @@ import { PotentiallyImpureOperations, TransformerContext } from '~/types/handler
 import { ProfileResult } from '~/lib/profile';
 import { createSchemaManager } from '~/worldkit/schema/manager';
 import { createMassApi, createMassComputationState } from '~/worldkit/physics/mass';
-import { createTransformerContext } from '~/worldkit/context';
+import { createTransformerContext, createWorldProjection } from '~/worldkit/context';
 import { EventType } from '~/types/event';
 
 /**
@@ -21,16 +21,7 @@ export const createTestTransformerContext = (overrides?: Partial<TransformerCont
 
   const defaultContext: TransformerContext = createTransformerContext((c: TransformerContext) => ({
     ...c,
-    world: {
-      actors: {},
-      places: {},
-      items: {},
-      sessions: {},
-      actorIds: [],
-      placeIds: [],
-      itemIds: [],
-      sessionIds: [],
-    },
+    world: createWorldProjection(),
     declareEvent: vi.fn((event: any) => {
       declaredEvents.push(event);
     }),

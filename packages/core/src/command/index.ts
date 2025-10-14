@@ -31,6 +31,7 @@ export function createCommandGuard<T extends CommandType, A extends Record<strin
 
 // Registry mapping CommandType to transformer (reducer) functions
 export const COMMAND_TRANSFORMERS: Partial<Record<CommandType, PureReducer<TransformerContext, any>>> = {
+  [CommandType.ATTACK]: attackReducer,
   [CommandType.CREATE_ACTOR]: createActorCommandReducer,
   [CommandType.CREATE_PLACE]: createPlaceCommandReducer,
   [CommandType.MATERIALIZE_ACTOR]: materializeActorReducer,
@@ -42,7 +43,6 @@ export const COMMAND_TRANSFORMERS: Partial<Record<CommandType, PureReducer<Trans
   [CommandType.STRIKE]: strikeReducer,
   [CommandType.CLEAVE]: cleaveReducer,
   [CommandType.DONE]: doneReducer,
-  [CommandType.ATTACK]: attackReducer,
   [CommandType.ADVANCE]: advanceReducer,
   [CommandType.DEFEND]: defendReducer,
   [CommandType.RETREAT]: retreatReducer,

@@ -3,30 +3,35 @@ import { AdvanceCommand } from './types';
 import { createCombatSessionApi } from '~/worldkit/combat/session/session';
 import { Team } from '~/types/combat';
 import { withBasicWorldStateValidation } from '~/command/validation';
+import { withPreventCrossSessionTargeting } from '~/worldkit/combat/validation';
 
 export const advanceReducer: PureReducer<TransformerContext, AdvanceCommand> = withBasicWorldStateValidation(
-  (context, command) => {
-    const actor = context.world.actors[command.actor];
-    const targetActor = context.world.actors[command.args.target!];
+  withPreventCrossSessionTargeting(
+    (context, command) => {
+      const { actors } = context.world;
+      const actor = actors[command.actor];
+      const targetActor = actors[command.args.target!];
 
-    const { session, isNew, getCombatantApi: useCombatant, addCombatant, startCombat } = createCombatSessionApi(context, actor.location, command.session);
+      // Create or get combat session
+      const { isNew, getCombatantApi, addCombatant, startCombat } = createCombatSessionApi(context, actor.location, command.session);
 
-    if (isNew) {
-      if (!targetActor) {
-        context.declareError('ADVANCE: Target not found', command.id);
-        return context;
+      if (isNew) {
+        if (!targetActor) {
+          context.declareError('ADVANCE: Target not found', command.id);
+          return context;
+        }
+
+        // Add both actors to combat - advancer vs target
+        addCombatant(actor.id, Team.ALPHA);
+        addCombatant(targetActor.id, Team.BRAVO);
+        startCombat(command.id);
       }
 
-      addCombatant(actor.id, Team.ALPHA);
-      addCombatant(targetActor.id, Team.BRAVO);
+      const combatantApi = getCombatantApi(actor.id);
+      const moveBy = command.args.type === 'distance' ? 'distance' : 'ap';
+      combatantApi.advance(moveBy, command.args.distance || 1, command.args.target, command.id);
+
+      return context;
     }
-
-    // Use the combatant API's advance method
-    // Note: The advance method already declares events internally, so we don't need to declare them again
-    const combatantApi = useCombatant(actor.id);
-    const moveBy = command.args.type === 'distance' ? 'distance' : 'ap';
-    combatantApi.advance(moveBy, command.args.distance || 1, command.args.target, command.id);
-
-    return context;
-  };
-};
+  )
+);

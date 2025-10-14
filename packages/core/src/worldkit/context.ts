@@ -40,6 +40,7 @@ export const createWorldProjection = (map: MapFunction<WorldProjection> = identi
     places: {},
     items: {},
     sessions: {},
+    groups: {},
   });
 };
 
