@@ -1,74 +1,9 @@
+import { PureHandlerInterface, TransformerContext } from '~/types/handler';
+import { UseWorkbenchCommand, UseWorkbenchCommandArgs } from './types';
+import { useWorkbenchReducer } from './reducer';
+import { useWorkbenchIntentParser } from './parser';
+import { Command, CommandType } from '~/types/intent';
 import { isCommandOfType } from '~/lib/intent';
-import { ActorCommand, Command, CommandType } from '~/types/intent';
-import { PureReducer, TransformerContext, PureHandlerInterface, IntentParser, Intent, IntentParserContext } from '~/types/handler';
-import { SessionURN } from '~/types/taxonomy';
-import { EventType } from '~/types/event';
-import { createWorkbenchSessionApi } from '~/worldkit/workbench/session/session';
-
-export type UseWorkbenchCommandArgs = {
-  sessionId?: SessionURN;
-};
-
-export type UseWorkbenchCommand = ActorCommand<CommandType.USE_WORKBENCH, UseWorkbenchCommandArgs>;
-
-export const useWorkbenchReducer: PureReducer<TransformerContext, UseWorkbenchCommand> = (context, command) => {
-  const { declareError } = context;
-  const { actors } = context.world;
-
-  // Ensure actor exists
-  const actor = actors[command.actor!];
-  if (!actor) {
-    declareError('Actor not found in world projection', command.id);
-    return context;
-  }
-
-  // Create or retrieve workbench session using the session API
-  const { session, isNew } = createWorkbenchSessionApi(
-    context,
-    actor.id,
-    command.id,
-    command.args.sessionId
-  );
-
-  // If this is a new session, add it to the actor's active sessions
-  if (isNew) {
-    context.actorSessionApi.addToActiveSessions(actor, session.id);
-
-    context.declareEvent({
-      type: EventType.WORKBENCH_SESSION_DID_START,
-      actor: actor.id,
-      location: actor.location,
-      trace: command.id,
-      payload: {
-        sessionId: session.id,
-      },
-    });
-  }
-
-  return context;
-};
-
-const NO_ARGS: Readonly<UseWorkbenchCommandArgs> = {};
-
-export const useWorkbenchIntentParser: IntentParser<UseWorkbenchCommand> = (
-  context: IntentParserContext,
-  intent: Intent,
-): UseWorkbenchCommand | undefined => {
-  if (!intent.verb.startsWith('use')) {
-    return undefined;
-  }
-
-  return {
-    __type: 'command',
-    id: context.uniqid(),
-    ts: context.timestamp(),
-    actor: intent.actor,
-    location: intent.location,
-    type: CommandType.USE_WORKBENCH,
-    args: NO_ARGS,
-  };
-
-};
 
 export class USE_WORKBENCH implements PureHandlerInterface<TransformerContext, UseWorkbenchCommand> {
   parse = useWorkbenchIntentParser;

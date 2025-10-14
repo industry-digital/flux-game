@@ -1,7 +1,9 @@
 import { EventType } from '~/types/event';
 import { PureReducer, TransformerContext } from '~/types/handler';
-import type { LookCommand } from './handler';
+import { LookCommand } from './types';
 import { ActorURN, ItemURN, PlaceURN } from '~/types/taxonomy';
+import { EntityType } from '~/types/entity/entity';
+import { parseEntityTypeFromURN } from '~/worldkit/entity/urn';
 
 const declareLookEvent = (context: TransformerContext, command: LookCommand, target: ActorURN | PlaceURN | ItemURN) => {
   context.declareEvent({
@@ -85,4 +87,46 @@ export const lookAtItemReducer: PureReducer<TransformerContext, LookCommand> = (
   declareLookEvent(context, command, targetItem.id);
 
   return context;
+};
+
+/**
+ * Rules for looking at an entity:
+ * - Actor may look only at Actors in the same `location` as the actor
+ * - Actor may look only at the Place that the actor is in
+ * - Actor may look only at these items:
+ *   - Items in the actor's inventory
+ *   - Items in the same `location` as the actor
+ */
+export const lookReducer: PureReducer<TransformerContext, LookCommand> = (context, command) => {
+  const { declareError } = context;
+  const { places, actors } = context.world;
+  const place = places[command.location!];
+
+  if (!place) {
+    declareError('Could not find place in world projection', command.id);
+    return context;
+  }
+
+  const actor = actors[command.actor!];
+  if (!actor) {
+    declareError('Could not find actor in world project', command.id);
+    return context;
+  }
+
+  const entityType = parseEntityTypeFromURN(command.args.target);
+
+  switch (entityType) {
+    case EntityType.ACTOR:
+      return lookAtActorReducer(context, command);
+
+    case EntityType.PLACE:
+      return lookAtPlaceReducer(context, command);
+
+    case EntityType.ITEM:
+      return lookAtItemReducer(context, command);
+
+    default: // This is never supposed to happen
+      declareError('Invalid look command arguments', command.id);
+      return context;
+  }
 };

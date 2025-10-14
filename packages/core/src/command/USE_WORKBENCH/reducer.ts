@@ -1,0 +1,41 @@
+import { PureReducer, TransformerContext } from '~/types/handler';
+import { UseWorkbenchCommand } from './types';
+import { EventType } from '~/types/event';
+import { createWorkbenchSessionApi } from '~/worldkit/workbench/session/session';
+
+export const useWorkbenchReducer: PureReducer<TransformerContext, UseWorkbenchCommand> = (context, command) => {
+  const { declareError } = context;
+  const { actors } = context.world;
+
+  // Ensure actor exists
+  const actor = actors[command.actor!];
+  if (!actor) {
+    declareError('Actor not found in world projection', command.id);
+    return context;
+  }
+
+  // Create or retrieve workbench session using the session API
+  const { session, isNew } = createWorkbenchSessionApi(
+    context,
+    actor.id,
+    command.id,
+    command.args.sessionId
+  );
+
+  // If this is a new session, add it to the actor's active sessions
+  if (isNew) {
+    context.actorSessionApi.addToActiveSessions(actor, session.id);
+
+    context.declareEvent({
+      type: EventType.WORKBENCH_SESSION_DID_START,
+      actor: actor.id,
+      location: actor.location,
+      trace: command.id,
+      payload: {
+        sessionId: session.id,
+      },
+    });
+  }
+
+  return context;
+};

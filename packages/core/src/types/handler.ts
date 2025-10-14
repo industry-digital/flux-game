@@ -1,6 +1,6 @@
 import { EventType, WorldEvent, WorldEventInput } from '~/types/event';
 import { Command, CommandType, NaturalLanguageAnalysis } from '~/types/intent';
-import { ActorURN, ItemURN, PlaceURN, SessionURN } from '~/types/taxonomy';
+import { ActorURN, GroupURN, ItemURN, PlaceURN, SessionURN } from '~/types/taxonomy';
 import { Place } from '~/types/entity/place';
 import { Actor } from '~/types/entity/actor';
 import { Item } from '~/types/entity/item';
@@ -15,6 +15,7 @@ import { ActorSkillApi } from '~/worldkit/entity/actor/skill';
 import { rollDiceWithRng } from '~/worldkit/dice';
 import { ActorSessionApi } from '~/worldkit/entity/actor/session';
 import { EntityResolverApi } from '~/intent/resolvers';
+import { Group } from '~/types/entity/group';
 
 /** Combat metrics collection interface for performance monitoring and telemetry */
 export type CombatMetrics = {
@@ -32,6 +33,7 @@ export type MinimalWorldProjection = WorldProjection;
 /** Union of all possible projections satisfied by the Flux World Server */
 export type WorldProjection = {
   actors: Record<ActorURN, Actor>;
+  groups: Record<GroupURN, Group>;
   places: Record<PlaceURN, Place>;
   items: Record<ItemURN, Item>;
   sessions: Record<SessionURN, AbstractSession<any, any>>;

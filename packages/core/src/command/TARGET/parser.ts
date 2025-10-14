@@ -1,16 +1,18 @@
 import { IntentParser, IntentParserContext, Intent } from '~/types/handler';
 import { CommandType } from '~/types/intent';
 import { createActorCommand } from '~/lib/intent';
-import { AttackCommand } from './types';
+import { TargetCommand } from './types';
 
-export const attackIntentParser: IntentParser<AttackCommand> = (
+const TARGET_VERB = 'target';
+
+export const targetIntentParser: IntentParser<TargetCommand> = (
   context: IntentParserContext,
   intent: Intent,
-): AttackCommand | undefined => {
+): TargetCommand | undefined => {
   const { world, resolveActor } = context;
 
-  // Check if this is an attack command
-  if (!intent.verb.startsWith('attack')) {
+  // Check if this is a target command
+  if (intent.verb !== TARGET_VERB) {
     return undefined;
   }
 
@@ -19,12 +21,12 @@ export const attackIntentParser: IntentParser<AttackCommand> = (
     return undefined;
   }
 
-  const attacker = world.actors[intent.actor];
-  if (!attacker) {
+  const actor = world.actors[intent.actor];
+  if (!actor) {
     return undefined;
   }
 
-  if (attacker.location !== target.location) {
+  if (actor.location !== target.location) {
     return undefined;
   }
 
@@ -32,7 +34,7 @@ export const attackIntentParser: IntentParser<AttackCommand> = (
     trace: intent.id,
     actor: intent.actor,
     location: intent.location,
-    type: CommandType.ATTACK,
+    type: CommandType.TARGET,
     args: {
       target: target.id
     },

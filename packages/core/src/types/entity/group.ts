@@ -1,4 +1,4 @@
-import { EntityType, AbstractEntity } from './entity';
+import { EntityType, AbstractEntity, Nameable } from './entity';
 import { EntityURN } from '~/types/taxonomy';
 
 /**
@@ -32,6 +32,7 @@ export type AbstractGroup<
   ItemsKey extends string = 'items',
 > =
   & AbstractEntity<EntityType.GROUP>
+  & Nameable
   & { readonly kind: G }
   & { [K in ItemsKey]: Record<EntityURN<T>, 1> };
 

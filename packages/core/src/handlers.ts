@@ -7,20 +7,20 @@
 
 import { PureHandlerImplementation, TransformerContext } from '~/types/handler';
 import { safeTopologicalSort } from '~/lib/dag';
-import { CREATE_ACTOR } from '~/command/CREATE_ACTOR/handler';
-import { CREATE_PLACE } from '~/command/CREATE_PLACE/handler';
-import { MATERIALIZE_ACTOR } from '~/command/MATERIALIZE_ACTOR/handler';
-import { DEMATERIALIZE_ACTOR } from '~/command/DEMATERIALIZE_ACTOR/handler';
-import { MUTATE_WEATHER } from '~/command/MUTATE_WEATHER/handler';
-import { MUTATE_RESOURCES } from '~/command/MUTATE_RESOURCES/handler';
-import { ATTACK } from '~/command/ATTACK/handler';
-import { DEFEND } from '~/command/DEFEND/handler';
-import { ADVANCE } from '~/command/ADVANCE/handler';
-import { RETREAT } from '~/command/RETREAT/handler';
-import { TARGET } from '~/command/TARGET/handler';
-import { LOOK } from '~/command/LOOK/handler';
-import { STRIKE } from '~/command/STRIKE/handler';
-import { CLEAVE } from '~/command/CLEAVE/handler';
+import { CREATE_ACTOR } from '~/command/CREATE_ACTOR';
+import { CREATE_PLACE } from '~/command/CREATE_PLACE';
+import { MATERIALIZE_ACTOR } from '~/command/MATERIALIZE_ACTOR';
+import { DEMATERIALIZE_ACTOR } from '~/command/DEMATERIALIZE_ACTOR';
+import { MUTATE_WEATHER } from '~/command/MUTATE_WEATHER';
+import { MUTATE_RESOURCES } from '~/command/MUTATE_RESOURCES';
+import { ATTACK } from '~/command/ATTACK';
+import { DEFEND } from '~/command/DEFEND';
+import { ADVANCE } from '~/command/ADVANCE';
+import { RETREAT } from '~/command/RETREAT';
+import { TARGET } from '~/command/TARGET';
+import { LOOK } from '~/command/LOOK';
+import { STRIKE } from '~/command/STRIKE';
+import { CLEAVE } from '~/command/CLEAVE';
 
 /**
  * The Flux World Server literally spreads this array into the Transformation stage.
