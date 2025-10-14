@@ -95,7 +95,7 @@ function resolveCSSColor(cssVar: string): string {
   return computedStyle.getPropertyValue(cssVar.replace('var(', '').replace(')', '')).trim();
 }
 
-// Color constants - resolved at runtime
+// Color and font constants - resolved at runtime
 const getColors = () => ({
   BATTLEFIELD: resolveCSSColor('var(--color-border)'),
   SUBJECT_TEAM: resolveCSSColor('var(--color-success)'),
@@ -105,6 +105,11 @@ const getColors = () => ({
   TEXT_SECONDARY: resolveCSSColor('var(--color-text-secondary)'),
   TEXT_PRIMARY: resolveCSSColor('var(--color-text-primary)'),
 });
+
+const getFontFamily = () => {
+  const computedStyle = getComputedStyle(document.documentElement);
+  return computedStyle.getPropertyValue('--font-family-mono').trim() || 'monospace';
+};
 
 // Subscript cache for performance
 const SUBSCRIPT_CACHE = new Map<number, string>();
@@ -270,6 +275,7 @@ export const BattlefieldVisualization: React.FC<BattlefieldVisualizationProps> =
     const ctx = canvas.getContext('2d')!;
     const cache = cacheRef.current;
     const colors = getColors();
+    const fontFamily = getFontFamily();
 
     // Clear canvas
     ctx.clearRect(0, 0, cache.width, cache.height);
@@ -284,7 +290,7 @@ export const BattlefieldVisualization: React.FC<BattlefieldVisualizationProps> =
 
     // Draw distance markers every 50m
     ctx.fillStyle = colors.TEXT_SECONDARY;
-    ctx.font = '12px var(--font-family-mono)';
+    ctx.font = `12px ${fontFamily}`;
     ctx.textAlign = 'center';
 
     for (let pos = 0; pos <= battlefieldLength; pos += MARKER_INTERVAL) {
@@ -305,7 +311,6 @@ export const BattlefieldVisualization: React.FC<BattlefieldVisualizationProps> =
       Math.min((timestamp - animationStartRef.current) / ANIMATION_DURATION, 1) : 1;
 
     // Draw combatants
-    ctx.font = 'bold 16px var(--font-family-mono)';
     ctx.textAlign = 'center';
 
     for (const combatant of renderDataRef.current) {
@@ -346,7 +351,7 @@ export const BattlefieldVisualization: React.FC<BattlefieldVisualizationProps> =
 
         // Draw current actor text (larger and highlighted color)
         ctx.fillStyle = colors.CURRENT_ACTOR;
-        ctx.font = 'bold 24px var(--font-family-mono)';
+        ctx.font = `bold 22px ${fontFamily}`;
         ctx.fillText(displayText, 0, 0);
 
         // Restore context
@@ -354,7 +359,7 @@ export const BattlefieldVisualization: React.FC<BattlefieldVisualizationProps> =
       } else {
         // Normal combatant rendering
         ctx.fillStyle = baseColor;
-        ctx.font = 'bold 20px var(--font-family-mono)';
+        ctx.font = `bold 18px ${fontFamily}`;
         ctx.fillText(displayText, x, y);
       }
     }
