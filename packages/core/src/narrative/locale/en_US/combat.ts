@@ -57,11 +57,11 @@ export const renderDefendNarrative: TemplateFunction<CombatantDidDefend, ActorUR
 
 export const renderMoveNarrative: TemplateFunction<CombatantDidMove> = (context, event, actorId) => {
   const { world } = context;
-  const actor = world.actors[event.payload.actor];
+  const actor = world.actors[event.actor];
   const distance = Math.abs(event.payload.to.coordinate - event.payload.from.coordinate);
   const direction = event.payload.to.coordinate > event.payload.from.coordinate ? 'forward' : 'backward';
 
-  if (actorId === event.payload.actor) {
+  if (actorId === event.actor) {
     // actorId is the actor
     return `You move ${direction} ${distance}m.`
   }

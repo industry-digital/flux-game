@@ -1,7 +1,10 @@
 import { IntentParser, IntentParserContext, Intent } from '~/types/handler';
 import { CommandType } from '~/types/intent';
 import { createActorCommand } from '~/lib/intent';
-import { CleaveCommand } from './types';
+import { CleaveCommand, CleaveCommandArgs } from './types';
+
+const CLEAVE_VERB = 'cleave';
+const NO_ARGS: Readonly<CleaveCommandArgs> = Object.freeze({});
 
 export const cleaveIntentParser: IntentParser<CleaveCommand> = (
   context: IntentParserContext,
@@ -9,8 +12,7 @@ export const cleaveIntentParser: IntentParser<CleaveCommand> = (
 ): CleaveCommand | undefined => {
   const { world } = context;
 
-  // Check if this is a cleave command
-  if (!intent.verb.startsWith('cleave')) {
+  if (intent.verb !== CLEAVE_VERB) {
     return undefined;
   }
 
@@ -28,8 +30,6 @@ export const cleaveIntentParser: IntentParser<CleaveCommand> = (
     actor: intent.actor,
     location: intent.location,
     type: CommandType.CLEAVE,
-    args: {
-      // No arguments needed for cleave
-    },
+    args: NO_ARGS,
   });
 };

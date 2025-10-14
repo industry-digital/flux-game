@@ -2,9 +2,10 @@ import { useCallback, useEffect, useMemo } from 'react';
 import { Terminal, useTerminal } from '../../../shared/terminal';
 import { createCombatInputEntry, createCombatErrorEntry, createSetupPhaseEntries, createCombatWelcomeEntries, worldEventsToTerminalEntries } from '../adapters/worldEventToTerminal';
 import type { TerminalEntry } from '@flux/ui';
-import type { WorldEvent, ActorURN } from '@flux/core';
+import type { WorldEvent, ActorURN, TransformerContext } from '@flux/core';
 
 export interface CombatTerminalProps {
+  context: TransformerContext;
   events: WorldEvent[];
   onCommand?: (command: string) => void;
   currentActor?: ActorURN;
@@ -15,6 +16,7 @@ export interface CombatTerminalProps {
 }
 
 export function CombatTerminal({
+  context,
   events,
   onCommand,
   currentActor,
@@ -53,7 +55,7 @@ export function CombatTerminal({
     }
 
     // Convert and add events
-    const eventEntries = worldEventsToTerminalEntries(events, currentActor);
+    const eventEntries = worldEventsToTerminalEntries(context, events, currentActor);
 
     eventEntries.forEach((entry: TerminalEntry) => {
       addEntry(entry);

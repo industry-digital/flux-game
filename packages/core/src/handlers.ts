@@ -7,20 +7,22 @@
 
 import { PureHandlerImplementation, TransformerContext } from '~/types/handler';
 import { safeTopologicalSort } from '~/lib/dag';
+
+import { ADVANCE } from '~/command/ADVANCE';
+import { ATTACK } from '~/command/ATTACK';
+import { CLEAVE } from '~/command/CLEAVE';
 import { CREATE_ACTOR } from '~/command/CREATE_ACTOR';
 import { CREATE_PLACE } from '~/command/CREATE_PLACE';
-import { MATERIALIZE_ACTOR } from '~/command/MATERIALIZE_ACTOR';
-import { DEMATERIALIZE_ACTOR } from '~/command/DEMATERIALIZE_ACTOR';
-import { MUTATE_WEATHER } from '~/command/MUTATE_WEATHER';
-import { MUTATE_RESOURCES } from '~/command/MUTATE_RESOURCES';
-import { ATTACK } from '~/command/ATTACK';
 import { DEFEND } from '~/command/DEFEND';
-import { ADVANCE } from '~/command/ADVANCE';
-import { RETREAT } from '~/command/RETREAT';
-import { TARGET } from '~/command/TARGET';
+import { DEMATERIALIZE_ACTOR } from '~/command/DEMATERIALIZE_ACTOR';
+import { DONE } from '~/command/DONE';
 import { LOOK } from '~/command/LOOK';
+import { MATERIALIZE_ACTOR } from '~/command/MATERIALIZE_ACTOR';
+import { MUTATE_RESOURCES } from '~/command/MUTATE_RESOURCES';
+import { MUTATE_WEATHER } from '~/command/MUTATE_WEATHER';
+import { RETREAT } from '~/command/RETREAT';
 import { STRIKE } from '~/command/STRIKE';
-import { CLEAVE } from '~/command/CLEAVE';
+import { TARGET } from '~/command/TARGET';
 
 /**
  * The Flux World Server literally spreads this array into the Transformation stage.
@@ -37,6 +39,7 @@ export const PURE_GAME_LOGIC_HANDLERS: PureHandlerImplementation<TransformerCont
     CREATE_PLACE,
     DEFEND,
     DEMATERIALIZE_ACTOR,
+    DONE,
     LOOK,
     MATERIALIZE_ACTOR,
     MUTATE_RESOURCES,

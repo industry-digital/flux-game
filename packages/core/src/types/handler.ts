@@ -10,7 +10,6 @@ import { SearchCache } from '~/types/combat-ai';
 import { MassApi } from '~/worldkit/physics/mass';
 import { ActorEquipmentApi } from '~/worldkit/entity/actor/equipment';
 import { ActorInventoryApi } from '~/worldkit/entity/actor/inventory';
-import { ActorCapacitorApi } from '~/worldkit/entity/actor/capacitor';
 import { ActorSkillApi } from '~/worldkit/entity/actor/skill';
 import { rollDiceWithRng } from '~/worldkit/dice';
 import { ActorSessionApi } from '~/worldkit/entity/actor/session';
@@ -125,10 +124,6 @@ export type TransformerContext<W extends WorldProjection = WorldProjection> =
     equipmentApi: ActorEquipmentApi;
     actorSkillApi: ActorSkillApi;
     actorSessionApi: ActorSessionApi;
-    /**
-     * @deprecated Use the pure functions directly instead
-     */
-    capacitorApi: ActorCapacitorApi;
 
     // Optional metrics collection for performance monitoring
     metrics?: CombatMetrics;

@@ -1,5 +1,11 @@
 import { useCallback, useEffect, useRef } from 'react';
-import { useCombatScenario, ALICE_ID, BOB_ID, getNameFromActorId, type OptionalActorName } from './hooks/useCombatScenario';
+import {
+    useCombatScenario,
+    ALICE_ID,
+    BOB_ID,
+    getNameFromActorId,
+    type OptionalActorName,
+} from './hooks/useCombatScenario';
 import { Team } from '@flux/core';
 import { useCombatActors } from './hooks/useCombatActors';
 import { useCombatSession } from './hooks/useCombatSession';
@@ -10,14 +16,12 @@ import { CombatTerminal } from './components/CombatTerminal';
 import { CombatantCard } from './components/CombatantCard';
 import { TeamManager, type TeamActor } from './components/TeamManager';
 import { BattlefieldVisualization } from '@flux/ui';
-import { createTransformerContext, type TransformerContext } from '@flux/core';
-import type { ActorURN, PlaceURN, WeaponSchemaURN } from '@flux/core';
+import { type TransformerContext } from '@flux/core';
+import type { ActorURN } from '@flux/core';
 import { attempt } from '~/shared/utils/error-handling';
 import './CombatTool.css';
-
-// Test place
-const TEST_PLACE_ID: PlaceURN = 'flux:place:test-battlefield';
-const DEFAULT_WEAPON_SCHEMA_URN: WeaponSchemaURN = 'flux:schema:weapon:longsword';
+import { useTransformerContext } from '~/apps/combat/hooks/useTransformerContext';
+import { DEFAULT_WEAPON_SCHEMA_URN, TEST_PLACE_ID } from '~/apps/combat/constants';
 
 export interface CombatToolProps {
   // Props will be defined as we migrate from legacy
@@ -33,14 +37,7 @@ export const DEFAULT_COMBAT_TOOL_DEPS: CombatToolDependencies = {
 
 export function createCombatTool(_deps: CombatToolDependencies = DEFAULT_COMBAT_TOOL_DEPS) {
   return function CombatTool({}: CombatToolProps) {
-
-    // Create the shared TransformerContext at the composition root
-    // Use ref to maintain stable reference and avoid infinite re-renders
-    const contextRef = useRef<TransformerContext | null>(null);
-    if (!contextRef.current) {
-      contextRef.current = createTransformerContext();
-    }
-    const context = contextRef.current;
+    const context: TransformerContext = useTransformerContext();
 
     // Default scenario data
     const defaultScenario = {
@@ -128,7 +125,6 @@ export function createCombatTool(_deps: CombatToolDependencies = DEFAULT_COMBAT_
       session.currentActorId,
       handleEventsGenerated
     );
-
 
     // Helper function to render enhanced CombatantCard with all necessary props
     const renderCombatantCard = useCallback((actorId: ActorURN) => {
@@ -379,6 +375,7 @@ export function createCombatTool(_deps: CombatToolDependencies = DEFAULT_COMBAT_
                     }}
                   >
                     <CombatTerminal
+                      context={context}
                       events={combatLog}
                       onCommand={handleCommand}
                       currentActor={session.currentActorId || undefined}

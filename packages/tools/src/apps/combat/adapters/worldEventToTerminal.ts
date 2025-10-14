@@ -1,23 +1,65 @@
-import type { WorldEvent, ActorURN } from '@flux/core';
-import { EventType } from '@flux/core';
+import type { WorldEvent, ActorURN, TransformerContext } from '@flux/core';
+import { EventType, getTemplatesForLanguage, Language } from '@flux/core';
 import type { TerminalEntry } from '@flux/ui';
 
 /**
- * Transforms a WorldEvent into a TerminalEntry using the adapter pattern
- * Currently formats events since embedded narratives aren't available yet
- * TODO: Use embedded narratives when WorldEvents are enhanced with narrative system
+ * Generates narrative text from a WorldEvent using the narrative system
+ */
+function generateNarrativeFromEvent(
+  context: TransformerContext,
+  event: WorldEvent,
+  currentActor?: ActorURN,
+  language: Language = Language.en_US
+): string {
+  const templates = getTemplatesForLanguage(language);
+  const templateFunction = templates[event.type];
+
+  if (!templateFunction) {
+    return formatEventFallback(event);
+  }
+
+  try {
+    // Use the current actor as the narrative recipient, or fall back to the event actor
+    const recipient = currentActor || event.actor;
+    if (!recipient) {
+      return formatEventFallback(event);
+    }
+
+    // Cast to any to work around the strict typing - the template function will handle the specific event type
+    const narrative = (templateFunction as any)(context, event, recipient);
+
+    // Handle both string and NarrativeSequence outputs
+    if (typeof narrative === 'string') {
+      return narrative;
+    }
+
+    // For NarrativeSequence, join the text parts
+    if (Array.isArray(narrative)) {
+      return narrative.map((item: any) => item.text).join(' ');
+    }
+
+    return formatEventFallback(event);
+  } catch (error) {
+    console.warn('Failed to generate narrative for event:', event.type, error);
+    return formatEventFallback(event);
+  }
+}
+
+/**
+ * Transforms a WorldEvent into a TerminalEntry using the narrative generation system
  */
 export function worldEventToTerminalEntry(
+  context: TransformerContext,
   event: WorldEvent,
-  _currentActor?: ActorURN // Unused for now, will be used for perspective logic
+  currentActor?: ActorURN
 ): TerminalEntry {
-  // Format the event for display
-  const formattedContent = formatEventFallback(event);
+  // Generate narrative content using the narrative system
+  const narrativeContent = generateNarrativeFromEvent(context, event, currentActor);
 
   return {
     id: event.id,
-    type: 'text', // Use text type for formatted combat events
-    content: formattedContent,
+    type: 'text',
+    content: narrativeContent,
     timestamp: event.ts,
     metadata: {
       actor: event.actor,
@@ -130,12 +172,13 @@ export function createCombatInputEntry(
  * Optimized for performance with large event lists
  */
 export function worldEventsToTerminalEntries(
+  context: TransformerContext,
   events: WorldEvent[],
   currentActor?: ActorURN,
   maxEntries?: number
 ): TerminalEntry[] {
   const entries = events.map(event =>
-    worldEventToTerminalEntry(event, currentActor)
+    worldEventToTerminalEntry(context, event, currentActor)
   );
 
   // Apply max entries limit if specified
