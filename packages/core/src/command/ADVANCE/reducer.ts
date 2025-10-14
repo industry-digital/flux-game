@@ -3,32 +3,36 @@ import { AdvanceCommand } from './types';
 import { createCombatSessionApi } from '~/worldkit/combat/session/session';
 import { Team } from '~/types/combat';
 import { withBasicWorldStateValidation } from '~/command/validation';
-import { withPreventCrossSessionTargeting } from '~/worldkit/combat/validation';
+import { withExistingCombatSession } from '~/worldkit/combat/validation';
+
+const DISTANCE = 'distance';
+const AP = 'ap';
 
 export const advanceReducer: PureReducer<TransformerContext, AdvanceCommand> = withBasicWorldStateValidation(
-  withPreventCrossSessionTargeting(
+  withExistingCombatSession(
     (context, command) => {
-      const { actors } = context.world;
+      const { actors, sessions } = context.world;
       const actor = actors[command.actor];
-      const targetActor = actors[command.args.target!];
+      const session = sessions[command.session!];
 
-      // Create or get combat session
-      const { isNew, getCombatantApi, addCombatant, startCombat } = createCombatSessionApi(context, actor.location, command.session);
+      const { isNew, getCombatantApi, addCombatant, startCombat } = createCombatSessionApi(context, actor.location, session.id);
 
-      if (isNew) {
+      // Handle combat initiation if targeting and session is new
+      if (command.args.target && isNew) {
+        const targetActor = actors[command.args.target];
         if (!targetActor) {
           context.declareError('ADVANCE: Target not found', command.id);
           return context;
         }
 
-        // Add both actors to combat - advancer vs target
         addCombatant(actor.id, Team.ALPHA);
         addCombatant(targetActor.id, Team.BRAVO);
         startCombat(command.id);
       }
 
+      // Execute movement
       const combatantApi = getCombatantApi(actor.id);
-      const moveBy = command.args.type === 'distance' ? 'distance' : 'ap';
+      const moveBy = command.args.type === DISTANCE ? DISTANCE : AP;
       combatantApi.advance(moveBy, command.args.distance || 1, command.args.target, command.id);
 
       return context;
