@@ -206,20 +206,18 @@ export type CombatSessionEndedInput = AbstractWorldEventInput<
 >;
 
 export type CombatantDidAcquireTarget = EventBase & CombatantDidAcquireTargetInput;
-export type CombatantDidAcquireTargetInput = AbstractWorldEventInput<
+export type CombatantDidAcquireTargetInput = RequiresActor & AbstractWorldEventInput<
   EventType.COMBATANT_DID_ACQUIRE_TARGET,
   {
     sessionId: SessionURN;
-    actor: ActorURN;
     target: ActorURN;
   }
 >;
 
 export type CombatantDidDefend = EventBase & CombatantDidDefendInput;
-export type CombatantDidDefendInput = AbstractWorldEventInput<
+export type CombatantDidDefendInput = RequiresActor & AbstractWorldEventInput<
   EventType.COMBATANT_DID_DEFEND,
   {
-    actor: ActorURN;
     cost: ActionCost;
   }
 >;
@@ -228,7 +226,6 @@ export type CombatantDidMove = EventBase & CombatantDidMoveInput;
 export type CombatantDidMoveInput = RequiresActor & AbstractWorldEventInput<
   EventType.COMBATANT_DID_MOVE,
   {
-    actor: ActorURN;
     cost: ActionCost;
     from: BattlefieldPositionSummary;
     to: BattlefieldPositionSummary;
@@ -238,10 +235,9 @@ export type CombatantDidMoveInput = RequiresActor & AbstractWorldEventInput<
 export type AttackOutcome = 'hit' | 'miss' | 'hit:critical' | 'miss:critical';
 
 export type CombatantDidAttack = EventBase & CombatantDidAttackInput;
-export type CombatantDidAttackInput = AbstractWorldEventInput<
+export type CombatantDidAttackInput = RequiresActor & AbstractWorldEventInput<
   EventType.COMBATANT_DID_ATTACK,
   {
-    actor: ActorURN;
     target: ActorURN;
     cost: ActionCost;
     roll: RollResult;
@@ -273,16 +269,6 @@ export type CombatTurnDidEndInput = AbstractWorldEventInput<
     turn: number;
     actor: ActorURN;
     energy: CombatantResourceChange;
-  }
->;
-
-export type CombatantDidEndTurn = EventBase & CombatantDidEndTurnInput;
-export type CombatantDidEndTurnInput = AbstractWorldEventInput<
-  EventType.COMBAT_TURN_DID_END,
-  {
-    round: number;
-    turn: number;
-    actor: ActorURN;
   }
 >;
 
@@ -424,7 +410,6 @@ export type WorldEventInput =
   | CombatantDidDefendInput
   | CombatantDidMoveInput
   | CombatantDidAttackInput
-  | CombatantDidEndTurnInput
   | CombatRoundDidStartInput
   | CombatRoundDidEndInput
   | CombatTurnDidStartInput

@@ -2,7 +2,7 @@ import type { ActorURN, PlaceURN, SessionURN, WeaponSchemaURN } from '@flux/core
 
 // Test place
 export const TEST_PLACE_ID: PlaceURN = 'flux:place:test-battlefield';
-export const TEST_COMBAT_SESSION_ID: SessionURN = 'flux:session:combat:simulator';
+export const DEFAULT_COMBAT_SESSION_ID: SessionURN = 'flux:session:combat:simulator';
 
 export const DEFAULT_WEAPON_SCHEMA_URN: WeaponSchemaURN = 'flux:schema:weapon:longsword';
 

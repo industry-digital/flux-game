@@ -19,12 +19,12 @@ import { ActorURN } from '~/types/taxonomy';
 
 export const renderAttackNarrative: TemplateFunction<CombatantDidAttack, ActorURN> = (context, event, actorId) => {
   const { world, equipmentApi } = context;
-  const actor = world.actors[event.payload.actor];
+  const actor = world.actors[event.actor];
   const target = world.actors[event.payload.target];
   const weapon = equipmentApi.getEquippedWeaponSchemaOrFail(actor);
   const { damage } = event.payload;
 
-  if (actorId === event.payload.actor) {
+  if (actorId === event.actor) {
     // actorId is the attacker
     return damage > 0
       ? `You strike ${target.name} with your ${weapon.name} for ${damage} damage.`
@@ -40,15 +40,15 @@ export const renderAttackNarrative: TemplateFunction<CombatantDidAttack, ActorUR
 
   // actorId is an observer
   return damage > 0
-    ? `${actor.name} strikes ${target.name} with their ${weapon.name} for ${damage} damage.`
-    : `${actor.name} misses ${target.name} with their ${weapon.name}.`
+    ? `${actor.name}'s ${weapon.name} deals ${damage} damage to ${target.name}.`
+    : `${actor.name}'s ${weapon.name} misses ${target.name}.`
 };
 
 export const renderDefendNarrative: TemplateFunction<CombatantDidDefend, ActorURN> = (context, event, actorId) => {
   const { world } = context;
-  const actor = world.actors[event.payload.actor];
+  const actor = world.actors[event.actor];
 
-  if (actorId === event.payload.actor) {
+  if (actorId === event.actor) {
     return `You take a defensive stance.`
   }
 
@@ -72,10 +72,10 @@ export const renderMoveNarrative: TemplateFunction<CombatantDidMove> = (context,
 
 export const renderTargetNarrative: TemplateFunction<CombatantDidAcquireTarget> = (context, event, actorId) => {
   const { world } = context;
-  const actor = world.actors[event.payload.actor];
+  const actor = world.actors[event.actor];
   const target = world.actors[event.payload.target];
 
-  if (actorId === event.payload.actor) {
+  if (actorId === event.actor) {
     // actorId is the actor
     return `You target ${target.name}.`
   }

@@ -213,11 +213,11 @@ export function createCleaveMethod(
 
       // Generate individual attack event for each target (following STRIKE pattern)
       const attackEvent = createWorldEventImpl({
+        trace: trace,
         type: EventType.COMBATANT_DID_ATTACK,
         location: actor.location,
-        trace: trace,
+        actor: actor.id,
         payload: {
-          actor: actor.id,
           cost: targets.indexOf(targetId) === 0 ? cost : { ap: 0, energy: 0 }, // Show total cost on first attack only
           target: targetId,
           roll,

@@ -54,8 +54,8 @@ export function CombatTerminal({
       }
     }
 
-    // Convert and add events
-    const eventEntries = worldEventsToTerminalEntries(context, events, currentActor);
+    // Convert and add events (always observer perspective)
+    const eventEntries = worldEventsToTerminalEntries(context, events);
 
     eventEntries.forEach((entry: TerminalEntry) => {
       addEntry(entry);

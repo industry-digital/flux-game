@@ -33,7 +33,6 @@ export function createTargetMethod (
       trace: trace,
       payload: {
         sessionId: session.id,
-        actor: actor.id,
         target,
       },
     });

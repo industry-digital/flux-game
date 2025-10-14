@@ -1,14 +1,26 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useMemo } from 'react';
 import type { WorldEvent } from '@flux/core';
 
 export interface UseCombatLogResult {
-  /** Current combat log entries */
+  /**
+   * Current combat log entries
+   */
   combatLog: WorldEvent[];
-  /** Add new events to the log */
+  /**
+   * The ID of the last event in the log
+   */
+  lastEventId: string | null;
+  /**
+   * Add new events to the log
+   */
   addEvents: (events: WorldEvent[]) => void;
-  /** Set the entire log (replaces all entries) */
+  /**
+   * Set the entire log (replaces all entries)
+   */
   setLog: (events: WorldEvent[]) => void;
-  /** Clear all log entries */
+  /**
+   * Clear all log entries
+   */
   clearLog: () => void;
 }
 
@@ -20,10 +32,11 @@ export interface UseCombatLogResult {
  */
 export function useCombatLog(): UseCombatLogResult {
   const [combatLog, setCombatLog] = useState<WorldEvent[]>([]);
+  const [lastEventId, setLastEventId] = useState<string | null>(null);
 
   const addEvents = useCallback((events: WorldEvent[]) => {
     if (events.length === 0) return;
-
+    setLastEventId(events[events.length - 1].id);
     setCombatLog(prev => [...prev, ...events]);
   }, []);
 
@@ -35,10 +48,11 @@ export function useCombatLog(): UseCombatLogResult {
     setCombatLog([]);
   }, []);
 
-  return {
+  return useMemo(() => ({
     combatLog,
+    lastEventId,
     addEvents,
     setLog,
     clearLog,
-  };
+  }), [combatLog, lastEventId]);
 }

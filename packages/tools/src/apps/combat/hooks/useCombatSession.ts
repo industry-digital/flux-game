@@ -13,6 +13,7 @@ import {
   EventType,
   type CombatTurnDidStart,
 } from '@flux/core';
+import { DEFAULT_COMBAT_SESSION_ID } from '../constants';
 
 export interface UseCombatSessionResult {
   session: CombatSession | null;
@@ -61,7 +62,7 @@ export function useCombatSession(
   // Initialize session API with the provided context
   useEffect(() => {
     if (!sessionApi) {
-      const api = deps.createCombatSessionApi(context, placeId);
+      const api = deps.createCombatSessionApi(context, placeId, DEFAULT_COMBAT_SESSION_ID);
       setSessionApi(api);
       setSession(api.session);
       setSessionId(api.session.id);

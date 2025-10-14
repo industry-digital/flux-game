@@ -1,10 +1,14 @@
 import { useCallback, useEffect, useRef } from 'react';
 import {
-    useCombatScenario,
-    ALICE_ID,
-    BOB_ID,
-    getNameFromActorId,
-    type OptionalActorName,
+  useCombatScenario,
+  ALICE_ID,
+  BOB_ID,
+  getNameFromActorId,
+  type OptionalActorName,
+  DAVE_ID,
+  ERIC_ID,
+  CHARLIE_ID,
+  FRANZ_ID,
 } from './hooks/useCombatScenario';
 import { Team } from '@flux/core';
 import { useCombatActors } from './hooks/useCombatActors';
@@ -102,12 +106,11 @@ export function createCombatTool(_deps: CombatToolDependencies = DEFAULT_COMBAT_
         }
       }
     }, [session.session, session.isInSetupPhase, actors.isInitialized, scenarioData.actors]);
-    const combatState = useCombatState(
+    const { executeCommand, lastEventId } = useCombatState(
       context,
       session.session,
       session.currentActorId,
-      TEST_PLACE_ID,
-      session.sessionId
+      TEST_PLACE_ID
     );
     const { combatLog, addEvents } = useCombatLog();
 
@@ -173,9 +176,9 @@ export function createCombatTool(_deps: CombatToolDependencies = DEFAULT_COMBAT_
 
     const handleCommand = useCallback((command: string) => {
       // Log combat session state before command
-      const events = combatState.executeCommand(command);
+      const events = executeCommand(command);
       handleEventsGenerated(events);
-    }, [combatState, handleEventsGenerated, session.session]);
+    }, [executeCommand, handleEventsGenerated]);
 
     // Create integrated add/remove functions that sync scenario and session
     const handleAddOptionalActor = useCallback((name: OptionalActorName) => {
@@ -229,10 +232,10 @@ export function createCombatTool(_deps: CombatToolDependencies = DEFAULT_COMBAT_
     // Helper to convert ActorURN to OptionalActorName
     const getOptionalActorNameFromId = (actorId: ActorURN): OptionalActorName | null => {
       switch (actorId) {
-        case 'flux:actor:charlie': return 'charlie';
-        case 'flux:actor:eric': return 'eric';
-        case 'flux:actor:dave': return 'dave';
-        case 'flux:actor:franz': return 'franz';
+        case CHARLIE_ID: return 'charlie';
+        case ERIC_ID: return 'eric';
+        case DAVE_ID: return 'dave';
+        case FRANZ_ID: return 'franz';
         default: return null;
       }
     };
@@ -350,14 +353,18 @@ export function createCombatTool(_deps: CombatToolDependencies = DEFAULT_COMBAT_
                   {/* Battlefield Visualization Display */}
                   <div className="battlefield-display">
                     {session.session?.data ? (
-                      <BattlefieldVisualization
-                        battlefield={session.session.data.battlefield}
-                        combatants={session.session.data.combatants}
-                        actors={actors.actors}
-                        currentActor={session.currentActorId || undefined}
-                        subjectTeam={Team.ALPHA}
-                        className="combat-battlefield-visualization"
-                      />
+                      <>
+                        {console.log('🎯 BattlefieldVisualization render - key:', lastEventId, 'combatants:', Array.from(session.session.data.combatants.entries()).map(([id, c]) => `${id}:${c.position.coordinate}`), 'session ID:', session.session.id)}
+                        <BattlefieldVisualization
+                          key={lastEventId || 'initial'}
+                          battlefield={session.session.data.battlefield}
+                          combatants={session.session.data.combatants}
+                          actors={actors.actors}
+                          currentActor={session.currentActorId || undefined}
+                          subjectTeam={Team.ALPHA}
+                          className="combat-battlefield-visualization"
+                        />
+                      </>
                     ) : (
                       <div className="battlefield-loading">
                         Initializing battlefield...

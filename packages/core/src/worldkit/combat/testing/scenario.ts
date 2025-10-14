@@ -10,6 +10,7 @@ import { DEFAULT_BATTLEFIELD } from '~/worldkit/combat/battlefield';
 import { SkillState } from '~/types/entity/skill';
 import { SchemaManager } from '~/worldkit/schema/manager';
 import { createDefaultSkillState } from '~/worldkit/entity/actor/skill';
+import { setEnergy, setPosition } from '~/worldkit/entity/actor/capacitor';
 
 export type CombatScenarioDependencies = {
   useCombatSession: typeof createCombatSessionApi;
@@ -124,8 +125,6 @@ export function useCombatScenario(
   const sessionHook = useCombatSessionImpl(testContext, TEST_PLACE_ID, undefined, battlefield);
 
   scenario.session = sessionHook.session;
-
-  const capacitorApi = testContext.capacitorApi;
 
   // Phase 1: Create actors and add them as combatants to the session
   for (const actorId in participants) {
@@ -273,15 +272,15 @@ export function useCombatScenario(
     if (energy !== undefined) {
       if (typeof energy === 'number') {
         // Simple number: set energy directly in Joules
-        capacitorApi.setEnergy(actor, energy);
+        setEnergy(actor, energy);
       } else {
         // Complex object: can specify position or energy
         if (energy.position !== undefined) {
           // Position is authoritative - preferred method
-          capacitorApi.setPosition(actor, energy.position);
+          setPosition(actor, energy.position);
         } else if (energy.energy !== undefined) {
           // Set energy directly in Joules
-          capacitorApi.setEnergy(actor, energy.energy);
+          setEnergy(actor, energy.energy);
         }
       }
     }

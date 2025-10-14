@@ -168,7 +168,6 @@ export const createTransformerContext = (
 
     inventoryApi,
     equipmentApi,
-    capacitorApi,
     actorSkillApi,
     actorSessionApi,
     metrics,

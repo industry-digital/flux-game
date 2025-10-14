@@ -154,8 +154,8 @@ export function createStrikeMethod(
       type: EventType.COMBATANT_DID_ATTACK,
       location: actor.location,
       trace: trace,
+      actor: actor.id,
       payload: {
-        actor: actor.id,
         cost,
         target: combatant.target!,
         roll,

@@ -4,11 +4,11 @@ import type { TerminalEntry } from '@flux/ui';
 
 /**
  * Generates narrative text from a WorldEvent using the narrative system
+ * Always generates observer perspective for the CombatTool
  */
 function generateNarrativeFromEvent(
   context: TransformerContext,
   event: WorldEvent,
-  currentActor?: ActorURN,
   language: Language = Language.en_US
 ): string {
   const templates = getTemplatesForLanguage(language);
@@ -19,11 +19,9 @@ function generateNarrativeFromEvent(
   }
 
   try {
-    // Use the current actor as the narrative recipient, or fall back to the event actor
-    const recipient = currentActor || event.actor;
-    if (!recipient) {
-      return formatEventFallback(event);
-    }
+    // For CombatTool, we always want observer perspective
+    // Pass undefined as recipient to trigger observer narrative in template functions
+    const recipient = undefined;
 
     // Cast to any to work around the strict typing - the template function will handle the specific event type
     const narrative = (templateFunction as any)(context, event, recipient);
@@ -47,14 +45,14 @@ function generateNarrativeFromEvent(
 
 /**
  * Transforms a WorldEvent into a TerminalEntry using the narrative generation system
+ * Always generates observer perspective for the CombatTool
  */
 export function worldEventToTerminalEntry(
   context: TransformerContext,
-  event: WorldEvent,
-  currentActor?: ActorURN
+  event: WorldEvent
 ): TerminalEntry {
-  // Generate narrative content using the narrative system
-  const narrativeContent = generateNarrativeFromEvent(context, event, currentActor);
+  // Generate narrative content using the narrative system (always observer perspective)
+  const narrativeContent = generateNarrativeFromEvent(context, event);
 
   return {
     id: event.id,
@@ -170,15 +168,15 @@ export function createCombatInputEntry(
 /**
  * Batch converts multiple WorldEvents to TerminalEntries
  * Optimized for performance with large event lists
+ * Always generates observer perspective for the CombatTool
  */
 export function worldEventsToTerminalEntries(
   context: TransformerContext,
   events: WorldEvent[],
-  currentActor?: ActorURN,
   maxEntries?: number
 ): TerminalEntry[] {
   const entries = events.map(event =>
-    worldEventToTerminalEntry(context, event, currentActor)
+    worldEventToTerminalEntry(context, event)
   );
 
   // Apply max entries limit if specified

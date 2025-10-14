@@ -51,7 +51,8 @@ export function createDefendMethod (
       type: EventType.COMBATANT_DID_DEFEND,
       location: actor.location,
       trace: trace,
-      payload: { actor: actor.id, cost },
+      actor: actor.id,
+      payload: { cost },
     });
 
     context.declareEvent(defendEvent);
