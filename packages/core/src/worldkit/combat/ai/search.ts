@@ -244,6 +244,7 @@ function ensurePlanTermination(
       trace,
       actor: situation.combatant.actorId,
       location: situation.session.data.location,
+      session: situation.session.id,
       type: CommandType.DEFEND,
       args: {
         autoDone: true,
@@ -266,6 +267,7 @@ function ensurePlanTermination(
       trace,
       actor: situation.combatant.actorId,
       location: situation.session.data.location,
+      session: situation.session.id,
       type: CommandType.DEFEND,
       args: { autoDone: true },
     });
@@ -460,6 +462,7 @@ export function* getValidActions(
       trace,
       actor: combatant.actorId,
       location: situation.session.data.location,
+      session: situation.session.id,
       type: CommandType.TARGET,
       args: {
         target: assessments.primaryTarget,
@@ -487,6 +490,7 @@ export function* getValidActions(
         trace,
         actor: combatant.actorId,
         location: situation.session.data.location,
+        session: situation.session.id,
         type: CommandType.STRIKE,
         args: {
           target: hasTarget,
@@ -586,6 +590,7 @@ export function* getValidActions(
               trace,
               actor: combatant.actorId,
               location: situation.session.data.location,
+              session: situation.session.id,
               type: CommandType.ADVANCE,
               args: {
                 type: 'distance',
@@ -615,6 +620,7 @@ export function* getValidActions(
                 trace,
                 actor: combatant.actorId,
                 location: situation.session.data.location,
+                session: situation.session.id,
                 type: CommandType.ADVANCE,
                 args: {
                   type: 'distance',
@@ -674,6 +680,7 @@ export function* getValidActions(
             trace,
             actor: combatant.actorId,
             location: situation.session.data.location,
+            session: situation.session.id,
             type: CommandType.RETREAT,
             args: {
               type: 'distance',
@@ -731,6 +738,7 @@ export function* getValidActions(
       trace,
       actor: combatant.actorId,
       location: situation.session.data.location,
+      session: situation.session.id,
       type: CommandType.DEFEND,
       args: {
         autoDone: true,
@@ -830,6 +838,7 @@ export function optimizeMovementSequence(trace: string, actions: CombatCommand[]
           trace,
           actor: action.actor,
           location: action.location,
+          session: action.session,
           type: commandType,
           args: {
             ...action.args,
