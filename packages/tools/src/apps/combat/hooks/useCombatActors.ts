@@ -157,6 +157,7 @@ export function useCombatActors(
 // Constants for equipment setup
 const TEST_WEAPON_ENTITY_URN: ItemURN = 'flux:item:weapon:test';
 
+
 /**
  * Create an actor from scenario data using @flux/core utilities
  * Enhanced to use TransformerContext APIs for proper customization

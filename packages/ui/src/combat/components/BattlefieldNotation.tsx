@@ -160,7 +160,7 @@ export const createBattleFieldNotationRenderer = () => {
 
       // Create glyph with minimal string operations
       const isRightFacing = actor.facing === RIGHT;
-      const glyphText = isRightFacing ? `${symbol}>` : `<${symbol}`;
+      const glyphText = isRightFacing ? `${symbol}&gt;` : `&lt;${symbol}`;
       let finalGlyph = colorFn(glyphText);
 
       // Apply current actor highlighting
@@ -216,6 +216,7 @@ export const createBattleFieldNotationRenderer = () => {
       const hasLeftGlyphs = group.leftGlyphs.length > 0;
       const hasRightGlyphs = group.rightGlyphs.length > 0;
 
+
       if (hasLeftGlyphs) {
         groupContent += group.leftGlyphs.join('');
       }
@@ -227,6 +228,7 @@ export const createBattleFieldNotationRenderer = () => {
       if (hasRightGlyphs) {
         groupContent += group.rightGlyphs.join('');
       }
+
 
       // Add distance from previous group (matching Vue format)
       if (prevPosition >= 0) {

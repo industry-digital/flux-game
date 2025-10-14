@@ -1,7 +1,6 @@
-import { createTerminalHook, useTheme, useVirtualizedList } from '@flux/ui';
+import { createTerminalHook, useTheme } from '@flux/ui';
 
 export const useTerminal = createTerminalHook({
   useTheme,
-  useVirtualizedList,
   timestamp: () => Date.now(),
 });

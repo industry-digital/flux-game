@@ -24,8 +24,8 @@
   align-items: flex-start;
   padding: 0.375rem 0.75rem;
   border-bottom: 1px solid transparent;
-  min-height: 24px;
-  margin-bottom: 0.25rem; /* Add space between entries */
+  /* Removed min-height to allow natural height measurement */
+  /* Removed margin-bottom to let TanStack Virtual handle spacing */
 }
 
 .terminal__entry:hover {

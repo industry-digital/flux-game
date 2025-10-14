@@ -29,7 +29,7 @@ describe('BattlefieldNotation Utilities', () => {
         colorStrategy: ColorStrategies.PLAIN
       });
 
-      expect(notation).toBe('[ A₁> ]');
+      expect(notation).toBe('[ A₁&gt; ]');
     });
 
     it('renders left-facing actors with leading chevron', () => {
@@ -39,7 +39,7 @@ describe('BattlefieldNotation Utilities', () => {
         colorStrategy: ColorStrategies.PLAIN
       });
 
-      expect(notation).toBe('[ <A₁ ]');
+      expect(notation).toBe('[ &lt;A₁ ]');
     });
 
     it('separates left and right facing actors with boundary space', () => {
@@ -52,7 +52,7 @@ describe('BattlefieldNotation Utilities', () => {
         colorStrategy: ColorStrategies.PLAIN
       });
 
-      expect(notation).toBe('[ <A₁ B₁> ]');
+      expect(notation).toBe('[ &lt;A₁ B₁&gt; ]');
     });
   });
 
@@ -68,7 +68,7 @@ describe('BattlefieldNotation Utilities', () => {
         colorStrategy: ColorStrategies.PLAIN
       });
 
-      expect(notation).toBe('[ A₁> ]─<span class="distance-number">75</span>─[ B₁> ]─<span class="distance-number">25</span>─[ C₁> ]');
+      expect(notation).toBe('[ A₁&gt; ]─<span class="distance-number">75</span>─[ B₁&gt; ]─<span class="distance-number">25</span>─[ C₁&gt; ]');
     });
   });
 
@@ -82,7 +82,7 @@ describe('BattlefieldNotation Utilities', () => {
         colorStrategy: ColorStrategies.PLAIN
       });
 
-      expect(notation).toBe('▌[ A₁> ]');
+      expect(notation).toBe('▌[ A₁&gt; ]');
     });
 
     it('renders right boundary marker', () => {
@@ -94,7 +94,7 @@ describe('BattlefieldNotation Utilities', () => {
         colorStrategy: ColorStrategies.PLAIN
       });
 
-      expect(notation).toBe('[ A₁> ]▌');
+      expect(notation).toBe('[ A₁&gt; ]▌');
     });
   });
 
@@ -107,7 +107,7 @@ describe('BattlefieldNotation Utilities', () => {
           currentActor: 'alice'
         });
 
-        expect(notation).toBe('[ <span style="font-weight: 900">A₁></span> ]');
+        expect(notation).toBe('[ <span style="font-weight: 900">A₁&gt;</span> ]');
     });
 
     it('applies HTML color strategy correctly', () => {
@@ -118,7 +118,7 @@ describe('BattlefieldNotation Utilities', () => {
         subjectTeam: 'alpha'
       });
 
-      expect(notation).toContain('<span class="subject-team">A₁></span>');
+      expect(notation).toContain('<span class="subject-team">A₁&gt;</span>');
     });
   });
 
@@ -139,7 +139,7 @@ describe('BattlefieldNotation Utilities', () => {
         colorStrategy: ColorStrategies.PLAIN
       });
 
-      expect(notation).toBe('[ A₁> ]');
+      expect(notation).toBe('[ A₁&gt; ]');
     });
 
     it('handles actors with single character names', () => {
@@ -149,7 +149,7 @@ describe('BattlefieldNotation Utilities', () => {
         colorStrategy: ColorStrategies.PLAIN
       });
 
-      expect(notation).toBe('[ A₁> ]');
+      expect(notation).toBe('[ A₁&gt; ]');
     });
 
     it('handles actors at same position with same facing', () => {
@@ -162,7 +162,30 @@ describe('BattlefieldNotation Utilities', () => {
         colorStrategy: ColorStrategies.PLAIN
       });
 
-      expect(notation).toBe('[ A₁>B₁> ]');
+      expect(notation).toBe('[ A₁&gt;B₁&gt; ]');
+    });
+
+    it('reproduces the six combatant bug with three per team', () => {
+      // Simulate the scenario: 3 combatants per team, positioned at different coordinates
+      const actors = [
+        // Team Alpha at position 100 (left side) - using lowercase to match Team enum
+        createActor({ name: 'Alice', id: 'alice', position: 100, facing: 'right', team: 'alpha' }),
+        createActor({ name: 'Charlie', id: 'charlie', position: 100, facing: 'right', team: 'alpha' }),
+        createActor({ name: 'Eve', id: 'eve', position: 100, facing: 'right', team: 'alpha' }),
+        // Team Bravo at position 200 (right side) - using lowercase to match Team enum
+        createActor({ name: 'Bob', id: 'bob', position: 200, facing: 'left', team: 'bravo' }),
+        createActor({ name: 'David', id: 'david', position: 200, facing: 'left', team: 'bravo' }),
+        createActor({ name: 'Frank', id: 'frank', position: 200, facing: 'left', team: 'bravo' }),
+      ];
+      const notation = renderBattlefieldNotation({
+        combatants: actors,
+        colorStrategy: ColorStrategies.PLAIN,
+        subjectTeam: 'alpha' // Match the lowercase team format
+      });
+
+      // Expected: all actors should be properly grouped by position
+      // Should NOT produce empty groups like "[ A₁>C₁>E₁> ]─100─[ ]"
+      expect(notation).toBe('[ A₁&gt;C₁&gt;E₁&gt; ]─<span class="distance-number">100</span>─[ &lt;B₁&lt;D₁&lt;F₁ ]');
     });
   });
 });

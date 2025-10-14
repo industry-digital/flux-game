@@ -34,11 +34,17 @@ export const createTerminalHook = (deps: TerminalDependencies): UseTerminal => {
     const [entries, setEntries] = useState<TerminalEntry[]>([]);
     const parentRef = useRef<HTMLDivElement>(null);
 
-    // TanStack Virtual setup
+    // TanStack Virtual setup with dynamic height measurement
     const virtualizer = deps.useVirtualizer({
       count: entries.length,
       getScrollElement: () => parentRef.current,
-      estimateSize: () => DEFAULT_LINE_HEIGHT, // Can be made dynamic later
+      estimateSize: () => DEFAULT_LINE_HEIGHT, // Initial estimate
+      getItemKey: (index) => entries[index]?.id ?? index,
+      // Dynamic height measurement for proper spacing
+      measureElement: (element) => {
+        if (!element) return DEFAULT_LINE_HEIGHT;
+        return element.getBoundingClientRect().height || DEFAULT_LINE_HEIGHT;
+      },
       overscan: 10,
     });
 

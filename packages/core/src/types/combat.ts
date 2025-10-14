@@ -147,9 +147,6 @@ export type CombatRounds = {
   completed: CombatRound[];
 };
 
-type CollisionResult = { success: boolean; error?: string; finalPosition: number };
-type CollisionDetector = (from: number, to: number) => CollisionResult;
-
 export type CombatSessionData = {
   /**
    * The Place where combat is taking place
@@ -305,11 +302,6 @@ export type Combatant = CombatantSummary & {
    * The actor's current target
    */
   target: ActorURN | null;
-
-  /**
-   * The actor's current plan
-   */
-  plan?: CombatCommandPlan;
 };
 
 export type ResolvedTarget = {

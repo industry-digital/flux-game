@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef } from 'react';
-import { useCombatScenario, ALICE_ID, BOB_ID, type TeamName, type OptionalActorName } from './hooks/useCombatScenario';
+import { useCombatScenario, ALICE_ID, BOB_ID, getNameFromActorId, type OptionalActorName } from './hooks/useCombatScenario';
+import { Team } from '@flux/core';
 import { useCombatActors } from './hooks/useCombatActors';
 import { useCombatSession } from './hooks/useCombatSession';
 import { useCombatState } from './hooks/useCombatState';
@@ -7,8 +8,9 @@ import { useCombatLog } from './hooks/useCombatLog';
 import { useAiControl } from './hooks/useAiControl';
 import { CombatTerminal } from './components/CombatTerminal';
 import { CombatantCard } from './components/CombatantCard';
-import { TeamManager } from './components/TeamManager';
-import { createTransformerContext, Team, type TransformerContext } from '@flux/core';
+import { TeamManager, type TeamActor } from './components/TeamManager';
+import { BattlefieldVisualization } from '@flux/ui';
+import { createTransformerContext, type TransformerContext } from '@flux/core';
 import type { ActorURN, PlaceURN, WeaponSchemaURN } from '@flux/core';
 import { attempt } from '~/shared/utils/error-handling';
 import './CombatTool.css';
@@ -51,7 +53,7 @@ export function createCombatTool(_deps: CombatToolDependencies = DEFAULT_COMBAT_
             'flux:skill:evasion': 0,
             'flux:skill:weapon:melee': 0
           },
-          team: 'ALPHA' as TeamName
+          team: Team.ALPHA
         },
         [BOB_ID]: {
           stats: { pow: 10, fin: 10, res: 10, int: 10, per: 10, mem: 10 },
@@ -61,7 +63,7 @@ export function createCombatTool(_deps: CombatToolDependencies = DEFAULT_COMBAT_
             'flux:skill:evasion': 0,
             'flux:skill:weapon:melee': 0
           },
-          team: 'BRAVO' as TeamName
+          team: Team.BRAVO
         }
       }
     };
@@ -72,7 +74,6 @@ export function createCombatTool(_deps: CombatToolDependencies = DEFAULT_COMBAT_
       addOptionalActor,
       removeOptionalActor,
       getTeamActors,
-      getAvailableOptionalActors,
       updateActorStats,
       updateActorSkill,
       updateActorWeapon,
@@ -89,10 +90,9 @@ export function createCombatTool(_deps: CombatToolDependencies = DEFAULT_COMBAT_
       if (session.session && session.isInSetupPhase && actors.isInitialized && !initialActorsAddedRef.current) {
         console.log('✅ Adding actors to combat session...');
         initialActorsAddedRef.current = true;
-
         // Add all actors from scenario to the combat session
         for (const [actorId, actorData] of Object.entries(scenarioData.actors)) {
-          const sessionTeam = actorData.team === 'ALPHA' ? Team.ALPHA : Team.BRAVO;
+          const sessionTeam = actorData.team === Team.ALPHA ? Team.ALPHA : Team.BRAVO;
           const result = attempt(() => {
             session.addCombatant(actorId as ActorURN, sessionTeam);
           });
@@ -116,6 +116,11 @@ export function createCombatTool(_deps: CombatToolDependencies = DEFAULT_COMBAT_
     const { combatLog, addEvents } = useCombatLog();
 
     const handleEventsGenerated = useCallback((events: any[]) => {
+      console.log('🎯 CombatTool handleEventsGenerated called', {
+        eventsCount: events.length,
+        events: events.map(e => ({ type: e.type, actor: e.actor, id: e.id }))
+      });
+
       addEvents(events);
       actors.syncActorsFromContext();
 
@@ -129,6 +134,7 @@ export function createCombatTool(_deps: CombatToolDependencies = DEFAULT_COMBAT_
       session.currentActorId,
       handleEventsGenerated
     );
+
 
     // Helper function to render enhanced CombatantCard with all necessary props
     const renderCombatantCard = useCallback((actorId: ActorURN) => {
@@ -192,7 +198,12 @@ export function createCombatTool(_deps: CombatToolDependencies = DEFAULT_COMBAT_
         console.log(`  Total combatants: ${session.session.data.combatants.size}`);
       }
 
+      console.log('🎮 Executing command:', command);
       const events = combatState.executeCommand(command);
+      console.log('🎮 Command executed, events returned:', {
+        eventsCount: events.length,
+        events: events.map(e => ({ type: e.type, actor: e.actor, id: e.id }))
+      });
       handleEventsGenerated(events);
     }, [combatState, handleEventsGenerated, session.session]);
 
@@ -200,7 +211,7 @@ export function createCombatTool(_deps: CombatToolDependencies = DEFAULT_COMBAT_
     const handleAddOptionalActor = useCallback((name: OptionalActorName) => {
       addOptionalActor(name, (actorId, team) => {
         // Add to combat session with proper team mapping
-        const sessionTeam = team === 'ALPHA' ? Team.ALPHA : Team.BRAVO;
+        const sessionTeam = team === Team.ALPHA ? Team.ALPHA : Team.BRAVO;
         console.log(`🎯 Adding ${actorId} to combat session as team ${sessionTeam}`);
         session.addCombatant(actorId, sessionTeam);
       });
@@ -213,6 +224,50 @@ export function createCombatTool(_deps: CombatToolDependencies = DEFAULT_COMBAT_
         session.removeCombatant(actorId);
       });
     }, [removeOptionalActor, session]);
+
+    // Helper function to create TeamActor array for the new TeamManager interface
+    const createTeamActors = useCallback((team: Team): TeamActor[] => {
+      const allPossibleActors: ActorURN[] = team === Team.ALPHA
+        ? [ALICE_ID, 'flux:actor:charlie' as ActorURN, 'flux:actor:eric' as ActorURN]
+        : [BOB_ID, 'flux:actor:dave' as ActorURN, 'flux:actor:franz' as ActorURN];
+
+      return allPossibleActors.map(actorId => ({
+        id: actorId,
+        name: getNameFromActorId(actorId),
+        isActive: actorId in scenarioData.actors,
+        isDisabled: actorId === ALICE_ID || actorId === BOB_ID // Alice and Bob cannot be toggled
+      }));
+    }, [scenarioData.actors]);
+
+    // Handler for the new TeamManager interface
+    const handleToggleActor = useCallback((actorId: ActorURN) => {
+      const isCurrentlyActive = actorId in scenarioData.actors;
+
+      if (isCurrentlyActive) {
+        // Remove actor (find the name from the actorId)
+        const name = getOptionalActorNameFromId(actorId);
+        if (name) {
+          handleRemoveOptionalActor(name);
+        }
+      } else {
+        // Add actor (find the name from the actorId)
+        const name = getOptionalActorNameFromId(actorId);
+        if (name) {
+          handleAddOptionalActor(name);
+        }
+      }
+    }, [scenarioData.actors, handleAddOptionalActor, handleRemoveOptionalActor]);
+
+    // Helper to convert ActorURN to OptionalActorName
+    const getOptionalActorNameFromId = (actorId: ActorURN): OptionalActorName | null => {
+      switch (actorId) {
+        case 'flux:actor:charlie': return 'charlie';
+        case 'flux:actor:eric': return 'eric';
+        case 'flux:actor:dave': return 'dave';
+        case 'flux:actor:franz': return 'franz';
+        default: return null;
+      }
+    };
 
     if (!actors.isInitialized) {
       return (
@@ -252,18 +307,17 @@ export function createCombatTool(_deps: CombatToolDependencies = DEFAULT_COMBAT_
               className="team-header"
               style={{ '--team-color': 'var(--color-info)' } as React.CSSProperties}
             >
-              <h2 className="team-title">Team Alpha</h2>
-              <div className="team-count">{getTeamActors('ALPHA').length} fighters</div>
+              <h2 className="team-title">Team A</h2>
+              <div className="team-count">{getTeamActors(Team.ALPHA).length} fighters</div>
 
               {/* Team Management for Alpha - Only show during setup phase */}
               {session.isInSetupPhase && (
                 <div className="team-management">
                   <TeamManager
-                    team="ALPHA"
-                    teamActors={getTeamActors('ALPHA')}
-                    availableOptionalActors={getAvailableOptionalActors('ALPHA')}
-                    onAddActor={handleAddOptionalActor}
-                    onRemoveActor={handleRemoveOptionalActor}
+                    teamName="Team Alpha"
+                    teamColor="var(--color-info)"
+                    actors={createTeamActors(Team.ALPHA)}
+                    onToggleActor={handleToggleActor}
                     isSetupPhase={session.isInSetupPhase}
                   />
                 </div>
@@ -272,7 +326,7 @@ export function createCombatTool(_deps: CombatToolDependencies = DEFAULT_COMBAT_
 
             {/* Team Alpha Combatants */}
             <div>
-              {getTeamActors('ALPHA').map(renderCombatantCard)}
+              {getTeamActors(Team.ALPHA).map(renderCombatantCard)}
             </div>
           </div>
 
@@ -325,6 +379,24 @@ export function createCombatTool(_deps: CombatToolDependencies = DEFAULT_COMBAT_
                 </div>
               ) : (
                 <div className="combat-interface">
+                  {/* Battlefield Visualization Display */}
+                  <div className="battlefield-display">
+                    {session.session?.data ? (
+                      <BattlefieldVisualization
+                        battlefield={session.session.data.battlefield}
+                        combatants={session.session.data.combatants}
+                        actors={actors.actors}
+                        currentActor={session.currentActorId || undefined}
+                        subjectTeam={Team.ALPHA}
+                        className="combat-battlefield-visualization"
+                      />
+                    ) : (
+                      <div className="battlefield-loading">
+                        Initializing battlefield...
+                      </div>
+                    )}
+                  </div>
+
                   {/* Enhanced Combat Terminal with integrated input */}
                   <div
                     className="combat-terminal-container"
@@ -355,18 +427,17 @@ export function createCombatTool(_deps: CombatToolDependencies = DEFAULT_COMBAT_
               className="team-header"
               style={{ '--team-color': 'var(--color-warning)' } as React.CSSProperties}
             >
-              <h2 className="team-title">Team Bravo</h2>
-              <div className="team-count">{getTeamActors('BRAVO').length} fighters</div>
+              <h2 className="team-title">Team B</h2>
+              <div className="team-count">{getTeamActors(Team.BRAVO).length} fighters</div>
 
               {/* Team Management for Bravo - Only show during setup phase */}
               {session.isInSetupPhase && (
                 <div className="team-management">
                   <TeamManager
-                    team="BRAVO"
-                    teamActors={getTeamActors('BRAVO')}
-                    availableOptionalActors={getAvailableOptionalActors('BRAVO')}
-                    onAddActor={handleAddOptionalActor}
-                    onRemoveActor={handleRemoveOptionalActor}
+                    teamName="Team Bravo"
+                    teamColor="var(--color-warning)"
+                    actors={createTeamActors(Team.BRAVO)}
+                    onToggleActor={handleToggleActor}
                     isSetupPhase={session.isInSetupPhase}
                   />
                 </div>
@@ -375,7 +446,7 @@ export function createCombatTool(_deps: CombatToolDependencies = DEFAULT_COMBAT_
 
             {/* Team Bravo Combatants */}
             <div>
-              {getTeamActors('BRAVO').map(renderCombatantCard)}
+              {getTeamActors(Team.BRAVO).map(renderCombatantCard)}
             </div>
 
             {/* Combat Status Panel - moved to bottom of right column */}

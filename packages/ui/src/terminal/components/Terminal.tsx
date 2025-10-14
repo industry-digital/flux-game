@@ -1,4 +1,4 @@
-import React, { useRef, useEffect, useCallback } from 'react';
+import React, { useEffect } from 'react';
 import type { Virtualizer } from '@tanstack/react-virtual';
 import type { TerminalEntry } from '../../types/terminal';
 import type { TerminalHook } from '~/types/terminal';
@@ -28,71 +28,61 @@ export function Terminal({
   virtualizer,
   entries,
   onTerminalReady,
-  onScroll,
 }: TerminalProps) {
-  const containerRef = useRef<HTMLDivElement>(null);
 
-  // Handle scroll events
-  const handleScroll = useCallback((event: React.UIEvent<HTMLDivElement>) => {
-    const target = event.target as HTMLDivElement;
-    onScroll?.({
-      scrollTop: target.scrollTop,
-      scrollHeight: target.scrollHeight,
-      clientHeight: target.clientHeight,
-    });
-  }, [onScroll]);
+  const virtualItems = virtualizer.getVirtualItems();
 
   // Entry styling helpers
-  const getEntryClasses = (entry: TerminalEntry) => [
-    'terminal__entry',
-    `terminal__entry--${entry.type}`,
-    {
-      'terminal__entry--with-timestamp': terminal.terminalClasses.some(cls =>
-        typeof cls === 'object' && cls['terminal--show-timestamps']
-      ),
-    }
-  ].filter(Boolean);
+  const getEntryClasses = (entry: TerminalEntry): string[] => {
+    const classes = [
+      'terminal__entry',
+      `terminal__entry--${entry.type}`,
+    ];
 
-  // No setup needed - TanStack Virtual handles this automatically
+    // Add conditional classes
+    if (terminal.terminalClasses.some(cls =>
+      typeof cls === 'object' && cls['terminal--show-timestamps']
+    )) {
+      classes.push('terminal__entry--with-timestamp');
+    }
+
+    return classes;
+  };
+
+  // TanStack Virtual handles scroll element connection automatically
 
   useEffect(() => {
     onTerminalReady?.(terminal);
   }, [terminal, onTerminalReady]);
 
-  const virtualItems = virtualizer.getVirtualItems();
-
   return (
     <div
-      ref={containerRef}
       className={terminal.terminalClasses.join(' ')}
       style={{
-        height: '100%',
+        height: virtualizer.getTotalSize(),
         width: '100%',
-        overflow: 'auto',
+        position: 'relative',
       }}
-      onScroll={handleScroll}
     >
-      <div
-        style={{
-          height: virtualizer.getTotalSize(),
-          width: '100%',
-          position: 'relative',
-        }}
-      >
-        {virtualItems.map((virtualItem: any) => {
+        {virtualItems.map((virtualItem) => {
           const entry = entries[virtualItem.index];
           if (!entry) return null;
 
           return (
             <div
-              key={entry.id}
+              key={virtualItem.key}
+              data-index={virtualItem.index}
+              ref={(el) => {
+                if (el) {
+                  virtualizer.measureElement(el);
+                }
+              }}
               className={getEntryClasses(entry).join(' ')}
               style={{
                 position: 'absolute',
                 top: 0,
                 left: 0,
                 width: '100%',
-                height: `${virtualItem.size}px`,
                 transform: `translateY(${virtualItem.start}px)`,
               }}
             >
@@ -136,6 +126,5 @@ export function Terminal({
           );
         })}
       </div>
-    </div>
   );
 }

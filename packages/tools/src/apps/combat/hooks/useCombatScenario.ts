@@ -1,9 +1,9 @@
 import { useCallback } from 'react';
 import { useStorage } from '@flux/ui';
 import type { ActorURN, WeaponSchemaURN, SkillURN } from '@flux/core';
+import { Team } from '@flux/core';
 import { BASE_HP, HP_PER_RES_BONUS, DEFAULT_BASE_AP, calculateStatBonus } from '@flux/core';
 
-export type TeamName = 'ALPHA' | 'BRAVO';
 export type OptionalActorName = 'charlie' | 'eric' | 'dave' | 'franz';
 
 export interface ActorStatsInput {
@@ -28,7 +28,7 @@ export interface CombatScenarioActorData {
   aiControlled: boolean;
   weapon: WeaponSchemaURN;
   skills: Record<SkillURN, number>;
-  team: TeamName;
+  team: Team;
 }
 
 export interface CombatScenarioData {
@@ -44,13 +44,13 @@ export const DAVE_ID: ActorURN = 'flux:actor:dave';
 export const FRANZ_ID: ActorURN = 'flux:actor:franz';
 
 // Team assignments
-export const TEAM_ASSIGNMENTS: Record<ActorURN, TeamName> = {
-  [ALICE_ID]: 'ALPHA',
-  [BOB_ID]: 'BRAVO',
-  [CHARLIE_ID]: 'ALPHA',
-  [ERIC_ID]: 'ALPHA',
-  [DAVE_ID]: 'BRAVO',
-  [FRANZ_ID]: 'BRAVO',
+export const TEAM_ASSIGNMENTS: Record<ActorURN, Team> = {
+  [ALICE_ID]: Team.ALPHA,
+  [BOB_ID]: Team.BRAVO,
+  [CHARLIE_ID]: Team.ALPHA,
+  [ERIC_ID]: Team.ALPHA,
+  [DAVE_ID]: Team.BRAVO,
+  [FRANZ_ID]: Team.BRAVO,
 };
 
 // Default combat skills for new actors
@@ -84,15 +84,15 @@ export const getNameFromActorId = (actorId: ActorURN): string => {
   }
 };
 
-export const getTeamActors = (scenarioData: CombatScenarioData, team: TeamName): ActorURN[] => {
+export const getTeamActors = (scenarioData: CombatScenarioData, team: Team): ActorURN[] => {
   return Object.entries(scenarioData.actors)
     .filter(([, data]) => data.team === team)
     .map(([actorId]) => actorId as ActorURN);
 };
 
-export const getAvailableOptionalActors = (scenarioData: CombatScenarioData, team: TeamName): OptionalActorName[] => {
+export const getAvailableOptionalActors = (scenarioData: CombatScenarioData, team: Team): OptionalActorName[] => {
   const teamActors = getTeamActors(scenarioData, team);
-  const optionalActors: OptionalActorName[] = team === 'ALPHA' ? ['charlie', 'eric'] : ['dave', 'franz'];
+  const optionalActors: OptionalActorName[] = team === Team.ALPHA ? ['charlie', 'eric'] : ['dave', 'franz'];
 
   return optionalActors.filter(name => {
     const actorId = getActorIdFromName(name);
@@ -106,11 +106,11 @@ export interface UseCombatScenarioResult {
   updateActorWeapon: (actorId: ActorURN, weaponUrn: WeaponSchemaURN) => void;
   updateActorSkill: (actorId: ActorURN, skillUrn: SkillURN, rank: number) => void;
   updateActorAiControl: (actorId: ActorURN, enabled: boolean) => void;
-  addOptionalActor: (name: OptionalActorName, onSessionAdd?: (actorId: ActorURN, team: TeamName) => void) => void;
+  addOptionalActor: (name: OptionalActorName, onSessionAdd?: (actorId: ActorURN, team: Team) => void) => void;
   removeOptionalActor: (name: OptionalActorName, onSessionRemove?: (actorId: ActorURN) => void) => void;
   resetScenario: () => void;
-  getTeamActors: (team: TeamName) => ActorURN[];
-  getAvailableOptionalActors: (team: TeamName) => OptionalActorName[];
+  getTeamActors: (team: Team) => ActorURN[];
+  getAvailableOptionalActors: (team: Team) => OptionalActorName[];
   calculateDerivedStats: (actorId: ActorURN) => DerivedStats;
   getActorStats: (actorId: ActorURN) => ActorStatsInput;
 }
@@ -196,7 +196,7 @@ export function useCombatScenario(
     }));
   }, [setScenarioData]);
 
-  const addOptionalActor = useCallback((name: OptionalActorName, onSessionAdd?: (actorId: ActorURN, team: TeamName) => void) => {
+  const addOptionalActor = useCallback((name: OptionalActorName, onSessionAdd?: (actorId: ActorURN, team: Team) => void) => {
     const actorId = getActorIdFromName(name);
     const team = TEAM_ASSIGNMENTS[actorId];
 
@@ -244,10 +244,10 @@ export function useCombatScenario(
     setScenarioData(defaultScenario);
   }, [setScenarioData, defaultScenario]);
 
-  const getTeamActorsCallback = useCallback((team: TeamName) =>
+  const getTeamActorsCallback = useCallback((team: Team) =>
     getTeamActors(scenarioData, team), [scenarioData]);
 
-  const getAvailableOptionalActorsCallback = useCallback((team: TeamName) =>
+  const getAvailableOptionalActorsCallback = useCallback((team: Team) =>
     getAvailableOptionalActors(scenarioData, team), [scenarioData]);
 
   const calculateDerivedStats = useCallback((actorId: ActorURN): DerivedStats => {

@@ -88,3 +88,21 @@ export type ActorGlyph = {
   /** Whether this actor is on the subject team */
   isSubjectTeam: boolean;
 };
+
+/**
+ * Props for the BattlefieldVisualization component
+ */
+export type BattlefieldVisualizationProps = {
+  /** The battlefield configuration */
+  battlefield: any; // Will be properly typed when imported from @flux/core
+  /** Map of combatants by ActorURN */
+  combatants: Map<string, any>; // Will be properly typed when imported from @flux/core
+  /** Actor data for names and details */
+  actors: Record<string, { name: string }>;
+  /** Currently active combatant ID */
+  currentActor?: string;
+  /** Player's team for color perspective */
+  subjectTeam: string;
+  /** Additional CSS classes */
+  className?: string;
+};

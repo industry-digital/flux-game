@@ -75,7 +75,6 @@ export function useCombatSession(
     // Get all declared events and look for turn events
     const allEvents = context.getDeclaredEvents();
 
-    console.log('🔄 processNewEvents called - total events:', allEvents.length, 'lastProcessedEventId:', lastProcessedEventId);
 
     if (allEvents.length === 0) return;
 
@@ -84,12 +83,8 @@ export function useCombatSession(
 
     // Skip if we've already processed this event
     if (latestEvent.id === lastProcessedEventId) {
-      console.log('🔄 No new events to process');
       return;
     }
-
-    console.log('🔄 Processing new events, latest ID:', latestEvent.id);
-    console.log('🔄 All event types:', allEvents.map(e => e.type));
 
     // Look for turn start events for this session that we haven't processed yet
     const newTurnEvents = allEvents.filter(event =>
@@ -97,15 +92,12 @@ export function useCombatSession(
       event.id !== lastProcessedEventId
     ) as CombatTurnDidStart[];
 
-    console.log('🔄 Found turn events:', newTurnEvents.length);
-
     if (newTurnEvents.length > 0) {
       // Use the most recent turn started event
       const latestTurnEvent = newTurnEvents[newTurnEvents.length - 1];
       const newActorId = latestTurnEvent.actor;
 
         if (newActorId && newActorId !== currentActorId) {
-          console.log(`🔄 Turn changed to: ${newActorId}`);
           setCurrentActorId(newActorId);
         }
     }
