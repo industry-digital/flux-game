@@ -158,6 +158,7 @@ export type Intent = {
   ts: number;
   actor: ActorURN;
   location: PlaceURN;
+  session?: SessionURN;
   /**
    * Raw string input from the user
    */

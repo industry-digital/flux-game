@@ -1,12 +1,13 @@
 import { BASE62_CHARSET, uniqid } from '~/lib/random';
 import { Intent } from '~/types/handler';
-import { ActorURN, PlaceURN } from '~/types/taxonomy';
+import { ActorURN, PlaceURN, SessionURN } from '~/types/taxonomy';
 
 export type IntentInput = {
   id: string;
   ts?: number;
   actor: ActorURN;
   location: PlaceURN;
+  session?: SessionURN;
   text: string;
 };
 
@@ -22,20 +23,19 @@ export const DEFAULT_INTENT_FACTORY_DEPENDENCIES: IntentFactoryDependencies = {
 
 export const createIntent = (
   input: IntentInput,
-  {
-    timestamp,
-    uniqid,
-  }: IntentFactoryDependencies = DEFAULT_INTENT_FACTORY_DEPENDENCIES,
+  deps: IntentFactoryDependencies = DEFAULT_INTENT_FACTORY_DEPENDENCIES,
 ): Intent => {
   const normalized = input.text.toLowerCase().trim();
-  const tokens = normalized.split(/\s+/).filter(token => token.length >= 2);
-  const verb = tokens[0];
+  const allTokens = normalized.split(/\s+/);
+  const filteredTokens = allTokens.filter(token => token.length >= 2);
+  const [verb, ...tokens] = filteredTokens;
 
   return {
-    id: input.id ?? uniqid(),
-    ts: timestamp(),
+    id: input.id ?? deps.uniqid(),
+    ts: input.ts ?? deps.timestamp(),
     actor: input.actor,
     location: input.location,
+    session: input.session,
     text: input.text,
     normalized,
     verb,

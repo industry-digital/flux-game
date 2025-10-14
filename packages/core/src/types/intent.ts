@@ -161,7 +161,7 @@ export type ActorCommand<
   & Omit<CommandInput<T, A>, 'id' | 'ts' | 'actor'>
   & {
     /**
-     * Guaranteed unique identifier
+     * Guaranteed unique identifier; inherited from intent
      */
     id: string;
 

@@ -16,10 +16,11 @@ export const doneIntentParser: IntentParser<DoneCommand> = (
   }
 
   return createActorCommand({
-    trace: intent.id,
+    id: intent.id,
+    type: CommandType.DONE,
     actor: intent.actor,
     location: intent.location,
-    type: CommandType.DONE,
+    session: intent.session,
     args: DEFAULT_DONE_ARGS,
   });
 };

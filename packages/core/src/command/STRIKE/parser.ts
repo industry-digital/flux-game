@@ -33,9 +33,10 @@ export const strikeIntentParser: IntentParser<StrikeCommand> = (
   }
 
   return createActorCommand({
-    trace: intent.id,
+    id: intent.id,
     actor: intent.actor,
     location: intent.location,
+    session: intent.session,
     type: CommandType.STRIKE,
     args: {
       target

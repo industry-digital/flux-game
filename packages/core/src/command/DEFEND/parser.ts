@@ -26,10 +26,11 @@ export const defendIntentParser: IntentParser<DefendCommand> = (
   }
 
   return createActorCommand({
-    trace: intent.id,
+    id: intent.id,
+    type: CommandType.DEFEND,
     actor: intent.actor,
     location: intent.location,
-    type: CommandType.DEFEND,
+    session: intent.session,
     args: {
       autoDone: false // User-initiated defend, not auto-generated
     },

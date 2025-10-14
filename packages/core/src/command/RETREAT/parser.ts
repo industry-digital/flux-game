@@ -1,7 +1,7 @@
 import {
-    Intent,
-    IntentParser,
-    IntentParserContext,
+  Intent,
+  IntentParser,
+  IntentParserContext,
 } from '~/types/handler';
 import { CommandType } from '~/types/intent';
 import { createActorCommand } from '~/lib/intent';
@@ -35,7 +35,7 @@ export const retreatIntentParser: IntentParser<RetreatCommand> = (
   }
 
   return createActorCommand({
-    trace: intent.id,
+    id: intent.id,
     actor: intent.actor,
     location: intent.location,
     type: CommandType.RETREAT,

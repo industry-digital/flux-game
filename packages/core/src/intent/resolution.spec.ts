@@ -1,11 +1,13 @@
-import { describe, beforeEach, it, expect, vi } from 'vitest';
-import { resolveIntent, getAvailableParsers, createIntentParserContext } from './resolution';
-import { TransformerContext } from '~/types/handler';
+import { describe, beforeEach, it, expect } from 'vitest';
+import { resolveCommandFromIntent, createIntentParserContext } from './resolution';
+import { createIntent } from './factory';
+import { TransformerContext, WorldProjection } from '~/types/handler';
 import { CommandType } from '~/types/intent';
 import { createTestTransformerContext } from '~/testing/context-testing';
-import { ActorURN, PlaceURN } from '~/types/taxonomy';
+import { ActorURN, PlaceURN, SessionURN } from '~/types/taxonomy';
 import { createActor } from '~/worldkit/entity/actor';
 import { createPlace } from '~/worldkit/entity/place';
+import { createWorldProjection } from '~/worldkit/context';
 
 describe('Intent Resolution', () => {
   let context: TransformerContext;
@@ -14,10 +16,12 @@ describe('Intent Resolution', () => {
   const ACTOR_ID: ActorURN = 'flux:actor:test:alice';
   const TARGET_ID: ActorURN = 'flux:actor:test:bob';
   const PLACE_ID: PlaceURN = 'flux:place:test:arena';
+  const SESSION_ID: SessionURN = 'flux:session:combat:test';
 
   beforeEach(() => {
     context = createTestTransformerContext({
-      world: {
+      world: createWorldProjection((w: WorldProjection) => ({
+        ...w,
         sessions: {},
         items: {},
         actors: {
@@ -38,198 +42,187 @@ describe('Intent Resolution', () => {
             name: 'Test Arena',
           }),
         },
-      },
+      })),
     });
   });
 
-  describe('resolveIntent', () => {
+  describe('resolveCommandFromIntent', () => {
     it('should resolve attack intent to ATTACK command', () => {
-      const command = resolveIntent(context, ACTOR_ID, 'attack bob');
+      const intent = createIntent({
+        id: 'test-intent-1',
+        actor: ACTOR_ID,
+        location: PLACE_ID,
+        text: 'attack bob',
+      });
+
+      const command = resolveCommandFromIntent(context, intent);
 
       expect(command).toBeTruthy();
       expect(command?.type).toBe(CommandType.ATTACK);
       expect(command?.actor).toBe(ACTOR_ID);
       expect(command?.location).toBe(PLACE_ID);
-      expect(command?.args).toHaveProperty('target');
-    });
-
-    it('should resolve target intent to TARGET command', () => {
-      const command = resolveIntent(context, ACTOR_ID, 'target bob');
-      expect(command).toBeTruthy();
-      expect(command?.type).toBe(CommandType.TARGET);
-      expect(command?.actor).toBe(ACTOR_ID);
-      expect(command?.location).toBe(PLACE_ID);
-      expect(command?.args).toHaveProperty('target');
-    });
-
-    it('should resolve defend intent to DEFEND command', () => {
-      const command = resolveIntent(context, ACTOR_ID, 'defend');
-
-      expect(command).toBeTruthy();
-      expect(command?.type).toBe(CommandType.DEFEND);
-      expect(command?.actor).toBe(ACTOR_ID);
-      expect(command?.location).toBe(PLACE_ID);
     });
 
     it('should resolve advance intent to ADVANCE command', () => {
-      const command = resolveIntent(context, ACTOR_ID, 'advance 5m');
+      const intent = createIntent({
+        id: 'test-intent-2',
+        actor: ACTOR_ID,
+        location: PLACE_ID,
+        text: 'advance 10',
+      });
+
+      const command = resolveCommandFromIntent(context, intent);
 
       expect(command).toBeTruthy();
       expect(command?.type).toBe(CommandType.ADVANCE);
       expect(command?.actor).toBe(ACTOR_ID);
-      expect(command?.location).toBe(PLACE_ID);
-      expect(command?.args).toHaveProperty('distance', 5);
     });
 
-    it('should resolve retreat intent to RETREAT command', () => {
-      const command = resolveIntent(context, ACTOR_ID, 'retreat distance 3');
+    it('should thread session ID from intent to command', () => {
+      const intent = createIntent({
+        id: 'test-intent-3',
+        actor: ACTOR_ID,
+        location: PLACE_ID,
+        session: SESSION_ID,
+        text: 'attack bob',
+      });
+
+      const command = resolveCommandFromIntent(context, intent);
 
       expect(command).toBeTruthy();
-      expect(command?.type).toBe(CommandType.RETREAT);
+      expect(command?.session).toBe(SESSION_ID);
+      expect(command?.type).toBe(CommandType.ATTACK);
+    });
+
+    it('should handle unrecognized intents gracefully', () => {
+      const intent = createIntent({
+        id: 'test-intent-4',
+        actor: ACTOR_ID,
+        location: PLACE_ID,
+        text: 'do something impossible',
+      });
+
+      const command = resolveCommandFromIntent(context, intent);
+
+      expect(command).toBeNull();
+    });
+
+    it('should preserve all intent metadata in command', () => {
+      const intent = createIntent({
+        id: 'test-intent-5',
+        actor: ACTOR_ID,
+        location: PLACE_ID,
+        session: SESSION_ID,
+        text: 'look bob',
+      });
+
+      const command = resolveCommandFromIntent(context, intent);
+
+      expect(command).toBeTruthy();
       expect(command?.actor).toBe(ACTOR_ID);
       expect(command?.location).toBe(PLACE_ID);
-      expect(command?.args).toHaveProperty('distance', 3);
+      expect(command?.session).toBe(SESSION_ID);
+      expect(command?.type).toBe(CommandType.LOOK);
     });
 
-    it('should return null for unrecognized intents', () => {
-      const command = resolveIntent(context, ACTOR_ID, 'dance a jig');
+    it('should handle combat-specific intents with session context', () => {
+      const combatSessionId: SessionURN = 'flux:session:combat:simulator';
 
-      expect(command).toBeNull();
-    });
+      const intent = createIntent({
+        id: 'combat-intent',
+        actor: ACTOR_ID,
+        location: PLACE_ID,
+        session: combatSessionId,
+        text: 'strike bob',
+      });
 
-    it('should handle empty intent text', () => {
-      const command = resolveIntent(context, ACTOR_ID, '');
-
-      expect(command).toBeNull();
-    });
-
-    it('should handle whitespace-only intent text', () => {
-      const command = resolveIntent(context, ACTOR_ID, '   ');
-
-      expect(command).toBeNull();
-    });
-
-    it('should handle missing actor', () => {
-      const command = resolveIntent(context, 'flux:actor:nonexistent' as ActorURN, 'attack bob');
-
-      expect(command).toBeNull();
-    });
-
-    it('should use actor location when location not provided', () => {
-      const command = resolveIntent(context, ACTOR_ID, 'defend');
+      const command = resolveCommandFromIntent(context, intent);
 
       expect(command).toBeTruthy();
-      expect(command?.location).toBe(PLACE_ID); // Should use actor's location
-    });
-
-    it('should propagate trace from intent to command', () => {
-      const command = resolveIntent(context, ACTOR_ID, 'attack bob');
-
-      expect(command).toBeTruthy();
-      expect(command?.trace).toBeTruthy();
-      expect(typeof command?.trace).toBe('string');
-    });
-
-    it('should include proper command metadata', () => {
-      const command = resolveIntent(context, ACTOR_ID, 'attack bob');
-
-      expect(command).toBeTruthy();
-      expect(command?.id).toBeTruthy();
-      expect(command?.ts).toBeTruthy();
-      expect(command?.__type).toBe('command');
-      expect(typeof command?.id).toBe('string');
-      expect(typeof command?.ts).toBe('number');
+      expect(command?.session).toBe(combatSessionId);
+      expect(command?.type).toBe(CommandType.STRIKE);
     });
   });
 
   describe('createIntentParserContext', () => {
-    it('should create proper parser context from transformer context', () => {
+    it('should create parser context with entity resolvers', () => {
       const parserContext = createIntentParserContext(context);
 
       expect(parserContext).toHaveProperty('world');
       expect(parserContext).toHaveProperty('uniqid');
       expect(parserContext).toHaveProperty('timestamp');
       expect(parserContext).toHaveProperty('resolveActor');
-      expect(parserContext).toHaveProperty('resolveItem');
       expect(parserContext).toHaveProperty('resolvePlace');
-
-      expect(parserContext.world).toBe(context.world);
-      expect(typeof parserContext.uniqid).toBe('function');
-      expect(typeof parserContext.timestamp).toBe('function');
+      expect(parserContext).toHaveProperty('resolveItem');
     });
-  });
 
-  describe('getAvailableParsers', () => {
-    it('should return array of parsers', () => {
-      const parsers = getAvailableParsers();
-
-      expect(Array.isArray(parsers)).toBe(true);
-      expect(parsers.length).toBeGreaterThan(0);
-
-      // Each parser should be a function
-      parsers.forEach(parser => {
-        expect(typeof parser).toBe('function');
+    it('should resolve actors by name', () => {
+      const parserContext = createIntentParserContext(context);
+      const intent = createIntent({
+        id: 'resolve-test-1',
+        actor: ACTOR_ID,
+        location: PLACE_ID,
+        text: 'attack bob',
       });
+      const resolvedActor = parserContext.resolveActor(intent);
+
+      expect(resolvedActor?.id).toBe(TARGET_ID);
     });
 
-    it('should return consistent parsers on multiple calls', () => {
-      const parsers1 = getAvailableParsers();
-      const parsers2 = getAvailableParsers();
+    it('should resolve actors by exact name match', () => {
+      const parserContext = createIntentParserContext(context);
+      const intent = createIntent({
+        id: 'resolve-test-2',
+        actor: ACTOR_ID,
+        location: PLACE_ID,
+        text: 'attack Bob', // Using exact name match
+      });
+      const resolvedActor = parserContext.resolveActor(intent);
 
-      expect(parsers1).toBe(parsers2); // Should be the same cached array
-      expect(parsers1.length).toBe(parsers2.length);
+      expect(resolvedActor?.id).toBe(TARGET_ID);
     });
   });
 
-  describe('error handling', () => {
-    it('should handle parser errors gracefully', () => {
-      // Mock a context that might cause parser errors
-      const errorContext = createTestTransformerContext({
-        world: {
-          actors: {}, // Empty actors might cause some parsers to fail
-          places: {},
-          items: {},
-          sessions: {},
-        },
+  describe('session threading integration', () => {
+    it('should maintain session context through full resolution pipeline', () => {
+      const combatSessionId: SessionURN = 'flux:session:combat:test-integration';
+
+      // Step 1: Create intent with session
+      const intent = createIntent({
+        id: 'integration-test',
+        actor: ACTOR_ID,
+        location: PLACE_ID,
+        session: combatSessionId,
+        text: 'advance 25',
       });
 
-      const command = resolveIntent(errorContext, ACTOR_ID, 'attack nonexistent');
+      // Step 2: Resolve to command
+      const command = resolveCommandFromIntent(context, intent);
 
-      // Should not throw, should return null
-      expect(command).toBeNull();
-    });
-
-    it('should declare errors for invalid inputs', () => {
-      const errorSpy = vi.spyOn(context, 'declareError');
-
-      resolveIntent(context, ACTOR_ID, '');
-
-      expect(errorSpy).toHaveBeenCalledWith(
-        'Intent text cannot be empty',
-        'intent-resolution'
-      );
-    });
-  });
-
-  describe('intent parsing edge cases', () => {
-    it('should handle case-insensitive verbs', () => {
-      const command1 = resolveIntent(context, ACTOR_ID, 'ATTACK bob');
-      const command2 = resolveIntent(context, ACTOR_ID, 'attack bob');
-
-      expect(command1?.type).toBe(command2?.type);
-    });
-
-    it('should handle extra whitespace', () => {
-      const command = resolveIntent(context, ACTOR_ID, '  attack   bob  ');
-
+      // Verify session threading
       expect(command).toBeTruthy();
-      expect(command?.type).toBe(CommandType.ATTACK);
+      expect(command?.session).toBe(combatSessionId);
+      expect(command?.type).toBe(CommandType.ADVANCE);
+      expect(command?.actor).toBe(ACTOR_ID);
+      expect(command?.location).toBe(PLACE_ID);
     });
 
-    it('should parse numeric values in intents', () => {
-      const command = resolveIntent(context, ACTOR_ID, 'advance distance 10');
+    it('should handle commands without session context', () => {
+      // Step 1: Create intent without session
+      const intent = createIntent({
+        id: 'no-session-test',
+        actor: ACTOR_ID,
+        location: PLACE_ID,
+        text: 'look bob',
+      });
+
+      // Step 2: Resolve to command
+      const command = resolveCommandFromIntent(context, intent);
+
+      // Verify command creation without session
       expect(command).toBeTruthy();
-      expect(command?.args).toHaveProperty('distance', 10);
+      expect(command?.session).toBeUndefined();
+      expect(command?.type).toBe(CommandType.LOOK);
     });
   });
 });

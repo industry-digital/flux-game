@@ -26,10 +26,11 @@ export const cleaveIntentParser: IntentParser<CleaveCommand> = (
   }
 
   return createActorCommand({
-    trace: intent.id,
+    id: intent.id,
+    type: CommandType.CLEAVE,
     actor: intent.actor,
     location: intent.location,
-    type: CommandType.CLEAVE,
+    session: intent.session,
     args: NO_ARGS,
   });
 };

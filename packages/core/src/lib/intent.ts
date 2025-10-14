@@ -40,10 +40,10 @@ export const createActorCommand = <
     id: input.id || deps.uniqid(),
     actor: input.actor,
     location: input.location,
+    session: input.session,
     type: input.type,
     ts: input.ts || deps.timestamp(),
     args: input.args as A,
-    trace: input.trace,
   };
   return transform(actorDefaults) as ActorCommand<T, A>;
 };

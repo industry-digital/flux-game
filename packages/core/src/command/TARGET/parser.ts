@@ -31,7 +31,7 @@ export const targetIntentParser: IntentParser<TargetCommand> = (
   }
 
   return createActorCommand({
-    trace: intent.id,
+    id: intent.id,
     actor: intent.actor,
     location: intent.location,
     type: CommandType.TARGET,

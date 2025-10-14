@@ -31,10 +31,11 @@ export const attackIntentParser: IntentParser<AttackCommand> = (
   }
 
   return createActorCommand({
-    trace: intent.id,
+    id: intent.id,
+    type: CommandType.ATTACK,
     actor: intent.actor,
     location: intent.location,
-    type: CommandType.ATTACK,
+    session: intent.session,
     args: {
       target: target.id
     },

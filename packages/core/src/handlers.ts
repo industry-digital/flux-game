@@ -23,6 +23,7 @@ import { MUTATE_WEATHER } from '~/command/MUTATE_WEATHER';
 import { RETREAT } from '~/command/RETREAT';
 import { STRIKE } from '~/command/STRIKE';
 import { TARGET } from '~/command/TARGET';
+import { USE_WORKBENCH } from '~/command/USE_WORKBENCH';
 
 /**
  * The Flux World Server literally spreads this array into the Transformation stage.
@@ -47,6 +48,7 @@ export const PURE_GAME_LOGIC_HANDLERS: PureHandlerImplementation<TransformerCont
     RETREAT,
     STRIKE,
     TARGET,
+    USE_WORKBENCH,
   ],
   (Handler) => Handler.prototype.dependencies ?? [],
 );

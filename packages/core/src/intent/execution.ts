@@ -1,8 +1,7 @@
-import { PureHandlerInterface, TransformerContext } from '~/types/handler';
+import { Intent, PureHandlerInterface, TransformerContext } from '~/types/handler';
 import { Command } from '~/types/intent';
 import { PURE_GAME_LOGIC_HANDLERS } from '~/handlers';
-import { ActorURN } from '~/types/taxonomy';
-import { resolveIntent } from './resolution';
+import { resolveCommandFromIntent } from './resolution';
 
 /**
  * Cached handlers extracted from PURE_GAME_LOGIC_HANDLERS
@@ -109,42 +108,35 @@ export function executeCommand(
 
 
 export type IntentExecutionDependencies = {
-  resolveIntent: typeof resolveIntent;
+  resolveCommandFromIntent: typeof resolveCommandFromIntent;
 };
 
 const DEFAULT_INTENT_EXECUTION_DEPENDENCIES: IntentExecutionDependencies = {
-  resolveIntent,
+  resolveCommandFromIntent,
 };
 
 /**
- * Execute a raw text intent directly (combines resolution + execution)
+ * Execute a well-formed Intent directly (combines resolution + execution)
  *
- * Convenience function that combines resolveIntent + executeCommand
+ * Convenience function that combines resolveCommandFromIntent + executeCommand
  * Useful for simple cases where you just want to execute an intent immediately
  *
  * @param context - Full transformer context
- * @param actorId - Actor performing the intent
- * @param intentText - Raw text intent (e.g., "attack bob")
+ * @param intent - Well-formed Intent object
  * @returns Updated transformer context with intent effects applied
  */
 export function executeIntent(
   context: TransformerContext,
-  actorId: ActorURN,
-  intentText: string,
+  intent: Intent,
   deps: IntentExecutionDependencies = DEFAULT_INTENT_EXECUTION_DEPENDENCIES,
 ): TransformerContext {
-  const actor = context.world.actors[actorId];
-  if (!actor) {
-    context.declareError(`Actor not found in world projection`);
-    return context;
-  }
 
   // Resolve intent to command
-  const command = deps.resolveIntent(context, actorId, intentText);
+  const command = deps.resolveCommandFromIntent(context, intent);
 
   if (!command) {
-    context.declareError(`No command found for intent: ${intentText}`);
-    // Error already declared in resolveIntent
+    context.declareError(`No command found for intent: ${intent.text}`);
+    // Error already declared in resolveCommandFromIntent
     return context;
   }
 

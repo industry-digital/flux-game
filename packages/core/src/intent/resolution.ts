@@ -1,8 +1,9 @@
 import { TransformerContext, IntentParser, Intent, PureHandlerInterface, IntentParserContext } from '~/types/handler';
 import { Command } from '~/types/intent';
-import { ActorURN, PlaceURN } from '~/types/taxonomy';
+import { ActorURN } from '~/types/taxonomy';
 import { PURE_GAME_LOGIC_HANDLERS } from '~/handlers';
 import { createEntityResolverApi } from './resolvers';
+import { createIntent } from './factory';
 
 const PARSERS: IntentParser[] = (() => {
   const parsers: IntentParser[] = [];
@@ -29,31 +30,6 @@ export const createIntentParserContext = (input: TransformerContext): IntentPars
   };
 };
 
-/**
- * Parse raw text intent into a structured Intent object
- */
-function parseRawIntent(
-  text: string,
-  actor: ActorURN,
-  location: PlaceURN,
-): Intent {
-  // Simple intent parsing - extract verb and create structured intent
-  const normalized = text.trim().toLowerCase();
-  const tokens = normalized.split(/\s+/);
-  const verb = tokens[0] || '';
-
-  return {
-    id: `intent-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-    ts: Date.now(),
-    text: text.trim(),
-    normalized,
-    verb,
-    tokens,
-    uniques: new Set(tokens),
-    actor,
-    location,
-  };
-}
 
 export type IntentResolutionDependencies = {
   parsers: IntentParser[];
@@ -64,25 +40,69 @@ export const DEFAULT_INTENT_RESOLUTION_DEPENDENCIES: IntentResolutionDependencie
 };
 
 /**
- * Resolve a raw text intent into a well-formed Command
+ * Resolve a well-formed Intent into a Command
  *
- * This is the main entry point for intent resolution. It:
- * 1. Parses raw text into structured Intent
- * 2. Tries each parser from PURE_GAME_LOGIC_HANDLERS until one succeeds
- * 3. Returns the first successfully parsed Command, or null if none match
+ * This is the core resolution logic extracted from the old resolveIntent function.
+ * Takes a pre-formed Intent object and attempts to parse it into a Command.
  *
  * @param context - Full transformer context with world state and utilities
- * @param intentText - Raw text intent from user (e.g., "attack bob")
+ * @param intent - Well-formed Intent object to resolve
+ * @returns Well-formed Command or null if intent couldn't be resolved
+ */
+export function resolveCommandFromIntent(
+  context: TransformerContext,
+  intent: Intent,
+  {
+    parsers,
+  }: IntentResolutionDependencies = DEFAULT_INTENT_RESOLUTION_DEPENDENCIES,
+): Command | null {
+  // Create parser context
+  const parserContext = createIntentParserContext(context);
+
+  // Try each parser until one succeeds
+  for (const parser of parsers) {
+    try {
+      const command = parser(parserContext, intent);
+      if (command) {
+        // Successfully parsed - return the command
+        return command;
+      }
+    } catch (error) {
+      // Parser threw an error - log it but continue trying other parsers
+      context.declareError(
+        `Parser error for intent "${intent.text}": ${error instanceof Error ? error.message : String(error)}`,
+        intent.id
+      );
+    }
+  }
+
+  // No parser could handle this intent
+  context.declareError(
+    `No handler found for intent: "${intent.text}"`,
+    intent.id
+  );
+
+  return null;
+}
+
+/**
+ * Resolve a raw text intent into a well-formed Command
+ *
+ * @deprecated Use the 3-step pipeline instead: createIntent → resolveCommandFromIntent → executeCommand
+ *
+ * Legacy function that combines text parsing and command resolution.
+ * New code should use the explicit 3-step pipeline for better session threading.
+ *
+ * @param context - Full transformer context with world state and utilities
  * @param actorId - Actor that is issuing the intent
+ * @param intentText - Raw text intent from user (e.g., "attack bob")
  * @returns Well-formed Command or null if intent couldn't be resolved
  */
 export function resolveIntent(
   context: TransformerContext,
   actorId: ActorURN,
   intentText: string,
-  {
-    parsers,
-  }: IntentResolutionDependencies = DEFAULT_INTENT_RESOLUTION_DEPENDENCIES,
+  deps: IntentResolutionDependencies = DEFAULT_INTENT_RESOLUTION_DEPENDENCIES,
 ): Command | null {
   const actor = context.world.actors[actorId];
   if (!actor) {
@@ -101,36 +121,16 @@ export function resolveIntent(
     return null;
   }
 
-  // Parse raw text into structured intent
-  const intent = parseRawIntent(intentText, actorId, actor.location);
+  // Parse raw text into structured intent (without session context)
+  const intent = createIntent({
+    id: `legacy-intent-${Date.now()}`,
+    actor: actorId,
+    location: actor.location,
+    text: intentText,
+  });
 
-  // Create parser context
-  const parserContext = createIntentParserContext(context);
-
-  // Try each parser until one succeeds
-  for (const parser of parsers) {
-    try {
-      const command = parser(parserContext, intent);
-      if (command) {
-        // Successfully parsed - return the command
-        return command;
-      }
-    } catch (error) {
-      // Parser threw an error - log it but continue trying other parsers
-      context.declareError(
-        `Parser error for intent "${intentText}": ${error instanceof Error ? error.message : String(error)}`,
-        intent.id
-      );
-    }
-  }
-
-  // No parser could handle this intent
-  context.declareError(
-    `No handler found for intent: "${intentText}"`,
-    intent.id
-  );
-
-  return null;
+  // Use the new resolution function
+  return resolveCommandFromIntent(context, intent, deps);
 }
 
 /**

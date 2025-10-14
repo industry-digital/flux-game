@@ -31,10 +31,11 @@ export const advanceIntentParser: IntentParser<AdvanceCommand> = (
   }
 
   return createActorCommand({
-    trace: intent.id,
+    id: intent.id,
+    type: CommandType.ADVANCE,
     actor: intent.actor,
     location: intent.location,
-    type: CommandType.ADVANCE,
+    session: intent.session,
     args: {
       type: 'distance',
       distance,
