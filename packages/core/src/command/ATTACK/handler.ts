@@ -21,7 +21,6 @@ export type AttackCommandArgs = {
 export type AttackCommand =ActorCommand<CommandType.ATTACK, AttackCommandArgs>;
 
 export const attackReducer: PureReducer<TransformerContext, AttackCommand> = (context, command) => {
-  console.log('🎯 ATTACK REDUCER CALLED:', { actor: command.actor, target: command.args.target, session: command.session });
   const { declareError } = context;
   const { actors } = context.world;
   const targetActor = actors[command.args.target!];
@@ -53,14 +52,14 @@ export const attackReducer: PureReducer<TransformerContext, AttackCommand> = (co
   // Use the inferred session ID, fallback to command.session if no running combat session found
   const sessionId = existingCombatSession?.id || command.session;
 
-  const { session, isNew, getCombatantApi: useCombatant, addCombatant } = createCombatSessionApi(context, actor.location, sessionId);
+  const { isNew, getCombatantApi, addCombatant } = createCombatSessionApi(context, actor.location, sessionId);
 
   if (isNew) {
     addCombatant(actor.id, Team.BRAVO);
     addCombatant(targetActor.id, Team.ALPHA);
   }
 
-  const combatantApi = useCombatant(actor.id);
+  const combatantApi = getCombatantApi(actor.id);
 
   // Use the combatant API's attack method which includes turn advancement
   // Note: The attack method already declares events internally, so we don't need to declare them again

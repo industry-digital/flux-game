@@ -57,10 +57,12 @@ const COMBATANT_API_DEPS: CombatantApiDependencies = {
   advanceTurn: (trace?: string) => [], //--> no-op
 };
 
+const DEFAULT_ACTION_DEPS: ActionDependencies = {};
+
 /**
  * Creates a combatant API factory with configurable action dependencies
  */
-export function createCombatantApiFactory(actionDeps: ActionDependencies = {}) {
+export function createCombatantApiFactory(actionDeps: ActionDependencies = DEFAULT_ACTION_DEPS) {
   return function createCombatantApi(
     context: TransformerContext,
     session: CombatSession,

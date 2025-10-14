@@ -1,15 +1,22 @@
-import { createActorCommandReducer } from '~/command/CREATE_ACTOR/handler';
-import { createPlaceCommandReducer } from '~/command/CREATE_PLACE/handler';
-import { materializeActorReducer } from '~/command/MATERIALIZE_ACTOR/handler';
-import { dematerializeActorReducer } from '~/command/DEMATERIALIZE_ACTOR/handler';
-import { mutateWeatherReducer } from '~/command/MUTATE_WEATHER/handler';
-import { mutateResourcesReducer } from '~/command/MUTATE_RESOURCES/handler';
-import { lookReducer } from '~/command/LOOK/handler';
+import { createActorCommandReducer } from '~/command/CREATE_ACTOR';
+import { createPlaceCommandReducer } from '~/command/CREATE_PLACE';
+import { materializeActorReducer } from '~/command/MATERIALIZE_ACTOR';
+import { dematerializeActorReducer } from '~/command/DEMATERIALIZE_ACTOR';
+import { mutateWeatherReducer } from '~/command/MUTATE_WEATHER';
+import { mutateResourcesReducer } from '~/command/MUTATE_RESOURCES';
+import { lookReducer } from '~/command/LOOK';
+import { actorMovementReducer } from '~/command/MOVE';
+import { strikeReducer } from '~/command/STRIKE';
+import { cleaveReducer } from '~/command/CLEAVE';
+import { doneReducer } from '~/command/DONE';
+import { attackReducer } from '~/command/ATTACK';
+import { advanceReducer } from '~/command/ADVANCE';
+import { defendReducer } from '~/command/DEFEND';
+import { retreatReducer } from '~/command/RETREAT';
+import { targetReducer } from '~/command/TARGET';
+import { useWorkbenchReducer } from '~/command/USE_WORKBENCH';
 import { PureReducer, TransformerContext } from '~/types/handler';
 import { CommandType, Command, CommandTypeGuard } from '~/types/intent';
-import { actorMovementReducer } from '~/command/MOVE/handler';
-import { strikeReducer } from '~/command/STRIKE/handler';
-import { cleaveReducer } from '~/command/CLEAVE/handler';
 
 /**
  * Helper function to create a command type guard for any command type (system or actor)
@@ -34,6 +41,13 @@ export const COMMAND_TRANSFORMERS: Partial<Record<CommandType, PureReducer<Trans
   [CommandType.MOVE]: actorMovementReducer,
   [CommandType.STRIKE]: strikeReducer,
   [CommandType.CLEAVE]: cleaveReducer,
+  [CommandType.DONE]: doneReducer,
+  [CommandType.ATTACK]: attackReducer,
+  [CommandType.ADVANCE]: advanceReducer,
+  [CommandType.DEFEND]: defendReducer,
+  [CommandType.RETREAT]: retreatReducer,
+  [CommandType.TARGET]: targetReducer,
+  [CommandType.USE_WORKBENCH]: useWorkbenchReducer,
 };
 
 /**
@@ -48,13 +62,20 @@ export const getTransformerForCommandType = (commandType: CommandType): PureRedu
 };
 
 // Re-export command handlers
-export { CREATE_ACTOR, CreateActorCommand as CreateActorCommand } from './CREATE_ACTOR/handler';
-export { CREATE_PLACE, CreatePlaceCommand as CreatePlaceCommand } from './CREATE_PLACE/handler';
-export { MATERIALIZE_ACTOR, MaterializeActorCommand } from './MATERIALIZE_ACTOR/handler';
-export { DEMATERIALIZE_ACTOR, DematerializeActorCommand } from './DEMATERIALIZE_ACTOR/handler';
-export { MUTATE_WEATHER, MutateWeatherCommand } from './MUTATE_WEATHER/handler';
-export { MUTATE_RESOURCES, MutateResourcesCommand } from './MUTATE_RESOURCES/handler';
-export { LOOK, LookCommand, LookCommandArgs } from './LOOK/handler';
-export { MOVE, MoveCommand, MoveCommandArgs } from './MOVE/handler';
-export { STRIKE, StrikeCommand, StrikeCommandArgs } from './STRIKE/handler';
-export { CLEAVE, CleaveCommand, CleaveCommandArgs } from './CLEAVE/handler';
+export { CREATE_ACTOR, CreateActorCommand as CreateActorCommand } from './CREATE_ACTOR';
+export { CREATE_PLACE, CreatePlaceCommand as CreatePlaceCommand } from './CREATE_PLACE';
+export { MATERIALIZE_ACTOR, MaterializeActorCommand } from './MATERIALIZE_ACTOR';
+export { DEMATERIALIZE_ACTOR, DematerializeActorCommand } from './DEMATERIALIZE_ACTOR';
+export { MUTATE_WEATHER, MutateWeatherCommand } from './MUTATE_WEATHER';
+export { MUTATE_RESOURCES, MutateResourcesCommand } from './MUTATE_RESOURCES';
+export { LOOK, LookCommand, LookCommandArgs } from './LOOK';
+export { MOVE, MoveCommand, MoveCommandArgs } from './MOVE';
+export { STRIKE, StrikeCommand, StrikeCommandArgs } from './STRIKE';
+export { CLEAVE, CleaveCommand, CleaveCommandArgs } from './CLEAVE';
+export { DONE, DoneCommand, DoneCommandArgs } from './DONE';
+export { ATTACK, AttackCommand, AttackCommandArgs } from './ATTACK';
+export { ADVANCE, AdvanceCommand, AdvanceCommandArgs } from './ADVANCE';
+export { DEFEND, DefendCommand, DefendCommandArgs } from './DEFEND';
+export { RETREAT, RetreatCommand, RetreatCommandArgs } from './RETREAT';
+export { TARGET, TargetCommand, TargetCommandArgs } from './TARGET';
+export { USE_WORKBENCH, UseWorkbenchCommand, UseWorkbenchCommandArgs } from './USE_WORKBENCH';
