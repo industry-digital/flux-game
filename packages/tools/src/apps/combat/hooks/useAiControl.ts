@@ -5,6 +5,7 @@ import {
   type TransformerContext,
   type CombatSession,
   type WorldEvent,
+  EventType,
 } from '@flux/core';
 import type { UseCombatStateResult } from '~/apps/combat/hooks/useCombatState';
 
@@ -83,7 +84,16 @@ export const createUseAiControl = (deps: AiControlDependencies = DEFAULT_AI_CONT
         );
 
         if (aiPlan.length === 0) {
-          console.warn(`No AI plan generated for ${actorId}`);
+          // Dump the errors from the context:
+          console.warn(`No AI plan generated for ${actorId}`, {
+            actorId,
+            hp: actor.hp.eff.cur,
+            ap: currentCombatant.ap.eff.cur,
+            team: currentCombatant.team,
+            combatantsCount: session.data.combatants.size,
+            combatantIds: Array.from(session.data.combatants.keys()),
+          });
+          console.log('errors!', context.getDeclaredErrors());
           return [];
         }
 
@@ -136,10 +146,20 @@ export const createUseAiControl = (deps: AiControlDependencies = DEFAULT_AI_CONT
         const events = executeAiTurn(currentActorId);
         onEventsGenerated(events);
 
-        // Clear AI thinking state and execution tracking
-        setAiThinking(null);
-        aiExecutingRef.current = null;
-        aiTimerRef.current = null;
+        // Check if turn ended by looking for COMBAT_TURN_DID_END event
+        const turnEndEvent = events.find(event => event.type === EventType.COMBAT_TURN_DID_END);
+        if (turnEndEvent) {
+          // Turn properly ended, clear AI state
+          setAiThinking(null);
+          aiExecutingRef.current = null;
+          aiTimerRef.current = null;
+        } else {
+          // Turn didn't end properly - this indicates a bug in AI planning
+          console.warn(`AI turn for ${currentActorId} did not end properly - no COMBAT_TURN_DID_END event found`);
+          setAiThinking(null);
+          aiExecutingRef.current = null;
+          aiTimerRef.current = null;
+        }
       }, 1000); // 1 second delay for better UX
 
       // Store timer reference for potential cancellation

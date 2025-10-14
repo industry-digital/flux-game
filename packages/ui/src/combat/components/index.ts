@@ -1,7 +1,7 @@
 // Combat component exports
 
 export { BattlefieldNotation, ColorStrategies, renderBattlefieldNotation } from './BattlefieldNotation';
-export { BattlefieldVisualization } from './BattlefieldVisualization';
+export { BattlefieldVisualization, createBattlefieldVisualizationComponent } from './BattlefieldVisualization';
 export type { BattlefieldNotationProps, BattlefieldVisualizationProps } from '~/types/combat';
 
 // Astro component (import path for Astro projects)

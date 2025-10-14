@@ -54,7 +54,9 @@ export type ActionDependencies = {
 };
 
 const COMBATANT_API_DEPS: CombatantApiDependencies = {
-  advanceTurn: (trace?: string) => [], //--> no-op
+  advanceTurn: (trace?: string) => {
+    throw new Error('advanceTurn dependency not provided - use session API to get properly configured combatant APIs');
+  },
 };
 
 const DEFAULT_ACTION_DEPS: ActionDependencies = {};

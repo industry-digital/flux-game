@@ -355,7 +355,6 @@ export function createCombatTool(_deps: CombatToolDependencies = DEFAULT_COMBAT_
                   <div className="battlefield-display">
                     {session.session?.data ? (
                       <>
-                        {console.log('🎯 BattlefieldVisualization render - key:', lastEventId, 'combatants:', Array.from(session.session.data.combatants.entries()).map(([id, c]) => `${id}:${c.position.coordinate}`), 'session ID:', session.session.id)}
                         <BattlefieldVisualization
                           key={lastEventId || 'initial'}
                           battlefield={session.session.data.battlefield}

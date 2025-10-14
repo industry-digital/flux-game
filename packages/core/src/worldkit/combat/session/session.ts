@@ -8,7 +8,7 @@ import { uniqid as uniqidImpl, BASE62_CHARSET } from '~/lib/random';
 import { TransformerContext, WorldProjection } from '~/types/handler';
 import { computeInitiativeRolls } from '~/worldkit/combat/initiative';
 import { createSessionId } from '~/worldkit/session';
-import { CombatantApi, createCombatantApi } from '~/worldkit/combat/combatant';
+import { CombatantApi, createCombatantApiFactory } from '~/worldkit/combat/combatant';
 import { CombatantManager, createCombatantManager } from '~/worldkit/combat/session/combatant-manager';
 import { createCombatLifecycle } from '~/worldkit/combat/session/combat-lifecycle';
 import { createTurnManager } from '~/worldkit/combat/session/turn-manager';
@@ -201,7 +201,9 @@ export const createCombatSessionApi = (
       throw new Error(`Actor ${actorId} not found`);
     }
     if (!combatantApis.has(actorId)) {
-      combatantApis.set(actorId, createCombatantApi(context, session, actor, createCombatantApiDeps));
+      // Use the factory directly to ensure advanceTurn dependency is properly injected
+      const combatantApiFactory = createCombatantApiFactory();
+      combatantApis.set(actorId, combatantApiFactory(context, session, actor, createCombatantApiDeps));
     }
     return combatantApis.get(actorId)!;
   }

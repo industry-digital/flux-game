@@ -11,7 +11,9 @@ export type DoneDependencies = {
 export type DoneMethod = (trace?: string) => WorldEvent[];
 
 export const DEFAULT_DONE_DEPENDENCIES: DoneDependencies = {
-  advanceTurn: () => [], //--> no-op
+  advanceTurn: () => {
+    throw new Error('advanceTurn dependency not provided - ensure done method is created with proper dependencies');
+  },
 };
 
 export function createDoneMethod(
