@@ -127,17 +127,18 @@ export type CombatSessionFactoryDependencies = {
 export const createCombatSessionApi = (
   context: TransformerContext,
   location: PlaceURN,
-  sessionId?: SessionURN,
+  sessionId: SessionURN = createCombatSessionId(),
   battlefield?: Battlefield,
   initiative?: Map<ActorURN, RollResult>,
   deps?: CombatSessionFactoryDependencies,
 ): CombatSessionApi => {
   const { world } = context;
 
-  let isNew = !sessionId;
-  sessionId ??= createCombatSessionId();
+  // Logically infer if session is new by checking if it exists in world
+  const existingSession = getCombatSession(world, sessionId);
+  const isNew = !existingSession;
 
-  let session!: CombatSession;
+  let session: CombatSession;
 
   if (isNew) {
     session = createCombatSession(context, {
@@ -150,11 +151,7 @@ export const createCombatSessionApi = (
     // Store the new session in the world context so it can be retrieved later
     world.sessions[sessionId] = session;
   } else {
-    session = getCombatSession(world, sessionId)!;
-  }
-
-  if (!session) {
-    throw new Error(`Session ${sessionId} not found`);
+    session = existingSession;
   }
 
   const combatantManager = createCombatantManager(context, session);
