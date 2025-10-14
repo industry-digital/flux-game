@@ -110,7 +110,7 @@ export type CombatSessionApi = {
   isNew: boolean;
   addCombatant: CombatantManager['addCombatant'];
   removeCombatant: CombatantManager['removeCombatant'];
-  startCombat: () => WorldEvent[];
+  startCombat: (trace?: string) => WorldEvent[];
   advanceTurn: (trace?: string) => WorldEvent[];
   checkVictoryConditions: () => boolean;
   endCombat: (trace?: string) => WorldEvent[];

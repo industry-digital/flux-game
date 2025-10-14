@@ -1,40 +1,21 @@
 import { PureReducer, TransformerContext } from '~/types/handler';
 import { CleaveCommand } from './types';
-import { createActorSessionApi } from '~/worldkit/entity/actor/session';
-import { SessionStrategy } from '~/types/session';
-import { CombatSession } from '~/types/combat';
 import { createCombatantApi } from '~/worldkit/combat/combatant';
+import { withBasicWorldStateValidation } from '~/command/validation';
+import { withExistingCombatSession } from '~/worldkit/combat/validation';
 
-export const cleaveReducer: PureReducer<TransformerContext, CleaveCommand> = (context, command) => {
-  console.log('🗡️ CLEAVE REDUCER CALLED:', { actor: command.actor, session: command.session });
-  const { declareError } = context;
-  const { actors } = context.world;
-  const actor = actors[command.actor];
+export const cleaveReducer: PureReducer<TransformerContext, CleaveCommand> = withBasicWorldStateValidation(
+  withExistingCombatSession(
+    (context, command, session) => {
+      const { actors } = context.world;
+      const actor = actors[command.actor];
 
-  if (!actor) {
-    declareError('Could not find `CLEAVE` actor in world projection', command.id);
-    return context;
-  }
+      const combatantApi = createCombatantApi(context, session, actor);
 
-  if (!actor.location) {
-    declareError('`CLEAVE` actor must have a location', command.id);
-    return context;
-  }
+      // Use the combatant API's cleave method (primitive multi-target action)
+      combatantApi.cleave(command.id);
 
-  // Try to infer the combat session from the actor's active sessions
-  const actorSessionApi = createActorSessionApi(context.world.sessions);
-  const existingCombatSession = actorSessionApi.getRunningSessionByStrategy(actor, SessionStrategy.COMBAT) as CombatSession;
-
-  if (!existingCombatSession) {
-    declareError('CLEAVE: Combat session not found', command.id);
-    return context;
-  }
-
-  const combatantApi = createCombatantApi(context, existingCombatSession, actor);
-
-  // Use the combatant API's cleave method (primitive multi-target action)
-  // Note: The cleave method already declares events internally, so we don't need to declare them again
-  combatantApi.cleave(command.id);
-
-  return context;
-};
+      return context;
+    },
+  )
+);

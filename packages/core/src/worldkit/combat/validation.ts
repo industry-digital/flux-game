@@ -19,7 +19,7 @@ function getActorCombatSession(context: TransformerContext, actorId: ActorURN): 
 /**
  * Higher-order function that ensures the actor has an active combat session
  */
-export function withRequiredCombatSession<TCommand extends Command>(
+export function withExistingCombatSession<TCommand extends Command>(
   reducer: PureReducer<TransformerContext, TCommand>
 ): PureReducer<TransformerContext, TCommand> {
   return (context: TransformerContext, command: TCommand) => {
@@ -83,7 +83,7 @@ export function withCombatSessionAndTarget<TCommand extends Command>(
   reducer: PureReducer<TransformerContext, TCommand>,
   targetOptional: boolean = false
 ): PureReducer<TransformerContext, TCommand> {
-  return withRequiredCombatSession(
+  return withExistingCombatSession(
     withPreventCrossSessionTargeting(reducer, targetOptional)
   );
 }

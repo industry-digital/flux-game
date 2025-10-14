@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import {
-  withRequiredCombatSession,
+  withExistingCombatSession,
   withPreventCrossSessionTargeting,
   withCombatSessionAndTarget,
 } from './validation';
@@ -104,7 +104,7 @@ describe('Combat Validation Decorators', () => {
 
   describe('withRequiredCombatSession', () => {
     it('should allow commands when actor has combat session', () => {
-      const wrappedReducer = withRequiredCombatSession(mockReducer);
+      const wrappedReducer = withExistingCombatSession(mockReducer);
       const command = createTestCommand();
 
       const result = wrappedReducer(context, command);
@@ -115,7 +115,7 @@ describe('Combat Validation Decorators', () => {
     });
 
     it('should block commands when actor has no combat session', () => {
-      const wrappedReducer = withRequiredCombatSession(mockReducer);
+      const wrappedReducer = withExistingCombatSession(mockReducer);
       const command = createTestCommand((cmd) => ({ ...cmd, actor: DAVE_ID }));
       const result = wrappedReducer(context, command);
 
@@ -126,7 +126,7 @@ describe('Combat Validation Decorators', () => {
     });
 
     it('should block commands when actor does not exist', () => {
-      const wrappedReducer = withRequiredCombatSession(mockReducer);
+      const wrappedReducer = withExistingCombatSession(mockReducer);
       const command = createTestCommand((cmd) => ({ ...cmd, actor: 'flux:actor:nonexistent' }));
       wrappedReducer(context, command);
 
@@ -272,7 +272,7 @@ describe('Combat Validation Decorators', () => {
 
   describe('Decorator Composition', () => {
     it('should allow manual composition of decorators', () => {
-      const manuallyComposed = withRequiredCombatSession(
+      const manuallyComposed = withExistingCombatSession(
         withPreventCrossSessionTargeting(mockReducer)
       );
       const convenientComposed = withCombatSessionAndTarget(mockReducer);
