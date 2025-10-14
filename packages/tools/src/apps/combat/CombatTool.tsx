@@ -106,7 +106,7 @@ export function createCombatTool(_deps: CombatToolDependencies = DEFAULT_COMBAT_
         }
       }
     }, [session.session, session.isInSetupPhase, actors.isInitialized, scenarioData.actors]);
-    const { executeCommand, lastEventId } = useCombatState(
+    const { executeIntent, executeCommand, lastEventId } = useCombatState(
       context,
       session.session,
       session.currentActorId,
@@ -126,7 +126,8 @@ export function createCombatTool(_deps: CombatToolDependencies = DEFAULT_COMBAT_
       context,
       session.session,
       session.currentActorId,
-      handleEventsGenerated
+      handleEventsGenerated,
+      executeCommand
     );
 
     // Helper function to render enhanced CombatantCard with all necessary props
@@ -176,9 +177,9 @@ export function createCombatTool(_deps: CombatToolDependencies = DEFAULT_COMBAT_
 
     const handleCommand = useCallback((command: string) => {
       // Log combat session state before command
-      const events = executeCommand(command);
+      const events = executeIntent(command);
       handleEventsGenerated(events);
-    }, [executeCommand, handleEventsGenerated]);
+    }, [executeIntent, handleEventsGenerated]);
 
     // Create integrated add/remove functions that sync scenario and session
     const handleAddOptionalActor = useCallback((name: OptionalActorName) => {
