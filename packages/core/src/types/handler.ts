@@ -123,6 +123,9 @@ export type TransformerContext<W extends WorldProjection = WorldProjection> =
     inventoryApi: ActorInventoryApi;
     equipmentApi: ActorEquipmentApi;
     actorSkillApi: ActorSkillApi;
+    /**
+     * @deprecated Use session ID explicitly on commands instead
+     */
     actorSessionApi: ActorSessionApi;
 
     // Optional metrics collection for performance monitoring
