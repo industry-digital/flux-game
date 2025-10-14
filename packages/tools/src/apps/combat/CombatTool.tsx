@@ -88,7 +88,6 @@ export function createCombatTool(_deps: CombatToolDependencies = DEFAULT_COMBAT_
     // Sync initial actors with combat session
     useEffect(() => {
       if (session.session && session.isInSetupPhase && actors.isInitialized && !initialActorsAddedRef.current) {
-        console.log('✅ Adding actors to combat session...');
         initialActorsAddedRef.current = true;
         // Add all actors from scenario to the combat session
         for (const [actorId, actorData] of Object.entries(scenarioData.actors)) {
@@ -116,11 +115,6 @@ export function createCombatTool(_deps: CombatToolDependencies = DEFAULT_COMBAT_
     const { combatLog, addEvents } = useCombatLog();
 
     const handleEventsGenerated = useCallback((events: any[]) => {
-      console.log('🎯 CombatTool handleEventsGenerated called', {
-        eventsCount: events.length,
-        events: events.map(e => ({ type: e.type, actor: e.actor, id: e.id }))
-      });
-
       addEvents(events);
       actors.syncActorsFromContext();
 
@@ -182,28 +176,8 @@ export function createCombatTool(_deps: CombatToolDependencies = DEFAULT_COMBAT_
     ]);
 
     const handleCommand = useCallback((command: string) => {
-      console.log(`🎮 CombatTool: Executing command "${command}"`);
-
       // Log combat session state before command
-      if (session.session) {
-        const initiativeOrder = Array.from(session.session.data.initiative.keys());
-        const currentActor = session.session.data.rounds.current.turns.current.actor;
-        const currentRound = session.session.data.rounds.current.number;
-        const currentTurn = session.session.data.rounds.current.turns.current.number;
-
-        console.log(`🎮 Combat session state:`);
-        console.log(`  Initiative order: [${initiativeOrder.join(', ')}]`);
-        console.log(`  Current actor: ${currentActor}`);
-        console.log(`  Round ${currentRound}, Turn ${currentTurn}`);
-        console.log(`  Total combatants: ${session.session.data.combatants.size}`);
-      }
-
-      console.log('🎮 Executing command:', command);
       const events = combatState.executeCommand(command);
-      console.log('🎮 Command executed, events returned:', {
-        eventsCount: events.length,
-        events: events.map(e => ({ type: e.type, actor: e.actor, id: e.id }))
-      });
       handleEventsGenerated(events);
     }, [combatState, handleEventsGenerated, session.session]);
 
@@ -212,7 +186,6 @@ export function createCombatTool(_deps: CombatToolDependencies = DEFAULT_COMBAT_
       addOptionalActor(name, (actorId, team) => {
         // Add to combat session with proper team mapping
         const sessionTeam = team === Team.ALPHA ? Team.ALPHA : Team.BRAVO;
-        console.log(`🎯 Adding ${actorId} to combat session as team ${sessionTeam}`);
         session.addCombatant(actorId, sessionTeam);
       });
     }, [addOptionalActor, session]);
@@ -220,7 +193,6 @@ export function createCombatTool(_deps: CombatToolDependencies = DEFAULT_COMBAT_
     const handleRemoveOptionalActor = useCallback((name: OptionalActorName) => {
       removeOptionalActor(name, (actorId) => {
         // Remove from combat session
-        console.log(`🗑️ Removing ${actorId} from combat session`);
         session.removeCombatant(actorId);
       });
     }, [removeOptionalActor, session]);

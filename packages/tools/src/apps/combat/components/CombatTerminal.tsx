@@ -40,13 +40,6 @@ export function CombatTerminal({
 
   // Update terminal when events change
   useEffect(() => {
-    console.log('🖥️ CombatTerminal useEffect - events received:', {
-      eventsLength: events.length,
-      events: events.slice(-3).map(e => ({ type: e.type, actor: e.actor, id: e.id })), // Show last 3 events
-      isSetupPhase,
-      showWelcomeMessage
-    });
-
     // Clear and repopulate terminal efficiently
     clear();
 
@@ -61,22 +54,11 @@ export function CombatTerminal({
 
     // Convert and add events
     const eventEntries = worldEventsToTerminalEntries(events, currentActor);
-    console.log('🔄 WorldEvents converted to TerminalEntries:', {
-      originalEventsCount: events.length,
-      convertedEntriesCount: eventEntries.length,
-      sampleEntries: eventEntries.slice(-3).map(e => ({ id: e.id, type: e.type, content: e.content.toString().substring(0, 50) + '...' }))
-    });
 
     eventEntries.forEach((entry: TerminalEntry) => {
-      console.log('➕ Adding entry to terminal:', { id: entry.id, type: entry.type, content: entry.content.toString().substring(0, 100) });
       addEntry(entry);
     });
 
-    console.log('📊 Terminal state after adding entries:', {
-      totalEntries: terminal.entries.length,
-      visibleEntries: terminal.visibleEntries.length,
-      lastFewEntries: terminal.entries.slice(-3).map(e => ({ id: e.id, type: e.type }))
-    });
   }, [events, currentActor, isSetupPhase, showWelcomeMessage, clear, addEntry]);
 
   // Handle command input with proper error handling
