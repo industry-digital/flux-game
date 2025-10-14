@@ -2,12 +2,13 @@ import { describe, beforeEach, it, expect } from 'vitest';
 import { createIntent } from './factory';
 import { resolveCommandFromIntent } from './resolution';
 import { executeCommand } from './execution';
-import { TransformerContext } from '~/types/handler';
+import { TransformerContext, WorldProjection } from '~/types/handler';
 import { CommandType } from '~/types/intent';
 import { createTestTransformerContext } from '~/testing/context-testing';
 import { ActorURN, PlaceURN, SessionURN } from '~/types/taxonomy';
 import { createActor } from '~/worldkit/entity/actor';
 import { createPlace } from '~/worldkit/entity/place';
+import { createWorldProjection } from '~/worldkit/context';
 
 describe('3-Step Intent Pipeline Integration', () => {
   let context: TransformerContext;
@@ -19,7 +20,8 @@ describe('3-Step Intent Pipeline Integration', () => {
 
   beforeEach(() => {
     context = createTestTransformerContext({
-      world: {
+      world: createWorldProjection((w: WorldProjection) => ({
+        ...w,
         sessions: {},
         items: {},
         actors: {
@@ -40,7 +42,7 @@ describe('3-Step Intent Pipeline Integration', () => {
             name: 'Test Arena',
           }),
         },
-      },
+      })),
     });
   });
 

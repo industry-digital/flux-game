@@ -3,7 +3,7 @@ import { Intent } from '~/types/handler';
 import { ActorURN, PlaceURN, SessionURN } from '~/types/taxonomy';
 
 export type IntentInput = {
-  id: string;
+  id?: string;
   ts?: number;
   actor: ActorURN;
   location: PlaceURN;
