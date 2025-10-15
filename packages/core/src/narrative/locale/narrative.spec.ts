@@ -329,7 +329,7 @@ describe.each([
 
   describe('Combat Session Events', () => {
     it('should render combat session start narrative', () => {
-      const event = create((e) => ({
+      const event: WorldEvent = {
         id: 'test-event',
         type: EventType.COMBAT_SESSION_DID_START,
         location: 'flux:place:test',
