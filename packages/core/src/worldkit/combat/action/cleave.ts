@@ -7,8 +7,8 @@
 
 import { Actor, Stat } from '~/types/entity/actor';
 import { ATTACK_ROLL_SPECIFICATION, CombatSession, computeDistanceBetweenCombatants } from '~/worldkit/combat';
-import { ActionCost, Combatant } from '~/types/combat';
-import { EventType, WorldEvent } from '~/types/event';
+import { ActionCost, AttackOutcome, AttackType, Combatant } from '~/types/combat';
+import { CombatantDidAttack, CombatantWasAttacked, EventType, WorldEvent } from '~/types/event';
 import { RollResult } from '~/types/dice';
 import { calculateActorEvasionRating, resolveHitAttempt } from '~/worldkit/combat/evasion';
 import { calculateWeaponDamage } from '~/worldkit/combat/damage';
@@ -16,10 +16,8 @@ import { createWorldEvent } from '~/worldkit/event';
 import { ActorURN } from '~/types/taxonomy';
 import { deductAp } from '~/worldkit/combat/combatant';
 import { TransformerContext } from '~/types/handler';
-import { createStrikeCost } from '~/worldkit/combat/tactical-cost';
 import { calculateAttackRating } from '~/worldkit/combat/attack';
 import { decrementHp } from '~/worldkit/entity/actor/health';
-import { getEffectiveSkillRank } from '~/worldkit/entity/actor/skill';
 import { getStatValue } from '~/worldkit/entity/actor/stats';
 import { isTwoHandedWeapon } from '~/worldkit/schema/weapon/util';
 import { isActorAlive } from '~/worldkit/entity/actor';
@@ -33,10 +31,7 @@ export type CleaveDependencies = {
   calculateActorEvasionRating?: typeof calculateActorEvasionRating;
   calculateWeaponDamage?: typeof calculateWeaponDamage;
   computeDistanceBetweenCombatants?: typeof computeDistanceBetweenCombatants;
-  canWeaponHitFromDistance?: typeof canWeaponHitFromDistance;
-  createStrikeCost?: typeof createStrikeCost;
   calculateAttackRating?: typeof calculateAttackRating;
-  getEffectiveSkillRank?: typeof getEffectiveSkillRank;
   isActorAlive?: typeof isActorAlive;
   isTwoHandedWeapon?: typeof isTwoHandedWeapon;
 };
@@ -47,10 +42,7 @@ export const DEFAULT_CLEAVE_DEPS: Readonly<CleaveDependencies> = {
   calculateActorEvasionRating,
   calculateWeaponDamage,
   computeDistanceBetweenCombatants,
-  canWeaponHitFromDistance,
-  createStrikeCost,
   calculateAttackRating,
-  getEffectiveSkillRank,
   isActorAlive,
   isTwoHandedWeapon,
 };
@@ -111,10 +103,7 @@ export function createCleaveMethod(
     calculateActorEvasionRating: calculateActorEvasionRatingImpl = calculateActorEvasionRating,
     calculateWeaponDamage: calculateWeaponDamageImpl = calculateWeaponDamage,
     computeDistanceBetweenCombatants: computeDistanceBetweenCombatantsImpl = computeDistanceBetweenCombatants,
-    canWeaponHitFromDistance: canWeaponHitFromDistanceImpl = canWeaponHitFromDistance,
-    createStrikeCost: createStrikeCostImpl = createStrikeCost,
     calculateAttackRating: calculateAttackRatingImpl = calculateAttackRating,
-    getEffectiveSkillRank: getEffectiveSkillRankImpl = getEffectiveSkillRank,
     isActorAlive: isActorAliveImpl = isActorAlive,
     isTwoHandedWeapon: isTwoHandedWeaponImpl = isTwoHandedWeapon,
   }: CleaveDependencies = DEFAULT_CLEAVE_DEPS
@@ -171,6 +160,23 @@ export function createCleaveMethod(
     const allEvents: WorldEvent[] = [];
     const power = getStatValue(actor, Stat.POW);
 
+    // Create single COMBATANT_DID_ATTACK event for the cleave action
+    const cleaveAttackEvent: CombatantDidAttack = createWorldEventImpl({
+      type: EventType.COMBATANT_DID_ATTACK,
+      location: actor.location,
+      trace: trace,
+      actor: actor.id,
+      payload: {
+        target: targets[0], // Primary target (could be omitted for area attacks)
+        attackType: AttackType.CLEAVE,
+        cost,
+        roll: { dice: ATTACK_ROLL_SPECIFICATION, values: [], mods: {}, natural: 0, result: 0 }, // Will be updated with first roll
+        attackRating: 0, // Will be updated with first attack rating
+      },
+    });
+
+    let isFirstTarget = true;
+
     // Execute attack against each target
     for (const targetId of targets) {
       const targetCombatant = session.data.combatants.get(targetId);
@@ -184,7 +190,6 @@ export function createCleaveMethod(
       const roll: RollResult = {
         dice: ATTACK_ROLL_SPECIFICATION,
         values,
-        mods: {},
         natural,
         result: natural,
       };
@@ -203,33 +208,39 @@ export function createCleaveMethod(
       );
 
       let damage = 0;
-      let outcome: 'hit' | 'miss' | 'hit:critical' | 'miss:critical' = 'miss';
+      let outcome: AttackOutcome = AttackOutcome.MISS;
 
       if (!hitResolution.evaded) {
-        outcome = 'hit';
+        outcome = AttackOutcome.HIT;
         damage = calculateWeaponDamageImpl(weaponMassKg, power);
         decrementHp(targetActor, damage);
       }
 
-      // Generate individual attack event for each target (following STRIKE pattern)
-      const attackEvent = createWorldEventImpl({
+      // Update the cleave attack event with the first target's roll and attack rating
+      if (isFirstTarget) {
+        cleaveAttackEvent.payload.roll = roll;
+        cleaveAttackEvent.payload.attackRating = attackRating;
+        isFirstTarget = false;
+      }
+
+      // Generate COMBATANT_WAS_ATTACKED event for this target
+      const wasAttackedEvent: CombatantWasAttacked = createWorldEventImpl({
+        type: EventType.COMBATANT_WAS_ATTACKED,
+        location: targetActor.location,
         trace: trace,
-        type: EventType.COMBATANT_DID_ATTACK,
-        location: actor.location,
-        actor: actor.id,
+        actor: targetId,
         payload: {
-          cost: targets.indexOf(targetId) === 0 ? cost : { ap: 0, energy: 0 }, // Show total cost on first attack only
-          target: targetId,
-          roll,
-          damage,
+          source: actor.id,
+          type: AttackType.CLEAVE,
           outcome,
           attackRating,
           evasionRating: defenderEvasionRating,
+          damage,
         },
       });
 
-      context.declareEvent(attackEvent);
-      allEvents.push(attackEvent);
+      context.declareEvent(wasAttackedEvent);
+      allEvents.push(wasAttackedEvent);
 
       // Generate death event if target died
       if (damage > 0 && targetActor.hp.eff.cur <= 0) {
@@ -246,6 +257,10 @@ export function createCleaveMethod(
         allEvents.push(deathEvent);
       }
     }
+
+    // Declare and add the cleave attack event
+    context.declareEvent(cleaveAttackEvent);
+    allEvents.unshift(cleaveAttackEvent); // Add at beginning so it comes before target events
 
     return allEvents;
   };

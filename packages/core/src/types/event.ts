@@ -1,7 +1,7 @@
 import { Weather } from '~/types/entity/weather';
 import { ResourceNodes } from '~/types/entity/resource';
 import { ActorURN, ItemURN, PlaceURN, SessionURN } from '~/types/taxonomy';
-import { ActionCost, BattlefieldPositionSummary, CombatantSummary } from '~/types/combat';
+import { ActionCost, AttackOutcome, AttackType, BattlefieldPositionSummary, CombatantSummary } from '~/types/combat';
 import { RollResult } from '~/types/dice';
 import { SessionStatus } from '~/types/session';
 import { ShellDiff, ShellMutation } from '~/types/workbench';
@@ -81,7 +81,7 @@ export enum EventType {
   ACTOR_DID_SWAP_SHELL = 'actor:shell:swapped',
   ACTOR_WAS_CREATED = 'actor:created',
   COMBATANT_DID_ACQUIRE_TARGET = 'combat:actor:target:acquired',
-  COMBATANT_DID_ATTACK = 'combat:actor:attacked',
+  COMBATANT_DID_ATTACK = 'combat:actor:attack',
   COMBATANT_DID_COVER = 'combat:actor:covered',
   COMBATANT_DID_DEFEND = 'combat:actor:defended',
   COMBATANT_DID_DIE = 'combat:actor:died',
@@ -89,6 +89,7 @@ export enum EventType {
   COMBATANT_DID_RECOVER_AP = 'combat:actor:ap:recovered',
   COMBATANT_DID_RELOAD = 'combat:actor:reloaded',
   COMBATANT_DID_REST = 'combat:actor:rested',
+  COMBATANT_WAS_ATTACKED = 'combat:actor:attack:received',
   COMBAT_ROUND_DID_END = 'combat:round:ended',
   COMBAT_ROUND_DID_START = 'combat:round:started',
   COMBAT_SESSION_DID_END = 'combat:session:ended',
@@ -232,19 +233,28 @@ export type CombatantDidMoveInput = RequiresActor & AbstractWorldEventInput<
   }
 >;
 
-export type AttackOutcome = 'hit' | 'miss' | 'hit:critical' | 'miss:critical';
-
 export type CombatantDidAttack = EventBase & CombatantDidAttackInput;
 export type CombatantDidAttackInput = RequiresActor & AbstractWorldEventInput<
   EventType.COMBATANT_DID_ATTACK,
   {
     target: ActorURN;
+    attackType: AttackType;
     cost: ActionCost;
     roll: RollResult;
+    attackRating: number;
+  }
+>;
+
+export type CombatantWasAttacked = EventBase & CombatantWasAttackedInput;
+export type CombatantWasAttackedInput = RequiresActor & AbstractWorldEventInput<
+  EventType.COMBATANT_WAS_ATTACKED,
+  {
+    source: ActorURN;
+    type: AttackType;
     outcome: AttackOutcome;
-    damage: number;
     attackRating: number;
     evasionRating: number;
+    damage: number;
   }
 >;
 
@@ -290,18 +300,17 @@ export type CombatRoundDidEndInput = AbstractWorldEventInput<
 >;
 
 export type CombatantDidDie = EventBase & CombatantDidDieInput;
-export type CombatantDidDieInput = AbstractWorldEventInput<
+export type CombatantDidDieInput = RequiresActor & AbstractWorldEventInput<
   EventType.COMBATANT_DID_DIE,
   {
-    actor: ActorURN;
+    killer: ActorURN;
   }
 >;
 
 export type CombatantDidRecoverAp = EventBase & CombatantDidRecoverApInput;
-export type CombatantDidRecoverApInput = AbstractWorldEventInput<
+export type CombatantDidRecoverApInput = RequiresActor & AbstractWorldEventInput<
   EventType.COMBATANT_DID_RECOVER_AP,
   {
-    actor: ActorURN;
     before: number;
     after: number;
     recovered: number;
@@ -410,6 +419,7 @@ export type WorldEventInput =
   | CombatantDidDefendInput
   | CombatantDidMoveInput
   | CombatantDidAttackInput
+  | CombatantWasAttackedInput
   | CombatRoundDidStartInput
   | CombatRoundDidEndInput
   | CombatTurnDidStartInput

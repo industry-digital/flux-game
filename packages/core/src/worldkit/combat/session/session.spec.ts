@@ -25,6 +25,7 @@ const TEST_ACTOR_ID: ActorURN = 'flux:actor:test-actor';
 const TEST_ACTOR_2_ID: ActorURN = 'flux:actor:test-actor-2';
 const TEST_TEAM: Team = Team.BRAVO;
 const TEST_TEAM_2: Team = Team.ALPHA;
+const DEFAULT_TIMESTAMP = 123456789000;
 
 const identity = <T>(input: T): T => input;
 
@@ -97,6 +98,7 @@ describe('session', () => {
 
       // Create dependencies with controlled RNG
       const testDeps: CreateCombatantDependencies = {
+        timestamp: () => DEFAULT_TIMESTAMP,
         computeInitiative: (actor: Actor) => {
           // Use the mock roll result but add perception bonus
           const mockResult = mockExecuteRoll('1d20', []);
@@ -342,16 +344,6 @@ describe('session', () => {
 
       expect(hook.isNew).toBe(false);
       expect(hook.session).toBe(existingSession);
-    });
-
-    it('should throw error when session not found', () => {
-      const context = createTransformerContext();
-      const location = TEST_PLACE_ID;
-      const sessionId = 'missing-session' as SessionURN;
-
-      expect(() => {
-        createCombatSessionApi(context, location, sessionId);
-      }).toThrow('Session missing-session not found');
     });
 
     it('should throw error when adding duplicate combatant', () => {

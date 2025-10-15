@@ -12,6 +12,7 @@ import {
   CombatSessionEnded,
   CombatSessionStatusDidChange,
   CombatantDidRecoverAp,
+  CombatantWasAttacked,
 } from '~/types/event';
 import { SessionStatus } from '~/types/session';
 import { TemplateFunction } from '~/types/narrative';
@@ -21,27 +22,69 @@ export const renderAttackNarrative: TemplateFunction<CombatantDidAttack, ActorUR
   const { world, equipmentApi } = context;
   const actor = world.actors[event.actor];
   const target = world.actors[event.payload.target];
-  const weapon = equipmentApi.getEquippedWeaponSchemaOrFail(actor);
-  const { damage } = event.payload;
 
+  // Handle missing actors gracefully
+  if (!actor || !target) {
+    return '';
+  }
+
+  const weapon = equipmentApi.getEquippedWeaponSchema(actor);
+  const { attackType } = event.payload;
+  const weaponName = weapon?.name || 'weapon';
+
+  // This event is from the attacker's perspective - focus on the action
   if (actorId === event.actor) {
     // actorId is the attacker
-    return damage > 0
-      ? `You strike ${target.name} with your ${weapon.name} for ${damage} damage.`
-      : `You miss ${target.name} with your ${weapon.name}.`
+    return attackType === 'cleave'
+      ? `You unleash a sweeping ${weaponName} attack!`
+      : `You attack ${target.name} with your ${weaponName}.`;
   }
 
   if (actorId === event.payload.target) {
-    // actorId is the target
-    return damage > 0
-      ? `${actor.name} strikes you with their ${weapon.name} for ${damage} damage.`
-      : `${actor.name} misses you with their ${weapon.name}.`
+    // actorId is the target - they should see the damage event instead
+    // This narrative is redundant for the target
+    return '';
   }
 
   // actorId is an observer
+  return attackType === 'cleave'
+    ? `${actor.name} unleashes a sweeping ${weaponName} attack!`
+    : `${actor.name} attacks ${target.name} with their ${weaponName}.`;
+};
+
+export const renderWasAttackedNarrative: TemplateFunction<CombatantWasAttacked, ActorURN> = (context, event, actorId) => {
+  const { world, equipmentApi } = context;
+  const attacker = world.actors[event.payload.source];
+  const target = world.actors[event.actor];
+  const { damage, outcome } = event.payload;
+
+  // Handle missing actors gracefully
+  if (!attacker || !target) {
+    return '';
+  }
+
+  // This event is from the target's perspective
+  if (actorId === event.actor) {
+    // actorId is the target being attacked
+    const weapon = equipmentApi.getEquippedWeaponSchema(attacker);
+    const weaponName = weapon?.name || 'weapon';
+    return damage > 0
+      ? `${attacker.name} strikes you with their ${weaponName} for ${damage} damage.`
+      : `${attacker.name} misses you with their ${weaponName}.`;
+  }
+
+  if (actorId === event.payload.source) {
+    // actorId is the attacker - they should see the attack event instead
+    // This narrative is redundant for the attacker
+    return '';
+  }
+
+  // actorId is an observer
+  const weapon = equipmentApi.getEquippedWeaponSchema(attacker);
+  const weaponName = weapon?.name || 'weapon';
   return damage > 0
-    ? `${actor.name}'s ${weapon.name} deals ${damage} damage to ${target.name}.`
-    : `${actor.name}'s ${weapon.name} misses ${target.name}.`
+    ? `${attacker.name}'s ${weaponName} deals ${damage} damage to ${target.name}.`
+    : `${attacker.name}'s ${weaponName} misses ${target.name}.`;
 };
 
 export const renderDefendNarrative: TemplateFunction<CombatantDidDefend, ActorURN> = (context, event, actorId) => {
@@ -86,9 +129,9 @@ export const renderTargetNarrative: TemplateFunction<CombatantDidAcquireTarget> 
 
 export const renderDeathNarrative: TemplateFunction<CombatantDidDie> = (context, event, actorId) => {
   const { world } = context;
-  const actor = world.actors[event.payload.actor];
+  const actor = world.actors[event.actor];
 
-  if (actorId === event.payload.actor) {
+  if (actorId === event.actor) {
     // actorId is the actor
     return 'You have died!';
   }
@@ -145,7 +188,7 @@ export const renderCombatSessionEndNarrative: TemplateFunction<CombatSessionEnde
   const { winningTeam, finalRound } = event.payload;
 
   if (winningTeam) {
-    return `Combat ends after ${finalRound} rounds. Team ${winningTeam} is victorious!`;
+    return `Combat ends after ${finalRound} rounds. Team ${winningTeam.toUpperCase()} is victorious!`;
   }
 
   return `Combat ends after ${finalRound} rounds with no clear victor.`;
@@ -168,10 +211,10 @@ export const renderCombatStatusChangeNarrative: TemplateFunction<CombatSessionSt
 
 export const renderApRecoveryNarrative: TemplateFunction<CombatantDidRecoverAp, ActorURN> = (context, event, recipientId) => {
   const { world } = context;
-  const actor = world.actors[event.payload.actor];
+  const actor = world.actors[event.actor];
   const recovered = event.payload.recovered;
 
-  if (recipientId === event.payload.actor) {
+  if (recipientId === event.actor) {
     return `You recover ${recovered} action points.`;
   }
 

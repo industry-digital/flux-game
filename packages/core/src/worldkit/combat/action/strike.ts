@@ -8,7 +8,7 @@
 
 import { Actor, Stat } from '~/types/entity/actor';
 import { ATTACK_ROLL_SPECIFICATION, CombatSession, computeDistanceBetweenCombatants, canWeaponHitFromDistance } from '~/worldkit/combat';
-import { ActionCost, Combatant } from '~/types/combat';
+import { ActionCost, AttackType, AttackOutcome, Combatant } from '~/types/combat';
 import { EventType, WorldEvent } from '~/types/event';
 import { RollResult } from '~/types/dice';
 import { calculateActorEvasionRating, resolveHitAttempt } from '~/worldkit/combat/evasion';
@@ -136,10 +136,10 @@ export function createStrikeMethod(
     );
 
     let damage = 0;
-    let outcome: 'hit' | 'miss' | 'hit:critical' | 'miss:critical' = 'miss';
+    let outcome: AttackOutcome = AttackOutcome.MISS;
 
     if (!hitResolution.evaded) {
-      outcome = 'hit';
+      outcome = AttackOutcome.HIT;
       const power = getStatValue(actor, Stat.POW);
       damage = calculateWeaponDamageImpl(weaponMassKg, power);
     }
@@ -150,35 +150,53 @@ export function createStrikeMethod(
       decrementHp(targetActor, damage);
     }
 
+    // Create COMBATANT_DID_ATTACK event (attacker's perspective)
     const combatantDidAttackEvent = createWorldEventImpl({
       type: EventType.COMBATANT_DID_ATTACK,
       location: actor.location,
       trace: trace,
       actor: actor.id,
       payload: {
-        cost,
         target: combatant.target!,
+        attackType: AttackType.STRIKE,
+        cost,
         roll,
-        damage,
+        attackRating,
+      },
+    });
+
+    // Create COMBATANT_WAS_ATTACKED event (target's perspective)
+    const combatantWasAttackedEvent = createWorldEventImpl({
+      type: EventType.COMBATANT_WAS_ATTACKED,
+      location: targetActor.location,
+      trace: trace,
+      actor: combatant.target!,
+      payload: {
+        source: actor.id,
+        type: AttackType.STRIKE,
         outcome,
         attackRating,
         evasionRating: defenderEvasionRating,
+        damage,
       },
     });
 
     const events: WorldEvent[] = [
       combatantDidAttackEvent,
+      combatantWasAttackedEvent,
     ];
 
     context.declareEvent(combatantDidAttackEvent);
+    context.declareEvent(combatantWasAttackedEvent);
 
     if (damage > 0 && targetActor.hp.eff.cur <= 0) {
       const deathEvent = createWorldEventImpl({
         type: EventType.COMBATANT_DID_DIE,
         location: actor.location,
+        actor: combatant.target!,
         trace: trace,
         payload: {
-          actor: combatant.target!,
+          killer: actor.id,
         },
       });
 

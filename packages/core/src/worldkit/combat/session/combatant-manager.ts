@@ -9,7 +9,7 @@ import {
 } from '~/types/combat';
 import { TransformerContext } from '~/types/handler';
 import { SessionStatus } from '~/types/session';
-import { createCombatant, CreateCombatantDependencies } from '../combatant';
+import { createCombatant, CreateCombatantDependencies, DEFAULT_CREATE_COMBATANT_DEPS } from '../combatant';
 
 /**
  * Calculates automatic position and facing for a combatant based on team placement rules.
@@ -76,7 +76,7 @@ export function createCombatantManager(
     team: string,
     position?: BattlefieldPosition,
     didInitiateCombat?: boolean,
-    deps?: CreateCombatantDependencies,
+    deps: CreateCombatantDependencies = DEFAULT_CREATE_COMBATANT_DEPS,
   ) => {
     if (session.status === SessionStatus.RUNNING) {
       throw new Error('Cannot add combatants after combat has started');
@@ -90,6 +90,8 @@ export function createCombatantManager(
     if (!actor) {
       throw new Error(`Actor ${actorId} not found`);
     }
+
+    actor.sessions[session.id] = deps.timestamp();
 
     const combatant = createCombatant(actor, team, (c: Combatant) => {
       return {
@@ -110,9 +112,6 @@ export function createCombatantManager(
 
     session.data.combatants.set(actorId, combatant);
 
-    // Register the combat session with the actor
-    context.actorSessionApi.addToActiveSessions(actor, session.id);
-
     // Invalidate initiative cache since combatants changed
     session.data.initiativeSorted = false;
   };
@@ -124,8 +123,7 @@ export function createCombatantManager(
 
     const actor = world.actors[actorId];
     if (actor) {
-      // Unregister the combat session from the actor
-      context.actorSessionApi.removeFromActiveSessions(actor, session.id);
+      delete actor.sessions[session.id];
     }
 
     session.data.combatants.delete(actorId);

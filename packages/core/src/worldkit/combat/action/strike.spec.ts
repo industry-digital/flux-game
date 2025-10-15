@@ -1,20 +1,17 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { createStrikeMethod } from './strike';
 import { useCombatScenario } from '../testing/scenario';
+import { extractEventsByType, extractFirstEventOfType } from '~/testing/event/parsing';
 import { createTransformerContext } from '~/worldkit/context';
 import { createSwordSchema } from '~/worldkit/schema/weapon/sword';
 import { registerWeapons } from '../testing/schema';
 import { ActorURN } from '~/types/taxonomy';
-import { CombatantDidAttack, CombatantDidDie, EventType, WorldEvent } from '~/types/event';
+import { CombatantDidAttack, CombatantDidDie, CombatantWasAttacked, EventType } from '~/types/event';
 import { Team } from '~/types/combat';
 import { createStrikeCost } from '~/worldkit/combat/tactical-cost';
 import { calculateWeaponApCost } from '~/worldkit/combat/damage';
 import { getStatValue } from '~/worldkit/entity/actor/stats';
 import { Stat } from '~/types/entity/actor';
-
-function extractCombatantDidAttackEvent(events: WorldEvent[]): CombatantDidAttack {
-  return events.find(e => e.type === EventType.COMBATANT_DID_ATTACK) as CombatantDidAttack;
-}
 
 describe('Strike Method', () => {
   let scenario: ReturnType<typeof useCombatScenario>;
@@ -86,52 +83,86 @@ describe('Strike Method', () => {
 
       const result = strike();
 
-      expect(result).toHaveLength(1);
-      expect(result[0].type).toBe(EventType.COMBATANT_DID_ATTACK);
+      // Should emit both attack and damage events
+      const attackEvents = extractEventsByType<CombatantDidAttack>(result, EventType.COMBATANT_DID_ATTACK);
+      const damageEvents = extractEventsByType<CombatantWasAttacked>(result, EventType.COMBATANT_WAS_ATTACKED);
+
+      expect(attackEvents).toHaveLength(1);
+      expect(damageEvents).toHaveLength(1);
       expect(attackerCombatant.ap.eff.cur).toBeLessThan(initialAP); // AP should be consumed
     });
 
-    it('should create COMBATANT_DID_ATTACK event with strike details', () => {
+    it('should emit correct event types with proper structure and separation of concerns', () => {
       const attacker = scenario.actors[ATTACKER_ID].actor;
       const attackerCombatant = scenario.session.data.combatants.get(ATTACKER_ID)!;
 
       const result = strike();
 
-      expect(result).toHaveLength(1);
-      expect(result[0]).toMatchObject({
+      const attackEvent = extractFirstEventOfType<CombatantDidAttack>(result, EventType.COMBATANT_DID_ATTACK);
+      const damageEvent = extractFirstEventOfType<CombatantWasAttacked>(result, EventType.COMBATANT_WAS_ATTACKED);
+      const deathEvent = extractFirstEventOfType<CombatantDidDie>(result, EventType.COMBATANT_DID_DIE);
+
+      // Event count validation: 1 attack + 1 damage + 0 deaths (target survives)
+      expect(attackEvent).toBeDefined();
+      expect(damageEvent).toBeDefined();
+      expect(deathEvent).toBeUndefined();
+
+      // Attack event validation (attacker's perspective)
+      expect(attackEvent).toMatchObject({
         type: EventType.COMBATANT_DID_ATTACK,
         location: attacker.location,
+        actor: attacker.id,
         payload: expect.objectContaining({
-          actor: attacker.id,
-          cost: expect.objectContaining({ ap: expect.any(Number) }),
           target: attackerCombatant.target,
+          attackType: 'strike',
+          cost: expect.objectContaining({
+            ap: expect.any(Number),
+          }),
           roll: expect.any(Object),
-          outcome: expect.any(String)
-        })
+          attackRating: expect.any(Number),
+        }),
       });
+
+      // Damage event validation (target's perspective)
+      expect(damageEvent).toMatchObject({
+        type: EventType.COMBATANT_WAS_ATTACKED,
+        actor: attackerCombatant.target, // Target actor
+        payload: expect.objectContaining({
+          source: attacker.id,
+          type: 'strike',
+          outcome: expect.any(String),
+          attackRating: expect.any(Number),
+          evasionRating: expect.any(Number),
+          damage: expect.any(Number),
+        }),
+      });
+
+      // Should declare both events
+      expect(context.declareEvent).toHaveBeenCalledTimes(2);
     });
 
     it('should use specified target when provided', () => {
       const result = strike(SPECIFIC_TARGET_ID);
-      expect(result).toHaveLength(1);
-      const event = result[0] as CombatantDidAttack;
-      expect(event.payload.target).toBe(SPECIFIC_TARGET_ID);
+
+      const attackEvent = extractFirstEventOfType<CombatantDidAttack>(result, EventType.COMBATANT_DID_ATTACK);
+      const damageEvent = extractFirstEventOfType<CombatantWasAttacked>(result, EventType.COMBATANT_WAS_ATTACKED);
+
+      expect(attackEvent?.payload.target).toBe(SPECIFIC_TARGET_ID);
+      expect(damageEvent?.actor).toBe(SPECIFIC_TARGET_ID);
     });
 
-    it('should call declareEvent on context', () => {
+    it('should call declareEvent for both attack and damage events', () => {
       strike();
 
-      expect(context.declareEvent).toHaveBeenCalledWith(
-        expect.objectContaining({
-          type: EventType.COMBATANT_DID_ATTACK,
-          payload: expect.objectContaining({
-            cost: expect.any(Object),
-            target: expect.any(String),
-            roll: expect.any(Object),
-            outcome: expect.any(String)
-          })
-        })
-      );
+      // Should declare both attack and damage events
+      expect(context.declareEvent).toHaveBeenCalledTimes(2);
+
+      const calls = (context.declareEvent as any).mock.calls;
+      const attackCall = calls.find((call: any) => call[0].type === EventType.COMBATANT_DID_ATTACK);
+      const damageCall = calls.find((call: any) => call[0].type === EventType.COMBATANT_WAS_ATTACKED);
+
+      expect(attackCall).toBeDefined();
+      expect(damageCall).toBeDefined();
     });
   });
 
@@ -174,7 +205,7 @@ describe('Strike Method', () => {
       expect(actualApCost).toBeCloseTo(tacticalApCost, 10);
 
       // Verify event contains tactical AP cost
-      const event = extractCombatantDidAttackEvent(result);
+      const event = extractFirstEventOfType<CombatantDidAttack>(result, EventType.COMBATANT_DID_ATTACK)!;
       expect(event).toBeDefined();
       expect(event.payload.cost.ap).toBe(tacticalApCost);
     });
@@ -222,7 +253,7 @@ describe('Strike Method', () => {
         // Verify tactical cost was used
         expect(actualApCost).toBeCloseTo(tacticalCost.ap!, 10);
 
-        const event = extractCombatantDidAttackEvent(result);
+        const event = extractFirstEventOfType<CombatantDidAttack>(result, EventType.COMBATANT_DID_ATTACK)!;
         expect(event.payload.cost.ap).toBe(tacticalCost.ap);
 
         // Verify conservative rounding (tactical >= precise)
@@ -239,17 +270,21 @@ describe('Strike Method', () => {
 
       const result = strike(undefined, customTrace);
 
-      expect(result).toHaveLength(1);
-      expect(result[0].trace).toBe(customTrace);
-      expect(result[0]).toMatchObject({
+      expect(result).toHaveLength(2); // COMBATANT_DID_ATTACK + COMBATANT_WAS_ATTACKED
+
+      // Both events should have the custom trace
+      result.forEach(event => {
+        expect(event.trace).toBe(customTrace);
+      });
+
+      const attackEvent = extractFirstEventOfType<CombatantDidAttack>(result, EventType.COMBATANT_DID_ATTACK);
+      expect(attackEvent).toMatchObject({
         type: EventType.COMBATANT_DID_ATTACK,
         trace: customTrace,
+        actor: attacker.id,
         payload: expect.objectContaining({
-          actor: attacker.id,
-          cost: expect.any(Object),
           target: attackerCombatant.target,
-          roll: expect.any(Object),
-          outcome: expect.any(String)
+          attackType: 'strike',
         })
       });
     });
@@ -264,18 +299,23 @@ describe('Strike Method', () => {
 
       const result = strike(); // No trace provided
 
-      expect(result).toHaveLength(1);
-      expect(result[0].trace).toBe(generatedTrace);
+      expect(result).toHaveLength(2); // Attack + damage events
+
+      // Both events should have the generated trace
+      result.forEach(event => {
+        expect(event.trace).toBe(generatedTrace);
+      });
+
       expect(context.uniqid).toHaveBeenCalled();
-      expect(result[0]).toMatchObject({
+
+      const attackEvent = extractFirstEventOfType<CombatantDidAttack>(result, EventType.COMBATANT_DID_ATTACK);
+      expect(attackEvent).toMatchObject({
         type: EventType.COMBATANT_DID_ATTACK,
         trace: generatedTrace,
+        actor: attacker.id,
         payload: expect.objectContaining({
-          actor: attacker.id,
-          cost: expect.any(Object),
           target: attackerCombatant.target,
-          roll: expect.any(Object),
-          outcome: expect.any(String)
+          attackType: 'strike',
         })
       });
     });
@@ -286,10 +326,18 @@ describe('Strike Method', () => {
 
       const result = strike(specificTarget, customTrace);
 
-      expect(result).toHaveLength(1);
-      const event = result[0] as CombatantDidAttack;
-      expect(event.trace).toBe(customTrace);
-      expect(event.payload.target).toBe(specificTarget);
+      expect(result).toHaveLength(2); // Attack + damage events
+
+      // Both events should have the custom trace
+      result.forEach(event => {
+        expect(event.trace).toBe(customTrace);
+      });
+
+      const attackEvent = extractFirstEventOfType<CombatantDidAttack>(result, EventType.COMBATANT_DID_ATTACK);
+      const damageEvent = extractFirstEventOfType<CombatantWasAttacked>(result, EventType.COMBATANT_WAS_ATTACKED);
+
+      expect(attackEvent?.payload.target).toBe(specificTarget);
+      expect(damageEvent?.actor).toBe(specificTarget);
     });
   });
 
@@ -339,15 +387,17 @@ describe('Strike Method', () => {
 
       const result = strikeWithMocks(TARGET_ID);
 
-      // Should contain both attack event and death event
-      expect(result).toHaveLength(2);
+      // Should contain attack, damage, and death events
+      expect(result).toHaveLength(3);
 
-      const attackEvent = result.find(e => e.type === EventType.COMBATANT_DID_ATTACK) as CombatantDidAttack;
-      const deathEvent = result.find(e => e.type === EventType.COMBATANT_DID_DIE) as CombatantDidDie;
+      const attackEvent = extractFirstEventOfType<CombatantDidAttack>(result, EventType.COMBATANT_DID_ATTACK);
+      const damageEvent = extractFirstEventOfType<CombatantWasAttacked>(result, EventType.COMBATANT_WAS_ATTACKED);
+      const deathEvent = extractFirstEventOfType<CombatantDidDie>(result, EventType.COMBATANT_DID_DIE);
 
       expect(attackEvent).toBeDefined();
+      expect(damageEvent).toBeDefined();
       expect(deathEvent).toBeDefined();
-      expect(deathEvent?.payload.actor).toBe(TARGET_ID);
+      expect(deathEvent?.payload.killer).toBe(ATTACKER_ID);
 
       // Verify target is actually dead
       expect(targetActorData.hp.eff.cur).toBe(0);
@@ -366,13 +416,15 @@ describe('Strike Method', () => {
 
       const result = strike();
 
-      // Should only contain attack event, no death event
-      expect(result).toHaveLength(1);
+      // Should contain attack and damage events, but no death event
+      expect(result).toHaveLength(2);
 
-      const attackEvent = result.find(e => e.type === EventType.COMBATANT_DID_ATTACK);
-      const deathEvent = result.find(e => e.type === EventType.COMBATANT_DID_DIE);
+      const attackEvent = extractFirstEventOfType<CombatantDidAttack>(result, EventType.COMBATANT_DID_ATTACK);
+      const damageEvent = extractFirstEventOfType<CombatantWasAttacked>(result, EventType.COMBATANT_WAS_ATTACKED);
+      const deathEvent = extractFirstEventOfType<CombatantDidDie>(result, EventType.COMBATANT_DID_DIE);
 
       expect(attackEvent).toBeDefined();
+      expect(damageEvent).toBeDefined();
       expect(deathEvent).toBeUndefined();
 
       // Verify target is still alive

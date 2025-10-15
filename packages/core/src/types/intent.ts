@@ -120,9 +120,11 @@ export type SystemCommand<
 
     /**
      * System actor URN
+     * At runtime, the server assigns a value like `flux:sys:server`, not an ActorURN
+     * We type this as ActorURN to avoid type impedance problems during development.
      * @example `flux:sys:server`
      */
-    actor: `flux:sys:${string}`;
+    actor: ActorURN;
 
     /**
      * Optional trace identifier for command chaining and causality tracking.

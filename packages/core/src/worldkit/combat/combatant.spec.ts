@@ -1,10 +1,10 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import {
-    initializeCombatantAttributes,
-    createCombatantApi,
-    createCombatantApiFactory,
-    MOVE_BY_DISTANCE,
-    MOVE_BY_AP,
+  initializeCombatantAttributes,
+  createCombatantApi,
+  createCombatantApiFactory,
+  MOVE_BY_DISTANCE,
+  MOVE_BY_AP,
 } from './combatant';
 import { useCombatScenario } from './testing/scenario';
 import { createTransformerContext } from '~/worldkit/context';
@@ -161,7 +161,9 @@ describe('combatant', () => {
         }
       });
 
-      const hook = createCombatantApi(testContext, testSession, testActor);
+      const hook = createCombatantApi(testContext, testSession, testActor, {
+        advanceTurn: () => []
+      });
 
       // Test that methods return WorldEvent arrays
       const targetResult = hook.target('flux:actor:target' as ActorURN);
@@ -198,7 +200,9 @@ describe('combatant', () => {
           createDefendCost: () => ({ ap: 0.5, energy: 0 })
         }
       });
-      const hook = createTestApi(testContext, testSession, testActor);
+      const hook = createTestApi(testContext, testSession, testActor, {
+        advanceTurn: () => []
+      });
 
       // Test each method returns proper WorldEvent array
       const methods = [

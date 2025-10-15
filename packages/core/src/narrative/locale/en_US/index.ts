@@ -17,6 +17,7 @@ import {
   renderCombatSessionEndNarrative,
   renderCombatStatusChangeNarrative,
   renderApRecoveryNarrative,
+  renderWasAttackedNarrative,
   // Note: Actor death and energy recovery are handled by combat events
 } from '~/narrative/locale/en_US/combat';
 
@@ -70,6 +71,7 @@ export const en_US: LanguageTemplates = {
 
   // Combat Events
   [EventType.COMBATANT_DID_ATTACK]: renderAttackNarrative,
+  [EventType.COMBATANT_WAS_ATTACKED]: renderWasAttackedNarrative,
   [EventType.COMBATANT_DID_DEFEND]: renderDefendNarrative,
   [EventType.COMBATANT_DID_MOVE]: renderMoveNarrative,
   [EventType.COMBATANT_DID_ACQUIRE_TARGET]: renderTargetNarrative,

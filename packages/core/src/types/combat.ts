@@ -51,11 +51,11 @@ export type Battlefield = {
   cover: [],
 };
 
-
-export type BattlefieldPositionSummary = {
-  coordinate: number;
-  facing: CombatFacing;
-  velocity: number;
+/**
+ * @deprecated
+ */
+export type BattlefieldPositionSummary = BattlefieldPosition & {
+  velocity?: number;
 };
 
 export type ActionCost = Partial<FullyQualifiedActionCost>;
@@ -318,4 +318,19 @@ export type ResolvedTarget = {
  */
 export type CombatCommandPlan = CombatCommand[];
 
-// CombatAction has been completely removed - combat system now uses Commands directly
+export enum AttackOutcome {
+  HIT = 'hit',
+  MISS = 'miss',
+  HIT_CRITICAL = 'hit:critical',
+  MISS_CRITICAL = 'miss:critical',
+}
+
+export enum AttackType {
+  STRIKE = 'strike',
+  CLEAVE = 'cleave',
+}
+
+export enum DamageType {
+  PHYSICAL = 'physical',
+  ENERGY = 'energy',
+}

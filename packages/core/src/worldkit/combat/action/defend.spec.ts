@@ -74,9 +74,8 @@ describe('Defend Method', () => {
         trace: expect.any(String),
         type: EventType.COMBATANT_DID_DEFEND,
         location: defender.location,
-        actor: undefined, // Actor should NOT be at top level
+        actor: defender.id,
         payload: {
-          actor: defender.id, // Actor should be in payload
           cost: { ap: initialAP }
         },
       });

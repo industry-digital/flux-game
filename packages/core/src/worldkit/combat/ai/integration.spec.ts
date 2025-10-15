@@ -398,9 +398,9 @@ describe('Combat System Integration (Post CombatCommand Refactor)', () => {
       if (plan.length > 0) {
         // Verify trace propagation
         plan.forEach((cmd, index) => {
-          expect(cmd.trace).toBeDefined();
-          expect(typeof cmd.trace).toBe('string');
-          console.log(`Command ${index + 1} trace: ${cmd.trace}`);
+          expect(cmd.id).toBeDefined();
+          expect(typeof cmd.id).toBe('string');
+          console.log(`Command ${index + 1} trace: ${cmd.id}`);
         });
       }
     });

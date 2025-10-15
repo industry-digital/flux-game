@@ -9,7 +9,7 @@ import { createActor } from '.';
 import { createTestTransformerContext } from '~/testing';
 import { Actor } from '~/types/entity/actor';
 import { TransformerContext } from '~/types/handler';
-import { WeaponItemURN, ItemURN, SchemaURN } from '~/types/taxonomy';
+import { WeaponItemURN, ItemURN } from '~/types/taxonomy';
 import { HumanAnatomy } from '~/types/taxonomy/anatomy';
 import { WeaponSchema } from '~/types/schema/weapon';
 import { SchemaManager } from '~/worldkit/schema/manager';
@@ -90,7 +90,7 @@ describe('createActorEquipmentApi', () => {
   describe('basic operations', () => {
     it('should equip weapon to correct anatomical location', () => {
       // Add weapon to inventory first
-      const weapon = inventoryApi.addItem(actor, { schema: 'flux:schema:weapon:sword' as SchemaURN });
+      const weapon = inventoryApi.addItem(actor, { schema: 'flux:schema:weapon:sword' });
       const weaponId = weapon.id as WeaponItemURN;
 
       equipmentApi.equipWeapon(actor, weaponId);
@@ -102,7 +102,7 @@ describe('createActorEquipmentApi', () => {
 
     it('should unequip weapon from anatomical location', () => {
       // Add and equip weapon
-      const weapon = inventoryApi.addItem(actor, { schema: 'flux:schema:weapon:sword' as SchemaURN });
+      const weapon = inventoryApi.addItem(actor, { schema: 'flux:schema:weapon:sword' });
       const weaponId = weapon.id as WeaponItemURN;
       equipmentApi.equipWeapon(actor, weaponId);
 
@@ -117,7 +117,7 @@ describe('createActorEquipmentApi', () => {
 
     it('should get equipped weapon from default locations', () => {
       // Add and equip weapon
-      const weapon = inventoryApi.addItem(actor, { schema: 'flux:schema:weapon:sword' as SchemaURN });
+      const weapon = inventoryApi.addItem(actor, { schema: 'flux:schema:weapon:sword' });
       const weaponId = weapon.id as WeaponItemURN;
       equipmentApi.equipWeapon(actor, weaponId);
 
@@ -128,7 +128,7 @@ describe('createActorEquipmentApi', () => {
 
     it('should get equipped weapon from specific locations', () => {
       // Add and equip weapon to right hand
-      const weapon = inventoryApi.addItem(actor, { schema: 'flux:schema:weapon:sword' as SchemaURN });
+      const weapon = inventoryApi.addItem(actor, { schema: 'flux:schema:weapon:sword' });
       const weaponId = weapon.id as WeaponItemURN;
       equipmentApi.equipWeapon(actor, weaponId);
 
@@ -150,7 +150,7 @@ describe('createActorEquipmentApi', () => {
     it('should ensure equipment is initialized', () => {
       actor.equipment = undefined as any;
 
-      const weapon = inventoryApi.addItem(actor, { schema: 'flux:schema:weapon:sword' as SchemaURN });
+      const weapon = inventoryApi.addItem(actor, { schema: 'flux:schema:weapon:sword' });
       const weaponId = weapon.id as WeaponItemURN;
       equipmentApi.equipWeapon(actor, weaponId);
 
@@ -184,7 +184,7 @@ describe('createActorEquipmentApi', () => {
     });
 
     it('should equip weapon to multiple anatomical locations', () => {
-      const weapon = inventoryApi.addItem(actor, { schema: 'flux:schema:weapon:greatsword' as SchemaURN });
+      const weapon = inventoryApi.addItem(actor, { schema: 'flux:schema:weapon:greatsword' });
       const weaponId = weapon.id as WeaponItemURN;
 
       equipmentApi.equipWeapon(actor, weaponId);
@@ -194,7 +194,7 @@ describe('createActorEquipmentApi', () => {
     });
 
     it('should unequip weapon from all anatomical locations', () => {
-      const weapon = inventoryApi.addItem(actor, { schema: 'flux:schema:weapon:greatsword' as SchemaURN });
+      const weapon = inventoryApi.addItem(actor, { schema: 'flux:schema:weapon:greatsword' });
       const weaponId = weapon.id as WeaponItemURN;
       equipmentApi.equipWeapon(actor, weaponId);
 
@@ -235,7 +235,7 @@ describe('createActorEquipmentApi', () => {
 
       mockSchemaManager.getSchemaOrFail.mockReturnValue(schemaWithoutFit);
 
-      const weapon = inventoryApi.addItem(actor, { schema: 'flux:schema:weapon:broken' as SchemaURN });
+      const weapon = inventoryApi.addItem(actor, { schema: 'flux:schema:weapon:broken' });
       const weaponId = weapon.id as WeaponItemURN;
 
       // Should not throw, but also should not equip anywhere
@@ -245,8 +245,8 @@ describe('createActorEquipmentApi', () => {
     });
 
     it('should throw error when trying to equip weapon to occupied slot', () => {
-      const weapon1 = inventoryApi.addItem(actor, { schema: 'flux:schema:weapon:sword' as SchemaURN });
-      const weapon2 = inventoryApi.addItem(actor, { schema: 'flux:schema:weapon:sword' as SchemaURN });
+      const weapon1 = inventoryApi.addItem(actor, { schema: 'flux:schema:weapon:sword' });
+      const weapon2 = inventoryApi.addItem(actor, { schema: 'flux:schema:weapon:sword' });
 
       // Equip first weapon
       equipmentApi.equipWeapon(actor, weapon1.id as WeaponItemURN);
@@ -260,7 +260,7 @@ describe('createActorEquipmentApi', () => {
   describe('dependency injection', () => {
     it('should use default anatomical locations when no dependencies provided', () => {
       // The API should work with default locations
-      const weapon = inventoryApi.addItem(actor, { schema: 'flux:schema:weapon:sword' as SchemaURN });
+      const weapon = inventoryApi.addItem(actor, { schema: 'flux:schema:weapon:sword' });
       const weaponId = weapon.id as WeaponItemURN;
 
       equipmentApi.equipWeapon(actor, weaponId);
@@ -277,7 +277,7 @@ describe('createActorEquipmentApi', () => {
 
       const customEquipmentApi = createActorEquipmentApi(mockSchemaManager as unknown as SchemaManager, inventoryApi, customDeps);
 
-      const weapon = inventoryApi.addItem(actor, { schema: 'flux:schema:weapon:sword' as SchemaURN });
+      const weapon = inventoryApi.addItem(actor, { schema: 'flux:schema:weapon:sword' });
       const weaponId = weapon.id as WeaponItemURN;
       customEquipmentApi.equipWeapon(actor, weaponId);
 
@@ -313,8 +313,8 @@ describe('createActorEquipmentApi', () => {
         .mockReturnValueOnce(swordSchema)
         .mockReturnValueOnce(daggerSchema);
 
-      const sword = inventoryApi.addItem(actor, { schema: 'flux:schema:weapon:sword' as SchemaURN });
-      const dagger = inventoryApi.addItem(actor, { schema: 'flux:schema:weapon:dagger' as SchemaURN });
+      const sword = inventoryApi.addItem(actor, { schema: 'flux:schema:weapon:sword' });
+      const dagger = inventoryApi.addItem(actor, { schema: 'flux:schema:weapon:dagger' });
 
       equipmentApi.equipWeapon(actor, sword.id as WeaponItemURN);
       equipmentApi.equipWeapon(actor, dagger.id as WeaponItemURN);
@@ -333,8 +333,8 @@ describe('createActorEquipmentApi', () => {
 
     it('should prevent equipping multiple weapons to the same anatomical location', () => {
       // Add multiple weapons to inventory
-      const sword = inventoryApi.addItem(actor, { schema: 'flux:schema:weapon:sword' as SchemaURN });
-      const sword2 = inventoryApi.addItem(actor, { schema: 'flux:schema:weapon:sword' as SchemaURN });
+      const sword = inventoryApi.addItem(actor, { schema: 'flux:schema:weapon:sword' });
+      const sword2 = inventoryApi.addItem(actor, { schema: 'flux:schema:weapon:sword' });
 
       // Equip first weapon
       equipmentApi.equipWeapon(actor, sword.id as WeaponItemURN);
@@ -363,7 +363,7 @@ describe('createActorEquipmentApi', () => {
 
     it('should cleanup equipment by removing undefined entries and empty objects', () => {
       // Add and equip weapon
-      const weapon = inventoryApi.addItem(actor, { schema: 'flux:schema:weapon:sword' as SchemaURN });
+      const weapon = inventoryApi.addItem(actor, { schema: 'flux:schema:weapon:sword' });
       const weaponId = weapon.id as WeaponItemURN;
       equipmentApi.equipWeapon(actor, weaponId);
 
@@ -400,11 +400,11 @@ describe('createActorEquipmentApi', () => {
 
       const sword = inventoryApi.addItem(actor, {
         id: 'flux:item:test-sword' as ItemURN,
-        schema: 'flux:schema:weapon:sword' as SchemaURN
+        schema: 'flux:schema:weapon:sword'
       });
       const dagger = inventoryApi.addItem(actor2, {
         id: 'flux:item:test-dagger' as ItemURN,
-        schema: 'flux:schema:weapon:dagger' as SchemaURN
+        schema: 'flux:schema:weapon:dagger'
       });
 
       // Mock different schemas for each weapon
@@ -430,7 +430,7 @@ describe('createActorEquipmentApi', () => {
     it('should work with the same actor inventory reference', () => {
       const originalInventory = actor.inventory;
 
-      const weapon = inventoryApi.addItem(actor, { schema: 'flux:schema:weapon:sword' as SchemaURN });
+      const weapon = inventoryApi.addItem(actor, { schema: 'flux:schema:weapon:sword' });
       equipmentApi.equipWeapon(actor, weapon.id as WeaponItemURN);
 
       expect(actor.inventory).toBe(originalInventory);
@@ -440,7 +440,7 @@ describe('createActorEquipmentApi', () => {
 
     it('should handle equipment operations when inventory changes', () => {
       // Add and equip weapon
-      const weapon = inventoryApi.addItem(actor, { schema: 'flux:schema:weapon:sword' as SchemaURN });
+      const weapon = inventoryApi.addItem(actor, { schema: 'flux:schema:weapon:sword' });
       const weaponId = weapon.id as WeaponItemURN;
       equipmentApi.equipWeapon(actor, weaponId);
 
@@ -464,7 +464,7 @@ describe('createActorEquipmentApi', () => {
       for (let i = 0; i < weaponCount; i++) {
         const weapon = inventoryApi.addItem(actor, {
           id: `flux:item:perf-sword-${i}` as ItemURN,
-          schema: 'flux:schema:weapon:sword' as SchemaURN
+          schema: 'flux:schema:weapon:sword'
         });
         weapons.push(weapon.id as WeaponItemURN);
       }
@@ -506,7 +506,7 @@ describe('createActorEquipmentApi', () => {
 
     it('should demonstrate equipment lookup performance', () => {
       // Equip a weapon
-      const weapon = inventoryApi.addItem(actor, { schema: 'flux:schema:weapon:sword' as SchemaURN });
+      const weapon = inventoryApi.addItem(actor, { schema: 'flux:schema:weapon:sword' });
       const weaponId = weapon.id as WeaponItemURN;
       equipmentApi.equipWeapon(actor, weaponId);
 
@@ -541,7 +541,7 @@ describe('createActorEquipmentApi', () => {
       const times: number[] = [];
 
       // Add a weapon
-      const weapon = inventoryApi.addItem(actor, { schema: 'flux:schema:weapon:sword' as SchemaURN });
+      const weapon = inventoryApi.addItem(actor, { schema: 'flux:schema:weapon:sword' });
       const weaponId = weapon.id as WeaponItemURN;
 
       // Measure performance of equip/unequip cycles

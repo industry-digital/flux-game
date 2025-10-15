@@ -7,11 +7,11 @@
 
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import {
-    createTransformerContext,
-    createWorldProjection,
-    createPotentiallyImpureOperations,
-    DEFAULT_POTENTIALLY_IMPURE_OPERATIONS,
-    MapFunction
+  createTransformerContext,
+  createWorldProjection,
+  createPotentiallyImpureOperations,
+  DEFAULT_POTENTIALLY_IMPURE_OPERATIONS,
+  MapFunction
 } from './context';
 import { TransformerContext, WorldProjection, PotentiallyImpureOperations, ProfileResult } from '~/types/handler';
 import { EventType, WorldEvent, WorldEventInput } from '~/types/event';
@@ -39,12 +39,7 @@ describe('createTransformerContext', () => {
       profile: vi.fn(() => ({ result: 'test-result', duration: 100 } as ProfileResult<any>))
     };
 
-    mockWorld = {
-      actors: {},
-      places: {},
-      items: {},
-      sessions: {},
-    };
+    mockWorld = createWorldProjection();
 
     mockSchemaManager = createSchemaManager();
   });
@@ -60,7 +55,6 @@ describe('createTransformerContext', () => {
       expect(context.inventoryApi).toBeDefined();
       expect(context.equipmentApi).toBeDefined();
       expect(context.actorSkillApi).toBeDefined();
-      expect(context.capacitorApi).toBeDefined();
       expect(context.metrics).toBeDefined();
     });
 
@@ -154,14 +148,12 @@ describe('createTransformerContext', () => {
         customInventoryApi,
         customEquipmentApi,
         customActorSkillApi,
-        customCapacitorApi,
         customMetrics
       );
 
       expect(context.inventoryApi).toBe(customInventoryApi);
       expect(context.equipmentApi).toBe(customEquipmentApi);
       expect(context.actorSkillApi).toBe(customActorSkillApi);
-      expect(context.capacitorApi).toBe(customCapacitorApi);
       expect(context.metrics).toBe(customMetrics);
     });
   });
@@ -259,6 +251,7 @@ describe('createTransformerContext', () => {
 
     it('should retrieve events by type', () => {
       context.declareEvent({
+        id: 'test-event-0',
         type: EventType.ACTOR_WAS_CREATED,
         location: 'flux:place:test' as PlaceURN,
         trace: 'create-command',
@@ -266,6 +259,7 @@ describe('createTransformerContext', () => {
       } as any);
 
       context.declareEvent({
+        id: 'test-event-1',
         type: EventType.ACTOR_DID_MOVE,
         location: 'flux:place:test' as PlaceURN,
         trace: 'move-command',
@@ -283,6 +277,7 @@ describe('createTransformerContext', () => {
 
     it('should retrieve events by regex pattern', () => {
       context.declareEvent({
+        id: 'test-event-0',
         type: EventType.ACTOR_WAS_CREATED,
         location: 'flux:place:test' as PlaceURN,
         trace: 'create-command',
@@ -290,6 +285,7 @@ describe('createTransformerContext', () => {
       } as any);
 
       context.declareEvent({
+        id: 'test-event-1',
         type: EventType.ACTOR_DID_MOVE,
         location: 'flux:place:test' as PlaceURN,
         trace: 'move-command',
@@ -297,6 +293,7 @@ describe('createTransformerContext', () => {
       } as any);
 
       context.declareEvent({
+        id: 'test-event-2',
         type: EventType.COMBAT_SESSION_DID_START,
         location: 'flux:place:test' as PlaceURN,
         trace: 'combat-command',
@@ -312,6 +309,7 @@ describe('createTransformerContext', () => {
 
     it('should retrieve events by command trace', () => {
       context.declareEvent({
+        id: 'test-event-0',
         type: EventType.ACTOR_WAS_CREATED,
         location: 'flux:place:test' as PlaceURN,
         trace: 'command-1',
@@ -319,6 +317,7 @@ describe('createTransformerContext', () => {
       } as any);
 
       context.declareEvent({
+        id: 'test-event-1',
         type: EventType.ACTOR_DID_MOVE,
         location: 'flux:place:test' as PlaceURN,
         trace: 'command-1',
@@ -326,6 +325,7 @@ describe('createTransformerContext', () => {
       } as any);
 
       context.declareEvent({
+        id: 'test-event-2',
         type: EventType.ACTOR_DID_DIE,
         location: 'flux:place:test' as PlaceURN,
         trace: 'command-2',
@@ -399,7 +399,6 @@ describe('createTransformerContext', () => {
       expect(context.mass).toBeDefined();
       expect(context.inventoryApi).toBeDefined();
       expect(context.equipmentApi).toBeDefined();
-      expect(context.capacitorApi).toBeDefined();
 
       // Test that schema manager is shared
       expect(context.schemaManager).toBeDefined();
@@ -434,6 +433,7 @@ describe('createTransformerContext', () => {
 
       // Declare multiple events
       context.declareEvent({
+        id: 'test-event-1',
         type: EventType.COMBAT_SESSION_DID_START,
         location: 'flux:place:arena' as PlaceURN,
         trace: 'combat-init',
@@ -441,6 +441,7 @@ describe('createTransformerContext', () => {
       });
 
       context.declareEvent({
+        id: 'test-event-2',
         type: EventType.COMBATANT_DID_ATTACK,
         location: 'flux:place:arena' as PlaceURN,
         actor: 'flux:actor:attacker' as ActorURN,
@@ -481,6 +482,7 @@ describe('createWorldProjection', () => {
       places: {},
       items: {},
       sessions: {},
+      groups: {},
     });
   });
 
