@@ -1,16 +1,18 @@
 import { PureReducer, TransformerContext } from '~/types/handler';
 import { DoneCommand } from './types';
-import { createCombatantApi } from '~/worldkit/combat/combatant';
 import { withBasicWorldStateValidation } from '../validation';
 import { withExistingCombatSession } from '~/worldkit/combat/validation';
+import { createCombatSessionApi } from '~/worldkit/combat/session/session';
 
 export const doneReducer: PureReducer<TransformerContext, DoneCommand> = withBasicWorldStateValidation(
   withExistingCombatSession(
-    (context, command, session) => {
+    (context, command) => {
       const { actors } = context.world;
       const actor = actors[command.actor];
 
-      const combatantApi = createCombatantApi(context, session, actor);
+      const { getCombatantApi } = createCombatSessionApi(context, actor.location, command.session!);
+      const combatantApi = getCombatantApi(actor.id);
+
       combatantApi.done(command.id);
 
       return context;
