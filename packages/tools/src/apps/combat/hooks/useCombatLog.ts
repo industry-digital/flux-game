@@ -7,10 +7,6 @@ export interface UseCombatLogResult {
    */
   combatLog: WorldEvent[];
   /**
-   * The ID of the last event in the log
-   */
-  lastEventId: string | null;
-  /**
    * Add new events to the log
    */
   addEvents: (events: WorldEvent[]) => void;
