@@ -21,13 +21,17 @@ export const DEFAULT_INTENT_FACTORY_DEPENDENCIES: IntentFactoryDependencies = {
   uniqid: () => uniqid(24, BASE62_CHARSET),
 };
 
+const NUMERIC_TOKEN_PATTERN = /^\d+(\.\d+)?$/;
+const TOKEN_FILTER = (token: string) => token.length >= 2 || NUMERIC_TOKEN_PATTERN.test(token);
+
 export const createIntent = (
   input: IntentInput,
   deps: IntentFactoryDependencies = DEFAULT_INTENT_FACTORY_DEPENDENCIES,
 ): Intent => {
   const normalized = input.text.toLowerCase().trim();
   const allTokens = normalized.split(/\s+/);
-  const filteredTokens = allTokens.filter(token => token.length >= 2);
+  // Keep tokens that are either >= 2 chars OR are numeric (including single digits)
+  const filteredTokens = allTokens.filter(TOKEN_FILTER);
   const [verb, ...tokens] = filteredTokens;
 
   return {

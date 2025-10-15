@@ -71,6 +71,19 @@ describe('Intent Factory', () => {
       expect(intent.uniques).toEqual(new Set(['to', 'big', 'room']));
     });
 
+    it('should preserve numeric tokens including single digits', () => {
+      const intent = createIntent({
+        id: 'test-intent-numeric',
+        actor: ACTOR_ID,
+        location: PLACE_ID,
+        text: 'advance ap 1 distance 15 x 2.5 a',
+      });
+
+      // Numbers (1, 15, 2.5) should be preserved, short non-numeric tokens (x, a) filtered out
+      expect(intent.tokens).toEqual(['ap', '1', 'distance', '15', '2.5']);
+      expect(intent.uniques).toEqual(new Set(['ap', '1', 'distance', '15', '2.5']));
+    });
+
     it('should handle empty text gracefully', () => {
       const intent = createIntent({
         id: 'test-intent-5',

@@ -1,5 +1,5 @@
 import { EventType, WorldEvent, WorldEventInput } from '~/types/event';
-import { Command, CommandType, NaturalLanguageAnalysis } from '~/types/intent';
+import { Command, CommandType } from '~/types/intent';
 import { ActorURN, GroupURN, ItemURN, PlaceURN, SessionURN } from '~/types/taxonomy';
 import { Place } from '~/types/entity/place';
 import { Actor } from '~/types/entity/actor';
@@ -173,19 +173,15 @@ export type Intent = {
 
   /**
    * Tokens created from `normalized`, unsorted
+   * Does not contain `verb`.
    */
   tokens: string[];
 
   /**
    * Unique tokens created from `normalized`
+   * Does not contain `verb`.
    */
   uniques: Set<string>;
-
-  /**
-   * NLP analysis of the intent text
-   * @deprecated
-   */
-  nlp?: NaturalLanguageAnalysis;
 };
 
 export type IntentParserContext = EntityResolverApi & {

@@ -1,9 +1,11 @@
 import { PureReducer, TransformerContext } from '~/types/handler';
 import { AdvanceCommand } from './types';
 import { createCombatSessionApi } from '~/worldkit/combat/session/session';
-import { Team } from '~/types/combat';
 import { withBasicWorldStateValidation } from '~/command/validation';
 import { withExistingCombatSession } from '~/worldkit/combat/validation';
+import { apToDistance } from '~/worldkit/physics/movement';
+import { getStatValue } from '~/worldkit/entity/actor/stats';
+import { Stat } from '~/types/entity/actor';
 
 const DISTANCE = 'distance';
 const AP = 'ap';
@@ -17,23 +19,43 @@ export const advanceReducer: PureReducer<TransformerContext, AdvanceCommand> = w
 
       const { isNew, getCombatantApi, addCombatant, startCombat } = createCombatSessionApi(context, actor.location, session.id);
 
-      // Handle combat initiation if targeting and session is new
-      if (command.args.target && isNew) {
-        const targetActor = actors[command.args.target];
-        if (!targetActor) {
-          context.declareError('ADVANCE: Target not found', command.id);
-          return context;
-        }
-
-        addCombatant(actor.id, Team.ALPHA);
-        addCombatant(targetActor.id, Team.BRAVO);
-        startCombat(command.id);
-      }
-
       // Execute movement
       const combatantApi = getCombatantApi(actor.id);
       const moveBy = command.args.type === DISTANCE ? DISTANCE : AP;
-      combatantApi.advance(moveBy, command.args.distance || 1, command.args.target, command.id);
+
+      // Handle max advance when distance is undefined
+      let moveValue: number;
+      if (command.args.distance !== undefined) {
+        moveValue = command.args.distance;
+      } else {
+        // Calculate maximum possible movement
+        if (moveBy === AP) {
+          // Use all available AP
+          const combatant = session.data.combatants.get(actor.id);
+          if (!combatant) {
+            context.declareError('ADVANCE: Actor not in combat', command.id);
+            return context;
+          }
+          moveValue = combatant.ap.eff.cur;
+        } else {
+          // Calculate max distance from available AP
+          const combatant = session.data.combatants.get(actor.id);
+          if (!combatant) {
+            context.declareError('ADVANCE: Actor not in combat', command.id);
+            return context;
+          }
+
+          // Use apToDistance to convert available AP to max distance
+          const power = getStatValue(actor, Stat.POW);
+          const finesse = getStatValue(actor, Stat.FIN);
+          const actorMassGrams = context.mass.computeActorMass(actor);
+          const actorMassKg = actorMassGrams / 1000;
+
+          moveValue = apToDistance(power, finesse, combatant.ap.eff.cur, actorMassKg);
+        }
+      }
+
+      combatantApi.advance(moveBy, moveValue, undefined, command.id);
 
       return context;
     }
