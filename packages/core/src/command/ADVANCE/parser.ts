@@ -1,7 +1,7 @@
 import { IntentParser, IntentParserContext, Intent } from '~/types/handler';
 import { CommandType } from '~/types/intent';
 import { createActorCommand } from '~/lib/intent';
-import { AdvanceCommand } from './types';
+import { AdvanceCommand, AdvanceCommandArgs } from './types';
 
 const ADVANCE_VERB = 'advance';
 const AP = 'ap';
@@ -33,21 +33,21 @@ export const advanceIntentParser: IntentParser<AdvanceCommand> = (
   // - "advance 15" → move 15 meters (shorthand)
   // - "advance ap 2.5" → move using 2.5 AP
 
-  let type: typeof DISTANCE | typeof AP = DISTANCE;
-  let distance: number | undefined = undefined; // undefined = max possible
-
   const { tokens } = intent;
+  let args: AdvanceCommandArgs;
 
   // No tokens = "advance" only → max advance
   if (tokens.length === 0) {
-    // distance remains undefined for max advance
+    args = { type: 'max' };
   }
   // Single token = "advance <number>" → distance shorthand
   else if (tokens.length === 1) {
     const value = parseFloat(tokens[0]);
-    if (!isNaN(value) && value > 0) {
-      type = DISTANCE;
-      distance = value;
+    if (!isNaN(value) && value > 0 && Number.isFinite(value) && value <= Number.MAX_SAFE_INTEGER) {
+      args = { type: 'distance', distance: value };
+    } else {
+      // Invalid number, fall back to max advance
+      args = { type: 'max' };
     }
   }
   // Two tokens = "advance ap <number>" or "advance distance <number>"
@@ -55,15 +55,22 @@ export const advanceIntentParser: IntentParser<AdvanceCommand> = (
     const [modifier, valueStr] = tokens;
     const value = parseFloat(valueStr);
 
-    if (!isNaN(value) && value > 0) {
+    if (!isNaN(value) && value > 0 && Number.isFinite(value) && value <= Number.MAX_SAFE_INTEGER) {
       if (modifier === AP) {
-        type = AP;
-        distance = value;
+        args = { type: 'ap', ap: value };
       } else if (modifier === DISTANCE) {
-        type = DISTANCE;
-        distance = Math.floor(value); // Distance must be whole meters
+        args = { type: 'distance', distance: Math.floor(value) }; // Distance must be whole meters
+      } else {
+        // Unknown modifier, fall back to max advance
+        args = { type: 'max' };
       }
+    } else {
+      // Invalid number, fall back to max advance
+      args = { type: 'max' };
     }
+  } else {
+    // Too many tokens, fall back to max advance
+    args = { type: 'max' };
   }
 
   return createActorCommand({
@@ -72,10 +79,6 @@ export const advanceIntentParser: IntentParser<AdvanceCommand> = (
     actor: intent.actor,
     location: intent.location,
     session: intent.session,
-    args: {
-      type,
-      distance, // undefined means "move as far as possible"
-      direction: 1, // Always forward for advance
-    },
+    args,
   });
 };

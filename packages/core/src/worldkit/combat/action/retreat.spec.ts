@@ -260,7 +260,7 @@ describe('Retreat Method', () => {
       const { retreat, attackerActor } = defaultScenario;
       const customTrace = 'custom-retreat-trace-123';
 
-      const result = retreat(MOVE_BY_DISTANCE, 10, undefined, customTrace);
+      const result = retreat(MOVE_BY_DISTANCE, 10, customTrace);
 
       expect(result).toHaveLength(1);
       expect(result[0].trace).toBe(customTrace);
