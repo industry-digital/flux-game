@@ -16,7 +16,7 @@ export const rangeIntentParser: IntentParser<RangeCommand> = (
     return undefined;
   }
 
-  const target = resolveActor(intent);
+  const target = resolveActor(intent, true);
   if (!target) {
     return undefined;
   }
