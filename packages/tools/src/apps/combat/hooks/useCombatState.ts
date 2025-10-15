@@ -9,8 +9,8 @@ import {
   resolveCommandFromIntent,
   executeCommand,
   type Command,
+  type PotentiallyImpureOperations,
 } from '@flux/core';
-import { ALICE_ID } from '~/apps/combat/constants';
 
 export interface UseCombatStateResult {
   executeIntent: (intentText: string) => WorldEvent[];
@@ -22,12 +22,14 @@ export interface CombatStateDependencies {
   createIntent: typeof createIntent;
   resolveCommandFromIntent: typeof resolveCommandFromIntent;
   executeCommand: typeof executeCommand;
+  timestamp: PotentiallyImpureOperations['timestamp'];
 }
 
 export const DEFAULT_COMBAT_STATE_DEPS: CombatStateDependencies = {
   createIntent,
   resolveCommandFromIntent,
   executeCommand,
+  timestamp: () => Date.now(),
 };
 
 /**
@@ -69,7 +71,7 @@ export function useCombatState(
 
       // Step 1: Create Intent with explicit session context
       const intent = deps.createIntent({
-        id: `combat-intent-${Date.now()}`,
+        id: `combat-intent-${deps.timestamp()}`,
         actor: currentActorId,
         location: placeId,
         session: sessionId, // 🎯 Explicit session threading from session.id!
@@ -100,14 +102,6 @@ export function useCombatState(
 
       // Trigger re-render by updating event count
       if (newEvents.length > 0) {
-        for (const event of newEvents) {
-          console.log(`${event.actor} ${event.type} ${JSON.stringify(event.payload)}`);
-          if (event.type === 'combat:actor:moved') {
-            const alice = session?.data.combatants.get(ALICE_ID);
-            console.log('🔍 MOVE EVENT DETAILS:', JSON.stringify(event.payload, null, 2));
-            console.log('🔍 SESSION AFTER MOVE - ID:', session?.id, 'Alice pos:', alice?.position.coordinate);
-          }
-        }
         // Update last event ID for re-render triggering
         const latestEvent = newEvents[newEvents.length - 1];
         setLastEventId(latestEvent.id);
@@ -150,14 +144,6 @@ export function useCombatState(
 
       // Trigger re-render by updating event count
       if (newEvents.length > 0) {
-        for (const event of newEvents) {
-          console.log(`${event.actor} ${event.type} ${JSON.stringify(event.payload)}`);
-          if (event.type === 'combat:actor:moved') {
-            const alice = session?.data.combatants.get(ALICE_ID);
-            console.log('🔍 MOVE EVENT DETAILS:', JSON.stringify(event.payload, null, 2));
-            console.log('🔍 SESSION AFTER MOVE - ID:', session?.id, 'Alice pos:', alice?.position.coordinate);
-          }
-        }
         // Update last event ID for re-render triggering
         const latestEvent = newEvents[newEvents.length - 1];
         setLastEventId(latestEvent.id);
