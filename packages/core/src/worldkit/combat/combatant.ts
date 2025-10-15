@@ -9,17 +9,18 @@ import { createAttackMethod, AttackDependencies } from './action/attack';
 import { createDefendMethod, DefendMethod, DefendDependencies } from './action/defend';
 import { createTargetMethod } from './action/target';
 import { createStrikeMethod, StrikeDependencies } from './action/strike';
+import { createCleaveMethod, CleaveDependencies } from '~/worldkit/combat/action/cleave';
 import { calculateMaxAp } from '~/worldkit/combat/ap';
 import { getMaxEnergy } from '~/worldkit/entity/actor/capacitor';
 import { createDoneMethod } from '~/worldkit/combat/action/done';
 import { cleanApPrecision } from '~/worldkit/combat/ap';
 import { computeInitiativeRoll } from '~/worldkit/combat/initiative';
-import { CleaveDependencies, createCleaveMethod } from '~/worldkit/combat/action/cleave';
 export { deductAp } from '~/worldkit/combat/ap';
 
 export const MOVE_BY_AP = 'ap' as const;
 export const MOVE_BY_DISTANCE = 'distance' as const;
-export type MovementType = typeof MOVE_BY_AP | typeof MOVE_BY_DISTANCE;
+export const MOVE_BY_MAX = 'max' as const;
+export type MovementType = typeof MOVE_BY_AP | typeof MOVE_BY_DISTANCE | typeof MOVE_BY_MAX;
 
 export type CombatantAttributes = {
   ap: Combatant['ap'];

@@ -16,7 +16,7 @@ export const defendReducer: PureReducer<TransformerContext, DefendCommand> = wit
       const { getCombatantApi } = createCombatSessionApi(context, actor.location, session.id);
       const combatantApi = getCombatantApi(actor.id);
 
-      combatantApi.defend(command.id, { autoDone: command.args.autoDone });
+      combatantApi.defend(command.id, { autoDone: true });
 
       return context;
     }

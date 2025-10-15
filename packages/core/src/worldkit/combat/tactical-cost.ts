@@ -68,6 +68,7 @@ export function createMovementCostFromAp(
   };
 }
 
+
 /**
  * Create zero-cost action (for TARGET, DONE, etc.)
  */
@@ -86,6 +87,25 @@ export function createDefendCost(remainingAp: number): FullyQualifiedActionCost 
   return {
     ap: cleanApPrecision(remainingAp), // Clean up precision artifacts without changing intended value
     energy: 0,
+  };
+}
+
+/**
+ * Create tactical cost for max movement (uses all remaining AP)
+ * Similar to defend, but includes energy cost for movement
+ */
+export function createMaxMovementCost(
+  remainingAp: number,
+  power: number,
+  finesse: number,
+  distance: number,
+  massKg: number
+): FullyQualifiedActionCost {
+  const energyCost = calculateMovementEnergyCost(power, finesse, distance, massKg);
+
+  return {
+    ap: cleanApPrecision(remainingAp), // Use all available AP without rounding up
+    energy: energyCost,
   };
 }
 

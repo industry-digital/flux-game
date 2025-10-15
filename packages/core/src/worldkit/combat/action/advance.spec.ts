@@ -5,7 +5,7 @@ import { CombatFacing } from '~/types/combat';
 import { createWorldEvent } from '~/worldkit/event';
 import { distanceToAp, apToDistance } from '~/worldkit/physics/movement';
 import { useCombatMovementTestScenario } from '../testing/movement';
-import { MOVE_BY_AP, MOVE_BY_DISTANCE } from '~/worldkit/combat/combatant';
+import { MOVE_BY_AP, MOVE_BY_DISTANCE, MOVE_BY_MAX } from '~/worldkit/combat/combatant';
 
 describe('createAdvanceMethod', () => {
   // Standard test scenario - most tests can use this
@@ -168,6 +168,201 @@ describe('createAdvanceMethod', () => {
         expect.stringContaining('exceed'),
         expect.any(String)
       );
+    });
+  });
+
+  describe('max movement', () => {
+    it('should move as far as possible when no obstacles present', () => {
+      const noObstacleScenario = useCombatMovementTestScenario({
+        attackerPosition: 100,
+        attackerAP: 10.0, // High AP for long movement
+        // No enemy position - clear battlefield
+      });
+      const { advance, attacker } = noObstacleScenario;
+      const initialAP = attacker.ap.eff.cur;
+
+      const result = advance(MOVE_BY_MAX, 0); // Value ignored for max movement
+
+      expect(result).toHaveLength(1);
+      expect(attacker.position.coordinate).toBeGreaterThan(100); // Moved forward
+      expect(attacker.ap.eff.cur).toBeLessThan(initialAP); // AP was consumed
+      expect(attacker.ap.eff.cur).toBeGreaterThanOrEqual(0); // Didn't exceed available AP
+    });
+
+    it('should stop at collision boundary when enemy blocks path', () => {
+      const collisionScenario = useCombatMovementTestScenario({
+        attackerPosition: 100,
+        enemyPosition: 150, // Enemy 50m away
+        attackerAP: 20.0, // Plenty of AP to reach enemy
+      });
+      const { advance, attacker } = collisionScenario;
+
+      const result = advance(MOVE_BY_MAX, 0);
+
+      expect(result).toHaveLength(1);
+      expect(attacker.position.coordinate).toBe(149); // Stopped 1m before enemy at 150
+    });
+
+    it('should stop at battlefield boundary when no other obstacles', () => {
+      const boundaryScenario = useCombatMovementTestScenario({
+        attackerPosition: 180,
+        battlefield: { length: 200, margin: 0, cover: [] }, // 200m battlefield
+        attackerAP: 20.0, // Plenty of AP
+      });
+      // Remove enemy to test pure boundary conditions
+      boundaryScenario.scenario.session.data.combatants.delete(boundaryScenario.ENEMY_ID);
+
+      const { advance, attacker } = boundaryScenario;
+
+      const result = advance(MOVE_BY_MAX, 0);
+
+      expect(result).toHaveLength(1);
+      expect(attacker.position.coordinate).toBe(200); // Stopped at battlefield boundary
+    });
+
+    it('should be limited by available AP when that is the constraint', () => {
+      const lowAPScenario = useCombatMovementTestScenario({
+        attackerPosition: 100,
+        attackerAP: 1.0, // Very low AP
+        battlefield: { length: 1000, margin: 0, cover: [] }, // Large battlefield
+        // No enemy - clear path
+      });
+      const { advance, attacker } = lowAPScenario;
+
+      const result = advance(MOVE_BY_MAX, 0);
+
+      expect(result).toHaveLength(1);
+      expect(attacker.position.coordinate).toBeGreaterThan(100); // Moved some distance
+      expect(attacker.position.coordinate).toBeLessThan(150); // But not too far due to AP limit
+      expect(attacker.ap.eff.cur).toBeCloseTo(0, 1); // Nearly all AP consumed
+    });
+
+    it('should choose the most restrictive constraint', () => {
+      const multiConstraintScenario = useCombatMovementTestScenario({
+        attackerPosition: 100,
+        enemyPosition: 120, // Enemy 20m away
+        attackerAP: 2.0, // Limited AP (can only move ~11m)
+        battlefield: { length: 200, margin: 0, cover: [] }, // Boundary at 200m (furthest)
+      });
+      const { advance, attacker } = multiConstraintScenario;
+
+      const result = advance(MOVE_BY_MAX, 0);
+
+      expect(result).toHaveLength(1);
+      // AP is the most restrictive constraint - can only move ~11m with 2 AP
+      expect(attacker.position.coordinate).toBeCloseTo(112, 0); // Stopped due to AP limit
+    });
+
+    it('should error when no movement is possible', () => {
+      const blockedScenario = useCombatMovementTestScenario({
+        attackerPosition: 100,
+        enemyPosition: 101, // Enemy immediately adjacent
+        attackerAP: 10.0,
+      });
+      const { advance, context } = blockedScenario;
+
+      const result = advance(MOVE_BY_MAX, 0);
+
+      expect(result).toHaveLength(0);
+      expect(context.declareError).toHaveBeenCalledWith(
+        expect.stringContaining('No movement possible'),
+        expect.any(String)
+      );
+    });
+
+    it('should error when actor has zero AP', () => {
+      const noAPScenario = useCombatMovementTestScenario({
+        attackerPosition: 100,
+        attackerAP: 0.0, // No AP available
+      });
+      const { advance, context } = noAPScenario;
+
+      const result = advance(MOVE_BY_MAX, 0);
+
+      expect(result).toHaveLength(0);
+      expect(context.declareError).toHaveBeenCalledWith(
+        expect.stringContaining('No movement possible'),
+        expect.any(String)
+      );
+    });
+
+    it('should work with LEFT facing direction', () => {
+      const leftFacingScenario = useCombatMovementTestScenario({
+        attackerPosition: 150,
+        attackerAP: 10.0,
+        // No enemy - clear battlefield
+      });
+      const { attacker } = leftFacingScenario;
+
+      // Set facing to LEFT
+      attacker.position.facing = CombatFacing.LEFT;
+
+      // Create advance method with LEFT-facing combatant
+      const advance = createAdvanceMethod(
+        leftFacingScenario.context,
+        leftFacingScenario.scenario.session,
+        leftFacingScenario.attackerActor,
+        attacker
+      );
+
+      const result = advance(MOVE_BY_MAX, 0);
+
+      expect(result).toHaveLength(1);
+      expect(attacker.position.coordinate).toBeLessThan(150); // Moved leftward
+      expect(attacker.position.facing).toBe(CombatFacing.LEFT); // Facing unchanged
+    });
+
+    it('should generate proper COMBATANT_DID_MOVE event', () => {
+      const { advance, attackerActor } = defaultScenario;
+      const initialPosition = defaultScenario.attacker.position.coordinate;
+
+      const result = advance(MOVE_BY_MAX, 0);
+      const event = result[0] as CombatantDidMove;
+      const distance = Math.abs(event.payload.from.coordinate - event.payload.to.coordinate);
+
+      expect(result).toHaveLength(1);
+      expect(event.type).toBe(EventType.COMBATANT_DID_MOVE);
+      expect(event.actor).toBe(attackerActor.id);
+      expect(event.payload.from.coordinate).toBe(initialPosition);
+      expect(event.payload.to.coordinate).toBeGreaterThan(initialPosition);
+      expect(distance).toBeGreaterThan(0);
+      expect(event.payload.cost.ap).toBeGreaterThan(0);
+      expect(event.payload.cost.energy).toBeGreaterThan(0);
+    });
+
+    it('should result in whole number positions', () => {
+      const roundingScenario = useCombatMovementTestScenario({
+        attackerPosition: 100,
+        enemyPosition: 137.7, // Fractional enemy position
+        attackerAP: 10.0,
+      });
+      const { advance, attacker } = roundingScenario;
+
+      const result = advance(MOVE_BY_MAX, 0);
+
+      expect(result).toHaveLength(1);
+      expect(Number.isInteger(attacker.position.coordinate)).toBe(true);
+    });
+
+    it('should ignore the value parameter', () => {
+      const { advance, attacker } = defaultScenario;
+      const initialPosition = attacker.position.coordinate;
+      const initialAP = attacker.ap.eff.cur;
+
+      // Test that different values produce the same result
+      const result1 = advance(MOVE_BY_MAX, 999);
+      const position1 = attacker.position.coordinate;
+
+      // Reset position and AP
+      attacker.position.coordinate = initialPosition;
+      attacker.ap.eff.cur = initialAP;
+
+      const result2 = advance(MOVE_BY_MAX, -50);
+      const position2 = attacker.position.coordinate;
+
+      expect(result1).toHaveLength(1);
+      expect(result2).toHaveLength(1);
+      expect(position1).toBe(position2); // Same result regardless of value
     });
   });
 

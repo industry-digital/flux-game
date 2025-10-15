@@ -1,5 +1,6 @@
 import { createWeaponSchema, WeaponSchemaInput } from './index';
 import { WeaponSchema } from '~/types/schema/weapon';
+import { TWO_HANDED_FIT } from '~/worldkit/schema/weapon/fit';
 
 export const createWarhammerSchema = (input: WeaponSchemaInput): WeaponSchema => {
   return createWeaponSchema({
@@ -10,6 +11,7 @@ export const createWarhammerSchema = (input: WeaponSchemaInput): WeaponSchema =>
       optimal: 1,
       max: 1,
     },
+    fit: TWO_HANDED_FIT,
   });
 };
 
