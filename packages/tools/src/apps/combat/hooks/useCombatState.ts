@@ -44,9 +44,19 @@ export function useCombatState(
   const [lastEventId, setLastEventId] = useState<string | null>(null);
 
   const executeIntent = useCallback((intentText: string): WorldEvent[] => {
-    // Return early if not initialized
-    if (!currentActorId || !session) {
-      return [];
+    // Validate required state - these should never be null when executing intents
+    if (!currentActorId) {
+      throw new Error(`Cannot execute intent "${intentText}": currentActorId is required but was ${currentActorId}`);
+    }
+
+    if (!session) {
+      throw new Error(`Cannot execute intent "${intentText}": session is required but was null`);
+    }
+
+    // Check if the current actor exists in the world projection
+    const actorInWorld = context.world.actors[currentActorId];
+    if (!actorInWorld) {
+      throw new Error(`Cannot execute intent "${intentText}": actor "${currentActorId}" not found in world projection. Available actors: [${Object.keys(context.world.actors).join(', ')}]`);
     }
 
     // Derive session ID from the session object
@@ -73,6 +83,7 @@ export function useCombatState(
         console.warn('Failed to resolve command:', intentText);
         return [];
       }
+
 
       // Step 3: Execute Command
       deps.executeCommand(context, resolvedCommand);
@@ -110,9 +121,13 @@ export function useCombatState(
   }, [currentActorId, context, session, placeId, deps]);
 
   const executeCommand = useCallback((command: Command): WorldEvent[] => {
-    // Return early if not initialized
-    if (!currentActorId || !session) {
-      return [];
+    // Validate required state - these should never be null when executing commands
+    if (!currentActorId) {
+      throw new Error(`Cannot execute command: currentActorId is required but was ${currentActorId}`);
+    }
+
+    if (!session) {
+      throw new Error(`Cannot execute command: session is required but was null`);
     }
 
     try {

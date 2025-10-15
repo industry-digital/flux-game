@@ -66,6 +66,10 @@ export function useCombatSession(
       setSessionApi(api);
       setSession(api.session);
       setSessionId(api.session.id);
+
+      // Set the initial current actor from the session
+      const initialCurrentActor = api.session.data.rounds.current.turns.current.actor;
+      setCurrentActorId(initialCurrentActor);
     }
   }, [context, placeId, sessionApi, deps]);
 
@@ -96,11 +100,11 @@ export function useCombatSession(
     if (newTurnEvents.length > 0) {
       // Use the most recent turn started event
       const latestTurnEvent = newTurnEvents[newTurnEvents.length - 1];
-      const newActorId = latestTurnEvent.actor;
+      const newActorId = latestTurnEvent.payload.turnActor;
 
-        if (newActorId && newActorId !== currentActorId) {
-          setCurrentActorId(newActorId);
-        }
+      if (newActorId && newActorId !== currentActorId) {
+        setCurrentActorId(newActorId);
+      }
     }
 
     // Update the last processed event ID
