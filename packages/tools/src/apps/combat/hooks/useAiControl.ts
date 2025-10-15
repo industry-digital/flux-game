@@ -11,9 +11,7 @@ import type { UseCombatStateResult } from '~/apps/combat/hooks/useCombatState';
 
 
 export interface UseAiControlResult {
-  aiControlled: Record<ActorURN, boolean>;
   aiThinking: ActorURN | null;
-  setAiControlled: (actorId: ActorURN, enabled: boolean) => void;
   setAiThinking: (actorId: ActorURN | null) => void;
   executeAiTurn: (actorId: ActorURN) => WorldEvent[];
 }
@@ -33,30 +31,24 @@ export const DEFAULT_AI_CONTROL_DEPS: Omit<AiControlDependencies, 'executeComman
 export const createUseAiControl = (deps: AiControlDependencies = DEFAULT_AI_CONTROL_DEPS) => {
 
   /**
-   * Hook for managing AI control state and execution
-   * Handles AI thinking indicators and automated turn execution
+   * Hook for managing AI control execution and thinking indicators
+   * AI control state is now managed externally (single source of truth)
    *
+   * @param aiControlled - Record of which actors are AI-controlled (from external state)
    * @param executeCommand - Function from useCombatState that handles intent execution
    */
   return function useAiControl(
     context: TransformerContext,
     session: CombatSession | null,
     currentActorId: ActorURN | null,
+    aiControlled: Record<ActorURN, boolean>,
     onEventsGenerated: (events: WorldEvent[]) => void,
     executeCommand: UseCombatStateResult['executeCommand'],
   ): UseAiControlResult {
-    const [aiControlled, setAiControlledState] = useState<Record<ActorURN, boolean>>({});
     const [aiThinking, setAiThinking] = useState<ActorURN | null>(null);
 
     const aiExecutingRef = useRef<ActorURN | null>(null);
     const aiTimerRef = useRef<NodeJS.Timeout | null>(null);
-
-    const setAiControlled = useCallback((actorId: ActorURN, enabled: boolean) => {
-      setAiControlledState(prev => ({
-        ...prev,
-        [actorId]: enabled
-      }));
-    }, []);
 
     const executeAiTurn = useCallback((actorId: ActorURN): WorldEvent[] => {
       if (!session) return [];
@@ -177,9 +169,7 @@ export const createUseAiControl = (deps: AiControlDependencies = DEFAULT_AI_CONT
     }, [currentActorId, aiControlled, context, session, executeAiTurn, onEventsGenerated]);
 
     return {
-      aiControlled,
       aiThinking,
-      setAiControlled,
       setAiThinking,
       executeAiTurn,
     };

@@ -1,10 +1,10 @@
 import { Actor } from '~/types/entity/actor';
-import { Combatant, CombatSession } from '~/types/combat';
+import { Combatant, CombatSession, MovementDirection } from '~/types/combat';
 import { TransformerContext } from '~/types/handler';
 import { WorldEvent } from '~/types/event';
 import { MovementType } from '~/worldkit/combat/combatant';
 import { DEFAULT_MOVEMENT_DEPS } from './movement-deps';
-import { createMovementMethod, MovementDirection, MovementFactoryDependencies } from './factory/movement';
+import { createMovementMethod, MovementFactoryDependencies } from './factory/movement';
 
 export type AdvanceDependencies = MovementFactoryDependencies;
 export const DEFAULT_ADVANCE_DEPS = DEFAULT_MOVEMENT_DEPS;

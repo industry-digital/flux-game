@@ -7,6 +7,8 @@ import {
   CombatantDidAcquireTarget,
   CombatantDidMove,
   CombatantDidRecoverAp,
+  CombatTurnDidStart,
+  CombatTurnDidEnd,
   EventType
 } from '~/types/event';
 import { ActorURN, SessionURN } from '~/types/taxonomy';
@@ -15,6 +17,7 @@ import { RollResult } from '~/types/dice';
 import { BattlefieldPosition } from '~/types/combat';
 import { CombatEventFactoryDependencies, DEFAULT_COMBAT_EVENT_FACTORY_DEPS } from './deps';
 import { ALICE_ID, BOB_ID } from '~/testing/constants';
+import { WellKnownActor } from '~/types/actor';
 
 // Transform function types for each factory
 export type CombatantDidAttackTransform = (event: CombatantDidAttack) => CombatantDidAttack;
@@ -24,6 +27,8 @@ export type CombatantDidDefendTransform = (event: CombatantDidDefend) => Combata
 export type CombatantDidAcquireTargetTransform = (event: CombatantDidAcquireTarget) => CombatantDidAcquireTarget;
 export type CombatantDidMoveTransform = (event: CombatantDidMove) => CombatantDidMove;
 export type CombatantDidRecoverApTransform = (event: CombatantDidRecoverAp) => CombatantDidRecoverAp;
+export type CombatTurnDidStartTransform = (event: CombatTurnDidStart) => CombatTurnDidStart;
+export type CombatTurnDidEndTransform = (event: CombatTurnDidEnd) => CombatTurnDidEnd;
 
 // Default values
 const DEFAULT_LOCATION = 'flux:place:test';
@@ -214,6 +219,57 @@ export function createCombatantDidRecoverApEvent(
       recovered: 2.0,
     },
   }) as CombatantDidRecoverAp;
+
+  return transform(baseEvent);
+}
+
+/**
+ * Creates a COMBAT_TURN_DID_START event for testing
+ */
+export function createCombatTurnDidStartEvent(
+  transform: CombatTurnDidStartTransform = identity,
+  deps: CombatEventFactoryDependencies = DEFAULT_COMBAT_EVENT_FACTORY_DEPS
+): CombatTurnDidStart {
+  const { createWorldEvent } = deps;
+
+  const baseEvent = createWorldEvent({
+    type: EventType.COMBAT_TURN_DID_START,
+    location: DEFAULT_LOCATION,
+    actor: WellKnownActor.SYSTEM,
+    trace: DEFAULT_TRACE,
+    payload: {
+      sessionId: DEFAULT_SESSION_ID,
+      turnActor: ALICE_ID,
+      round: 1,
+      turn: 1,
+    },
+  }) as CombatTurnDidStart;
+
+  return transform(baseEvent);
+}
+
+/**
+ * Creates a COMBAT_TURN_DID_END event for testing
+ */
+export function createCombatTurnDidEndEvent(
+  transform: CombatTurnDidEndTransform = identity,
+  deps: CombatEventFactoryDependencies = DEFAULT_COMBAT_EVENT_FACTORY_DEPS
+): CombatTurnDidEnd {
+  const { createWorldEvent } = deps;
+
+  const baseEvent = createWorldEvent({
+    type: EventType.COMBAT_TURN_DID_END,
+    location: DEFAULT_LOCATION,
+    actor: WellKnownActor.SYSTEM,
+    trace: DEFAULT_TRACE,
+    payload: {
+      sessionId: DEFAULT_SESSION_ID,
+      turnActor: ALICE_ID,
+      round: 1,
+      turn: 1,
+      energy: { before: 1350, after: 1500, change: 150 },
+    },
+  }) as CombatTurnDidEnd;
 
   return transform(baseEvent);
 }

@@ -10,6 +10,7 @@ import { createDefendMethod, DefendMethod, DefendDependencies } from './action/d
 import { createTargetMethod } from './action/target';
 import { createStrikeMethod, StrikeDependencies } from './action/strike';
 import { createCleaveMethod, CleaveDependencies } from '~/worldkit/combat/action/cleave';
+import { createRangeMethod, RangeMethod } from '~/worldkit/combat/action/range';
 import { calculateMaxAp } from '~/worldkit/combat/ap';
 import { getMaxEnergy } from '~/worldkit/entity/actor/capacitor';
 import { createDoneMethod } from '~/worldkit/combat/action/done';
@@ -36,6 +37,7 @@ export interface CombatantApi {
   retreat: (by: MovementType, value: number, target?: ActorURN, trace?: string) => WorldEvent[];
   attack: (target?: ActorURN, trace?: string) => WorldEvent[];
   defend: DefendMethod;
+  range: RangeMethod;
   strike: (target?: ActorURN, trace?: string) => WorldEvent[];
   cleave: (trace?: string) => WorldEvent[];
   done: (trace?: string) => WorldEvent[];
@@ -77,6 +79,7 @@ export function createCombatantApiFactory(actionDeps: ActionDependencies = DEFAU
       throw new Error(`Combatant not found: ${actor.id}`);
     }
 
+    const range = createRangeMethod(context, session, actor, combatant);
     const strike = createStrikeMethod(context, session, actor, combatant, actionDeps.strikeDeps);
     const target = createTargetMethod(context, session, actor, combatant);
     const advance = createAdvanceMethod(context, session, actor, combatant, actionDeps.advanceDeps);
@@ -102,6 +105,7 @@ export function createCombatantApiFactory(actionDeps: ActionDependencies = DEFAU
       strike,
       cleave,
       done,
+      range,
     };
   };
 }

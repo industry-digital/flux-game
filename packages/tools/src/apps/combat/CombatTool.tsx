@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef } from 'react';
+import { useCallback, useEffect, useRef, useMemo } from 'react';
 import {
   useCombatScenario,
   ALICE_ID,
@@ -78,6 +78,7 @@ export function createCombatTool(_deps: CombatToolDependencies = DEFAULT_COMBAT_
       updateActorStats,
       updateActorSkill,
       updateActorWeapon,
+      updateActorAiControl,
       calculateDerivedStats,
     } = useCombatScenario(defaultScenario);
     const actors = useCombatActors(context, scenarioData, TEST_PLACE_ID);
@@ -122,10 +123,20 @@ export function createCombatTool(_deps: CombatToolDependencies = DEFAULT_COMBAT_
       session.processNewEvents();
     }, [addEvents, actors, session]);
 
+    // Extract AI control state from scenario data (single source of truth)
+    const aiControlledState = useMemo(() => {
+      const result: Record<ActorURN, boolean> = {};
+      for (const [actorId, actorData] of Object.entries(scenarioData.actors)) {
+        result[actorId as ActorURN] = actorData.aiControlled;
+      }
+      return result;
+    }, [scenarioData.actors]);
+
     const aiControl = useAiControl(
       context,
       session.session,
       session.currentActorId,
+      aiControlledState,
       handleEventsGenerated,
       executeCommand
     );
@@ -144,8 +155,8 @@ export function createCombatTool(_deps: CombatToolDependencies = DEFAULT_COMBAT_
           actor={actor}
           actorId={actorId}
           isActive={session.currentActorId === actorId}
-          isAiControlled={aiControl.aiControlled[actorId] || false}
-          onAiToggle={aiControl.setAiControlled}
+          isAiControlled={actorData.aiControlled}
+          onAiToggle={updateActorAiControl}
           isAiThinking={aiControl.aiThinking === actorId}
 
           // Editing props (only active during setup phase)
@@ -166,13 +177,12 @@ export function createCombatTool(_deps: CombatToolDependencies = DEFAULT_COMBAT_
       scenarioData.actors,
       session.currentActorId,
       session.isInSetupPhase,
-      aiControl.aiControlled,
-      aiControl.setAiControlled,
       aiControl.aiThinking,
       calculateDerivedStats,
       updateActorStats,
       updateActorSkill,
       updateActorWeapon,
+      updateActorAiControl,
     ]);
 
     const handleCommand = useCallback((command: string) => {

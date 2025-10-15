@@ -6,12 +6,12 @@
  */
 
 import { Actor } from '~/types/entity/actor';
-import { Combatant, CombatSession } from '~/types/combat';
+import { Combatant, CombatSession, MovementDirection } from '~/types/combat';
 import { WorldEvent } from '~/types/event';
 import { MovementType } from '~/worldkit/combat/combatant';
 import { TransformerContext } from '~/types/handler';
 import { DEFAULT_MOVEMENT_DEPS } from './movement-deps';
-import { createMovementMethod, MovementDirection, MovementFactoryDependencies } from './factory/movement';
+import { createMovementMethod, MovementFactoryDependencies } from './factory/movement';
 
 export type RetreatDependencies = MovementFactoryDependencies;
 export const DEFAULT_RETREAT_DEPS = DEFAULT_MOVEMENT_DEPS;

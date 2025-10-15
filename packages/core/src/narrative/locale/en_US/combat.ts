@@ -2,7 +2,6 @@ import {
   CombatantDidAttack,
   CombatantDidDefend,
   CombatantDidMove,
-  CombatantDidAcquireTarget,
   CombatantDidDie,
   CombatTurnDidEnd,
   CombatTurnDidStart,
@@ -13,10 +12,20 @@ import {
   CombatSessionStatusDidChange,
   CombatantDidRecoverAp,
   CombatantWasAttacked,
+  CombatantDidAcquireRange,
 } from '~/types/event';
+import { MovementDirection } from '~/types/combat';
 import { SessionStatus } from '~/types/session';
 import { TemplateFunction } from '~/types/narrative';
 import { ActorURN } from '~/types/taxonomy';
+import {
+  withUserEventValidation,
+  withInteractionValidation,
+  createPerspectiveTemplate,
+  createSystemTemplate,
+  createSystemPerspectiveTemplate,
+  createDynamicSystemPerspectiveTemplate,
+} from '~/narrative/util';
 
 export const renderAttackNarrative: TemplateFunction<CombatantDidAttack, ActorURN> = (context, event, actorId) => {
   const { world, equipmentApi } = context;
@@ -87,16 +96,12 @@ export const renderWasAttackedNarrative: TemplateFunction<CombatantWasAttacked, 
     : `${attacker.name}'s ${weaponName} misses ${target.name}.`;
 };
 
-export const renderDefendNarrative: TemplateFunction<CombatantDidDefend, ActorURN> = (context, event, actorId) => {
-  const { world } = context;
-  const actor = world.actors[event.actor];
-
-  if (actorId === event.actor) {
-    return `You take a defensive stance.`
-  }
-
-  return `${actor.name} takes a defensive stance.`
-};
+export const renderDefendNarrative = withUserEventValidation(
+  createPerspectiveTemplate<CombatantDidDefend>(
+    'You take a defensive stance.',
+    (actorName) => `${actorName} takes a defensive stance.`
+  )
+);
 
 export const renderMoveNarrative: TemplateFunction<CombatantDidMove> = (context, event, actorId) => {
   const { world } = context;
@@ -113,19 +118,15 @@ export const renderMoveNarrative: TemplateFunction<CombatantDidMove> = (context,
   return `${actor.name} moves ${direction} ${distance}m.`
 };
 
-export const renderTargetNarrative: TemplateFunction<CombatantDidAcquireTarget> = (context, event, actorId) => {
-  const { world } = context;
-  const actor = world.actors[event.actor];
-  const target = world.actors[event.payload.target];
-
-  if (actorId === event.actor) {
-    // actorId is the actor
-    return `You target ${target.name}.`
+export const renderTargetNarrative = withInteractionValidation(
+  (context, event, actorId) => {
+    const actor = context.world.actors[event.actor];
+    const target = context.world.actors[event.payload.target];
+    return actorId === event.actor
+      ? `You target ${target.name}.`
+      : `${actor.name} targets ${target.name}.`;
   }
-
-  // actorId is an observer
-  return `${actor.name} targets ${target.name}.`
-};
+);
 
 export const renderDeathNarrative: TemplateFunction<CombatantDidDie> = (context, event, actorId) => {
   const { world } = context;
@@ -140,74 +141,67 @@ export const renderDeathNarrative: TemplateFunction<CombatantDidDie> = (context,
   return `${actor.name} has been killed!`;
 };
 
-export const renderTurnEndNarrative: TemplateFunction<CombatTurnDidEnd> = (context, event, actorId) => {
-  const { world } = context;
-  const actor = world.actors[event.payload.actor];
-  const energyRecovered = event.payload.energy.change;
+export const renderTurnEndNarrative = createDynamicSystemPerspectiveTemplate<CombatTurnDidEnd>(
+  (event) => event.payload.turnActor,
+  (context, event) => `Your turn has ended.\nYou have recovered ${event.payload.energy.change} energy.`,
+  (context, event, actorName) => `${actorName}'s turn ends.`
+);
 
-  if (actorId === event.payload.actor) {
-    return `Your turn has ended.\nYou have recovered ${energyRecovered} energy.`;
+export const renderTurnStartNarrative = createSystemPerspectiveTemplate<CombatTurnDidStart>(
+  (event) => event.payload.turnActor,
+  'Your turn begins.',
+  (actorName) => `${actorName}'s turn begins.`
+);
+
+export const renderRoundStartNarrative = createSystemTemplate<CombatRoundDidStart>(
+  (context, event) => `Round ${event.payload.round} begins!`
+);
+
+export const renderRoundEndNarrative = createSystemTemplate<CombatRoundDidEnd>(
+  (context, event) => `Round ${event.payload.round} ends.`
+);
+
+export const renderCombatSessionStartNarrative = createSystemTemplate<CombatSessionStarted>(
+  (context, event) => {
+    const { world } = context;
+    const combatantNames = event.payload.combatants.map(([actorId]) => world.actors[actorId]?.name).filter(Boolean);
+
+    if (combatantNames.length <= 2) {
+      return `Combat begins between ${combatantNames.join(' and ')}!`;
+    }
+
+    return `A fierce battle erupts involving ${combatantNames.length} combatants!`;
   }
+);
 
-  return `${actor.name}'s turn ends.`;
-};
+export const renderCombatSessionEndNarrative = createSystemTemplate<CombatSessionEnded>(
+  (context, event) => {
+    const { winningTeam, finalRound } = event.payload;
 
-export const renderTurnStartNarrative: TemplateFunction<CombatTurnDidStart, ActorURN> = (context, event, actorId) => {
-  const { world } = context;
-  const actor = world.actors[event.payload.actor];
+    if (winningTeam) {
+      return `Combat ends after ${finalRound} rounds. Team ${winningTeam.toUpperCase()} is victorious!`;
+    }
 
-  if (actorId === event.payload.actor) {
-    return 'Your turn begins.';
+    return `Combat ends after ${finalRound} rounds with no clear victor.`;
   }
+);
 
-  return `${actor.name}'s turn begins.`;
-};
+export const renderCombatStatusChangeNarrative = createSystemTemplate<CombatSessionStatusDidChange>(
+  (context, event) => {
+    const { currentStatus } = event.payload;
 
-export const renderRoundStartNarrative: TemplateFunction<CombatRoundDidStart> = (context, event, recipientId) => {
-  const round = event.payload.round;
-  return `Round ${round} begins!`;
-};
-
-export const renderRoundEndNarrative: TemplateFunction<CombatRoundDidEnd> = (context, event, recipientId) => {
-  const round = event.payload.round;
-  return `Round ${round} ends.`;
-};
-
-export const renderCombatSessionStartNarrative: TemplateFunction<CombatSessionStarted> = (context, event, recipientId) => {
-  const { world } = context;
-  const combatantNames = event.payload.combatants.map(([actorId]) => world.actors[actorId]?.name).filter(Boolean);
-
-  if (combatantNames.length <= 2) {
-    return `Combat begins between ${combatantNames.join(' and ')}!`;
+    switch (currentStatus) {
+      case SessionStatus.RUNNING:
+        return 'Combat is now active!';
+      case SessionStatus.PAUSED:
+        return 'Combat has been paused.';
+      case SessionStatus.TERMINATED:
+        return 'Combat has ended.';
+      default:
+        return `Combat status changed to ${currentStatus}.`;
+    }
   }
-
-  return `A fierce battle erupts involving ${combatantNames.length} combatants!`;
-};
-
-export const renderCombatSessionEndNarrative: TemplateFunction<CombatSessionEnded> = (context, event, recipientId) => {
-  const { winningTeam, finalRound } = event.payload;
-
-  if (winningTeam) {
-    return `Combat ends after ${finalRound} rounds. Team ${winningTeam.toUpperCase()} is victorious!`;
-  }
-
-  return `Combat ends after ${finalRound} rounds with no clear victor.`;
-};
-
-export const renderCombatStatusChangeNarrative: TemplateFunction<CombatSessionStatusDidChange> = (context, event, recipientId) => {
-  const { currentStatus } = event.payload;
-
-  switch (currentStatus) {
-    case SessionStatus.RUNNING:
-      return 'Combat is now active!';
-    case SessionStatus.PAUSED:
-      return 'Combat has been paused.';
-    case SessionStatus.TERMINATED:
-      return 'Combat has ended.';
-    default:
-      return `Combat status changed to ${currentStatus}.`;
-  }
-};
+);
 
 export const renderApRecoveryNarrative: TemplateFunction<CombatantDidRecoverAp, ActorURN> = (context, event, recipientId) => {
   const { world } = context;
@@ -221,5 +215,26 @@ export const renderApRecoveryNarrative: TemplateFunction<CombatantDidRecoverAp, 
   return `${actor.name} recovers ${recovered} action points.`;
 };
 
-// Note: ActorDidDie and ActorDidRecoverEnergy are handled in actor.ts
-// These were moved to avoid duplication since they're actor events, not combat-specific
+export const renderAcquireRangeNarrative: TemplateFunction<CombatantDidAcquireRange, ActorURN> = (context, event, actorId) => {
+  const { world, schemaManager } = context;
+  const actor = world.actors[event.actor];
+  const target = world.actors[event.payload.target];
+  const range = event.payload.range;
+  const direction = event.payload.direction;
+
+  if (actorId === event.actor) {
+    // Get weapon information for the actor
+    const equippedWeapon = context.equipmentApi.getEquippedWeaponSchema(actor);
+    const weaponInfo = equippedWeapon
+      ? `Your ${equippedWeapon.name.toLowerCase()}'s optimal range is ${equippedWeapon.range?.optimal || 1}m.`
+      : 'You have no weapon equipped.';
+
+    // Convert MovementDirection to readable text
+    const directionText = direction === MovementDirection.FORWARD ? 'in front of you' : 'behind you';
+
+    return `${target.name} is ${range}m away, ${directionText}.\n${weaponInfo}`;
+  }
+
+  // Third-person narrative for other observers
+  return `${actor.name} assesses the range to ${target.name} (${range}m).`;
+};

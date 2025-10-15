@@ -9,6 +9,8 @@ import {
   createCombatantDidDieEvent,
   createCombatantDidDefendEvent,
   createCombatantDidAcquireTargetEvent,
+  createCombatTurnDidStartEvent,
+  createCombatTurnDidEndEvent,
 } from '~/testing/event';
 import { EventType, WorldEvent } from '~/types/event';
 import { AttackOutcome, AttackType, Team } from '~/types/combat';
@@ -327,7 +329,7 @@ describe.each([
 
   describe('Combat Session Events', () => {
     it('should render combat session start narrative', () => {
-      const event: WorldEvent = {
+      const event = create((e) => ({
         id: 'test-event',
         type: EventType.COMBAT_SESSION_DID_START,
         location: 'flux:place:test',
@@ -396,18 +398,7 @@ describe.each([
 
   describe('Combat Turn Events', () => {
     it('should render turn start narrative from active player perspective', () => {
-      const event: WorldEvent = {
-        id: 'test-event',
-        type: EventType.COMBAT_TURN_DID_START,
-        location: 'flux:place:test',
-        actor: 'flux:actor:system',
-        trace: 'test-trace',
-        ts: Date.now(),
-        payload: {
-          actor: ALICE_ID,
-          round: 1,
-        },
-      };
+      const event = createCombatTurnDidStartEvent();
 
       const narrative = callTemplate(context, event, ALICE_ID);
 
@@ -416,18 +407,7 @@ describe.each([
     });
 
     it('should render turn start narrative from observer perspective', () => {
-      const event: WorldEvent = {
-        id: 'test-event',
-        type: EventType.COMBAT_TURN_DID_START,
-        location: 'flux:place:test',
-        actor: 'flux:actor:system',
-        trace: 'test-trace',
-        ts: Date.now(),
-        payload: {
-          actor: ALICE_ID,
-          round: 1,
-        },
-      };
+      const event = createCombatTurnDidStartEvent();
 
       const narrative = callTemplate(context, event, OBSERVER_ID);
 
@@ -436,18 +416,7 @@ describe.each([
     });
 
     it('should render turn end narrative with energy recovery', () => {
-      const event: WorldEvent = {
-        id: 'test-event',
-        type: EventType.COMBAT_TURN_DID_END,
-        location: 'flux:place:test',
-        actor: 'flux:actor:system',
-        trace: 'test-trace',
-        ts: Date.now(),
-        payload: {
-          actor: ALICE_ID,
-          energy: { change: 150, current: 1500 },
-        },
-      };
+      const event = createCombatTurnDidEndEvent();
 
       const narrative = callTemplate(context, event, ALICE_ID);
 
@@ -499,21 +468,14 @@ describe.each([
 
   describe('Edge Cases', () => {
     it('should handle missing actors gracefully', () => {
-      const event: WorldEvent = {
-        id: 'test-event',
-        type: EventType.COMBATANT_DID_ATTACK,
-        location: 'flux:place:test',
+      const event = createCombatantDidAttackEvent((event) => ({
+        ...event,
         actor: 'flux:actor:nonexistent' as ActorURN,
-        trace: 'test-trace',
-        ts: Date.now(),
         payload: {
+          ...event.payload,
           target: BOB_ID,
-          attackType: AttackType.STRIKE,
-          cost: { ap: 2.5 },
-          roll: { dice: '1d20', values: [15], mods: {}, natural: 15, result: 15 },
-          attackRating: 75,
         },
-      };
+      }));
 
       // Should not throw an error, even with missing actor
       expect(() => {
@@ -526,21 +488,13 @@ describe.each([
       const attacker = context.world.actors[ALICE_ID];
       attacker.equipment = {};
 
-      const event: WorldEvent = {
-        id: 'test-event',
-        type: EventType.COMBATANT_DID_ATTACK,
-        location: 'flux:place:test',
-        actor: ALICE_ID,
-        trace: 'test-trace',
-        ts: Date.now(),
+      const event = createCombatantDidAttackEvent((event) => ({
+        ...event,
         payload: {
+          ...event.payload,
           target: BOB_ID,
-          attackType: AttackType.STRIKE,
-          cost: { ap: 2.5 },
-          roll: { dice: '1d20', values: [15], mods: {}, natural: 15, result: 15 },
-          attackRating: 75,
         },
-      };
+      }));
 
       // Should handle missing weapon gracefully (may throw or return default text)
       expect(() => {

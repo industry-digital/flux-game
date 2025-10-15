@@ -334,3 +334,9 @@ export enum DamageType {
   PHYSICAL = 'physical',
   ENERGY = 'energy',
 }
+
+// Not to be confused with CombatFacing
+export enum MovementDirection {
+  FORWARD = 1,    // Move in facing direction (ADVANCE)
+  BACKWARD = -1 // Move opposite to facing (RETREAT)
+}

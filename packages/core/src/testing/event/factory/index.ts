@@ -7,6 +7,8 @@ export {
   createCombatantDidAcquireTargetEvent,
   createCombatantDidMoveEvent,
   createCombatantDidRecoverApEvent,
+  createCombatTurnDidStartEvent,
+  createCombatTurnDidEndEvent,
 } from './combat';
 
 // Export transform types
@@ -18,6 +20,8 @@ export type {
   CombatantDidAcquireTargetTransform,
   CombatantDidMoveTransform,
   CombatantDidRecoverApTransform,
+  CombatTurnDidStartTransform,
+  CombatTurnDidEndTransform,
 } from './combat';
 
 // Export dependencies

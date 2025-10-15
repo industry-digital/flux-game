@@ -23,12 +23,7 @@ import { getStatValue } from '~/worldkit/entity/actor/stats';
 import { MovementActionDependencies, DEFAULT_MOVEMENT_DEPS } from '../movement-deps';
 import { createMovementCostFromAp, createMovementCostFromDistance, createMaxMovementCost } from '~/worldkit/combat/tactical-cost';
 import { ActorURN } from '~/types/taxonomy';
-
-// Not to be confused with CombatFacing
-export enum MovementDirection {
-  FORWARD = 1,    // Move in facing direction (ADVANCE)
-  BACKWARD = -1 // Move opposite to facing (RETREAT)
-}
+import { MovementDirection } from '~/types/combat';
 
 export type MovementEfficiencyProfile = {
   forward: number;   // Efficiency multiplier for forward movement (1.0 = 100%)
@@ -394,8 +389,9 @@ export function createMovementMethod(
         : createMovementCostFromApImpl(ap, power, finesse, actorMassKg);
 
     // Apply efficiency multiplier to get final cost
+    // Must apply tactical rounding after efficiency multiplier to maintain precision
     const finalCost = {
-      ap: baseCost.ap * efficiencyMultiplier,
+      ap: roundApCostUp(baseCost.ap * efficiencyMultiplier),
       energy: baseCost.energy * efficiencyMultiplier,
     };
 

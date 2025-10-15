@@ -20,6 +20,7 @@ import { LOOK } from '~/command/LOOK';
 import { MATERIALIZE_ACTOR } from '~/command/MATERIALIZE_ACTOR';
 import { MUTATE_RESOURCES } from '~/command/MUTATE_RESOURCES';
 import { MUTATE_WEATHER } from '~/command/MUTATE_WEATHER';
+import { RANGE } from '~/command/RANGE';
 import { RETREAT } from '~/command/RETREAT';
 import { STRIKE } from '~/command/STRIKE';
 import { TARGET } from '~/command/TARGET';
@@ -45,6 +46,7 @@ export const PURE_GAME_LOGIC_HANDLERS: PureHandlerImplementation<TransformerCont
     MATERIALIZE_ACTOR,
     MUTATE_RESOURCES,
     MUTATE_WEATHER,
+    RANGE,
     RETREAT,
     STRIKE,
     TARGET,
