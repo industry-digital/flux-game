@@ -159,8 +159,8 @@ describe('Retreat Method', () => {
         payload: {
           actor: attackerActor.id,
           cost: { ap: expect.any(Number) },
-          from: { coordinate: 100, facing: CombatFacing.RIGHT, velocity: 0 },
-          to: { coordinate: 95, facing: CombatFacing.RIGHT, velocity: 0 }, // Moved backward
+          from: { coordinate: 100, facing: CombatFacing.RIGHT, speed: 0 },
+          to: { coordinate: 95, facing: CombatFacing.RIGHT, speed: 0 }, // Moved backward
         },
       });
     });

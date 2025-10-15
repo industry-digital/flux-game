@@ -144,9 +144,9 @@ export function createRetreatMethod(
     combatant.position.coordinate = tacticalFinalPosition;
     deductAp(combatant, movementResult.tactical.apCost);
 
-    const from = { coordinate: currentPosition, facing: combatant.position.facing, velocity: combatant.position.speed };
-    const to = { coordinate: tacticalFinalPosition, facing: combatant.position.facing, velocity: combatant.position.speed };
-    const payload = { actor: actor.id,  cost, from, to };
+    const from = { coordinate: currentPosition, facing: combatant.position.facing, speed: combatant.position.speed };
+    const to = { coordinate: tacticalFinalPosition, facing: combatant.position.facing, speed: combatant.position.speed };
+    const payload = { actor: actor.id, cost, from, to };
 
     // Create movement event with both tactical and precise values
     const event = createWorldEventImpl({

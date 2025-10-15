@@ -247,9 +247,10 @@ export function createCleaveMethod(
         const deathEvent = createWorldEventImpl({
           type: EventType.COMBATANT_DID_DIE,
           location: actor.location,
+          actor: targetId,
           trace: trace,
           payload: {
-            actor: targetId,
+            killer: actor.id,
           },
         });
 

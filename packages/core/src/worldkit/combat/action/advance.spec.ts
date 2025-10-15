@@ -302,8 +302,8 @@ describe('createAdvanceMethod', () => {
         payload: {
           actor: attackerActor.id,
           cost: { ap: expect.any(Number) },
-          from: { coordinate: 100, facing: CombatFacing.RIGHT, velocity: 0 },
-          to: { coordinate: 115, facing: CombatFacing.RIGHT, velocity: 0 },
+          from: { coordinate: 100, facing: CombatFacing.RIGHT, speed: 0 },
+          to: { coordinate: 115, facing: CombatFacing.RIGHT, speed: 0 },
         },
       });
 

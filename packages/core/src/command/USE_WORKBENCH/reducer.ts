@@ -24,7 +24,7 @@ export const useWorkbenchReducer: PureReducer<TransformerContext, UseWorkbenchCo
 
   // If this is a new session, add it to the actor's active sessions
   if (isNew) {
-    context.actorSessionApi.addToActiveSessions(actor, session.id);
+    actor.sessions[session.id] = context.timestamp();
 
     context.declareEvent({
       type: EventType.WORKBENCH_SESSION_DID_START,

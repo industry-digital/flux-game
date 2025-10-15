@@ -1,6 +1,6 @@
 import { ActorURN, PlaceURN } from '~/types/taxonomy';
 import { CombatSession } from '~/types/combat';
-import { WorldEvent, EventType, CombatantDidDie } from '~/types/event';
+import { WorldEvent, EventType } from '~/types/event';
 import { createWorldEvent } from '~/worldkit/event';
 import { TransformerContext } from '~/types/handler';
 import { SessionStatus } from '~/types/session';
@@ -9,7 +9,7 @@ import { restoreApToFull, TURN_DURATION_SECONDS } from '~/worldkit/combat/ap';
 import { getCurrentEnergy, recoverEnergy } from '~/worldkit/entity/actor/capacitor';
 
 export type CombatGameStateApi ={
-  checkForDeaths: (trace?: string) => CombatantDidDie[];
+  checkForDeaths: () => ActorURN[];
   checkVictoryConditions: () => boolean;
   getWinningTeam: () => string | null;
   validateCanStartCombat: () => void;
@@ -42,12 +42,11 @@ export function createCombatGameStateApi(
   };
 
   /**
-   * Checks for combatant deaths and emits COMBATANT_DID_DIE events for newly dead combatants
+   * Checks for combatant deaths and returns list of newly dead actor IDs
+   * Pure detection function - does not create events (combat actions handle death events)
    */
-  const checkForDeaths = (trace?: string): CombatantDidDie[] => {
-    const deathEvents: CombatantDidDie[] = Array(session.data.combatants.size);
-
-    let i = 0;
+  const checkForDeaths = (): ActorURN[] => {
+    const newlyDeadActors: ActorURN[] = [];
 
     for (const [actorId] of session.data.combatants) {
       const actor = context.world.actors[actorId];
@@ -60,20 +59,7 @@ export function createCombatGameStateApi(
 
       // Detect death transition: was alive, now dead
       if (wasAlive && !isCurrentlyAlive) {
-
-        const deathEvent: CombatantDidDie = createWorldEvent({
-          type: EventType.COMBATANT_DID_DIE,
-          location,
-          trace: trace ?? context.uniqid(),
-          payload: {
-            actor: actorId,
-          },
-        }) as CombatantDidDie;
-
-        context.declareEvent(deathEvent);
-
-        deathEvents[i] = deathEvent;
-        i += 1;
+        newlyDeadActors.push(actorId);
       }
 
       // Update tracked state
@@ -81,10 +67,10 @@ export function createCombatGameStateApi(
     }
 
     // Record metrics if available (pure - just incrementing counters)
-    context.metrics?.recordValue('combat.deaths_detected', i);
+    context.metrics?.recordValue('combat.deaths_detected', newlyDeadActors.length);
     context.metrics?.incrementCounter('combat.death_checks_performed');
 
-    return deathEvents.slice(0, i);
+    return newlyDeadActors;
   };
 
   /**

@@ -181,8 +181,8 @@ export function createAdvanceMethod(
       combatant.position.facing = targetPosition > currentPosition ? CombatFacing.RIGHT : CombatFacing.LEFT;
     }
 
-    const from = { coordinate: originalPosition, facing: originalFacing, velocity: combatant.position.speed };
-    const to = { coordinate: combatant.position.coordinate, facing: combatant.position.facing, velocity: combatant.position.speed };
+    const from = { coordinate: originalPosition, facing: originalFacing, speed: combatant.position.speed };
+    const to = { coordinate: combatant.position.coordinate, facing: combatant.position.facing, speed: combatant.position.speed };
     const payload = { actor: actor.id,from, to, distance, cost };
 
     const event = createWorldEventImpl({

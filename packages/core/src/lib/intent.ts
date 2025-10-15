@@ -8,6 +8,7 @@ import {
   ActorCommand,
   SystemCommand,
 } from '~/types/intent';
+import { WellKnownActor } from '~/types/actor';
 
 const identity = <I, O = I>(x: I): O => x as unknown as O;
 
@@ -55,14 +56,14 @@ export const createSystemCommand = <
   T extends CommandType,
   A extends Record<string, any> = Record<string, any>,
 >(
-  input: Omit<CommandInput<T, A>, 'actor'> & { actor?: `flux:sys:${string}` },
+  input: Omit<CommandInput<T, A>, 'actor'> & { actor?: ActorURN },
   transform: CommandTransformer = identity,
   deps: CommandFactoryDependencies = DEFAULT_COMMAND_FACTORY_DEPS,
 ): SystemCommand<T, A> => {
   const systemDefaults: SystemCommand<T, A> = {
     __type: 'command',
     id: input.id || deps.uniqid(),
-    actor: input.actor || ('flux:sys:server' as const),
+    actor: input.actor || WellKnownActor.SYSTEM,
     type: input.type,
     ts: input.ts || deps.timestamp(),
     args: input.args as A,

@@ -460,7 +460,7 @@ describe('Cleave Method', () => {
       expect(damageEvents).toHaveLength(3); // 3 damage events
       expect(deathEvents).toHaveLength(2); // 2 deaths (target1 and target2)
 
-      const deadTargets = deathEvents.map(e => e.payload.actor);
+      const deadTargets = deathEvents.map(e => e.actor);
       expect(deadTargets).toContain(TARGET1_ID);
       expect(deadTargets).toContain(TARGET2_ID);
     });

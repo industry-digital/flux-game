@@ -5,22 +5,18 @@ import { createCombatSession } from './session';
 import { createActor } from '~/worldkit/entity/actor';
 import { ActorType } from '~/types/entity/actor';
 import { Team, CombatFacing } from '~/types/combat';
-import { CombatantDidDie, EventType } from '~/types/event';
-import { ActorURN, PlaceURN, SessionURN } from '~/types/taxonomy';
+import { PlaceURN, SessionURN } from '~/types/taxonomy';
+import { ALICE_ID, BOB_ID, CHARLIE_ID, DEFAULT_LOCATION } from '~/testing/constants';
 
 describe('createCombatGameStateApi', () => {
   let context: ReturnType<typeof createTransformerContext>;
   let sessionId: SessionURN;
   let location: PlaceURN;
 
-  const ALICE_ID: ActorURN = 'flux:actor:alice' as ActorURN;
-  const BOB_ID: ActorURN = 'flux:actor:bob' as ActorURN;
-  const CHARLIE_ID: ActorURN = 'flux:actor:charlie' as ActorURN;
-
   beforeEach(() => {
     context = createTransformerContext();
     sessionId = 'flux:session:combat:test' as SessionURN;
-    location = 'flux:place:arena' as PlaceURN;
+    location = DEFAULT_LOCATION;
 
     // Create test actors
     context.world.actors[ALICE_ID] = createActor({
@@ -290,11 +286,11 @@ describe('createCombatGameStateApi', () => {
 
       const gameState = createCombatGameStateApi(context, session, location);
 
-      const deathEvents = gameState.checkForDeaths();
-      expect(deathEvents).toHaveLength(0);
+      const deadActors = gameState.checkForDeaths();
+      expect(deadActors).toHaveLength(0);
     });
 
-    it('should emit COMBATANT_DID_DIE event when combatant dies', () => {
+    it('should detect when combatant dies', () => {
       const session = createCombatSession(context, {
         id: sessionId,
         location,
@@ -322,16 +318,15 @@ describe('createCombatGameStateApi', () => {
       context.world.actors[ALICE_ID].hp.eff.cur = 0;
 
       // Second check - should detect death
-      const deathEvents: CombatantDidDie[] = gameState.checkForDeaths();
-      expect(deathEvents).toHaveLength(1);
-      expect(deathEvents[0].type).toBe(EventType.COMBATANT_DID_DIE);
-      expect(deathEvents[0].payload.actor).toBe(ALICE_ID);
+      const deadActors = gameState.checkForDeaths();
+      expect(deadActors).toHaveLength(1);
+      expect(deadActors[0]).toBe(ALICE_ID);
 
-      // Third check - should not emit duplicate death event
+      // Third check - should not detect duplicate death
       expect(gameState.checkForDeaths()).toHaveLength(0);
     });
 
-    it('should emit multiple death events when multiple combatants die', () => {
+    it('should detect multiple deaths when multiple combatants die', () => {
       const session = createCombatSession(context, {
         id: sessionId,
         location,
@@ -367,16 +362,10 @@ describe('createCombatGameStateApi', () => {
       context.world.actors[ALICE_ID].hp.eff.cur = 0;
       context.world.actors[BOB_ID].hp.eff.cur = 0;
 
-      const deathEvents = gameState.checkForDeaths();
-      expect(deathEvents).toHaveLength(2);
-
-      const actorIds = deathEvents.map(event => event.payload.actor);
-      expect(actorIds).toContain(ALICE_ID);
-      expect(actorIds).toContain(BOB_ID);
-
-      deathEvents.forEach(event => {
-        expect(event.type).toBe(EventType.COMBATANT_DID_DIE);
-      });
+      const deadActors = gameState.checkForDeaths();
+      expect(deadActors).toHaveLength(2);
+      expect(deadActors).toContain(ALICE_ID);
+      expect(deadActors).toContain(BOB_ID);
     });
 
     it('should handle resurrection correctly', () => {
@@ -408,43 +397,10 @@ describe('createCombatGameStateApi', () => {
       context.world.actors[ALICE_ID].hp.eff.cur = 50;
       expect(gameState.checkForDeaths()).toHaveLength(0);
 
-      // Kill Alice again - should emit another death event
+      // Kill Alice again - should detect another death
       context.world.actors[ALICE_ID].hp.eff.cur = 0;
       expect(gameState.checkForDeaths()).toHaveLength(1);
     });
 
-    it('should declare events through context', () => {
-      const session = createCombatSession(context, {
-        id: sessionId,
-        location,
-        combatants: [
-          {
-            actorId: ALICE_ID,
-            team: Team.ALPHA,
-            position: { coordinate: 100, facing: CombatFacing.RIGHT, speed: 0 },
-            initiative: { values: [15], result: 15, dice: '1d20', mods: {}, natural: 15 },
-            mass: 70,
-            ap: { nat: { cur: 6, max: 6 }, eff: { cur: 6, max: 6 }, mods: {} },
-            energy: { position: 1, nat: { cur: 1000, max: 1000 }, eff: { cur: 1000, max: 1000 }, mods: {} },
-            balance: { nat: { cur: 1, max: 1 }, eff: { cur: 1, max: 1 }, mods: {} },
-            target: null,
-          },
-        ],
-      });
-
-      const gameState = createCombatGameStateApi(context, session, location);
-
-      // Initially no events
-      expect(context.getDeclaredEvents()).toHaveLength(0);
-
-      // Kill Alice
-      context.world.actors[ALICE_ID].hp.eff.cur = 0;
-      gameState.checkForDeaths();
-
-      // Should have declared the death event
-      const declaredEvents = context.getDeclaredEvents();
-      expect(declaredEvents).toHaveLength(1);
-      expect(declaredEvents[0].type).toBe(EventType.COMBATANT_DID_DIE);
-    });
   });
 });

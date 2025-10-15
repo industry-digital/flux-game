@@ -2,7 +2,7 @@
 // This provides a clean API boundary and makes it easier to share types
 // across multiple services in our MUD architecture if needed
 
-export { Self } from './actor';
+export { Self, WellKnownActor } from './actor';
 
 export { ROOT_NAMESPACE } from './constants';
 
