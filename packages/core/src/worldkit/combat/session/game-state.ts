@@ -7,6 +7,7 @@ import { SessionStatus } from '~/types/session';
 import { isAlive, isDead } from '~/worldkit/entity/actor/health';
 import { restoreApToFull, TURN_DURATION_SECONDS } from '~/worldkit/combat/ap';
 import { getCurrentEnergy, recoverEnergy } from '~/worldkit/entity/actor/capacitor';
+import { WellKnownActor } from '~/types/actor';
 
 export type CombatGameStateApi ={
   checkForDeaths: () => ActorURN[];
@@ -195,13 +196,14 @@ export function createCombatGameStateApi(
     // Emit single comprehensive turn end event with resource summaries
     const turnEndEvent = createWorldEvent({
       type: EventType.COMBAT_TURN_DID_END,
-      actor: actorId,
+      actor: WellKnownActor.SYSTEM,
       location,
       trace: eventTrace,
       payload: {
+        sessionId: session.id,
+        turnActor: actorId,
         round: session.data.rounds.current.number,
         turn: session.data.rounds.current.turns.current.number,
-        actor: actorId,
         energy: {
           before: energyBefore,
           after: energyAfterRecovery,

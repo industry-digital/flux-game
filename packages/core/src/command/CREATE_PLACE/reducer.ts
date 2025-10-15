@@ -1,7 +1,8 @@
 import { PureReducer, TransformerContext } from '~/types/handler';
 import { CreatePlaceCommand } from './types';
 import { createPlace } from '~/worldkit/entity/place';
-import { EventType } from '~/types';
+import { EventType } from '~/types/event';
+import { WellKnownActor } from '~/types/actor';
 
 export const createPlaceCommandReducer: PureReducer<TransformerContext, CreatePlaceCommand> = (
   context,
@@ -18,6 +19,7 @@ export const createPlaceCommandReducer: PureReducer<TransformerContext, CreatePl
   declareEvent({
     type: EventType.PLACE_WAS_CREATED,
     location: place.id,
+    actor: WellKnownActor.SYSTEM,
     payload: {},
     trace: command.id,
   });

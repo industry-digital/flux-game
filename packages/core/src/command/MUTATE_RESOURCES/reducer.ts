@@ -1,6 +1,7 @@
 import { PureReducer, TransformerContext } from '~/types/handler';
 import { MutateResourcesCommand } from './types';
 import { EventType, ResourcesDidChangeInput } from '~/types/event';
+import { WellKnownActor } from '~/types/actor';
 
 /**
  * Change the `resources` in specific Place
@@ -24,6 +25,7 @@ export const mutateResourcesReducer: PureReducer<TransformerContext, MutateResou
   const event: ResourcesDidChangeInput = {
     type: EventType.RESOURCES_DID_CHANGE,
     trace: command.id,
+    actor: WellKnownActor.SYSTEM,
     location: placeId,
     payload: {
       from:  previous,

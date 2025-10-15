@@ -26,6 +26,7 @@ import {
   loadContainerSchemas,
 } from './loaders';
 import { ComponentSchema } from '~/types/schema/component';
+import { SchemaLoader } from '~/types/schema/loader';
 
 /**
  * Registry mapping URN types to their corresponding schema types
@@ -44,12 +45,6 @@ export type SchemaRegistry = {
   // [key: TraitSchemaURN]: TraitSchema;
 };
 
-/**
- * Pure function type for schema loaders
- * Each schema type provides a pure function that loads its schemas
- * TUrn can be any string for flexibility in testing, but should be SchemaURN in production
- */
-export type SchemaLoader<TUrn extends string = SchemaURN, TSchema = any> = () => Map<TUrn, TSchema>;
 
 /**
  * Unified schema manager that handles all schema types with type safety
@@ -57,7 +52,7 @@ export type SchemaLoader<TUrn extends string = SchemaURN, TSchema = any> = () =>
  */
 export class SchemaManager {
   private readonly schemas = new Map<string, unknown>();
-  private readonly loaders = new Map<string, SchemaLoader<any>>();
+  private readonly loaders = new Map<string, SchemaLoader<any, any>>();
   private loaded = false;
 
   /**
@@ -65,7 +60,7 @@ export class SchemaManager {
    */
   public registerLoader<TUrn extends string = SchemaURN>(
     schemaType: string,
-    loader: SchemaLoader<TUrn>,
+    loader: SchemaLoader<TUrn, any>,
     replace: boolean = false,
   ): void {
     if (this.loaders.has(schemaType) && !replace) {
@@ -199,7 +194,7 @@ export class SchemaManager {
   }
 }
 
-const DEFAULT_LOADERS = new Map<string, SchemaLoader<any>>([
+const DEFAULT_LOADERS = new Map<string, SchemaLoader<any, any>>([
   ['resource', loadResourceSchemas],
   ['weapon', loadWeaponSchemas],
   ['armor', loadArmorSchemas],
@@ -213,7 +208,7 @@ const DEFAULT_LOADERS = new Map<string, SchemaLoader<any>>([
  * This is the main factory function for creating schema managers
  */
 export function createSchemaManager(
-  loaders: Map<string, SchemaLoader<any>> = DEFAULT_LOADERS,
+  loaders: Map<string, SchemaLoader<any, any>> = DEFAULT_LOADERS,
 ): SchemaManager {
   // Import loaders dynamically to avoid circular dependencies
   const manager = new SchemaManager();

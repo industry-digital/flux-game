@@ -1,4 +1,4 @@
-import { SchemaLoader } from '../manager';
+import { SchemaLoader } from '~/types/schema/loader';
 import { BulkResourceSchema, KindOfResource } from '~/types';
 import { ResourceSchemaURN } from '~/types/taxonomy';
 import * as fungusSchemas from '../resource/fungus';

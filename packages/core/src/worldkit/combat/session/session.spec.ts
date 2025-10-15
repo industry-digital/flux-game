@@ -14,10 +14,12 @@ import { ActorURN, PlaceURN, SessionURN } from '~/types/taxonomy';
 import { CombatFacing, Team } from '~/types/combat';
 import { SessionStatus, SessionStrategy } from '~/types/session';
 import { EntityType } from '~/types/entity/entity';
-import { EventType } from '~/types/event';
+import { CombatTurnDidEnd, CombatTurnDidStart, EventType } from '~/types/event';
 import { type RollResult } from '~/types/dice';
 import { createTransformerContext } from '~/worldkit/context';
 import { calculateStatBonus, getStatValue } from '~/worldkit/entity/actor/stats';
+import { extractFirstEventOfType } from '~/testing/event';
+import { WellKnownActor } from '~/types/actor';
 
 const TEST_PLACE_ID: PlaceURN = 'flux:place:test-place';
 const TEST_SESSION_ID: SessionURN = 'flux:session:combat:test-session';
@@ -450,14 +452,16 @@ describe('session', () => {
       expect(events.length).toBeGreaterThanOrEqual(1);
 
       // First event should be turn end
-      expect(events[0].type).toBe(EventType.COMBAT_TURN_DID_END);
-      expect(events[0].actor).toBe(initialActor);
+      const turnEndEvent = extractFirstEventOfType<CombatTurnDidEnd>(events, EventType.COMBAT_TURN_DID_END)!;
+      expect(turnEndEvent.type).toBe(EventType.COMBAT_TURN_DID_END);
+      expect(turnEndEvent.actor).toBe(WellKnownActor.SYSTEM);
+      expect(turnEndEvent.payload.turnActor).toBe(initialActor);
 
       // Last event should be turn start (if multiple events)
       if (events.length > 1) {
-        const lastEvent = events[events.length - 1];
+        const lastEvent = events[events.length - 1] as CombatTurnDidStart;
         expect(lastEvent.type).toBe(EventType.COMBAT_TURN_DID_START);
-        expect(lastEvent.actor).toBe(newTurn.actor);
+        expect(lastEvent.actor).toBe(WellKnownActor.SYSTEM);
       }
 
       // Combat should continue since both teams have viable combatants at the correct location

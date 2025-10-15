@@ -4,6 +4,7 @@ import { WorldEvent, EventType } from '~/types/event';
 import { createWorldEvent } from '~/worldkit/event';
 import { TransformerContext } from '~/types/handler';
 import { isAlive } from '~/worldkit/entity/actor/health';
+import { WellKnownActor } from '~/types/actor';
 
 export type AdvanceTurnCallback = (trace?: string) => WorldEvent[];
 
@@ -39,14 +40,14 @@ export function createTurnManager(
 
     const turnStartEvent = createWorldEvent({
       type: EventType.COMBAT_TURN_DID_START,
-      actor: actorId,
+      actor: WellKnownActor.SYSTEM,
       location: session.data.location,
       trace,
       payload: {
         sessionId: session.id,
+        turnActor: actorId,
         round: roundNumber,
         turn: turnNumber,
-        actor: actorId,
       }
     });
 
@@ -73,6 +74,7 @@ export function createTurnManager(
     if (isLastActorInRound) {
       const roundDidEndEvent = createWorldEvent({
         type: EventType.COMBAT_ROUND_DID_END,
+        actor: WellKnownActor.SYSTEM,
         location: session.data.location,
         trace,
         payload: { round: currentRound.number }
@@ -102,9 +104,10 @@ export function createTurnManager(
         session.data.rounds.current = newRound;
 
         const roundStartEvent = createWorldEvent({
-          type: EventType.COMBAT_ROUND_DID_START,
-          location: session.data.location,
           trace,
+          type: EventType.COMBAT_ROUND_DID_START,
+          actor: WellKnownActor.SYSTEM,
+          location: session.data.location,
           payload: {
             sessionId: session.id,
             round: nextRoundNumber,
@@ -137,9 +140,10 @@ export function createTurnManager(
       } else {
         // No alive combatants left in this round, advance to next round
         const roundDidEndEvent = createWorldEvent({
-          type: EventType.COMBAT_ROUND_DID_END,
-          location: session.data.location,
           trace,
+          type: EventType.COMBAT_ROUND_DID_END,
+          actor: WellKnownActor.SYSTEM,
+          location: session.data.location,
           payload: { round: currentRound.number }
         });
 
@@ -167,9 +171,10 @@ export function createTurnManager(
           session.data.rounds.current = newRound;
 
           const roundStartEvent = createWorldEvent({
-            type: EventType.COMBAT_ROUND_DID_START,
-            location: session.data.location,
             trace,
+            type: EventType.COMBAT_ROUND_DID_START,
+            actor: WellKnownActor.SYSTEM,
+            location: session.data.location,
             payload: {
               sessionId: session.id,
               round: nextRoundNumber,

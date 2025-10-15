@@ -1,4 +1,4 @@
-import { SchemaLoader } from '../manager';
+import { SchemaLoader } from '~/types/schema/loader';
 import { WeaponSchema } from '~/types/schema/weapon';
 import { WeaponSchemaURN } from '~/types/taxonomy';
 import { longswordSchema, bastardSwordSchema } from '../weapon/sword';

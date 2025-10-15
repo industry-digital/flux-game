@@ -1,4 +1,4 @@
-import { createWeaponSchema, WeaponSchemaInput } from './index';
+import { createWeaponSchema, WeaponSchemaInput } from './factory';
 import { WeaponSchema } from '~/types/schema/weapon';
 
 export const createBowSchema = (input: WeaponSchemaInput): WeaponSchema => {

@@ -1,4 +1,4 @@
-import { SchemaLoader } from '../manager';
+import { SchemaLoader } from '~/types/schema/loader';
 import { ArmorSchema } from '~/types/schema/armor';
 import { ArmorSchemaURN } from '~/types/taxonomy';
 

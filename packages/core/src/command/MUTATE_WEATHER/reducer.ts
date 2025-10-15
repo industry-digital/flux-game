@@ -2,6 +2,7 @@ import { PureReducer, TransformerContext } from '~/types/handler';
 import { MutateWeatherCommand } from './types';
 import { Weather } from '~/types/entity/weather';
 import { EventType } from '~/types/event';
+import { WellKnownActor } from '~/types/actor';
 
 /**
  * Change the `weather` in specific Place
@@ -25,6 +26,7 @@ export const mutateWeatherReducer: PureReducer<TransformerContext, MutateWeather
   declareEvent({
     trace: command.id,
     type: EventType.WEATHER_DID_CHANGE,
+    actor: WellKnownActor.SYSTEM,
     location: placeId,
     payload: {
       from: currentWeather,

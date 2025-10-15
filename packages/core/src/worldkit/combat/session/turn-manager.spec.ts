@@ -11,6 +11,7 @@ import { Team } from '~/types/combat';
 import { TransformerContext } from '~/types/handler';
 import { EventType, WorldEvent } from '~/types/event';
 import { RollResult } from '~/types/dice';
+import { WellKnownActor } from '~/types/actor';
 
 const TEST_PLACE_ID: PlaceURN = 'flux:place:test-place';
 const TEST_SESSION_ID: SessionURN = 'flux:session:combat:test-session';
@@ -177,9 +178,10 @@ describe('createTurnManager', () => {
     const events = turnManager.advanceTurn('test-trace');
     const turnEvent = events[0];
 
+    expect(turnEvent.actor).toBe(WellKnownActor.SYSTEM);
     expect(turnEvent.payload).toHaveProperty('round');
     expect(turnEvent.payload).toHaveProperty('turn');
-    expect(turnEvent.payload).toHaveProperty('actor');
+    expect(turnEvent.payload).toHaveProperty('turnActor');
     expect(turnEvent.location).toBe(TEST_PLACE_ID);
     expect(turnEvent.trace).toBe('test-trace');
   });

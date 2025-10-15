@@ -26,6 +26,7 @@
     "build:esm": "tsc --project tsconfig.esm.json && tsc-alias -p tsconfig.esm.json && node scripts/fix-esm-extensions.js && echo '{\"type\":\"module\"}' > dist/esm/package.json",
     "build:types": "tsc --project tsconfig.types.json && tsc-alias -p tsconfig.types.json",
     "type-check": "tsc --noEmit",
+    "check-circular": "npx madge --circular --extensions ts,js src/",
     "test": "vitest run",
     "benchmark:mass": "vitest run src/worldkit/physics/mass.benchmark.spec.ts",
     "benchmark:urn": "npx vitest bench --run urn-final.bench.ts"

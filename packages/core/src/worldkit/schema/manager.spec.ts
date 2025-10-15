@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest';
-import { SchemaManager, SchemaLoader, createSchemaManager } from './manager';
+import { SchemaManager, createSchemaManager } from './manager';
+import { SchemaLoader } from '~/types/schema/loader';
 
 // Example schema type for testing
 type TestSchema = {

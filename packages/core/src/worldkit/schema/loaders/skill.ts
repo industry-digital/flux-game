@@ -1,4 +1,4 @@
-import { SchemaLoader } from '../manager';
+import { SchemaLoader } from '~/types/schema/loader';
 import { SkillSchema } from '~/types/schema/skill';
 import { SkillSchemaURN } from '~/types/taxonomy';
 

@@ -1,4 +1,4 @@
-import { createWeaponSchema, WeaponSchemaInput } from './index';
+import { createWeaponSchema, WeaponSchemaInput } from './factory';
 import { WeaponSchema } from '~/types/schema/weapon';
 import { TWO_HANDED_FIT } from '~/worldkit/schema/weapon/fit';
 

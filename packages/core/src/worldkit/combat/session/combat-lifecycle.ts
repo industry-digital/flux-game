@@ -8,6 +8,7 @@ import { createWorldEvent } from '~/worldkit/event';
 import { createCombatantSummary } from '~/worldkit/combat/combatant';
 import { TransformerContext } from '~/types/handler';
 import { CombatGameStateApi } from '~/worldkit/combat/session/game-state';
+import { WellKnownActor } from '~/types/actor';
 
 /**
  * Given a map of combatants, throw an error if there are not at least 2 different teams with a
@@ -42,8 +43,9 @@ const createCombatStartEvents = (
 
     createWorldEvent({
       type: EventType.COMBAT_SESSION_DID_START,
-      location,
       trace,
+      actor: WellKnownActor.SYSTEM,
+      location,
       payload: {
         sessionId,
         initiative: [...initiativeRolls.entries()],
@@ -54,9 +56,10 @@ const createCombatStartEvents = (
     }),
 
     createWorldEvent({
-      type: EventType.COMBAT_SESSION_STATUS_DID_CHANGE,
-      location,
       trace,
+      type: EventType.COMBAT_SESSION_STATUS_DID_CHANGE,
+      actor: WellKnownActor.SYSTEM,
+      location,
       payload: {
         sessionId,
         previousStatus: SessionStatus.PENDING,
@@ -65,21 +68,23 @@ const createCombatStartEvents = (
     }),
 
     createWorldEvent({
-      type: EventType.COMBAT_ROUND_DID_START,
-      location,
       trace,
+      type: EventType.COMBAT_ROUND_DID_START,
+      actor: WellKnownActor.SYSTEM,
+      location,
       payload: { sessionId, round: 1 },
     }),
 
     createWorldEvent({
-      type: EventType.COMBAT_TURN_DID_START,
-      location,
       trace,
+      type: EventType.COMBAT_TURN_DID_START,
+      actor: WellKnownActor.SYSTEM,
+      location,
       payload: {
         sessionId,
         round: 1,
         turn: 1,
-        actor: firstActorId,
+        turnActor: firstActorId,
       },
     })
   ];
@@ -105,6 +110,7 @@ function createCombatSessionStatusDidChangeEvent(
 ): WorldEvent {
   return createWorldEvent({
     type: EventType.COMBAT_SESSION_STATUS_DID_CHANGE,
+    actor: WellKnownActor.SYSTEM,
     location,
     trace,
     payload: { sessionId, previousStatus, currentStatus },
@@ -228,9 +234,10 @@ export function createCombatLifecycle(
     const events: WorldEvent[] = [];
 
     const combatSessionStatusDidChangeEvent = createWorldEvent({
-      type: EventType.COMBAT_SESSION_STATUS_DID_CHANGE,
-      location,
       trace,
+      type: EventType.COMBAT_SESSION_STATUS_DID_CHANGE,
+      actor: WellKnownActor.SYSTEM,
+      location,
       payload: {
         sessionId,
         previousStatus: session.status,
@@ -243,6 +250,7 @@ export function createCombatLifecycle(
 
     const combatEndEvent = createWorldEvent({
       type: EventType.COMBAT_SESSION_DID_END,
+      actor: WellKnownActor.SYSTEM,
       location,
       trace,
       payload: {

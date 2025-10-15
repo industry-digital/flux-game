@@ -314,7 +314,6 @@ describe('SwapShellAction', () => {
       expect(swapEvent.trace).toBe('custom-trace');
       expect(swapEvent.location).toBe(actor.location);
       expect(swapEvent.actor).toBe(actor.id);
-      expect(swapEvent.payload.actorId).toBe(actor.id);
       expect(swapEvent.payload.fromShellId).toBe(originalShellId);
       expect(swapEvent.payload.toShellId).toBe(secondShellId);
       expect(swapEvent.payload.sessionId).toBe(session.id);

@@ -1,4 +1,4 @@
-import { SchemaLoader } from '../manager';
+import { SchemaLoader } from '~/types/schema/loader';
 import { ContainerSchema } from '~/types/schema/container';
 import { SchemaURN } from '~/types/taxonomy';
 

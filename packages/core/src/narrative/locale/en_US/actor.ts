@@ -89,9 +89,9 @@ export const narrateActorDidLook: TemplateFunction<ActorDidLook, ActorURN> = (co
 
 export const renderSwapShellNarrative: TemplateFunction<ActorDidSwapShell, ActorURN> = (context, event, recipientId) => {
   const { world } = context;
-  const actor = world.actors[event.payload.actorId];
+  const actor = world.actors[event.actor];
 
-  if (recipientId === event.payload.actorId) {
+  if (recipientId === event.actor) {
     return `You swap to a different shell configuration.`;
   }
 

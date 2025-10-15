@@ -86,7 +86,6 @@ export const createSwapShellAction = (
       location: actor.location,
       actor: actor.id,
       payload: {
-        actorId: actor.id,
         fromShellId: previousShellId,
         toShellId: targetShellId,
         sessionId: session.id,
