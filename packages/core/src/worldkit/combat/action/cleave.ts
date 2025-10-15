@@ -113,12 +113,8 @@ export function createCleaveMethod(
 
   return (trace: string = context.uniqid()): WorldEvent[] => {
     const weapon = context.equipmentApi.getEquippedWeaponSchema(actor);
-    if (!weapon) {
-      declareError('You don\'t have a weapon equipped.', trace);
-      return [];
-    }
 
-    // Check if weapon is two-handed
+    // Check if weapon is two-handed (actors always have a weapon, even if it's bare hands)
     if (!isTwoHandedWeaponImpl(weapon)) {
       declareError('CLEAVE requires a two-handed weapon.', trace);
       return [];

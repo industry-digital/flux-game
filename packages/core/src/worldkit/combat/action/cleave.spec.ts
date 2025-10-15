@@ -214,25 +214,26 @@ describe('Cleave Method', () => {
   });
 
   describe('Requirements Validation', () => {
-    it('should fail when no weapon is equipped', () => {
+
+    it('should fail when only bare hands are equipped (requires two-handed weapon)', () => {
       const attacker = scenario.actors[ATTACKER_ID].actor;
       const attackerCombatant = scenario.session.data.combatants.get(ATTACKER_ID)!;
 
-      // Remove weapon by clearing equipment
+      // Remove any equipped weapons - this will cause getEquippedWeaponSchema to return bare hands
       attacker.equipment = {};
 
-      const cleaveWithoutWeapon = createCleaveMethod(
+      const cleaveWithBareHands = createCleaveMethod(
         context,
         scenario.session,
         attacker,
         attackerCombatant,
       );
 
-      const result = cleaveWithoutWeapon();
+      const result = cleaveWithBareHands();
 
       expect(result).toHaveLength(0);
       expect(context.declareError).toHaveBeenCalledWith(
-        'You don\'t have a weapon equipped.',
+        expect.stringContaining('two-handed weapon'),
         expect.any(String)
       );
     });

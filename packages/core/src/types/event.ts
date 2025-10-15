@@ -1,7 +1,14 @@
 import { Weather } from '~/types/entity/weather';
 import { ResourceNodes } from '~/types/entity/resource';
 import { ActorURN, ItemURN, PlaceURN, SessionURN } from '~/types/taxonomy';
-import { ActionCost, AttackOutcome, AttackType, BattlefieldPositionSummary, CombatantSummary, MovementDirection } from '~/types/combat';
+import {
+  ActionCost,
+  AttackOutcome,
+  AttackType,
+  BattlefieldPosition,
+  CombatantSummary,
+  MovementDirection,
+} from '~/types/combat';
 import { RollResult } from '~/types/dice';
 import { SessionStatus } from '~/types/session';
 import { ShellDiff, ShellMutation } from '~/types/workbench';
@@ -234,8 +241,10 @@ export type CombatantDidMoveInput = AbstractWorldEventInput<
   EventType.COMBATANT_DID_MOVE,
   {
     cost: ActionCost;
-    from: BattlefieldPositionSummary;
-    to: BattlefieldPositionSummary;
+    from: BattlefieldPosition;
+    to: BattlefieldPosition;
+    distance: number;
+    direction: MovementDirection;
   }
 >;
 

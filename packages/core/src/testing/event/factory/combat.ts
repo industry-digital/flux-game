@@ -1,4 +1,4 @@
-import { AttackOutcome, AttackType } from '~/types/combat';
+import { AttackOutcome, AttackType, MovementDirection } from '~/types/combat';
 import {
   CombatantDidAttack,
   CombatantWasAttacked,
@@ -184,14 +184,20 @@ export function createCombatantDidMoveEvent(
 ): CombatantDidMove {
   const { createWorldEvent } = deps;
 
+  const fromPosition = DEFAULT_POSITION;
+  const toPosition = { ...DEFAULT_POSITION, coordinate: DEFAULT_POSITION.coordinate + 10 };
+  const distance = Math.abs(toPosition.coordinate - fromPosition.coordinate);
+
   const baseEvent = createWorldEvent({
     type: EventType.COMBATANT_DID_MOVE,
     location: DEFAULT_LOCATION,
     actor: ALICE_ID,
     trace: DEFAULT_TRACE,
     payload: {
-      from: DEFAULT_POSITION,
-      to: { ...DEFAULT_POSITION, coordinate: DEFAULT_POSITION.coordinate + 10 },
+      from: fromPosition,
+      to: toPosition,
+      distance: distance,
+      direction: MovementDirection.FORWARD,
       cost: DEFAULT_COST,
     },
   }) as CombatantDidMove;

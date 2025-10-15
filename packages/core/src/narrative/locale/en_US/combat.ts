@@ -26,6 +26,7 @@ import {
   createSystemPerspectiveTemplate,
   createDynamicSystemPerspectiveTemplate,
 } from '~/narrative/util';
+import { getAllStats, getMaxHp } from '~/worldkit/entity/actor';
 
 export const renderAttackNarrative: TemplateFunction<CombatantDidAttack, ActorURN> = (context, event, actorId) => {
   const { world, equipmentApi } = context;
@@ -38,15 +39,74 @@ export const renderAttackNarrative: TemplateFunction<CombatantDidAttack, ActorUR
   }
 
   const weapon = equipmentApi.getEquippedWeaponSchema(actor);
-  const { attackType } = event.payload;
-  const weaponName = weapon?.name || 'weapon';
+  const { attackType, roll, attackRating } = event.payload;
+  const weaponName = weapon.name;
+
+  const actorStats = getAllStats(actor);
+
+  // Generate weapon-specific attack verbs and descriptions
+  const getAttackDescription = () => {
+    const isHighRoll = roll.result >= 15; // High roll threshold
+    const actorPower = actorStats.pow?.eff || 0;
+    const actorFinesse = actorStats.fin?.eff || 0;
+    const isPowerfulAttack = actorPower > actorFinesse;
+
+    // Weapon-specific attack verbs based on weapon type and stats
+    const weaponType = weapon.skill.split(':').slice(-1)[0] || 'generic';
+
+    switch (weaponType) {
+      case 'unarmed':
+        // Special handling for bare hands combat with martial arts flavor
+        if (attackType === 'cleave') {
+          return isPowerfulAttack
+            ? (isHighRoll ? 'unleashes a devastating spinning strike' : 'attempts a wide sweeping')
+            : (isHighRoll ? 'executes a precise spinning technique' : 'tries a sweeping');
+        }
+        return isPowerfulAttack
+          ? (isHighRoll ? 'delivers a crushing blow' : 'throws a heavy punch')
+          : (isHighRoll ? 'strikes with lightning speed' : 'swings');
+
+      case 'slash':
+        if (attackType === 'cleave') {
+          return isPowerfulAttack
+            ? (isHighRoll ? 'unleashes a devastating sweeping' : 'swings in a wide')
+            : (isHighRoll ? 'executes a precise sweeping' : 'attempts a sweeping');
+        }
+        return isPowerfulAttack
+          ? (isHighRoll ? 'delivers a crushing' : 'swings their')
+          : (isHighRoll ? 'strikes with a swift' : 'slashes with their');
+
+      case 'pierce':
+        return isPowerfulAttack
+          ? (isHighRoll ? 'drives their' : 'thrusts their')
+          : (isHighRoll ? 'darts forward with their' : 'jabs with their');
+
+      case 'crush':
+        return isPowerfulAttack
+          ? (isHighRoll ? 'brings down their' : 'swings their')
+          : (isHighRoll ? 'strikes precisely with their' : 'attacks with their');
+
+      case 'pistol':
+      case 'rifle':
+      case 'shotgun':
+        return isHighRoll ? 'fires their' : 'shoots their';
+
+      default:
+        return isPowerfulAttack
+          ? (isHighRoll ? 'strikes powerfully with their' : 'attacks with their')
+          : (isHighRoll ? 'strikes precisely with their' : 'attacks with their');
+    }
+  };
+
+  const attackDescription = getAttackDescription();
 
   // This event is from the attacker's perspective - focus on the action
   if (actorId === event.actor) {
     // actorId is the attacker
-    return attackType === 'cleave'
-      ? `You unleash a sweeping ${weaponName} attack!`
-      : `You attack ${target.name} with your ${weaponName}.`;
+    if (attackType === 'cleave') {
+      return `You ${attackDescription} ${weaponName} in a sweeping attack!`;
+    }
+    return `You ${attackDescription.replace('their', 'your')} ${weaponName} at ${target.name}.`;
   }
 
   if (actorId === event.payload.target) {
@@ -56,30 +116,68 @@ export const renderAttackNarrative: TemplateFunction<CombatantDidAttack, ActorUR
   }
 
   // actorId is an observer
-  return attackType === 'cleave'
-    ? `${actor.name} unleashes a sweeping ${weaponName} attack!`
-    : `${actor.name} attacks ${target.name} with their ${weaponName}.`;
+  if (attackType === 'cleave') {
+    return `${actor.name} ${attackDescription} ${weaponName} in a sweeping attack!`;
+  }
+  return `${actor.name} ${attackDescription} ${weaponName} at ${target.name}.`;
 };
 
 export const renderWasAttackedNarrative: TemplateFunction<CombatantWasAttacked, ActorURN> = (context, event, actorId) => {
-  const { world, equipmentApi } = context;
+  const { world, equipmentApi, actorSkillApi } = context;
   const attacker = world.actors[event.payload.source];
   const target = world.actors[event.actor];
-  const { damage, outcome } = event.payload;
+  const { damage, outcome, attackRating, evasionRating } = event.payload;
 
   // Handle missing actors gracefully
   if (!attacker || !target) {
     return '';
   }
 
+  const weapon = equipmentApi.getEquippedWeaponSchema(attacker);
+  const weaponName = weapon.name;
+
+  // Enhanced damage descriptions based on damage amount and target health
+  const getDamageDescription = (damage: number, isFirstPerson: boolean) => {
+    if (damage === 0) {
+      // Miss descriptions based on evasion vs attack rating
+      const isCloseCall = Math.abs(attackRating - evasionRating) <= 2;
+      if (isCloseCall) {
+        return isFirstPerson
+          ? `narrowly dodges your ${weaponName}`
+          : `barely avoids the ${weaponName}`;
+      }
+      return isFirstPerson
+        ? `easily evades your ${weaponName}`
+        : `sidesteps the ${weaponName}`;
+    }
+
+    const targetMaxHp = getMaxHp(target);
+    const damagePercent = damage / targetMaxHp;
+
+    // Damage intensity descriptions
+    if (damagePercent >= 0.3) {
+      return isFirstPerson
+        ? `devastates you with their ${weaponName} for ${damage} damage`
+        : `brutally strikes ${target.name} with their ${weaponName} for ${damage} damage`;
+    } else if (damagePercent >= 0.15) {
+      return isFirstPerson
+        ? `wounds you severely with their ${weaponName} for ${damage} damage`
+        : `lands a solid hit on ${target.name} with their ${weaponName} for ${damage} damage`;
+    } else if (damagePercent >= 0.05) {
+      return isFirstPerson
+        ? `strikes you with their ${weaponName} for ${damage} damage`
+        : `hits ${target.name} with their ${weaponName} for ${damage} damage`;
+    } else {
+      return isFirstPerson
+        ? `grazes you with their ${weaponName} for ${damage} damage`
+        : `barely scratches ${target.name} with their ${weaponName} for ${damage} damage`;
+    }
+  };
+
   // This event is from the target's perspective
   if (actorId === event.actor) {
     // actorId is the target being attacked
-    const weapon = equipmentApi.getEquippedWeaponSchema(attacker);
-    const weaponName = weapon?.name || 'weapon';
-    return damage > 0
-      ? `${attacker.name} strikes you with their ${weaponName} for ${damage} damage.`
-      : `${attacker.name} misses you with their ${weaponName}.`;
+    return `${attacker.name} ${getDamageDescription(damage, true)}.`;
   }
 
   if (actorId === event.payload.source) {
@@ -89,11 +187,7 @@ export const renderWasAttackedNarrative: TemplateFunction<CombatantWasAttacked, 
   }
 
   // actorId is an observer
-  const weapon = equipmentApi.getEquippedWeaponSchema(attacker);
-  const weaponName = weapon?.name || 'weapon';
-  return damage > 0
-    ? `${attacker.name}'s ${weaponName} deals ${damage} damage to ${target.name}.`
-    : `${attacker.name}'s ${weaponName} misses ${target.name}.`;
+  return `${attacker.name} ${getDamageDescription(damage, false)}.`;
 };
 
 export const renderDefendNarrative = withUserEventValidation(
@@ -104,18 +198,81 @@ export const renderDefendNarrative = withUserEventValidation(
 );
 
 export const renderMoveNarrative: TemplateFunction<CombatantDidMove> = (context, event, actorId) => {
-  const { world } = context;
+  const { world, equipmentApi } = context;
   const actor = world.actors[event.actor];
-  const distance = Math.abs(event.payload.to.coordinate - event.payload.from.coordinate);
-  const direction = event.payload.to.coordinate > event.payload.from.coordinate ? 'forward' : 'backward';
+
+  // Use pre-computed values from event payload - no calculations needed!
+  const distance = event.payload.distance;
+  const direction = event.payload.direction === MovementDirection.FORWARD ? 'forward' : 'backward';
+
+  // Enhanced movement descriptions based on distance and actor stats
+  const actorStats = getAllStats(actor);
+  const finesse = actorStats.fin?.eff || 0;
+  const weapon = equipmentApi.getEquippedWeaponSchema(actor);
+
+  const getMovementDescription = (isFirstPerson: boolean) => {
+    const baseDirection = direction;
+    const distanceText = `${distance}m`;
+
+    // Movement style based on finesse and distance
+    if (distance >= 3) {
+      if (finesse >= 60) {
+        return isFirstPerson
+          ? `dash ${baseDirection} ${distanceText}`
+          : `dashes ${baseDirection} ${distanceText}`;
+      } else if (finesse >= 30) {
+        return isFirstPerson
+          ? `sprint ${baseDirection} ${distanceText}`
+          : `sprints ${baseDirection} ${distanceText}`;
+      } else {
+        return isFirstPerson
+          ? `charge ${baseDirection} ${distanceText}`
+          : `charges ${baseDirection} ${distanceText}`;
+      }
+    } else if (distance >= 2) {
+      if (finesse >= 60) {
+        return isFirstPerson
+          ? `glide ${baseDirection} ${distanceText}`
+          : `glides ${baseDirection} ${distanceText}`;
+      } else {
+        return isFirstPerson
+          ? `move ${baseDirection} ${distanceText}`
+          : `moves ${baseDirection} ${distanceText}`;
+      }
+    } else {
+      if (finesse >= 60) {
+        return isFirstPerson
+          ? `step ${baseDirection} ${distanceText}`
+          : `steps ${baseDirection} ${distanceText}`;
+      } else {
+        return isFirstPerson
+          ? `shift ${baseDirection} ${distanceText}`
+          : `shifts ${baseDirection} ${distanceText}`;
+      }
+    }
+  };
+
+  // Add tactical context if weapon has range preferences
+  const getTacticalContext = () => {
+    const optimalRange = weapon.range.optimal || 1;
+    const newPosition = event.payload.to.coordinate;
+
+    // This is simplified - in a real scenario we'd check distances to enemies
+    if (direction === 'forward' && optimalRange <= 1) {
+      return ' to close distance';
+    } else if (direction === 'backward' && optimalRange > 2) {
+      return ' to gain range';
+    }
+    return '';
+  };
 
   if (actorId === event.actor) {
     // actorId is the actor
-    return `You move ${direction} ${distance}m.`
+    return `You ${getMovementDescription(true)}${getTacticalContext()}.`;
   }
 
   // actorId is an observer
-  return `${actor.name} moves ${direction} ${distance}m.`
+  return `${actor.name} ${getMovementDescription(false)}${getTacticalContext()}.`;
 };
 
 export const renderTargetNarrative = withInteractionValidation(
@@ -224,10 +381,8 @@ export const renderAcquireRangeNarrative: TemplateFunction<CombatantDidAcquireRa
 
   if (actorId === event.actor) {
     // Get weapon information for the actor
-    const equippedWeapon = context.equipmentApi.getEquippedWeaponSchema(actor);
-    const weaponInfo = equippedWeapon
-      ? `Your ${equippedWeapon.name.toLowerCase()}'s optimal range is ${equippedWeapon.range?.optimal || 1}m.`
-      : 'You have no weapon equipped.';
+    const weapon = context.equipmentApi.getEquippedWeaponSchema(actor);
+    const weaponInfo = `Your ${weapon.name.toLowerCase()}'s optimal range is ${weapon.range.optimal || 1}m.`;
 
     // Convert MovementDirection to readable text
     const directionText = direction === MovementDirection.FORWARD ? 'in front of you' : 'behind you';
@@ -236,5 +391,5 @@ export const renderAcquireRangeNarrative: TemplateFunction<CombatantDidAcquireRa
   }
 
   // Third-person narrative for other observers
-  return `${actor.name} assesses the range to ${target.name} (${range}m).`;
+  return `${actor.name} is range to ${target.name} (${range}m).`;
 };

@@ -31,7 +31,7 @@ export function withSystemEventFilter<T extends WorldEvent>(
 /**
  * Validates that the event's actor exists in the world
  */
-export function withActorValidation<T extends WorldEvent & { actor: ActorURN }>(
+export function withActorValidation<T extends WorldEvent>(
   baseTemplate: TemplateFunction<T, ActorURN>
 ): TemplateFunction<T, ActorURN> {
   return (context, event, actorId) => {
@@ -44,7 +44,7 @@ export function withActorValidation<T extends WorldEvent & { actor: ActorURN }>(
 /**
  * Validates that both actor and target exist for interaction events
  */
-export function withActorAndTargetValidation<T extends WorldEvent & { actor: ActorURN; payload: { target: ActorURN } }>(
+export function withActorAndTargetValidation<T extends WorldEvent & { payload: { target: ActorURN } }>(
   baseTemplate: TemplateFunction<T, ActorURN>
 ): TemplateFunction<T, ActorURN> {
   return (context, event, actorId) => {

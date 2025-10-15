@@ -4,6 +4,7 @@ import { AnatomyURN, ItemURN, WeaponItemURN } from '~/types/taxonomy';
 import { HumanAnatomy } from '~/types/taxonomy/anatomy';
 import { ActorInventoryApi } from '~/worldkit/entity/actor/inventory';
 import { SchemaManager, SchemaRegistry } from '~/worldkit/schema/manager';
+import { BARE_HANDS_WEAPON_SCHEMA } from '~/worldkit/schema/weapon';
 
 export const WEAPON_EQUIPMENT_ANATOMICAL_LOCATIONS: AnatomyURN[] = [
   HumanAnatomy.RIGHT_HAND,
@@ -27,7 +28,11 @@ export type ActorEquipmentApi = {
    * @returns The equipped weapon or null if no weapon is equipped
    */
   getEquippedWeapon: (actor: Actor, locations?: AnatomyURN[]) => WeaponItemURN | null;
-  getEquippedWeaponSchema: (actor: Actor, locations?: AnatomyURN[]) => WeaponSchema | null;
+
+  getEquippedWeaponSchema: (actor: Actor, locations?: AnatomyURN[]) => WeaponSchema;
+  /**
+   * @deprecated Just use `getEquippedWeaponSchema`
+   */
   getEquippedWeaponSchemaOrFail: (actor: Actor, locations?: AnatomyURN[]) => WeaponSchema;
   equipWeapon: (actor: Actor, itemId: WeaponItemURN) => void;
   unequipWeapon: (actor: Actor, itemId: WeaponItemURN) => void;
@@ -71,23 +76,21 @@ export function createActorEquipmentApi (
     return null;
   }
 
-  function getEquippedWeaponSchema(actor: Actor, possibleLocations: AnatomyURN[] = allowedAnatomicalLocations): WeaponSchema | null {
+  function getEquippedWeaponSchema(actor: Actor, possibleLocations: AnatomyURN[] = allowedAnatomicalLocations): WeaponSchema {
     const weaponId = getEquippedWeapon(actor, possibleLocations);
     if (!weaponId) {
-      return null;
+      // Actor is never truly unarmed - return bare hands weapon
+      return BARE_HANDS_WEAPON_SCHEMA;
     }
 
     const item = inventoryApi.getItem(actor, weaponId);
     const schema = schemaManager.getSchema(item.schema as keyof SchemaRegistry);
-    return schema as WeaponSchema | null;
+    return schema as WeaponSchema;
   }
 
   function getEquippedWeaponSchemaOrFail(actor: Actor, possibleLocations: AnatomyURN[] = allowedAnatomicalLocations): WeaponSchema {
-    const schema = getEquippedWeaponSchema(actor, possibleLocations);
-    if (!schema) {
-      throw new Error('No weapon equipped');
-    }
-    return schema;
+    // Since getEquippedWeaponSchema now always returns a weapon (including bare hands), this never fails
+    return getEquippedWeaponSchema(actor, possibleLocations);
   }
 
   function equipWeapon(actor: Actor, itemId: WeaponItemURN) {

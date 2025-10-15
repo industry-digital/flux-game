@@ -13,7 +13,7 @@
 import { Actor, Stat } from '~/types/entity/actor';
 import { Combatant, CombatSession } from '~/types/combat';
 import { TransformerContext } from '~/types/handler';
-import { EventType, WorldEvent } from '~/types/event';
+import { CombatantDidMove, EventType, WorldEvent } from '~/types/event';
 import { createWorldEvent } from '~/worldkit/event';
 import { calculateTacticalMovement, roundApCostUp } from '~/worldkit/combat/tactical-rounding';
 import { distanceToAp, apToDistance } from '~/worldkit/physics/movement';
@@ -418,16 +418,19 @@ export function createMovementMethod(
     // Create movement event
     const from = { coordinate: originalPosition, facing: originalFacing, speed: combatant.position.speed };
     const to = { coordinate: combatant.position.coordinate, facing: combatant.position.facing, speed: combatant.position.speed };
-    const payload = { actor: actor.id, from, to, distance, cost: finalCost };
 
-    const event = createWorldEventImpl({
-      id: context.uniqid(),
-      ts: context.timestamp(),
+    const event: CombatantDidMove = createWorldEventImpl({
       type: EventType.COMBATANT_DID_MOVE,
       actor: actor.id,
       location: actor.location,
       trace: trace,
-      payload,
+      payload: {
+        from,
+        to,
+        distance,
+        direction: movementDirection,
+        cost: finalCost
+      },
     });
 
     context.declareEvent(event);

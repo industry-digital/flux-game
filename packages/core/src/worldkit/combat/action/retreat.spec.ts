@@ -1,8 +1,9 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { useCombatMovementTestScenario } from '../testing/movement';
 import { CombatantDidMove, EventType } from '~/types/event';
-import { CombatFacing } from '~/types/combat';
+import { CombatFacing, MovementDirection } from '~/types/combat';
 import { MOVE_BY_AP, MOVE_BY_DISTANCE } from '~/worldkit/combat/combatant';
+import { extractFirstEventOfType } from '~/testing/event';
 
 describe('Retreat Method', () => {
   // Standard test scenario - most tests can use this
@@ -36,14 +37,17 @@ describe('Retreat Method', () => {
       const result = retreat(MOVE_BY_DISTANCE, 5);
 
       expect(result).toHaveLength(1);
-      expect(result[0]).toMatchObject({
+      const moveEvent: CombatantDidMove = extractFirstEventOfType<CombatantDidMove>(result, EventType.COMBATANT_DID_MOVE)!;
+      expect(moveEvent).toMatchObject({
         type: EventType.COMBATANT_DID_MOVE,
         location: attackerActor.location,
+        actor: attackerActor.id,
         payload: {
-          actor: attackerActor.id,
           cost: expect.objectContaining({ ap: expect.any(Number) }),
           from: expect.objectContaining({ coordinate: initialPosition }),
-          to: expect.objectContaining({ coordinate: expect.any(Number) })
+          to: expect.objectContaining({ coordinate: expect.any(Number) }),
+          distance: expect.any(Number),
+          direction: MovementDirection.BACKWARD,
         }
       });
     });
@@ -156,11 +160,13 @@ describe('Retreat Method', () => {
       expect(event).toMatchObject({
         type: EventType.COMBATANT_DID_MOVE,
         trace: expect.any(String),
+        actor: attackerActor.id,
         payload: {
-          actor: attackerActor.id,
           cost: { ap: expect.any(Number) },
           from: { coordinate: 100, facing: CombatFacing.RIGHT, speed: 0 },
           to: { coordinate: 95, facing: CombatFacing.RIGHT, speed: 0 }, // Moved backward
+          distance: 5,
+          direction: MovementDirection.BACKWARD,
         },
       });
     });
