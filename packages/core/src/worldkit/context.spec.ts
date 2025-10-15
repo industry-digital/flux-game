@@ -14,7 +14,7 @@ import {
   MapFunction
 } from './context';
 import { TransformerContext, WorldProjection, PotentiallyImpureOperations, ProfileResult } from '~/types/handler';
-import { EventType, WorldEvent, WorldEventInput } from '~/types/event';
+import { ActorWasCreatedInput, EventType, WorldEvent } from '~/types/event';
 import { createSchemaManager } from '~/worldkit/schema/manager';
 import { createMassApi, createMassComputationState } from '~/worldkit/physics/mass';
 import { createActorInventoryApi } from '~/worldkit/entity/actor/inventory';
@@ -23,6 +23,9 @@ import { createActorCapacitorApi } from '~/worldkit/entity/actor/capacitor';
 import { createActorSkillApi } from '~/worldkit/entity/actor/skill';
 import { createCombatMetricsApi } from '~/worldkit/combat/metrics';
 import { ActorURN, PlaceURN } from '~/types/taxonomy';
+import { WellKnownActor } from '~/types';
+import { createCombatSessionStartedEvent } from '~/testing/event/factory/combat';
+import { DEFAULT_LOCATION } from '~/testing/constants';
 
 describe('createTransformerContext', () => {
   let mockDeps: PotentiallyImpureOperations;
@@ -196,10 +199,10 @@ describe('createTransformerContext', () => {
     });
 
     it('should declare events with auto-generated id and timestamp', () => {
-      const eventInput: WorldEventInput = {
+      const eventInput: ActorWasCreatedInput = {
         type: EventType.ACTOR_WAS_CREATED,
         location: 'flux:place:test' as PlaceURN,
-        actor: 'flux:actor:test' as ActorURN,
+        actor: WellKnownActor.SYSTEM,
         trace: 'test-command',
         payload: {}
       };
@@ -292,13 +295,15 @@ describe('createTransformerContext', () => {
         payload: { destination: 'flux:place:dest' as PlaceURN }
       } as any);
 
-      context.declareEvent({
+      context.declareEvent(createCombatSessionStartedEvent((event) => ({
+        ...event,
         id: 'test-event-2',
-        type: EventType.COMBAT_SESSION_DID_START,
-        location: 'flux:place:test' as PlaceURN,
         trace: 'combat-command',
+        type: EventType.COMBAT_SESSION_DID_START,
+        actor: WellKnownActor.SYSTEM,
+        location: DEFAULT_LOCATION,
         payload: { sessionId: 'flux:session:test', initiative: [], combatants: [] }
-      });
+      })));
 
       const actorEvents = context.getDeclaredEvents(/^actor:/);
       const combatEvents = context.getDeclaredEvents(/^combat:/);
@@ -432,13 +437,13 @@ describe('createTransformerContext', () => {
       const context = createTransformerContext(undefined, undefined, undefined, mockDeps);
 
       // Declare multiple events
-      context.declareEvent({
+      context.declareEvent(createCombatSessionStartedEvent((event) => ({
+        ...event,
         id: 'test-event-1',
-        type: EventType.COMBAT_SESSION_DID_START,
         location: 'flux:place:arena' as PlaceURN,
         trace: 'combat-init',
         payload: { sessionId: 'flux:session:1', initiative: [], combatants: [] }
-      });
+      })));
 
       context.declareEvent({
         id: 'test-event-2',

@@ -5,7 +5,7 @@
  * @param output Array of numbers that Math.random() would return (0-1 range)
  * @returns Function that returns sequential values from the output array
  */
-export function createDeterministicRng(output: number[]): () => number {
+export function createDeterministicRng(output: readonly number[]): () => number {
   // Validate that all values are in valid Math.random() range
   for (const value of output) {
     if (value < 0 || value >= 1) {
@@ -33,7 +33,7 @@ export function createDeterministicRng(output: number[]): () => number {
  * @param output Array of numbers that Math.random() would return (0-1 range)
  * @returns Function that returns sequential values, cycling back to start when exhausted
  */
-export function createCyclingRng(output: number[]): () => number {
+export function createCyclingRng(output: readonly number[]): () => number {
   // Validate that all values are in valid Math.random() range
   for (const value of output) {
     if (value < 0 || value >= 1) {

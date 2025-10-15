@@ -18,6 +18,7 @@ import {
   BASELINE_STAT_VALUE,
   MAX_STAT_VALUE,
 } from './stats';
+import { AppliedModifiers } from '~/types/modifier';
 
 describe('Actor Stats Module', () => {
   let actor: Actor;
@@ -25,7 +26,7 @@ describe('Actor Stats Module', () => {
   beforeEach(() => {
     actor = createActor({
       name: 'Test Actor',
-      description: 'Test actor for stats testing',
+      description: { base: 'Test actor for stats testing' },
     });
   });
 
@@ -94,7 +95,7 @@ describe('Actor Stats Module', () => {
 
   describe('Stat Modifiers', () => {
     it('should get stat modifiers', () => {
-      const modifiers = { 'test-mod': { value: 5, position: 0.5 } };
+      const modifiers: AppliedModifiers = { 'flux:mod:test-mod': { schema: 'flux:schema:modifier:test-mod', position: 0.5, value: 5 } };
       actor.stats[Stat.INT].mods = modifiers;
 
       expect(getStatModifiers(actor, Stat.INT)).toEqual(modifiers);
@@ -105,11 +106,11 @@ describe('Actor Stats Module', () => {
       expect(hasActiveStatModifiers(actor, Stat.INT)).toBe(false);
 
       // Add active modifier
-      actor.stats[Stat.INT].mods = { 'test-mod': { value: 5, position: 0.5 } };
+      actor.stats[Stat.INT].mods = { 'flux:mod:test-mod': { schema: 'flux:schema:modifier:test-mod', position: 0.5, value: 5 } };
       expect(hasActiveStatModifiers(actor, Stat.INT)).toBe(true);
 
       // Add inactive modifier (position >= 1.0)
-      actor.stats[Stat.INT].mods = { 'test-mod': { value: 5, position: 1.0 } };
+      actor.stats[Stat.INT].mods = { 'flux:mod:test-mod': { schema: 'flux:schema:modifier:test-mod', position: 1.0, value: 5 } };
       expect(hasActiveStatModifiers(actor, Stat.INT)).toBe(false);
     });
   });
@@ -130,9 +131,9 @@ describe('Actor Stats Module', () => {
     it('should compute effective stat values with modifiers', () => {
       actor.stats[Stat.INT].nat = 12;
       actor.stats[Stat.INT].mods = {
-        'buff': { value: 3, position: 0.5 },
-        'debuff': { value: -1, position: 0.3 },
-        'inactive': { value: 10, position: 1.0 }, // Should be ignored
+        'buff': { schema: 'flux:schema:modifier:buff', value: 3, position: 0.5 },
+        'debuff': { schema: 'flux:schema:modifier:debuff', value: -1, position: 0.3 },
+        'inactive': { schema: 'flux:schema:modifier:inactive', value: 10, position: 1.0 }, // Should be ignored
       };
 
       // 12 + 3 - 1 = 14 (inactive modifier ignored)
@@ -141,13 +142,13 @@ describe('Actor Stats Module', () => {
 
     it('should clamp computed values to valid range', () => {
       actor.stats[Stat.INT].nat = 5;
-      actor.stats[Stat.INT].mods = { 'debuff': { value: -10, position: 0.5 } };
+      actor.stats[Stat.INT].mods = { 'debuff': { schema: 'flux:schema:modifier:debuff', value: -10, position: 0.5 } };
 
       // Should clamp to BASELINE_STAT_VALUE
       expect(computeStatValue(actor, Stat.INT)).toBe(BASELINE_STAT_VALUE);
 
       actor.stats[Stat.INT].nat = 90;
-      actor.stats[Stat.INT].mods = { 'buff': { value: 20, position: 0.5 } };
+      actor.stats[Stat.INT].mods = { 'buff': { schema: 'flux:schema:modifier:buff', value: 20, position: 0.5 } };
 
       // Should clamp to MAX_STAT_VALUE
       expect(computeStatValue(actor, Stat.INT)).toBe(MAX_STAT_VALUE);
@@ -172,7 +173,7 @@ describe('Actor Stats Module', () => {
     });
 
     it('should set stat modifiers', () => {
-      const modifiers = { 'test': { value: 5, position: 0.5 } };
+      const modifiers: AppliedModifiers = { 'flux:mod:test-mod': { schema: 'flux:schema:modifier:test-mod', position: 0.5, value: 5 } };
       setStatModifiers(actor, Stat.INT, modifiers);
       expect(getStatModifiers(actor, Stat.INT)).toEqual(modifiers);
     });
@@ -182,10 +183,10 @@ describe('Actor Stats Module', () => {
     it('should refresh all stats by default', () => {
       // Set up some natural values and modifiers
       setNaturalStatValue(actor, Stat.INT, 12);
-      setStatModifiers(actor, Stat.INT, { 'buff': { value: 3, position: 0.5 } });
+      setStatModifiers(actor, Stat.INT, { 'buff': { schema: 'flux:schema:modifier:buff', value: 3, position: 0.5 } });
 
       setNaturalStatValue(actor, Stat.POW, 15);
-      setStatModifiers(actor, Stat.POW, { 'debuff': { value: -2, position: 0.3 } });
+      setStatModifiers(actor, Stat.POW, { 'debuff': { schema: 'flux:schema:modifier:debuff', value: -2, position: 0.3 } });
 
       // Manually set incorrect effective values
       setStatValue(actor, Stat.INT, 999);
@@ -200,10 +201,10 @@ describe('Actor Stats Module', () => {
 
     it('should refresh specific stats when requested', () => {
       setNaturalStatValue(actor, Stat.INT, 12);
-      setStatModifiers(actor, Stat.INT, { 'buff': { value: 3, position: 0.5 } });
+      setStatModifiers(actor, Stat.INT, { 'buff': { schema: 'flux:schema:modifier:buff', value: 3, position: 0.5 } });
 
       setNaturalStatValue(actor, Stat.POW, 15);
-      setStatModifiers(actor, Stat.POW, { 'debuff': { value: -2, position: 0.3 } });
+      setStatModifiers(actor, Stat.POW, { 'debuff': { schema: 'flux:schema:modifier:debuff', value: -2, position: 0.3 } });
 
       // Set incorrect effective values
       setStatValue(actor, Stat.INT, 999);

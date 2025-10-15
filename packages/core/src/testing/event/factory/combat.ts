@@ -9,7 +9,8 @@ import {
   CombatantDidRecoverAp,
   CombatTurnDidStart,
   CombatTurnDidEnd,
-  EventType
+  EventType,
+  CombatSessionStarted
 } from '~/types/event';
 import { ActorURN, SessionURN } from '~/types/taxonomy';
 import { ActionCost } from '~/types/combat';
@@ -276,6 +277,27 @@ export function createCombatTurnDidEndEvent(
       energy: { before: 1350, after: 1500, change: 150 },
     },
   }) as CombatTurnDidEnd;
+
+  return transform(baseEvent);
+}
+type CombatSessionStartedTransform = (event: CombatSessionStarted) => CombatSessionStarted;
+export function createCombatSessionStartedEvent(
+  transform: CombatSessionStartedTransform = identity,
+  deps: CombatEventFactoryDependencies = DEFAULT_COMBAT_EVENT_FACTORY_DEPS
+): CombatSessionStarted {
+  const { createWorldEvent } = deps;
+
+  const baseEvent: CombatSessionStarted = createWorldEvent({
+    type: EventType.COMBAT_SESSION_DID_START,
+    location: DEFAULT_LOCATION,
+    actor: WellKnownActor.SYSTEM,
+    trace: DEFAULT_TRACE,
+    payload: {
+      sessionId: DEFAULT_SESSION_ID,
+      initiative: [],
+      combatants: [],
+    },
+  });
 
   return transform(baseEvent);
 }

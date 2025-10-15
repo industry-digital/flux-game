@@ -12,6 +12,9 @@ import {
 import { RollResult } from '~/types/dice';
 import { SessionStatus } from '~/types/session';
 import { ShellDiff, ShellMutation } from '~/types/workbench';
+import { Shell } from '~/types/entity/shell';
+import { ShellPerformanceProfile } from '~/types/shell';
+import { ComponentSchemaURN, SchemaURN } from '~/types/taxonomy';
 import { CurrencyTransaction } from '~/types/currency';
 import { WellKnownActor } from '~/types/actor';
 
@@ -116,6 +119,15 @@ export enum EventType {
   WORKBENCH_SHELL_MUTATIONS_DIFFED = 'workbench:mutations:diffed',
   WORKBENCH_SHELL_MUTATIONS_UNDONE = 'workbench:mutations:undone',
   WORKBENCH_SHELL_MUTATION_STAGED = 'workbench:mutation:staged',
+  WORKBENCH_COMPONENT_MOUNTED = 'workbench:component:mounted',
+  WORKBENCH_COMPONENT_UNMOUNTED = 'workbench:component:unmounted',
+  ACTOR_DID_LIST_SHELLS = 'actor:shells:listed',
+  ACTOR_DID_INSPECT_SHELL_STATUS = 'actor:shell:status:inspected',
+  ACTOR_DID_REVIEW_SHELL_STATS = 'actor:shell:stats:reviewed',
+  ACTOR_DID_LIST_SHELL_COMPONENTS = 'actor:shell:components:listed',
+  ACTOR_DID_EXAMINE_COMPONENT = 'actor:component:examined',
+  ACTOR_DID_LIST_INVENTORY_COMPONENTS = 'actor:inventory:components:listed',
+  ACTOR_DID_LIST_INVENTORY_MATERIALS = 'actor:inventory:materials:listed',
 }
 
 export type EventBase = {
@@ -427,6 +439,194 @@ export type ActorDidGainCurrencyInput = AbstractWorldEventInput<
   CurrencyTransaction
 >;
 
+// New workbench events
+export type ActorDidListShells = EventBase & ActorDidListShellsInput;
+export type ActorDidListShellsInput = AbstractWorldEventInput<
+  EventType.ACTOR_DID_LIST_SHELLS,
+  {
+    shells: Array<{
+      id: string;
+      name?: string;
+      isActive: boolean;
+      stats: {
+        pow: number;
+        fin: number;
+        res: number;
+      };
+      condition: number; // 0-1 overall condition
+    }>;
+  }
+>;
+
+export type ActorDidInspectShellStatus = EventBase & ActorDidInspectShellStatusInput;
+export type ActorDidInspectShellStatusInput = AbstractWorldEventInput<
+  EventType.ACTOR_DID_INSPECT_SHELL_STATUS,
+  {
+    shellId: string;
+    shell: Shell;
+    performanceProfile: ShellPerformanceProfile;
+    componentStatus: Array<{
+      componentId: ItemURN;
+      schema: ComponentSchemaURN;
+      condition: number; // 0-1 degradation level
+      powerDraw: number;
+    }>;
+  }
+>;
+
+export type ActorDidReviewShellStats = EventBase & ActorDidReviewShellStatsInput;
+export type ActorDidReviewShellStatsInput = AbstractWorldEventInput<
+  EventType.ACTOR_DID_REVIEW_SHELL_STATS,
+  {
+    shellId: string;
+    currentStats: {
+      pow: number;
+      fin: number;
+      res: number;
+    };
+    pendingMutations: ShellMutation[];
+    previewStats?: {
+      pow: number;
+      fin: number;
+      res: number;
+    };
+    upgradePoints: {
+      available: number;
+      allocated: number;
+    };
+  }
+>;
+
+export type ActorDidListShellComponents = EventBase & ActorDidListShellComponentsInput;
+export type ActorDidListShellComponentsInput = AbstractWorldEventInput<
+  EventType.ACTOR_DID_LIST_SHELL_COMPONENTS,
+  {
+    shellId: string;
+    mountedComponents: Array<{
+      componentId: ItemURN;
+      schema: ComponentSchemaURN;
+      name: string;
+      slot: string;
+      condition: number;
+      powerDraw: number;
+      effects: string[];
+    }>;
+    availableSlots: Array<{
+      slot: string;
+      compatibleTypes: ComponentSchemaURN[];
+    }>;
+  }
+>;
+
+export type ActorDidExamineComponent = EventBase & ActorDidExamineComponentInput;
+export type ActorDidExamineComponentInput = AbstractWorldEventInput<
+  EventType.ACTOR_DID_EXAMINE_COMPONENT,
+  {
+    componentId: ItemURN;
+    schema: ComponentSchemaURN;
+    name: string;
+    description: string;
+    stats: {
+      powerDraw: number;
+      mass: number;
+      condition: number;
+    };
+    effects: Array<{
+      type: string;
+      magnitude: number;
+      description: string;
+    }>;
+    requirements: {
+      minPowerOutput?: number;
+      compatibleSlots: string[];
+      skillRequirements?: Record<string, number>;
+    };
+    isInstalled: boolean;
+    installedOn?: string; // shell ID if mounted
+  }
+>;
+
+export type WorkbenchComponentMounted = EventBase & WorkbenchComponentMountedInput;
+export type WorkbenchComponentMountedInput = AbstractWorldEventInput<
+  EventType.WORKBENCH_COMPONENT_MOUNTED,
+  {
+    sessionId: SessionURN;
+    shellId: string;
+    componentId: ItemURN;
+    schema: ComponentSchemaURN;
+    slot: string;
+    powerDrawChange: number;
+    statModifications: {
+      pow?: number;
+      fin?: number;
+      res?: number;
+    };
+  }
+>;
+
+export type WorkbenchComponentUnmounted = EventBase & WorkbenchComponentUnmountedInput;
+export type WorkbenchComponentUnmountedInput = AbstractWorldEventInput<
+  EventType.WORKBENCH_COMPONENT_UNMOUNTED,
+  {
+    sessionId: SessionURN;
+    shellId: string;
+    componentId: ItemURN;
+    schema: ComponentSchemaURN;
+    slot: string;
+    powerDrawChange: number;
+    statModifications: {
+      pow?: number;
+      fin?: number;
+      res?: number;
+    };
+  }
+>;
+
+export type ActorDidListInventoryComponents = EventBase & ActorDidListInventoryComponentsInput;
+export type ActorDidListInventoryComponentsInput = AbstractWorldEventInput<
+  EventType.ACTOR_DID_LIST_INVENTORY_COMPONENTS,
+  {
+    components: Array<{
+      componentId: ItemURN;
+      schema: ComponentSchemaURN;
+      name: string;
+      condition: number;
+      powerDraw: number;
+      mass: number;
+      compatibleSlots: string[];
+      isInstalled: boolean;
+      installedOn?: string; // shell ID if mounted
+    }>;
+    totalMass: number;
+    totalCount: number;
+  }
+>;
+
+export type ActorDidListInventoryMaterials = EventBase & ActorDidListInventoryMaterialsInput;
+export type ActorDidListInventoryMaterialsInput = AbstractWorldEventInput<
+  EventType.ACTOR_DID_LIST_INVENTORY_MATERIALS,
+  {
+    materials: Array<{
+      materialId: ItemURN;
+      schema: SchemaURN;
+      name: string;
+      quantity: number;
+      mass: number;
+      rarity: 'common' | 'uncommon' | 'rare' | 'exotic';
+      uses: string[]; // "stat upgrades", "component repair", etc.
+    }>;
+    totalMass: number;
+    totalValue: number; // in scrap currency
+    categories: {
+      piezoelectricCrystals: number;
+      fusionFuelPellets: number;
+      structuralMaterials: number;
+      electronicComponents: number;
+      rareMinerals: number;
+    };
+  }
+>;
+
 /**
  * Union of all valid event inputs
  */
@@ -465,7 +665,16 @@ export type WorldEventInput =
   | ActorDidSwapShellInput
   | ActorDidOpenHelpFileInput
   | ActorDidSpendCurrencyInput
-  | ActorDidGainCurrencyInput;
+  | ActorDidGainCurrencyInput
+  | ActorDidListShellsInput
+  | ActorDidInspectShellStatusInput
+  | ActorDidReviewShellStatsInput
+  | ActorDidListShellComponentsInput
+  | ActorDidExamineComponentInput
+  | WorkbenchComponentMountedInput
+  | WorkbenchComponentUnmountedInput
+  | ActorDidListInventoryComponentsInput
+  | ActorDidListInventoryMaterialsInput;
 
 /**
  * Union of all valid events

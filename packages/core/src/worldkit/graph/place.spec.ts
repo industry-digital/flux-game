@@ -658,14 +658,17 @@ describe('PlaceGraph', () => {
       });
 
       it('should update weather data', () => {
-        const updatedPlace = {
+        const updatedPlace: Place = {
           ...testPlaces[0],
-          weather: { ...testPlaces[0].weather, temperature: 25 }
+          weather: {
+            ...testPlaces[0].weather,
+            temperature: { seed: 123, value: 25 },
+          }
         };
         graph.updatePlace('flux:place:test1', updatedPlace);
 
         const place = graph.getPlace('flux:place:test1');
-        expect(place?.weather.temperature).toBe(25);
+        expect(place?.weather.temperature.value).toBe(25);
       });
     });
 

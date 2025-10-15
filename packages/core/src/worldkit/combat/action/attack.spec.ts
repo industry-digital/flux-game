@@ -18,12 +18,19 @@ import { WeaponSchema } from '~/types/schema/weapon';
 import { createWorldEvent } from '~/worldkit/event';
 import { TransformerContext } from '~/types/handler';
 import { assessWeaponCapabilities } from '~/worldkit/combat/ai/analysis';
-import { calculateMaxRange } from '~/worldkit/combat/weapon';
 import { createTransformerContext } from '~/worldkit/context';
 import { createSwordSchema } from '~/worldkit/schema/weapon/sword';
 import { registerWeapons } from '~/worldkit/combat/testing/schema';
 import { DEFAULT_COMBAT_PLANNING_DEPS } from '~/worldkit/combat/ai/deps';
 import { createActorCommand } from '~/lib/intent';
+import {
+  createCombatantDidAttackEvent,
+  createCombatantDidAcquireTargetEvent,
+  createCombatantDidMoveEvent,
+  createCombatantDidDefendEvent,
+  createCombatTurnDidEndEvent
+} from '~/testing/event/factory';
+import { WellKnownActor } from '~/types/actor';
 
 describe('Attack Method with AI Integration', () => {
   const DEFAULT_TIMESTAMP = 1234567890000;
@@ -152,7 +159,7 @@ describe('Attack Method with AI Integration', () => {
 
       const mockExecuteCombatPlan: CombatPlanExecutor = vi.fn().mockReturnValue(
         [
-          { type: 'combat:actor:attacked', actor: actor.id } as WorldEvent
+          createCombatantDidAttackEvent((event) => ({ ...event, actor: actor.id }))
         ]
       );
 
@@ -212,7 +219,7 @@ describe('Attack Method with AI Integration', () => {
 
       // Verify result includes events from executeCombatPlan
       expect(result).toHaveLength(1);
-      expect(result[0].type).toBe('combat:actor:attacked');
+      expect(result[0].type).toBe('combat:actor:attack');
     });
 
     it('should use default executeCombatPlan when not injected', () => {
@@ -226,7 +233,7 @@ describe('Attack Method with AI Integration', () => {
       ]);
 
       const mockStrike = vi.fn().mockReturnValue([
-        { type: 'combat:actor:attacked', actor: actor.id } as WorldEvent
+        createCombatantDidAttackEvent((event) => ({ ...event, actor: actor.id }))
       ]);
 
       // Create attack method without executeCombatPlan injection
@@ -248,14 +255,14 @@ describe('Attack Method with AI Integration', () => {
       expect(mockStrike).toHaveBeenCalledWith('flux:actor:bob', expect.any(String));
       // Should have 1 event: only strike (no target acquisition since combatant already targets 'flux:actor:bob')
       expect(result).toHaveLength(1);
-      expect(result).toContainEqual(expect.objectContaining({ type: 'combat:actor:attacked' }));
+      expect(result).toContainEqual(expect.objectContaining({ type: 'combat:actor:attack' }));
     });
   });
 
   describe('Target Management', () => {
     it('should update target when provided and include target events', () => {
       const mockTarget = vi.fn().mockReturnValue([
-        { type: 'combat:actor:target:acquired', actor: actor.id } as WorldEvent
+        createCombatantDidAcquireTargetEvent((event) => ({ ...event, actor: actor.id }))
       ]);
 
       const mockGenerateCombatPlan = vi.fn().mockReturnValue([]);
@@ -306,7 +313,7 @@ describe('Attack Method with AI Integration', () => {
   describe('Movement Actions in Combat Plans', () => {
     it('should execute ADVANCE actions through combat plan', () => {
       const mockAdvance = vi.fn().mockReturnValue([
-        { type: 'combat:actor:moved', actor: actor.id } as WorldEvent
+        createCombatantDidMoveEvent((event) => ({ ...event, actor: actor.id }))
       ]);
 
       const mockGenerateCombatPlan = vi.fn().mockReturnValue([
@@ -340,7 +347,7 @@ describe('Attack Method with AI Integration', () => {
 
     it('should execute RETREAT actions through combat plan', () => {
       const mockRetreat = vi.fn().mockReturnValue([
-        { type: 'combat:actor:moved', actor: actor.id } as WorldEvent
+        createCombatantDidMoveEvent((event) => ({ ...event, actor: actor.id }))
       ]);
 
       const mockGenerateCombatPlan = vi.fn().mockReturnValue([
@@ -374,10 +381,10 @@ describe('Attack Method with AI Integration', () => {
 
     it('should handle mixed action plans with movement and combat', () => {
       const mockAdvance = vi.fn().mockReturnValue([
-        { type: 'combat:actor:moved', actor: actor.id } as WorldEvent
+        createCombatantDidMoveEvent((event) => ({ ...event, actor: actor.id }))
       ]);
       const mockStrike = vi.fn().mockReturnValue([
-        { type: 'combat:actor:attacked', actor: actor.id } as WorldEvent
+        createCombatantDidAttackEvent((event) => ({ ...event, actor: actor.id }))
       ]);
 
       const mockGenerateCombatPlan = vi.fn().mockReturnValue([
@@ -415,7 +422,7 @@ describe('Attack Method with AI Integration', () => {
       // Should have 2 events: advance + strike (no target acquisition since combatant already targets 'flux:actor:bob')
       expect(result).toHaveLength(2);
       expect(result).toContainEqual(expect.objectContaining({ type: 'combat:actor:moved' }));
-      expect(result).toContainEqual(expect.objectContaining({ type: 'combat:actor:attacked' }));
+      expect(result).toContainEqual(expect.objectContaining({ type: 'combat:actor:attack' }));
     });
   });
 
@@ -431,7 +438,7 @@ describe('Attack Method with AI Integration', () => {
       ]);
 
       const mockStrike = vi.fn().mockReturnValue([
-        { type: 'combat:actor:attacked', actor: actor.id } as WorldEvent
+        createCombatantDidAttackEvent((event) => ({ ...event, actor: actor.id }))
       ]);
 
       const attack = createAttackMethod(
@@ -463,13 +470,13 @@ describe('Attack Method with AI Integration', () => {
       // that the attack method attempts to generate a plan by checking that
       // it doesn't immediately error out due to missing plan generation
       const mockStrike = vi.fn().mockReturnValue([
-        { type: 'combat:actor:attacked', actor: actor.id } as WorldEvent
+        createCombatantDidAttackEvent((event) => ({ ...event, actor: actor.id }))
       ]);
       const mockDefend = vi.fn().mockReturnValue([
-        { type: 'combat:actor:defended', actor: actor.id } as WorldEvent
+        createCombatantDidDefendEvent((event) => ({ ...event, actor: actor.id }))
       ]);
       const mockDone = vi.fn().mockReturnValue([
-        { type: 'combat:turn:ended', actor: actor.id } as WorldEvent
+        createCombatTurnDidEndEvent((event) => ({ ...event, actor: WellKnownActor.SYSTEM }))
       ]);
 
       const attack = createAttackMethod(
@@ -520,10 +527,10 @@ describe('Attack Method with AI Integration', () => {
   describe('Target Assignment in Strike Actions', () => {
     it('should call target method when STRIKE action has explicit target', () => {
       const mockTarget = vi.fn().mockReturnValue([
-        { type: 'combat:actor:target:acquired', actor: actor.id } as WorldEvent
+        createCombatantDidAcquireTargetEvent((event) => ({ ...event, actor: actor.id }))
       ]);
       const mockStrike = vi.fn().mockReturnValue([
-        { type: 'combat:actor:attacked', actor: actor.id } as WorldEvent
+        createCombatantDidAttackEvent((event) => ({ ...event, actor: actor.id }))
       ]);
 
       const mockGenerateCombatPlan = vi.fn().mockReturnValue([
@@ -558,15 +565,15 @@ describe('Attack Method with AI Integration', () => {
       // Verify both target acquisition and strike events are in result
       expect(result).toHaveLength(2);
       expect(result).toContainEqual(expect.objectContaining({ type: 'combat:actor:target:acquired' }));
-      expect(result).toContainEqual(expect.objectContaining({ type: 'combat:actor:attacked' }));
+      expect(result).toContainEqual(expect.objectContaining({ type: 'combat:actor:attack' }));
     });
 
     it('should call target method when ATTACK action has explicit target', () => {
       const mockTarget = vi.fn().mockReturnValue([
-        { type: 'combat:actor:target:acquired', actor: actor.id } as WorldEvent
+        createCombatantDidAcquireTargetEvent((event) => ({ ...event, actor: actor.id }))
       ]);
       const mockStrike = vi.fn().mockReturnValue([
-        { type: 'combat:actor:attacked', actor: actor.id } as WorldEvent
+        createCombatantDidAttackEvent((event) => ({ ...event, actor: actor.id }))
       ]);
 
       const mockGenerateCombatPlan = vi.fn().mockReturnValue([
@@ -601,7 +608,7 @@ describe('Attack Method with AI Integration', () => {
     it('should not call target method when STRIKE action has no explicit target', () => {
       const mockTarget = vi.fn().mockReturnValue([]);
       const mockStrike = vi.fn().mockReturnValue([
-        { type: 'combat:actor:attacked', actor: actor.id } as WorldEvent
+        createCombatantDidAttackEvent((event) => ({ ...event, actor: actor.id }))
       ]);
 
       const mockGenerateCombatPlan = vi.fn().mockReturnValue([
@@ -633,13 +640,13 @@ describe('Attack Method with AI Integration', () => {
       // Verify strike method was called with combatant's existing target
       expect(mockStrike).toHaveBeenCalledWith('flux:actor:bob', expect.any(String));
       expect(result).toHaveLength(1);
-      expect(result).toContainEqual(expect.objectContaining({ type: 'combat:actor:attacked' }));
+      expect(result).toContainEqual(expect.objectContaining({ type: 'combat:actor:attack' }));
     });
 
     it('should handle STRIKE action with null target args gracefully', () => {
       const mockTarget = vi.fn().mockReturnValue([]);
       const mockStrike = vi.fn().mockReturnValue([
-        { type: 'combat:actor:attacked', actor: actor.id } as WorldEvent
+        createCombatantDidAttackEvent((event) => ({ ...event, actor: actor.id }))
       ]);
 
       const mockGenerateCombatPlan = vi.fn().mockReturnValue([
@@ -832,36 +839,28 @@ describe('Attack Method with AI Integration', () => {
     });
   });
 
-  describe('DEBUG: AI Planning Analysis', () => {
-    it('should debug why generateNaturalCombatPlan returns empty plans', async () => {
-      // Use the hoisted meleeScenario instead of creating inline
-      console.log('🔧 DEBUG: Testing AI planning at close range...');
+  describe('AI Planning Analysis', () => {
+    it('should generate combat plans for close-range scenarios', () => {
       const attacker = meleeScenario.actors['flux:actor:test:attacker'];
       const defender = meleeScenario.actors['flux:actor:test:defender'];
 
-      console.log(`  Attacker AP: ${attacker.hooks.combatant.combatant.ap.eff.cur}`);
-      console.log(`  Attacker position: ${attacker.hooks.combatant.combatant.position.coordinate}`);
-      console.log(`  Defender position: ${defender.hooks.combatant.combatant.position.coordinate}`);
-      console.log(`  Distance: ${Math.abs(defender.hooks.combatant.combatant.position.coordinate - attacker.hooks.combatant.combatant.position.coordinate)}`);
-      console.log(`  Attacker has target: ${attacker.hooks.combatant.combatant.target}`);
+      // Verify scenario setup
+      expect(attacker.hooks.combatant.combatant.ap.eff.cur).toBeGreaterThan(0);
+      expect(attacker.hooks.combatant.combatant.target).toBeTruthy();
 
       const weaponSchema = context.equipmentApi.getEquippedWeaponSchema(attacker.actor);
-      if (!weaponSchema) {
-        expect.fail('Attacker has no weapon');
-      }
+      expect(weaponSchema).toBeDefined();
 
-      const distance = Math.abs(defender.hooks.combatant.combatant.position.coordinate - attacker.hooks.combatant.combatant.position.coordinate);
-      const weaponAssessment = assessWeaponCapabilities(context, weaponSchema, distance);
-      console.log(`  Weapon assessment:`, {
-        canHit: weaponAssessment.canHit,
-        isOptimalRange: weaponAssessment.isOptimalRange,
-        effectiveness: weaponAssessment.effectiveness,
-        weaponOptimal: weaponSchema?.range?.optimal,
-        weaponMax: calculateMaxRange(weaponSchema)
-      });
+      const distance = Math.abs(
+        defender.hooks.combatant.combatant.position.coordinate -
+        attacker.hooks.combatant.combatant.position.coordinate
+      );
 
-      // Stub the weapon cost calculation to return reasonable values
-      const mockCalculateWeaponApCost = vi.fn().mockReturnValue(2); // 2 AP for strike
+      const weaponAssessment = assessWeaponCapabilities(context, weaponSchema!, distance);
+      expect(weaponAssessment).toBeDefined();
+
+      // Mock weapon cost calculation
+      const mockCalculateWeaponApCost = vi.fn().mockReturnValue(2);
       const testDeps = {
         ...DEFAULT_COMBAT_PLANNING_DEPS,
         timestamp: () => Date.now(),
@@ -873,28 +872,24 @@ describe('Attack Method with AI Integration', () => {
         context,
         meleeScenario.session,
         attacker.hooks.combatant.combatant,
-        'debug-trace',
+        'test-trace',
         testDeps
       );
 
-      console.log(`📋 Generated plan:`, plan.map(a => a.type));
-      console.log(`📋 Plan length: ${plan.length}`);
-      console.log(`📋 Full plan details:`, plan.map(a => ({
-        command: a.type,
-        args: a.args
-      })));
+      // Verify plan generation
+      expect(plan).toBeDefined();
+      expect(Array.isArray(plan)).toBe(true);
 
-      if (plan.length > 0) {
-        console.log('✅ AI generated actions!');
-        plan.forEach((action, i) => {
-          console.log(`  ${i + 1}. ${action.type} (AP: ${action.args.cost?.ap || 0})`);
-        });
-      } else {
-        console.log('❌ AI generated no actions - this is the problem!');
-      }
-
-      // This test should pass once we fix the AI
+      // The AI should generate at least one action for a valid combat scenario
       expect(plan.length).toBeGreaterThan(0);
+
+      // Verify plan structure
+      plan.forEach(action => {
+        expect(action).toHaveProperty('type');
+        expect(action).toHaveProperty('args');
+        // Some actions may have cost, others may have different properties like autoDone
+        expect(typeof action.args).toBe('object');
+      });
     });
   });
 });
