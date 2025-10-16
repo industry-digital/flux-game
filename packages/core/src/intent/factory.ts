@@ -158,7 +158,7 @@ export function createIntent<TOptions extends IntentOptions = undefined>(
     actor: input.actor,
     location: input.location,
     session: input.session,
-    text: input.text,
+    text: trimmed,
     normalized,
     verb,
     tokens: args,

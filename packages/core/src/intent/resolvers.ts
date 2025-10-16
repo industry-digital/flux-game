@@ -112,6 +112,17 @@ export const createEntityResolverApi = (
 
   const resolveActor = (intent: Intent, matchLocation = true): Actor | undefined => {
     // ASSUMPTION: Server provides tokens as Set<string> with duplicates removed and 1-char tokens filtered
+
+    // First, check if any token looks like an ActorURN and resolve it directly
+    for (const token of intent.uniques) {
+      if (token.startsWith('flux:actor:')) {
+        const actor = world.actors[token as ActorURN];
+        if (actor && (!matchLocation || intent.location === actor.location)) {
+          return actor; // Direct URN match
+        }
+      }
+    }
+
     // Fast path: Check exact matches first using O(1) lookup
     for (const token of intent.uniques) {
       const exactMatchId = exactNameLookup.get(token);

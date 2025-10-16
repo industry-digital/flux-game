@@ -27,8 +27,6 @@ export const createCommand = <T extends CommandType>(
   } as Command;
 };
 
-
-
 /**
  * Hook-style utility for creating batch of commands
  * Pure function that returns array of mock commands
