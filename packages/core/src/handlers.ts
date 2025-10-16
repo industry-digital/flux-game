@@ -13,6 +13,8 @@ import { ATTACK } from '~/command/ATTACK';
 import { CLEAVE } from '~/command/CLEAVE';
 import { CREATE_ACTOR } from '~/command/CREATE_ACTOR';
 import { CREATE_PLACE } from '~/command/CREATE_PLACE';
+import { CREDIT } from '~/command/CREDIT';
+import { DEBIT } from '~/command/DEBIT';
 import { DEFEND } from '~/command/DEFEND';
 import { DEMATERIALIZE_ACTOR } from '~/command/DEMATERIALIZE_ACTOR';
 import { DONE } from '~/command/DONE';
@@ -39,6 +41,8 @@ export const PURE_GAME_LOGIC_HANDLERS: PureHandlerImplementation<TransformerCont
     CLEAVE,
     CREATE_ACTOR,
     CREATE_PLACE,
+    CREDIT,
+    DEBIT,
     DEFEND,
     DEMATERIALIZE_ACTOR,
     DONE,

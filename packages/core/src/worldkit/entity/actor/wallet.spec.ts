@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { Actor, ActorType } from '~/types/entity/actor';
 import { CurrencyType, TransactionType } from '~/types/currency';
-import { ActorDidGainCurrency, ActorDidSpendCurrency, EventType } from '~/types/event';
+import { ActorDidCompleteCurrencyTransaction, EventType } from '~/types/event';
 import { TransformerContext } from '~/types/handler';
 import { createActor } from './index';
 import {
@@ -297,9 +297,11 @@ describe('Wallet Module', () => {
     describe('executeCurrencyTransaction', () => {
       beforeEach(() => {
         setBalance(actor, CurrencyType.SCRAP, 100);
+        // Reset mock call counts between tests
+        vi.clearAllMocks();
       });
 
-      it('should execute DEBIT transaction and emit spend event', () => {
+      it('should execute DEBIT transaction and declare event', () => {
         const transaction = createCurrencyTransaction({
           trace: 'test-trace',
           actorId: actor.id,
@@ -308,21 +310,21 @@ describe('Wallet Module', () => {
           amount: 30,
         }, mockDeps);
 
-        const events = executeCurrencyTransaction(mockContext as TransformerContext, actor, transaction);
+        executeCurrencyTransaction(mockContext as TransformerContext, actor, transaction);
 
         // Check wallet was updated
         expect(getBalance(actor, CurrencyType.SCRAP)).toBe(70);
 
-        // Check event was emitted
-        expect(events).toHaveLength(1);
-        const spendEvent = events[0] as ActorDidSpendCurrency;
-        expect(spendEvent.type).toBe(EventType.ACTOR_DID_SPEND_CURRENCY);
-        expect(spendEvent.trace).toBe('test-trace');
-        expect(spendEvent.actor).toBe(actor.id);
-        expect(spendEvent.payload).toEqual(transaction);
+        // Check event was declared
+        expect(mockContext.declareEvent).toHaveBeenCalledTimes(1);
+        const declaredEvent = (mockContext.declareEvent as any).mock.calls[0][0] as ActorDidCompleteCurrencyTransaction;
+        expect(declaredEvent.type).toBe(EventType.ACTOR_DID_COMPLETE_CURRENCY_TRANSACTION);
+        expect(declaredEvent.trace).toBe('test-trace');
+        expect(declaredEvent.actor).toBe(actor.id);
+        expect(declaredEvent.payload.transaction).toEqual(transaction);
       });
 
-      it('should execute CREDIT transaction and emit gain event', () => {
+      it('should execute CREDIT transaction and declare event', () => {
         const transaction = createCurrencyTransaction({
           trace: 'test-trace',
           actorId: actor.id,
@@ -331,18 +333,18 @@ describe('Wallet Module', () => {
           amount: 50,
         }, mockDeps);
 
-        const events = executeCurrencyTransaction(mockContext as TransformerContext, actor, transaction);
+        executeCurrencyTransaction(mockContext as TransformerContext, actor, transaction);
 
         // Check wallet was updated
         expect(getBalance(actor, CurrencyType.SCRAP)).toBe(150);
 
-        // Check event was emitted
-        expect(events).toHaveLength(1);
-        const gainEvent = events[0] as ActorDidGainCurrency;
-        expect(gainEvent.type).toBe(EventType.ACTOR_DID_GAIN_CURRENCY);
-        expect(gainEvent.trace).toBe('test-trace');
-        expect(gainEvent.actor).toBe(actor.id);
-        expect(gainEvent.payload).toEqual(transaction);
+        // Check event was declared
+        expect(mockContext.declareEvent).toHaveBeenCalledTimes(1);
+        const declaredEvent = (mockContext.declareEvent as any).mock.calls[0][0] as ActorDidCompleteCurrencyTransaction;
+        expect(declaredEvent.type).toBe(EventType.ACTOR_DID_COMPLETE_CURRENCY_TRANSACTION);
+        expect(declaredEvent.trace).toBe('test-trace');
+        expect(declaredEvent.actor).toBe(actor.id);
+        expect(declaredEvent.payload.transaction).toEqual(transaction);
       });
 
       it('should handle unknown transaction types gracefully', () => {
@@ -355,11 +357,12 @@ describe('Wallet Module', () => {
         }, mockDeps);
 
         const originalBalance = getBalance(actor, CurrencyType.SCRAP);
-        const events = executeCurrencyTransaction(mockContext as TransformerContext, actor, transaction);
+        executeCurrencyTransaction(mockContext as TransformerContext, actor, transaction);
 
-        // Should not change balance or emit events
+        // Should not change balance or declare events
         expect(getBalance(actor, CurrencyType.SCRAP)).toBe(originalBalance);
-        expect(events).toHaveLength(0);
+        expect(mockContext.declareEvent).not.toHaveBeenCalled();
+        expect(mockContext.declareError).toHaveBeenCalledWith('Unknown transaction type: UNKNOWN');
       });
 
       it('should use default dependencies when not provided', () => {
@@ -371,16 +374,21 @@ describe('Wallet Module', () => {
           amount: 10,
         });
 
-        const events = executeCurrencyTransaction(mockContext as TransformerContext, actor, transaction);
+        executeCurrencyTransaction(mockContext as TransformerContext, actor, transaction);
 
-        expect(events).toHaveLength(1);
-        expect(events[0].type).toBe(EventType.ACTOR_DID_SPEND_CURRENCY);
+        expect(mockContext.declareEvent).toHaveBeenCalledTimes(1);
+        const declaredEvent = (mockContext.declareEvent as any).mock.calls[0][0] as ActorDidCompleteCurrencyTransaction;
+        expect(declaredEvent.type).toBe(EventType.ACTOR_DID_COMPLETE_CURRENCY_TRANSACTION);
       });
     });
   });
 
   describe('Integration Tests', () => {
     describe('Workbench commit workflow simulation', () => {
+      beforeEach(() => {
+        vi.clearAllMocks();
+      });
+
       it('should handle typical commit transaction flow', () => {
         // Setup: Actor has some scrap
         setBalance(actor, CurrencyType.SCRAP, 100);
@@ -399,14 +407,14 @@ describe('Wallet Module', () => {
         });
 
         // Step 3: Execute transaction
-        const events = executeCurrencyTransaction(mockContext as TransformerContext, actor, transaction);
+        executeCurrencyTransaction(mockContext as TransformerContext, actor, transaction);
 
         // Verify results
         expect(getBalance(actor, CurrencyType.SCRAP)).toBe(55);
-        expect(events).toHaveLength(1);
-        const spendEvent = events[0] as ActorDidSpendCurrency;
-        expect(spendEvent.type).toBe(EventType.ACTOR_DID_SPEND_CURRENCY);
-        expect(spendEvent.payload.amount).toBe(mutationCost);
+        expect(mockContext.declareEvent).toHaveBeenCalledTimes(1);
+        const declaredEvent = (mockContext.declareEvent as any).mock.calls[0][0] as ActorDidCompleteCurrencyTransaction;
+        expect(declaredEvent.type).toBe(EventType.ACTOR_DID_COMPLETE_CURRENCY_TRANSACTION);
+        expect(declaredEvent.payload.transaction.amount).toBe(mutationCost);
       });
 
       it('should handle insufficient funds scenario', () => {
@@ -439,6 +447,10 @@ describe('Wallet Module', () => {
     });
 
     describe('Edge cases and error conditions', () => {
+      beforeEach(() => {
+        vi.clearAllMocks();
+      });
+
       it('should handle actor with no wallet property', () => {
         // @ts-ignore - Testing edge case
         delete actor.wallet;
@@ -464,12 +476,12 @@ describe('Wallet Module', () => {
           amount: 0,
         });
 
-        const events = executeCurrencyTransaction(mockContext as TransformerContext, actor, transaction);
+        executeCurrencyTransaction(mockContext as TransformerContext, actor, transaction);
 
         expect(getBalance(actor, CurrencyType.SCRAP)).toBe(100); // No change
-        expect(events).toHaveLength(1); // Event still emitted
-        const spendEvent = events[0] as ActorDidSpendCurrency;
-        expect(spendEvent.payload.amount).toBe(0);
+        expect(mockContext.declareEvent).toHaveBeenCalledTimes(1); // Event still declared
+        const declaredEvent = (mockContext.declareEvent as any).mock.calls[0][0] as ActorDidCompleteCurrencyTransaction;
+        expect(declaredEvent.payload.transaction.amount).toBe(0);
       });
     });
   });

@@ -14,9 +14,9 @@ import { SessionStatus } from '~/types/session';
 import { ShellDiff, ShellMutation } from '~/types/workbench';
 import { Shell } from '~/types/entity/shell';
 import { ComponentSchemaURN } from '~/types/taxonomy';
-import { CurrencyTransaction } from '~/types/currency';
 import { WellKnownActor } from '~/types/actor';
 import { ShellStats } from '~/types/entity/actor';
+import { CurrencyTransaction } from '~/types/currency';
 
 export type EventPayload = Record<string, any>;
 
@@ -83,13 +83,11 @@ export enum EventType {
   ACTOR_DID_DEPART = 'actor:departed',
   ACTOR_DID_DIE = 'actor:died',
   ACTOR_DID_EXAMINE_SHELL = 'actor:shell:examined',
-  ACTOR_DID_GAIN_CURRENCY = 'actor:currency:credited',
   ACTOR_DID_LOOK = 'actor:looked',
   ACTOR_DID_MATERIALIZE = 'actor:materialized',
   ACTOR_DID_MOVE = 'actor:moved',
   ACTOR_DID_QUERY_HELPFILE = 'actor:helpfile:queried',
   ACTOR_DID_RECOVER_ENERGY = 'actor:energy:recovered',
-  ACTOR_DID_SPEND_CURRENCY = 'actor:currency:debited',
   ACTOR_DID_SWAP_SHELL = 'actor:shell:swapped',
   ACTOR_WAS_CREATED = 'actor:created',
   COMBATANT_DID_ACQUIRE_TARGET = 'combat:actor:target:acquired',
@@ -128,6 +126,7 @@ export enum EventType {
   ACTOR_DID_UNMOUNT_COMPONENT = 'actor:component:unmounted',
   ACTOR_DID_LIST_INVENTORY_COMPONENTS = 'actor:inventory:components:listed',
   ACTOR_DID_LIST_INVENTORY_MATERIALS = 'actor:inventory:materials:listed',
+  ACTOR_DID_COMPLETE_CURRENCY_TRANSACTION = 'actor:currency:transaction:completed',
 }
 
 export type EventBase = {
@@ -427,18 +426,6 @@ export type ActorDidOpenHelpFileInput = AbstractWorldEventInput<
   }
 >;
 
-export type ActorDidSpendCurrency = EventBase & ActorDidSpendCurrencyInput;
-export type ActorDidSpendCurrencyInput = AbstractWorldEventInput<
-  EventType.ACTOR_DID_SPEND_CURRENCY,
-  CurrencyTransaction
->;
-
-export type ActorDidGainCurrency = EventBase & ActorDidGainCurrencyInput;
-export type ActorDidGainCurrencyInput = AbstractWorldEventInput<
-  EventType.ACTOR_DID_GAIN_CURRENCY,
-  CurrencyTransaction
->;
-
 // New workbench events
 export type ActorDidListShells = EventBase & ActorDidListShellsInput;
 export type ActorDidListShellsInput = AbstractWorldEventInput<
@@ -522,6 +509,14 @@ export type ActorDidListInventoryMaterialsInput = AbstractWorldEventInput<
   }
 >;
 
+export type ActorDidCompleteCurrencyTransaction = EventBase & ActorDidCompleteCurrencyTransactionInput;
+export type ActorDidCompleteCurrencyTransactionInput = AbstractWorldEventInput<
+  EventType.ACTOR_DID_COMPLETE_CURRENCY_TRANSACTION,
+  {
+    transaction: CurrencyTransaction;
+  }
+>;
+
 /**
  * Union of all valid event inputs
  */
@@ -559,8 +554,6 @@ export type WorldEventInput =
   | ActorDidCommitShellMutationsInput
   | ActorDidSwapShellInput
   | ActorDidOpenHelpFileInput
-  | ActorDidSpendCurrencyInput
-  | ActorDidGainCurrencyInput
   | ActorDidListShellsInput
   | ActorDidInspectShellStatusInput
   | ActorDidReviewShellStatsInput
@@ -569,8 +562,8 @@ export type WorldEventInput =
   | ActorDidMountComponentInput
   | ActorDidUnmountComponentInput
   | ActorDidListInventoryComponentsInput
-  | ActorDidListInventoryMaterialsInput;
-
+  | ActorDidListInventoryMaterialsInput
+  | CurrencyTransactionDidCompleteInput;
 /**
  * Union of all valid events
  */

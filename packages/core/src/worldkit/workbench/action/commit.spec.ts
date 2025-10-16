@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { Stat } from '~/types/entity/actor';
-import { ActorDidCommitShellMutations, ActorDidSpendCurrency, EventType } from '~/types/event';
+import { ActorDidCommitShellMutations, ActorDidCompleteCurrencyTransaction, EventType } from '~/types/event';
 import { TransformerContext } from '~/types/handler';
 import { CurrencyType, TransactionType } from '~/types/currency';
 import { StatMutationOperation, ShellMutationType } from '~/types/workbench';
@@ -11,6 +11,7 @@ import {
   createStatMutation
 } from '../testing';
 import { setBalance, getBalance } from '~/worldkit/entity/actor/wallet';
+import { extractFirstEventOfType } from '~/testing/event';
 
 describe('CommitShellMutationsAction', () => {
   let context: TransformerContext;
@@ -48,21 +49,21 @@ describe('CommitShellMutationsAction', () => {
       expect(events).toHaveLength(2);
 
       // First event should be currency spend
-      const spendEvent = events[0] as ActorDidSpendCurrency;
-      expect(spendEvent.type).toBe(EventType.ACTOR_DID_SPEND_CURRENCY);
+      const spendEvent = extractFirstEventOfType<ActorDidCompleteCurrencyTransaction>(events, EventType.ACTOR_DID_COMPLETE_CURRENCY_TRANSACTION)!;
+      expect(spendEvent.type).toBe(EventType.ACTOR_DID_COMPLETE_CURRENCY_TRANSACTION);
       expect(spendEvent.trace).toBe('test-trace');
-      expect(spendEvent.payload.currency).toBe(CurrencyType.SCRAP);
-      expect(spendEvent.payload.type).toBe(TransactionType.DEBIT);
-      expect(spendEvent.payload.amount).toBeGreaterThan(0);
+      expect(spendEvent.payload.transaction.currency).toBe(CurrencyType.SCRAP);
+      expect(spendEvent.payload.transaction.type).toBe(TransactionType.DEBIT);
+      expect(spendEvent.payload.transaction.amount).toBeGreaterThan(0);
 
       // Second event should be commit event
-      const commitEvent = events[1] as ActorDidCommitShellMutations;
+      const commitEvent = extractFirstEventOfType<ActorDidCommitShellMutations>(events, EventType.WORKBENCH_SHELL_MUTATIONS_COMMITTED)!;
       expect(commitEvent.type).toBe(EventType.WORKBENCH_SHELL_MUTATIONS_COMMITTED);
       expect(commitEvent.trace).toBe('test-trace');
       expect(commitEvent.location).toBe(actor.location);
       expect(commitEvent.actor).toBe(actor.id);
       expect(commitEvent.payload.sessionId).toBe(session.id);
-      expect(commitEvent.payload.cost).toBe(spendEvent.payload.amount);
+      expect(commitEvent.payload.cost).toBe(spendEvent.payload.transaction.amount);
       expect(commitEvent.payload.mutations).toHaveLength(2);
 
       // Verify mutations were applied to shell
@@ -70,7 +71,7 @@ describe('CommitShellMutationsAction', () => {
       expect(shell.stats[Stat.FIN].eff).toBe(initialFin + 1);
 
       // Verify wallet was debited
-      expect(getBalance(actor, CurrencyType.SCRAP)).toBe(initialBalance - spendEvent.payload.amount);
+      expect(getBalance(actor, CurrencyType.SCRAP)).toBe(initialBalance - spendEvent.payload.transaction.amount);
 
       // Verify pending mutations were cleared
       expect(session.data.pendingMutations).toHaveLength(0);
@@ -217,11 +218,11 @@ describe('CommitShellMutationsAction', () => {
       const events = commitAction(actor);
 
       expect(events).toHaveLength(2);
-      const spendEvent = events[0] as ActorDidSpendCurrency;
-      const commitEvent = events[1] as ActorDidCommitShellMutations;
+      const spendEvent = extractFirstEventOfType<ActorDidCompleteCurrencyTransaction>(events, EventType.ACTOR_DID_COMPLETE_CURRENCY_TRANSACTION)!;
+      const commitEvent = extractFirstEventOfType<ActorDidCommitShellMutations>(events, EventType.WORKBENCH_SHELL_MUTATIONS_COMMITTED)!;
 
       // Cost should be consistent between spend and commit events
-      expect(spendEvent.payload.amount).toBe(commitEvent.payload.cost);
+      expect(spendEvent.payload.transaction.amount).toBe(commitEvent.payload.cost);
       expect(commitEvent.payload.cost).toBeGreaterThan(0);
     });
 
@@ -242,8 +243,8 @@ describe('CommitShellMutationsAction', () => {
       const events = commitAction(actor);
 
       expect(events).toHaveLength(2);
-      const spendEvent = events[0] as ActorDidSpendCurrency;
-      expect(spendEvent.payload.amount).toBe(0);
+      const spendEvent = extractFirstEventOfType<ActorDidCompleteCurrencyTransaction>(events, EventType.ACTOR_DID_COMPLETE_CURRENCY_TRANSACTION)!;
+      expect(spendEvent.payload.transaction.amount).toBe(0);
 
       // Balance should remain unchanged for zero-cost transaction
       expect(getBalance(actor, CurrencyType.SCRAP)).toBe(initialBalance);
@@ -320,15 +321,15 @@ describe('CommitShellMutationsAction', () => {
       const commitAction = createCommitShellMutationsAction(context, session);
       const events = commitAction(actor, 'custom-trace');
 
-      const spendEvent = events[0] as ActorDidSpendCurrency;
+      const spendEvent = extractFirstEventOfType<ActorDidCompleteCurrencyTransaction>(events, EventType.ACTOR_DID_COMPLETE_CURRENCY_TRANSACTION)!;
 
-      expect(spendEvent.type).toBe(EventType.ACTOR_DID_SPEND_CURRENCY);
+      expect(spendEvent.type).toBe(EventType.ACTOR_DID_COMPLETE_CURRENCY_TRANSACTION);
       expect(spendEvent.trace).toBe('custom-trace');
       expect(spendEvent.location).toBe(actor.location);
       expect(spendEvent.actor).toBe(actor.id);
-      expect(spendEvent.payload.actorId).toBe(actor.id);
-      expect(spendEvent.payload.currency).toBe(CurrencyType.SCRAP);
-      expect(spendEvent.payload.type).toBe(TransactionType.DEBIT);
+      expect(spendEvent.payload.transaction.actorId).toBe(actor.id);
+      expect(spendEvent.payload.transaction.currency).toBe(CurrencyType.SCRAP);
+      expect(spendEvent.payload.transaction.type).toBe(TransactionType.DEBIT);
     });
 
     it('should generate proper commit event with complete payload', () => {
@@ -380,19 +381,19 @@ describe('CommitShellMutationsAction', () => {
 
       expect(events).toHaveLength(2);
 
-      const spendEvent = events[0] as ActorDidSpendCurrency;
-      const commitEvent = events[1] as ActorDidCommitShellMutations;
+      const transactionEvent = extractFirstEventOfType<ActorDidCompleteCurrencyTransaction>(events, EventType.ACTOR_DID_COMPLETE_CURRENCY_TRANSACTION)!;
+      const commitEvent = extractFirstEventOfType<ActorDidCommitShellMutations>(events, EventType.WORKBENCH_SHELL_MUTATIONS_COMMITTED)!;
 
       // Verify transaction record structure
-      expect(spendEvent.payload.actorId).toBe(actor.id);
-      expect(spendEvent.payload.currency).toBe(CurrencyType.SCRAP);
-      expect(spendEvent.payload.type).toBe(TransactionType.DEBIT);
-      expect(spendEvent.payload.amount).toBe(commitEvent.payload.cost);
-      expect(spendEvent.payload.trace).toBeDefined();
+      expect(transactionEvent.payload.transaction.actorId).toBe(actor.id);
+      expect(transactionEvent.payload.transaction.currency).toBe(CurrencyType.SCRAP);
+      expect(transactionEvent.payload.transaction.type).toBe(TransactionType.DEBIT);
+      expect(transactionEvent.payload.transaction.amount).toBe(commitEvent.payload.cost);
+      expect(transactionEvent.payload.transaction.trace).toBeDefined();
 
       // Verify wallet was properly debited
       const finalBalance = getBalance(actor, CurrencyType.SCRAP);
-      expect(finalBalance).toBe(initialBalance - spendEvent.payload.amount);
+      expect(finalBalance).toBe(initialBalance - transactionEvent.payload.transaction.amount);
     });
 
     it('should handle edge case of exact balance match', () => {
@@ -408,7 +409,8 @@ describe('CommitShellMutationsAction', () => {
       setBalance(actor, CurrencyType.SCRAP, 1000);
       const testCommitAction = createCommitShellMutationsAction(context, session);
       const testEvents = testCommitAction(actor);
-      const exactCost = (testEvents[0] as ActorDidSpendCurrency).payload.amount;
+      const transactionEvent = extractFirstEventOfType<ActorDidCompleteCurrencyTransaction>(testEvents, EventType.ACTOR_DID_COMPLETE_CURRENCY_TRANSACTION)!;
+      const exactCost = transactionEvent.payload.transaction.amount;
 
       // Reset scenario with exact balance
       const scenario2 = useSimpleWorkbenchScenario(context, {

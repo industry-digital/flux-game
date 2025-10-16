@@ -3,10 +3,10 @@ import { ActorDidCommitShellMutations, EventType, WorldEvent } from '~/types/eve
 import { TransformerContext } from '~/types/handler';
 import { WorkbenchSession } from '~/types/workbench';
 import {
-    hasEnoughFunds,
-    getBalance,
-    createCurrencyTransaction,
-    executeCurrencyTransaction
+  hasEnoughFunds,
+  getBalance,
+  createCurrencyTransaction,
+  executeCurrencyTransaction
 } from '~/worldkit/entity/actor/wallet';
 import { CurrencyType, TransactionType } from '~/types/currency';
 import { calculateTotalCost } from '~/worldkit/workbench/cost';
@@ -15,34 +15,52 @@ import { createWorldEvent } from '~/worldkit/event';
 
 export type CommitShellMutationsAction = (actor: Actor, trace?: string) => WorldEvent[];
 
+export type CommitShellMutationsDependencies = {
+  createWorldEvent: typeof createWorldEvent;
+  calculateTotalCost: typeof calculateTotalCost;
+  hasEnoughFunds: typeof hasEnoughFunds;
+  createCurrencyTransaction: typeof createCurrencyTransaction;
+  executeCurrencyTransaction: typeof executeCurrencyTransaction;
+  applyShellMutations: typeof applyShellMutations;
+};
+
+const DEFAULT_COMMIT_SHELL_MUTATIONS_DEPS: CommitShellMutationsDependencies = {
+  createWorldEvent,
+  calculateTotalCost,
+  hasEnoughFunds,
+  createCurrencyTransaction,
+  executeCurrencyTransaction,
+  applyShellMutations,
+};
+
 export const createCommitShellMutationsAction = (
   context: TransformerContext,
   session: WorkbenchSession,
+  deps: CommitShellMutationsDependencies = DEFAULT_COMMIT_SHELL_MUTATIONS_DEPS,
 ): CommitShellMutationsAction => {
-  const { declareError } = context;
 
   return function commitShellMutations(actor: Actor, trace: string = context.uniqid()): WorldEvent[] {
     // 1. Validate Pending Mutations
     if (session.data.pendingMutations.length === 0) {
-      declareError('No staged mutations to commit');
+      context.declareError('No staged mutations to commit');
       return [];
     }
 
     const shell = actor.shells[actor.currentShell];
     if (!shell) {
-      declareError('Current shell not found');
+      context.declareError('Current shell not found');
       return [];
     }
 
-    const cost = calculateTotalCost(shell, session.data.pendingMutations);
+    const cost = deps.calculateTotalCost(shell, session.data.pendingMutations);
 
-    if (!hasEnoughFunds(actor, CurrencyType.SCRAP, cost)) {
-      declareError(`Insufficient scrap for shell modifications: need ${cost}, have ${getBalance(actor, CurrencyType.SCRAP)}`);
+    if (!deps.hasEnoughFunds(actor, CurrencyType.SCRAP, cost)) {
+      context.declareError(`Insufficient scrap for shell modifications: need ${cost}, have ${getBalance(actor, CurrencyType.SCRAP)}`);
       return [];
     }
 
     // 4. Create Transaction
-    const transaction = createCurrencyTransaction({
+    const transaction = deps.createCurrencyTransaction({
       actorId: actor.id,
       currency: CurrencyType.SCRAP,
       type: TransactionType.DEBIT,
@@ -51,17 +69,17 @@ export const createCommitShellMutationsAction = (
     });
 
     // 5. Execute Transaction (applies payment + emits currency events)
-    const currencyEvents = executeCurrencyTransaction(context, actor, transaction);
+    const currencyEvents = deps.executeCurrencyTransaction(context, actor, transaction);
 
     // 6. Apply Mutations
-    applyShellMutations(shell, session.data.pendingMutations);
+    deps.applyShellMutations(shell, session.data.pendingMutations);
 
     // 7. Clear Pending State
     const committedMutations = [...session.data.pendingMutations]; // Copy before clearing
     session.data.pendingMutations.length = 0;
 
     // 8. Create Event
-    const commitEvent = createWorldEvent<ActorDidCommitShellMutations>({
+    const commitEvent = deps.createWorldEvent<ActorDidCommitShellMutations>({
       type: EventType.WORKBENCH_SHELL_MUTATIONS_COMMITTED,
       trace,
       location: actor.location,
@@ -73,7 +91,8 @@ export const createCommitShellMutationsAction = (
       },
     });
 
-    // Return all events
+    context.declareEvent(commitEvent);
+
     return [...currencyEvents, commitEvent];
   };
 };

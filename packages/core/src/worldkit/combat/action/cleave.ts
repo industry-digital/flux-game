@@ -171,6 +171,8 @@ export function createCleaveMethod(
       },
     });
 
+    allEvents.push(cleaveAttackEvent);
+
     let isFirstTarget = true;
 
     // Execute attack against each target
@@ -257,7 +259,6 @@ export function createCleaveMethod(
 
     // Declare and add the cleave attack event
     context.declareEvent(cleaveAttackEvent);
-    allEvents.unshift(cleaveAttackEvent); // Add at beginning so it comes before target events
 
     return allEvents;
   };

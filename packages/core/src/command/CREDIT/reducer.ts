@@ -1,21 +1,26 @@
 import { PureReducer, TransformerContext } from '~/types/handler';
-import { DoneCommand } from './types';
-import { withBasicWorldStateValidation } from '../validation';
-import { withExistingCombatSession } from '~/worldkit/combat/validation';
-import { createCombatSessionApi } from '~/worldkit/combat/session/session';
+import { CreditCommand } from './types';
+import { createCurrencyTransaction, executeCurrencyTransaction } from '~/worldkit/entity/actor/wallet';
+import { TransactionType } from '~/types/currency';
 
-export const doneReducer: PureReducer<TransformerContext, DoneCommand> = withBasicWorldStateValidation(
-  withExistingCombatSession(
-    (context, command) => {
-      const { actors } = context.world;
-      const actor = actors[command.actor];
+export const creditReducer: PureReducer<TransformerContext, CreditCommand> = (context, command) => {
+  const { actors } = context.world;
+  const recipient = actors[command.args.recipient];
 
-      const { getCombatantApi } = createCombatSessionApi(context, actor.location, command.session!);
-      const combatantApi = getCombatantApi(actor.id);
+  if (!recipient) {
+    context.declareError(`CREDIT recipient not found in world projection`, command.id);
+    return context;
+  }
 
-      combatantApi.done(command.id);
+  const transaction = createCurrencyTransaction({
+    trace: command.id,
+    actorId: recipient.id,
+    currency: command.args.currency,
+    type: TransactionType.CREDIT,
+    amount: command.args.amount,
+  });
 
-      return context;
-    }
-  )
-);
+  executeCurrencyTransaction(context, recipient, transaction);
+
+  return context;
+};
