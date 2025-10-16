@@ -5,10 +5,11 @@ import { createTransformerContext } from '~/worldkit/context';
 import { createSwordSchema } from '~/worldkit/schema/weapon/sword';
 import { registerWeapons } from '../testing/schema';
 import { ActorURN } from '~/types/taxonomy';
-import { EventType } from '~/types/event';
+import { CombatantDidDefend, EventType } from '~/types/event';
 import { extractApCost } from '~/worldkit/combat/ap';
 import { Team } from '~/types/combat';
 import { DoneMethod } from '~/worldkit/combat/action/done';
+import { extractFirstEventOfType } from '~/testing/event';
 
 describe('Defend Method', () => {
   let scenario: ReturnType<typeof useCombatScenario>;
@@ -91,9 +92,9 @@ describe('Defend Method', () => {
 
       expect(defenderCombatant.ap.eff.cur).toBe(0);
       expect(result).toHaveLength(1);
-      expect(result[0].type).toBe(EventType.COMBATANT_DID_DEFEND);
-      // @ts-expect-error: payload `cost` is not typed
-      expect(extractApCost(result[0].payload?.cost)).toBe(initialAP);
+      const defendEvent = extractFirstEventOfType<CombatantDidDefend>(result, EventType.COMBATANT_DID_DEFEND)!;
+      expect(defendEvent.type).toBe(EventType.COMBATANT_DID_DEFEND);
+      expect(extractApCost(defendEvent.payload.cost)).toBe(initialAP);
     });
 
     it('should call declareEvent on context', () => {
@@ -117,8 +118,8 @@ describe('Defend Method', () => {
 
       expect(defenderCombatant.ap.eff.cur).toBe(0);
       expect(result).toHaveLength(1);
-      // @ts-expect-error: payload `cost` is not typed
-      expect(extractApCost(result[0].payload.cost)).toBe(0);
+      const defendEvent = extractFirstEventOfType<CombatantDidDefend>(result, EventType.COMBATANT_DID_DEFEND)!;
+      expect(extractApCost(defendEvent.payload.cost)).toBe(0);
     });
   });
 

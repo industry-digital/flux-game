@@ -20,6 +20,7 @@ import { ALICE_ID, BOB_ID } from '~/testing/constants';
 
 // Import all locale implementations
 import { en_US } from './en_US';
+import { LanguageTemplates, TemplateFunction } from '~/types/narrative';
 
 // Test data setup
 const OBSERVER_ID: ActorURN = 'flux:actor:test:observer';
@@ -40,7 +41,7 @@ describe.each([
     event: T,
     actorId: ActorURN
   ): string {
-    const template = templates[event.type] as any;
+    const template = templates[event.type as keyof LanguageTemplates] as TemplateFunction<T, ActorURN, string>;
     return template(context, event, actorId);
   }
 
