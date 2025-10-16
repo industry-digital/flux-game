@@ -1,8 +1,9 @@
 import { describe, beforeEach, it, expect } from 'vitest';
-import { debitIntentParser } from './parser';
+import { debitResolver } from './resolver';
 import { createIntent } from '~/intent/factory';
-import { createIntentParserContext } from '~/intent/resolution';
-import { TransformerContext, WorldProjection } from '~/types/handler';
+import { createCommandResolverContext } from '~/intent/resolution';
+import { TransformerContext } from '~/types/handler';
+import { WorldProjection } from '~/types/world';
 import { CommandType } from '~/types/intent';
 import { createTestTransformerContext } from '~/testing/context-testing';
 import { ActorURN, PlaceURN, SessionURN } from '~/types/taxonomy';
@@ -14,7 +15,7 @@ import { WellKnownActor } from '~/types';
 
 describe('DEBIT Command Parser', () => {
   let context: TransformerContext;
-  let parserContext: ReturnType<typeof createIntentParserContext>;
+  let parserContext: ReturnType<typeof createCommandResolverContext>;
 
   // Test entities
   const ACTOR_ID: ActorURN = 'flux:actor:test:alice';
@@ -49,7 +50,7 @@ describe('DEBIT Command Parser', () => {
       })),
     });
 
-    parserContext = createIntentParserContext(context);
+    parserContext = createCommandResolverContext(context);
   });
 
   describe('Basic Functionality', () => {
@@ -61,7 +62,7 @@ describe('DEBIT Command Parser', () => {
         text: '@debit flux:actor:test:bob scrap 100',
       });
 
-      const command = debitIntentParser(parserContext, intent);
+      const command = debitResolver(parserContext, intent);
 
       expect(command).toBeTruthy();
       expect(command?.type).toBe(CommandType.DEBIT);
@@ -80,7 +81,7 @@ describe('DEBIT Command Parser', () => {
         text: '@credit flux:actor:test:bob scrap 100',
       });
 
-      const command = debitIntentParser(parserContext, intent);
+      const command = debitResolver(parserContext, intent);
 
       expect(command).toBeUndefined();
     });
@@ -93,7 +94,7 @@ describe('DEBIT Command Parser', () => {
         text: '@debit flux:actor:missing scrap 100',
       });
 
-      const command = debitIntentParser(parserContext, intent);
+      const command = debitResolver(parserContext, intent);
 
       expect(command).toBeUndefined();
     });
@@ -106,7 +107,7 @@ describe('DEBIT Command Parser', () => {
         text: '@debit flux:actor:test:bob gold 100',
       });
 
-      const command = debitIntentParser(parserContext, intent);
+      const command = debitResolver(parserContext, intent);
 
       expect(command).toBeUndefined();
     });
@@ -119,7 +120,7 @@ describe('DEBIT Command Parser', () => {
         text: '@debit flux:actor:test:bob scrap abc',
       });
 
-      const command = debitIntentParser(parserContext, intent);
+      const command = debitResolver(parserContext, intent);
 
       expect(command).toBeUndefined();
     });
@@ -132,7 +133,7 @@ describe('DEBIT Command Parser', () => {
         text: `@debit flux:actor:test:bob scrap ${Number.MAX_SAFE_INTEGER + 1}`,
       });
 
-      const command = debitIntentParser(parserContext, intent);
+      const command = debitResolver(parserContext, intent);
 
       expect(command).toBeUndefined();
     });
@@ -147,7 +148,7 @@ describe('DEBIT Command Parser', () => {
         text: '@debit flux:actor:test:bob',
       });
 
-      const command = debitIntentParser(parserContext, intent);
+      const command = debitResolver(parserContext, intent);
 
       expect(command).toBeUndefined();
     });
@@ -160,7 +161,7 @@ describe('DEBIT Command Parser', () => {
         text: '@debit flux:actor:test:bob scrap 100 extra tokens',
       });
 
-      const command = debitIntentParser(parserContext, intent);
+      const command = debitResolver(parserContext, intent);
 
       expect(command).toBeUndefined();
     });
@@ -173,7 +174,7 @@ describe('DEBIT Command Parser', () => {
         text: '@debit flux:actor:test:bob scrap 50',
       });
 
-      const command = debitIntentParser(parserContext, intent);
+      const command = debitResolver(parserContext, intent);
 
       expect(command).toBeTruthy();
       expect(command?.args.amount).toBe(50);
@@ -189,7 +190,7 @@ describe('DEBIT Command Parser', () => {
         text: '@debit flux:actor:test:bob scrap 42',
       });
 
-      const command = debitIntentParser(parserContext, intent);
+      const command = debitResolver(parserContext, intent);
 
       expect(command).toBeTruthy();
       expect(command?.args.amount).toBe(42);
@@ -203,7 +204,7 @@ describe('DEBIT Command Parser', () => {
         text: '@debit flux:actor:test:bob scrap 0',
       });
 
-      const command = debitIntentParser(parserContext, intent);
+      const command = debitResolver(parserContext, intent);
 
       expect(command).toBeTruthy();
       expect(command?.args.amount).toBe(0);
@@ -217,7 +218,7 @@ describe('DEBIT Command Parser', () => {
         text: '@debit flux:actor:test:bob scrap -25',
       });
 
-      const command = debitIntentParser(parserContext, intent);
+      const command = debitResolver(parserContext, intent);
 
       expect(command).toBeTruthy();
       expect(command?.args.amount).toBe(-25);
@@ -231,7 +232,7 @@ describe('DEBIT Command Parser', () => {
         text: '@debit flux:actor:test:bob scrap 10.5',
       });
 
-      const command = debitIntentParser(parserContext, intent);
+      const command = debitResolver(parserContext, intent);
 
       expect(command).toBeTruthy();
       expect(command?.args.amount).toBe(10); // parseInt truncates
@@ -245,7 +246,7 @@ describe('DEBIT Command Parser', () => {
         text: `@debit flux:actor:test:bob scrap ${Number.MAX_SAFE_INTEGER}`,
       });
 
-      const command = debitIntentParser(parserContext, intent);
+      const command = debitResolver(parserContext, intent);
 
       expect(command).toBeTruthy();
       expect(command?.args.amount).toBe(Number.MAX_SAFE_INTEGER);
@@ -259,7 +260,7 @@ describe('DEBIT Command Parser', () => {
         text: `@debit flux:actor:test:bob scrap ${Number.MIN_SAFE_INTEGER}`,
       });
 
-      const command = debitIntentParser(parserContext, intent);
+      const command = debitResolver(parserContext, intent);
 
       expect(command).toBeTruthy();
       expect(command?.args.amount).toBe(Number.MIN_SAFE_INTEGER);
@@ -276,7 +277,7 @@ describe('DEBIT Command Parser', () => {
         text: '@debit flux:actor:test:bob scrap 100',
       });
 
-      const command = debitIntentParser(parserContext, intent);
+      const command = debitResolver(parserContext, intent);
 
       expect(command).toBeTruthy();
       expect(command?.session).toBe(SESSION_ID);
@@ -290,7 +291,7 @@ describe('DEBIT Command Parser', () => {
         text: '@debit flux:actor:test:bob scrap 100',
       });
 
-      const command = debitIntentParser(parserContext, intent);
+      const command = debitResolver(parserContext, intent);
 
       expect(command).toBeTruthy();
       expect(command?.session).toBeUndefined();
@@ -307,7 +308,7 @@ describe('DEBIT Command Parser', () => {
         text: '@debit flux:actor:test:bob scrap 250',
       });
 
-      const command = debitIntentParser(parserContext, intent);
+      const command = debitResolver(parserContext, intent);
 
       expect(command).toMatchObject({
         id: intent.id,
@@ -331,7 +332,7 @@ describe('DEBIT Command Parser', () => {
         text: '@debit flux:actor:test:bob scrap 100',
       });
 
-      const command = debitIntentParser(parserContext, intent);
+      const command = debitResolver(parserContext, intent);
 
       expect(command).toBeTruthy();
       expect(command?.actor).toBe(WellKnownActor.SYSTEM);
@@ -348,7 +349,7 @@ describe('DEBIT Command Parser', () => {
         text: '@debit invalid-urn scrap 100',
       });
 
-      const command = debitIntentParser(parserContext, intent);
+      const command = debitResolver(parserContext, intent);
 
       expect(command).toBeUndefined();
     });
@@ -377,7 +378,7 @@ describe('DEBIT Command Parser', () => {
           text: maliciousText,
         });
 
-        const command = debitIntentParser(parserContext, intent);
+        const command = debitResolver(parserContext, intent);
 
         // Most malicious inputs should be rejected due to invalid amount parsing
         if (command) {
@@ -425,7 +426,7 @@ describe('DEBIT Command Parser', () => {
           text,
         });
 
-        const command = debitIntentParser(parserContext, intent);
+        const command = debitResolver(parserContext, intent);
 
         if (command) {
           // Should either be a valid finite number or be rejected
@@ -448,7 +449,7 @@ describe('DEBIT Command Parser', () => {
           text: `@debit flux:actor:test:bob ${currency} 100`,
         });
 
-        const command = debitIntentParser(parserContext, intent);
+        const command = debitResolver(parserContext, intent);
 
         expect(command).toBeTruthy();
         expect(command?.args.currency).toBe(currency);
@@ -466,7 +467,7 @@ describe('DEBIT Command Parser', () => {
           text: `@debit flux:actor:test:bob ${currency} 100`,
         });
 
-        const command = debitIntentParser(parserContext, intent);
+        const command = debitResolver(parserContext, intent);
 
         expect(command).toBeUndefined();
       });

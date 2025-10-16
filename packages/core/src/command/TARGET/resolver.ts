@@ -1,12 +1,11 @@
-import { IntentParser, IntentParserContext, Intent } from '~/types/handler';
-import { CommandType } from '~/types/intent';
+import { CommandResolver, CommandResolverContext, CommandType, Intent } from '~/types/intent';
 import { createActorCommand } from '~/lib/intent';
 import { TargetCommand } from './types';
 
 const TARGET_VERB = 'target';
 
-export const targetIntentParser: IntentParser<TargetCommand> = (
-  context: IntentParserContext,
+export const targetResolver: CommandResolver<TargetCommand> = (
+  context: CommandResolverContext,
   intent: Intent,
 ): TargetCommand | undefined => {
   const { world, resolveActor } = context;

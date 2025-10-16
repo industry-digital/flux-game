@@ -1,15 +1,14 @@
-import { IntentParser, IntentParserContext, Intent } from '~/types/handler';
-import { CommandType } from '~/types/intent';
+import { CommandResolverContext, CommandType, Intent, CommandResolver } from '~/types/intent';
 import { createActorCommand } from '~/lib/intent';
 import { RangeCommand } from './types';
 
 const RANGE_VERB = 'range';
 
-export const rangeIntentParser: IntentParser<RangeCommand> = (
-  context: IntentParserContext,
+export const rangeResolver: CommandResolver<RangeCommand> = (
+  context: CommandResolverContext,
   intent: Intent,
 ): RangeCommand | undefined => {
-  const { world, resolveActor } = context;
+  const { resolveActor } = context;
 
   // Check if this is a range command
   if (intent.verb !== RANGE_VERB) {

@@ -1,25 +1,26 @@
-import { TransformerContext, IntentParser, Intent, PureHandlerInterface, IntentParserContext } from '~/types/handler';
-import { Command } from '~/types/intent';
+import { TransformerContext, PureHandlerInterface } from '~/types/handler';
+import { Command, Intent } from '~/types/intent';
 import { ActorURN } from '~/types/taxonomy';
 import { PURE_GAME_LOGIC_HANDLERS } from '~/handlers';
 import { createEntityResolverApi } from './resolvers';
 import { createIntent } from './factory';
+import { CommandResolver, CommandResolverContext } from '~/types/intent';
 
-const PARSERS: IntentParser[] = (() => {
-  const parsers: IntentParser[] = [];
+const RESOLVERS: CommandResolver[] = (() => {
+  const resolvers: CommandResolver[] = [];
 
   for (const HandlerClass of PURE_GAME_LOGIC_HANDLERS) {
     const handler = new HandlerClass() as PureHandlerInterface<TransformerContext, any>;
-    const parser = handler.parse; // ASSUMPTION: No need to bind() to handler
-    if (parser) {
-      parsers.push(parser);
+    const resolver = handler.resolve; // ASSUMPTION: No need to bind() to handler
+    if (resolver) {
+      resolvers.push(resolver);
     }
   }
 
-  return parsers;
+  return resolvers;
 })();
 
-export const createIntentParserContext = (input: TransformerContext): IntentParserContext => {
+export const createCommandResolverContext = (input: TransformerContext): CommandResolverContext => {
   const resolvers = createEntityResolverApi(input.world);
   return {
     ...input,
@@ -31,12 +32,12 @@ export const createIntentParserContext = (input: TransformerContext): IntentPars
 };
 
 
-export type IntentResolutionDependencies = {
-  parsers: IntentParser[];
+export type CommandResolutionDependencies = {
+  resolvers: CommandResolver[];
 };
 
-export const DEFAULT_INTENT_RESOLUTION_DEPENDENCIES: IntentResolutionDependencies = {
-  parsers: PARSERS,
+export const DEFAULT_COMMAND_RESOLUTION_DEPENDENCIES: CommandResolutionDependencies = {
+  resolvers: RESOLVERS,
 };
 
 /**
@@ -53,18 +54,18 @@ export function resolveCommandFromIntent(
   context: TransformerContext,
   intent: Intent,
   {
-    parsers,
-  }: IntentResolutionDependencies = DEFAULT_INTENT_RESOLUTION_DEPENDENCIES,
+    resolvers,
+  }: CommandResolutionDependencies = DEFAULT_COMMAND_RESOLUTION_DEPENDENCIES,
 ): Command | null {
   // Create parser context
-  const parserContext = createIntentParserContext(context);
+  const resolverContext = createCommandResolverContext(context);
 
   // Try each parser until one succeeds
-  for (const parser of parsers) {
+  for (const resolver of resolvers) {
     try {
-      const command = parser(parserContext, intent);
+      const command = resolver(resolverContext, intent);
       if (command) {
-        // Successfully parsed - return the command
+        // Successfully resolved - return the command
         return command;
       }
     } catch (error) {
@@ -102,7 +103,7 @@ export function resolveIntent(
   context: TransformerContext,
   actorId: ActorURN,
   intentText: string,
-  deps: IntentResolutionDependencies = DEFAULT_INTENT_RESOLUTION_DEPENDENCIES,
+  deps: CommandResolutionDependencies = DEFAULT_COMMAND_RESOLUTION_DEPENDENCIES,
 ): Command | null {
   const actor = context.world.actors[actorId];
   if (!actor) {
@@ -137,6 +138,6 @@ export function resolveIntent(
  * Get all available parsers (for debugging/introspection)
  * Useful for tools that want to show what intents are supported
  */
-export function getAvailableParsers(): IntentParser[] {
-  return PARSERS;
+export function getAvailableParsers(): CommandResolver[] {
+  return RESOLVERS;
 }

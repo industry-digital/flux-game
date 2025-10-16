@@ -1,5 +1,7 @@
 import { ActorURN, PlaceURN, SessionURN } from '~/types/taxonomy';
-import { InputTypeGuard } from '~/types/handler';
+import { WorldProjection } from '~/types/world';
+import { EntityResolverApi } from '~/intent/resolvers';
+import { PotentiallyImpureOperations } from '~/types/handler';
 
 export type InputMetadata = { __type: 'command' | 'intent' };
 
@@ -188,21 +190,6 @@ export type ActorCommand<
   };
 
 /**
- * Type guard for Commands with specific type and arguments
- */
-export type SystemCommandTypeGuard<
-  T extends CommandType,
-  A extends Record<string, any> = Record<string, any>
-> =
-  InputTypeGuard<SystemCommand, SystemCommand<T, A>>;
-
-export type ActorCommandTypeGuard<
-  T extends CommandType,
-  A extends Record<string, any> = Record<string, any>
-> =
-  InputTypeGuard<ActorCommand<CommandType>, ActorCommand<T, A>>;
-
-/**
  * Union type for any command - either system-issued or actor-issued
  * This provides flexibility for handlers that can work with both types
  */
@@ -211,11 +198,57 @@ export type Command<
   A extends Record<string, any> = Record<string, any>
 > = SystemCommand<T, A> | ActorCommand<T, A>;
 
-/**
- * Type guard for any command (system or actor) with specific type and arguments
- */
-export type CommandTypeGuard<
-  T extends CommandType,
-  A extends Record<string, any> = Record<string, any>
-> =
-  InputTypeGuard<Command, Command<T, A>>;
+export type CommandResolverContext = EntityResolverApi & {
+  world: WorldProjection;
+  uniqid: PotentiallyImpureOperations['uniqid'];
+  timestamp: PotentiallyImpureOperations['timestamp'];
+};
+
+export type CommandResolver<TCommand extends Command = Command> = (
+  context: CommandResolverContext,
+  input: Intent
+) => TCommand | undefined;
+
+export type IntentOptions = undefined | Record<string, string | number | boolean>;
+
+export type Intent<TOptions extends IntentOptions = undefined> = {
+  id: string;
+  /**
+   * The moment the intent was created; epoch milliseconds
+   */
+  ts: number;
+  actor: ActorURN;
+  location: PlaceURN;
+  session?: SessionURN;
+  /**
+   * Raw string input from the user
+   */
+  text: string;
+  /**
+   * Downcased and trimmed string input from the user
+   */
+  normalized: string;
+
+  /**
+   * The first token of the intent
+   */
+  verb: string;
+
+  /**
+   * Tokens created from `normalized`, unsorted
+   * Does not contain `verb`.
+   */
+  tokens: string[];
+
+  /**
+   * Unique tokens created from `normalized`
+   * Does not contain `verb`.
+   */
+  uniques: Set<string>;
+
+  /**
+   * Key-value options that occur *after* the verb.
+   * Parsed from `--key` or `--key=value` syntax.
+   */
+  options: TOptions;
+};

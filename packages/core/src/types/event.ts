@@ -563,7 +563,7 @@ export type WorldEventInput =
   | ActorDidUnmountComponentInput
   | ActorDidListInventoryComponentsInput
   | ActorDidListInventoryMaterialsInput
-  | CurrencyTransactionDidCompleteInput;
+  | ActorDidCompleteCurrencyTransactionInput;
 /**
  * Union of all valid events
  */

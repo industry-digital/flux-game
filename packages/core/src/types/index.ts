@@ -126,7 +126,6 @@ export {
   EventDeclarationProducer,
   ExecutionError,
   InputTypeGuard,
-  MinimalWorldProjection,
   PotentiallyImpureOperations,
   PureHandlerImplementation,
   PureHandlerInterface,
@@ -135,23 +134,17 @@ export {
   TransformerContext,
   TransformerImplementation,
   TransformerInterface,
-  WorldProjection,
   WorldProjectionConsumer,
-  IntentParser,
-  IntentParserContext,
-  Intent,
 } from './handler';
 
 export {
-  Command as SystemCommand,
+  Command,
   CommandInput,
   CommandType,
-  Command,
   Command as AnyCommand,
-  CommandTypeGuard as AnyCommandTypeGuard,
   ActorCommand,
-  ActorCommandTypeGuard,
-  SystemCommandTypeGuard,
+  CommandResolver,
+  CommandResolverContext,
 } from './intent';
 
 export {

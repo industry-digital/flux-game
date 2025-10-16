@@ -4,7 +4,6 @@ import {
   Command,
   CommandInput,
   CommandType,
-  SystemCommandTypeGuard,
   ActorCommand,
   SystemCommand,
 } from '~/types/intent';
@@ -106,25 +105,4 @@ export const isValidatedCommandOfType = <T extends CommandType, A extends Record
   type: T
 ): input is Command<T, A> => {
   return input.type === type;
-};
-
-/**
- * Helper function to create a command type guard
- */
-export function createCommandGuard<T extends CommandType, A extends Record<string, any> = {}>(
-  type: T
-): SystemCommandTypeGuard<T, A> {
-  return (input: SystemCommand): input is SystemCommand<T, A> =>
-    'type' in input && input.type === type;
-}
-
-/**
- * Factory function to create type-specific command guards
- */
-export const createCommandTypeGuard = <T extends CommandType, A extends Record<string, any> = Record<string, any>>(
-  type: T
-) => {
-  return (input: unknown): input is Command<T, A> => {
-    return isCommandOfType(input, type);
-  };
 };

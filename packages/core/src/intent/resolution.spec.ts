@@ -1,7 +1,8 @@
 import { describe, beforeEach, it, expect } from 'vitest';
-import { resolveCommandFromIntent, createIntentParserContext } from './resolution';
+import { resolveCommandFromIntent, createCommandResolverContext } from './resolution';
 import { createIntent } from './factory';
-import { TransformerContext, WorldProjection } from '~/types/handler';
+import { TransformerContext } from '~/types/handler';
+import { WorldProjection } from '~/types/world';
 import { CommandType } from '~/types/intent';
 import { createTestTransformerContext } from '~/testing/context-testing';
 import { ActorURN, PlaceURN, SessionURN } from '~/types/taxonomy';
@@ -144,9 +145,9 @@ describe('Intent Resolution', () => {
     });
   });
 
-  describe('createIntentParserContext', () => {
+  describe('createCommandResolverContext', () => {
     it('should create parser context with entity resolvers', () => {
-      const parserContext = createIntentParserContext(context);
+      const parserContext = createCommandResolverContext(context);
 
       expect(parserContext).toHaveProperty('world');
       expect(parserContext).toHaveProperty('uniqid');
@@ -157,7 +158,7 @@ describe('Intent Resolution', () => {
     });
 
     it('should resolve actors by name', () => {
-      const parserContext = createIntentParserContext(context);
+      const parserContext = createCommandResolverContext(context);
       const intent = createIntent({
         id: 'resolve-test-1',
         actor: ACTOR_ID,
@@ -170,7 +171,7 @@ describe('Intent Resolution', () => {
     });
 
     it('should resolve actors by exact name match', () => {
-      const parserContext = createIntentParserContext(context);
+      const parserContext = createCommandResolverContext(context);
       const intent = createIntent({
         id: 'resolve-test-2',
         actor: ACTOR_ID,

@@ -1,13 +1,12 @@
-import { IntentParser, IntentParserContext, Intent } from '~/types/handler';
-import { CommandType } from '~/types/intent';
+import { CommandResolver, CommandResolverContext, CommandType, Intent } from '~/types/intent';
 import { createActorCommand } from '~/lib/intent';
 import { CleaveCommand, CleaveCommandArgs } from './types';
 
 const CLEAVE_VERB = 'cleave';
 const NO_ARGS: Readonly<CleaveCommandArgs> = Object.freeze({});
 
-export const cleaveIntentParser: IntentParser<CleaveCommand> = (
-  context: IntentParserContext,
+export const cleaveResolver: CommandResolver<CleaveCommand> = (
+  context: CommandResolverContext,
   intent: Intent,
 ): CleaveCommand | undefined => {
   const { world } = context;

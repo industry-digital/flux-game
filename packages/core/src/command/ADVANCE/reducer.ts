@@ -6,6 +6,7 @@ import { withExistingCombatSession } from '~/worldkit/combat/validation';
 
 const DISTANCE = 'distance';
 const AP = 'ap';
+const MAX = 'max';
 
 export const advanceReducer: PureReducer<TransformerContext, AdvanceCommand> = withBasicWorldStateValidation(
   withExistingCombatSession(
@@ -19,15 +20,15 @@ export const advanceReducer: PureReducer<TransformerContext, AdvanceCommand> = w
       const combatantApi = getCombatantApi(actor.id);
 
       switch (command.args.type) {
-        case 'distance':
+        case DISTANCE:
           combatantApi.advance(DISTANCE, command.args.distance, undefined, command.id);
           break;
 
-        case 'ap':
+        case AP:
           combatantApi.advance(AP, command.args.ap, undefined, command.id);
           break;
 
-        case 'max':
+        case MAX:
           // TODO: Add 'max' movement support to combatantApi.advance method
           // This is an architectural violation - the reducer should not compute movement
           // The combat API should handle 'max' movement internally
@@ -35,10 +36,8 @@ export const advanceReducer: PureReducer<TransformerContext, AdvanceCommand> = w
           break;
 
         default:
-          // TypeScript exhaustiveness check
-          const _exhaustive: never = command.args;
           context.declareError('ADVANCE: Unknown command type', command.id);
-          return context;
+          break;
       }
 
       return context;

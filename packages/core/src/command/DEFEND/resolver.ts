@@ -1,16 +1,16 @@
 import {
+  CommandResolver,
+  CommandResolverContext,
+  CommandType,
   Intent,
-  IntentParser,
-  IntentParserContext,
-} from '~/types/handler';
-import { CommandType } from '~/types/intent';
+} from '~/types/intent';
 import { createActorCommand } from '~/lib/intent';
 import { DefendCommand } from './types';
 
 const DEFEND_VERB = 'defend';
 
-export const defendIntentParser: IntentParser<DefendCommand> = (
-  context: IntentParserContext,
+export const defendResolver: CommandResolver<DefendCommand> = (
+  context: CommandResolverContext,
   intent: Intent,
 ): DefendCommand | undefined => {
   const { world } = context;

@@ -1,11 +1,8 @@
 import { ActorCommand, CommandType } from '~/types/intent';
-import { ActorURN } from '~/types/taxonomy';
 
-export type RetreatCommandArgs = {
-  type?: 'distance' | 'ap'; // Type of retreat movement
-  distance?: number; // Distance to move (in meters)
-  direction?: number; // Direction to move (always -1 for retreat)
-  target?: ActorURN; // Target to retreat from (alternative to distance)
-};
+export type RetreatCommandArgs =
+  | { type: 'max' } // Move as far as possible until AP exhausted or collision
+  | { type: 'distance'; distance: number } // Move specific distance in meters
+  | { type: 'ap'; ap: number }; // Move using specific AP amount
 
 export type RetreatCommand = ActorCommand<CommandType.RETREAT, RetreatCommandArgs>;

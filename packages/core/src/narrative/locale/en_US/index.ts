@@ -31,8 +31,6 @@ import {
   renderActorDepartNarrative,
   renderSwapShellNarrative,
   renderHelpFileNarrative,
-  renderSpendCurrencyNarrative,
-  renderGainCurrencyNarrative,
   narrateActorDidLook,
 } from '~/narrative/locale/en_US/actor';
 
@@ -61,8 +59,7 @@ export const en_US: LanguageTemplates = {
   [EventType.ACTOR_DID_DEPART]: renderActorDepartNarrative,
   [EventType.ACTOR_DID_DIE]: NOT_IMPLEMENTED, // This event type doesn't exist - handled by COMBATANT_DID_DIE
   [EventType.ACTOR_DID_RECOVER_ENERGY]: NOT_IMPLEMENTED, // This event type doesn't exist
-  [EventType.ACTOR_DID_GAIN_CURRENCY]: renderGainCurrencyNarrative,
-  [EventType.ACTOR_DID_SPEND_CURRENCY]: renderSpendCurrencyNarrative,
+  [EventType.ACTOR_DID_COMPLETE_CURRENCY_TRANSACTION]: NOT_IMPLEMENTED,
   [EventType.ACTOR_DID_SWAP_SHELL]: renderSwapShellNarrative,
   [EventType.ACTOR_DID_QUERY_HELPFILE]: renderHelpFileNarrative,
 

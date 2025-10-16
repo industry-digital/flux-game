@@ -1,5 +1,5 @@
-import { Intent, PureHandlerInterface, TransformerContext } from '~/types/handler';
-import { Command } from '~/types/intent';
+import { PureHandlerInterface, TransformerContext } from '~/types/handler';
+import { Intent, Command } from '~/types/intent';
 import { PURE_GAME_LOGIC_HANDLERS } from '~/handlers';
 import { resolveCommandFromIntent } from './resolution';
 

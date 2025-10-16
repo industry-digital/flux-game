@@ -26,7 +26,6 @@ export {
 // Command type guards and utilities
 export {
   isCommandOfType,
-  createCommandTypeGuard,
   createCommand,
   createActorCommand,
   createSystemCommand,

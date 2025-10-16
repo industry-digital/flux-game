@@ -1,10 +1,6 @@
 import { EventType, WorldEvent, WorldEventInput } from '~/types/event';
 import { Command, CommandType } from '~/types/intent';
-import { ActorURN, GroupURN, ItemURN, PlaceURN, SessionURN } from '~/types/taxonomy';
-import { Place } from '~/types/entity/place';
-import { Actor } from '~/types/entity/actor';
-import { Item } from '~/types/entity/item';
-import { AbstractSession } from '~/types/session';
+import { ActorURN, PlaceURN, SessionURN } from '~/types/taxonomy';
 import { SchemaManager } from '~/worldkit/schema/manager';
 import { SearchCache } from '~/types/combat-ai';
 import { MassApi } from '~/worldkit/physics/mass';
@@ -12,8 +8,8 @@ import { ActorEquipmentApi } from '~/worldkit/entity/actor/equipment';
 import { ActorInventoryApi } from '~/worldkit/entity/actor/inventory';
 import { ActorSkillApi } from '~/worldkit/entity/actor/skill';
 import { rollDiceWithRng } from '~/worldkit/dice';
-import { EntityResolverApi } from '~/intent/resolvers';
-import { Group } from '~/types/entity/group';
+import { WorldProjection } from '~/types/world';
+import { CommandResolver } from '~/types/intent';
 
 /** Combat metrics collection interface for performance monitoring and telemetry */
 export type CombatMetrics = {
@@ -21,21 +17,6 @@ export type CombatMetrics = {
   incrementCounter(metric: string): void;
   recordValue(metric: string, value: number): void;
 }
-
-/**
- * Minimum required properties for all world projections
- * @deprecated Use `WorldProjection` instead
- */
-export type MinimalWorldProjection = WorldProjection;
-
-/** Union of all possible projections satisfied by the Flux World Server */
-export type WorldProjection = {
-  actors: Record<ActorURN, Actor>;
-  groups: Record<GroupURN, Group>;
-  places: Record<PlaceURN, Place>;
-  items: Record<ItemURN, Item>;
-  sessions: Record<SessionURN, AbstractSession<any, any>>;
-};
 
 export type ExecutionError = {
   /** Timestamp in milliseconds since Unix epoch */
@@ -147,60 +128,7 @@ export type PureReducer<C, I, O = any> = (context: C, input: I, ...args: O[]) =>
 export type CommandReducer<T extends CommandType, A extends Record<string, any>> = PureReducer<TransformerContext, Command<T, A>>;
 
 export type InputTypeGuard<I extends Command, S extends I> = (input: I) => input is S;
-export type IntentOptions = undefined | Record<string, string | number | boolean>;
 
-export type Intent<TOptions extends IntentOptions = undefined> = {
-  id: string;
-  /**
-   * The moment the intent was created; epoch milliseconds
-   */
-  ts: number;
-  actor: ActorURN;
-  location: PlaceURN;
-  session?: SessionURN;
-  /**
-   * Raw string input from the user
-   */
-  text: string;
-  /**
-   * Downcased and trimmed string input from the user
-   */
-  normalized: string;
-
-  /**
-   * The first token of the intent
-   */
-  verb: string;
-
-  /**
-   * Tokens created from `normalized`, unsorted
-   * Does not contain `verb`.
-   */
-  tokens: string[];
-
-  /**
-   * Unique tokens created from `normalized`
-   * Does not contain `verb`.
-   */
-  uniques: Set<string>;
-
-  /**
-   * Key-value options that occur *after* the verb.
-   * Parsed from `--key` or `--key=value` syntax.
-   */
-  options: TOptions;
-};
-
-export type IntentParserContext = EntityResolverApi & {
-  world: WorldProjection;
-  uniqid: PotentiallyImpureOperations['uniqid'];
-  timestamp: PotentiallyImpureOperations['timestamp'];
-};
-
-export type IntentParser<TCommand extends Command = Command> = (
-  context: IntentParserContext,
-  intent: Intent,
-) => TCommand | undefined;
 
 /** Handler that associates a reducer with its dependencies */
 export type PureHandlerInterface<
@@ -216,7 +144,7 @@ export type PureHandlerInterface<
    * All user-facing commands should have a parser
    * Administrative/system commands don't need one because they don't arrive as raw text intents
    */
-  parse?: IntentParser<I>;
+  resolve?: CommandResolver<I>;
 }
 
 export type PureHandlerImplementation<

@@ -1,12 +1,11 @@
-import { IntentParser, IntentParserContext, Intent } from '~/types/handler';
-import { CommandType } from '~/types/intent';
+import { CommandResolverContext, CommandType, Intent, CommandResolver } from '~/types/intent';
 import { LookCommand } from './types';
 import { createActorCommand } from '~/lib/intent';
 
 const LOOK_VERB = 'look';
 
-export const lookIntentParser: IntentParser<LookCommand> = (
-  context: IntentParserContext,
+export const lookResolver: CommandResolver<LookCommand> = (
+  context: CommandResolverContext,
   intent: Intent,
 ): LookCommand | undefined => {
   if (intent.verb !== LOOK_VERB) {

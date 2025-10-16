@@ -1,6 +1,6 @@
 import { Actor } from '~/types/entity/actor';
 import { Party, GroupType } from '~/types/entity/group';
-import { WorldProjection } from '~/types/handler';
+import { WorldProjection } from '~/types/world';
 import { ActorURN, GroupURN, PartyURN, PlaceURN } from '~/types/taxonomy';
 
 /**

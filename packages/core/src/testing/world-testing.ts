@@ -6,7 +6,7 @@ import { createActor, ActorTransformer } from '~/worldkit/entity/actor';
 import { createPlace } from '~/worldkit/entity/place';
 import { createWorldProjection } from '~/worldkit/context';
 import { identity } from '~/types/testing';
-import { WorldProjection } from '~/types/handler';
+import { WorldProjection } from '~/types/world';
 
 export type WorldProjectionInput = Partial<WorldProjection>;
 

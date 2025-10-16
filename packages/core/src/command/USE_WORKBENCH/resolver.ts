@@ -1,20 +1,20 @@
-import { IntentParser, IntentParserContext, Intent } from '~/types/handler';
-import { CommandType } from '~/types/intent';
+import { CommandResolver, CommandResolverContext, CommandType, Intent } from '~/types/intent';
 import { UseWorkbenchCommand, UseWorkbenchCommandArgs } from './types';
 import { createActorCommand } from '~/lib/intent';
 
 const USE_VERB = 'use';
-const NO_ARGS: Readonly<UseWorkbenchCommandArgs> = {};
+const NO_ARGS: Readonly<UseWorkbenchCommandArgs> = Object.freeze({});
+const WORKBENCH = 'workbench';
 
-export const useWorkbenchIntentParser: IntentParser<UseWorkbenchCommand> = (
-  context: IntentParserContext,
+export const useWorkbenchResolver: CommandResolver<UseWorkbenchCommand> = (
+  context: CommandResolverContext,
   intent: Intent,
 ): UseWorkbenchCommand | undefined => {
   if (intent.verb !== USE_VERB) {
     return undefined;
   }
 
-  if (intent.tokens[0] !== 'workbench') {
+  if (intent.tokens[0] !== WORKBENCH) {
     return undefined;
   }
 

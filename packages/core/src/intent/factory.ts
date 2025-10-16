@@ -1,5 +1,5 @@
 import { BASE62_CHARSET, uniqid } from '~/lib/random';
-import { Intent, IntentOptions } from '~/types/handler';
+import { Intent, IntentOptions } from '~/types/intent';
 import { ActorURN, PlaceURN, SessionURN } from '~/types/taxonomy';
 
 export type IntentInput = {

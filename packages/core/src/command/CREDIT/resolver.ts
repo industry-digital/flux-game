@@ -1,22 +1,22 @@
-import { IntentParser, IntentParserContext, Intent } from '~/types/handler';
+import { CommandResolver, CommandResolverContext, Intent } from '~/types/intent';
 import { CommandType } from '~/types/intent';
 import { createActorCommand } from '~/lib/intent';
-import { DebitCommand } from './types';
+import { CreditCommand } from './types';
 import { CurrencyType, WellKnownActor } from '~/types';
 import { ALLOWED_CURRENCIES } from '~/worldkit/currency';
 
-const DEBIT_VERB = '@debit';
+const CREDIT_VERB = '@credit';
 
 /**
  * @example
- * `@debit flux:actor:alice gold 100 --memo="Payment for services"`
+ * `@credit flux:actor:alice gold 100 --memo="Gift from the queen"`
  */
-export const debitIntentParser: IntentParser<DebitCommand> = (
-  context: IntentParserContext,
+export const creditResolver: CommandResolver<CreditCommand> = (
+  context: CommandResolverContext,
   intent: Intent,
-): DebitCommand | undefined => {
-  // Check if this is a debit command
-  if (intent.verb !== DEBIT_VERB) {
+): CreditCommand | undefined => {
+  // Check if this is a done command
+  if (intent.verb !== CREDIT_VERB) {
     return undefined;
   }
 
@@ -41,7 +41,7 @@ export const debitIntentParser: IntentParser<DebitCommand> = (
 
   return createActorCommand({
     id: intent.id,
-    type: CommandType.DEBIT,
+    type: CommandType.CREDIT,
     actor: WellKnownActor.SYSTEM,
     location: intent.location,
     session: intent.session,

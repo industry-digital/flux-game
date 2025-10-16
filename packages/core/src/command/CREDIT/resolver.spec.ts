@@ -1,8 +1,9 @@
 import { describe, beforeEach, it, expect } from 'vitest';
-import { creditIntentParser } from './parser';
+import { creditResolver } from './resolver';
 import { createIntent } from '~/intent/factory';
-import { createIntentParserContext } from '~/intent/resolution';
-import { TransformerContext, WorldProjection } from '~/types/handler';
+import { createCommandResolverContext } from '~/intent/resolution';
+import { TransformerContext } from '~/types/handler';
+import { WorldProjection } from '~/types/world';
 import { CommandType } from '~/types/intent';
 import { createTestTransformerContext } from '~/testing/context-testing';
 import { ActorURN, PlaceURN, SessionURN } from '~/types/taxonomy';
@@ -13,7 +14,7 @@ import { CurrencyType, WellKnownActor } from '~/types';
 
 describe('CREDIT Command Parser', () => {
   let context: TransformerContext;
-  let parserContext: ReturnType<typeof createIntentParserContext>;
+  let parserContext: ReturnType<typeof createCommandResolverContext>;
 
   // Test entities
   const ACTOR_ID: ActorURN = 'flux:actor:test:alice';
@@ -48,7 +49,7 @@ describe('CREDIT Command Parser', () => {
       })),
     });
 
-    parserContext = createIntentParserContext(context);
+    parserContext = createCommandResolverContext(context);
   });
 
   describe('Basic Functionality', () => {
@@ -60,7 +61,7 @@ describe('CREDIT Command Parser', () => {
         text: '@credit flux:actor:test:bob scrap 100',
       });
 
-      const command = creditIntentParser(parserContext, intent);
+      const command = creditResolver(parserContext, intent);
 
       expect(command).toBeTruthy();
       expect(command?.type).toBe(CommandType.CREDIT);
@@ -79,7 +80,7 @@ describe('CREDIT Command Parser', () => {
         text: '@debit flux:actor:test:bob scrap 100',
       });
 
-      const command = creditIntentParser(parserContext, intent);
+      const command = creditResolver(parserContext, intent);
 
       expect(command).toBeUndefined();
     });
@@ -92,7 +93,7 @@ describe('CREDIT Command Parser', () => {
         text: '@credit flux:actor:missing scrap 100',
       });
 
-      const command = creditIntentParser(parserContext, intent);
+      const command = creditResolver(parserContext, intent);
 
       expect(command).toBeUndefined();
     });
@@ -105,7 +106,7 @@ describe('CREDIT Command Parser', () => {
         text: '@credit flux:actor:test:bob gold 100',
       });
 
-      const command = creditIntentParser(parserContext, intent);
+      const command = creditResolver(parserContext, intent);
 
       expect(command).toBeUndefined();
     });
@@ -118,7 +119,7 @@ describe('CREDIT Command Parser', () => {
         text: '@credit flux:actor:test:bob scrap abc',
       });
 
-      const command = creditIntentParser(parserContext, intent);
+      const command = creditResolver(parserContext, intent);
 
       expect(command).toBeUndefined();
     });
@@ -131,7 +132,7 @@ describe('CREDIT Command Parser', () => {
         text: `@credit flux:actor:test:bob scrap ${Number.MAX_SAFE_INTEGER + 1}`,
       });
 
-      const command = creditIntentParser(parserContext, intent);
+      const command = creditResolver(parserContext, intent);
 
       expect(command).toBeUndefined();
     });
@@ -146,7 +147,7 @@ describe('CREDIT Command Parser', () => {
         text: '@credit flux:actor:test:bob',
       });
 
-      const command = creditIntentParser(parserContext, intent);
+      const command = creditResolver(parserContext, intent);
 
       expect(command).toBeUndefined();
     });
@@ -159,7 +160,7 @@ describe('CREDIT Command Parser', () => {
         text: '@credit flux:actor:test:bob scrap 100 extra tokens',
       });
 
-      const command = creditIntentParser(parserContext, intent);
+      const command = creditResolver(parserContext, intent);
 
       expect(command).toBeUndefined();
     });
@@ -172,7 +173,7 @@ describe('CREDIT Command Parser', () => {
         text: '@credit flux:actor:test:bob scrap 50',
       });
 
-      const command = creditIntentParser(parserContext, intent);
+      const command = creditResolver(parserContext, intent);
 
       expect(command).toBeTruthy();
       expect(command?.args.amount).toBe(50);
@@ -188,7 +189,7 @@ describe('CREDIT Command Parser', () => {
         text: '@credit flux:actor:test:bob scrap 42',
       });
 
-      const command = creditIntentParser(parserContext, intent);
+      const command = creditResolver(parserContext, intent);
 
       expect(command).toBeTruthy();
       expect(command?.args.amount).toBe(42);
@@ -202,7 +203,7 @@ describe('CREDIT Command Parser', () => {
         text: '@credit flux:actor:test:bob scrap 0',
       });
 
-      const command = creditIntentParser(parserContext, intent);
+      const command = creditResolver(parserContext, intent);
 
       expect(command).toBeTruthy();
       expect(command?.args.amount).toBe(0);
@@ -216,7 +217,7 @@ describe('CREDIT Command Parser', () => {
         text: '@credit flux:actor:test:bob scrap -25',
       });
 
-      const command = creditIntentParser(parserContext, intent);
+      const command = creditResolver(parserContext, intent);
 
       expect(command).toBeTruthy();
       expect(command?.args.amount).toBe(-25);
@@ -230,7 +231,7 @@ describe('CREDIT Command Parser', () => {
         text: '@credit flux:actor:test:bob scrap 10.5',
       });
 
-      const command = creditIntentParser(parserContext, intent);
+      const command = creditResolver(parserContext, intent);
 
       expect(command).toBeTruthy();
       expect(command?.args.amount).toBe(10); // parseInt truncates
@@ -244,7 +245,7 @@ describe('CREDIT Command Parser', () => {
         text: `@credit flux:actor:test:bob scrap ${Number.MAX_SAFE_INTEGER}`,
       });
 
-      const command = creditIntentParser(parserContext, intent);
+      const command = creditResolver(parserContext, intent);
 
       expect(command).toBeTruthy();
       expect(command?.args.amount).toBe(Number.MAX_SAFE_INTEGER);
@@ -258,7 +259,7 @@ describe('CREDIT Command Parser', () => {
         text: `@credit flux:actor:test:bob scrap ${Number.MIN_SAFE_INTEGER}`,
       });
 
-      const command = creditIntentParser(parserContext, intent);
+      const command = creditResolver(parserContext, intent);
 
       expect(command).toBeTruthy();
       expect(command?.args.amount).toBe(Number.MIN_SAFE_INTEGER);
@@ -275,7 +276,7 @@ describe('CREDIT Command Parser', () => {
         text: '@credit flux:actor:test:bob scrap 100',
       });
 
-      const command = creditIntentParser(parserContext, intent);
+      const command = creditResolver(parserContext, intent);
 
       expect(command).toBeTruthy();
       expect(command?.session).toBe(SESSION_ID);
@@ -289,7 +290,7 @@ describe('CREDIT Command Parser', () => {
         text: '@credit flux:actor:test:bob scrap 100',
       });
 
-      const command = creditIntentParser(parserContext, intent);
+      const command = creditResolver(parserContext, intent);
 
       expect(command).toBeTruthy();
       expect(command?.session).toBeUndefined();
@@ -306,7 +307,7 @@ describe('CREDIT Command Parser', () => {
         text: '@credit flux:actor:test:bob scrap 250',
       });
 
-      const command = creditIntentParser(parserContext, intent);
+      const command = creditResolver(parserContext, intent);
 
       expect(command).toMatchObject({
         id: intent.id,
@@ -330,7 +331,7 @@ describe('CREDIT Command Parser', () => {
         text: '@credit flux:actor:test:bob scrap 100',
       });
 
-      const command = creditIntentParser(parserContext, intent);
+      const command = creditResolver(parserContext, intent);
 
       expect(command).toBeTruthy();
       expect(command?.actor).toBe(WellKnownActor.SYSTEM);
@@ -347,7 +348,7 @@ describe('CREDIT Command Parser', () => {
         text: '@credit invalid-urn scrap 100',
       });
 
-      const command = creditIntentParser(parserContext, intent);
+      const command = creditResolver(parserContext, intent);
 
       expect(command).toBeUndefined();
     });
@@ -376,7 +377,7 @@ describe('CREDIT Command Parser', () => {
           text: maliciousText,
         });
 
-        const command = creditIntentParser(parserContext, intent);
+        const command = creditResolver(parserContext, intent);
 
         // Most malicious inputs should be rejected due to invalid amount parsing
         if (command) {
@@ -424,7 +425,7 @@ describe('CREDIT Command Parser', () => {
           text,
         });
 
-        const command = creditIntentParser(parserContext, intent);
+        const command = creditResolver(parserContext, intent);
 
         if (command) {
           // Should either be a valid finite number or be rejected
@@ -447,7 +448,7 @@ describe('CREDIT Command Parser', () => {
           text: `@credit flux:actor:test:bob ${currency} 100`,
         });
 
-        const command = creditIntentParser(parserContext, intent);
+        const command = creditResolver(parserContext, intent);
 
         expect(command).toBeTruthy();
         expect(command?.args.currency).toBe(currency);
@@ -465,7 +466,7 @@ describe('CREDIT Command Parser', () => {
           text: `@credit flux:actor:test:bob ${currency} 100`,
         });
 
-        const command = creditIntentParser(parserContext, intent);
+        const command = creditResolver(parserContext, intent);
 
         expect(command).toBeUndefined();
       });

@@ -1,5 +1,4 @@
-import { IntentParser, IntentParserContext, Intent } from '~/types/handler';
-import { CommandType } from '~/types/intent';
+import { CommandResolver, CommandResolverContext, CommandType, Intent } from '~/types/intent';
 import { createActorCommand } from '~/lib/intent';
 import { AdvanceCommand, AdvanceCommandArgs } from './types';
 
@@ -8,8 +7,8 @@ const AP = 'ap';
 const DISTANCE = 'distance';
 const MAX_ADVANCE_ARGS: Readonly<AdvanceCommandArgs> = Object.freeze({ type: 'max' });
 
-export const advanceIntentParser: IntentParser<AdvanceCommand> = (
-  context: IntentParserContext,
+export const advanceResolver: CommandResolver<AdvanceCommand> = (
+  context: CommandResolverContext,
   intent: Intent,
 ): AdvanceCommand | undefined => {
   const { world } = context;

@@ -1,7 +1,8 @@
 import { Actor } from '~/types/entity/actor';
 import { Item } from '~/types/entity/item';
 import { Place } from '~/types/entity/place';
-import { Intent, WorldProjection } from '~/types/handler';
+import { Intent } from '~/types/intent';
+import { WorldProjection } from '~/types/world';
 import { ActorURN, PlaceURN } from '~/types/taxonomy';
 
 class TrieNode {

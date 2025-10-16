@@ -1,7 +1,7 @@
 import { describe, beforeEach, it, expect } from 'vitest';
-import { advanceIntentParser } from './parser';
+import { advanceResolver } from './resolver';
 import { createIntent } from '~/intent/factory';
-import { createIntentParserContext } from '~/intent/resolution';
+import { createCommandResolverContext } from '~/intent/resolution';
 import { TransformerContext, WorldProjection } from '~/types/handler';
 import { CommandType } from '~/types/intent';
 import { createTestTransformerContext } from '~/testing/context-testing';
@@ -35,7 +35,7 @@ function assertApAdvanceCommand(command: AdvanceCommand | undefined, expectedAp:
 
 describe('ADVANCE Command Parser', () => {
   let context: TransformerContext;
-  let parserContext: ReturnType<typeof createIntentParserContext>;
+  let parserContext: ReturnType<typeof createCommandResolverContext>;
 
   // Test entities
   const ACTOR_ID: ActorURN = 'flux:actor:test:alice';
@@ -64,7 +64,7 @@ describe('ADVANCE Command Parser', () => {
       })),
     });
 
-    parserContext = createIntentParserContext(context);
+    parserContext = createCommandResolverContext(context);
   });
 
   describe('Basic Functionality', () => {
@@ -76,7 +76,7 @@ describe('ADVANCE Command Parser', () => {
         text: 'advance',
       });
 
-      const command = advanceIntentParser(parserContext, intent);
+      const command = advanceResolver(parserContext, intent);
 
       expect(command).toBeTruthy();
       expect(command?.type).toBe(CommandType.ADVANCE);
@@ -92,7 +92,7 @@ describe('ADVANCE Command Parser', () => {
         text: 'attack bob',
       });
 
-      const command = advanceIntentParser(parserContext, intent);
+      const command = advanceResolver(parserContext, intent);
 
       expect(command).toBeUndefined();
     });
@@ -105,7 +105,7 @@ describe('ADVANCE Command Parser', () => {
         text: 'advance',
       });
 
-      const command = advanceIntentParser(parserContext, intent);
+      const command = advanceResolver(parserContext, intent);
 
       expect(command).toBeUndefined();
     });
@@ -121,7 +121,7 @@ describe('ADVANCE Command Parser', () => {
         text: 'advance',
       });
 
-      const command = advanceIntentParser(parserContext, intent);
+      const command = advanceResolver(parserContext, intent);
 
       assertMaxAdvanceCommand(command);
     });
@@ -136,7 +136,7 @@ describe('ADVANCE Command Parser', () => {
         text: 'advance 15',
       });
 
-      const command = advanceIntentParser(parserContext, intent);
+      const command = advanceResolver(parserContext, intent);
 
       assertDistanceAdvanceCommand(command, 15);
     });
@@ -149,7 +149,7 @@ describe('ADVANCE Command Parser', () => {
         text: 'advance 5.5',
       });
 
-      const command = advanceIntentParser(parserContext, intent);
+      const command = advanceResolver(parserContext, intent);
 
       assertDistanceAdvanceCommand(command, 5.5);
     });
@@ -162,7 +162,7 @@ describe('ADVANCE Command Parser', () => {
         text: 'advance 0',
       });
 
-      const command = advanceIntentParser(parserContext, intent);
+      const command = advanceResolver(parserContext, intent);
 
       assertMaxAdvanceCommand(command);
     });
@@ -175,7 +175,7 @@ describe('ADVANCE Command Parser', () => {
         text: 'advance -5',
       });
 
-      const command = advanceIntentParser(parserContext, intent);
+      const command = advanceResolver(parserContext, intent);
 
       assertMaxAdvanceCommand(command); // Falls back to max advance
     });
@@ -188,7 +188,7 @@ describe('ADVANCE Command Parser', () => {
         text: 'advance abc',
       });
 
-      const command = advanceIntentParser(parserContext, intent);
+      const command = advanceResolver(parserContext, intent);
 
       assertMaxAdvanceCommand(command); // Falls back to max advance
     });
@@ -203,7 +203,7 @@ describe('ADVANCE Command Parser', () => {
         text: 'advance distance 10',
       });
 
-      const command = advanceIntentParser(parserContext, intent);
+      const command = advanceResolver(parserContext, intent);
       assertDistanceAdvanceCommand(command, 10);
     });
 
@@ -215,7 +215,7 @@ describe('ADVANCE Command Parser', () => {
         text: 'advance distance 7.8',
       });
 
-      const command = advanceIntentParser(parserContext, intent);
+      const command = advanceResolver(parserContext, intent);
       assertDistanceAdvanceCommand(command, 7); // Math.floor(7.8)
     });
 
@@ -227,7 +227,7 @@ describe('ADVANCE Command Parser', () => {
         text: 'advance distance 0',
       });
 
-      const command = advanceIntentParser(parserContext, intent);
+      const command = advanceResolver(parserContext, intent);
 
       assertMaxAdvanceCommand(command); // Falls back to max advance
     });
@@ -240,7 +240,7 @@ describe('ADVANCE Command Parser', () => {
         text: 'advance distance -3',
       });
 
-      const command = advanceIntentParser(parserContext, intent);
+      const command = advanceResolver(parserContext, intent);
 
       assertMaxAdvanceCommand(command); // Falls back to max advance
     });
@@ -255,7 +255,7 @@ describe('ADVANCE Command Parser', () => {
         text: 'advance ap 2.5',
       });
 
-      const command = advanceIntentParser(parserContext, intent);
+      const command = advanceResolver(parserContext, intent);
       assertApAdvanceCommand(command, 2.5);
     });
 
@@ -267,7 +267,7 @@ describe('ADVANCE Command Parser', () => {
         text: 'advance ap 1',
       });
 
-      const command = advanceIntentParser(parserContext, intent);
+      const command = advanceResolver(parserContext, intent);
       assertApAdvanceCommand(command, 1);
     });
 
@@ -279,7 +279,7 @@ describe('ADVANCE Command Parser', () => {
         text: 'advance ap 0',
       });
 
-      const command = advanceIntentParser(parserContext, intent);
+      const command = advanceResolver(parserContext, intent);
 
       assertMaxAdvanceCommand(command); // Falls back to max advance
     });
@@ -292,7 +292,7 @@ describe('ADVANCE Command Parser', () => {
         text: 'advance ap -1.5',
       });
 
-      const command = advanceIntentParser(parserContext, intent);
+      const command = advanceResolver(parserContext, intent);
 
       assertMaxAdvanceCommand(command); // Falls back to max advance
     });
@@ -308,7 +308,7 @@ describe('ADVANCE Command Parser', () => {
         text: 'advance 10',
       });
 
-      const command = advanceIntentParser(parserContext, intent);
+      const command = advanceResolver(parserContext, intent);
 
       expect(command).toBeTruthy();
       expect(command?.session).toBe(SESSION_ID);
@@ -322,7 +322,7 @@ describe('ADVANCE Command Parser', () => {
         text: 'advance ap 1.5',
       });
 
-      const command = advanceIntentParser(parserContext, intent);
+      const command = advanceResolver(parserContext, intent);
 
       expect(command).toBeTruthy();
       expect(command?.session).toBeUndefined();
@@ -338,7 +338,7 @@ describe('ADVANCE Command Parser', () => {
         text: 'advance distance 10 extra tokens here',
       });
 
-      const command = advanceIntentParser(parserContext, intent);
+      const command = advanceResolver(parserContext, intent);
 
       assertMaxAdvanceCommand(command); // Falls back to max advance due to >2 tokens
     });
@@ -351,7 +351,7 @@ describe('ADVANCE Command Parser', () => {
         text: 'advance speed 10',
       });
 
-      const command = advanceIntentParser(parserContext, intent);
+      const command = advanceResolver(parserContext, intent);
 
       assertMaxAdvanceCommand(command); // Falls back to max advance
     });
@@ -364,7 +364,7 @@ describe('ADVANCE Command Parser', () => {
         text: 'advance distance',
       });
 
-      const command = advanceIntentParser(parserContext, intent);
+      const command = advanceResolver(parserContext, intent);
 
       assertMaxAdvanceCommand(command); // Falls back to max advance
     });
@@ -383,7 +383,7 @@ describe('ADVANCE Command Parser', () => {
       expect(intent.tokens).toEqual(['ap', '2.5']);
       expect(intent.verb).toBe('advance');
 
-      const command = advanceIntentParser(parserContext, intent);
+      const command = advanceResolver(parserContext, intent);
       assertApAdvanceCommand(command, 2.5);
     });
 
@@ -395,7 +395,7 @@ describe('ADVANCE Command Parser', () => {
         text: 'advance 999999',
       });
 
-      const command = advanceIntentParser(parserContext, intent);
+      const command = advanceResolver(parserContext, intent);
       assertDistanceAdvanceCommand(command, 999999);
     });
   });
@@ -433,7 +433,7 @@ describe('ADVANCE Command Parser', () => {
           text: maliciousText,
         });
 
-        const command = advanceIntentParser(parserContext, intent);
+        const command = advanceResolver(parserContext, intent);
 
         // Command should be parsed successfully (no crashes)
         expect(command).toBeTruthy();
@@ -521,7 +521,7 @@ describe('ADVANCE Command Parser', () => {
           text,
         });
 
-        const command = advanceIntentParser(parserContext, intent);
+        const command = advanceResolver(parserContext, intent);
 
         expect(command).toBeTruthy();
 
@@ -548,7 +548,7 @@ describe('ADVANCE Command Parser', () => {
         text: 'advance distance 15',
       });
 
-      const command = advanceIntentParser(parserContext, intent);
+      const command = advanceResolver(parserContext, intent);
 
       expect(command).toMatchObject({
         id: intent.id,

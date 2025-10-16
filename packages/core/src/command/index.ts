@@ -16,18 +16,7 @@ import { retreatReducer } from '~/command/RETREAT';
 import { targetReducer } from '~/command/TARGET';
 import { useWorkbenchReducer } from '~/command/USE_WORKBENCH';
 import { PureReducer, TransformerContext } from '~/types/handler';
-import { CommandType, Command, CommandTypeGuard } from '~/types/intent';
-
-/**
- * Helper function to create a command type guard for any command type (system or actor)
- */
-export function createCommandGuard<T extends CommandType, A extends Record<string, any> = Record<string, any>>(
-  type: T
-): CommandTypeGuard<T, A> {
-  return (input: any): input is Command<T, A> => {
-    return input?.__type === 'command' && input.type === type;
-  };
-}
+import { CommandType } from '~/types/intent';
 
 // Registry mapping CommandType to transformer (reducer) functions
 export const COMMAND_TRANSFORMERS: Partial<Record<CommandType, PureReducer<TransformerContext, any>>> = {
