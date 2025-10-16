@@ -380,7 +380,7 @@ describe('ADVANCE Command Parser', () => {
       });
 
       // Verify tokens are pre-parsed
-      expect(intent.tokens).toEqual(['ap', '2.5']);
+      expect(intent.args).toEqual(['ap', '2.5']);
       expect(intent.verb).toBe('advance');
 
       const command = advanceIntentParser(parserContext, intent);

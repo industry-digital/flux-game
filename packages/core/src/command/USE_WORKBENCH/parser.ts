@@ -14,7 +14,7 @@ export const useWorkbenchIntentParser: IntentParser<UseWorkbenchCommand> = (
     return undefined;
   }
 
-  if (intent.tokens[0] !== 'workbench') {
+  if (intent.args[0] !== 'workbench') {
     return undefined;
   }
 

@@ -6,6 +6,7 @@ import { AdvanceCommand, AdvanceCommandArgs } from './types';
 const ADVANCE_VERB = 'advance';
 const AP = 'ap';
 const DISTANCE = 'distance';
+const MAX_ADVANCE_ARGS: Readonly<AdvanceCommandArgs> = Object.freeze({ type: 'max' });
 
 export const advanceIntentParser: IntentParser<AdvanceCommand> = (
   context: IntentParserContext,
@@ -33,23 +34,17 @@ export const advanceIntentParser: IntentParser<AdvanceCommand> = (
   // - "advance 15" → move 15 meters (shorthand)
   // - "advance ap 2.5" → move using 2.5 AP
 
-  const { tokens } = intent;
-  let args: AdvanceCommandArgs;
+  const { args: tokens } = intent;
+  let commandArgs: AdvanceCommandArgs;
 
-  // No tokens = "advance" only → max advance
-  if (tokens.length === 0) {
-    args = { type: 'max' };
-  }
   // Single token = "advance <number>" → distance shorthand
-  else if (tokens.length === 1) {
+  if (tokens.length === 1) {
     const value = parseFloat(tokens[0]);
     if (!isNaN(value) && value > 0 && Number.isFinite(value) && value <= Number.MAX_SAFE_INTEGER) {
-      args = { type: 'distance', distance: value };
-    } else {
-      // Invalid number, fall back to max advance
-      args = { type: 'max' };
+      commandArgs = { type: 'distance', distance: value };
     }
   }
+
   // Two tokens = "advance ap <number>" or "advance distance <number>"
   else if (tokens.length === 2) {
     const [modifier, valueStr] = tokens;
@@ -57,21 +52,14 @@ export const advanceIntentParser: IntentParser<AdvanceCommand> = (
 
     if (!isNaN(value) && value > 0 && Number.isFinite(value) && value <= Number.MAX_SAFE_INTEGER) {
       if (modifier === AP) {
-        args = { type: 'ap', ap: value };
+        commandArgs = { type: 'ap', ap: value };
       } else if (modifier === DISTANCE) {
-        args = { type: 'distance', distance: Math.floor(value) }; // Distance must be whole meters
-      } else {
-        // Unknown modifier, fall back to max advance
-        args = { type: 'max' };
+        commandArgs = { type: 'distance', distance: Math.floor(value) }; // Distance must be whole meters
       }
-    } else {
-      // Invalid number, fall back to max advance
-      args = { type: 'max' };
     }
-  } else {
-    // Too many tokens, fall back to max advance
-    args = { type: 'max' };
   }
+
+  commandArgs ??= MAX_ADVANCE_ARGS;
 
   return createActorCommand({
     id: intent.id,
@@ -79,6 +67,6 @@ export const advanceIntentParser: IntentParser<AdvanceCommand> = (
     actor: intent.actor,
     location: intent.location,
     session: intent.session,
-    args,
+    args: commandArgs,
   });
 };

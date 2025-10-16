@@ -175,13 +175,19 @@ export type Intent = {
    * Tokens created from `normalized`, unsorted
    * Does not contain `verb`.
    */
-  tokens: string[];
+  args: string[];
 
   /**
    * Unique tokens created from `normalized`
    * Does not contain `verb`.
    */
   uniques: Set<string>;
+
+  /**
+   * Key-value options that occur *after* the verb.
+   * Parsed from `--key` or `--key=value` syntax.
+   */
+  options?: Record<string, string | number | boolean>;
 };
 
 export type IntentParserContext = EntityResolverApi & {

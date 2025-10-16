@@ -1,7 +1,6 @@
 # Priorities
 
 1. [Workbench: Basic Mechanics](./docs/gameplay/workbench.md)
-1. Player Guide -> Help Files (Vitepress tooling + server handling of helpfile-related events)
 1. [Party Mechanics](./packages/guide/src/party/mechanics.md)
 1. [Combat: Capacitor Mechanics](./docs/gameplay/overview.md)
 1. [Combat: Ranged Weapons](./docs/gameplay/combat/overview.md)
@@ -20,6 +19,7 @@
 1. [Loot Drops](./docs//loot.md)
 1. Combat Simulator (arranged 3v3 matches, bring-your-own-Shell, consequence-free)
 1. LLM-powered monster behavior profiles that continuously update based on recent events and player actions.
+1. Player Guide -> Help Files (Vitepress tooling + server handling of helpfile-related events)
 
 # Dependency Graph
 

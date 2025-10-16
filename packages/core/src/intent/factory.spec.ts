@@ -23,7 +23,7 @@ describe('Intent Factory', () => {
         text: 'attack bob',
         normalized: 'attack bob',
         verb: 'attack',
-        tokens: ['bob'],
+        args: ['bob'],
         uniques: new Set(['bob']),
       });
       expect(intent.ts).toBeTypeOf('number');
@@ -41,7 +41,7 @@ describe('Intent Factory', () => {
 
       expect(intent.session).toBe(SESSION_ID);
       expect(intent.verb).toBe('advance');
-      expect(intent.tokens).toEqual(['10']);
+      expect(intent.args).toEqual(['10']);
     });
 
     it('should normalize text and extract tokens correctly', () => {
@@ -54,7 +54,7 @@ describe('Intent Factory', () => {
 
       expect(intent.normalized).toBe('attack   bob   with   sword');
       expect(intent.verb).toBe('attack');
-      expect(intent.tokens).toEqual(['bob', 'with', 'sword']);
+      expect(intent.args).toEqual(['bob', 'with', 'sword']);
       expect(intent.uniques).toEqual(new Set(['bob', 'with', 'sword']));
     });
 
@@ -67,7 +67,7 @@ describe('Intent Factory', () => {
       });
 
       // 'a' should be filtered out (length < 2), but 'to' has length 2 so it stays
-      expect(intent.tokens).toEqual(['to', 'big', 'room']);
+      expect(intent.args).toEqual(['to', 'big', 'room']);
       expect(intent.uniques).toEqual(new Set(['to', 'big', 'room']));
     });
 
@@ -80,7 +80,7 @@ describe('Intent Factory', () => {
       });
 
       // Numbers (1, 15, 2.5) should be preserved, short non-numeric tokens (x, a) filtered out
-      expect(intent.tokens).toEqual(['ap', '1', 'distance', '15', '2.5']);
+      expect(intent.args).toEqual(['ap', '1', 'distance', '15', '2.5']);
       expect(intent.uniques).toEqual(new Set(['ap', '1', 'distance', '15', '2.5']));
     });
 
@@ -93,8 +93,8 @@ describe('Intent Factory', () => {
       });
 
       expect(intent.normalized).toBe('');
-      expect(intent.verb).toBeUndefined();
-      expect(intent.tokens).toEqual([]);
+      expect(intent.verb).toBe('');
+      expect(intent.args).toEqual([]);
       expect(intent.uniques).toEqual(new Set());
     });
 
@@ -150,7 +150,7 @@ describe('Intent Factory', () => {
 
       expect(intent.session).toBe(combatSessionId);
       expect(intent.verb).toBe('advance');
-      expect(intent.tokens).toEqual(['15']);
+      expect(intent.args).toEqual(['15']);
     });
 
     it('should handle different session types', () => {
@@ -165,6 +165,101 @@ describe('Intent Factory', () => {
       });
 
       expect(intent.session).toBe(workbenchSessionId);
+    });
+  });
+
+  describe('option parsing', () => {
+    it('should parse key-value options with equals syntax', () => {
+      const intent = createIntent({
+        id: 'test-options-1',
+        actor: ACTOR_ID,
+        location: PLACE_ID,
+        text: 'attack bob --weapon=sword --damage=10',
+      });
+
+      expect(intent.verb).toBe('attack');
+      expect(intent.args).toEqual(['bob']);
+      expect(intent.options).toEqual({
+        weapon: 'sword',
+        damage: '10',
+      });
+    });
+
+    it('should parse boolean flags without equals syntax', () => {
+      const intent = createIntent({
+        id: 'test-options-2',
+        actor: ACTOR_ID,
+        location: PLACE_ID,
+        text: 'advance 10 --stealth --fast',
+      });
+
+      expect(intent.verb).toBe('advance');
+      expect(intent.args).toEqual(['10']);
+      expect(intent.options).toEqual({
+        stealth: true,
+        fast: true,
+      });
+    });
+
+    it('should handle mixed options and arguments', () => {
+      const intent = createIntent({
+        id: 'test-options-3',
+        actor: ACTOR_ID,
+        location: PLACE_ID,
+        text: 'craft sword --material=steel --quantity=2 --enchanted from iron ore',
+      });
+
+      expect(intent.verb).toBe('craft');
+      expect(intent.args).toEqual(['sword', 'from', 'iron', 'ore']);
+      expect(intent.options).toEqual({
+        material: 'steel',
+        quantity: '2',
+        enchanted: true,
+      });
+    });
+
+    it('should handle empty option values', () => {
+      const intent = createIntent({
+        id: 'test-options-4',
+        actor: ACTOR_ID,
+        location: PLACE_ID,
+        text: 'search --filter= --verbose',
+      });
+
+      expect(intent.verb).toBe('search');
+      expect(intent.args).toEqual([]);
+      expect(intent.options).toEqual({
+        filter: '',
+        verbose: true,
+      });
+    });
+
+    it('should handle no options gracefully', () => {
+      const intent = createIntent({
+        id: 'test-options-5',
+        actor: ACTOR_ID,
+        location: PLACE_ID,
+        text: 'simple command with args',
+      });
+
+      expect(intent.verb).toBe('simple');
+      expect(intent.args).toEqual(['command', 'with', 'args']);
+      expect(intent.options).toEqual({});
+    });
+
+    it('should ignore malformed options', () => {
+      const intent = createIntent({
+        id: 'test-options-6',
+        actor: ACTOR_ID,
+        location: PLACE_ID,
+        text: 'test -- --valid=option regular arg',
+      });
+
+      expect(intent.verb).toBe('test');
+      expect(intent.args).toEqual(['--', 'regular', 'arg']);
+      expect(intent.options).toEqual({
+        valid: 'option',
+      });
     });
   });
 });
