@@ -245,6 +245,42 @@ describe('Retreat Method', () => {
       expect(event.payload.to.coordinate).toBe(Math.round(event.payload.to.coordinate));
     });
 
+    it('should report whole number distance in event payload for AP-based movement', () => {
+      const roundingScenario = useCombatMovementTestScenario({
+        attackerPosition: 50,
+        enemyPosition: 60
+      });
+      const { retreat } = roundingScenario;
+
+      // AP-based movement uses apToDistance which produces fractional distances
+      const result = retreat(MOVE_BY_AP, 1.5);
+
+      expect(result).toHaveLength(1);
+      const event = result[0] as CombatantDidMove;
+
+      // Distance in event should be a whole number (tactical rounding applied)
+      expect(Number.isInteger(event.payload.distance)).toBe(true);
+      expect(event.payload.distance).toBeGreaterThan(0);
+    });
+
+    it('should report actual moved distance matching position change', () => {
+      const roundingScenario = useCombatMovementTestScenario({
+        attackerPosition: 50,
+        enemyPosition: 60
+      });
+      const { retreat } = roundingScenario;
+
+      const result = retreat(MOVE_BY_DISTANCE, 8);
+
+      expect(result).toHaveLength(1);
+      const event = result[0] as CombatantDidMove;
+
+      // Event distance should match actual movement (from tactical positions)
+      const actualMovement = Math.abs(event.payload.to.coordinate - event.payload.from.coordinate);
+      expect(event.payload.distance).toBe(actualMovement);
+      expect(Number.isInteger(event.payload.distance)).toBe(true);
+    });
+
     it('should handle AP-based movement with whole number positions', () => {
       const roundingScenario = useCombatMovementTestScenario({
         attackerPosition: 50,

@@ -419,6 +419,9 @@ export function createMovementMethod(
     const from = { coordinate: originalPosition, facing: originalFacing, speed: combatant.position.speed };
     const to = { coordinate: combatant.position.coordinate, facing: combatant.position.facing, speed: combatant.position.speed };
 
+    // Calculate actual tactical distance moved (always a whole number due to tactical rounding)
+    const actualDistance = Math.abs(movementResult.tactical.position - originalPosition);
+
     const event: CombatantDidMove = createWorldEventImpl({
       type: EventType.COMBATANT_DID_MOVE,
       actor: actor.id,
@@ -427,7 +430,7 @@ export function createMovementMethod(
       payload: {
         from,
         to,
-        distance,
+        distance: actualDistance,
         direction: movementDirection,
         cost: finalCost
       },
