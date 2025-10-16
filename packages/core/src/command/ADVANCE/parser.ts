@@ -34,7 +34,7 @@ export const advanceIntentParser: IntentParser<AdvanceCommand> = (
   // - "advance 15" → move 15 meters (shorthand)
   // - "advance ap 2.5" → move using 2.5 AP
 
-  const { args: tokens } = intent;
+  const { tokens: tokens } = intent;
   let commandArgs: AdvanceCommandArgs;
 
   // Single token = "advance <number>" → distance shorthand
