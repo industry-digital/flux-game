@@ -21,7 +21,7 @@ function assertDistanceAdvanceCommand(command: AdvanceCommand | undefined, expec
   expect(command).toBeTruthy();
   expect(command?.args.type).toBe('distance');
   if (command?.args.type === 'distance') {
-    expect(command.args.distance).toBe(expectedDistance);
+    expect(command.args.distance).toBe(Math.floor(expectedDistance));
   }
 }
 

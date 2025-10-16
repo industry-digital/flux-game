@@ -34,12 +34,12 @@ export const advanceIntentParser: IntentParser<AdvanceCommand> = (
   // - "advance 15" → move 15 meters (shorthand)
   // - "advance ap 2.5" → move using 2.5 AP
 
-  const { tokens: tokens } = intent;
+  const { tokens } = intent;
   let commandArgs: AdvanceCommandArgs;
 
   // Single token = "advance <number>" → distance shorthand
   if (tokens.length === 1) {
-    const value = parseFloat(tokens[0]);
+    const value = parseInt(tokens[0], 10);
     if (!isNaN(value) && value > 0 && Number.isFinite(value) && value <= Number.MAX_SAFE_INTEGER) {
       commandArgs = { type: 'distance', distance: value };
     }
