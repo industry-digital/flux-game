@@ -1,6 +1,7 @@
 import React, { useRef, useEffect, useCallback, useMemo } from 'react';
 import type { ActorURN } from '@flux/core';
 import type { Battlefield, Combatant, CombatFacing } from '@flux/core';
+import type { AnimationApiResolver } from '~/types/animation';
 
 /**
  * Props for the BattlefieldVisualization component
@@ -140,16 +141,19 @@ function hashPositions(combatants: Map<ActorURN, Combatant>): string {
 }
 
 export type BattlefieldVisualizationDependencies = {
-  requestAnimationFrame: typeof requestAnimationFrame;
-  cancelAnimationFrame: typeof cancelAnimationFrame;
+  animationApiResolver: AnimationApiResolver;
 };
 
 export const DEFAULT_BATTLEFIELD_VISUALIZATION_DEPS: Readonly<BattlefieldVisualizationDependencies> = Object.freeze({
-  requestAnimationFrame,
-  cancelAnimationFrame,
+  animationApiResolver: () => ({
+    requestAnimationFrame: requestAnimationFrame,
+    cancelAnimationFrame: cancelAnimationFrame,
+  }),
 });
 
-export const createBattlefieldVisualizationComponent = (deps: BattlefieldVisualizationDependencies = DEFAULT_BATTLEFIELD_VISUALIZATION_DEPS): React.FC<BattlefieldVisualizationProps> => {
+export const createBattlefieldVisualizationComponent = (
+  deps: BattlefieldVisualizationDependencies = DEFAULT_BATTLEFIELD_VISUALIZATION_DEPS,
+): React.FC<BattlefieldVisualizationProps> => {
 
   /**
    * Canvas-based battlefield visualization component
@@ -162,6 +166,8 @@ export const createBattlefieldVisualizationComponent = (deps: BattlefieldVisuali
     subjectTeam,
     className = '',
   }) => {
+    const { requestAnimationFrame, cancelAnimationFrame } = deps.animationApiResolver();
+
     const canvasRef = useRef<HTMLCanvasElement>(null);
     const containerRef = useRef<HTMLDivElement>(null);
     const cacheRef = useRef<RenderCache>({
@@ -381,7 +387,7 @@ export const createBattlefieldVisualizationComponent = (deps: BattlefieldVisuali
       const needsAnimation = (animationProgress < 1 && cache.animationId) || hasCurrentActor;
 
       if (needsAnimation) {
-        deps.requestAnimationFrame(render);
+        requestAnimationFrame(render);
       } else if (cache.animationId) {
         cache.animationId = undefined;
       }
@@ -393,11 +399,11 @@ export const createBattlefieldVisualizationComponent = (deps: BattlefieldVisuali
     const startAnimation = useCallback(() => {
       const cache = cacheRef.current;
       if (cache.animationId) {
-        deps.cancelAnimationFrame(cache.animationId);
+        cancelAnimationFrame(cache.animationId);
       }
 
       animationStartRef.current = performance.now();
-      cache.animationId = deps.requestAnimationFrame(render);
+      cache.animationId = requestAnimationFrame(render);
     }, [render]);
 
     /**
@@ -459,7 +465,7 @@ export const createBattlefieldVisualizationComponent = (deps: BattlefieldVisuali
       return () => {
         const cache = cacheRef.current;
         if (cache.animationId) {
-          deps.cancelAnimationFrame(cache.animationId);
+          cancelAnimationFrame(cache.animationId);
         }
       };
     }, []);
