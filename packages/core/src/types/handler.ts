@@ -147,8 +147,9 @@ export type PureReducer<C, I, O = any> = (context: C, input: I, ...args: O[]) =>
 export type CommandReducer<T extends CommandType, A extends Record<string, any>> = PureReducer<TransformerContext, Command<T, A>>;
 
 export type InputTypeGuard<I extends Command, S extends I> = (input: I) => input is S;
+export type IntentOptions = undefined | Record<string, string | number | boolean>;
 
-export type Intent = {
+export type Intent<TOptions extends IntentOptions = undefined> = {
   id: string;
   /**
    * The moment the intent was created; epoch milliseconds
@@ -175,7 +176,7 @@ export type Intent = {
    * Tokens created from `normalized`, unsorted
    * Does not contain `verb`.
    */
-  args: string[];
+  tokens: string[];
 
   /**
    * Unique tokens created from `normalized`
@@ -187,7 +188,7 @@ export type Intent = {
    * Key-value options that occur *after* the verb.
    * Parsed from `--key` or `--key=value` syntax.
    */
-  options?: Record<string, string | number | boolean>;
+  options: TOptions;
 };
 
 export type IntentParserContext = EntityResolverApi & {

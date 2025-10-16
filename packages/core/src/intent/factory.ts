@@ -1,5 +1,5 @@
 import { BASE62_CHARSET, uniqid } from '~/lib/random';
-import { Intent } from '~/types/handler';
+import { Intent, IntentOptions } from '~/types/handler';
 import { ActorURN, PlaceURN, SessionURN } from '~/types/taxonomy';
 
 export type IntentInput = {
@@ -22,8 +22,24 @@ export const DEFAULT_INTENT_FACTORY_DEPENDENCIES: IntentFactoryDependencies = {
 };
 
 const HYPHEN = 45;
+const DOUBLE_QUOTE = 34;
+const SINGLE_QUOTE = 39;
 const WHITESPACE_PATTERN = /\s+/;
 const KEYVALUE_OPTION_PARSER = /^--([^=]+)=(.*)$/;
+
+// Strip enclosing quotes from option values
+const stripQuotes = (value: string): string => {
+  const len = value.length;
+  if (len >= 2) {
+    const first = value.charCodeAt(0);
+    const last = value.charCodeAt(len - 1);
+    // Check for matching single or double quotes
+    if ((first === DOUBLE_QUOTE && last === DOUBLE_QUOTE) || (first === SINGLE_QUOTE && last === SINGLE_QUOTE)) { // " or '
+      return value.slice(1, -1);
+    }
+  }
+  return value;
+};
 
 // Optimized token filter - inline numeric check for better performance
 const TOKEN_FILTER = (token: string): boolean => {
@@ -39,17 +55,64 @@ const TOKEN_FILTER = (token: string): boolean => {
   return false;
 };
 
-export function createIntent<TOptions extends Record<string, string | number | boolean> = Record<string, string | number | boolean>>(
+// Tokenize text respecting quoted strings and preserving their case
+const tokenize = (originalText: string, normalizedText: string): string[] => {
+  const tokens: string[] = [];
+  let current = '';
+  let originalCurrent = '';
+  let inQuotes = false;
+  let quoteChar = 0;
+  let tokenWasQuoted = false;
+
+  for (let i = 0; i < normalizedText.length; i++) {
+    const char = normalizedText.charCodeAt(i);
+    const originalChar = originalText[i];
+
+    if (!inQuotes && (char === DOUBLE_QUOTE || char === SINGLE_QUOTE)) {
+      inQuotes = true;
+      quoteChar = char;
+      tokenWasQuoted = true;
+      current += normalizedText[i];
+      originalCurrent += originalChar;
+    } else if (inQuotes && char === quoteChar) {
+      inQuotes = false;
+      current += normalizedText[i];
+      originalCurrent += originalChar;
+      quoteChar = 0;
+    } else if (!inQuotes && (char === 32 || char === 9 || char === 10 || char === 13)) { // whitespace
+      if (current) {
+        // Use original case for quoted strings, normalized case for everything else
+        tokens.push(tokenWasQuoted ? originalCurrent : current);
+        current = '';
+        originalCurrent = '';
+        tokenWasQuoted = false;
+      }
+    } else {
+      current += normalizedText[i];
+      originalCurrent += originalChar;
+    }
+  }
+
+  if (current) {
+    // Use original case for quoted strings, normalized case for everything else
+    tokens.push(tokenWasQuoted ? originalCurrent : current);
+  }
+
+  return tokens;
+};
+
+export function createIntent<TOptions extends IntentOptions = undefined>(
   input: IntentInput,
   deps: IntentFactoryDependencies = DEFAULT_INTENT_FACTORY_DEPENDENCIES
-): Intent & { options: TOptions } {
-  const normalized = input.text.toLowerCase().trim();
-  const allTokens = normalized.split(WHITESPACE_PATTERN);
+): Intent<TOptions> {
+  const trimmed = input.text.trim();
+  const normalized = trimmed.toLowerCase();
+  const allTokens = tokenize(trimmed, normalized);
 
   let verb: string = '';
 
   const args: string[] = [];
-  const options: Record<string, string | number | boolean> = {};
+  let options: TOptions | undefined;
 
   // Single pass through all the tokens to parse verb, options, and args.
   const tokenCount = allTokens.length;
@@ -69,14 +132,16 @@ export function createIntent<TOptions extends Record<string, string | number | b
       const match = token.match(KEYVALUE_OPTION_PARSER);
       if (match?.length === 3) {
         const [, optionName, optionValue] = match;
-        options[optionName] = optionValue;
+        if (!options) options = {} as TOptions;
+        (options as Record<string, any>)[optionName] = stripQuotes(optionValue);
         continue;
       }
 
       // Handle flags like --debug (without =value)
       const flagName = token.slice(2);
       if (flagName) {
-        options[flagName] = true;
+        if (!options) options = {} as TOptions;
+        (options as Record<string, any>)[flagName] = true;
         continue;
       }
     }
@@ -96,8 +161,8 @@ export function createIntent<TOptions extends Record<string, string | number | b
     text: input.text,
     normalized,
     verb,
-    args,
+    tokens: args,
     uniques,
-    options: options as TOptions,
+    options: options as TOptions
   };
 }
