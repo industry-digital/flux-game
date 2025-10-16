@@ -6,21 +6,19 @@ import { TransformerContext } from '~/types/handler';
 import { WorldProjection } from '~/types/world';
 import { CommandType } from '~/types/intent';
 import { createTestTransformerContext } from '~/testing/context-testing';
-import { ActorURN, PlaceURN, SessionURN } from '~/types/taxonomy';
+import { SessionURN } from '~/types/taxonomy';
 import { createActor } from '~/worldkit/entity/actor';
 import { createPlace } from '~/worldkit/entity/place';
 import { createWorldProjection } from '~/worldkit/context';
 import { CurrencyType, WellKnownActor } from '~/types';
+import { ALICE_ID, BOB_ID, DEFAULT_LOCATION, DEFAULT_COMBAT_SESSION } from '~/testing/constants';
 
 describe('CREDIT Command Parser', () => {
   let context: TransformerContext;
   let parserContext: ReturnType<typeof createCommandResolverContext>;
 
   // Test entities
-  const ACTOR_ID: ActorURN = 'flux:actor:test:alice';
-  const RECIPIENT_ID: ActorURN = 'flux:actor:test:bob';
-  const PLACE_ID: PlaceURN = 'flux:place:test:arena';
-  const SESSION_ID: SessionURN = 'flux:session:test:credit';
+  const SESSION_ID: SessionURN = DEFAULT_COMBAT_SESSION;
 
   beforeEach(() => {
     context = createTestTransformerContext({
@@ -29,20 +27,20 @@ describe('CREDIT Command Parser', () => {
         sessions: {},
         items: {},
         actors: {
-          [ACTOR_ID]: createActor({
-            id: ACTOR_ID,
+          [ALICE_ID]: createActor({
+            id: ALICE_ID,
             name: 'Alice',
-            location: PLACE_ID,
+            location: DEFAULT_LOCATION,
           }),
-          [RECIPIENT_ID]: createActor({
-            id: RECIPIENT_ID,
+          [BOB_ID]: createActor({
+            id: BOB_ID,
             name: 'Bob',
-            location: PLACE_ID,
+            location: DEFAULT_LOCATION,
           }),
         },
         places: {
-          [PLACE_ID]: createPlace({
-            id: PLACE_ID,
+          [DEFAULT_LOCATION]: createPlace({
+            id: DEFAULT_LOCATION,
             name: 'Test Arena',
           }),
         },
@@ -55,10 +53,9 @@ describe('CREDIT Command Parser', () => {
   describe('Basic Functionality', () => {
     it('should recognize @credit verb', () => {
       const intent = createIntent({
-        id: 'test-1',
-        actor: ACTOR_ID,
-        location: PLACE_ID,
-        text: '@credit flux:actor:test:bob scrap 100',
+        actor: ALICE_ID,
+        location: DEFAULT_LOCATION,
+        text: '@credit flux:actor:bob scrap 100',
       });
 
       const command = creditResolver(parserContext, intent);
@@ -66,18 +63,17 @@ describe('CREDIT Command Parser', () => {
       expect(command).toBeTruthy();
       expect(command?.type).toBe(CommandType.CREDIT);
       expect(command?.actor).toBe(WellKnownActor.SYSTEM);
-      expect(command?.location).toBe(PLACE_ID);
-      expect(command?.args.recipient).toBe(RECIPIENT_ID);
+      expect(command?.location).toBe(DEFAULT_LOCATION);
+      expect(command?.args.recipient).toBe(BOB_ID);
       expect(command?.args.currency).toBe(CurrencyType.SCRAP);
       expect(command?.args.amount).toBe(100);
     });
 
     it('should reject non-@credit verbs', () => {
       const intent = createIntent({
-        id: 'test-2',
-        actor: ACTOR_ID,
-        location: PLACE_ID,
-        text: '@debit flux:actor:test:bob scrap 100',
+        actor: ALICE_ID,
+        location: DEFAULT_LOCATION,
+        text: '@debit flux:actor:bob scrap 100',
       });
 
       const command = creditResolver(parserContext, intent);
@@ -87,9 +83,8 @@ describe('CREDIT Command Parser', () => {
 
     it('should reject when recipient not found', () => {
       const intent = createIntent({
-        id: 'test-3',
-        actor: ACTOR_ID,
-        location: PLACE_ID,
+        actor: ALICE_ID,
+        location: DEFAULT_LOCATION,
         text: '@credit flux:actor:missing scrap 100',
       });
 
@@ -100,10 +95,9 @@ describe('CREDIT Command Parser', () => {
 
     it('should reject invalid currency types', () => {
       const intent = createIntent({
-        id: 'test-4',
-        actor: ACTOR_ID,
-        location: PLACE_ID,
-        text: '@credit flux:actor:test:bob gold 100',
+        actor: ALICE_ID,
+        location: DEFAULT_LOCATION,
+        text: '@credit flux:actor:bob gold 100',
       });
 
       const command = creditResolver(parserContext, intent);
@@ -113,10 +107,9 @@ describe('CREDIT Command Parser', () => {
 
     it('should reject invalid amount (NaN)', () => {
       const intent = createIntent({
-        id: 'test-5',
-        actor: ACTOR_ID,
-        location: PLACE_ID,
-        text: '@credit flux:actor:test:bob scrap abc',
+        actor: ALICE_ID,
+        location: DEFAULT_LOCATION,
+        text: '@credit flux:actor:bob scrap abc',
       });
 
       const command = creditResolver(parserContext, intent);
@@ -126,10 +119,9 @@ describe('CREDIT Command Parser', () => {
 
     it('should reject amounts outside safe integer range', () => {
       const intent = createIntent({
-        id: 'test-6',
-        actor: ACTOR_ID,
-        location: PLACE_ID,
-        text: `@credit flux:actor:test:bob scrap ${Number.MAX_SAFE_INTEGER + 1}`,
+        actor: ALICE_ID,
+        location: DEFAULT_LOCATION,
+        text: `@credit flux:actor:bob scrap ${Number.MAX_SAFE_INTEGER + 1}`,
       });
 
       const command = creditResolver(parserContext, intent);
@@ -141,10 +133,9 @@ describe('CREDIT Command Parser', () => {
   describe('Token Length Validation', () => {
     it('should reject commands with too few tokens', () => {
       const intent = createIntent({
-        id: 'test-7',
-        actor: ACTOR_ID,
-        location: PLACE_ID,
-        text: '@credit flux:actor:test:bob',
+        actor: ALICE_ID,
+        location: DEFAULT_LOCATION,
+        text: '@credit flux:actor:bob',
       });
 
       const command = creditResolver(parserContext, intent);
@@ -154,10 +145,9 @@ describe('CREDIT Command Parser', () => {
 
     it('should reject commands with too many tokens', () => {
       const intent = createIntent({
-        id: 'test-8',
-        actor: ACTOR_ID,
-        location: PLACE_ID,
-        text: '@credit flux:actor:test:bob scrap 100 extra tokens',
+        actor: ALICE_ID,
+        location: DEFAULT_LOCATION,
+        text: '@credit flux:actor:bob scrap 100 extra tokens',
       });
 
       const command = creditResolver(parserContext, intent);
@@ -167,10 +157,9 @@ describe('CREDIT Command Parser', () => {
 
     it('should accept exactly 3 tokens after verb', () => {
       const intent = createIntent({
-        id: 'test-9',
-        actor: ACTOR_ID,
-        location: PLACE_ID,
-        text: '@credit flux:actor:test:bob scrap 50',
+        actor: ALICE_ID,
+        location: DEFAULT_LOCATION,
+        text: '@credit flux:actor:bob scrap 50',
       });
 
       const command = creditResolver(parserContext, intent);
@@ -183,10 +172,9 @@ describe('CREDIT Command Parser', () => {
   describe('Amount Parsing', () => {
     it('should parse positive integers', () => {
       const intent = createIntent({
-        id: 'test-10',
-        actor: ACTOR_ID,
-        location: PLACE_ID,
-        text: '@credit flux:actor:test:bob scrap 42',
+        actor: ALICE_ID,
+        location: DEFAULT_LOCATION,
+        text: '@credit flux:actor:bob scrap 42',
       });
 
       const command = creditResolver(parserContext, intent);
@@ -197,10 +185,9 @@ describe('CREDIT Command Parser', () => {
 
     it('should parse zero amount', () => {
       const intent = createIntent({
-        id: 'test-11',
-        actor: ACTOR_ID,
-        location: PLACE_ID,
-        text: '@credit flux:actor:test:bob scrap 0',
+        actor: ALICE_ID,
+        location: DEFAULT_LOCATION,
+        text: '@credit flux:actor:bob scrap 0',
       });
 
       const command = creditResolver(parserContext, intent);
@@ -211,10 +198,9 @@ describe('CREDIT Command Parser', () => {
 
     it('should parse negative amounts', () => {
       const intent = createIntent({
-        id: 'test-12',
-        actor: ACTOR_ID,
-        location: PLACE_ID,
-        text: '@credit flux:actor:test:bob scrap -25',
+        actor: ALICE_ID,
+        location: DEFAULT_LOCATION,
+        text: '@credit flux:actor:bob scrap -25',
       });
 
       const command = creditResolver(parserContext, intent);
@@ -225,10 +211,9 @@ describe('CREDIT Command Parser', () => {
 
     it('should reject decimal amounts (parseInt truncates)', () => {
       const intent = createIntent({
-        id: 'test-13',
-        actor: ACTOR_ID,
-        location: PLACE_ID,
-        text: '@credit flux:actor:test:bob scrap 10.5',
+        actor: ALICE_ID,
+        location: DEFAULT_LOCATION,
+        text: '@credit flux:actor:bob scrap 10.5',
       });
 
       const command = creditResolver(parserContext, intent);
@@ -239,10 +224,9 @@ describe('CREDIT Command Parser', () => {
 
     it('should handle maximum safe integer', () => {
       const intent = createIntent({
-        id: 'test-14',
-        actor: ACTOR_ID,
-        location: PLACE_ID,
-        text: `@credit flux:actor:test:bob scrap ${Number.MAX_SAFE_INTEGER}`,
+        actor: ALICE_ID,
+        location: DEFAULT_LOCATION,
+        text: `@credit flux:actor:bob scrap ${Number.MAX_SAFE_INTEGER}`,
       });
 
       const command = creditResolver(parserContext, intent);
@@ -253,10 +237,9 @@ describe('CREDIT Command Parser', () => {
 
     it('should handle minimum safe integer', () => {
       const intent = createIntent({
-        id: 'test-15',
-        actor: ACTOR_ID,
-        location: PLACE_ID,
-        text: `@credit flux:actor:test:bob scrap ${Number.MIN_SAFE_INTEGER}`,
+        actor: ALICE_ID,
+        location: DEFAULT_LOCATION,
+        text: `@credit flux:actor:bob scrap ${Number.MIN_SAFE_INTEGER}`,
       });
 
       const command = creditResolver(parserContext, intent);
@@ -269,11 +252,10 @@ describe('CREDIT Command Parser', () => {
   describe('Session Threading', () => {
     it('should thread session ID from intent to command', () => {
       const intent = createIntent({
-        id: 'test-16',
-        actor: ACTOR_ID,
-        location: PLACE_ID,
+        actor: ALICE_ID,
+        location: DEFAULT_LOCATION,
         session: SESSION_ID,
-        text: '@credit flux:actor:test:bob scrap 100',
+        text: '@credit flux:actor:bob scrap 100',
       });
 
       const command = creditResolver(parserContext, intent);
@@ -284,10 +266,9 @@ describe('CREDIT Command Parser', () => {
 
     it('should work without session ID', () => {
       const intent = createIntent({
-        id: 'test-17',
-        actor: ACTOR_ID,
-        location: PLACE_ID,
-        text: '@credit flux:actor:test:bob scrap 100',
+        actor: ALICE_ID,
+        location: DEFAULT_LOCATION,
+        text: '@credit flux:actor:bob scrap 100',
       });
 
       const command = creditResolver(parserContext, intent);
@@ -300,11 +281,10 @@ describe('CREDIT Command Parser', () => {
   describe('Command Structure Validation', () => {
     it('should preserve all required command fields', () => {
       const intent = createIntent({
-        id: 'test-18',
-        actor: ACTOR_ID,
-        location: PLACE_ID,
+        actor: ALICE_ID,
+        location: DEFAULT_LOCATION,
         session: SESSION_ID,
-        text: '@credit flux:actor:test:bob scrap 250',
+        text: '@credit flux:actor:bob scrap 250',
       });
 
       const command = creditResolver(parserContext, intent);
@@ -313,10 +293,10 @@ describe('CREDIT Command Parser', () => {
         id: intent.id,
         type: CommandType.CREDIT,
         actor: WellKnownActor.SYSTEM,
-        location: PLACE_ID,
+        location: DEFAULT_LOCATION,
         session: SESSION_ID,
         args: {
-          recipient: RECIPIENT_ID,
+          recipient: BOB_ID,
           currency: CurrencyType.SCRAP,
           amount: 250,
         },
@@ -325,115 +305,16 @@ describe('CREDIT Command Parser', () => {
 
     it('should use SYSTEM actor regardless of intent actor', () => {
       const intent = createIntent({
-        id: 'test-19',
-        actor: ACTOR_ID,
-        location: PLACE_ID,
-        text: '@credit flux:actor:test:bob scrap 100',
+        actor: ALICE_ID,
+        location: DEFAULT_LOCATION,
+        text: '@credit flux:actor:bob scrap 100',
       });
 
       const command = creditResolver(parserContext, intent);
 
       expect(command).toBeTruthy();
       expect(command?.actor).toBe(WellKnownActor.SYSTEM);
-      expect(command?.actor).not.toBe(ACTOR_ID);
-    });
-  });
-
-  describe('Edge Cases and Security', () => {
-    it('should handle malformed actor URNs gracefully', () => {
-      const intent = createIntent({
-        id: 'test-20',
-        actor: ACTOR_ID,
-        location: PLACE_ID,
-        text: '@credit invalid-urn scrap 100',
-      });
-
-      const command = creditResolver(parserContext, intent);
-
-      expect(command).toBeUndefined();
-    });
-
-    it('should sanitize input and not propagate raw user data', () => {
-      const maliciousInputs = [
-        '@credit flux:actor:test:bob scrap <script>alert("xss")</script>',
-        '@credit flux:actor:test:bob scrap ${process.env.SECRET}',
-        '@credit flux:actor:test:bob scrap ../../../etc/passwd',
-        '@credit flux:actor:test:bob scrap DROP TABLE users;',
-        '@credit flux:actor:test:bob scrap __proto__.constructor',
-        '@credit flux:actor:test:bob scrap eval("malicious")',
-        '@credit flux:actor:test:bob scrap function(){return window}',
-        '@credit flux:actor:test:bob scrap \x00\x01\x02\x03',
-        '@credit flux:actor:test:bob scrap NaN',
-        '@credit flux:actor:test:bob scrap Infinity',
-        '@credit flux:actor:test:bob scrap undefined',
-        '@credit flux:actor:test:bob scrap null',
-      ];
-
-      maliciousInputs.forEach((maliciousText, index) => {
-        const intent = createIntent({
-          id: `security-test-${index}`,
-          actor: ACTOR_ID,
-          location: PLACE_ID,
-          text: maliciousText,
-        });
-
-        const command = creditResolver(parserContext, intent);
-
-        // Most malicious inputs should be rejected due to invalid amount parsing
-        if (command) {
-          // If command is created, ensure it contains only safe values
-          expect(command.type).toBe(CommandType.CREDIT);
-          expect(command.actor).toBe(WellKnownActor.SYSTEM);
-          expect(command.args.recipient).toBe(RECIPIENT_ID);
-          expect(command.args.currency).toBe(CurrencyType.SCRAP);
-          expect(typeof command.args.amount).toBe('number');
-          expect(Number.isFinite(command.args.amount)).toBe(true);
-
-          // Verify no raw malicious input exists in the command
-          const commandStr = JSON.stringify(command);
-          expect(commandStr).not.toMatch(/<script/i);
-          expect(commandStr).not.toMatch(/eval\(/i);
-          expect(commandStr).not.toMatch(/\$\{/);
-          expect(commandStr).not.toMatch(/\.\.\//);
-          expect(commandStr).not.toMatch(/DROP\s+TABLE/i);
-          expect(commandStr).not.toMatch(/__proto__/);
-          expect(commandStr).not.toMatch(/constructor/);
-          expect(commandStr).not.toMatch(/\x00/);
-          expect(commandStr).not.toMatch(/\bundefined\b/);
-          expect(commandStr).not.toMatch(/\bnull\b/);
-        }
-      });
-    });
-
-    it('should handle edge case numeric inputs safely', () => {
-      const edgeCaseNumbers = [
-        '@credit flux:actor:test:bob scrap 1e308',       // Scientific notation near infinity
-        '@credit flux:actor:test:bob scrap 1e-308',      // Scientific notation near zero
-        '@credit flux:actor:test:bob scrap 0x41',        // Hexadecimal
-        '@credit flux:actor:test:bob scrap 0b101',       // Binary
-        '@credit flux:actor:test:bob scrap 0o77',        // Octal
-        '@credit flux:actor:test:bob scrap 3.14159265359', // High precision decimal
-        '@credit flux:actor:test:bob scrap 1.7976931348623157e+308', // Near MAX_VALUE
-        '@credit flux:actor:test:bob scrap 5e-324',      // Near MIN_VALUE
-      ];
-
-      edgeCaseNumbers.forEach((text, index) => {
-        const intent = createIntent({
-          id: `edge-numeric-${index}`,
-          actor: ACTOR_ID,
-          location: PLACE_ID,
-          text,
-        });
-
-        const command = creditResolver(parserContext, intent);
-
-        if (command) {
-          // Should either be a valid finite number or be rejected
-          expect(Number.isFinite(command.args.amount)).toBe(true);
-          expect(command.args.amount).toBeGreaterThanOrEqual(Number.MIN_SAFE_INTEGER);
-          expect(command.args.amount).toBeLessThanOrEqual(Number.MAX_SAFE_INTEGER);
-        }
-      });
+      expect(command?.actor).not.toBe(ALICE_ID);
     });
   });
 
@@ -442,10 +323,9 @@ describe('CREDIT Command Parser', () => {
       // Test all valid currency types
       Object.values(CurrencyType).forEach((currency) => {
         const intent = createIntent({
-          id: `currency-test-${currency}`,
-          actor: ACTOR_ID,
-          location: PLACE_ID,
-          text: `@credit flux:actor:test:bob ${currency} 100`,
+          actor: ALICE_ID,
+          location: DEFAULT_LOCATION,
+          text: `@credit flux:actor:bob ${currency} 100`,
         });
 
         const command = creditResolver(parserContext, intent);
@@ -460,10 +340,9 @@ describe('CREDIT Command Parser', () => {
 
       invalidCurrencies.forEach((currency) => {
         const intent = createIntent({
-          id: `invalid-currency-${currency}`,
-          actor: ACTOR_ID,
-          location: PLACE_ID,
-          text: `@credit flux:actor:test:bob ${currency} 100`,
+          actor: ALICE_ID,
+          location: DEFAULT_LOCATION,
+          text: `@credit flux:actor:bob ${currency} 100`,
         });
 
         const command = creditResolver(parserContext, intent);

@@ -2,21 +2,20 @@ import { describe, beforeEach, it, expect } from 'vitest';
 import { createIntent } from './factory';
 import { resolveCommandFromIntent } from './resolution';
 import { executeCommand } from './execution';
-import { TransformerContext, WorldProjection } from '~/types/handler';
+import { TransformerContext } from '~/types/handler';
+import { WorldProjection } from '~/types/world';
 import { CommandType } from '~/types/intent';
 import { createTestTransformerContext } from '~/testing/context-testing';
-import { ActorURN, PlaceURN, SessionURN } from '~/types/taxonomy';
+import { ActorURN, SessionURN } from '~/types/taxonomy';
 import { createActor } from '~/worldkit/entity/actor';
 import { createPlace } from '~/worldkit/entity/place';
 import { createWorldProjection } from '~/worldkit/context';
+import { ALICE_ID, BOB_ID, DEFAULT_LOCATION } from '~/testing/constants';
 
 describe('3-Step Intent Pipeline Integration', () => {
   let context: TransformerContext;
 
   // Create test actors and place
-  const ACTOR_ID: ActorURN = 'flux:actor:test:alice';
-  const TARGET_ID: ActorURN = 'flux:actor:test:bob';
-  const PLACE_ID: PlaceURN = 'flux:place:test:arena';
 
   beforeEach(() => {
     context = createTestTransformerContext({
@@ -25,20 +24,20 @@ describe('3-Step Intent Pipeline Integration', () => {
         sessions: {},
         items: {},
         actors: {
-          [ACTOR_ID]: createActor({
-            id: ACTOR_ID,
+          [ALICE_ID]: createActor({
+            id: ALICE_ID,
             name: 'Alice',
-            location: PLACE_ID,
+            location: DEFAULT_LOCATION,
           }),
-          [TARGET_ID]: createActor({
-            id: TARGET_ID,
+          [BOB_ID]: createActor({
+            id: BOB_ID,
             name: 'Bob',
-            location: PLACE_ID,
+            location: DEFAULT_LOCATION,
           }),
         },
         places: {
-          [PLACE_ID]: createPlace({
-            id: PLACE_ID,
+          [DEFAULT_LOCATION]: createPlace({
+            id: DEFAULT_LOCATION,
             name: 'Test Arena',
           }),
         },
@@ -50,9 +49,8 @@ describe('3-Step Intent Pipeline Integration', () => {
     it('should execute attack intent through full pipeline', () => {
       // Step 1: Create Intent
       const intent = createIntent({
-        id: 'pipeline-test-1',
-        actor: ACTOR_ID,
-        location: PLACE_ID,
+        actor: ALICE_ID,
+        location: DEFAULT_LOCATION,
         text: 'attack bob',
       });
 
@@ -69,9 +67,8 @@ describe('3-Step Intent Pipeline Integration', () => {
     it('should execute advance intent through full pipeline', () => {
       // Step 1: Create Intent
       const intent = createIntent({
-        id: 'pipeline-test-2',
-        actor: ACTOR_ID,
-        location: PLACE_ID,
+        actor: ALICE_ID,
+        location: DEFAULT_LOCATION,
         text: 'advance 15',
       });
 
@@ -88,9 +85,8 @@ describe('3-Step Intent Pipeline Integration', () => {
     it('should handle unresolvable intents gracefully', () => {
       // Step 1: Create Intent
       const intent = createIntent({
-        id: 'pipeline-test-3',
-        actor: ACTOR_ID,
-        location: PLACE_ID,
+        actor: ALICE_ID,
+        location: DEFAULT_LOCATION,
         text: 'do something impossible',
       });
 
@@ -105,13 +101,12 @@ describe('3-Step Intent Pipeline Integration', () => {
 
   describe('session threading through full pipeline', () => {
     it('should thread combat session ID through entire pipeline', () => {
-      const combatSessionId: SessionURN = 'flux:session:combat:pipeline-test';
+      const combatSessionId: SessionURN = 'flux:session:combat:pipelinetest';
 
       // Step 1: Create Intent with session
       const intent = createIntent({
-        id: 'session-pipeline-1',
-        actor: ACTOR_ID,
-        location: PLACE_ID,
+        actor: ALICE_ID,
+        location: DEFAULT_LOCATION,
         session: combatSessionId,
         text: 'strike bob',
       });
@@ -131,13 +126,12 @@ describe('3-Step Intent Pipeline Integration', () => {
     });
 
     it('should thread workbench session ID through entire pipeline', () => {
-      const workbenchSessionId: SessionURN = 'flux:session:workbench:pipeline-test';
+      const workbenchSessionId: SessionURN = 'flux:session:workbench:pipelinetest';
 
       // Step 1: Create Intent with session
       const intent = createIntent({
-        id: 'session-pipeline-2',
-        actor: ACTOR_ID,
-        location: PLACE_ID,
+        actor: ALICE_ID,
+        location: DEFAULT_LOCATION,
         session: workbenchSessionId,
         text: 'use workbench',
       });
@@ -157,9 +151,8 @@ describe('3-Step Intent Pipeline Integration', () => {
     it('should handle pipeline without session context', () => {
       // Step 1: Create Intent without session
       const intent = createIntent({
-        id: 'no-session-pipeline',
-        actor: ACTOR_ID,
-        location: PLACE_ID,
+        actor: ALICE_ID,
+        location: DEFAULT_LOCATION,
         text: 'look bob',
       });
 
@@ -181,9 +174,8 @@ describe('3-Step Intent Pipeline Integration', () => {
     it('should handle resolution failures without crashing', () => {
       // Step 1: Create Intent
       const intent = createIntent({
-        id: 'error-test-1',
-        actor: ACTOR_ID,
-        location: PLACE_ID,
+        actor: ALICE_ID,
+        location: DEFAULT_LOCATION,
         text: 'invalid command syntax',
       });
 
@@ -197,9 +189,8 @@ describe('3-Step Intent Pipeline Integration', () => {
     it('should handle execution errors without crashing', () => {
       // Step 1: Create Intent
       const intent = createIntent({
-        id: 'error-test-2',
         actor: 'flux:actor:nonexistent' as ActorURN,
-        location: PLACE_ID,
+        location: DEFAULT_LOCATION,
         text: 'look bob',
       });
 
@@ -227,9 +218,8 @@ describe('3-Step Intent Pipeline Integration', () => {
       const results = intents.map((text, index) => {
         // Step 1: Create Intent
         const intent = createIntent({
-          id: `perf-test-${index}`,
-          actor: ACTOR_ID,
-          location: PLACE_ID,
+          actor: ALICE_ID,
+          location: DEFAULT_LOCATION,
           text,
         });
 

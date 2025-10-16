@@ -24,7 +24,6 @@ export const DEFAULT_INTENT_FACTORY_DEPENDENCIES: IntentFactoryDependencies = {
 const HYPHEN = 45;
 const DOUBLE_QUOTE = 34;
 const SINGLE_QUOTE = 39;
-const WHITESPACE_PATTERN = /\s+/;
 const KEYVALUE_OPTION_PARSER = /^--([^=]+)=(.*)$/;
 
 // Strip enclosing quotes from option values
@@ -101,10 +100,35 @@ const tokenize = (originalText: string, normalizedText: string): string[] => {
   return tokens;
 };
 
+// OK: flux:place:somewhere
+// OK: flux:actor:alice-the-great
+// OK: flux:session:combat-123
+// Security: Alphanumeric with hyphens and colons to allow multi-segment URNs, prevent injection
+const ACTOR_URN_REGEXP = /^flux:actor:([a-zA-Z0-9]+(?:[-:][a-zA-Z0-9]+)*)$/;
+const LOCATION_URN_REGEXP = /^flux:place:([a-zA-Z0-9]+(?:[-:][a-zA-Z0-9]+)*)$/;
+const SESSION_URN_REGEXP = /^flux:session:([a-zA-Z0-9]+(?:[-:][a-zA-Z0-9]+)*)$/;
+const BASE62_REGEXP = /^[0-9a-zA-Z]+$/;
+
 export function createIntent<TOptions extends IntentOptions = undefined>(
   input: IntentInput,
   deps: IntentFactoryDependencies = DEFAULT_INTENT_FACTORY_DEPENDENCIES
 ): Intent<TOptions> {
+  if (input.ts !== undefined && (typeof input.ts !== 'number' || Number.isNaN(input.ts) || !Number.isFinite(input.ts))) {
+    throw new Error('Invalid timestamp');
+  }
+  if (input.id !== undefined && !BASE62_REGEXP.test(input.id)) {
+    throw new Error('Invalid intent ID');
+  }
+  if (!ACTOR_URN_REGEXP.test(input.actor)) {
+    throw new Error('Invalid actor URN');
+  }
+  if (input.location && !LOCATION_URN_REGEXP.test(input.location)) {
+    throw new Error('Invalid location URN');
+  }
+  if (input.session && !SESSION_URN_REGEXP.test(input.session)) {
+    throw new Error('Invalid session URN');
+  }
+
   const trimmed = input.text.trim();
   const normalized = trimmed.toLowerCase();
   const allTokens = tokenize(trimmed, normalized);

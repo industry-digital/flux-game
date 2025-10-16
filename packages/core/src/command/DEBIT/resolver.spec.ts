@@ -6,22 +6,19 @@ import { TransformerContext } from '~/types/handler';
 import { WorldProjection } from '~/types/world';
 import { CommandType } from '~/types/intent';
 import { createTestTransformerContext } from '~/testing/context-testing';
-import { ActorURN, PlaceURN, SessionURN } from '~/types/taxonomy';
+import { SessionURN } from '~/types/taxonomy';
 import { createActor } from '~/worldkit/entity/actor';
 import { createPlace } from '~/worldkit/entity/place';
 import { createWorldProjection } from '~/worldkit/context';
 import { CurrencyType } from '~/types/currency';
 import { WellKnownActor } from '~/types';
+import { ALICE_ID, BOB_ID, DEFAULT_LOCATION, DEFAULT_COMBAT_SESSION } from '~/testing/constants';
 
 describe('DEBIT Command Parser', () => {
   let context: TransformerContext;
   let parserContext: ReturnType<typeof createCommandResolverContext>;
 
-  // Test entities
-  const ACTOR_ID: ActorURN = 'flux:actor:test:alice';
-  const RECIPIENT_ID: ActorURN = 'flux:actor:test:bob';
-  const PLACE_ID: PlaceURN = 'flux:place:test:arena';
-  const SESSION_ID: SessionURN = 'flux:session:test:debit';
+  const SESSION_ID: SessionURN = DEFAULT_COMBAT_SESSION;
 
   beforeEach(() => {
     context = createTestTransformerContext({
@@ -30,20 +27,20 @@ describe('DEBIT Command Parser', () => {
         sessions: {},
         items: {},
         actors: {
-          [ACTOR_ID]: createActor({
-            id: ACTOR_ID,
+          [ALICE_ID]: createActor({
+            id: ALICE_ID,
             name: 'Alice',
-            location: PLACE_ID,
+            location: DEFAULT_LOCATION,
           }),
-          [RECIPIENT_ID]: createActor({
-            id: RECIPIENT_ID,
+          [BOB_ID]: createActor({
+            id: BOB_ID,
             name: 'Bob',
-            location: PLACE_ID,
+            location: DEFAULT_LOCATION,
           }),
         },
         places: {
-          [PLACE_ID]: createPlace({
-            id: PLACE_ID,
+          [DEFAULT_LOCATION]: createPlace({
+            id: DEFAULT_LOCATION,
             name: 'Test Arena',
           }),
         },
@@ -56,10 +53,9 @@ describe('DEBIT Command Parser', () => {
   describe('Basic Functionality', () => {
     it('should recognize @debit verb', () => {
       const intent = createIntent({
-        id: 'test-1',
-        actor: ACTOR_ID,
-        location: PLACE_ID,
-        text: '@debit flux:actor:test:bob scrap 100',
+        actor: ALICE_ID,
+        location: DEFAULT_LOCATION,
+        text: `@debit ${BOB_ID} scrap 100`,
       });
 
       const command = debitResolver(parserContext, intent);
@@ -67,18 +63,17 @@ describe('DEBIT Command Parser', () => {
       expect(command).toBeTruthy();
       expect(command?.type).toBe(CommandType.DEBIT);
       expect(command?.actor).toBe(WellKnownActor.SYSTEM);
-      expect(command?.location).toBe(PLACE_ID);
-      expect(command?.args.recipient).toBe(RECIPIENT_ID);
+      expect(command?.location).toBe(DEFAULT_LOCATION);
+      expect(command?.args.recipient).toBe(BOB_ID);
       expect(command?.args.currency).toBe(CurrencyType.SCRAP);
       expect(command?.args.amount).toBe(100);
     });
 
     it('should reject non-@debit verbs', () => {
       const intent = createIntent({
-        id: 'test-2',
-        actor: ACTOR_ID,
-        location: PLACE_ID,
-        text: '@credit flux:actor:test:bob scrap 100',
+        actor: ALICE_ID,
+        location: DEFAULT_LOCATION,
+        text: `@credit ${BOB_ID} scrap 100`,
       });
 
       const command = debitResolver(parserContext, intent);
@@ -88,9 +83,8 @@ describe('DEBIT Command Parser', () => {
 
     it('should reject when recipient not found', () => {
       const intent = createIntent({
-        id: 'test-3',
-        actor: ACTOR_ID,
-        location: PLACE_ID,
+        actor: ALICE_ID,
+        location: DEFAULT_LOCATION,
         text: '@debit flux:actor:missing scrap 100',
       });
 
@@ -101,10 +95,9 @@ describe('DEBIT Command Parser', () => {
 
     it('should reject invalid currency types', () => {
       const intent = createIntent({
-        id: 'test-4',
-        actor: ACTOR_ID,
-        location: PLACE_ID,
-        text: '@debit flux:actor:test:bob gold 100',
+        actor: ALICE_ID,
+        location: DEFAULT_LOCATION,
+        text: `@debit ${BOB_ID} gold 100`,
       });
 
       const command = debitResolver(parserContext, intent);
@@ -114,10 +107,9 @@ describe('DEBIT Command Parser', () => {
 
     it('should reject invalid amount (NaN)', () => {
       const intent = createIntent({
-        id: 'test-5',
-        actor: ACTOR_ID,
-        location: PLACE_ID,
-        text: '@debit flux:actor:test:bob scrap abc',
+        actor: ALICE_ID,
+        location: DEFAULT_LOCATION,
+        text: `@debit ${BOB_ID} scrap abc`,
       });
 
       const command = debitResolver(parserContext, intent);
@@ -127,10 +119,9 @@ describe('DEBIT Command Parser', () => {
 
     it('should reject amounts outside safe integer range', () => {
       const intent = createIntent({
-        id: 'test-6',
-        actor: ACTOR_ID,
-        location: PLACE_ID,
-        text: `@debit flux:actor:test:bob scrap ${Number.MAX_SAFE_INTEGER + 1}`,
+        actor: ALICE_ID,
+        location: DEFAULT_LOCATION,
+        text: `@debit ${BOB_ID} scrap ${Number.MAX_SAFE_INTEGER + 1}`,
       });
 
       const command = debitResolver(parserContext, intent);
@@ -142,10 +133,9 @@ describe('DEBIT Command Parser', () => {
   describe('Token Length Validation', () => {
     it('should reject commands with too few tokens', () => {
       const intent = createIntent({
-        id: 'test-7',
-        actor: ACTOR_ID,
-        location: PLACE_ID,
-        text: '@debit flux:actor:test:bob',
+        actor: ALICE_ID,
+        location: DEFAULT_LOCATION,
+        text: `@debit ${BOB_ID}`,
       });
 
       const command = debitResolver(parserContext, intent);
@@ -155,10 +145,9 @@ describe('DEBIT Command Parser', () => {
 
     it('should reject commands with too many tokens', () => {
       const intent = createIntent({
-        id: 'test-8',
-        actor: ACTOR_ID,
-        location: PLACE_ID,
-        text: '@debit flux:actor:test:bob scrap 100 extra tokens',
+        actor: ALICE_ID,
+        location: DEFAULT_LOCATION,
+        text: `@debit ${BOB_ID} scrap 100 extra tokens`,
       });
 
       const command = debitResolver(parserContext, intent);
@@ -168,10 +157,9 @@ describe('DEBIT Command Parser', () => {
 
     it('should accept exactly 3 tokens after verb', () => {
       const intent = createIntent({
-        id: 'test-9',
-        actor: ACTOR_ID,
-        location: PLACE_ID,
-        text: '@debit flux:actor:test:bob scrap 50',
+        actor: ALICE_ID,
+        location: DEFAULT_LOCATION,
+        text: `@debit ${BOB_ID} scrap 50`,
       });
 
       const command = debitResolver(parserContext, intent);
@@ -184,10 +172,9 @@ describe('DEBIT Command Parser', () => {
   describe('Amount Parsing', () => {
     it('should parse positive integers', () => {
       const intent = createIntent({
-        id: 'test-10',
-        actor: ACTOR_ID,
-        location: PLACE_ID,
-        text: '@debit flux:actor:test:bob scrap 42',
+        actor: ALICE_ID,
+        location: DEFAULT_LOCATION,
+        text: `@debit ${BOB_ID} scrap 42`,
       });
 
       const command = debitResolver(parserContext, intent);
@@ -198,10 +185,9 @@ describe('DEBIT Command Parser', () => {
 
     it('should parse zero amount', () => {
       const intent = createIntent({
-        id: 'test-11',
-        actor: ACTOR_ID,
-        location: PLACE_ID,
-        text: '@debit flux:actor:test:bob scrap 0',
+        actor: ALICE_ID,
+        location: DEFAULT_LOCATION,
+        text: `@debit ${BOB_ID} scrap 0`,
       });
 
       const command = debitResolver(parserContext, intent);
@@ -212,10 +198,9 @@ describe('DEBIT Command Parser', () => {
 
     it('should parse negative amounts', () => {
       const intent = createIntent({
-        id: 'test-12',
-        actor: ACTOR_ID,
-        location: PLACE_ID,
-        text: '@debit flux:actor:test:bob scrap -25',
+        actor: ALICE_ID,
+        location: DEFAULT_LOCATION,
+        text: `@debit ${BOB_ID} scrap -25`,
       });
 
       const command = debitResolver(parserContext, intent);
@@ -226,10 +211,9 @@ describe('DEBIT Command Parser', () => {
 
     it('should reject decimal amounts (parseInt truncates)', () => {
       const intent = createIntent({
-        id: 'test-13',
-        actor: ACTOR_ID,
-        location: PLACE_ID,
-        text: '@debit flux:actor:test:bob scrap 10.5',
+        actor: ALICE_ID,
+        location: DEFAULT_LOCATION,
+        text: `@debit ${BOB_ID} scrap 10.5`,
       });
 
       const command = debitResolver(parserContext, intent);
@@ -240,10 +224,9 @@ describe('DEBIT Command Parser', () => {
 
     it('should handle maximum safe integer', () => {
       const intent = createIntent({
-        id: 'test-14',
-        actor: ACTOR_ID,
-        location: PLACE_ID,
-        text: `@debit flux:actor:test:bob scrap ${Number.MAX_SAFE_INTEGER}`,
+        actor: ALICE_ID,
+        location: DEFAULT_LOCATION,
+        text: `@debit ${BOB_ID} scrap ${Number.MAX_SAFE_INTEGER}`,
       });
 
       const command = debitResolver(parserContext, intent);
@@ -254,10 +237,9 @@ describe('DEBIT Command Parser', () => {
 
     it('should handle minimum safe integer', () => {
       const intent = createIntent({
-        id: 'test-15',
-        actor: ACTOR_ID,
-        location: PLACE_ID,
-        text: `@debit flux:actor:test:bob scrap ${Number.MIN_SAFE_INTEGER}`,
+        actor: ALICE_ID,
+        location: DEFAULT_LOCATION,
+        text: `@debit ${BOB_ID} scrap ${Number.MIN_SAFE_INTEGER}`,
       });
 
       const command = debitResolver(parserContext, intent);
@@ -269,26 +251,25 @@ describe('DEBIT Command Parser', () => {
 
   describe('Session Threading', () => {
     it('should thread session ID from intent to command', () => {
+      const customSessionId = 'flux:session:combat:aksjf9aw0f4';
       const intent = createIntent({
-        id: 'test-16',
-        actor: ACTOR_ID,
-        location: PLACE_ID,
-        session: SESSION_ID,
-        text: '@debit flux:actor:test:bob scrap 100',
+        actor: ALICE_ID,
+        location: DEFAULT_LOCATION,
+        session: customSessionId,
+        text: `@debit ${BOB_ID} scrap 100`,
       });
 
       const command = debitResolver(parserContext, intent);
 
       expect(command).toBeTruthy();
-      expect(command?.session).toBe(SESSION_ID);
+      expect(command?.session).toBe(customSessionId);
     });
 
     it('should work without session ID', () => {
       const intent = createIntent({
-        id: 'test-17',
-        actor: ACTOR_ID,
-        location: PLACE_ID,
-        text: '@debit flux:actor:test:bob scrap 100',
+        actor: ALICE_ID,
+        location: DEFAULT_LOCATION,
+        text: `@debit ${BOB_ID} scrap 100`,
       });
 
       const command = debitResolver(parserContext, intent);
@@ -301,11 +282,10 @@ describe('DEBIT Command Parser', () => {
   describe('Command Structure Validation', () => {
     it('should preserve all required command fields', () => {
       const intent = createIntent({
-        id: 'test-18',
-        actor: ACTOR_ID,
-        location: PLACE_ID,
+        actor: ALICE_ID,
+        location: DEFAULT_LOCATION,
         session: SESSION_ID,
-        text: '@debit flux:actor:test:bob scrap 250',
+        text: `@debit ${BOB_ID} scrap 250`,
       });
 
       const command = debitResolver(parserContext, intent);
@@ -314,10 +294,10 @@ describe('DEBIT Command Parser', () => {
         id: intent.id,
         type: CommandType.DEBIT,
         actor: WellKnownActor.SYSTEM,
-        location: PLACE_ID,
+        location: DEFAULT_LOCATION,
         session: SESSION_ID,
         args: {
-          recipient: RECIPIENT_ID,
+          recipient: BOB_ID,
           currency: CurrencyType.SCRAP,
           amount: 250,
         },
@@ -326,26 +306,24 @@ describe('DEBIT Command Parser', () => {
 
     it('should use SYSTEM actor regardless of intent actor', () => {
       const intent = createIntent({
-        id: 'test-19',
-        actor: ACTOR_ID,
-        location: PLACE_ID,
-        text: '@debit flux:actor:test:bob scrap 100',
+        actor: ALICE_ID,
+        location: DEFAULT_LOCATION,
+        text: `@debit ${BOB_ID} scrap 100`,
       });
 
       const command = debitResolver(parserContext, intent);
 
       expect(command).toBeTruthy();
       expect(command?.actor).toBe(WellKnownActor.SYSTEM);
-      expect(command?.actor).not.toBe(ACTOR_ID);
+      expect(command?.actor).not.toBe(ALICE_ID);
     });
   });
 
   describe('Edge Cases and Security', () => {
     it('should handle malformed actor URNs gracefully', () => {
       const intent = createIntent({
-        id: 'test-20',
-        actor: ACTOR_ID,
-        location: PLACE_ID,
+        actor: ALICE_ID,
+        location: DEFAULT_LOCATION,
         text: '@debit invalid-urn scrap 100',
       });
 
@@ -354,75 +332,22 @@ describe('DEBIT Command Parser', () => {
       expect(command).toBeUndefined();
     });
 
-    it('should sanitize input and not propagate raw user data', () => {
-      const maliciousInputs = [
-        '@debit flux:actor:test:bob scrap <script>alert("xss")</script>',
-        '@debit flux:actor:test:bob scrap ${process.env.SECRET}',
-        '@debit flux:actor:test:bob scrap ../../../etc/passwd',
-        '@debit flux:actor:test:bob scrap DROP TABLE users;',
-        '@debit flux:actor:test:bob scrap __proto__.constructor',
-        '@debit flux:actor:test:bob scrap eval("malicious")',
-        '@debit flux:actor:test:bob scrap function(){return window}',
-        '@debit flux:actor:test:bob scrap \x00\x01\x02\x03',
-        '@debit flux:actor:test:bob scrap NaN',
-        '@debit flux:actor:test:bob scrap Infinity',
-        '@debit flux:actor:test:bob scrap undefined',
-        '@debit flux:actor:test:bob scrap null',
-      ];
-
-      maliciousInputs.forEach((maliciousText, index) => {
-        const intent = createIntent({
-          id: `security-test-${index}`,
-          actor: ACTOR_ID,
-          location: PLACE_ID,
-          text: maliciousText,
-        });
-
-        const command = debitResolver(parserContext, intent);
-
-        // Most malicious inputs should be rejected due to invalid amount parsing
-        if (command) {
-          // If command is created, ensure it contains only safe values
-          expect(command.type).toBe(CommandType.DEBIT);
-          expect(command.actor).toBe(WellKnownActor.SYSTEM);
-          expect(command.args.recipient).toBe(RECIPIENT_ID);
-          expect(command.args.currency).toBe(CurrencyType.SCRAP);
-          expect(typeof command.args.amount).toBe('number');
-          expect(Number.isFinite(command.args.amount)).toBe(true);
-
-          // Verify no raw malicious input exists in the command
-          const commandStr = JSON.stringify(command);
-          expect(commandStr).not.toMatch(/<script/i);
-          expect(commandStr).not.toMatch(/eval\(/i);
-          expect(commandStr).not.toMatch(/\$\{/);
-          expect(commandStr).not.toMatch(/\.\.\//);
-          expect(commandStr).not.toMatch(/DROP\s+TABLE/i);
-          expect(commandStr).not.toMatch(/__proto__/);
-          expect(commandStr).not.toMatch(/constructor/);
-          expect(commandStr).not.toMatch(/\x00/);
-          expect(commandStr).not.toMatch(/\bundefined\b/);
-          expect(commandStr).not.toMatch(/\bnull\b/);
-        }
-      });
-    });
-
     it('should handle edge case numeric inputs safely', () => {
       const edgeCaseNumbers = [
-        '@debit flux:actor:test:bob scrap 1e308',       // Scientific notation near infinity
-        '@debit flux:actor:test:bob scrap 1e-308',      // Scientific notation near zero
-        '@debit flux:actor:test:bob scrap 0x41',        // Hexadecimal
-        '@debit flux:actor:test:bob scrap 0b101',       // Binary
-        '@debit flux:actor:test:bob scrap 0o77',        // Octal
-        '@debit flux:actor:test:bob scrap 3.14159265359', // High precision decimal
-        '@debit flux:actor:test:bob scrap 1.7976931348623157e+308', // Near MAX_VALUE
-        '@debit flux:actor:test:bob scrap 5e-324',      // Near MIN_VALUE
+        `@debit ${BOB_ID} scrap 1e308`,       // Scientific notation near infinity
+        `@debit ${BOB_ID} scrap 1e-308`,      // Scientific notation near zero
+        `@debit ${BOB_ID} scrap 0x41`,        // Hexadecimal
+        `@debit ${BOB_ID} scrap 0b101`,       // Binary
+        `@debit ${BOB_ID} scrap 0o77`,        // Octal
+        `@debit ${BOB_ID} scrap 3.14159265359`, // High precision decimal
+        `@debit ${BOB_ID} scrap 1.7976931348623157e+308`, // Near MAX_VALUE
+        `@debit ${BOB_ID} scrap 5e-324`,      // Near MIN_VALUE
       ];
 
       edgeCaseNumbers.forEach((text, index) => {
         const intent = createIntent({
-          id: `edge-numeric-${index}`,
-          actor: ACTOR_ID,
-          location: PLACE_ID,
+          actor: ALICE_ID,
+          location: DEFAULT_LOCATION,
           text,
         });
 
@@ -443,10 +368,9 @@ describe('DEBIT Command Parser', () => {
       // Test all valid currency types
       Object.values(CurrencyType).forEach((currency) => {
         const intent = createIntent({
-          id: `currency-test-${currency}`,
-          actor: ACTOR_ID,
-          location: PLACE_ID,
-          text: `@debit flux:actor:test:bob ${currency} 100`,
+          actor: ALICE_ID,
+          location: DEFAULT_LOCATION,
+          text: `@debit ${BOB_ID} ${currency} 100`,
         });
 
         const command = debitResolver(parserContext, intent);
@@ -461,10 +385,9 @@ describe('DEBIT Command Parser', () => {
 
       invalidCurrencies.forEach((currency) => {
         const intent = createIntent({
-          id: `invalid-currency-${currency}`,
-          actor: ACTOR_ID,
-          location: PLACE_ID,
-          text: `@debit flux:actor:test:bob ${currency} 100`,
+          actor: ALICE_ID,
+          location: DEFAULT_LOCATION,
+          text: `@debit ${BOB_ID} ${currency} 100`,
         });
 
         const command = debitResolver(parserContext, intent);

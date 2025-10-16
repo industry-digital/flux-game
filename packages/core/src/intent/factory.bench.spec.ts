@@ -1,11 +1,8 @@
 import { describe, it, expect } from 'vitest';
 import { createIntent } from './factory';
-import { ActorURN, PlaceURN, SessionURN } from '~/types/taxonomy';
+import { ALICE_ID, DEFAULT_LOCATION, DEFAULT_COMBAT_SESSION } from '~/testing/constants';
 
 describe('Intent Factory Benchmarks', () => {
-  const ACTOR_ID: ActorURN = 'flux:actor:test:alice';
-  const PLACE_ID: PlaceURN = 'flux:place:test:arena';
-  const SESSION_ID: SessionURN = 'flux:session:combat:test';
 
   // Test cases representing different complexity levels
   const testCases = [
@@ -44,10 +41,10 @@ describe('Intent Factory Benchmarks', () => {
 
         for (let i = 0; i < iterations; i++) {
           createIntent({
-            id: `bench-${i}`,
-            actor: ACTOR_ID,
-            location: PLACE_ID,
-            session: SESSION_ID,
+            id: `bench${i}`,
+            actor: ALICE_ID,
+            location: DEFAULT_LOCATION,
+            session: DEFAULT_COMBAT_SESSION,
             text,
           });
         }
@@ -68,8 +65,8 @@ describe('Intent Factory Benchmarks', () => {
         // Verify the parsing still works correctly
         const testIntent = createIntent({
           id: 'verification',
-          actor: ACTOR_ID,
-          location: PLACE_ID,
+          actor: ALICE_ID,
+          location: DEFAULT_LOCATION,
           text,
         });
 
@@ -98,9 +95,9 @@ describe('Intent Factory Benchmarks', () => {
 
       for (let i = 0; i < iterations; i++) {
         const intent = createIntent({
-          id: `mem-test-${i}`,
-          actor: ACTOR_ID,
-          location: PLACE_ID,
+          id: `memtest${i}`,
+          actor: ALICE_ID,
+          location: DEFAULT_LOCATION,
           text,
         });
         intents.push(intent);
@@ -127,7 +124,8 @@ describe('Intent Factory Benchmarks', () => {
       expect(intents).toHaveLength(iterations);
       expect(intents[0].verb).toBe('@credit');
       expect(intents[0].tokens).toEqual(['flux:actor:alice', 'gold', '100']);
-      expect(intents[0].options.memo).toBe('Gift from the queen');
+      // @ts-expect-error - we are testing the options type
+      expect(intents[0].options?.memo).toBe('Gift from the queen');
 
       // Memory usage should be reasonable (adjust based on expectations)
       expect(bytesPerIntent).toBeLessThan(1500); // Less than 1.5KB per intent (includes memoization overhead)
@@ -169,9 +167,9 @@ describe('Intent Factory Benchmarks', () => {
 
         for (let i = 0; i < iterations; i++) {
           createIntent({
-            id: `tok-${i}`,
-            actor: ACTOR_ID,
-            location: PLACE_ID,
+            id: `tok${i}`,
+            actor: ALICE_ID,
+            location: DEFAULT_LOCATION,
             text,
           });
         }
@@ -184,8 +182,8 @@ describe('Intent Factory Benchmarks', () => {
         // Get token count for reference
         const testIntent = createIntent({
           id: 'test',
-          actor: ACTOR_ID,
-          location: PLACE_ID,
+          actor: ALICE_ID,
+          location: DEFAULT_LOCATION,
           text,
         });
 
@@ -228,9 +226,9 @@ describe('Intent Factory Benchmarks', () => {
       for (let i = 0; i < iterations; i++) {
         for (const text of commandVariations) {
           createIntent({
-            id: `variation-test-${i}`,
-            actor: ACTOR_ID,
-            location: PLACE_ID,
+            id: `variationtest${i}`,
+            actor: ALICE_ID,
+            location: DEFAULT_LOCATION,
             text,
           });
         }
@@ -251,8 +249,8 @@ describe('Intent Factory Benchmarks', () => {
       const testResults = commandVariations.map(text => {
         const intent = createIntent({
           id: 'verification',
-          actor: ACTOR_ID,
-          location: PLACE_ID,
+          actor: ALICE_ID,
+          location: DEFAULT_LOCATION,
           text,
         });
         return { text, verb: intent.verb, tokens: intent.tokens.length };
@@ -282,9 +280,9 @@ describe('Intent Factory Benchmarks', () => {
       for (let i = 0; i < iterations; i++) {
         try {
           const intent = createIntent({
-            id: `stress-${i}`,
-            actor: ACTOR_ID,
-            location: PLACE_ID,
+            id: `stress${i}`,
+            actor: ALICE_ID,
+            location: DEFAULT_LOCATION,
             text,
           });
 

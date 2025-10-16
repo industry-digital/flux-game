@@ -50,7 +50,6 @@ describe('Intent Resolution', () => {
   describe('resolveCommandFromIntent', () => {
     it('should resolve attack intent to ATTACK command', () => {
       const intent = createIntent({
-        id: 'test-intent-1',
         actor: ACTOR_ID,
         location: PLACE_ID,
         text: 'attack bob',
@@ -66,7 +65,6 @@ describe('Intent Resolution', () => {
 
     it('should resolve advance intent to ADVANCE command', () => {
       const intent = createIntent({
-        id: 'test-intent-2',
         actor: ACTOR_ID,
         location: PLACE_ID,
         text: 'advance 10',
@@ -81,7 +79,6 @@ describe('Intent Resolution', () => {
 
     it('should thread session ID from intent to command', () => {
       const intent = createIntent({
-        id: 'test-intent-3',
         actor: ACTOR_ID,
         location: PLACE_ID,
         session: SESSION_ID,
@@ -97,7 +94,6 @@ describe('Intent Resolution', () => {
 
     it('should handle unrecognized intents gracefully', () => {
       const intent = createIntent({
-        id: 'test-intent-4',
         actor: ACTOR_ID,
         location: PLACE_ID,
         text: 'do something impossible',
@@ -110,7 +106,6 @@ describe('Intent Resolution', () => {
 
     it('should preserve all intent metadata in command', () => {
       const intent = createIntent({
-        id: 'test-intent-5',
         actor: ACTOR_ID,
         location: PLACE_ID,
         session: SESSION_ID,
@@ -130,7 +125,6 @@ describe('Intent Resolution', () => {
       const combatSessionId: SessionURN = 'flux:session:combat:simulator';
 
       const intent = createIntent({
-        id: 'combat-intent',
         actor: ACTOR_ID,
         location: PLACE_ID,
         session: combatSessionId,
@@ -160,7 +154,6 @@ describe('Intent Resolution', () => {
     it('should resolve actors by name', () => {
       const parserContext = createCommandResolverContext(context);
       const intent = createIntent({
-        id: 'resolve-test-1',
         actor: ACTOR_ID,
         location: PLACE_ID,
         text: 'attack bob',
@@ -173,7 +166,6 @@ describe('Intent Resolution', () => {
     it('should resolve actors by exact name match', () => {
       const parserContext = createCommandResolverContext(context);
       const intent = createIntent({
-        id: 'resolve-test-2',
         actor: ACTOR_ID,
         location: PLACE_ID,
         text: 'attack Bob', // Using exact name match
@@ -190,7 +182,6 @@ describe('Intent Resolution', () => {
 
       // Step 1: Create intent with session
       const intent = createIntent({
-        id: 'integration-test',
         actor: ACTOR_ID,
         location: PLACE_ID,
         session: combatSessionId,
@@ -211,7 +202,6 @@ describe('Intent Resolution', () => {
     it('should handle commands without session context', () => {
       // Step 1: Create intent without session
       const intent = createIntent({
-        id: 'no-session-test',
         actor: ACTOR_ID,
         location: PLACE_ID,
         text: 'look bob',

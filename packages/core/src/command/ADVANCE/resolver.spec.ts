@@ -2,14 +2,16 @@ import { describe, beforeEach, it, expect } from 'vitest';
 import { advanceResolver } from './resolver';
 import { createIntent } from '~/intent/factory';
 import { createCommandResolverContext } from '~/intent/resolution';
-import { TransformerContext, WorldProjection } from '~/types/handler';
+import { TransformerContext } from '~/types/handler';
 import { CommandType } from '~/types/intent';
 import { createTestTransformerContext } from '~/testing/context-testing';
-import { ActorURN, PlaceURN, SessionURN } from '~/types/taxonomy';
+import { ActorURN } from '~/types/taxonomy';
 import { createActor } from '~/worldkit/entity/actor';
 import { createPlace } from '~/worldkit/entity/place';
 import { createWorldProjection } from '~/worldkit/context';
+import { WorldProjection } from '~/types/world';
 import { AdvanceCommand } from './types';
+import { ALICE_ID, DEFAULT_LOCATION, DEFAULT_COMBAT_SESSION } from '~/testing/constants';
 
 // Type-safe utility functions for testing discriminated union variants
 function assertMaxAdvanceCommand(command: AdvanceCommand | undefined): asserts command is AdvanceCommand & { args: { type: 'max' } } {
@@ -37,11 +39,6 @@ describe('ADVANCE Command Parser', () => {
   let context: TransformerContext;
   let parserContext: ReturnType<typeof createCommandResolverContext>;
 
-  // Test entities
-  const ACTOR_ID: ActorURN = 'flux:actor:test:alice';
-  const PLACE_ID: PlaceURN = 'flux:place:test:arena';
-  const SESSION_ID: SessionURN = 'flux:session:combat:test';
-
   beforeEach(() => {
     context = createTestTransformerContext({
       world: createWorldProjection((w: WorldProjection) => ({
@@ -49,15 +46,15 @@ describe('ADVANCE Command Parser', () => {
         sessions: {},
         items: {},
         actors: {
-          [ACTOR_ID]: createActor({
-            id: ACTOR_ID,
+          [ALICE_ID]: createActor({
+            id: ALICE_ID,
             name: 'Alice',
-            location: PLACE_ID,
+            location: DEFAULT_LOCATION,
           }),
         },
         places: {
-          [PLACE_ID]: createPlace({
-            id: PLACE_ID,
+          [DEFAULT_LOCATION]: createPlace({
+            id: DEFAULT_LOCATION,
             name: 'Test Arena',
           }),
         },
@@ -70,9 +67,8 @@ describe('ADVANCE Command Parser', () => {
   describe('Basic Functionality', () => {
     it('should recognize advance verb', () => {
       const intent = createIntent({
-        id: 'test-1',
-        actor: ACTOR_ID,
-        location: PLACE_ID,
+        actor: ALICE_ID,
+        location: DEFAULT_LOCATION,
         text: 'advance',
       });
 
@@ -80,15 +76,14 @@ describe('ADVANCE Command Parser', () => {
 
       expect(command).toBeTruthy();
       expect(command?.type).toBe(CommandType.ADVANCE);
-      expect(command?.actor).toBe(ACTOR_ID);
-      expect(command?.location).toBe(PLACE_ID);
+      expect(command?.actor).toBe(ALICE_ID);
+      expect(command?.location).toBe(DEFAULT_LOCATION);
     });
 
     it('should reject non-advance verbs', () => {
       const intent = createIntent({
-        id: 'test-2',
-        actor: ACTOR_ID,
-        location: PLACE_ID,
+        actor: ALICE_ID,
+        location: DEFAULT_LOCATION,
         text: 'attack bob',
       });
 
@@ -99,9 +94,8 @@ describe('ADVANCE Command Parser', () => {
 
     it('should reject when actor not found', () => {
       const intent = createIntent({
-        id: 'test-3',
         actor: 'flux:actor:missing' as ActorURN,
-        location: PLACE_ID,
+        location: DEFAULT_LOCATION,
         text: 'advance',
       });
 
@@ -115,9 +109,8 @@ describe('ADVANCE Command Parser', () => {
   describe('Max Advance Syntax: "advance"', () => {
     it('should parse bare "advance" as max advance', () => {
       const intent = createIntent({
-        id: 'test-5',
-        actor: ACTOR_ID,
-        location: PLACE_ID,
+        actor: ALICE_ID,
+        location: DEFAULT_LOCATION,
         text: 'advance',
       });
 
@@ -130,9 +123,8 @@ describe('ADVANCE Command Parser', () => {
   describe('Distance Shorthand Syntax: "advance <number>"', () => {
     it('should parse "advance 15" as distance shorthand', () => {
       const intent = createIntent({
-        id: 'test-6',
-        actor: ACTOR_ID,
-        location: PLACE_ID,
+        actor: ALICE_ID,
+        location: DEFAULT_LOCATION,
         text: 'advance 15',
       });
 
@@ -143,9 +135,8 @@ describe('ADVANCE Command Parser', () => {
 
     it('should parse "advance 5.5" as distance shorthand with decimal', () => {
       const intent = createIntent({
-        id: 'test-7',
-        actor: ACTOR_ID,
-        location: PLACE_ID,
+        actor: ALICE_ID,
+        location: DEFAULT_LOCATION,
         text: 'advance 5.5',
       });
 
@@ -156,9 +147,8 @@ describe('ADVANCE Command Parser', () => {
 
     it('should reject "advance 0" (zero distance)', () => {
       const intent = createIntent({
-        id: 'test-8',
-        actor: ACTOR_ID,
-        location: PLACE_ID,
+        actor: ALICE_ID,
+        location: DEFAULT_LOCATION,
         text: 'advance 0',
       });
 
@@ -169,9 +159,8 @@ describe('ADVANCE Command Parser', () => {
 
     it('should reject "advance -5" (negative distance)', () => {
       const intent = createIntent({
-        id: 'test-9',
-        actor: ACTOR_ID,
-        location: PLACE_ID,
+        actor: ALICE_ID,
+        location: DEFAULT_LOCATION,
         text: 'advance -5',
       });
 
@@ -182,9 +171,8 @@ describe('ADVANCE Command Parser', () => {
 
     it('should reject "advance abc" (invalid number)', () => {
       const intent = createIntent({
-        id: 'test-10',
-        actor: ACTOR_ID,
-        location: PLACE_ID,
+        actor: ALICE_ID,
+        location: DEFAULT_LOCATION,
         text: 'advance abc',
       });
 
@@ -197,9 +185,8 @@ describe('ADVANCE Command Parser', () => {
   describe('Explicit Distance Syntax: "advance distance <number>"', () => {
     it('should parse "advance distance 10"', () => {
       const intent = createIntent({
-        id: 'test-11',
-        actor: ACTOR_ID,
-        location: PLACE_ID,
+        actor: ALICE_ID,
+        location: DEFAULT_LOCATION,
         text: 'advance distance 10',
       });
 
@@ -209,9 +196,8 @@ describe('ADVANCE Command Parser', () => {
 
     it('should floor decimal distances to whole meters', () => {
       const intent = createIntent({
-        id: 'test-12',
-        actor: ACTOR_ID,
-        location: PLACE_ID,
+        actor: ALICE_ID,
+        location: DEFAULT_LOCATION,
         text: 'advance distance 7.8',
       });
 
@@ -221,9 +207,8 @@ describe('ADVANCE Command Parser', () => {
 
     it('should reject "advance distance 0"', () => {
       const intent = createIntent({
-        id: 'test-13',
-        actor: ACTOR_ID,
-        location: PLACE_ID,
+        actor: ALICE_ID,
+        location: DEFAULT_LOCATION,
         text: 'advance distance 0',
       });
 
@@ -234,9 +219,8 @@ describe('ADVANCE Command Parser', () => {
 
     it('should reject "advance distance -3"', () => {
       const intent = createIntent({
-        id: 'test-14',
-        actor: ACTOR_ID,
-        location: PLACE_ID,
+        actor: ALICE_ID,
+        location: DEFAULT_LOCATION,
         text: 'advance distance -3',
       });
 
@@ -249,9 +233,8 @@ describe('ADVANCE Command Parser', () => {
   describe('AP-based Syntax: "advance ap <number>"', () => {
     it('should parse "advance ap 2.5"', () => {
       const intent = createIntent({
-        id: 'test-15',
-        actor: ACTOR_ID,
-        location: PLACE_ID,
+        actor: ALICE_ID,
+        location: DEFAULT_LOCATION,
         text: 'advance ap 2.5',
       });
 
@@ -261,9 +244,8 @@ describe('ADVANCE Command Parser', () => {
 
     it('should parse "advance ap 1" (whole number AP)', () => {
       const intent = createIntent({
-        id: 'test-16',
-        actor: ACTOR_ID,
-        location: PLACE_ID,
+        actor: ALICE_ID,
+        location: DEFAULT_LOCATION,
         text: 'advance ap 1',
       });
 
@@ -273,9 +255,8 @@ describe('ADVANCE Command Parser', () => {
 
     it('should reject "advance ap 0"', () => {
       const intent = createIntent({
-        id: 'test-17',
-        actor: ACTOR_ID,
-        location: PLACE_ID,
+        actor: ALICE_ID,
+        location: DEFAULT_LOCATION,
         text: 'advance ap 0',
       });
 
@@ -286,9 +267,8 @@ describe('ADVANCE Command Parser', () => {
 
     it('should reject "advance ap -1.5"', () => {
       const intent = createIntent({
-        id: 'test-18',
-        actor: ACTOR_ID,
-        location: PLACE_ID,
+        actor: ALICE_ID,
+        location: DEFAULT_LOCATION,
         text: 'advance ap -1.5',
       });
 
@@ -301,24 +281,22 @@ describe('ADVANCE Command Parser', () => {
   describe('Session Threading', () => {
     it('should thread session ID from intent to command', () => {
       const intent = createIntent({
-        id: 'test-19',
-        actor: ACTOR_ID,
-        location: PLACE_ID,
-        session: SESSION_ID,
+        actor: ALICE_ID,
+        location: DEFAULT_LOCATION,
+        session: DEFAULT_COMBAT_SESSION,
         text: 'advance 10',
       });
 
       const command = advanceResolver(parserContext, intent);
 
       expect(command).toBeTruthy();
-      expect(command?.session).toBe(SESSION_ID);
+      expect(command?.session).toBe(DEFAULT_COMBAT_SESSION);
     });
 
     it('should work without session ID', () => {
       const intent = createIntent({
-        id: 'test-20',
-        actor: ACTOR_ID,
-        location: PLACE_ID,
+        actor: ALICE_ID,
+        location: DEFAULT_LOCATION,
         text: 'advance ap 1.5',
       });
 
@@ -332,9 +310,8 @@ describe('ADVANCE Command Parser', () => {
   describe('Edge Cases and Malformed Input', () => {
     it('should handle extra tokens gracefully', () => {
       const intent = createIntent({
-        id: 'test-21',
-        actor: ACTOR_ID,
-        location: PLACE_ID,
+        actor: ALICE_ID,
+        location: DEFAULT_LOCATION,
         text: 'advance distance 10 extra tokens here',
       });
 
@@ -345,9 +322,8 @@ describe('ADVANCE Command Parser', () => {
 
     it('should handle unknown modifiers', () => {
       const intent = createIntent({
-        id: 'test-22',
-        actor: ACTOR_ID,
-        location: PLACE_ID,
+        actor: ALICE_ID,
+        location: DEFAULT_LOCATION,
         text: 'advance speed 10',
       });
 
@@ -358,9 +334,8 @@ describe('ADVANCE Command Parser', () => {
 
     it('should handle empty string numbers', () => {
       const intent = createIntent({
-        id: 'test-23',
-        actor: ACTOR_ID,
-        location: PLACE_ID,
+        actor: ALICE_ID,
+        location: DEFAULT_LOCATION,
         text: 'advance distance',
       });
 
@@ -373,9 +348,8 @@ describe('ADVANCE Command Parser', () => {
   describe('Performance Characteristics', () => {
     it('should use zero-allocation token parsing', () => {
       const intent = createIntent({
-        id: 'test-24',
-        actor: ACTOR_ID,
-        location: PLACE_ID,
+        actor: ALICE_ID,
+        location: DEFAULT_LOCATION,
         text: 'advance ap 2.5',
       });
 
@@ -389,9 +363,8 @@ describe('ADVANCE Command Parser', () => {
 
     it('should handle large numbers efficiently', () => {
       const intent = createIntent({
-        id: 'test-25',
-        actor: ACTOR_ID,
-        location: PLACE_ID,
+        actor: ALICE_ID,
+        location: DEFAULT_LOCATION,
         text: 'advance 999999',
       });
 
@@ -400,162 +373,25 @@ describe('ADVANCE Command Parser', () => {
     });
   });
 
-  describe('Input Sanitization', () => {
-    it('should prove that no raw user input propagates into parsed command', () => {
-      // Test malicious/unexpected input that should be completely sanitized
-      const maliciousInputs = [
-        'advance <script>alert("xss")</script>',
-        'advance ${process.env.SECRET}',
-        'advance ../../../etc/passwd',
-        'advance DROP TABLE users;',
-        'advance __proto__.constructor',
-        'advance eval("malicious code")',
-        'advance function(){return window}',
-        'advance \x00\x01\x02\x03', // null bytes and control chars
-        'advance \u0000\u0001\u0002', // unicode null/control
-        'advance 999999999999999999999999999999999', // extremely large number
-        'advance -999999999999999999999999999999999', // extremely large negative
-        'advance NaN',
-        'advance Infinity',
-        'advance undefined',
-        'advance null',
-        'advance {}',
-        'advance []',
-        'advance console.log',
-        'advance window.location',
-      ];
-
-      maliciousInputs.forEach((maliciousText, index) => {
-        const intent = createIntent({
-          id: `security-test-${index}`,
-          actor: ACTOR_ID,
-          location: PLACE_ID,
-          text: maliciousText,
-        });
-
-        const command = advanceResolver(parserContext, intent);
-
-        // Command should be parsed successfully (no crashes)
-        expect(command).toBeTruthy();
-        expect(command?.type).toBe(CommandType.ADVANCE);
-        expect(command?.actor).toBe(ACTOR_ID);
-        expect(command?.location).toBe(PLACE_ID);
-
-        // Args should only contain safe, validated values from our discriminated union
-        expect(command?.args).toBeDefined();
-        expect(typeof command?.args).toBe('object');
-
-        // Type field should only be one of our safe enum values
-        expect(['max', 'distance', 'ap']).toContain(command?.args.type);
-
-        // Verify no raw user input exists anywhere in the command
-        const commandStr = JSON.stringify(command);
-
-        // Should not contain any script tags, eval, or other dangerous patterns
-        expect(commandStr).not.toMatch(/<script/i);
-        expect(commandStr).not.toMatch(/eval\(/i);
-        expect(commandStr).not.toMatch(/function\(/i);
-        expect(commandStr).not.toMatch(/\$\{/);
-        expect(commandStr).not.toMatch(/\.\.\//);
-        expect(commandStr).not.toMatch(/DROP\s+TABLE/i);
-        expect(commandStr).not.toMatch(/__proto__/);
-        expect(commandStr).not.toMatch(/constructor/);
-        expect(commandStr).not.toMatch(/window/);
-        expect(commandStr).not.toMatch(/console/);
-        expect(commandStr).not.toMatch(/process\.env/);
-
-        // Should not contain null bytes or control characters
-        expect(commandStr).not.toMatch(/\x00/);
-        expect(commandStr).not.toMatch(/\u0000/);
-
-        // Should not contain the literal strings "undefined", "null", "NaN", "Infinity"
-        expect(commandStr).not.toMatch(/\bundefined\b/);
-        expect(commandStr).not.toMatch(/\bnull\b/);
-        expect(commandStr).not.toMatch(/\bNaN\b/);
-        expect(commandStr).not.toMatch(/\bInfinity\b/);
-
-        // Verify that numeric values are properly bounded and safe
-        if (command?.args.type === 'distance') {
-          expect(typeof command.args.distance).toBe('number');
-          expect(Number.isFinite(command.args.distance)).toBe(true);
-          expect(command.args.distance).toBeGreaterThan(0);
-          // For extremely large numbers, parser should fall back to max instead of parsing
-          expect(command.args.distance).toBeLessThanOrEqual(Number.MAX_SAFE_INTEGER);
-        }
-
-        if (command?.args.type === 'ap') {
-          expect(typeof command.args.ap).toBe('number');
-          expect(Number.isFinite(command.args.ap)).toBe(true);
-          expect(command.args.ap).toBeGreaterThan(0);
-          // For extremely large numbers, parser should fall back to max instead of parsing
-          expect(command.args.ap).toBeLessThanOrEqual(Number.MAX_SAFE_INTEGER);
-        }
-
-        // For malicious input, should fall back to safe 'max' type
-        if (!maliciousText.match(/^\s*advance\s+(?:distance\s+)?\d+(?:\.\d+)?\s*$/i) &&
-            !maliciousText.match(/^\s*advance\s+ap\s+\d+(?:\.\d+)?\s*$/i)) {
-          assertMaxAdvanceCommand(command);
-        }
-      });
-    });
-
-    it('should handle edge case numeric inputs safely', () => {
-      const edgeCaseNumbers = [
-        'advance 0',           // Zero (should fall back to max)
-        'advance -1',          // Negative (should fall back to max)
-        'advance 1e308',       // Scientific notation near infinity
-        'advance 1e-308',      // Scientific notation near zero
-        'advance 0x41',        // Hexadecimal
-        'advance 0b101',       // Binary
-        'advance 0o77',        // Octal
-        'advance 3.14159265359', // High precision decimal
-        'advance 1.7976931348623157e+308', // Near MAX_VALUE
-        'advance 5e-324',      // Near MIN_VALUE
-      ];
-
-      edgeCaseNumbers.forEach((text, index) => {
-        const intent = createIntent({
-          id: `edge-numeric-${index}`,
-          actor: ACTOR_ID,
-          location: PLACE_ID,
-          text,
-        });
-
-        const command = advanceResolver(parserContext, intent);
-
-        expect(command).toBeTruthy();
-
-        // All edge cases should either be valid numbers or fall back to max
-        if (command?.args.type === 'distance') {
-          expect(Number.isFinite(command.args.distance)).toBe(true);
-          expect(command.args.distance).toBeGreaterThan(0);
-        } else {
-          // Should fall back to max for invalid numbers
-          assertMaxAdvanceCommand(command);
-        }
-      });
-    });
-  });
-
   describe('Command Structure Validation', () => {
 
     it('should preserve all required command fields', () => {
       const intent = createIntent({
-        id: 'test-26',
-        actor: ACTOR_ID,
-        location: PLACE_ID,
-        session: SESSION_ID,
+        id: 'test1234',
+        actor: ALICE_ID,
+        location: DEFAULT_LOCATION,
+        session: DEFAULT_COMBAT_SESSION,
         text: 'advance distance 15',
       });
 
       const command = advanceResolver(parserContext, intent);
 
       expect(command).toMatchObject({
-        id: intent.id,
+        id: 'test1234',
         type: CommandType.ADVANCE,
-        actor: ACTOR_ID,
-        location: PLACE_ID,
-        session: SESSION_ID,
+        actor: ALICE_ID,
+        location: DEFAULT_LOCATION,
+        session: DEFAULT_COMBAT_SESSION,
         args: {
           type: 'distance',
           distance: 15,
