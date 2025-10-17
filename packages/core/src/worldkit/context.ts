@@ -18,7 +18,7 @@ const identity = <T extends any>(context: T): T => context;
 export const createPotentiallyImpureOperations = (
   random = () => Math.random(),
   timestamp = () => Date.now(),
-  uniqid = () => uniqidImpl(16, BASE62_CHARSET),
+  uniqid = () => uniqidImpl(24, BASE62_CHARSET),
   debug = () => {},
   profile = profileImpl,
 ): PotentiallyImpureOperations => {

@@ -173,18 +173,6 @@ describe.each([
         expect(typeof narrative).toBe('string');
         expect(narrative.length).toBeGreaterThan(0);
       });
-
-      it('should return empty string for attacker (redundant narrative)', () => {
-        const event = createCombatantWasAttackedEvent((e) => ({
-          ...e,
-          actor: BOB_ID,
-          payload: { ...e.payload, source: ALICE_ID }
-        }));
-
-        const narrative = callTemplate(context, event, ALICE_ID);
-
-        expect(narrative).toBe('');
-      });
     });
 
     describe('COMBATANT_DID_DIE', () => {

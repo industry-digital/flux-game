@@ -2,6 +2,8 @@ import type { WorldEvent, ActorURN, TransformerContext } from '@flux/core';
 import { EventType, getTemplatesForLanguage, Language } from '@flux/core';
 import type { TerminalEntry } from '@flux/ui';
 
+const OBSERVER_ID: ActorURN = 'flux:actor:observer';
+
 /**
  * Generates narrative text from a WorldEvent using the narrative system
  * Always generates observer perspective for the CombatTool
@@ -19,12 +21,22 @@ function generateNarrativeFromEvent(
   }
 
   try {
-    // For CombatTool, we always want observer perspective
-    // Pass undefined as recipient to trigger observer narrative in template functions
-    const recipient = undefined;
-
     // Cast to any to work around the strict typing - the template function will handle the specific event type
-    const narrative = (templateFunction as any)(context, event, recipient);
+    const narrative = (templateFunction as any)(context, event, OBSERVER_ID);
+
+    // Debug logging for missing narratives
+    if (!narrative || narrative === '') {
+      console.warn('Empty narrative generated for event:', event.type, 'actor:', event.actor);
+      if (event.type === EventType.COMBATANT_DID_MOVE) {
+        console.warn('Movement event details:', {
+          actor: event.actor,
+          from: event.payload?.from,
+          to: event.payload?.to,
+          distance: event.payload?.distance,
+          direction: event.payload?.direction
+        });
+      }
+    }
 
     // Handle both string and NarrativeSequence outputs
     if (typeof narrative === 'string') {
@@ -175,6 +187,16 @@ export function worldEventsToTerminalEntries(
   events: WorldEvent[],
   maxEntries?: number
 ): TerminalEntry[] {
+  // Debug logging to see what events reach the terminal
+  const movementEvents = events.filter(e => e.type === EventType.COMBATANT_DID_MOVE);
+  if (movementEvents.length > 0) {
+    console.log('Movement events reaching terminal:', movementEvents.map(e => ({
+      type: e.type,
+      actor: e.actor,
+      distance: (e.payload as any)?.distance
+    })));
+  }
+
   const entries = events.map(event =>
     worldEventToTerminalEntry(context, event)
   );

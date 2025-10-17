@@ -10,7 +10,7 @@ import {
   CHARLIE_ID,
   FRANZ_ID,
 } from './hooks/useCombatScenario';
-import { Team } from '@flux/core';
+import { Team, EventType } from '@flux/core';
 import { useCombatActors } from './hooks/useCombatActors';
 import { useCombatSession } from './hooks/useCombatSession';
 import { useCombatState } from './hooks/useCombatState';
@@ -75,7 +75,6 @@ export function createCombatTool(_deps: CombatToolDependencies = DEFAULT_COMBAT_
       addOptionalActor,
       removeOptionalActor,
       getTeamActors,
-      updateActorStats,
       updateActorSkill,
       updateActorWeapon,
       updateActorAiControl,
@@ -116,6 +115,16 @@ export function createCombatTool(_deps: CombatToolDependencies = DEFAULT_COMBAT_
     const { combatLog, addEvents } = useCombatLog();
 
     const handleEventsGenerated = useCallback((events: any[]) => {
+      // Debug logging for AI events
+      const movementEvents = events.filter(e => e.type === EventType.COMBATANT_DID_MOVE);
+      if (movementEvents.length > 0) {
+        console.log('AI movement events reaching handleEventsGenerated:', movementEvents.map(e => ({
+          type: e.type,
+          actor: e.actor,
+          distance: e.payload?.distance
+        })));
+      }
+
       addEvents(events);
       actors.syncActorsFromContext();
 
@@ -167,7 +176,7 @@ export function createCombatTool(_deps: CombatToolDependencies = DEFAULT_COMBAT_
           selectedWeapon={actorData.weapon}
           availableWeapons={actors.availableWeapons}
           derivedStats={calculateDerivedStats(actorId)}
-          onStatsChange={updateActorStats}
+          onStatsChange={actors.updateActorStats}
           onSkillChange={updateActorSkill}
           onWeaponChange={updateActorWeapon}
         />
@@ -175,12 +184,12 @@ export function createCombatTool(_deps: CombatToolDependencies = DEFAULT_COMBAT_
     }, [
       actors.actors,
       actors.availableWeapons,
+      actors.updateActorStats,
       scenarioData.actors,
       session.currentActorId,
       session.isInSetupPhase,
       aiControl.aiThinking,
       calculateDerivedStats,
-      updateActorStats,
       updateActorSkill,
       updateActorWeapon,
       updateActorAiControl,
@@ -324,7 +333,10 @@ export function createCombatTool(_deps: CombatToolDependencies = DEFAULT_COMBAT_
                 <div className="terminal-controls">
                   {session.isInSetupPhase && (
                     <button
-                      onClick={session.startCombat}
+                      onClick={() => {
+                        const events = session.startCombat();
+                        handleEventsGenerated(events);
+                      }}
                       className="start-combat-button"
                     >
                       ⚔️ Start Combat

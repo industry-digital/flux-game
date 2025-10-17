@@ -51,7 +51,8 @@ export function CombatantCard({
 }: CombatantCardProps) {
   const [isExpanded, setIsExpanded] = useState(false);
   const alive = isActorAlive(actor);
-  const healthPercent = getHealthPercentage(actor);
+  const healthPercentage = getHealthPercentage(actor);
+  const healthPercent = healthPercentage * 100; // Convert 0-1 to 0-100 for display
   const currentHp = getCurrentHp(actor);
   const maxHp = getMaxHp(actor);
   const currentEnergy = getCurrentEnergy(actor);

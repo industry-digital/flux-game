@@ -28,11 +28,9 @@ export interface UseCombatLogResult {
  */
 export function useCombatLog(): UseCombatLogResult {
   const [combatLog, setCombatLog] = useState<WorldEvent[]>([]);
-  const [lastEventId, setLastEventId] = useState<string | null>(null);
 
   const addEvents = useCallback((events: WorldEvent[]) => {
     if (events.length === 0) return;
-    setLastEventId(events[events.length - 1].id);
     setCombatLog(prev => [...prev, ...events]);
   }, []);
 
@@ -46,9 +44,8 @@ export function useCombatLog(): UseCombatLogResult {
 
   return useMemo(() => ({
     combatLog,
-    lastEventId,
     addEvents,
     setLog,
     clearLog,
-  }), [combatLog, lastEventId]);
+  }), [combatLog]);
 }

@@ -22,7 +22,7 @@ export interface UseCombatSessionResult {
   isPaused: boolean;
   isRunning: boolean;
   currentActorId: ActorURN | null;
-  startCombat: () => void;
+  startCombat: () => WorldEvent[];
   pauseCombat: () => WorldEvent[];
   resumeCombat: () => WorldEvent[];
   advanceTurn: (trace?: string) => WorldEvent[];
@@ -116,11 +116,11 @@ export function useCombatSession(
     processNewEvents();
   }, [processNewEvents]);
 
-  const startCombat = useCallback(() => {
-    if (!sessionApi || !isInSetupPhase) return;
+  const startCombat = useCallback((): WorldEvent[] => {
+    if (!sessionApi || !isInSetupPhase) return [];
 
     try {
-      // Start combat and handle events
+      // Start combat and capture events
       const events = sessionApi.startCombat();
 
       // Get the first actor from initiative order
@@ -129,8 +129,12 @@ export function useCombatSession(
 
       // Session status is updated by the API
       setSession({ ...sessionApi.session });
+
+      // Return events for the combat log
+      return events;
     } catch (error) {
       console.error('❌ Combat start failed:', error);
+      return [];
     }
   }, [sessionApi, isInSetupPhase, session]);
 

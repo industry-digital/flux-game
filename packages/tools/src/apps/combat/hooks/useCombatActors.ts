@@ -15,6 +15,9 @@ import {
   setHealthPercentage,
   HumanAnatomy,
   refreshStats,
+  initializeHpFromRes,
+  updateMaxHpFromRes,
+  setNaturalStatValue,
 } from '@flux/core';
 import type { CombatScenarioData } from './useCombatScenario';
 
@@ -26,6 +29,7 @@ export interface UseCombatActorsResult {
   getActorWeapon: (actorId: ActorURN) => WeaponSchemaURN;
   getActorSkills: (actorId: ActorURN) => Record<SkillURN, number>;
   updateActorWeapon: (actorId: ActorURN, weaponUrn: WeaponSchemaURN) => void;
+  updateActorStats: (actorId: ActorURN, stats: Partial<Record<Stat, number>>) => void;
 }
 
 export interface CombatActorsDependencies {
@@ -33,6 +37,7 @@ export interface CombatActorsDependencies {
   createShell: typeof createShell;
   mutateShellStats: typeof mutateShellStats;
   setHealthPercentage: typeof setHealthPercentage;
+  initializeHpFromRes: typeof initializeHpFromRes;
   timestamp: () => number;
 }
 
@@ -41,6 +46,7 @@ export const DEFAULT_COMBAT_ACTORS_DEPS: CombatActorsDependencies = {
   createShell,
   mutateShellStats,
   setHealthPercentage,
+  initializeHpFromRes,
   timestamp: () => Date.now(),
 };
 
@@ -143,6 +149,40 @@ export function useCombatActors(
     syncActorsFromContext();
   }, [context, availableWeapons, syncActorsFromContext]);
 
+  const updateActorStats = useCallback((actorId: ActorURN, stats: Partial<Record<Stat, number>>) => {
+    if (!context) return;
+
+    const actor = context.world.actors[actorId];
+    if (!actor) {
+      console.warn(`Cannot update stats: actor ${actorId} not found`);
+      return;
+    }
+
+    let resChanged = false;
+
+    // Update stats using the actor stat utilities
+    for (const [statKey, value] of Object.entries(stats)) {
+      const stat = statKey as Stat;
+      if (value !== undefined) {
+        setNaturalStatValue(actor, stat, value);
+        if (stat === Stat.RES) {
+          resChanged = true;
+        }
+      }
+    }
+
+    // Refresh stats to recalculate effective values
+    refreshStats(actor);
+
+    // If RES changed, update max HP based on new RES value
+    if (resChanged) {
+      updateMaxHpFromRes(actor);
+    }
+
+    // Trigger re-render
+    syncActorsFromContext();
+  }, [context, syncActorsFromContext]);
+
   return {
     actors,
     availableWeapons,
@@ -151,6 +191,7 @@ export function useCombatActors(
     getActorWeapon,
     getActorSkills,
     updateActorWeapon,
+    updateActorStats,
   };
 }
 
@@ -227,11 +268,11 @@ function createActorFromScenarioData(
   // Note: Physical stats (POW, FIN, RES) are already applied to shell above
   // Mental stats (INT, PER, MEM) are applied during actor creation above
 
-  // Refresh stats to ensure derived values (HP, etc.) are calculated correctly
+  // Refresh stats to ensure derived values are calculated correctly
   refreshStats(actor);
 
-  // Set full health based on updated stats
-  deps.setHealthPercentage(actor, 1.0);
+  // Initialize HP based on RES stat (this sets both max and current HP)
+  deps.initializeHpFromRes(actor);
 
   return actor;
 }
