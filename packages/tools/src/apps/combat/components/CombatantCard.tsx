@@ -8,6 +8,7 @@ import './CombatantCard.css';
 export interface CombatantCardProps {
   actor: Actor;
   actorId: ActorURN;
+  computeCombatMass: (actor: Actor) => number;
   isActive?: boolean;
   isAiControlled?: boolean;
   onAiToggle?: (actorId: ActorURN, enabled: boolean) => void;
@@ -31,6 +32,7 @@ export interface CombatantCardProps {
 export function CombatantCard({
   actor,
   actorId,
+  computeCombatMass,
   isActive = false,
   isAiControlled = false,
   onAiToggle,
@@ -54,6 +56,7 @@ export function CombatantCard({
   const maxHp = getMaxHp(actor);
   const currentEnergy = getCurrentEnergy(actor);
   const maxEnergy = getMaxEnergy(actor);
+  const massKg = computeCombatMass(actor);
 
   const stats = {
     [Stat.POW]: getStatValue(actor, Stat.POW),
@@ -101,6 +104,10 @@ export function CombatantCard({
               </div>
             )}
           </div>
+
+          <p className="combatant-mass">
+            <span className="mass-value-inline">{massKg.toFixed(1)} kg</span>
+          </p>
 
           {isActive && alive && (
             <div className="active-turn-badge">

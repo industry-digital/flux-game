@@ -1,6 +1,5 @@
 import { EventType, WorldEvent, WorldEventInput } from '~/types/event';
 import { Command, CommandType } from '~/types/intent';
-import { ActorURN, PlaceURN, SessionURN } from '~/types/taxonomy';
 import { SchemaManager } from '~/worldkit/schema/manager';
 import { SearchCache } from '~/types/combat-ai';
 import { MassApi } from '~/worldkit/physics/mass';

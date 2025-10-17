@@ -154,6 +154,7 @@ export function createCombatTool(_deps: CombatToolDependencies = DEFAULT_COMBAT_
           key={actorId}
           actor={actor}
           actorId={actorId}
+          computeCombatMass={context.mass.computeCombatMass}
           isActive={session.currentActorId === actorId}
           isAiControlled={actorData.aiControlled}
           onAiToggle={updateActorAiControl}
@@ -183,6 +184,7 @@ export function createCombatTool(_deps: CombatToolDependencies = DEFAULT_COMBAT_
       updateActorSkill,
       updateActorWeapon,
       updateActorAiControl,
+      context.mass.computeCombatMass,
     ]);
 
     const handleCommand = useCallback((command: string) => {

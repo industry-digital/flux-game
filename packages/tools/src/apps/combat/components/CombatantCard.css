@@ -271,6 +271,22 @@
   line-height: 1;
 }
 
+/* Inline Mass Display */
+.combatant-mass {
+  margin: 0.25rem 0 0 0;
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-xs);
+  font-family: var(--font-family-body);
+  font-weight: var(--font-weight-normal);
+  line-height: 1.2;
+}
+
+.mass-value-inline {
+  color: var(--color-text);
+  font-family: var(--font-family-mono);
+  font-weight: var(--font-weight-semibold);
+}
+
 @keyframes pulse {
   0%, 100% {
     opacity: 1;
