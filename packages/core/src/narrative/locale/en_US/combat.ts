@@ -28,6 +28,8 @@ import {
   createDynamicSystemPerspectiveTemplate,
 } from '~/narrative/util';
 import { getAllStats, getMaxHp } from '~/worldkit/entity/actor';
+import { getPrimaryDamageType } from '~/worldkit/combat/damage-type';
+import { DamageType } from '~/types/damage';
 
 const HIS = 'his';
 const HER = 'her';
@@ -38,42 +40,67 @@ const getPossessivePronoun = (gender: Gender): string => {
   return gender === Gender.MALE ? HIS : HER;
 };
 
+/**
+ * Maps damage types to narrative descriptors for combat text
+ */
+const getDamageTypeNarrative = (damageType: DamageType): {
+  verb: string;
+  impact: string;
+  weaponAction: string;
+} => {
+  switch (damageType) {
+    case DamageType.SLASH:
+      return {
+        verb: 'slashes',
+        impact: 'cutting through the air',
+        weaponAction: 'sweeps'
+      };
+
+    case DamageType.PIERCE:
+      return {
+        verb: 'thrusts',
+        impact: 'piercing through',
+        weaponAction: 'drives'
+      };
+
+    case DamageType.IMPACT:
+      return {
+        verb: 'strikes',
+        impact: 'smashing with force',
+        weaponAction: 'swings'
+      };
+
+    default:
+      return {
+        verb: 'attacks',
+        impact: 'striking',
+        weaponAction: 'wields'
+      };
+  }
+};
+
 const renderCleaveNarrative = (actor: Actor, targets: Actor[], weapon: any, viewerActorId: ActorURN): string => {
   const weaponName = weapon.name;
   const possessive = getPossessivePronoun(actor.gender);
-  const weaponType = weapon.skill.split(':').slice(-1)[0] || 'generic';
+  const primaryDamageType = getPrimaryDamageType(weapon);
 
-  // Generate weapon-specific cleave descriptions
+  // Generate damage-type-specific cleave descriptions
   const getCleaveDescription = () => {
-    switch (weaponType) {
-      case 'slash':
-        return {
-          firstPerson: `sweep your ${weaponName} in a devastating arc`,
-          thirdPerson: `sweeps ${possessive} ${weaponName} in a devastating arc`,
-          impact: 'cutting through the air'
-        };
-
-      case 'crush':
-        return {
-          firstPerson: `whirl your ${weaponName} in a crushing circle`,
-          thirdPerson: `whirls ${possessive} ${weaponName} in a crushing circle`,
-          impact: 'smashing through everything in reach'
-        };
-
-      case 'pierce':
-        return {
-          firstPerson: `thrust your ${weaponName} in a wide sweeping motion`,
-          thirdPerson: `thrusts ${possessive} ${weaponName} in a wide sweeping motion`,
-          impact: 'piercing through multiple targets'
-        };
-
-      default:
-        return {
-          firstPerson: `swing your ${weaponName} in a wide, sweeping attack`,
-          thirdPerson: `swings ${possessive} ${weaponName} in a wide, sweeping attack`,
-          impact: 'striking at everything within reach'
-        };
+    if (primaryDamageType) {
+      const damageNarrative = getDamageTypeNarrative(primaryDamageType);
+      return {
+        firstPerson: `${damageNarrative.weaponAction} your ${weaponName} in a devastating arc`,
+        thirdPerson: `${damageNarrative.weaponAction}s ${possessive} ${weaponName} in a devastating arc`,
+        impact: damageNarrative.impact
+      };
     }
+
+    // Fallback for weapons without damage types
+    return {
+      firstPerson: `swing your ${weaponName} in a wide, sweeping attack`,
+      thirdPerson: `swings ${possessive} ${weaponName} in a wide, sweeping attack`,
+      impact: 'striking at everything within reach'
+    };
   };
 
   const descriptions = getCleaveDescription();

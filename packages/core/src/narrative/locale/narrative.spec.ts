@@ -16,7 +16,7 @@ import { EventType, WorldEvent } from '~/types/event';
 import { AttackOutcome, AttackType, Team } from '~/types/combat';
 import { ActorURN } from '~/types/taxonomy';
 import { SessionStatus } from '~/types/session';
-import { ALICE_ID, BOB_ID } from '~/testing/constants';
+import { ALICE_ID, BOB_ID, CHARLIE_ID } from '~/testing/constants';
 
 // Import all locale implementations
 import { en_US } from './en_US';
@@ -85,7 +85,7 @@ describe.each([
       it('should render attack narrative from attacker perspective', () => {
         const event = createCombatantDidAttackEvent((e) => ({
           ...e,
-          payload: { ...e.payload, target: BOB_ID }
+          payload: { ...e.payload, targets: [BOB_ID], attackType: AttackType.CLEAVE }
         }));
 
         const narrative = callTemplate(context, event, ALICE_ID);
@@ -98,7 +98,7 @@ describe.each([
       it('should render attack narrative from observer perspective', () => {
         const event = createCombatantDidAttackEvent((e) => ({
           ...e,
-          payload: { ...e.payload, target: BOB_ID }
+          payload: { ...e.payload, targets: [BOB_ID, CHARLIE_ID], attackType: AttackType.CLEAVE }
         }));
 
         const narrative = callTemplate(context, event, OBSERVER_ID);
@@ -113,7 +113,7 @@ describe.each([
           ...e,
           payload: {
             ...e.payload,
-            target: BOB_ID,
+            targets: [BOB_ID, CHARLIE_ID], // CLEAVE attacks have multiple targets
             attackType: AttackType.CLEAVE
           }
         }));
@@ -123,6 +123,8 @@ describe.each([
         expect(narrative).toBeTruthy();
         expect(typeof narrative).toBe('string');
         expect(narrative.length).toBeGreaterThan(0);
+        // CLEAVE narratives should be different from regular STRIKE narratives
+        // This is a structural test - we just ensure it generates valid output
       });
     });
 

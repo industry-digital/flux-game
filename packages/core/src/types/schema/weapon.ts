@@ -1,8 +1,9 @@
 import { AmmoSchemaURN, SkillURN, Taxonomy } from '~/types/taxonomy';
 import { Equippable } from '~/types/schema/equipment';
 import { ChargeableMixin } from '~/types/entity/item';
-import { DamageSpecification } from '~/types/damage';
+import { DamageSpecification, DamageType } from '~/types/damage';
 import { AbstractItemSchema } from '~/types/schema/item';
+import { NormalizedValueBetweenZeroAndOne } from '~/types/entity/attribute';
 
 export type WeaponAttackSpecification = {
   /**
@@ -71,6 +72,12 @@ export type WeaponSchema  =
    * How easy it is to hit a target
    */
   attack?: WeaponAttackSpecification;
+
+  /**
+   * The types of damage the weapon deals
+   * All entries must sum to 1.0
+   */
+  damageTypes: Partial<Record<DamageType, NormalizedValueBetweenZeroAndOne>>;
 
   /**
    * How much damage the weapon deals
