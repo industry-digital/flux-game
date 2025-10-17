@@ -1,8 +1,9 @@
 import { useCallback } from 'react';
 import { useStorage } from '@flux/ui';
 import type { ActorURN, WeaponSchemaURN, SkillURN } from '@flux/core';
-import { Team } from '@flux/core';
+import { Team, Gender } from '@flux/core';
 import { BASE_HP, HP_PER_RES_BONUS, DEFAULT_BASE_AP, calculateStatBonus } from '@flux/core';
+
 
 export type OptionalActorName = 'charlie' | 'eric' | 'dave' | 'franz';
 
@@ -29,6 +30,7 @@ export interface CombatScenarioActorData {
   weapon: WeaponSchemaURN;
   skills: Record<SkillURN, number>;
   team: Team;
+  gender: Gender;
 }
 
 export interface CombatScenarioData {
@@ -205,7 +207,8 @@ export function useCombatScenario(
       aiControlled: true, // Optional actors are AI-controlled by default
       weapon: 'flux:schema:weapon:longsword' as WeaponSchemaURN,
       skills: { ...DEFAULT_COMBAT_SKILLS },
-      team
+      team,
+      gender: Gender.MALE // Default gender for optional actors
     };
 
     setScenarioData((prev: CombatScenarioData) => ({

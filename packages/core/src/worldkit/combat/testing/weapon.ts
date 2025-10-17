@@ -1,3 +1,4 @@
+import { DamageType } from '~/types/damage';
 import { WeaponSchema } from '~/types/schema/weapon';
 import { HumanAnatomy } from '~/types/taxonomy/anatomy';
 
@@ -14,6 +15,9 @@ export const createTestWeapon = (transform: WeaponTransformer = identity): Weapo
     },
     fit: {
       [HumanAnatomy.RIGHT_HAND]: 1,
+    },
+    damageTypes: {
+      [DamageType.SLASH]: 1,
     },
   });
 };

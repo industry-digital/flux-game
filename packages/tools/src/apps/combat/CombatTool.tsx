@@ -11,7 +11,7 @@ import {
   CHARLIE_ID,
   FRANZ_ID,
 } from './hooks/useCombatScenario';
-import { Team, EventType, Stat, type SkillURN, type WeaponSchemaURN } from '@flux/core';
+import { Team, EventType, Stat, type SkillURN, type WeaponSchemaURN, Gender } from '@flux/core';
 import { useCombatActors } from './hooks/useCombatActors';
 import { useCombatSession } from './hooks/useCombatSession';
 import { useCombatState } from './hooks/useCombatState';
@@ -55,7 +55,8 @@ export function createCombatTool(_deps: CombatToolDependencies = DEFAULT_COMBAT_
             'flux:skill:evasion': 0,
             'flux:skill:weapon:melee': 0
           },
-          team: Team.ALPHA
+          team: Team.ALPHA,
+          gender: Gender.FEMALE
         },
         [BOB_ID]: {
           stats: { pow: 10, fin: 10, res: 10, int: 10, per: 10, mem: 10 },
@@ -65,7 +66,8 @@ export function createCombatTool(_deps: CombatToolDependencies = DEFAULT_COMBAT_
             'flux:skill:evasion': 0,
             'flux:skill:weapon:melee': 0
           },
-          team: Team.BRAVO
+          team: Team.BRAVO,
+          gender: Gender.MALE
         }
       }
     };

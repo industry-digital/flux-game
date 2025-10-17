@@ -1,4 +1,4 @@
-import { createActor, createPlace, createTransformerContext, createWorldProjection, type TransformerContext, type WorldProjection } from '@flux/core';
+import { createActor, createPlace, createTransformerContext, createWorldProjection, Gender, type TransformerContext, type WorldProjection } from '@flux/core';
 import { useRef } from 'react';
 import { TEST_PLACE_ID, ALICE_ID, BOB_ID, CHARLIE_ID, DAVE_ID, ERIC_ID, FRANZ_ID } from '../constants';
 
@@ -18,7 +18,7 @@ export const useTransformerContext = (): TransformerContext => {
           },
           actors: {
             ...w.actors,
-            [ALICE_ID]: createActor({ id: ALICE_ID, name: 'Alice' }),
+            [ALICE_ID]: createActor({ id: ALICE_ID, name: 'Alice', gender: Gender.FEMALE }),
             [BOB_ID]: createActor({ id: BOB_ID, name: 'Bob' }),
             [CHARLIE_ID]: createActor({ id: CHARLIE_ID, name: 'Charlie' }),
             [DAVE_ID]: createActor({ id: DAVE_ID, name: 'Dave' }),

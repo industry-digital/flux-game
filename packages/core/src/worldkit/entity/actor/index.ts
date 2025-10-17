@@ -17,7 +17,6 @@ import { createShell } from '~/worldkit/entity/actor/shell';
 import { initializeWallet } from '~/worldkit/entity/actor/wallet';
 
 export type ActorTransformer = (actor: Actor) => Actor;
-const identity: ActorTransformer = (actor: Actor) => actor;
 
 /**
  * Type guard for Actor

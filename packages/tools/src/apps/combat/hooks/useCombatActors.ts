@@ -230,6 +230,7 @@ function createActorFromScenarioData(
     id: actorId,
     name: getActorNameFromId(actorId),
     location: placeId,
+    gender: actorData.gender,
     stats: {
       [Stat.INT]: { nat: int, eff: int, mods: {} },
       [Stat.PER]: { nat: per, eff: per, mods: {} },

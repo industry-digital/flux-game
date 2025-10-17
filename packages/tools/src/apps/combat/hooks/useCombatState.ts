@@ -12,6 +12,7 @@ import {
   type PotentiallyImpureOperations,
   type ExecutionError,
 } from '@flux/core';
+import { useLogger } from '@flux/ui';
 
 export interface UseCombatStateResult {
   executeIntent: (intentText: string) => WorldEvent[];
@@ -50,17 +51,18 @@ export function useCombatState(
   placeId: PlaceURN,
   deps: CombatStateDependencies = DEFAULT_COMBAT_STATE_DEPS
 ): UseCombatStateResult {
+  const log = useLogger('useCombatState');
   const [lastEventId, setLastEventId] = useState<string | null>(null);
 
   const logEvents = useCallback((events: WorldEvent[]) => {
     for (const event of events) {
-      console.log(event.actor, event.type, stripSlashes(JSON.stringify(event.payload)));
+      log.debug(event.actor, event.type, event.payload);
     }
   }, []);
 
   const logErrors = useCallback((errors: ExecutionError[]) => {
     for (const error of errors) {
-      console.error('executeCommand failed:', error.error.stack);
+      log.error('executeCommand failed:', error.error.stack);
     }
   }, []);
 
@@ -101,7 +103,7 @@ export function useCombatState(
       const resolvedCommand = deps.resolveCommandFromIntent(context, intent);
 
       if (!resolvedCommand) {
-        console.warn('Failed to resolve command:', intentText);
+        log.warn('Failed to resolve command:', intentText);
         return [];
       }
 
@@ -123,7 +125,7 @@ export function useCombatState(
 
       return newEvents;
     } catch (error) {
-      console.error('executeCommand failed:', error);
+      log.error('executeCommand failed:', error);
       return [];
     }
   }, [currentActorId, context, session, placeId, deps]);
@@ -162,7 +164,7 @@ export function useCombatState(
 
       return newEvents;
     } catch (error) {
-      console.error('executeCommand failed:', error);
+      log.error('executeCommand failed:', error);
       return [];
     }
   }, [currentActorId, context, session, deps]);

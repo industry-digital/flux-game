@@ -139,6 +139,10 @@ export {
 } from './handler';
 
 export {
+  WorldProjection
+} from './world';
+
+export {
   Command,
   CommandInput,
   CommandType,

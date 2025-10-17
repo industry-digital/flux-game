@@ -40,43 +40,52 @@ const getPossessivePronoun = (gender: Gender): string => {
   return gender === Gender.MALE ? HIS : HER;
 };
 
-/**
- * Maps damage types to narrative descriptors for combat text
- */
-const getDamageTypeNarrative = (damageType: DamageType): {
+type DamageTypeNarrative = {
   verb: string;
   impact: string;
   weaponAction: string;
-} => {
-  switch (damageType) {
-    case DamageType.SLASH:
-      return {
-        verb: 'slashes',
-        impact: 'cutting through the air',
-        weaponAction: 'sweeps'
-      };
+  weaponActionThirdPerson: string;
+}
 
-    case DamageType.PIERCE:
-      return {
-        verb: 'thrusts',
-        impact: 'piercing through',
-        weaponAction: 'drives'
-      };
+const SLASH_NARRATIVE: Readonly<DamageTypeNarrative> = Object.freeze({
+  verb: 'slashes',
+  impact: 'cutting through the air',
+  weaponAction: 'sweep',
+  weaponActionThirdPerson: 'sweeps'
+});
 
-    case DamageType.IMPACT:
-      return {
-        verb: 'strikes',
-        impact: 'smashing with force',
-        weaponAction: 'swings'
-      };
+const PIERCE_NARRATIVE: Readonly<DamageTypeNarrative> = Object.freeze({
+  verb: 'thrusts',
+  impact: 'piercing through',
+  weaponAction: 'drive',
+  weaponActionThirdPerson: 'drives'
+});
 
-    default:
-      return {
-        verb: 'attacks',
-        impact: 'striking',
-        weaponAction: 'wields'
-      };
-  }
+const IMPACT_NARRATIVE: Readonly<DamageTypeNarrative> = Object.freeze({
+  verb: 'strikes',
+  impact: 'smashing with force',
+  weaponAction: 'swing',
+  weaponActionThirdPerson: 'swings'
+});
+
+const DEFAULT_DAMAGE_TYPE_NARRATIVE: Readonly<DamageTypeNarrative> = Object.freeze({
+  verb: 'attacks',
+  impact: 'striking',
+  weaponAction: 'wield',
+  weaponActionThirdPerson: 'wields'
+});
+
+const NARRATIVES_BY_DAMAGE_TYPE: Record<DamageType, DamageTypeNarrative> = {
+  [DamageType.SLASH]: SLASH_NARRATIVE,
+  [DamageType.PIERCE]: PIERCE_NARRATIVE,
+  [DamageType.IMPACT]: IMPACT_NARRATIVE,
+};
+
+/**
+ * Maps damage types to narrative descriptors for combat text
+ */
+const getDamageTypeNarrative = (damageType: DamageType): DamageTypeNarrative => {
+  return NARRATIVES_BY_DAMAGE_TYPE[damageType] ?? DEFAULT_DAMAGE_TYPE_NARRATIVE;
 };
 
 const renderCleaveNarrative = (actor: Actor, targets: Actor[], weapon: any, viewerActorId: ActorURN): string => {
@@ -90,7 +99,7 @@ const renderCleaveNarrative = (actor: Actor, targets: Actor[], weapon: any, view
       const damageNarrative = getDamageTypeNarrative(primaryDamageType);
       return {
         firstPerson: `${damageNarrative.weaponAction} your ${weaponName} in a devastating arc`,
-        thirdPerson: `${damageNarrative.weaponAction}s ${possessive} ${weaponName} in a devastating arc`,
+        thirdPerson: `${damageNarrative.weaponActionThirdPerson} ${possessive} ${weaponName} in a devastating arc`,
         impact: damageNarrative.impact
       };
     }
@@ -203,16 +212,16 @@ export const renderAttackNarrative: TemplateFunction<CombatantDidAttack, ActorUR
   // Generate narrative for all perspectives (STRIKE attacks only)
   if (actorId === event.actor) {
     // actorId is the attacker
-    return `You ${attackDescription.replace(/his|her/, 'your')} ${weaponName} at ${target.name}.`;
+    return `You ${attackDescription.replace(/his|her/, 'your')} ${weaponName}, striking ${target.name}.`;
   }
 
   if (actorId === event.payload.target) {
     // actorId is the target
-    return `${actor.name} ${attackDescription} ${weaponName} at you.`;
+    return `${actor.name} ${attackDescription} ${weaponName}, striking you.`;
   }
 
   // actorId is an observer
-  return `${actor.name} ${attackDescription} ${weaponName} at ${target.name}.`;
+  return `${actor.name} ${attackDescription} ${weaponName}, striking ${target.name}.`;
 };
 
 export const renderWasAttackedNarrative: TemplateFunction<CombatantWasAttacked, ActorURN> = (context, event, actorId) => {
