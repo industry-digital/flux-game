@@ -3,8 +3,8 @@ import { Combatant, CombatantSummary, CombatFacing, CombatSession, Team } from '
 import { TransformerContext } from '~/types/handler';
 import { ActorURN } from '~/types/taxonomy';
 import { WorldEvent } from '~/types/event';
-import { createAdvanceMethod, AdvanceDependencies } from './action/advance';
-import { createRetreatMethod, RetreatDependencies } from './action/retreat';
+import { createAdvanceMethod, AdvanceDependencies, AdvanceMethod } from './action/advance';
+import { createRetreatMethod, RetreatDependencies, RetreatMethod } from './action/retreat';
 import { createAttackMethod, AttackDependencies } from './action/attack';
 import { createDefendMethod, DefendMethod, DefendDependencies } from './action/defend';
 import { createTargetMethod } from './action/target';
@@ -33,8 +33,8 @@ export interface CombatantApi {
   combatant: Combatant;
   canAct: () => boolean;
   target: (targetId: ActorURN, trace?: string) => WorldEvent[];
-  advance: (by: MovementType, value: number, target?: ActorURN, trace?: string) => WorldEvent[];
-  retreat: (by: MovementType, value: number, target?: ActorURN, trace?: string) => WorldEvent[];
+  advance: AdvanceMethod;
+  retreat: RetreatMethod;
   attack: (target?: ActorURN, trace?: string) => WorldEvent[];
   defend: DefendMethod;
   range: RangeMethod;
@@ -82,9 +82,9 @@ export function createCombatantApiFactory(actionDeps: ActionDependencies = DEFAU
     const range = createRangeMethod(context, session, actor, combatant);
     const strike = createStrikeMethod(context, session, actor, combatant, actionDeps.strikeDeps);
     const target = createTargetMethod(context, session, actor, combatant);
-    const advance = createAdvanceMethod(context, session, actor, combatant, actionDeps.advanceDeps);
-    const retreat = createRetreatMethod(context, session, actor, combatant, actionDeps.retreatDeps);
     const done = createDoneMethod(context, session, actor, combatant, { advanceTurn });
+    const advance = createAdvanceMethod(context, session, actor, combatant, { ...actionDeps.advanceDeps, done });
+    const retreat = createRetreatMethod(context, session, actor, combatant, { ...actionDeps.retreatDeps, done });
     const defend = createDefendMethod(context, session, actor, combatant, { ...actionDeps.defendDeps, done });
     const cleave = createCleaveMethod(context, session, actor, combatant, { ...actionDeps.cleaveDeps });
     const attack = createAttackMethod(context, session, actor, combatant, {

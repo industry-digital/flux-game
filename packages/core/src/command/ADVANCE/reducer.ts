@@ -3,10 +3,15 @@ import { AdvanceCommand } from './types';
 import { createCombatSessionApi } from '~/worldkit/combat/session/session';
 import { withBasicWorldStateValidation } from '~/command/validation';
 import { withExistingCombatSession } from '~/worldkit/combat/validation';
+import { MovementOptions } from '~/worldkit/combat/action/advance';
 
 const DISTANCE = 'distance';
 const AP = 'ap';
 const MAX = 'max';
+
+const DEFAULT_MOVEMENT_OPTIONS: MovementOptions = {
+  autoDone: true,
+};
 
 export const advanceReducer: PureReducer<TransformerContext, AdvanceCommand> = withBasicWorldStateValidation(
   withExistingCombatSession(
@@ -21,15 +26,15 @@ export const advanceReducer: PureReducer<TransformerContext, AdvanceCommand> = w
 
       switch (command.args.type) {
         case DISTANCE:
-          combatantApi.advance(DISTANCE, command.args.distance, undefined, command.id);
+          combatantApi.advance(DISTANCE, command.args.distance, command.id, DEFAULT_MOVEMENT_OPTIONS);
           break;
 
         case AP:
-          combatantApi.advance(AP, command.args.ap, undefined, command.id);
+          combatantApi.advance(AP, command.args.ap, command.id, DEFAULT_MOVEMENT_OPTIONS);
           break;
 
         case MAX:
-          combatantApi.advance(MAX, 0, undefined, command.id); // Value ignored for max movement
+          combatantApi.advance(MAX, 0, command.id, DEFAULT_MOVEMENT_OPTIONS); // Value ignored for max movement
           break;
 
         default:

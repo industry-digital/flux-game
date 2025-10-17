@@ -16,7 +16,11 @@ import { createMovementMethod, MovementFactoryDependencies } from './factory/mov
 export type RetreatDependencies = MovementFactoryDependencies;
 export const DEFAULT_RETREAT_DEPS = DEFAULT_MOVEMENT_DEPS;
 
-export type RetreatMethod = (by: MovementType, value: number, trace?: string) => WorldEvent[];
+export type MovementOptions = {
+  autoDone?: boolean;
+};
+
+export type RetreatMethod = (by: MovementType, value: number, trace?: string, options?: MovementOptions) => WorldEvent[];
 
 /**
  * Creates retreat method using the unified movement factory
@@ -32,7 +36,7 @@ export function createRetreatMethod(
   deps: RetreatDependencies = DEFAULT_RETREAT_DEPS,
 ): RetreatMethod {
   // Use the unified movement factory with BACKWARD direction
-  return createMovementMethod(
+  const moveMethod = createMovementMethod(
     context,
     session,
     actor,
@@ -40,4 +44,8 @@ export function createRetreatMethod(
     MovementDirection.BACKWARD,
     deps
   );
+
+  return (by: MovementType, value: number, trace?: string, options?: MovementOptions) => {
+    return moveMethod(by, value, trace, options);
+  };
 }

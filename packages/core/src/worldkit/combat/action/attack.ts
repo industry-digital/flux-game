@@ -108,7 +108,7 @@ const internalExecuteCombatPlan: CombatPlanExecutor = (
         if (!value || value <= 0) {
           context.declareError('ADVANCE action requires positive distance or ap argument', trace);
         } else {
-          actionEvents = deps.advance(by, value, action.args.target, trace);
+          actionEvents = deps.advance(by, value, trace, { autoDone: action.args.autoDone });
         }
         break;
 
@@ -119,7 +119,7 @@ const internalExecuteCombatPlan: CombatPlanExecutor = (
           ? (action.args.distance || action.args.value)
           : (action.args.ap || action.args.amount || action.args.value);
 
-        actionEvents = deps.retreat(by, value, action.args.target, trace);
+        actionEvents = deps.retreat(by, value, trace, { autoDone: action.args.autoDone });
         break;
       }
 

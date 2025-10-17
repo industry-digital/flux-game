@@ -9,6 +9,7 @@ import { createWorldEvent } from '~/worldkit/event';
 import { distanceToAp, apToDistance } from '~/worldkit/physics/movement';
 import { calculateTacticalMovement, roundPosition } from '~/worldkit/combat/tactical-rounding';
 import { createMovementCostFromDistance, createMovementCostFromAp } from '~/worldkit/combat/tactical-cost';
+import { DoneMethod } from './done';
 
 export type MovementActionDependencies = {
   createWorldEvent?: typeof createWorldEvent;
@@ -18,6 +19,7 @@ export type MovementActionDependencies = {
   roundPosition?: typeof roundPosition;
   createMovementCostFromDistance?: typeof createMovementCostFromDistance;
   createMovementCostFromAp?: typeof createMovementCostFromAp;
+  done?: DoneMethod;
 };
 
 export const DEFAULT_MOVEMENT_DEPS: MovementActionDependencies = {

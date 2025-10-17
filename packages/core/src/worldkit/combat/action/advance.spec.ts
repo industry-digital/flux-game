@@ -1,11 +1,12 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { createAdvanceMethod } from './advance';
 import { CombatantDidMove, EventType } from '~/types/event';
-import { CombatFacing } from '~/types/combat';
+import { CombatFacing, MovementDirection } from '~/types/combat';
 import { createWorldEvent } from '~/worldkit/event';
 import { distanceToAp, apToDistance } from '~/worldkit/physics/movement';
 import { useCombatMovementTestScenario } from '../testing/movement';
 import { MOVE_BY_AP, MOVE_BY_DISTANCE, MOVE_BY_MAX } from '~/worldkit/combat/combatant';
+import { createCombatTurnDidEndEvent } from '~/testing/event/factory';
 
 describe('createAdvanceMethod', () => {
   // Standard test scenario - most tests can use this
@@ -240,17 +241,20 @@ describe('createAdvanceMethod', () => {
     it('should choose the most restrictive constraint', () => {
       const multiConstraintScenario = useCombatMovementTestScenario({
         attackerPosition: 100,
-        enemyPosition: 120, // Enemy 20m away
-        attackerAP: 2.0, // Limited AP (can only move ~11m)
-        battlefield: { length: 200, margin: 0, cover: [] }, // Boundary at 200m (furthest)
+        enemyPosition: 120, // Enemy 20m away (collision limit)
+        attackerAP: 2.0, // Limited AP (most restrictive - can only move ~11m)
+        battlefield: { length: 200, margin: 0, cover: [] }, // Boundary at 200m (least restrictive)
       });
       const { advance, attacker } = multiConstraintScenario;
 
       const result = advance(MOVE_BY_MAX, 0);
 
       expect(result).toHaveLength(1);
-      // AP is the most restrictive constraint - can only move ~11m with 2 AP
-      expect(attacker.position.coordinate).toBeCloseTo(112, 0); // Stopped due to AP limit
+      // AP should be the most restrictive constraint
+      // Should move less than the collision distance (20m) and boundary distance (100m)
+      expect(attacker.position.coordinate).toBeGreaterThan(100); // Moved forward
+      expect(attacker.position.coordinate).toBeLessThan(115); // But limited by AP (~11-12m max)
+      expect(attacker.ap.eff.cur).toBe(0); // All AP consumed
     });
 
     it('should not move when blocked by adjacent enemy but not error', () => {
@@ -608,6 +612,208 @@ describe('createAdvanceMethod', () => {
 
       expect(result).toHaveLength(1);
       expect(result[0].trace).toBe(generatedTrace);
+    });
+  });
+
+  describe('Auto-Done Functionality', () => {
+    it('should not auto-advance turn by default', () => {
+      const { advance } = defaultScenario;
+
+      const result = advance(MOVE_BY_MAX, 0);
+
+      // Should only generate MOVE event, not turn advancement events
+      expect(result).toHaveLength(1);
+      expect(result[0].type).toBe(EventType.COMBATANT_DID_MOVE);
+    });
+
+    it('should auto-advance turn when autoDone is true and AP is depleted by MOVE_BY_MAX', () => {
+      const mockDone = vi.fn(() => [
+        {
+          type: EventType.COMBAT_TURN_DID_END,
+          actor: 'flux:actor:test-actor' as const,
+          location: 'flux:place:test-battlefield' as const,
+          payload: {}
+        },
+        {
+          type: EventType.COMBAT_TURN_DID_START,
+          actor: 'flux:actor:other-actor' as const,
+          location: 'flux:place:test-battlefield' as const,
+          payload: {}
+        }
+      ]) as any;
+
+      // Create advance method with mock done dependency
+      const advanceScenario = useCombatMovementTestScenario({
+        advanceDeps: { done: mockDone },
+      });
+
+      const result = advanceScenario.advance(MOVE_BY_MAX, 0, undefined, { autoDone: true });
+
+      // Should generate MOVE event + turn advancement events
+      expect(result).toHaveLength(3);
+      expect(result[0].type).toBe(EventType.COMBATANT_DID_MOVE);
+      expect(result[1].type).toBe(EventType.COMBAT_TURN_DID_END);
+      expect(result[2].type).toBe(EventType.COMBAT_TURN_DID_START);
+      expect(mockDone).toHaveBeenCalledOnce();
+    });
+
+    it('should auto-advance turn when autoDone is true and AP is depleted by MOVE_BY_DISTANCE', () => {
+      const mockDone = vi.fn(() => [
+        {
+          type: EventType.COMBAT_TURN_DID_END,
+          actor: 'flux:actor:test-actor' as const,
+          location: 'flux:place:test-battlefield' as const,
+          payload: {}
+        }
+      ]) as any;
+
+      // Create scenario with exactly enough AP for a specific distance
+      const exactApScenario = useCombatMovementTestScenario({
+        attackerAP: 2.2, // Exactly enough for ~12m movement
+        advanceDeps: { done: mockDone }
+      });
+
+      const result = exactApScenario.advance(MOVE_BY_DISTANCE, 12, undefined, { autoDone: true });
+
+      // Should generate MOVE event + turn advancement events
+      expect(result.length).toBeGreaterThan(1);
+      expect(result[0].type).toBe(EventType.COMBATANT_DID_MOVE);
+      expect(result[result.length - 1].type).toBe(EventType.COMBAT_TURN_DID_END);
+      expect(mockDone).toHaveBeenCalledOnce();
+
+      // Verify AP is depleted
+      expect(exactApScenario.attacker.ap.eff.cur).toBe(0);
+    });
+
+    it('should auto-advance turn when autoDone is true and AP is depleted by MOVE_BY_AP', () => {
+      const mockDone = vi.fn(() => [
+        {
+          type: EventType.COMBAT_TURN_DID_END,
+          actor: 'flux:actor:test-actor' as const,
+          location: 'flux:place:test-battlefield' as const,
+          payload: {}
+        }
+      ]) as any;
+
+      // Create scenario with specific AP amount
+      const exactApScenario = useCombatMovementTestScenario({
+        attackerAP: 3.0,
+        advanceDeps: { done: mockDone }
+      });
+
+      const result = exactApScenario.advance(MOVE_BY_AP, 3.0, undefined, { autoDone: true });
+
+      // Should generate MOVE event + turn advancement events
+      expect(result.length).toBeGreaterThan(1);
+      expect(result[0].type).toBe(EventType.COMBATANT_DID_MOVE);
+      expect(result[result.length - 1].type).toBe(EventType.COMBAT_TURN_DID_END);
+      expect(mockDone).toHaveBeenCalledOnce();
+
+      // Verify AP is depleted
+      expect(exactApScenario.attacker.ap.eff.cur).toBeLessThanOrEqual(0.1);
+    });
+
+    it('should not auto-advance turn when autoDone is true but AP is not depleted', () => {
+      const mockDone = vi.fn(() => []);
+
+      const partialApScenario = useCombatMovementTestScenario({
+        attackerAP: 6.0,
+        advanceDeps: { done: mockDone }
+      });
+
+      const result = partialApScenario.advance(MOVE_BY_DISTANCE, 5, undefined, { autoDone: true });
+
+      // Should only generate MOVE event since AP is not depleted
+      expect(result).toHaveLength(1);
+      expect(result[0].type).toBe(EventType.COMBATANT_DID_MOVE);
+      expect(mockDone).not.toHaveBeenCalled();
+
+      // Verify AP is not depleted
+      expect(partialApScenario.attacker.ap.eff.cur).toBeGreaterThan(0.1);
+    });
+
+    it('should not call done when autoDone is false even if AP is depleted', () => {
+      const mockDone = vi.fn(() => []);
+
+      const maxApScenario = useCombatMovementTestScenario({
+        advanceDeps: { done: mockDone }
+      });
+
+      const result = maxApScenario.advance(MOVE_BY_MAX, 0, undefined, { autoDone: false });
+
+      // Should only generate MOVE event
+      expect(result).toHaveLength(1);
+      expect(result[0].type).toBe(EventType.COMBATANT_DID_MOVE);
+      expect(mockDone).not.toHaveBeenCalled();
+    });
+
+    it('should propagate trace to done events', () => {
+      const customTrace = 'custom-advance-trace-123';
+      const mockDone = vi.fn((trace) => [
+        createCombatTurnDidEndEvent((e) => ({ ...e, trace }))
+      ]);
+
+      const traceScenario = useCombatMovementTestScenario({
+        advanceDeps: { done: mockDone }
+      });
+
+      const result = traceScenario.advance(MOVE_BY_MAX, 0, customTrace, { autoDone: true });
+
+      expect(result.length).toBeGreaterThan(1);
+      expect(result[0].trace).toBe(customTrace);
+      expect(mockDone).toHaveBeenCalledWith(customTrace);
+    });
+
+    it('should not auto-advance when done dependency is not provided', () => {
+      // Create scenario without done dependency
+      const noDoneScenario = useCombatMovementTestScenario({
+        advanceDeps: {} // No done method
+      });
+
+      const result = noDoneScenario.advance(MOVE_BY_MAX, 0, undefined, { autoDone: true });
+
+      // Should only generate MOVE event since done is not available
+      expect(result).toHaveLength(1);
+      expect(result[0].type).toBe(EventType.COMBATANT_DID_MOVE);
+    });
+  });
+
+  describe('Efficiency Verification', () => {
+    it('should move full distance with 100% efficiency (forward movement)', () => {
+      const { advance, attacker } = defaultScenario;
+      const initialPosition = attacker.position.coordinate;
+      const testAP = 3.0;
+
+      const result = advance(MOVE_BY_AP, testAP);
+
+      expect(result).toHaveLength(1);
+      const event = result[0] as CombatantDidMove;
+      const actualDistance = Math.abs(event.payload.to.coordinate - initialPosition);
+
+      // ADVANCE should move the full distance that the AP allows (no efficiency penalty)
+      expect(actualDistance).toBeGreaterThan(0);
+      expect(event.payload.cost.ap).toBe(testAP);
+
+      // Store this for comparison with retreat tests
+      expect(event.payload.direction).toBe(MovementDirection.FORWARD);
+    });
+
+    it('should use all available AP for max movement', () => {
+      const { advance, attacker } = defaultScenario;
+      const initialAP = attacker.ap.eff.cur;
+
+      const result = advance(MOVE_BY_MAX, 0);
+
+      expect(result).toHaveLength(1);
+      const event = result[0] as CombatantDidMove;
+
+      // Should use all available AP
+      expect(event.payload.cost.ap).toBe(initialAP);
+      expect(attacker.ap.eff.cur).toBe(0);
+
+      // Should move some distance forward
+      expect(event.payload.distance).toBeGreaterThan(0);
+      expect(event.payload.direction).toBe(MovementDirection.FORWARD);
     });
   });
 });

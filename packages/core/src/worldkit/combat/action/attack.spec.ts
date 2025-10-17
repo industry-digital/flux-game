@@ -339,7 +339,7 @@ describe('Attack Method with AI Integration', () => {
       const result = attack();
 
       // Verify advance method was called with correct args
-      expect(mockAdvance).toHaveBeenCalledWith('distance', 10, undefined, expect.any(String));
+      expect(mockAdvance).toHaveBeenCalledWith('distance', 10, expect.any(String), { autoDone: undefined });
       expect(result).toContainEqual(
         expect.objectContaining({ type: 'combat:actor:moved' })
       );
@@ -373,7 +373,7 @@ describe('Attack Method with AI Integration', () => {
       const result = attack();
 
       // Verify retreat method was called with correct args
-      expect(mockRetreat).toHaveBeenCalledWith('distance', 5, undefined, expect.any(String));
+      expect(mockRetreat).toHaveBeenCalledWith('distance', 5, expect.any(String), { autoDone: undefined });
       expect(result).toContainEqual(
         expect.objectContaining({ type: 'combat:actor:moved' })
       );
@@ -417,7 +417,7 @@ describe('Attack Method with AI Integration', () => {
       const result = attack();
 
       // Verify both actions were executed in sequence
-      expect(mockAdvance).toHaveBeenCalledWith('distance', 5, undefined, expect.any(String));
+      expect(mockAdvance).toHaveBeenCalledWith('distance', 5, expect.any(String), { autoDone: undefined });
       expect(mockStrike).toHaveBeenCalledWith('flux:actor:bob', expect.any(String));
       // Should have 2 events: advance + strike (no target acquisition since combatant already targets 'flux:actor:bob')
       expect(result).toHaveLength(2);

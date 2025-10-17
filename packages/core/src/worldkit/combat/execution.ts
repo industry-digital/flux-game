@@ -31,11 +31,11 @@ export const executeCombatPlan = (
         break;
       }
       case CommandType.ADVANCE: {
-        events.push(...combatant.advance('distance', command.args.distance, command.args.target, command.id));
+        events.push(...combatant.advance('distance', command.args.distance, command.id, { autoDone: command.args.autoDone }));
         break;
       }
       case CommandType.RETREAT: {
-        events.push(...combatant.retreat('distance', command.args.distance, command.args.target, command.id));
+        events.push(...combatant.retreat('distance', command.args.distance, command.id, { autoDone: command.args.autoDone }));
         break;
       }
       case CommandType.ATTACK: {

@@ -1,5 +1,7 @@
 import { Combatant, CombatSession, CombatCommand } from '~/types/combat';
 import { TransformerContext } from '~/types/handler';
+import { CommandType } from '~/types/intent';
+import { createActorCommand } from '~/lib/intent';
 import { analyzeBattlefield } from '~/worldkit/combat/ai/analysis';
 import { createHeuristicProfile } from '~/worldkit/combat/ai/heuristics';
 import { findOptimalPlan, optimizeMovementSequence, DEFAULT_SEARCH_CONFIG } from '~/worldkit/combat/ai/search';
@@ -47,9 +49,19 @@ export function generateCombatPlan(
     return []; // No targets available, no plan needed
   }
 
-  // Early exit if insufficient resources for any meaningful action
+  // If insufficient resources for any meaningful action, generate a DEFEND action to end turn
   if (situation.resources.ap.current < 1.0) {
-    return [];
+    return [createActorCommand({
+      trace,
+      actor: combatant.actorId,
+      location: session.data.location,
+      session: session.id,
+      type: CommandType.DEFEND,
+      args: {
+        autoDone: true,
+        cost: { ap: situation.resources.ap.current, energy: 0 },
+      },
+    })];
   }
 
   // Create heuristic profile for this weapon type

@@ -24,21 +24,28 @@ import { MovementActionDependencies, DEFAULT_MOVEMENT_DEPS } from '../movement-d
 import { createMovementCostFromAp, createMovementCostFromDistance, createMaxMovementCost } from '~/worldkit/combat/tactical-cost';
 import { ActorURN } from '~/types/taxonomy';
 import { MovementDirection } from '~/types/combat';
+import { DoneMethod } from '../done';
+import { cleanApPrecision } from '~/worldkit/combat/ap';
 
 export type MovementEfficiencyProfile = {
-  forward: number;   // Efficiency multiplier for forward movement (1.0 = 100%)
-  backward: number;  // Efficiency multiplier for backward movement (>1.0 = penalty)
+  forward: number;   // Efficiency coefficient for forward movement (1.0 = 100%)
+  backward: number;  // Efficiency coefficient for backward movement (0.0-1.0, lower = less efficient)
 };
 
 export const DEFAULT_EFFICIENCY_PROFILE: MovementEfficiencyProfile = {
-  forward: 1.0,   // 100% efficiency
-  backward: 1.35, // 35% penalty for backward movement
+  forward: 1.0, // 100% efficiency
+  backward: 0.5, // 50% efficiency (half as efficient as forward movement)
 };
 
-export type MovementMethod = (by: MovementType, value: number, trace?: string) => WorldEvent[];
+export type MovementOptions = {
+  autoDone?: boolean;
+};
+
+export type MovementMethod = (by: MovementType, value: number, trace?: string, options?: MovementOptions) => WorldEvent[];
 
 export type MovementFactoryDependencies = MovementActionDependencies & {
   efficiencyProfile?: MovementEfficiencyProfile;
+  done?: DoneMethod;
 };
 
 /**
@@ -56,9 +63,9 @@ function calculateMovementEfficiency(
   // Backward movement penalty - could be enhanced with stat-based modifiers
   const finesse = getStatValue(actor, Stat.FIN);
 
-  // Higher finesse slightly reduces backward movement penalty (better body control)
+  // Higher finesse slightly improves backward movement efficiency (better body control)
   const finesseBonus = (finesse - 50) * 0.002; // ±0.1 efficiency per 50 finesse points
-  const adjustedBackwardEfficiency = Math.max(1.1, efficiencyProfile.backward - finesseBonus);
+  const adjustedBackwardEfficiency = Math.min(0.8, Math.max(0.3, efficiencyProfile.backward + finesseBonus));
 
   return adjustedBackwardEfficiency;
 }
@@ -84,8 +91,8 @@ function calculateDistanceMovement(
   distanceToApImpl: typeof distanceToAp
 ): MovementParameters {
   const distance = Number.isInteger(value) ? value : Math.ceil(value);
-  const baseApCost = distanceToApImpl(power, finesse, distance, actorMassKg);
-  const ap = baseApCost * efficiencyMultiplier;
+  // AP cost is always calculated from the requested distance - efficiency doesn't affect AP cost
+  const ap = distanceToApImpl(power, finesse, distance, actorMassKg);
 
   return { distance, ap };
 }
@@ -101,7 +108,7 @@ function calculateApMovement(
   combatant: Combatant,
   efficiencyMultiplier: number,
   apToDistanceImpl: typeof apToDistance,
-  roundApCostUp: typeof import('~/worldkit/combat/tactical-rounding').roundApCostUp,
+  roundApCostUp: (ap: number) => number,
   declareError: (message: string, trace: string) => void,
   trace: string
 ): MovementParameters | null {
@@ -116,9 +123,10 @@ function calculateApMovement(
     return null;
   }
 
-  // For backward movement, same AP covers less distance
+  // Efficiency affects how much distance you get for the same AP
+  // Lower efficiency coefficient = less distance for same AP (less efficient)
   const baseDistance = apToDistanceImpl(power, finesse, ap, actorMassKg);
-  const distance = baseDistance / efficiencyMultiplier;
+  const distance = baseDistance * efficiencyMultiplier;
 
   return { distance, ap };
 }
@@ -189,25 +197,18 @@ function calculateMovementParameters(
       );
 
       // Check if we can afford this movement
-      const finalCost = costResult.ap * efficiencyMultiplier;
-
-      if (finalCost > availableAp) {
+      if (costResult.ap > availableAp) {
         // If we can't afford the full distance, find the max distance we can afford
-        const affordableDistance = apToDistanceImpl(power, finesse, availableAp / efficiencyMultiplier, actorMassKg);
+        // For max movement, use all available AP and calculate the distance we can achieve
+        const baseDistance = apToDistanceImpl(power, finesse, availableAp, actorMassKg);
+        const affordableDistance = baseDistance * efficiencyMultiplier;
 
         if (affordableDistance <= 0) {
           declareError('No movement possible', trace);
           return null;
         }
 
-        return calculateDistanceMovement(
-          affordableDistance,
-          power,
-          finesse,
-          actorMassKg,
-          efficiencyMultiplier,
-          distanceToApImpl
-        );
+        return { distance: affordableDistance, ap: availableAp };
       }
 
       return costResult;
@@ -267,6 +268,7 @@ export function createMovementMethod(
     createMovementCostFromDistance: createMovementCostFromDistanceImpl = createMovementCostFromDistance,
     createMovementCostFromAp: createMovementCostFromApImpl = createMovementCostFromAp,
     efficiencyProfile = DEFAULT_EFFICIENCY_PROFILE,
+    done,
   } = deps;
 
   // Calculate efficiency multiplier for this movement direction
@@ -283,7 +285,9 @@ export function createMovementMethod(
     by: MovementType,
     value: number,
     trace: string = context.uniqid(),
+    options?: MovementOptions,
   ): WorldEvent[] {
+    const { autoDone = false } = options ?? {};
     // Input validation
     if (by !== MOVE_BY_MAX && value <= 0) {
       declareError(`${by === MOVE_BY_DISTANCE ? 'Distance' : 'AP'} must be positive`, trace);
@@ -364,9 +368,11 @@ export function createMovementMethod(
     }
 
     // Calculate tactical movement for position rounding
+    // For AP-based movement, use the efficiency-adjusted distance instead of raw AP
+    // to ensure tactical rounding respects efficiency calculations
     const mockInput = by === MOVE_BY_DISTANCE || by === MOVE_BY_MAX
       ? { type: 'distance' as const, distance }
-      : { type: 'ap' as const, ap };
+      : { type: 'distance' as const, distance }; // Use efficiency-adjusted distance for AP-based movement too
 
     const movementResult = calculateTacticalMovementImpl(
       power,
@@ -387,10 +393,10 @@ export function createMovementMethod(
         ? createMovementCostFromDistanceImpl(power, finesse, distance, actorMassKg)
         : createMovementCostFromApImpl(ap, power, finesse, actorMassKg);
 
-    // Apply efficiency multiplier to get final cost
-    // Must apply tactical rounding after efficiency multiplier to maintain precision
+    // Calculate final cost
+    // Efficiency multiplier is already applied in the movement parameter calculations
     const finalCost = {
-      ap: roundApCostUp(baseCost.ap * efficiencyMultiplier),
+      ap: by === MOVE_BY_MAX ? baseCost.ap : roundApCostUp(baseCost.ap),
       energy: baseCost.energy * efficiencyMultiplier,
     };
 
@@ -398,7 +404,8 @@ export function createMovementMethod(
     // For max movement, we should have already ensured this is affordable
     // For other movements, check affordability against the final cost
     if (by !== MOVE_BY_MAX && finalCost.ap > combatant.ap.eff.cur) {
-      const maxDistance = apToDistanceImpl(power, finesse, combatant.ap.eff.cur, actorMassKg) / efficiencyMultiplier;
+      const baseMaxDistance = apToDistanceImpl(power, finesse, combatant.ap.eff.cur, actorMassKg);
+      const maxDistance = baseMaxDistance * efficiencyMultiplier;
       declareError(
         `Movement would cost ${finalCost.ap} AP (you have ${combatant.ap.eff.cur} AP). Try: ${actionName.toLowerCase()} distance ${Math.floor(maxDistance)}m`,
         trace
@@ -436,7 +443,20 @@ export function createMovementMethod(
     });
 
     context.declareEvent(event);
-    return [event];
+    const events: WorldEvent[] = [event];
+
+    // Check for auto-done after AP deduction
+    // Only auto-advance turn if actor cannot perform any meaningful actions
+    // Use same threshold as AI system: 0.1 AP is the minimum for meaningful actions
+    const remainingAp = cleanApPrecision(combatant.ap.eff.cur);
+    const canStillAct = remainingAp > 0.1;
+
+    if (!canStillAct && autoDone && done) {
+      const doneEvents = done(trace);
+      events.push(...doneEvents);
+    }
+
+    return events;
   };
 }
 

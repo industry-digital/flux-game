@@ -20,7 +20,7 @@ import {
   renderWasAttackedNarrative,
   renderAcquireRangeNarrative,
   // Note: Actor death and energy recovery are handled by combat events
-} from '~/narrative/locale/en_US/combat';
+} from './combat';
 
 import {
   renderActorCreatedNarrative,
@@ -32,13 +32,13 @@ import {
   renderSwapShellNarrative,
   renderHelpFileNarrative,
   narrateActorDidLook,
-} from '~/narrative/locale/en_US/actor';
+} from './actor';
 
 import {
   renderPlaceCreatedNarrative,
   renderWeatherChangeNarrative,
   renderResourcesChangeNarrative,
-} from '~/narrative/locale/en_US/world';
+} from './world';
 
 import {
   renderWorkbenchSessionStartNarrative,
@@ -47,7 +47,11 @@ import {
   renderDiffMutationsNarrative,
   renderUndoMutationsNarrative,
   renderCommitMutationsNarrative,
-} from '~/narrative/locale/en_US/workbench';
+} from './workbench';
+
+import {
+  renderCurrencyTransactionNarrative,
+} from './currency';
 
 export const en_US: LanguageTemplates = {
   // Actor Events
@@ -59,7 +63,7 @@ export const en_US: LanguageTemplates = {
   [EventType.ACTOR_DID_DEPART]: renderActorDepartNarrative,
   [EventType.ACTOR_DID_DIE]: NOT_IMPLEMENTED, // This event type doesn't exist - handled by COMBATANT_DID_DIE
   [EventType.ACTOR_DID_RECOVER_ENERGY]: NOT_IMPLEMENTED, // This event type doesn't exist
-  [EventType.ACTOR_DID_COMPLETE_CURRENCY_TRANSACTION]: NOT_IMPLEMENTED,
+  [EventType.ACTOR_DID_COMPLETE_CURRENCY_TRANSACTION]: renderCurrencyTransactionNarrative,
   [EventType.ACTOR_DID_SWAP_SHELL]: renderSwapShellNarrative,
   [EventType.ACTOR_DID_QUERY_HELPFILE]: renderHelpFileNarrative,
 

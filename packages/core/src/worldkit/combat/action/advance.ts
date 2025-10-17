@@ -9,7 +9,11 @@ import { createMovementMethod, MovementFactoryDependencies } from './factory/mov
 export type AdvanceDependencies = MovementFactoryDependencies;
 export const DEFAULT_ADVANCE_DEPS = DEFAULT_MOVEMENT_DEPS;
 
-export type AdvanceMethod = (by: MovementType, value: number, trace?: string) => WorldEvent[];
+export type MovementOptions = {
+  autoDone?: boolean;
+};
+
+export type AdvanceMethod = (by: MovementType, value: number, trace?: string, options?: MovementOptions) => WorldEvent[];
 
 /**
  * Creates advance method using the unified movement factory
@@ -25,7 +29,7 @@ export function createAdvanceMethod(
   deps: AdvanceDependencies = DEFAULT_ADVANCE_DEPS,
 ): AdvanceMethod {
   // Use the unified movement factory with FORWARD direction
-  return createMovementMethod(
+  const moveMethod = createMovementMethod(
     context,
     session,
     actor,
@@ -33,4 +37,8 @@ export function createAdvanceMethod(
     MovementDirection.FORWARD,
     deps
   );
+
+  return (by: MovementType, value: number, trace?: string, options?: MovementOptions) => {
+    return moveMethod(by, value, trace, options);
+  };
 }

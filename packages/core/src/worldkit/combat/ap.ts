@@ -54,6 +54,10 @@ export function cleanApPrecision(ap: number): number {
   return Math.round(ap * TACTICAL_AP_PRECISION_FACTOR) / TACTICAL_AP_PRECISION_FACTOR;
 }
 
+export function getCurrentAp(combatant: Combatant): number {
+  return combatant.ap.eff.cur;
+}
+
 /**
  * Deduct AP from combatant
  * Directly mutates combatant state

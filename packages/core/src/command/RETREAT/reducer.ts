@@ -3,10 +3,15 @@ import { RetreatCommand } from './types';
 import { createCombatSessionApi } from '~/worldkit/combat/session/session';
 import { withBasicWorldStateValidation } from '~/command/validation';
 import { withExistingCombatSession } from '~/worldkit/combat/validation';
+import { MovementOptions } from '~/worldkit/combat/action/factory/movement';
 
 const DISTANCE = 'distance';
 const AP = 'ap';
 const MAX = 'max';
+
+const DEFAULT_MOVEMENT_OPTIONS: MovementOptions = {
+  autoDone: true, // Manual commands should auto-advance turns when AP is depleted
+};
 
 export const retreatReducer: PureReducer<TransformerContext, RetreatCommand> = withBasicWorldStateValidation(
   withExistingCombatSession(
@@ -21,15 +26,15 @@ export const retreatReducer: PureReducer<TransformerContext, RetreatCommand> = w
 
       switch (command.args.type) {
         case DISTANCE:
-          retreat(DISTANCE, command.args.distance, undefined, command.id);
+          retreat(DISTANCE, command.args.distance, command.id, DEFAULT_MOVEMENT_OPTIONS);
           break;
 
         case AP:
-          retreat(AP, command.args.ap, undefined, command.id);
+          retreat(AP, command.args.ap, command.id, DEFAULT_MOVEMENT_OPTIONS);
           break;
 
         case MAX:
-          retreat(MAX, 0, undefined, command.id); // Value ignored for max movement
+          retreat(MAX, 0, command.id, DEFAULT_MOVEMENT_OPTIONS); // Value ignored for max movement
           break;
 
         default:

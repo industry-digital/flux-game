@@ -23,6 +23,8 @@ type CombatMovementTestScenarioOptions = {
   mockCreateWorldEvent?: any;
   mockDistanceToAp?: any;
   mockApToDistance?: any;
+  advanceDeps?: Partial<AdvanceDependencies>; // Custom advance dependencies
+  retreatDeps?: Partial<RetreatDependencies>; // Custom retreat dependencies
 };
 
 export function useCombatMovementTestScenario({
@@ -37,6 +39,8 @@ export function useCombatMovementTestScenario({
   mockCreateWorldEvent = vi.fn((event) => event),
   mockDistanceToAp = distanceToAp,
   mockApToDistance = apToDistance,
+  advanceDeps = {},
+  retreatDeps = {},
 }: CombatMovementTestScenarioOptions = {}) {
 
   // Create context with mocked mass computation
@@ -82,19 +86,21 @@ export function useCombatMovementTestScenario({
     },
   });
 
-  // Create dependencies
-  const advanceDeps: AdvanceDependencies = {
+  // Create dependencies with custom overrides
+  const finalAdvanceDeps: AdvanceDependencies = {
     ...DEFAULT_ADVANCE_DEPS,
     createWorldEvent: mockCreateWorldEvent as unknown as typeof createWorldEvent,
     distanceToAp: stubPhysics ? mockDistanceToAp : distanceToAp,
     apToDistance: stubPhysics ? mockApToDistance : apToDistance,
+    ...advanceDeps, // Apply custom dependencies last to override defaults
   };
 
-  const retreatDeps: RetreatDependencies = {
+  const finalRetreatDeps: RetreatDependencies = {
     ...DEFAULT_RETREAT_DEPS,
     createWorldEvent: mockCreateWorldEvent as unknown as typeof createWorldEvent,
     distanceToAp: stubPhysics ? mockDistanceToAp : distanceToAp,
     apToDistance: stubPhysics ? mockApToDistance : apToDistance,
+    ...retreatDeps, // Apply custom dependencies last to override defaults
   };
 
   // Create movement methods
@@ -106,7 +112,7 @@ export function useCombatMovementTestScenario({
     scenario.session,
     attackerActor,
     attackerCombatant,
-    advanceDeps
+    finalAdvanceDeps
   );
 
   const retreat = createRetreatMethod(
@@ -114,7 +120,7 @@ export function useCombatMovementTestScenario({
     scenario.session,
     attackerActor,
     attackerCombatant,
-    retreatDeps
+    finalRetreatDeps
   );
 
   return {
