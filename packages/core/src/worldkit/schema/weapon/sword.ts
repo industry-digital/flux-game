@@ -5,7 +5,7 @@ export const createSwordSchema = (input: WeaponSchemaInput): WeaponSchema => {
   return createWeaponSchema({
     ...input,
     baseMass: 2_000, // 2kg - typical sword mass
-    name: input.name || 'Sword',
+    name: input.name || 'sword',
     range: {
       optimal: 1,
       max: 1,

@@ -5,14 +5,19 @@ import { createTransformerContext } from '~/worldkit/context';
 import { extractEventsByType } from '../../../testing/event/parsing';
 import { registerWeapons } from '../testing/schema';
 import { ActorURN } from '~/types/taxonomy';
-import { CombatantDidAttack, CombatantDidDie, CombatantWasAttacked, EventType } from '~/types/event';
-import { Team } from '~/types/combat';
+import { CombatantDidAttack, CombatantDidCleave, CombatantDidDie, CombatantWasAttacked, EventType } from '~/types/event';
+import { AttackType, Team } from '~/types/combat';
 import { createCleaveCost } from '~/worldkit/combat/tactical-cost';
 import { getStatValue } from '~/worldkit/entity/actor/stats';
 import { Stat } from '~/types/entity/actor';
 import { HumanAnatomy } from '~/types/taxonomy/anatomy';
 import { getCurrentEnergy, setEnergy } from '~/worldkit/entity/actor/capacitor';
 import { createWeaponSchema } from '~/worldkit/schema/weapon';
+
+// Type guard to help TypeScript understand CLEAVE attack events
+function isCleaveAttack(event: CombatantDidAttack): event is CombatantDidCleave {
+  return event.payload.attackType === AttackType.CLEAVE;
+}
 
 describe('Cleave Method', () => {
   let scenario: ReturnType<typeof useCombatScenario>;
@@ -142,6 +147,22 @@ describe('Cleave Method', () => {
       const damageEvents = extractEventsByType<CombatantWasAttacked>(result, EventType.COMBATANT_WAS_ATTACKED);
 
       expect(attackEvents).toHaveLength(1); // Single cleave attack
+
+      const attackEvent = attackEvents[0];
+      expect(attackEvent.payload.attackType).toBe(AttackType.CLEAVE);
+
+      // Use type guard to help TypeScript understand this is a CLEAVE attack
+      expect(isCleaveAttack(attackEvent)).toBe(true);
+
+      if (isCleaveAttack(attackEvent)) {
+        expect(attackEvent.payload.targets).toHaveLength(3);
+        expect(attackEvent.payload.targets).toContain(TARGET1_ID);
+        expect(attackEvent.payload.targets).toContain(TARGET2_ID);
+        expect(attackEvent.payload.targets).toContain(TARGET3_ID);
+        expect(attackEvent.payload.targets).not.toContain(ALLY_ID);
+        expect(attackEvent.payload.targets).not.toContain(FAR_TARGET_ID);
+      }
+
       expect(damageEvents).toHaveLength(3); // Hit 3 targets
 
       // Verify AP was consumed
@@ -181,7 +202,7 @@ describe('Cleave Method', () => {
         location: attacker.location,
         actor: attacker.id,
         payload: expect.objectContaining({
-          target: expect.any(String),
+          targets: expect.any(Array),
           attackType: 'cleave',
           cost: expect.objectContaining({
             ap: expect.any(Number),

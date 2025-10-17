@@ -5,7 +5,7 @@ import { TWO_HANDED_FIT } from '~/worldkit/schema/weapon/fit';
 export const createWarhammerSchema = (input: WeaponSchemaInput): WeaponSchema => {
   return createWeaponSchema({
     ...input,
-    name: input.name || 'Warhammer',
+    name: input.name || 'warhammer',
     baseMass: 12_000, // 12kg - heavy, devastating weapon
     range: {
       optimal: 1,

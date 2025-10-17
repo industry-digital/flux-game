@@ -40,6 +40,7 @@ export {
 
 export {
   Actor,
+  Gender,
   ActorType,
   ActorInput,
   Stat,

@@ -259,17 +259,26 @@ export type CombatantDidMoveInput = AbstractWorldEventInput<
   }
 >;
 
-export type CombatantDidAttack = EventBase & CombatantDidAttackInput;
-export type CombatantDidAttackInput = AbstractWorldEventInput<
+type CombatantDidAttackPayloadBase = {
+  cost: ActionCost;
+  roll: RollResult;
+  attackRating: number;
+};
+
+export type CombatantDidCleave = EventBase & CombatantDidCleaveInput
+type CombatantDidCleaveInput = AbstractWorldEventInput<
   EventType.COMBATANT_DID_ATTACK,
-  {
-    target: ActorURN;
-    attackType: AttackType;
-    cost: ActionCost;
-    roll: RollResult;
-    attackRating: number;
-  }
+  CombatantDidAttackPayloadBase & { attackType: AttackType.CLEAVE; targets: ActorURN[]; }
 >;
+
+export type CombatantDidStrike = EventBase & CombatantDidStrikeInput;
+type CombatantDidStrikeInput = AbstractWorldEventInput<
+  EventType.COMBATANT_DID_ATTACK,
+  CombatantDidAttackPayloadBase & { attackType: AttackType.STRIKE; target: ActorURN; }
+>;
+
+export type CombatantDidAttackInput = CombatantDidCleaveInput | CombatantDidStrikeInput;
+export type CombatantDidAttack = CombatantDidCleave | CombatantDidStrike;
 
 export type CombatantWasAttacked = EventBase & CombatantWasAttackedInput;
 export type CombatantWasAttackedInput = AbstractWorldEventInput<

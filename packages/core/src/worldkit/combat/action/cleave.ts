@@ -163,7 +163,7 @@ export function createCleaveMethod(
       trace: trace,
       actor: actor.id,
       payload: {
-        target: targets[0], // Primary target (could be omitted for area attacks)
+        targets,
         attackType: AttackType.CLEAVE,
         cost,
         roll: { dice: ATTACK_ROLL_SPECIFICATION, values: [], mods: {}, natural: 0, result: 0 }, // Will be updated with first roll
@@ -171,6 +171,8 @@ export function createCleaveMethod(
       },
     });
 
+    // Declare and add the cleave attack event
+    context.declareEvent(cleaveAttackEvent);
     allEvents.push(cleaveAttackEvent);
 
     let isFirstTarget = true;
@@ -257,8 +259,6 @@ export function createCleaveMethod(
       }
     }
 
-    // Declare and add the cleave attack event
-    context.declareEvent(cleaveAttackEvent);
 
     return allEvents;
   };

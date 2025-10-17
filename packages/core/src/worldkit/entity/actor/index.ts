@@ -7,6 +7,7 @@ import {
   ActorInput,
   Stat,
   ActorType,
+  Gender,
 } from '~/types/entity/actor';
 import { ActorURN } from '~/types/taxonomy';
 import { WellKnownPlace } from '~/types/world/space';
@@ -74,6 +75,7 @@ const createDefaultActor = (deps: ActorFactoryDependencies): Actor => {
     type: EntityType.ACTOR,
     name: '',
     description: { base: '' },
+    gender: Gender.MALE,
     kind: ActorType.PC,
     location: WellKnownPlace.ORIGIN,
     level: createModifiableScalarAttribute((defaults) => ({ ...defaults, nat: 1, eff: 1, mods: {} })),

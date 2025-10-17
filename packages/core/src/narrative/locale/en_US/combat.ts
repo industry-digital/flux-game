@@ -14,10 +14,11 @@ import {
   CombatantWasAttacked,
   CombatantDidAcquireRange,
 } from '~/types/event';
-import { MovementDirection } from '~/types/combat';
+import { AttackType, MovementDirection } from '~/types/combat';
 import { SessionStatus } from '~/types/session';
 import { TemplateFunction } from '~/types/narrative';
 import { ActorURN } from '~/types/taxonomy';
+import { Actor, Gender } from '~/types/entity/actor';
 import {
   withUserEventValidation,
   withInteractionValidation,
@@ -28,18 +29,99 @@ import {
 } from '~/narrative/util';
 import { getAllStats, getMaxHp } from '~/worldkit/entity/actor';
 
+const HIS = 'his';
+const HER = 'her';
+/**
+ * Get the appropriate possessive pronoun based on actor gender
+ */
+const getPossessivePronoun = (gender: Gender): string => {
+  return gender === Gender.MALE ? HIS : HER;
+};
+
+const renderCleaveNarrative = (actor: Actor, targets: Actor[], weapon: any, viewerActorId: ActorURN): string => {
+  const weaponName = weapon.name;
+  const possessive = getPossessivePronoun(actor.gender);
+  const weaponType = weapon.skill.split(':').slice(-1)[0] || 'generic';
+
+  // Generate weapon-specific cleave descriptions
+  const getCleaveDescription = () => {
+    switch (weaponType) {
+      case 'slash':
+        return {
+          firstPerson: `sweep your ${weaponName} in a devastating arc`,
+          thirdPerson: `sweeps ${possessive} ${weaponName} in a devastating arc`,
+          impact: 'cutting through the air'
+        };
+
+      case 'crush':
+        return {
+          firstPerson: `whirl your ${weaponName} in a crushing circle`,
+          thirdPerson: `whirls ${possessive} ${weaponName} in a crushing circle`,
+          impact: 'smashing through everything in reach'
+        };
+
+      case 'pierce':
+        return {
+          firstPerson: `thrust your ${weaponName} in a wide sweeping motion`,
+          thirdPerson: `thrusts ${possessive} ${weaponName} in a wide sweeping motion`,
+          impact: 'piercing through multiple targets'
+        };
+
+      default:
+        return {
+          firstPerson: `swing your ${weaponName} in a wide, sweeping attack`,
+          thirdPerson: `swings ${possessive} ${weaponName} in a wide, sweeping attack`,
+          impact: 'striking at everything within reach'
+        };
+    }
+  };
+
+  const descriptions = getCleaveDescription();
+
+  // Determine perspective
+  if (viewerActorId === actor.id) {
+    // Attacker's perspective
+    return `You ${descriptions.firstPerson}, ${descriptions.impact}!`;
+  }
+
+  if (targets.some(target => target.id === viewerActorId)) {
+    // Target's perspective - focus on the attack coming at them
+    return `${actor.name} ${descriptions.thirdPerson}, ${descriptions.impact}!`;
+  }
+
+  // Observer's perspective - show the full scope with target names
+  if (targets.length === 1) {
+    return `${actor.name} ${descriptions.thirdPerson} at ${targets[0].name}!`;
+  } else if (targets.length === 2) {
+    return `${actor.name} ${descriptions.thirdPerson} at ${targets[0].name} and ${targets[1].name}!`;
+  } else {
+    const targetNames = targets.slice(0, -1).map(t => t.name).join(', ');
+    const lastName = targets[targets.length - 1].name;
+    return `${actor.name} ${descriptions.thirdPerson} at ${targetNames}, and ${lastName}!`;
+  }
+};
+
 export const renderAttackNarrative: TemplateFunction<CombatantDidAttack, ActorURN> = (context, event, actorId) => {
   const { world, equipmentApi } = context;
   const actor = world.actors[event.actor];
-  const target = world.actors[event.payload.target];
 
-  // Handle missing actors gracefully
+  // Handle CLEAVE vs STRIKE attack types
+  if (event.payload.attackType === AttackType.CLEAVE) {
+    const targets = event.payload.targets.map(id => world.actors[id]).filter(Boolean);
+    if (!actor || targets.length === 0) {
+      return '';
+    }
+    return renderCleaveNarrative(actor, targets, equipmentApi.getEquippedWeaponSchema(actor), actorId);
+  }
+
+  // Handle STRIKE attacks (original logic)
+  const target = world.actors[event.payload.target];
   if (!actor || !target) {
     return '';
   }
 
   const weapon = equipmentApi.getEquippedWeaponSchema(actor);
-  const { attackType, roll, attackRating } = event.payload;
+  const { roll } = event.payload;
   const weaponName = weapon.name;
 
   const actorStats = getAllStats(actor);
@@ -50,6 +132,7 @@ export const renderAttackNarrative: TemplateFunction<CombatantDidAttack, ActorUR
     const actorPower = actorStats.pow?.eff || 0;
     const actorFinesse = actorStats.fin?.eff || 0;
     const isPowerfulAttack = actorPower > actorFinesse;
+    const possessive = getPossessivePronoun(actor.gender);
 
     // Weapon-specific attack verbs based on weapon type and stats
     const weaponType = weapon.skill.split(':').slice(-1)[0] || 'generic';
@@ -57,70 +140,51 @@ export const renderAttackNarrative: TemplateFunction<CombatantDidAttack, ActorUR
     switch (weaponType) {
       case 'unarmed':
         // Special handling for bare hands combat with martial arts flavor
-        if (attackType === 'cleave') {
-          return isPowerfulAttack
-            ? (isHighRoll ? 'unleashes a devastating spinning strike' : 'attempts a wide sweeping')
-            : (isHighRoll ? 'executes a precise spinning technique' : 'tries a sweeping');
-        }
         return isPowerfulAttack
           ? (isHighRoll ? 'delivers a crushing blow' : 'throws a heavy punch')
           : (isHighRoll ? 'strikes with lightning speed' : 'swings');
 
       case 'slash':
-        if (attackType === 'cleave') {
-          return isPowerfulAttack
-            ? (isHighRoll ? 'unleashes a devastating sweeping' : 'swings in a wide')
-            : (isHighRoll ? 'executes a precise sweeping' : 'attempts a sweeping');
-        }
         return isPowerfulAttack
-          ? (isHighRoll ? 'delivers a crushing' : 'swings their')
-          : (isHighRoll ? 'strikes with a swift' : 'slashes with their');
+          ? (isHighRoll ? 'delivers a crushing' : `swings ${possessive}`)
+          : (isHighRoll ? 'strikes with a swift' : `slashes with ${possessive}`);
 
       case 'pierce':
         return isPowerfulAttack
-          ? (isHighRoll ? 'drives their' : 'thrusts their')
-          : (isHighRoll ? 'darts forward with their' : 'jabs with their');
+          ? (isHighRoll ? `drives ${possessive}` : `thrusts ${possessive}`)
+          : (isHighRoll ? `darts forward with ${possessive}` : `jabs with ${possessive}`);
 
       case 'crush':
         return isPowerfulAttack
-          ? (isHighRoll ? 'brings down their' : 'swings their')
-          : (isHighRoll ? 'strikes precisely with their' : 'attacks with their');
+          ? (isHighRoll ? `brings down ${possessive}` : `swings ${possessive}`)
+          : (isHighRoll ? `strikes precisely with ${possessive}` : `attacks with ${possessive}`);
 
       case 'pistol':
       case 'rifle':
       case 'shotgun':
-        return isHighRoll ? 'fires their' : 'shoots their';
+        return isHighRoll ? `fires ${possessive}` : `shoots ${possessive}`;
 
       default:
         return isPowerfulAttack
-          ? (isHighRoll ? 'strikes powerfully with their' : 'attacks with their')
-          : (isHighRoll ? 'strikes precisely with their' : 'attacks with their');
+          ? (isHighRoll ? `strikes powerfully with ${possessive}` : `attacks with ${possessive}`)
+          : (isHighRoll ? `strikes precisely with ${possessive}` : `attacks with ${possessive}`);
     }
   };
 
   const attackDescription = getAttackDescription();
 
-  // Generate narrative for all perspectives
+  // Generate narrative for all perspectives (STRIKE attacks only)
   if (actorId === event.actor) {
     // actorId is the attacker
-    if (attackType === 'cleave') {
-      return `You ${attackDescription} ${weaponName} in a sweeping attack!`;
-    }
-    return `You ${attackDescription.replace('their', 'your')} ${weaponName} at ${target.name}.`;
+    return `You ${attackDescription.replace(/his|her/, 'your')} ${weaponName} at ${target.name}.`;
   }
 
   if (actorId === event.payload.target) {
     // actorId is the target
-    if (attackType === 'cleave') {
-      return `${actor.name} ${attackDescription} ${weaponName} in a sweeping attack!`;
-    }
     return `${actor.name} ${attackDescription} ${weaponName} at you.`;
   }
 
   // actorId is an observer
-  if (attackType === 'cleave') {
-    return `${actor.name} ${attackDescription} ${weaponName} in a sweeping attack!`;
-  }
   return `${actor.name} ${attackDescription} ${weaponName} at ${target.name}.`;
 };
 
@@ -153,8 +217,8 @@ export const renderWasAttackedNarrative: TemplateFunction<CombatantWasAttacked, 
           : `misses ${target.name} completely with your ${weaponName}`;
       } else {
         return isCloseCall
-          ? `barely avoids ${target.name} with the ${weaponName}`
-          : `sidesteps the ${weaponName}`;
+          ? `barely misses ${target.name} with the ${weaponName}`
+          : `misses ${target.name} with the ${weaponName}`;
       }
     }
 

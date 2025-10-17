@@ -9,6 +9,6 @@ export const createBowSchema = (input: WeaponSchemaInput): WeaponSchema => {
       falloff: 30,
     },
     ...input,
-    name: input.name || 'Bow',
+    name: input.name || 'bow',
   });
 };

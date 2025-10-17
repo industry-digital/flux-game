@@ -149,6 +149,11 @@ export type CapacitorState = CurvePosition & {
   energy: ModifiableBoundedAttribute;
 };
 
+export enum Gender {
+  MALE = 'M',
+  FEMALE = 'F',
+}
+
 /**
  * The input type for creating a new Actor, containing only the required fields
  * that need to be provided when creating an Actor.
@@ -185,6 +190,11 @@ export type Actor =
    * Character level. e.g., "You are a 5th level barbarian."
    */
   level: ModifiableScalarAttribute;
+
+  /**
+   * The actor's gender
+   */
+  gender: Gender;
 
   /**
    * Hit points. When this reaches 0, the actor is usually considered dead.
