@@ -173,10 +173,9 @@ function calculateMovementParameters(
         maxDistance = Math.min(maxDistance, collisionDistance);
       }
 
-      // If no movement is possible, error
+      // If no movement is possible, return zero movement (no error for max movement)
       if (maxDistance <= 0) {
-        declareError('No movement possible', trace);
-        return null;
+        return { distance: 0, ap: 0 };
       }
 
       // 3. Compute cost from the clamped distance

@@ -6,6 +6,7 @@ import { withExistingCombatSession } from '~/worldkit/combat/validation';
 
 const DISTANCE = 'distance';
 const AP = 'ap';
+const MAX = 'max';
 
 export const retreatReducer: PureReducer<TransformerContext, RetreatCommand> = withBasicWorldStateValidation(
   withExistingCombatSession(
@@ -16,29 +17,25 @@ export const retreatReducer: PureReducer<TransformerContext, RetreatCommand> = w
 
       // Get combatant API from existing combat session (no session creation)
       const { getCombatantApi } = createCombatSessionApi(context, actor.location, session.id);
-      const combatantApi = getCombatantApi(actor.id);
+      const { retreat } = getCombatantApi(actor.id);
 
       switch (command.args.type) {
-        case 'distance':
-          combatantApi.retreat(DISTANCE, command.args.distance, undefined, command.id);
+        case DISTANCE:
+          retreat(DISTANCE, command.args.distance, undefined, command.id);
           break;
 
-        case 'ap':
-          combatantApi.retreat(AP, command.args.ap, undefined, command.id);
+        case AP:
+          retreat(AP, command.args.ap, undefined, command.id);
           break;
 
-        case 'max':
-          // TODO: Add 'max' movement support to combatantApi.retreat method
-          // This is an architectural violation - the reducer should not compute movement
-          // The combat API should handle 'max' movement internally
-          combatantApi.retreat(AP, combatantApi.combatant.ap.eff.cur, undefined, command.id);
+        case MAX:
+          retreat(MAX, 0, undefined, command.id); // Value ignored for max movement
           break;
 
         default:
           // TypeScript exhaustiveness check
-          const _exhaustive: never = command.args;
-          context.declareError('RETREAT: Unknown command type', command.id);
-          return context;
+          context.declareError('RETREAT: Unknown movement type', command.id);
+          break;
       }
 
       return context;

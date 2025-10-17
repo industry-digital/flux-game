@@ -253,21 +253,20 @@ describe('createAdvanceMethod', () => {
       expect(attacker.position.coordinate).toBeCloseTo(112, 0); // Stopped due to AP limit
     });
 
-    it('should error when no movement is possible', () => {
+    it('should not move when blocked by adjacent enemy but not error', () => {
       const blockedScenario = useCombatMovementTestScenario({
         attackerPosition: 100,
         enemyPosition: 101, // Enemy immediately adjacent
         attackerAP: 10.0,
       });
-      const { advance, context } = blockedScenario;
+      const { advance, attacker, context } = blockedScenario;
+      const initialPosition = attacker.position.coordinate;
 
       const result = advance(MOVE_BY_MAX, 0);
 
-      expect(result).toHaveLength(0);
-      expect(context.declareError).toHaveBeenCalledWith(
-        expect.stringContaining('No movement possible'),
-        expect.any(String)
-      );
+      expect(result).toHaveLength(1); // Should generate event with zero movement
+      expect(attacker.position.coordinate).toBe(initialPosition); // No movement
+      expect(context.declareError).not.toHaveBeenCalled(); // No error for max movement
     });
 
     it('should error when actor has zero AP', () => {

@@ -29,10 +29,7 @@ export const advanceReducer: PureReducer<TransformerContext, AdvanceCommand> = w
           break;
 
         case MAX:
-          // TODO: Add 'max' movement support to combatantApi.advance method
-          // This is an architectural violation - the reducer should not compute movement
-          // The combat API should handle 'max' movement internally
-          combatantApi.advance(AP, combatantApi.combatant.ap.eff.cur, undefined, command.id);
+          combatantApi.advance(MAX, 0, undefined, command.id); // Value ignored for max movement
           break;
 
         default:
