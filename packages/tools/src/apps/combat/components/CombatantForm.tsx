@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import type { ActorURN, WeaponSchemaURN, SkillURN, WeaponSchema } from '@flux/core';
 import type { ActorStatsInput, DerivedStats } from '../hooks/useCombatScenario';
 import './CombatantForm.css';
@@ -34,6 +34,11 @@ export function CombatantForm({
   isExpanded = false,
 }: CombatantFormProps) {
   const [localStats, setLocalStats] = useState<ActorStatsInput>(stats);
+
+  // Sync local stats with props when they change
+  useEffect(() => {
+    setLocalStats(stats);
+  }, [stats]);
 
   // Handle stat changes with real-time updates
   const handleStatChange = useCallback((stat: keyof ActorStatsInput, value: number) => {

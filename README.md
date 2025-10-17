@@ -1,5 +1,9 @@
 # Priorities
 
+1. GET
+1. EQUIP
+1. UNEQUIP
+1. Combat: Injury Mechanics + dropping weapon
 1. [Workbench: Basic Mechanics](./docs/gameplay/workbench.md)
 1. [Party Mechanics](./packages/guide/src/party/mechanics.md)
 1. [Combat: Capacitor Mechanics](./docs/gameplay/overview.md)

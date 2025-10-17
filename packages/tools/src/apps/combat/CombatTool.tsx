@@ -5,12 +5,13 @@ import {
   BOB_ID,
   getNameFromActorId,
   type OptionalActorName,
+  type ActorStatsInput,
   DAVE_ID,
   ERIC_ID,
   CHARLIE_ID,
   FRANZ_ID,
 } from './hooks/useCombatScenario';
-import { Team, EventType } from '@flux/core';
+import { Team, EventType, Stat, type SkillURN, type WeaponSchemaURN } from '@flux/core';
 import { useCombatActors } from './hooks/useCombatActors';
 import { useCombatSession } from './hooks/useCombatSession';
 import { useCombatState } from './hooks/useCombatState';
@@ -75,6 +76,7 @@ export function createCombatTool(_deps: CombatToolDependencies = DEFAULT_COMBAT_
       addOptionalActor,
       removeOptionalActor,
       getTeamActors,
+      updateActorStats,
       updateActorSkill,
       updateActorWeapon,
       updateActorAiControl,
@@ -150,6 +152,45 @@ export function createCombatTool(_deps: CombatToolDependencies = DEFAULT_COMBAT_
       executeCommand
     );
 
+    // Bridge function to handle stats updates with proper type conversion and dual updates
+    const handleStatsChange = useCallback((actorId: ActorURN, stats: Partial<ActorStatsInput>) => {
+      // Convert ActorStatsInput format to Stat enum format
+      const statUpdates: Partial<Record<Stat, number>> = {};
+      if (stats.pow !== undefined) statUpdates[Stat.POW] = stats.pow;
+      if (stats.fin !== undefined) statUpdates[Stat.FIN] = stats.fin;
+      if (stats.res !== undefined) statUpdates[Stat.RES] = stats.res;
+      if (stats.int !== undefined) statUpdates[Stat.INT] = stats.int;
+      if (stats.per !== undefined) statUpdates[Stat.PER] = stats.per;
+      if (stats.mem !== undefined) statUpdates[Stat.MEM] = stats.mem;
+
+      // Update both scenario data (for persistence) and actor data (for immediate effect)
+      updateActorStats(actorId, stats); // Update scenario data
+      actors.updateActorStats(actorId, statUpdates); // Update actor data with mutations
+    }, [updateActorStats, actors.updateActorStats]);
+
+    // Bridge function to handle skill updates with dual updates
+    const handleSkillChange = useCallback((actorId: ActorURN, skillUrn: SkillURN, rank: number) => {
+      if (!context) return;
+
+      const actor = context.world.actors[actorId];
+      if (!actor) {
+        console.warn(`Cannot update skill: actor ${actorId} not found`);
+        return;
+      }
+
+      // Update both scenario data (for persistence) and actor data (for immediate effect)
+      updateActorSkill(actorId, skillUrn, rank); // Update scenario data
+      context.actorSkillApi.setActorSkillRank(actor, skillUrn, rank); // Update actor data with mutations
+      actors.syncActorsFromContext(); // Force re-render
+    }, [updateActorSkill, context, actors.syncActorsFromContext]);
+
+    // Bridge function to handle weapon updates with dual updates
+    const handleWeaponChange = useCallback((actorId: ActorURN, weaponUrn: WeaponSchemaURN) => {
+      // Update both scenario data (for persistence) and actor data (for immediate effect)
+      updateActorWeapon(actorId, weaponUrn); // Update scenario data
+      actors.updateActorWeapon(actorId, weaponUrn); // Update actor data with mutations
+    }, [updateActorWeapon, actors.updateActorWeapon]);
+
     // Helper function to render enhanced CombatantCard with all necessary props
     const renderCombatantCard = useCallback((actorId: ActorURN) => {
       const actor = actors.actors[actorId];
@@ -176,22 +217,22 @@ export function createCombatTool(_deps: CombatToolDependencies = DEFAULT_COMBAT_
           selectedWeapon={actorData.weapon}
           availableWeapons={actors.availableWeapons}
           derivedStats={calculateDerivedStats(actorId)}
-          onStatsChange={actors.updateActorStats}
-          onSkillChange={updateActorSkill}
-          onWeaponChange={updateActorWeapon}
+          onStatsChange={handleStatsChange}
+          onSkillChange={handleSkillChange}
+          onWeaponChange={handleWeaponChange}
         />
       );
     }, [
       actors.actors,
       actors.availableWeapons,
-      actors.updateActorStats,
+      handleStatsChange,
+      handleSkillChange,
+      handleWeaponChange,
       scenarioData.actors,
       session.currentActorId,
       session.isInSetupPhase,
       aiControl.aiThinking,
       calculateDerivedStats,
-      updateActorSkill,
-      updateActorWeapon,
       updateActorAiControl,
       context.mass.computeCombatMass,
     ]);
