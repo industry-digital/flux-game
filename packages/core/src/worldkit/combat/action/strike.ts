@@ -105,7 +105,7 @@ export function createStrikeMethod(
       return [];
     }
 
-      const finesse = getStatValue(actor, Stat.FIN);
+    const finesse = getStatValue(actor, Stat.FIN);
     const cost: ActionCost = createStrikeCostImpl(weaponMassKg, finesse);
     if (cost.ap! > combatant.ap.eff.cur) {
       declareError(`You don't have enough AP to strike.`, trace);
