@@ -1,17 +1,33 @@
 import { describe, it, expect } from 'vitest';
 import { calculateAttackRating, ATTACK_SKILL_MULTIPLIER } from './attack';
-import { Actor } from '~/types/entity/actor';
-import { WeaponSchema } from '~/types/schema/weapon';
+import { Actor, Stat } from '~/types/entity/actor';
+import { AccuracyModel, WeaponSchema } from '~/types/schema/weapon';
+import { createTestWeapon } from '~/worldkit/combat/testing/weapon';
+import { DamageModel, DamageType } from '~/types/damage';
 
 describe('Attack Rating Calculation', () => {
-  const mockWeapon: WeaponSchema = {
+  const mockWeapon: WeaponSchema = createTestWeapon((schema: WeaponSchema) => ({
+    ...schema,
     urn: 'flux:schema:weapon:test-sword',
     name: 'Test Sword',
-    skill: 'flux:skill:combat:melee' as any,
+    skill: 'flux:skill:combat:melee',
     baseMass: 2000,
     range: { optimal: 1 },
-    fit: {}
-  };
+    accuracy: {
+      model: AccuracyModel.SKILL_SCALING,
+      skill: 'flux:skill:combat:melee',
+      base: '1d20',
+    },
+    damage: {
+      model: DamageModel.STAT_SCALING,
+      stat: Stat.POW,
+      base: '1d6',
+      massEffect: 0.5,
+      types: {
+        [DamageType.SLASH]: 1.0,
+      },
+    },
+  }));
 
   const createMockActor = (skillRank: number): Actor => ({
     id: 'test-actor',

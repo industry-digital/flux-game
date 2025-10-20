@@ -1,7 +1,8 @@
 import { createWeaponSchema, WeaponSchemaInput } from './factory';
 import { WeaponSchema } from '~/types/schema/weapon';
 import { TWO_HANDED_FIT } from '~/worldkit/schema/weapon/fit';
-import { DamageType } from '~/types/damage';
+import { DamageModel, DamageType } from '~/types/damage';
+import { Stat } from '~/types/entity/actor';
 
 export const createWarhammerSchema = (input: WeaponSchemaInput): WeaponSchema => {
   return createWeaponSchema({
@@ -14,8 +15,14 @@ export const createWarhammerSchema = (input: WeaponSchemaInput): WeaponSchema =>
       max: 1,
     },
     fit: TWO_HANDED_FIT,
-    damageTypes: {
-      [DamageType.IMPACT]: 1.0,
+    damage: {
+      model: DamageModel.STAT_SCALING,
+      stat: Stat.POW,
+      base: '3d6',
+      massEffect: 1.0,
+      types: {
+        [DamageType.IMPACT]: 1.0,
+      },
     },
   });
 };

@@ -14,7 +14,7 @@ export enum DieSize {
  * A RollSpecification is a string that describes a roll. It consists of a number followed by a die type.
  * For example, "2d6" means two six-sided dice are rolled.
  */
-export type RollSpecification = `${number}d${DieSize}`;
+export type RollSpecification = `${number}d${DieSize}` | `${number}d${DieSize}+${number}`;
 
 export interface RollResult {
   /**

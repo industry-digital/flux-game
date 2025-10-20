@@ -1,5 +1,5 @@
 import { Actor } from '~/types/entity/actor';
-import { WeaponSchema } from '~/types/schema/weapon';
+import { AccuracyModel, WeaponSchema } from '~/types/schema/weapon';
 import { getActorSkill, getEffectiveSkillRank } from '~/worldkit/entity/actor/skill';
 
 /**
@@ -42,14 +42,20 @@ export const calculateAttackRating = (
   baseRoll: number,
   deps: CalculateAttackRatingDependencies = DEFAULT_CALCULATE_ATTACK_RATING_DEPS,
 ): number => {
-  const skillState = deps.getActorSkill(actor, weapon.skill);
-  const weaponSkillRank = deps.getEffectiveSkillRank(actor, weapon.skill, skillState);
+  let attackRating = 0;
 
-  // Skill bonus: 0-80 points (rank 0-100 * 0.8 multiplier)
-  const skillBonus = weaponSkillRank * ATTACK_SKILL_MULTIPLIER;
+  if (weapon.accuracy.model === AccuracyModel.SKILL_SCALING) {
+    const skillState = deps.getActorSkill(actor, weapon.accuracy.skill);
+    const weaponSkillRank = deps.getEffectiveSkillRank(actor, weapon.accuracy.skill, skillState);
 
-  // Base roll (1-20) + skill bonus (0-80) = total rating (1-100)
-  const attackRating = baseRoll + skillBonus;
+    // Skill bonus: 0-80 points (rank 0-100 * 0.8 multiplier)
+    const skillBonus = weaponSkillRank * ATTACK_SKILL_MULTIPLIER;
+
+    // Base roll (1-20) + skill bonus (0-80) = total rating (1-100)
+    attackRating = baseRoll + skillBonus;
+  } else {
+    throw new Error(`Unsupported accuracy model: ${weapon.accuracy.model}`);
+  }
 
   // Ensure we don't exceed theoretical maximum
   return Math.min(attackRating, 100);

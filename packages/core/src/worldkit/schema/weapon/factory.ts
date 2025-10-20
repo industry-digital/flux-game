@@ -1,31 +1,41 @@
-import { WeaponSchema } from '~/types/schema/weapon';
-import { DamageType, HUMAN_ANATOMY } from '~/types';
-import { WeaponSchemaURN } from '~/types/taxonomy';
+import { AccuracyModel, WeaponSchema } from '~/types/schema/weapon';
+import { DamageType, HUMAN_ANATOMY, Stat } from '~/types';
+import { DamageModel } from '~/types/damage';
 
-export type WeaponSchemaInput = Partial<WeaponSchema> & {
-  urn: WeaponSchemaURN;
-  name: string;
-  baseMass?: number;
-  fit?: WeaponSchema['fit'];
-};
+export type WeaponSchemaInput = Partial<WeaponSchema>;
 
-export function createWeaponSchema(input: WeaponSchemaInput): WeaponSchema {
-  return {
-    // Required fields with defaults
-    skill: 'flux:skill:weapon:melee',// FIXME: should be input.skill
+export type WeaponTransformer = (schema: WeaponSchema) => WeaponSchema;
+
+export function createWeaponSchema(inputOrTransform: WeaponSchemaInput | WeaponTransformer): WeaponSchema {
+  const defaults: Partial<WeaponSchema> = {
     range: {
       optimal: 1,
       max: 1,
     },
     timers: {},
-    baseMass: input.baseMass || 1000,
-    fit: input.fit || {
+    baseMass: 1000,
+    fit: {
       [HUMAN_ANATOMY.RIGHT_HAND]: 1,
     },
-    damageTypes: {
-      [DamageType.SLASH]: 1,
+    accuracy: {
+      model: AccuracyModel.SKILL_SCALING,
+      skill: 'flux:skill:weapon:melee',
+      base: '1d20',
     },
-    // Spread input to allow overrides
-    ...input,
+    damage: {
+      model: DamageModel.STAT_SCALING,
+      stat: Stat.POW,
+      base: '1d6',
+      massEffect: 0.5,
+      types: {
+        [DamageType.SLASH]: 1.0,
+      },
+    },
   };
+
+  if (typeof inputOrTransform === 'function') {
+    return inputOrTransform(defaults as WeaponSchema);
+  }
+
+  return { ...defaults, ...inputOrTransform } as WeaponSchema;
 }

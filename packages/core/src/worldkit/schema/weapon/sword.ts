@@ -1,6 +1,7 @@
 import { WeaponSchema } from '~/types/schema/weapon';
 import { createWeaponSchema, WeaponSchemaInput } from './factory';
-import { DamageType } from '~/types/damage';
+import { DamageModel, DamageType } from '~/types/damage';
+import { Stat } from '~/types/entity/actor';
 
 export const createSwordSchema = (input: WeaponSchemaInput): WeaponSchema => {
   return createWeaponSchema({
@@ -12,9 +13,14 @@ export const createSwordSchema = (input: WeaponSchemaInput): WeaponSchema => {
       optimal: 1,
       max: 1,
     },
-    damageTypes: {
-      [DamageType.SLASH]: 0.8,  // Primary slashing damage
-      [DamageType.PIERCE]: 0.2, // Some piercing from the point
+    damage: {
+      model: DamageModel.STAT_SCALING,
+      stat: Stat.POW,
+      base: '2d6',
+      massEffect: 0.6,
+      types: {
+        [DamageType.SLASH]: 1,
+      },
     },
   });
 };

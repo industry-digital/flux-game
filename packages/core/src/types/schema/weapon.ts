@@ -1,16 +1,24 @@
 import { AmmoSchemaURN, SkillURN, Taxonomy } from '~/types/taxonomy';
 import { Equippable } from '~/types/schema/equipment';
 import { ChargeableMixin } from '~/types/entity/item';
-import { DamageSpecification, DamageType } from '~/types/damage';
+import { DamageSpecification } from '~/types/damage';
 import { AbstractItemSchema } from '~/types/schema/item';
-import { NormalizedValueBetweenZeroAndOne } from '~/types/entity/attribute';
+import { RollSpecification } from '~/types/dice';
 
-export type WeaponAttackSpecification = {
-  /**
-   * The base attack rating of the weapon. Defaults to zero.
-   */
-  base?: number;
+export enum AccuracyModel {
+  SKILL_SCALING = 'skill',
 }
+
+export type AbstractAccuracySpecification<TAccuracyModel extends AccuracyModel> = {
+  model: TAccuracyModel;
+  base: RollSpecification;
+}
+
+export type SkillScalingAccuracySpecification = AbstractAccuracySpecification<AccuracyModel.SKILL_SCALING> & {
+  skill: SkillURN;
+}
+
+export type AccuracySpecification = SkillScalingAccuracySpecification;
 
 export type WeaponAmmoSpecification = {
   type: AmmoSchemaURN;
@@ -28,6 +36,7 @@ export type WeaponTimers = {
 
   /**
    * The time it takes to "charge" or "wind up" the weapon before firing
+   * This is a separate concept from loading the weapon with ammo.
    */
   charge?: number;
 
@@ -42,13 +51,16 @@ export type WeaponTimers = {
   cooldown?: number;
 
   /**
-   * The time it takes to reload the weapon
+   * The time it takes to load the weapon
    */
   reload?: number;
 }
 
 export type WeaponRangeSpecification = {
   optimal: number;
+  /**
+   * If the weapon has a `falloff`, it is effectively a ranged weapon.
+   */
   falloff?: number;
   min?: number;
   max?: number;
@@ -65,25 +77,20 @@ export type WeaponSchema  =
 
   /**
    * The skill that modifies the weapon's effectiveness
+   * @deprecated - use `accuracy` instead
    */
-  skill: SkillURN;
+  skill?: SkillURN;
 
   /**
-   * How easy it is to hit a target
+   * Describes how the weapon's attack rating is determined
    */
-  attack?: WeaponAttackSpecification;
+  accuracy: AccuracySpecification;
 
   /**
-   * The types of damage the weapon deals
-   * All entries must sum to 1.0
+   * How the weapon deals damage
+   * If not specified, the weapon deals damage based on its ammo
    */
-  damageTypes: Partial<Record<DamageType, NormalizedValueBetweenZeroAndOne>>;
-
-  /**
-   * How much damage the weapon deals
-   * @deprecated
-   */
-  damage?: DamageSpecification;
+  damage: DamageSpecification;
 
   /**
    * Weapon range specifications
@@ -97,6 +104,7 @@ export type WeaponSchema  =
 
   /**
    * If this weapon consumes ammo, this is the type of ammo it uses
+   * If the `damage` model is `ammo-based`, this is required.
    */
   ammo?: WeaponAmmoSpecification;
 

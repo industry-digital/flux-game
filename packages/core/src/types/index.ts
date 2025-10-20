@@ -200,7 +200,7 @@ export {
 
 export {
   WeaponSchema,
-  WeaponAttackSpecification,
+  AccuracySpecification as WeaponAttackSpecification,
   WeaponTimers,
   WeaponRangeSpecification,
 } from './schema/weapon';

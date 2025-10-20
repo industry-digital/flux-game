@@ -1,0 +1,203 @@
+---
+title: Weapon Systems
+description: Understanding the unified weapon mechanics in Flux combat
+---
+
+# Weapon Systems
+
+Flux implements a unified weapon system built on simple primitives that create emergent complexity. Every weapon follows the same core mechanics while producing distinct tactical behaviors through different combinations of accuracy and damage models.
+
+## Core Architecture
+
+### The Universal Weapon Formula
+
+Every weapon interaction follows this three-step process:
+
+1. **Calculate Attack Rating**: `1d20 + skill bonus + weapon accuracy + stat bonus`
+2. **Resolve Hit**: Contest attack rating vs defender's evasion rating
+3. **Calculate Damage**: Apply weapon's damage model if hit connects
+
+This separation of concerns allows weapons to have distinct characteristics while using consistent underlying mechanics.
+
+## Damage Models
+
+Weapons use one of two fundamental damage models based on their energy source:
+
+### Stat-Based Damage (Muscular Weapons)
+
+Damage scales with character attributes, representing weapons powered by user strength or technique.
+
+```typescript
+// Melee weapons: weapon mass affects damage
+damage = baseDice + (statValue * efficiency * weaponMass)
+
+// Ranged weapons: mass ignored, damage from projectile energy
+damage = baseDice + (statValue * efficiency * scalingFactor)
+```
+
+**Examples**: Swords, bows, thrown weapons, heavy melee weapons
+
+**Characteristics**:
+- Damage increases with character development
+- **Melee weapons**: Heavier weapons benefit more from strength investment
+- **Ranged weapons**: Damage comes from projectile energy, not launcher mass
+- Creates clear progression incentives
+
+### Stored Potential Damage (Energy Weapons)
+
+Damage comes from pre-stored energy independent of user strength.
+
+```typescript
+damage = baseDice  // Fixed energy release
+```
+
+**Examples**: Firearms, energy weapons, explosives
+
+**Characteristics**:
+- Consistent damage regardless of user stats
+- Ammunition may modify damage output
+- User stats affect handling, not damage potential
+
+## Accuracy System
+
+All weapons use stat-based accuracy scaling with weapon-specific modifiers:
+
+```typescript
+attackRating = 1d20 + skillBonus + weaponAccuracyBonus + statBonus
+```
+
+Where `statBonus = floor((statValue - 10) / 2)`, providing meaningful scaling from baseline (10) to maximum (100) stats.
+
+### Accuracy Stats by Weapon Type
+
+- **POW (Power)**: Heavy weapons requiring strength to control recoil or weapon mass
+- **FIN (Finesse)**: Precision weapons benefiting from steady hands and fine motor control
+- **INT (Intelligence)**: Technical weapons with smart targeting or complex operation
+
+## Weapon Archetypes
+
+The combination of damage models and accuracy stats creates distinct weapon categories:
+
+### Pure Strength Weapons
+- **Accuracy**: POW stat (weapon control)
+- **Damage**: STAT_BASED POW (muscle power)
+- **Identity**: Raw power weapons rewarding physical builds
+
+**Example - Warhammer**:
+```typescript
+{
+  accuracy: { modifier: -2, stat: POW },     // Hard to control precisely
+  damage: { model: STAT_BASED, stat: POW, efficiency: 1.0 }
+}
+```
+
+Strong characters excel with both accuracy and damage; weak characters struggle with both.
+
+### Pure Finesse Weapons
+- **Accuracy**: FIN stat (steady aim)
+- **Damage**: STORED_POTENTIAL (fixed energy)
+- **Identity**: Precision weapons rewarding technique over strength
+
+**Example - Sniper Rifle**:
+```typescript
+{
+  accuracy: { bonus: 8, stat: FIN },      // Rewards steady hands
+  damage: { model: STORED_POTENTIAL }     // Fixed bullet energy
+}
+```
+
+Steady characters achieve excellent accuracy with consistent damage output.
+
+### Hybrid Weapons
+- **Accuracy**: One stat (typically FIN)
+- **Damage**: Different stat (typically POW)
+- **Identity**: Complex weapons requiring multiple attributes
+
+**Example - Compound Bow**:
+```typescript
+{
+  range: { optimal: 30, falloff: 30 },    // Ranged weapon classification
+  accuracy: { bonus: 2, stat: FIN },      // Steady aim for precision
+  damage: { model: STAT_BASED, stat: POW, efficiency: 1.5 }  // Draw strength
+}
+```
+
+Requires both POW for damage and FIN for accuracy. As a ranged weapon, damage scaling ignores the bow's physical mass and instead represents draw weight and arrow energy.
+
+### Technical Weapons
+- **Accuracy**: INT stat (targeting systems)
+- **Damage**: STORED_POTENTIAL (fixed energy)
+- **Identity**: High-tech weapons minimizing physical requirements
+
+**Example - Smart Rifle**:
+```typescript
+{
+  accuracy: { bonus: 5, stat: INT },      // Smart targeting assistance
+  damage: { model: STORED_POTENTIAL }     // Fixed projectile energy
+}
+```
+
+Rewards intelligence and technical skill over physical attributes.
+
+## Character Build Synergies
+
+### POW-Focused Builds
+- **Optimal weapons**: Heavy melee, machine guns, war hammers
+- **Characteristics**: High damage potential, good accuracy with strength weapons
+- **Weaknesses**: Poor performance with precision firearms
+
+### FIN-Focused Builds
+- **Optimal weapons**: Precision firearms, light melee, energy weapons
+- **Characteristics**: Excellent accuracy, consistent damage with stored-energy weapons
+- **Weaknesses**: Low damage with muscular weapons
+
+### Balanced Builds
+- **Optimal weapons**: Hybrid weapons like bows, versatile firearms
+- **Characteristics**: Tactical flexibility, moderate effectiveness across weapon types
+- **Weaknesses**: Never achieve specialist-level performance
+
+### Specialized Builds
+- **Optimal weapons**: Extreme stat requirements (anti-materiel rifles, siege weapons)
+- **Characteristics**: Devastating effectiveness with matching weapons
+- **Weaknesses**: Limited weapon selection, vulnerable when disarmed
+
+## Tactical Implications
+
+### Range Dynamics
+- **Melee muscular weapons**: Must close distance, damage scales with weapon mass and character power
+- **Ranged muscular weapons**: Effective at range, damage scales with character power but not launcher mass
+- **Stored energy weapons**: Effective at range with consistent performance regardless of user strength
+- **Positioning**: POW builds excel with both heavy melee and powerful ranged weapons, FIN builds control distance with precision weapons
+
+### Resource Management
+- **Muscular weapons**: No ammunition costs, AP costs scale with weapon mass
+- **Stored energy weapons**: Ammunition dependency, consistent AP costs
+- **Economic pressure**: Bullets cost money, muscle power is free
+
+### Character Progression
+- **POW builds**: Linear damage scaling with every stat point invested
+- **FIN builds**: Accuracy improvements and speed benefits, stable damage
+- **Hybrid builds**: Complex optimization requiring multiple stat investments
+
+## Design Principles
+
+### Emergent Complexity
+Simple rules create sophisticated weapon behaviors:
+- Two damage models cover all weapon types
+- Single accuracy formula handles all stat interactions
+- Weapon bonuses provide fine-tuning without breaking core mechanics
+
+### Meaningful Choices
+Every design decision has tactical implications:
+- Stat investment directly affects weapon effectiveness
+- Weapon selection must match character build
+- No universally optimal choices exist
+
+### Intuitive Physics
+Game mechanics reflect real-world weapon behavior:
+- **Bows**: Need strength to draw (affects damage) and steadiness to aim (affects accuracy), but bow mass doesn't affect arrow damage
+- **Heavy melee weapons**: Require strength to control and benefit from mass for impact damage
+- **Precision weapons**: Reward steady hands for accuracy
+- **Stored energy weapons**: Work regardless of user strength, damage comes from ammunition energy
+
+This unified system creates distinct weapon identities and character archetypes while maintaining consistent, learnable rules that scale from simple to sophisticated without breaking the underlying mechanics.

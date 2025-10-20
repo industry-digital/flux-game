@@ -28,7 +28,7 @@ import {
   createDynamicSystemPerspectiveTemplate,
 } from '~/narrative/util';
 import { getAllStats, getMaxHp } from '~/worldkit/entity/actor';
-import { getPrimaryDamageType } from '~/worldkit/combat/damage-type';
+import { getPrimaryDamageType } from '~/worldkit/combat/damage/damage-type';
 import { DamageType } from '~/types/damage';
 
 const HIS = 'his';
@@ -171,7 +171,7 @@ export const renderAttackNarrative: TemplateFunction<CombatantDidAttack, ActorUR
     const possessive = getPossessivePronoun(actor.gender);
 
     // Weapon-specific attack verbs based on weapon type and stats
-    const weaponType = weapon.skill.split(':').slice(-1)[0] || 'generic';
+    const weaponType: any = 'slash'; // FIXME
 
     switch (weaponType) {
       case 'unarmed':

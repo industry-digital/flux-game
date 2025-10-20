@@ -24,23 +24,33 @@ export enum DamageType {
   IMPACT = 'kinetic:impact',
 }
 
-/**
- * Represents the damage profile for a weapon
- */
-export type DamageSpecification = {
+export enum DamageModel {
+  STAT_SCALING = 'stat',
+  FIXED = 'fixed',
+}
+
+export type AbstractDamageSpecification<TDamageModel extends DamageModel> = {
+  model: TDamageModel;
+}
+
+export type StatScalingDamageSpecification = AbstractDamageSpecification<DamageModel.STAT_SCALING> & {
   /**
-   * The stat that the weapon scales with
+   * The stat that damage scales with.
    */
   stat: Stat;
 
-  /**
-   * The base damage of the weapon
-   */
-  dice: RollSpecification;
-
-  /**
-   * The types of damage the weapon deals
-   * The values are normalized between 0.0 and 1.0, and must sum to 1.0
-   */
+  base: RollSpecification;
   types: Partial<Record<DamageType, NormalizedValueBetweenZeroAndOne>>;
+  /**
+   * The effect of mass on the weapon's damage output.
+   * In general, heavier weapons will tend to have higher mass effect.
+   */
+  massEffect: NormalizedValueBetweenZeroAndOne;
 }
+
+export type FixedDamageSpecification = AbstractDamageSpecification<DamageModel.FIXED> & {
+  base: RollSpecification;
+  types: Partial<Record<DamageType, NormalizedValueBetweenZeroAndOne>>;
+};
+
+export type DamageSpecification = StatScalingDamageSpecification | FixedDamageSpecification;
