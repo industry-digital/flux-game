@@ -18,7 +18,7 @@ export const createWarhammerSchema = (input: WeaponSchemaInput): WeaponSchema =>
       model: DamageModel.STAT_SCALING,
       stat: Stat.POW,
       base: '3d6',
-      massEffect: 1.0,
+      efficiency: 1.0,
       types: {
         [DamageType.IMPACT]: 1.0,
       },

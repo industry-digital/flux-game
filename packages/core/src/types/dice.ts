@@ -1,4 +1,4 @@
-import { Actor } from '~/types/entity/actor';
+import { Actor, Stat } from '~/types/entity/actor';
 import { AppliedModifiers } from './modifier';
 import { WeaponSchema } from '~/types/schema/weapon';
 import { SkillSchema } from '~/types/schema/skill';
@@ -64,4 +64,6 @@ export type RollApiDependencies = {
   timestamp: PotentiallyImpureOperations['timestamp'];
   getActorSkill: (actor: Actor, skill: SkillSchemaURN) => SkillState;
   getEffectiveSkillRank: (actor: Actor, skill: SkillSchemaURN, baseSkill?: SkillState) => number;
+  getNaturalStatValue: (actor: Actor, stat: Stat) => number;
+  calculateStatBonus: (statValue: number) => number;
 };

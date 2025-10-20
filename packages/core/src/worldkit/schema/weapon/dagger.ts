@@ -16,7 +16,7 @@ export const createDaggerSchema = (input: WeaponSchemaInput): WeaponSchema => {
       model: DamageModel.STAT_SCALING,
       stat: Stat.FIN,
       base: '1d6',
-      massEffect: 0.1,
+      efficiency: 0.1,
       types: {
         [DamageType.PIERCE]: 1,
       },

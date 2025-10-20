@@ -21,7 +21,7 @@ describe('Attack Rating Calculation', () => {
       model: DamageModel.STAT_SCALING,
       stat: Stat.POW,
       base: '1d6',
-      massEffect: 0.5,
+      efficiency: 0.5,
       types: {
         [DamageType.SLASH]: 1.0,
       },

@@ -7,43 +7,34 @@
  */
 
 import { Actor, Stat } from '~/types/entity/actor';
-import { ATTACK_ROLL_SPECIFICATION, CombatSession, computeDistanceBetweenCombatants, canWeaponHitFromDistance } from '~/worldkit/combat';
+import { CombatSession, computeDistanceBetweenCombatants, canWeaponHitFromDistance } from '~/worldkit/combat';
 import { ActionCost, AttackType, AttackOutcome, Combatant } from '~/types/combat';
 import { EventType, WorldEvent } from '~/types/event';
 import { calculateActorEvasionRating, resolveHitAttempt } from '~/worldkit/combat/evasion';
-import { calculateWeaponDamage } from '~/worldkit/combat/damage';
 import { createWorldEvent } from '~/worldkit/event';
 import { ActorURN } from '~/types/taxonomy';
 import { deductAp } from '~/worldkit/combat/combatant';
 import { TransformerContext } from '~/types/handler';
 import { createStrikeCost } from '~/worldkit/combat/tactical-cost';
-import { calculateAttackRating } from '~/worldkit/combat/attack';
 import { decrementHp } from '~/worldkit/entity/actor/health';
-import { getEffectiveSkillRank } from '~/worldkit/entity/actor/skill';
 import { getStatValue } from '~/worldkit/entity/actor/stats';
 
 export type StrikeDependencies = {
   createWorldEvent?: typeof createWorldEvent;
   resolveHitAttempt?: typeof resolveHitAttempt;
   calculateActorEvasionRating?: typeof calculateActorEvasionRating;
-  calculateWeaponDamage?: typeof calculateWeaponDamage;
   computeDistanceBetweenCombatants?: typeof computeDistanceBetweenCombatants;
   canWeaponHitFromDistance?: typeof canWeaponHitFromDistance;
   createStrikeCost?: typeof createStrikeCost;
-  calculateAttackRating?: typeof calculateAttackRating;
-  getEffectiveSkillRank?: typeof getEffectiveSkillRank;
 };
 
 export const DEFAULT_STRIKE_DEPS: Readonly<StrikeDependencies> = {
   createWorldEvent,
   resolveHitAttempt,
   calculateActorEvasionRating,
-  calculateWeaponDamage,
   computeDistanceBetweenCombatants,
   canWeaponHitFromDistance,
   createStrikeCost,
-  calculateAttackRating,
-  getEffectiveSkillRank,
 };
 
 export type StrikeMethod = (target?: ActorURN, trace?: string) => WorldEvent[];
@@ -60,12 +51,9 @@ export function createStrikeMethod(
     createWorldEvent: createWorldEventImpl = createWorldEvent,
     resolveHitAttempt: resolveHitAttemptImpl = resolveHitAttempt,
     calculateActorEvasionRating: calculateActorEvasionRatingImpl = calculateActorEvasionRating,
-    calculateWeaponDamage: calculateWeaponDamageImpl = calculateWeaponDamage,
     computeDistanceBetweenCombatants: computeDistanceBetweenCombatantsImpl = computeDistanceBetweenCombatants,
     canWeaponHitFromDistance: canWeaponHitFromDistanceImpl = canWeaponHitFromDistance,
     createStrikeCost: createStrikeCostImpl = createStrikeCost,
-    calculateAttackRating: calculateAttackRatingImpl = calculateAttackRating,
-    getEffectiveSkillRank: getEffectiveSkillRankImpl = getEffectiveSkillRank,
   }: StrikeDependencies = DEFAULT_STRIKE_DEPS
 ): StrikeMethod {
   const { declareError } = context;
@@ -111,7 +99,9 @@ export function createStrikeMethod(
       return [];
     }
 
-    const roll = context.rollDice(ATTACK_ROLL_SPECIFICATION, context.random);
+    // Use RollApi for accuracy calculation
+    const accuracyRoll = context.rollApi.rollWeaponAccuracy(actor, weapon);
+    const attackRating = accuracyRoll.result;
 
     const targetActor = context.world.actors[combatant.target!];
     const defenderEvasionRating = calculateActorEvasionRatingImpl(
@@ -119,7 +109,6 @@ export function createStrikeMethod(
       computeCombatMass,
     );
 
-    const attackRating = calculateAttackRatingImpl(actor, weapon, roll.result);
     const hitResolution = resolveHitAttemptImpl(
       defenderEvasionRating,
       attackRating,
@@ -132,8 +121,9 @@ export function createStrikeMethod(
 
     if (!hitResolution.evaded) {
       outcome = AttackOutcome.HIT;
-      const power = getStatValue(actor, Stat.POW);
-      damage = calculateWeaponDamageImpl(weaponMassKg, power);
+      // Use RollApi for damage calculation
+      const damageRoll = context.rollApi.rollWeaponDamage(actor, weapon);
+      damage = damageRoll.result;
     }
 
     deductAp(combatant, cost.ap!);
@@ -152,7 +142,7 @@ export function createStrikeMethod(
         target: combatant.target!,
         attackType: AttackType.STRIKE,
         cost,
-        roll,
+        roll: accuracyRoll,
         attackRating,
       },
     });

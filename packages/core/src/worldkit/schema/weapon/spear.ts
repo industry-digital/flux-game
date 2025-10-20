@@ -20,7 +20,7 @@ export const createSpearSchema = (input: WeaponSchemaInput): WeaponSchema => {
       model: DamageModel.STAT_SCALING,
       stat: Stat.FIN,
       base: '2d6',
-      massEffect: 0.6,
+      efficiency: 0.6,
       types: {
         [DamageType.PIERCE]: 1,
       },

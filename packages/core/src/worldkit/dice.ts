@@ -4,7 +4,9 @@ import { AppliedModifiers, Modifier } from '~/types/modifier';
 import { addModifier, computeSumOfModifiers } from '~/worldkit/entity/modifier';
 import { WeaponSchema, AccuracyModel } from '~/types/schema/weapon';
 import { SkillSchema } from '~/types/schema/skill';
+import { DamageModel, StatScalingDamageSpecification } from '~/types/damage';
 import { getActorSkill, getEffectiveSkillRank } from '~/worldkit/entity/actor/skill';
+import { getNaturalStatValue, calculateStatBonus } from '~/worldkit/entity/actor/stats';
 import { ATTACK_SKILL_MULTIPLIER } from '~/worldkit/combat/attack';
 
 type ParsedRollSpecification = {
@@ -157,6 +159,8 @@ export const DEFAULT_ROLL_API_DEPS: RollApiDependencies = Object.freeze({
   timestamp: () => Date.now(),
   getActorSkill,
   getEffectiveSkillRank,
+  getNaturalStatValue,
+  calculateStatBonus,
 });
 
 export const createRollApi = (deps: RollApiDependencies = DEFAULT_ROLL_API_DEPS): RollApi => {
@@ -195,7 +199,54 @@ export const createRollApi = (deps: RollApiDependencies = DEFAULT_ROLL_API_DEPS)
   };
 
   const rollWeaponDamage = (actor: Actor, weapon: WeaponSchema): RollResult => {
-    throw new Error();
+    // Roll base dice using weapon's damage specification
+    const baseRoll = rollDiceWithRng(weapon.damage.base, deps.random);
+
+    // Convert to RollResult by adding mods property
+    const rollResult: RollResult = {
+      ...baseRoll,
+      mods: {},
+    };
+
+    // Apply damage model-specific modifiers
+    if (weapon.damage.model === DamageModel.FIXED) {
+      // Fixed damage: no additional modifiers needed
+      return rollResult;
+    }
+
+    if (weapon.damage.model === DamageModel.STAT_SCALING) {
+      // Stat-based damage: stat bonus calculation depends on weapon type
+      const statScalingDamage = weapon.damage as StatScalingDamageSpecification;
+      const statValue = deps.getNaturalStatValue(actor, statScalingDamage.stat);
+      const statBonus = deps.calculateStatBonus(statValue);
+
+      let finalBonus: number;
+
+      const isRangedWeapon = weapon.range.falloff !== undefined;
+
+      // Check if weapon is ranged (has falloff) or melee (no falloff)
+      if (isRangedWeapon) {
+        // Ranged weapon: mass doesn't factor into damage, only stat and mass effect
+        finalBonus = statBonus * statScalingDamage.efficiency;
+      } else {
+        // Melee weapon: mass amplifies stat bonus
+        const weaponMassKg = weapon.baseMass / 1000;
+        finalBonus = statBonus * weaponMassKg * statScalingDamage.efficiency;
+      }
+
+      // Add stat modifier to the roll
+      const statModifier: Modifier = {
+        origin: `stat:${statScalingDamage.stat}`,
+        value: finalBonus,
+        duration: -1, // Permanent modifier
+        ts: deps.timestamp(),
+      };
+
+      applyModifierToRollResult(rollResult, `stat:${statScalingDamage.stat}`, statModifier);
+      return rollResult;
+    }
+
+    throw new Error(`Unsupported damage model: ${(weapon.damage as any).model}`);
   };
 
   const rollSkillCheck = (actor: Actor, skill: SkillSchema): RollResult => {

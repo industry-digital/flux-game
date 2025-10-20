@@ -27,7 +27,7 @@ export const createTestWeapon = (transform: WeaponTransformer = identity): Weapo
       damage: {
         model: DamageModel.STAT_SCALING,
         stat: Stat.POW,
-        massEffect: 0.5,
+        efficiency: 0.5,
         base: '1d6',
         types: {
           [DamageType.SLASH]: 1,

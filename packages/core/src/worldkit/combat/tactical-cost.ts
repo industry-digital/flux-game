@@ -115,7 +115,6 @@ export function createMaxMovementCost(
 export function createCleaveCost(
   weaponMassKg: number,
   finesse: number,
-  targetCount: number
 ): FullyQualifiedActionCost {
   // Same AP cost as a regular strike
   const baseCost = createStrikeCost(weaponMassKg, finesse);

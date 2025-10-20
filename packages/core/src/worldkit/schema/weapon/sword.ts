@@ -16,7 +16,7 @@ export const createSwordSchema = (input: WeaponSchemaInput): WeaponSchema => {
       model: DamageModel.STAT_SCALING,
       stat: Stat.POW,
       base: '2d6',
-      massEffect: 0.6,
+      efficiency: 0.6,
       types: {
         [DamageType.SLASH]: 1,
       },

@@ -42,10 +42,10 @@ export type StatScalingDamageSpecification = AbstractDamageSpecification<DamageM
   base: RollSpecification;
   types: Partial<Record<DamageType, NormalizedValueBetweenZeroAndOne>>;
   /**
-   * The effect of mass on the weapon's damage output.
-   * In general, heavier weapons will tend to have higher mass effect.
+   * Damage transfer efficiency
+   * How this is applied depends on the nature of the weapon
    */
-  massEffect: NormalizedValueBetweenZeroAndOne;
+  efficiency: number;
 }
 
 export type FixedDamageSpecification = AbstractDamageSpecification<DamageModel.FIXED> & {

@@ -14,7 +14,7 @@ export const BARE_HANDS_WEAPON_SCHEMA: WeaponSchema = createWeaponSchema({
     model: DamageModel.STAT_SCALING,
     stat: Stat.POW,
     base: '1d4',
-    massEffect: 0.1,
+    efficiency: 0.1,
     types: {
       [DamageType.IMPACT]: 1,
     },
