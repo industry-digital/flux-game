@@ -7,11 +7,10 @@ export const createPistolSchema = (input: WeaponSchemaInput): WeaponSchema => {
   return createWeaponSchema({
     ...input,
     name: input.name || 'pistol',
-    skill: 'flux:skill:weapon:gun:pistol',
     baseMass: 800, // 0.8kg - typical pistol mass
     accuracy: {
       model: AccuracyModel.SKILL_SCALING,
-      skill: 'flux:skill:weapon:gun:pistol',
+      skill: 'flux:schema:skill:weapon:pistol',
       base: '1d20',
     },
     damage: {
@@ -47,7 +46,7 @@ export const createRifleSchema = (input: WeaponSchemaInput): WeaponSchema => {
     baseMass: 3500, // 3.5kg - typical rifle mass
     accuracy: {
       model: AccuracyModel.SKILL_SCALING,
-      skill: 'flux:skill:weapon:gun:rifle',
+      skill: 'flux:schema:skill:weapon:rifle',
       base: '1d20+5',
     },
     damage: {
@@ -84,7 +83,7 @@ export const createShotgunSchema = (input: WeaponSchemaInput): WeaponSchema => {
     baseMass: 3200, // 3.2kg - typical shotgun mass
     accuracy: {
       model: AccuracyModel.SKILL_SCALING,
-      skill: 'flux:skill:weapon:gun:shotgun',
+      skill: 'flux:schema:skill:weapon:shotgun',
       base: '1d20+3',
     },
     damage: {
@@ -126,7 +125,7 @@ export const ak47Schema = createRifleSchema({
   baseMass: 4300, // 4.3kg - heavier than typical rifle
   accuracy: {
     model: AccuracyModel.SKILL_SCALING,
-    skill: 'flux:skill:weapon:gun:rifle',
+    skill: 'flux:schema:skill:weapon:rifle',
     base: '1d20+2',
   },
 });

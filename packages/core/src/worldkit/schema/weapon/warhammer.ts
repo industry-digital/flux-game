@@ -8,7 +8,6 @@ export const createWarhammerSchema = (input: WeaponSchemaInput): WeaponSchema =>
   return createWeaponSchema({
     ...input,
     name: input.name || 'warhammer',
-    skill: 'flux:skill:weapon:melee',
     baseMass: 12_000,
     range: {
       optimal: 1,

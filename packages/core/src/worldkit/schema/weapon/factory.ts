@@ -19,7 +19,7 @@ export function createWeaponSchema(inputOrTransform: WeaponSchemaInput | WeaponT
     },
     accuracy: {
       model: AccuracyModel.SKILL_SCALING,
-      skill: 'flux:skill:weapon:melee',
+      skill: 'flux:schema:skill:weapon:melee',
       base: '1d20',
     },
     damage: {

@@ -15,7 +15,7 @@ import { CombatFacing, Team } from '~/types/combat';
 import { SessionStatus, SessionStrategy } from '~/types/session';
 import { EntityType } from '~/types/entity/entity';
 import { CombatTurnDidEnd, CombatTurnDidStart, EventType } from '~/types/event';
-import { type RollResult } from '~/types/dice';
+import { type RollResultWithoutModifiers } from '~/types/dice';
 import { createTransformerContext } from '~/worldkit/context';
 import { calculateStatBonus, getStatValue } from '~/worldkit/entity/actor/stats';
 import { extractFirstEventOfType } from '~/testing/event';
@@ -242,18 +242,18 @@ describe('session', () => {
       context.world.actors[TEST_ACTOR_2_ID] = actor2;
 
       // Create deterministic initiative with actor2 going first
-      const deterministicInitiative = new Map<ActorURN, RollResult>([
+      const deterministicInitiative = new Map<ActorURN, RollResultWithoutModifiers>([
         [TEST_ACTOR_2_ID, {
           dice: '1d20' as const,
           values: [20],
-          mods: {},
+          bonus: 0,
           natural: 20,
           result: 20
         }],
         [TEST_ACTOR_ID, {
           dice: '1d20' as const,
           values: [1],
-          mods: {},
+          bonus: 0,
           natural: 1,
           result: 1
         }]
@@ -643,18 +643,18 @@ describe('session', () => {
       context.world.actors[TEST_ACTOR_2_ID] = actor2;
 
       // Create deterministic initiative with actor2 going first
-      const deterministicInitiative = new Map<ActorURN, RollResult>([
+      const deterministicInitiative = new Map<ActorURN, RollResultWithoutModifiers>([
         [TEST_ACTOR_2_ID, {
           dice: '1d20' as const,
           values: [20],
-          mods: {},
+          bonus: 0,
           natural: 20,
           result: 20
         }],
         [TEST_ACTOR_ID, {
           dice: '1d20' as const,
           values: [1],
-          mods: {},
+          bonus: 0,
           natural: 1,
           result: 1
         }]

@@ -9,7 +9,7 @@ import { Actor, Stat } from '~/types/entity/actor';
 import { ATTACK_ROLL_SPECIFICATION, CombatSession, computeDistanceBetweenCombatants } from '~/worldkit/combat';
 import { ActionCost, AttackOutcome, AttackType, Combatant } from '~/types/combat';
 import { CombatantDidAttack, CombatantWasAttacked, EventType, WorldEvent } from '~/types/event';
-import { RollResult } from '~/types/dice';
+import { RollResult, RollResultWithoutModifiers } from '~/types/dice';
 import { calculateActorEvasionRating, resolveHitAttempt } from '~/worldkit/combat/evasion';
 import { calculateWeaponDamage } from '~/worldkit/combat/damage';
 import { createWorldEvent } from '~/worldkit/event';
@@ -24,6 +24,7 @@ import { isActorAlive } from '~/worldkit/entity/actor';
 import { canWeaponHitFromDistance } from '~/worldkit/combat/weapon';
 import { createCleaveCost } from '~/worldkit/combat/tactical-cost';
 import { canAfford, consumeEnergy } from '~/worldkit/entity/actor/capacitor';
+import { rollDiceWithRng } from '~/worldkit/dice';
 
 export type CleaveDependencies = {
   createWorldEvent?: typeof createWorldEvent;
@@ -34,6 +35,7 @@ export type CleaveDependencies = {
   calculateAttackRating?: typeof calculateAttackRating;
   isActorAlive?: typeof isActorAlive;
   isTwoHandedWeapon?: typeof isTwoHandedWeapon;
+  rollDice?: typeof rollDiceWithRng;
 };
 
 export const DEFAULT_CLEAVE_DEPS: Readonly<CleaveDependencies> = {
@@ -45,6 +47,7 @@ export const DEFAULT_CLEAVE_DEPS: Readonly<CleaveDependencies> = {
   calculateAttackRating,
   isActorAlive,
   isTwoHandedWeapon,
+  rollDice: rollDiceWithRng,
 };
 
 export type CleaveMethod = (trace?: string) => WorldEvent[];
@@ -106,10 +109,19 @@ export function createCleaveMethod(
     calculateAttackRating: calculateAttackRatingImpl = calculateAttackRating,
     isActorAlive: isActorAliveImpl = isActorAlive,
     isTwoHandedWeapon: isTwoHandedWeaponImpl = isTwoHandedWeapon,
+    rollDice: rollDiceImpl = rollDiceWithRng,
   }: CleaveDependencies = DEFAULT_CLEAVE_DEPS
 ): CleaveMethod {
   const { declareError } = context;
   const { computeCombatMass } = context.mass;
+
+  const REUSED_ROLL_RESULT: RollResultWithoutModifiers = {
+    dice: '1d20',
+    values: [],
+    bonus: 0,
+    natural: 0,
+    result: 0,
+  };
 
   return (trace: string = context.uniqid()): WorldEvent[] => {
     const weapon = context.equipmentApi.getEquippedWeaponSchema(actor);
@@ -156,6 +168,9 @@ export function createCleaveMethod(
     const allEvents: WorldEvent[] = [];
     const power = getStatValue(actor, Stat.POW);
 
+    const roll: RollResult = rollDiceImpl(weapon.accuracy.base, context.random);
+    roll.mods ??= {};
+
     // Create single COMBATANT_DID_ATTACK event for the cleave action
     const cleaveAttackEvent: CombatantDidAttack = createWorldEventImpl({
       type: EventType.COMBATANT_DID_ATTACK,
@@ -166,7 +181,7 @@ export function createCleaveMethod(
         targets,
         attackType: AttackType.CLEAVE,
         cost,
-        roll: { dice: ATTACK_ROLL_SPECIFICATION, values: [], mods: {}, natural: 0, result: 0 }, // Will be updated with first roll
+        roll,
         attackRating: 0, // Will be updated with first attack rating
       },
     });
@@ -186,13 +201,7 @@ export function createCleaveMethod(
       if (!targetActor || !isActorAliveImpl(targetActor)) continue;
 
       // Roll attack for this target
-      const { values, sum: natural } = context.rollDice(ATTACK_ROLL_SPECIFICATION, context.random);
-      const roll: RollResult = {
-        dice: ATTACK_ROLL_SPECIFICATION,
-        values,
-        natural,
-        result: natural,
-      };
+      const roll = rollDiceImpl(ATTACK_ROLL_SPECIFICATION, context.random, REUSED_ROLL_RESULT);
 
       const defenderEvasionRating = calculateActorEvasionRatingImpl(
         targetActor,

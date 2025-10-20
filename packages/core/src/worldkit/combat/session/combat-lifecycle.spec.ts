@@ -8,7 +8,7 @@ import { createCombatantManager } from './combatant-manager';
 import { ActorURN, PlaceURN, SessionURN } from '~/types/taxonomy';
 import { Team } from '~/types/combat';
 import { SessionStatus } from '~/types/session';
-import { RollResult } from '~/types/dice';
+import { RollResult, RollResultWithoutModifiers } from '~/types/dice';
 import { EventType } from '~/types/event';
 
 const TEST_PLACE_ID: PlaceURN = 'flux:place:test-place';
@@ -208,20 +208,20 @@ describe('createCombatLifecycle', () => {
     context.world.actors[TEST_ACTOR_2_ID] = actor2;
 
     // Create deterministic initiative with actor2 going first
-    const deterministicInitiative = new Map<ActorURN, RollResult>([
+    const deterministicInitiative = new Map<ActorURN, RollResultWithoutModifiers>([
       [TEST_ACTOR_2_ID, {
         dice: '1d20' as const,
         values: [20],
-        mods: {},
         natural: 20,
-        result: 20
+        result: 20,
+        bonus: 0,
       }],
       [TEST_ACTOR_ID, {
         dice: '1d20' as const,
         values: [1],
-        mods: {},
         natural: 1,
-        result: 1
+        result: 1,
+        bonus: 0,
       }]
     ]);
 
@@ -273,20 +273,20 @@ describe('createCombatLifecycle', () => {
     combatantManager.addCombatant(TEST_ACTOR_2_ID, Team.ALPHA);
 
     // Create deterministic initiative with actor1 going first (via options)
-    const optionsInitiative = new Map<ActorURN, RollResult>([
+    const optionsInitiative = new Map<ActorURN, RollResultWithoutModifiers>([
       [TEST_ACTOR_ID, {
         dice: '1d20' as const,
         values: [20],
-        mods: {},
         natural: 20,
-        result: 20
+        result: 20,
+        bonus: 0,
       }],
       [TEST_ACTOR_2_ID, {
         dice: '1d20' as const,
         values: [5],
-        mods: {},
         natural: 5,
-        result: 5
+        result: 5,
+        bonus: 0,
       }]
     ]);
 
@@ -321,16 +321,16 @@ describe('createCombatLifecycle', () => {
       [TEST_ACTOR_2_ID, {
         dice: '1d20' as const,
         values: [18],
-        mods: {},
         natural: 18,
-        result: 18
+        result: 18,
+        bonus: 0,
       }],
       [TEST_ACTOR_ID, {
         dice: '1d20' as const,
         values: [3],
-        mods: {},
         natural: 3,
-        result: 3
+        result: 3,
+        bonus: 0,
       }]
     ]);
 
@@ -350,16 +350,16 @@ describe('createCombatLifecycle', () => {
       [TEST_ACTOR_ID, {
         dice: '1d20' as const,
         values: [19],
-        mods: {},
         natural: 19,
-        result: 19
+        result: 19,
+        bonus: 0,
       }],
       [TEST_ACTOR_2_ID, {
         dice: '1d20' as const,
         values: [2],
-        mods: {},
         natural: 2,
-        result: 2
+        result: 2,
+        bonus: 0,
       }]
     ]);
 

@@ -1,4 +1,4 @@
-import { AmmoSchemaURN, SkillURN, Taxonomy } from '~/types/taxonomy';
+import { AmmoSchemaURN, SkillSchemaURN, Taxonomy } from '~/types/taxonomy';
 import { Equippable } from '~/types/schema/equipment';
 import { ChargeableMixin } from '~/types/entity/item';
 import { DamageSpecification } from '~/types/damage';
@@ -15,7 +15,7 @@ export type AbstractAccuracySpecification<TAccuracyModel extends AccuracyModel> 
 }
 
 export type SkillScalingAccuracySpecification = AbstractAccuracySpecification<AccuracyModel.SKILL_SCALING> & {
-  skill: SkillURN;
+  skill: SkillSchemaURN;
 }
 
 export type AccuracySpecification = SkillScalingAccuracySpecification;
@@ -79,7 +79,7 @@ export type WeaponSchema  =
    * The skill that modifies the weapon's effectiveness
    * @deprecated - use `accuracy` instead
    */
-  skill?: SkillURN;
+  skill?: SkillSchemaURN;
 
   /**
    * Describes how the weapon's attack rating is determined

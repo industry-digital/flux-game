@@ -1,4 +1,12 @@
-import { Taxonomy, ItemURN, PlaceURN, GroupURN, SchemaURN, SkillURN, SessionURN } from '~/types/taxonomy';
+import {
+  Taxonomy,
+  ItemURN,
+  PlaceURN,
+  GroupURN,
+  SchemaURN,
+  SessionURN,
+  SkillSchemaURN,
+} from '~/types/taxonomy';
 import { AppliedEffects } from '~/types/taxonomy/effect';
 import { EntityType, AbstractEntity, Describable } from '~/types/entity/entity';
 import { SkillState, Specializations } from '~/types/entity/skill';
@@ -99,7 +107,7 @@ export type ActorStats = CoreStats & ShellStats;
  */
 export type EquipmentSlots = Partial<Record<ItemURN, 1>>;
 export type Equipment = Partial<Record<Taxonomy.Anatomy, EquipmentSlots>>;
-export type Skills = Partial<Record<SkillURN, SkillState>>;
+export type Skills = Partial<Record<SkillSchemaURN, SkillState>>;
 export type Membership = { role: string; ts: number; duration?: number };
 export type Memberships = Partial<Record<Taxonomy.Factions, Membership>>;
 export type Traits = Partial<Record<Taxonomy.Traits, 1>>;

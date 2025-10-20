@@ -447,8 +447,8 @@ describe('useCombatScenario', () => {
         'flux:actor:test:skilled': {
           team: Team.ALPHA,
           skills: {
-            'flux:skill:evasion': 3,
-            'flux:skill:combat:strike': 2,
+            'flux:schema:skill:evasion': 3,
+            'flux:schema:skill:weapon:melee': 2,
           },
         },
       };
@@ -460,12 +460,12 @@ describe('useCombatScenario', () => {
       const { actor } = scenario.actors['flux:actor:test:skilled'];
 
       // Verify skills were applied to the actor
-      expect(actor.skills['flux:skill:evasion']).toEqual({
+      expect(actor.skills['flux:schema:skill:evasion']).toEqual({
         xp: 0,
         pxp: 0,
         rank: 3,
       });
-      expect(actor.skills['flux:skill:combat:strike']).toEqual({
+      expect(actor.skills['flux:schema:skill:weapon:melee']).toEqual({
         xp: 0,
         pxp: 0,
         rank: 2,
@@ -477,8 +477,8 @@ describe('useCombatScenario', () => {
         'flux:actor:test:experienced': {
           team: Team.ALPHA,
           skills: {
-            'flux:skill:evasion': { xp: 1500, pxp: 750, rank: 4, mods: {} },
-            'flux:skill:combat:strike': { xp: 2000, pxp: 1000, rank: 5, mods: {} },
+            'flux:schema:skill:evasion': { xp: 1500, pxp: 750, rank: 4, mods: {} },
+            'flux:schema:skill:weapon:melee': { xp: 2000, pxp: 1000, rank: 5, mods: {} },
           },
         },
       };
@@ -489,13 +489,13 @@ describe('useCombatScenario', () => {
       });
       const actor = scenario.actors['flux:actor:test:experienced'];
 
-      expect(actor.actor.skills['flux:skill:evasion']).toEqual({
+      expect(actor.actor.skills['flux:schema:skill:evasion']).toEqual({
         xp: 1500,
         pxp: 750,
         rank: 4,
         mods: {},
       });
-      expect(actor.actor.skills['flux:skill:combat:strike']).toEqual({
+      expect(actor.actor.skills['flux:schema:skill:weapon:melee']).toEqual({
         xp: 2000,
         pxp: 1000,
         rank: 5,

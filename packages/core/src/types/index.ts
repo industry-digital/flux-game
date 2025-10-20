@@ -13,7 +13,7 @@ export {
 
 export {
   DieSize as DieType,
-  RollResult,
+  RollResultWithoutModifiers as RollResult,
   RollSpecification
 } from './dice';
 

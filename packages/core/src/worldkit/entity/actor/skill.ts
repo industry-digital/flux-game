@@ -1,7 +1,9 @@
 import { Actor } from '~/types/entity/actor';
 import { SkillState } from '~/types/entity/skill';
-import { ActorURN, SkillURN } from '~/types/taxonomy';
+import { ActorURN, SkillSchemaURN } from '~/types/taxonomy';
 import { AppliedModifiers } from '~/types/modifier';
+import { PotentiallyImpureOperations } from '~/types/handler';
+import { isActiveModifier } from '~/worldkit/entity/modifier';
 
 export const MIN_SKILL_RANK = 0;
 export const MAX_SKILL_RANK = 100;
@@ -14,7 +16,7 @@ export const createDefaultSkillState = (rank: number = 0): SkillState => ({
 
 export function getActorSkill(
   actor: Actor,
-  skill: SkillURN,
+  skill: SkillSchemaURN,
 ): SkillState {
   if (!actor.skills) {
     throw new Error('Actor has no skills');
@@ -30,7 +32,7 @@ export function getActorSkill(
  */
 export function getActorSkillModifiers(
   actor: Actor,
-  skill: SkillURN,
+  skill: SkillSchemaURN,
 ): AppliedModifiers {
   if (!actor.skills) {
     return {};
@@ -38,6 +40,14 @@ export function getActorSkillModifiers(
   const skillState = actor.skills[skill];
   return skillState?.mods ?? {};
 }
+
+type SkillComputationDependencies = {
+  timestamp: PotentiallyImpureOperations['timestamp'],
+};
+
+export const DEFAULT_SKILL_COMPUTATION_DEPS: SkillComputationDependencies = {
+  timestamp: () => Date.now(),
+};
 
 /**
  * Calculate the effective skill rank including all modifier bonuses
@@ -48,15 +58,17 @@ export function getActorSkillModifiers(
  */
 export function getEffectiveSkillRank(
   actor: Actor,
-  skill: SkillURN,
+  skill: SkillSchemaURN,
   baseSkill = getActorSkill(actor, skill),
   modifiers = getActorSkillModifiers(actor, skill),
+  deps: SkillComputationDependencies = DEFAULT_SKILL_COMPUTATION_DEPS,
 ): number {
+  const now = deps.timestamp();
   // Single-pass optimization: filter and aggregate in one loop
   let totalBonus = 0;
   for (let modifierId in modifiers) {
     const modifier = modifiers[modifierId];
-    if (modifier.position < 1.0) { // Only active modifiers
+    if (isActiveModifier(modifier, now)) { // Only active modifiers
       totalBonus += modifier.value;
     }
   }
@@ -73,12 +85,13 @@ export function getEffectiveSkillRank(
  */
 export function hasActiveSkillModifiers(
   actor: Actor,
-  skill: SkillURN,
+  skill: SkillSchemaURN,
+  now: number,
 ): boolean {
   const modifiers = getActorSkillModifiers(actor, skill);
   for (let modifierId in modifiers) {
     const modifier = modifiers[modifierId];
-    if (modifier.position < 1.0) {
+    if (isActiveModifier(modifier, now)) {
       return true;
     }
   }
@@ -94,14 +107,15 @@ export function hasActiveSkillModifiers(
  */
 export function getSkillModifierBonus(
   actor: Actor,
-  skill: SkillURN,
+  skill: SkillSchemaURN,
   modifiers: AppliedModifiers = getActorSkillModifiers(actor, skill),
+  now: number,
 ): number {
   // Single-pass optimization: filter and aggregate in one loop
   let totalBonus = 0;
   for (let modifierId in modifiers) {
     const modifier = modifiers[modifierId];
-    if (modifier.position < 1.0) { // Only active modifiers
+    if (isActiveModifier(modifier, now)) { // Only active modifiers
       totalBonus += modifier.value;
     }
   }
@@ -116,7 +130,7 @@ export function getSkillModifierBonus(
  */
 export function setActorSkillRank(
   actor: Actor,
-  skillUrn: SkillURN,
+  skillUrn: SkillSchemaURN,
   rank: number,
 ): void {
   const clampedRank = Math.max(MIN_SKILL_RANK, Math.min(MAX_SKILL_RANK, rank));
@@ -134,10 +148,11 @@ export function setActorSkillRank(
  */
 export function setActorSkillRanks(
   actor: Actor,
-  skills: Record<SkillURN, number>,
+  skills: Record<SkillSchemaURN, number>,
 ): void {
-  for (const [skillUrn, rank] of Object.entries(skills)) {
-    setActorSkillRank(actor, skillUrn as SkillURN, rank);
+  for (const skillUrn in skills) {
+    const rank = skills[skillUrn as SkillSchemaURN];
+    setActorSkillRank(actor, skillUrn as SkillSchemaURN, rank);
   }
 }
 
@@ -154,14 +169,15 @@ export type ActorSkillApi = {
 
 export const createActorSkillApi = (
   modifierCache: Map<string, AppliedModifiers> = new Map<string, AppliedModifiers>(),
+  deps: SkillComputationDependencies = DEFAULT_SKILL_COMPUTATION_DEPS,
 ): ActorSkillApi => {
 
   // Helper to create cache key
-  const createCacheKey = (actorUrn: ActorURN, skillUrn: SkillURN): string =>
+  const createCacheKey = (actorUrn: ActorURN, skillUrn: SkillSchemaURN): string =>
     `${actorUrn}:${skillUrn}`;
 
   // Memoized getActorSkillModifiers (the expensive operation)
-  const memoizedGetActorSkillModifiers = (actor: Actor, skillUrn: SkillURN): AppliedModifiers => {
+  const memoizedGetActorSkillModifiers = (actor: Actor, skillUrn: SkillSchemaURN): AppliedModifiers => {
     const cacheKey = createCacheKey(actor.id, skillUrn);
     const cachedModifiers = modifierCache.get(cacheKey);
 
@@ -177,24 +193,24 @@ export const createActorSkillApi = (
   return {
     getActorSkill,
 
-    getActorSkillModifiers: (actor: Actor, skillUrn: SkillURN): AppliedModifiers => {
+    getActorSkillModifiers: (actor: Actor, skillUrn: SkillSchemaURN): AppliedModifiers => {
       return memoizedGetActorSkillModifiers(actor, skillUrn);
     },
 
     getEffectiveSkillRank: (
       actor: Actor,
-      skillUrn: SkillURN,
+      skillUrn: SkillSchemaURN,
       baseSkill = getActorSkill(actor, skillUrn),
       modifiers = memoizedGetActorSkillModifiers(actor, skillUrn)
     ): number => {
       return getEffectiveSkillRank(actor, skillUrn, baseSkill, modifiers);
     },
 
-    hasActiveSkillModifiers: (actor: Actor, skillUrn: SkillURN): boolean => {
+    hasActiveSkillModifiers: (actor: Actor, skillUrn: SkillSchemaURN, now: number): boolean => {
       const modifiers = memoizedGetActorSkillModifiers(actor, skillUrn);
       for (let modifierId in modifiers) {
         const modifier = modifiers[modifierId];
-        if (modifier.position < 1.0) {
+        if (isActiveModifier(modifier, now)) {
           return true;
         }
       }
@@ -203,10 +219,11 @@ export const createActorSkillApi = (
 
     getSkillModifierBonus: (
       actor: Actor,
-      skillUrn: SkillURN,
-      modifiers = memoizedGetActorSkillModifiers(actor, skillUrn)
+      skillUrn: SkillSchemaURN,
+      modifiers = memoizedGetActorSkillModifiers(actor, skillUrn),
+      now: number,
     ): number => {
-      return getSkillModifierBonus(actor, skillUrn, modifiers);
+      return getSkillModifierBonus(actor, skillUrn, modifiers, now);
     },
 
     // Mutation functions

@@ -1,5 +1,4 @@
-import { SkillURN } from '~/types/taxonomy';
-import { Stat } from '~/types/entity/actor';
+import { SkillSchemaURN } from '~/types/taxonomy';
 import { AbilityInContainment } from '~/types/schema/ability';
 
 /**
@@ -12,32 +11,22 @@ export type SkillSchema = {
   /**
    * The URN of the skill
    */
-  id: SkillURN;
+  urn: SkillSchemaURN;
 
   /**
     * The name of the skill
+    * @deprecated This will come from i18n instead
     */
-  name: string;
+  name?: string;
 
   /**
    * A description of the skill
+    * @deprecated This will come from i18n instead
    */
-  description: string;
-
-  /**
-   * A skill may have an affinity with up to two stats.
-   * Such stats are used to determine the skill's effectiveness.
-   * Skills may implement stat affinities any way they want.
-   * Examples:
-   * - Weapon skills might haven an affinity with either`STR` or `DEX`, depending on the kindof weapon it is
-   * - Ranged combat has an intrinsic affinity to the `DEX` stat
-   * - Stealth has an intrinsic affinity to the `AGI` stat
-   * - "Magic", or "tech", might have an affinity with the `INT` stat
-   */
-  stats: [] | [Stat] | [Stat, Stat];
+  description?: string;
 
   /**
    * The various abilities that are available at different levels of the skill
    */
-  milestones: ProgressionMilestone[];
+  milestones: Map<number, ProgressionMilestone>;
 };

@@ -5,6 +5,7 @@ import { createSchemaManager } from '~/worldkit/schema/manager';
 import { createMassApi, createMassComputationState } from '~/worldkit/physics/mass';
 import { createTransformerContext, createWorldProjection } from '~/worldkit/context';
 import { EventType } from '~/types/event';
+import { RollResultWithoutModifiers } from '~/types/dice';
 
 /**
  * Factory function for creating mock TransformerContext with sensible defaults
@@ -37,7 +38,7 @@ export const createTestTransformerContext = (overrides?: Partial<TransformerCont
     schemaManager,
     mass: createMassApi(schemaManager, createMassComputationState()),
     searchCache: mockSearchCache,
-    rollDice: vi.fn(() => ({ values: [10], sum: 10 })),
+    rollDice: vi.fn(() => ({ values: [10], sum: 10, dice: '1d20', natural: 10, result: 10, bonus: 0 } as RollResultWithoutModifiers)),
     executeRoll: vi.fn(() => ({ dice: '1d20' , natural: 10, result: 10, values: [10], mods: {} })),
     ...impureOps,
   }));

@@ -1,4 +1,4 @@
-import { RollSpecification } from '~/types/dice';
+import { RollResultWithoutModifiers, RollSpecification } from '~/types/dice';
 import { NormalizedValueBetweenZeroAndOne } from '~/types/entity/attribute';
 import { Stat } from '~/types/entity/actor';
 
@@ -54,3 +54,5 @@ export type FixedDamageSpecification = AbstractDamageSpecification<DamageModel.F
 };
 
 export type DamageSpecification = StatScalingDamageSpecification | FixedDamageSpecification;
+
+export type DamageSummary = RollResultWithoutModifiers;

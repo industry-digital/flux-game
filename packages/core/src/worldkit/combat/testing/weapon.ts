@@ -11,7 +11,6 @@ export const createTestWeapon = (transform: WeaponTransformer = identity): Weapo
     createWeaponSchema((schema: WeaponSchema) => ({
       ...schema,
       urn: 'flux:schema:weapon:test',
-      skill: 'flux:skill:weapon:test',
       name: 'Test Weapon',
       baseMass: 1_000,
       range: {
@@ -22,7 +21,7 @@ export const createTestWeapon = (transform: WeaponTransformer = identity): Weapo
       },
       accuracy: {
         model: AccuracyModel.SKILL_SCALING,
-        skill: 'flux:skill:weapon:melee',
+        skill: 'flux:schema:skill:weapon:melee',
         base: '1d6',
       },
       damage: {

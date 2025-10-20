@@ -1,6 +1,7 @@
 import { Actor, Stat, CoreStats, ActorStats } from '~/types/entity/actor';
 import { ModifiableScalarAttribute } from '~/types/entity/attribute';
 import { AppliedModifiers } from '~/types/modifier';
+import { isActiveModifier } from '~/worldkit/entity/modifier';
 
 // Actor-specific stat constants
 export const BASELINE_STAT_VALUE = 10;
@@ -79,11 +80,11 @@ export function getStatBonus(actor: Actor, stat: Stat): number {
 /**
  * Check if a stat has active modifiers
  */
-export function hasActiveStatModifiers(actor: Actor, stat: Stat): boolean {
+export function hasActiveStatModifiers(actor: Actor, stat: Stat, now: number): boolean {
   const modifiers = getStatModifiers(actor, stat);
   for (let modifierId in modifiers) {
     const modifier = modifiers[modifierId];
-    if (modifier.position < 1.0) {
+    if (isActiveModifier(modifier, now)) {
       return true;
     }
   }
@@ -94,7 +95,7 @@ export function hasActiveStatModifiers(actor: Actor, stat: Stat): boolean {
  * Compute the effective stat value, applying modifiers
  * This recalculates from scratch - useful for validation or when modifiers change
  */
-export function computeStatValue(actor: Actor, stat: Stat): number {
+export function computeStatValue(actor: Actor, stat: Stat, now: number): number {
   const statAttr = getStat(actor, stat);
   const modifiers = statAttr.mods ?? {};
 
@@ -102,7 +103,7 @@ export function computeStatValue(actor: Actor, stat: Stat): number {
   let totalBonus = 0;
   for (let modifierId in modifiers) {
     const modifier = modifiers[modifierId];
-    if (modifier.position < 1.0) { // Only active modifiers
+    if (isActiveModifier(modifier, now)) {
       totalBonus += modifier.value;
     }
   }
@@ -161,12 +162,13 @@ export function setStatModifiers(actor: Actor, stat: Stat, modifiers: AppliedMod
  * Refresh the stats for an actor, recalculating effective values from natural + modifiers
  * This operation directly mutates the supplied actor
  */
-export function refreshStats(actor: Actor, statNames?: readonly Stat[]): void {
+export function refreshStats(actor: Actor, statNames?: readonly Stat[], timestamp = () => Date.now()): void {
+  const now = timestamp();
   const statsToRefresh = statNames || ALL_STAT_NAMES;
 
   for (const stat of statsToRefresh) {
     const statAttr = getStat(actor, stat);
-    const effectiveValue = computeStatValue(actor, stat);
+    const effectiveValue = computeStatValue(actor, stat, now);
     statAttr.eff = effectiveValue;
   }
 }

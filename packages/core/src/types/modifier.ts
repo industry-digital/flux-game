@@ -1,53 +1,32 @@
-import { ActorURN, EffectURN, Intrinsic, ModifierSchemaURN, SkillURN, StatURN } from '~/types/taxonomy';
-import { TraitURN } from '~/types/taxonomy';
-
 /**
  * Normalized value between 0 and 1, representing position on an easing curve
  * 0 = start of effect, 1 = end of effect
  */
 export type NormalizedValueBetweenZeroAndOne = number;
 
+type URNLike = `${string}:${string}`;
+
 /**
- * A Modifier represents an active effect that modifies game values.
- * The schema defines all behavior - the instance just tracks position and computed value.
+ * A Modifier represents an active effect that modifies a dice roll or attribute.
  */
 export type Modifier = {
-  /**
-   * The schema that defines this modifier's behavior, stacking rules,
-   * easing curve, duration, bonus type, etc.
-   */
-  schema: ModifierSchemaURN;
+  origin: URNLike;
 
   /**
-   * Position on the modifier's easing curve (0.0 to 1.0)
-   * - 0.0 = effect just started
-   * - 1.0 = effect about to end
-   * - For permanent modifiers, this stays at a fixed value (usually 1.0)
-   */
-  position: NormalizedValueBetweenZeroAndOne;
-
-  /**
-   * The computed value at the current position on the easing curve
-   * This is calculated from the schema's curve function and peak value
+   * The modifier value; positive or negative
    */
   value: number;
 
   /**
-   * Who applied the modifier
+   * The modifier duration; milliseconds
    */
-  appliedBy?: ActorURN;
-};
+  duration: number;
 
-/**
- * The various concepts that modify a roll.
- * An `intrinsic` modifier originates from the host object itself, and not from an external
- */
-export type ModifierOrigin =
-  | SkillURN
-  | StatURN
-  | EffectURN
-  | TraitURN
-  | Intrinsic;
+  /**
+   * The moment the modifer took effect; epoch milliseconds
+   */
+  ts: number;
+};
 
 /**
  * Modifiers is a dictionary of Modifiers, indexed by opaque IDs.

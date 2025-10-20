@@ -1,9 +1,12 @@
 import { AbstractSession, SessionStrategy } from '~/types/session';
 import { ActorURN, PlaceURN, SkillURN } from '~/types/taxonomy';
 import { CommandType, ActorCommand } from '~/types/intent';
-import { RollResult } from '~/types/dice';
+import { RollResultWithoutModifiers } from '~/types/dice';
 import { CurvePosition } from '~/types/easing';
 import { ModifiableBoundedAttribute } from '~/types/entity/attribute';
+import { Actor } from '~/types/entity/actor';
+import { WeaponSchema } from '~/types/schema/weapon';
+import { DamageSummary } from '~/types/damage';
 
 export type CombatMemoization = {
   /** Distance calculation cache for performance optimization */
@@ -83,7 +86,7 @@ export type CombatCommand<
   /**
    * Combat execution results (added after command execution)
    */
-  roll?: RollResult;
+  roll?: RollResultWithoutModifiers;
 
   /**
    * The cost paid by the actor for performing the action
@@ -161,7 +164,7 @@ export type CombatSessionData = {
   /**
    * The initiative order of the combatants
    */
-  initiative: Map<ActorURN, RollResult>;
+  initiative: Map<ActorURN, RollResultWithoutModifiers>;
 
   /**
    * The linear battlefield
@@ -256,7 +259,7 @@ export type CombatantSummary = {
  * Extended combatant interface with initiative order
  */
 export type FullyQualifiedCombatant = Omit<Combatant, 'initiative'> & {
-  initiative: RollResult;
+  initiative: RollResultWithoutModifiers;
 }
 
 /**
@@ -269,7 +272,7 @@ export type Combatant = CombatantSummary & {
   /**
    * Actor's initiative roll. which determines *when* the actor may act within a combat round.
    */
-  initiative?: RollResult;
+  initiative?: RollResultWithoutModifiers;
 
   /**
    * The total mass of the actor, in grams
@@ -340,3 +343,7 @@ export enum MovementDirection {
   FORWARD = 1,    // Move in facing direction (ADVANCE)
   BACKWARD = -1 // Move opposite to facing (RETREAT)
 }
+
+export type DamageModelInterface = {
+  calculateDamage: (actor: Actor, weapon: WeaponSchema, ) => DamageSummary;
+};

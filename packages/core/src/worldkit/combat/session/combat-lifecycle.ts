@@ -1,6 +1,6 @@
 import { ActorURN, PlaceURN, SessionURN } from '~/types/taxonomy';
 import { CombatSession, Combatant } from '~/types/combat';
-import { RollResult } from '~/types/dice';
+import { RollResult, RollResultWithoutModifiers } from '~/types/dice';
 import { SessionStatus } from '~/types/session';
 import { WorldEvent, EventType } from '~/types/event';
 import { computeInitiativeRolls, sortInitiativeOrder } from '~/worldkit/combat/initiative';
@@ -35,7 +35,7 @@ const createCombatStartEvents = (
   sessionId: SessionURN,
   location: PlaceURN,
   trace: string,
-  initiativeRolls: Map<ActorURN, RollResult>,
+  initiativeRolls: Map<ActorURN, RollResultWithoutModifiers>,
   combatants: Map<ActorURN, Combatant>,
   firstActorId: ActorURN
 ): WorldEvent[] => {
@@ -159,7 +159,7 @@ export function createCombatLifecycle(
     };
 
     // Determine initiative source: options > existing session data > compute new
-    let sortedInitiativeRolls: Map<ActorURN, RollResult>;
+    let sortedInitiativeRolls: Map<ActorURN, RollResultWithoutModifiers>;
 
     if (options.initiativeRolls) {
       // Use initiative rolls provided in options (highest priority)

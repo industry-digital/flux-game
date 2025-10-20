@@ -203,7 +203,7 @@ export function calculateActorEvasionRating(
   actor: Actor,
   computeActorMass: (actor: Actor) => number,
 ): number {
-  const evasionSkill = getActorSkill(actor, 'flux:skill:evasion');
+  const evasionSkill = getActorSkill(actor, 'flux:schema:skill:evasion');
   const naturalMass = computeActorMass(actor);
   const finesse = getStatValue(actor, Stat.FIN);
   const power = getStatValue(actor, Stat.POW);

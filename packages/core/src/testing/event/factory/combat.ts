@@ -14,7 +14,7 @@ import {
 } from '~/types/event';
 import { ActorURN, SessionURN } from '~/types/taxonomy';
 import { ActionCost } from '~/types/combat';
-import { RollResult } from '~/types/dice';
+import { RollResultWithoutModifiers } from '~/types/dice';
 import { BattlefieldPosition } from '~/types/combat';
 import { CombatEventFactoryDependencies, DEFAULT_COMBAT_EVENT_FACTORY_DEPS } from './deps';
 import { ALICE_ID, BOB_ID } from '~/testing/constants';
@@ -36,11 +36,12 @@ const DEFAULT_LOCATION = 'flux:place:test';
 const DEFAULT_TRACE = 'test-trace';
 const DEFAULT_SESSION_ID: SessionURN = 'flux:session:combat:test';
 
-const DEFAULT_ROLL: Readonly<RollResult> = Object.freeze({
+const DEFAULT_ROLL: Readonly<RollResultWithoutModifiers> = Object.freeze({
   dice: '1d20',
   values: [10],
   natural: 10,
   result: 10,
+  bonus: 0,
 });
 
 const DEFAULT_COST: Readonly<ActionCost> = Object.freeze({

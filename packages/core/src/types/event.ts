@@ -9,7 +9,7 @@ import {
   CombatantSummary,
   MovementDirection,
 } from '~/types/combat';
-import { RollResult } from '~/types/dice';
+import { RollResultWithoutModifiers } from '~/types/dice';
 import { SessionStatus } from '~/types/session';
 import { ShellDiff, ShellMutation } from '~/types/workbench';
 import { Shell } from '~/types/entity/shell';
@@ -212,7 +212,7 @@ export type CombatSessionStartedInput = AbstractWorldEventInput<
   EventType.COMBAT_SESSION_DID_START,
   {
     sessionId: SessionURN;
-    initiative: [ActorURN, RollResult][];
+    initiative: [ActorURN, RollResultWithoutModifiers][];
     combatants: [ActorURN, CombatantSummary][];
   },
   WellKnownActor.SYSTEM
@@ -261,7 +261,7 @@ export type CombatantDidMoveInput = AbstractWorldEventInput<
 
 type CombatantDidAttackPayloadBase = {
   cost: ActionCost;
-  roll: RollResult;
+  roll: RollResultWithoutModifiers;
   attackRating: number;
 };
 

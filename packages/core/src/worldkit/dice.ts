@@ -1,4 +1,9 @@
-import { RollSpecification } from '~/types/dice';
+import { RollApi, RollApiDependencies, RollResult, RollResultWithoutModifiers, RollSpecification } from '~/types/dice';
+import { Actor } from '~/types/entity/actor';
+import { AppliedModifiers, Modifier } from '~/types/modifier';
+import { addModifier, computeSumOfModifiers } from '~/worldkit/entity/modifier';
+import { WeaponSchema } from '~/types/schema/weapon';
+import { SkillSchema } from '~/types/schema/skill';
 
 type ParsedRollSpecification = {
   numDice: number;
@@ -70,25 +75,29 @@ function parseRollSpecification(
   return output;
 }
 
-export type RollDiceWithRngResult = {
-  values: number[];
-  sum: number;
-  bonus?: number;
-};
 
 export function rollDiceWithRng(
-  spec: RollSpecification,
+  dice: RollSpecification,
   rng: () => number,
 
   // Consumers may opt into reusing the same output object for performance
-  output: RollDiceWithRngResult = { values: [], sum: 0, bonus: undefined },
-): RollDiceWithRngResult {
-  const { numDice, dieSize, flatBonus } = parseRollSpecification(spec);
+  output: RollResultWithoutModifiers = {
+    values: [],
+    dice,
+    natural: 0,
+    bonus: 0,
+    result: 0,
+  },
+): RollResultWithoutModifiers {
+  const { numDice, dieSize, flatBonus } = parseRollSpecification(dice);
 
+  // Reset output object
+  output.dice = dice;
   output.values.length = numDice;
-  output.sum = 0;
-  output.bonus = undefined;
+  output.natural = 0;
+  output.bonus = flatBonus;
 
+  // Roll the dice
   let sum = 0;
   for (let i = 0; i < numDice; i++) {
     const value = Math.floor(rng() * dieSize) + 1;
@@ -96,12 +105,71 @@ export function rollDiceWithRng(
     sum += value;
   }
 
-  if (flatBonus) {
-    sum += flatBonus;
-  }
-
-  output.sum = sum;
-  output.bonus = flatBonus;
+  output.natural = sum;
+  output.result = sum + output.bonus; // Base result without modifiers
 
   return output;
 }
+
+/**
+ * Apply a single modifier to a roll result.
+ * **Directly mutates the roll object.**
+ */
+export function applyModifierToRollResult(
+  roll: RollResult,
+  modifierId: string,
+  modifier: Modifier,
+  rng: () => number = Math.random,
+): void {
+  roll.mods ??= {};
+
+  addModifier(roll.mods, modifierId, modifier);
+
+  // Update result
+  roll.result = roll.natural + roll.bonus + computeSumOfModifiers(roll.mods);
+}
+
+/**
+ * Apply multiple modifiers to a roll result.
+ * Directly mutates the roll object.
+ */
+export function applyModifiersToRollResult(
+  roll: RollResult,
+  modifiers: AppliedModifiers,
+  rng: () => number = Math.random,
+): void {
+  roll.mods ??= {};
+
+  // Add each modifier directly
+  for (const modifierId in modifiers) {
+    const modifier = modifiers[modifierId];
+    roll.mods[modifierId] = modifier;
+  }
+
+  // Update result once at the end
+  roll.result = roll.natural + roll.bonus + computeSumOfModifiers(roll.mods);
+}
+
+export const DEFAULT_ROLL_API_DEPS: RollApiDependencies = Object.freeze({
+  random: () => Math.random(),
+});
+
+export const createRollApi = (deps: RollApiDependencies = DEFAULT_ROLL_API_DEPS): RollApi => {
+  const rollWeaponAccuracy = (actor: Actor, weapon: WeaponSchema): RollResult => {
+    throw new Error();
+  };
+
+  const rollWeaponDamage = (actor: Actor, weapon: WeaponSchema): RollResult => {
+    throw new Error();
+  };
+
+  const rollSkillCheck = (actor: Actor, skill: SkillSchema): RollResult => {
+    throw new Error();
+  };
+
+  return {
+    rollWeaponAccuracy,
+    rollWeaponDamage,
+    rollSkillCheck,
+  };
+};

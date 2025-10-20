@@ -1,4 +1,8 @@
+import { Actor } from '~/types/entity/actor';
 import { AppliedModifiers } from './modifier';
+import { WeaponSchema } from '~/types/schema/weapon';
+import { SkillSchema } from '~/types/schema/skill';
+import { PotentiallyImpureOperations } from '~/types/handler';
 
 export enum DieSize {
   D4 = 4,
@@ -16,15 +20,11 @@ export enum DieSize {
  */
 export type RollSpecification = `${number}d${DieSize}` | `${number}d${DieSize}+${number}`;
 
-export interface RollResult {
+export type RollResultWithoutModifiers = {
   /**
    * The roll that was made. For example, "2d6", meaning two six-sided dice were rolled.
    */
   dice: RollSpecification;
-  /**
-   * The modifiers that should be applied to compute the final value.
-   */
-  mods?: AppliedModifiers;
   /**
    * The raw values of the dice that were rolled.
    */
@@ -34,7 +34,29 @@ export interface RollResult {
    */
   natural: number;
   /**
+   * The flat bonus that was added to the roll, if `dice` looked like `${number}d${DieSize}+${number}`.
+   */
+  bonus: number;
+  /**
    * The final result of the roll, after all modifiers have been applied.
    */
   result: number;
-}
+};
+
+export type RollResult = RollResultWithoutModifiers & {
+  /**
+   * The modifiers that should be applied to compute the final value.
+   */
+  mods?: AppliedModifiers;
+};
+
+export type RollApi = {
+  // High-level semantic rolls
+  rollWeaponAccuracy(actor: Actor, weapon: WeaponSchema): RollResult;
+  rollWeaponDamage(actor: Actor, weapon: WeaponSchema): RollResult;
+  rollSkillCheck(actor: Actor, skill: SkillSchema): RollResult;
+};
+
+export type RollApiDependencies = {
+  random: PotentiallyImpureOperations['random'];
+};

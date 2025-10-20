@@ -10,12 +10,11 @@ describe('Attack Rating Calculation', () => {
     ...schema,
     urn: 'flux:schema:weapon:test-sword',
     name: 'Test Sword',
-    skill: 'flux:skill:combat:melee',
     baseMass: 2000,
     range: { optimal: 1 },
     accuracy: {
       model: AccuracyModel.SKILL_SCALING,
-      skill: 'flux:skill:combat:melee',
+      skill: 'flux:schema:skill:combat:melee',
       base: '1d20',
     },
     damage: {
@@ -41,7 +40,7 @@ describe('Attack Rating Calculation', () => {
       per: { eff: 50 },
     },
     skills: {
-      'flux:skill:combat:melee': {
+      'flux:schema:skill:combat:melee': {
         xp: 0,
         pxp: 0,
         rank: skillRank

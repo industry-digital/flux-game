@@ -1,13 +1,15 @@
-import { Actor, ActorURN, RollResult } from '~/types';
+import { Actor, Stat } from '~/types/entity/actor';
+import { ActorURN } from '~/types/taxonomy';
+import { RollResult, RollSpecification } from '~/types/dice';
 import { Combatant } from '~/types/combat';
-import { Stat } from '~/types/entity/actor';
-import { rollDiceWithRng } from '~/worldkit/dice';
+import { applyModifierToRollResult, rollDiceWithRng } from '~/worldkit/dice';
 import { calculateStatBonus, getStatValue } from '~/worldkit/entity/actor/stats';
 
-export const INITIATIVE_ROLL_SPECIFICATION = '1d20';
+export const INITIATIVE_ROLL_SPECIFICATION: RollSpecification = '1d20';
 
 export type InitiativeDependencies = {
   random: () => number;
+  timestamp: () => number;
   calculateStatBonus: typeof calculateStatBonus;
   getStatValue: typeof getStatValue;
   rollDiceWithRng: typeof rollDiceWithRng;
@@ -15,6 +17,7 @@ export type InitiativeDependencies = {
 
 const DEFAULT_INITIATIVE_DEPS: InitiativeDependencies = {
   random: () => Math.random(),
+  timestamp: () => Date.now(),
   calculateStatBonus: calculateStatBonus,
   getStatValue: getStatValue,
   rollDiceWithRng: rollDiceWithRng,
@@ -26,16 +29,16 @@ export function computeInitiativeRoll(
 ): RollResult {
   const perceptionValue = deps.getStatValue(actor, Stat.PER);
   const bonus = deps.calculateStatBonus(perceptionValue);
-  const { values, sum: natural } = deps.rollDiceWithRng('1d20', deps.random);
-  const result = natural + bonus;
+  const roll = deps.rollDiceWithRng(INITIATIVE_ROLL_SPECIFICATION, deps.random);
 
-  return {
-    dice: '1d20',
-    values,
-    mods: {},
-    natural,
-    result,
-  };
+  applyModifierToRollResult(roll, `stat:${Stat.PER}`, {
+    origin: `stat:${Stat.PER}`,
+    value: bonus,
+    duration: -1,
+    ts: deps.timestamp(),
+  });
+
+  return roll;
 }
 
 export function computeInitiativeRolls(

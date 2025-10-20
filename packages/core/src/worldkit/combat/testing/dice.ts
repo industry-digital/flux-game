@@ -1,7 +1,6 @@
-import { RollResult, RollSpecification } from '~/types/dice';
-import { AppliedModifiers } from '~/types/modifier';
+import { RollResultWithoutModifiers, RollSpecification } from '~/types/dice';
 
-export const createDiceRollResult = (dice: RollSpecification, values: number[], mods?: AppliedModifiers): RollResult => {
+export const createDiceRollResult = (dice: RollSpecification, values: number[], bonus: number = 0): RollResultWithoutModifiers => {
   const result = values.reduce((acc, value) => acc + value, 0);
-  return { dice, values, result, mods, natural: result };
+  return { dice, values, result, natural: result, bonus };
 };

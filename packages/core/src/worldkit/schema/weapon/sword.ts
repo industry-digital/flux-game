@@ -8,7 +8,6 @@ export const createSwordSchema = (input: WeaponSchemaInput): WeaponSchema => {
     ...input,
     baseMass: 2_000, // 2kg - typical sword mass
     name: input.name || 'sword',
-    skill: 'flux:skill:weapon:melee',
     range: {
       optimal: 1,
       max: 1,

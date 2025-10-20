@@ -11,7 +11,7 @@ export const createBowSchema = (input: WeaponSchemaInput): WeaponSchema => {
     baseMass: 3_000, // 3kg - typical bow mass
     accuracy: {
       model: AccuracyModel.SKILL_SCALING,
-      skill: 'flux:skill:weapon:bow',
+      skill: 'flux:schema:skill:weapon:bow',
       base: '1d20+2',
     },
     damage: {

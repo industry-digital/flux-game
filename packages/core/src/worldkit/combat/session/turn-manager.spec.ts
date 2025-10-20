@@ -216,9 +216,9 @@ describe('createTurnManager', () => {
 
     // Set up initiative order: Alice, Bob, Charlie
     const initiativeRolls: Map<ActorURN, RollResult> = new Map([
-      [ALICE_ID, { dice: '1d20', values: [20], result: 20, natural: 20, mods: {} }],
-      [BOB_ID, { dice: '1d20', values: [19], result: 19, natural: 19, mods: {} }],
-      [CHARLIE_ID, { dice: '1d20', values: [18], result: 18, natural: 18, mods: {} }]
+      [ALICE_ID, { dice: '1d20', values: [20], result: 20, natural: 20, mods: {}, bonus: 0 }],
+      [BOB_ID, { dice: '1d20', values: [19], result: 19, natural: 19, mods: {}, bonus: 0 }],
+      [CHARLIE_ID, { dice: '1d20', values: [18], result: 18, natural: 18, mods: {}, bonus: 0 }]
     ]);
 
     lifecycle.startCombat('test-trace', { initiativeRolls });
@@ -269,9 +269,9 @@ describe('createTurnManager', () => {
 
     // Set up initiative order: Alice, Bob, Charlie
     const initiativeRolls: Map<ActorURN, RollResult> = new Map([
-      [ALICE_ID, { dice: '1d20', values: [20], result: 20, natural: 20, mods: {} }],
-      [BOB_ID, { dice: '1d20', values: [19], result: 19, natural: 19, mods: {} }],
-      [CHARLIE_ID, { dice: '1d20', values: [18], result: 18, natural: 18, mods: {} }]
+      [ALICE_ID, { dice: '1d20', values: [20], result: 20, natural: 20, mods: {}, bonus: 0 }],
+      [BOB_ID, { dice: '1d20', values: [19], result: 19, natural: 19, mods: {}, bonus: 0 }],
+      [CHARLIE_ID, { dice: '1d20', values: [18], result: 18, natural: 18, mods: {}, bonus: 0 }]
     ]);
 
     lifecycle.startCombat('test-trace', { initiativeRolls });
@@ -329,10 +329,10 @@ describe('createTurnManager', () => {
 
     // Set up initiative order: Dave, Franz, Alice, Bob
     const initiativeRolls: Map<ActorURN, RollResult> = new Map([
-      [DAVE_ID, { dice: '1d20', values: [20], result: 20, natural: 20, mods: {} }],
-      [FRANZ_ID, { dice: '1d20', values: [19], result: 19, natural: 19, mods: {} }],
-      [ALICE_ID, { dice: '1d20', values: [18], result: 18, natural: 18, mods: {} }],
-      [BOB_ID, { dice: '1d20', values: [17], result: 17, natural: 17, mods: {} }]
+      [DAVE_ID, { dice: '1d20', values: [20], result: 20, natural: 20, mods: {}, bonus: 0 }],
+      [FRANZ_ID, { dice: '1d20', values: [19], result: 19, natural: 19, mods: {}, bonus: 0 }],
+      [ALICE_ID, { dice: '1d20', values: [18], result: 18, natural: 18, mods: {}, bonus: 0 }],
+      [BOB_ID, { dice: '1d20', values: [17], result: 17, natural: 17, mods: {}, bonus: 0 }]
     ]);
 
     lifecycle.startCombat('test-trace', { initiativeRolls });

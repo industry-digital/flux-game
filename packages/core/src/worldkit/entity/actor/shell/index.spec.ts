@@ -16,6 +16,7 @@ import {
   ShellInput
 } from './index';
 import { createActor } from '../index';
+import { createModifier } from '~/worldkit/entity/modifier';
 
 const DEFAULT_TIMESTAMP = 1234567890000;
 
@@ -413,14 +414,20 @@ describe('Zero-Allocation Stat Mutations', () => {
         [Stat.POW]: createTestStat({
           nat: 15,
           eff: 15,
-          mods: { someModifier: { schema: 'test' as any, position: 0.5, value: 5, appliedBy: 'test' as any } }
+          mods: {
+            someModifier: createModifier({
+              origin: 'stat:pow',
+              value: 5,
+              duration: -1,
+              ts: DEFAULT_TIMESTAMP,
+            }),
+          },
         }),
-        [Stat.FIN]: { ...baseStats[Stat.FIN] },
-        [Stat.RES]: { ...baseStats[Stat.RES] },
+        [Stat.FIN]: createTestStat({ nat: 12, eff: 12 }),
+        [Stat.RES]: createTestStat({ nat: 18, eff: 18 }),
       };
 
       mutateShellStats(statsCopy, { [Stat.POW]: 20 });
-
       expect(statsCopy[Stat.POW].mods).toBeUndefined();
     });
   });

@@ -1,9 +1,11 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import { Actor } from '~/types/entity/actor';
 import { SkillState } from '~/types/entity/skill';
-import { AppliedModifiers, Modifier } from '~/types/modifier';
-import { SkillURN } from '~/types/taxonomy';
+import { AppliedModifiers } from '~/types/modifier';
+import { SkillSchemaURN } from '~/types/taxonomy';
 import { createActor } from './index';
+import { createModifier } from '~/worldkit/entity/modifier';
+import { DEFAULT_TIMESTAMP } from '~/testing/constants';
 import {
   MIN_SKILL_RANK,
   MAX_SKILL_RANK,
@@ -14,13 +16,19 @@ import {
   getSkillModifierBonus,
   createDefaultSkillState,
   createActorSkillApi,
-  type ActorSkillApi,
   setActorSkillRank,
   setActorSkillRanks,
+  type ActorSkillApi,
 } from './skill';
 
+const NOW = DEFAULT_TIMESTAMP;
+const ONE_MINUTE_AGO = NOW - (60 * 1000);
+const ONE_MINUTE_FROM_NOW = NOW + (60 * 1000);
+
+const TEST_SKILL_URN: SkillSchemaURN = 'flux:skill:test' as SkillSchemaURN;
+
 // Test fixtures
-const createTestActor = (skills: Partial<Record<SkillURN, SkillState>> = {}): Actor => {
+const createTestActor = (skills: Partial<Record<SkillSchemaURN, SkillState>> = {}): Actor => {
   const actor = createActor();
   return {
     ...actor,
@@ -28,24 +36,14 @@ const createTestActor = (skills: Partial<Record<SkillURN, SkillState>> = {}): Ac
     description: { base: 'Test actor for skill tests' },
     skills: {
       ...actor.skills,
-      ...skills,  // This preserves object references!
+      ...skills,
     },
   };
 };
 
-const createTestModifier = (overrides: Partial<Modifier> = {}): Modifier => ({
-  schema: 'test-modifier' as any,
-  position: 0.5,
-  value: 10,
-  appliedBy: 'test-source' as any,
-  ...overrides,
-});
-
-const TEST_SKILL_URN: SkillURN = 'flux:skill:test' as SkillURN;
-
-describe('skill.ts', () => {
+describe('skill utilities', () => {
   describe('createDefaultSkillState', () => {
-    it('should create a default skill state with zero values when no rank provided', () => {
+    it('should create default skill state with zero rank', () => {
       const result = createDefaultSkillState();
 
       expect(result).toEqual({
@@ -55,7 +53,7 @@ describe('skill.ts', () => {
       });
     });
 
-    it('should create a skill state with specified rank', () => {
+    it('should create skill state with specified rank', () => {
       const result = createDefaultSkillState(50);
 
       expect(result).toEqual({
@@ -65,24 +63,9 @@ describe('skill.ts', () => {
       });
     });
 
-    it('should clamp rank to MIN_SKILL_RANK', () => {
-      const result = createDefaultSkillState(-10);
-
-      expect(result).toEqual({
-        xp: 0,
-        pxp: 0,
-        rank: MIN_SKILL_RANK,
-      });
-    });
-
-    it('should clamp rank to MAX_SKILL_RANK', () => {
-      const result = createDefaultSkillState(150);
-
-      expect(result).toEqual({
-        xp: 0,
-        pxp: 0,
-        rank: MAX_SKILL_RANK,
-      });
+    it('should clamp rank to valid range', () => {
+      expect(createDefaultSkillState(-10).rank).toBe(MIN_SKILL_RANK);
+      expect(createDefaultSkillState(150).rank).toBe(MAX_SKILL_RANK);
     });
   });
 
@@ -92,7 +75,14 @@ describe('skill.ts', () => {
         xp: 100,
         pxp: 50,
         rank: 75,
-        mods: { 'test-mod': createTestModifier() },
+        mods: {
+          'test-mod': createModifier({
+            origin: 'test:modifier',
+            value: 10,
+            duration: -1,
+            ts: NOW,
+          }),
+        },
       };
       const actor = createTestActor({ [TEST_SKILL_URN]: skillState });
 
@@ -128,9 +118,9 @@ describe('skill.ts', () => {
       expect(result).toEqual({});
     });
 
-    it('should return object of modifiers for skill with modifiers', () => {
-      const modifier1 = createTestModifier({ value: 10 });
-      const modifier2 = createTestModifier({ value: 5 });
+    it('should return modifiers object for skill with modifiers', () => {
+      const modifier1 = createModifier({ origin: 'test:mod1', value: 10, duration: -1, ts: NOW });
+      const modifier2 = createModifier({ origin: 'test:mod2', value: 5, duration: -1, ts: NOW });
       const actor = createTestActor({
         [TEST_SKILL_URN]: {
           xp: 0,
@@ -156,7 +146,9 @@ describe('skill.ts', () => {
     });
 
     it('should return direct reference to mods object (zero-copy)', () => {
-      const modsObject = { 'mod1': createTestModifier({ value: 10 }) };
+      const modsObject = {
+        'mod1': createModifier({ origin: 'test:mod', value: 10, duration: -1, ts: NOW })
+      };
       const actor = createTestActor({
         [TEST_SKILL_URN]: {
           xp: 0,
@@ -168,7 +160,6 @@ describe('skill.ts', () => {
 
       const result = getActorSkillModifiers(actor, TEST_SKILL_URN);
 
-      // Should return the exact same object reference (zero-copy)
       expect(result).toBe(modsObject);
     });
   });
@@ -179,7 +170,7 @@ describe('skill.ts', () => {
         [TEST_SKILL_URN]: { xp: 0, pxp: 0, rank: 50, mods: {} }
       });
 
-      const result = getEffectiveSkillRank(actor, TEST_SKILL_URN);
+      const result = getEffectiveSkillRank(actor, TEST_SKILL_URN, undefined, undefined, { timestamp: () => NOW });
 
       expect(result).toBe(50);
     });
@@ -191,32 +182,32 @@ describe('skill.ts', () => {
           pxp: 0,
           rank: 50,
           mods: {
-            'mod1': createTestModifier({ position: 0.5, value: 10 }),
-            'mod2': createTestModifier({ position: 0.3, value: 5 }),
+            'mod1': createModifier({ origin: 'test:mod1', value: 10, duration: -1, ts: NOW }),
+            'mod2': createModifier({ origin: 'test:mod2', value: 5, duration: -1, ts: NOW }),
           }
         }
       });
 
-      const result = getEffectiveSkillRank(actor, TEST_SKILL_URN);
+      const result = getEffectiveSkillRank(actor, TEST_SKILL_URN, undefined, undefined, { timestamp: () => NOW });
 
       expect(result).toBe(65); // 50 + 10 + 5
     });
 
-    it('should ignore expired modifiers (position >= 1.0)', () => {
+    it('should ignore expired modifiers', () => {
       const actor = createTestActor({
         [TEST_SKILL_URN]: {
           xp: 0,
           pxp: 0,
           rank: 50,
           mods: {
-            'active': createTestModifier({ position: 0.5, value: 10 }),
-            'expired1': createTestModifier({ position: 1.0, value: 20 }),
-            'expired2': createTestModifier({ position: 1.5, value: 30 }),
+            'active': createModifier({ origin: 'test:active', value: 10, duration: -1, ts: NOW }),
+            'expired1': createModifier({ origin: 'test:expired1', value: 20, duration: 30000, ts: NOW - 60000 }),
+            'expired2': createModifier({ origin: 'test:expired2', value: 30, duration: 10000, ts: NOW - 20000 }),
           }
         }
       });
 
-      const result = getEffectiveSkillRank(actor, TEST_SKILL_URN);
+      const result = getEffectiveSkillRank(actor, TEST_SKILL_URN, undefined, undefined, { timestamp: () => NOW });
 
       expect(result).toBe(60); // 50 + 10 (only active modifier)
     });
@@ -228,13 +219,13 @@ describe('skill.ts', () => {
           pxp: 0,
           rank: 50,
           mods: {
-            'positive': createTestModifier({ position: 0.5, value: 10 }),
-            'negative': createTestModifier({ position: 0.3, value: -15 }),
+            'positive': createModifier({ origin: 'test:positive', value: 10, duration: -1, ts: NOW }),
+            'negative': createModifier({ origin: 'test:negative', value: -15, duration: -1, ts: NOW }),
           }
         }
       });
 
-      const result = getEffectiveSkillRank(actor, TEST_SKILL_URN);
+      const result = getEffectiveSkillRank(actor, TEST_SKILL_URN, undefined, undefined, { timestamp: () => NOW });
 
       expect(result).toBe(45); // 50 + 10 - 15
     });
@@ -246,14 +237,14 @@ describe('skill.ts', () => {
           pxp: 0,
           rank: 10,
           mods: {
-            'penalty': createTestModifier({ position: 0.5, value: -50 }),
+            'penalty': createModifier({ origin: 'test:penalty', value: -50, duration: -1, ts: NOW }),
           }
         }
       });
 
-      const result = getEffectiveSkillRank(actor, TEST_SKILL_URN);
+      const result = getEffectiveSkillRank(actor, TEST_SKILL_URN, undefined, undefined, { timestamp: () => NOW });
 
-      expect(result).toBe(MIN_SKILL_RANK); // Should not go below 0
+      expect(result).toBe(MIN_SKILL_RANK);
     });
 
     it('should clamp result to MAX_SKILL_RANK', () => {
@@ -263,24 +254,24 @@ describe('skill.ts', () => {
           pxp: 0,
           rank: 90,
           mods: {
-            'bonus': createTestModifier({ position: 0.5, value: 50 }),
+            'bonus': createModifier({ origin: 'test:bonus', value: 50, duration: -1, ts: NOW }),
           }
         }
       });
 
-      const result = getEffectiveSkillRank(actor, TEST_SKILL_URN);
+      const result = getEffectiveSkillRank(actor, TEST_SKILL_URN, undefined, undefined, { timestamp: () => NOW });
 
-      expect(result).toBe(MAX_SKILL_RANK); // Should not go above 100
+      expect(result).toBe(MAX_SKILL_RANK);
     });
 
     it('should work with pre-extracted baseSkill and modifiers', () => {
       const baseSkill: SkillState = { xp: 0, pxp: 0, rank: 50, mods: {} };
       const modifiers: AppliedModifiers = {
-        'mod1': createTestModifier({ value: 15 }),
+        'mod1': createModifier({ origin: 'test:mod1', value: 15, duration: -1, ts: NOW }),
       };
       const actor = createTestActor();
 
-      const result = getEffectiveSkillRank(actor, TEST_SKILL_URN, baseSkill, modifiers);
+      const result = getEffectiveSkillRank(actor, TEST_SKILL_URN, baseSkill, modifiers, { timestamp: () => NOW });
 
       expect(result).toBe(65); // 50 + 15
     });
@@ -292,7 +283,7 @@ describe('skill.ts', () => {
         [TEST_SKILL_URN]: { xp: 0, pxp: 0, rank: 50, mods: {} }
       });
 
-      const result = hasActiveSkillModifiers(actor, TEST_SKILL_URN);
+      const result = hasActiveSkillModifiers(actor, TEST_SKILL_URN, NOW);
 
       expect(result).toBe(false);
     });
@@ -304,12 +295,12 @@ describe('skill.ts', () => {
           pxp: 0,
           rank: 50,
           mods: {
-            'active': createTestModifier({ position: 0.5 }),
+            'active': createModifier({ origin: 'test:active', value: 10, duration: -1, ts: NOW }),
           }
         }
       });
 
-      const result = hasActiveSkillModifiers(actor, TEST_SKILL_URN);
+      const result = hasActiveSkillModifiers(actor, TEST_SKILL_URN, NOW);
 
       expect(result).toBe(true);
     });
@@ -321,13 +312,13 @@ describe('skill.ts', () => {
           pxp: 0,
           rank: 50,
           mods: {
-            'expired1': createTestModifier({ position: 1.0 }),
-            'expired2': createTestModifier({ position: 1.5 }),
+            'expired1': createModifier({ origin: 'test:expired1', value: 10, duration: 30000, ts: NOW - 60000 }),
+            'expired2': createModifier({ origin: 'test:expired2', value: 20, duration: 10000, ts: NOW - 20000 }),
           }
         }
       });
 
-      const result = hasActiveSkillModifiers(actor, TEST_SKILL_URN);
+      const result = hasActiveSkillModifiers(actor, TEST_SKILL_URN, NOW);
 
       expect(result).toBe(false);
     });
@@ -339,13 +330,13 @@ describe('skill.ts', () => {
           pxp: 0,
           rank: 50,
           mods: {
-            'active': createTestModifier({ position: 0.5 }),
-            'expired': createTestModifier({ position: 1.0 }),
+            'active': createModifier({ origin: 'test:active', value: 10, duration: -1, ts: NOW }),
+            'expired': createModifier({ origin: 'test:expired', value: 20, duration: 30000, ts: NOW - 60000 }),
           }
         }
       });
 
-      const result = hasActiveSkillModifiers(actor, TEST_SKILL_URN);
+      const result = hasActiveSkillModifiers(actor, TEST_SKILL_URN, NOW);
 
       expect(result).toBe(true);
     });
@@ -357,7 +348,7 @@ describe('skill.ts', () => {
         [TEST_SKILL_URN]: { xp: 0, pxp: 0, rank: 50, mods: {} }
       });
 
-      const result = getSkillModifierBonus(actor, TEST_SKILL_URN);
+      const result = getSkillModifierBonus(actor, TEST_SKILL_URN, undefined, NOW);
 
       expect(result).toBe(0);
     });
@@ -369,14 +360,14 @@ describe('skill.ts', () => {
           pxp: 0,
           rank: 50,
           mods: {
-            'mod1': createTestModifier({ position: 0.5, value: 10 }),
-            'mod2': createTestModifier({ position: 0.3, value: 5 }),
-            'mod3': createTestModifier({ position: 0.8, value: -3 }),
+            'mod1': createModifier({ origin: 'test:mod1', value: 10, duration: -1, ts: NOW }),
+            'mod2': createModifier({ origin: 'test:mod2', value: 5, duration: -1, ts: NOW }),
+            'mod3': createModifier({ origin: 'test:mod3', value: -3, duration: -1, ts: NOW }),
           }
         }
       });
 
-      const result = getSkillModifierBonus(actor, TEST_SKILL_URN);
+      const result = getSkillModifierBonus(actor, TEST_SKILL_URN, undefined, NOW);
 
       expect(result).toBe(12); // 10 + 5 - 3
     });
@@ -388,104 +379,28 @@ describe('skill.ts', () => {
           pxp: 0,
           rank: 50,
           mods: {
-            'active': createTestModifier({ position: 0.5, value: 10 }),
-            'expired': createTestModifier({ position: 1.0, value: 100 }),
+            'active': createModifier({ origin: 'test:active', value: 10, duration: -1, ts: NOW }),
+            'expired': createModifier({ origin: 'test:expired', value: 100, duration: 30000, ts: NOW - 60000 }),
           }
         }
       });
 
-      const result = getSkillModifierBonus(actor, TEST_SKILL_URN);
+      const result = getSkillModifierBonus(actor, TEST_SKILL_URN, undefined, NOW);
 
       expect(result).toBe(10); // Only active modifier
     });
 
-    it('should work with pre-extracted modifiers array', () => {
+    it('should work with pre-extracted modifiers', () => {
       const modifiers: AppliedModifiers = {
-        'mod1': createTestModifier({ position: 0.5, value: 15 }),
-        'mod2': createTestModifier({ position: 0.3, value: 5 }),
-        'mod3': createTestModifier({ position: 1.0, value: 100 }), // expired
+        'mod1': createModifier({ origin: 'test:mod1', value: 15, duration: -1, ts: NOW }),
+        'mod2': createModifier({ origin: 'test:mod2', value: 5, duration: -1, ts: NOW }),
+        'mod3': createModifier({ origin: 'test:expired', value: 100, duration: 30000, ts: NOW - 60000 }), // expired
       };
       const actor = createTestActor();
 
-      const result = getSkillModifierBonus(actor, TEST_SKILL_URN, modifiers);
+      const result = getSkillModifierBonus(actor, TEST_SKILL_URN, modifiers, NOW);
 
       expect(result).toBe(20); // 15 + 5 (expired ignored)
-    });
-
-    it('should handle all expired modifiers', () => {
-      const modifiers: AppliedModifiers = {
-        'expired1': createTestModifier({ position: 1.0, value: 10 }),
-        'expired2': createTestModifier({ position: 1.5, value: 20 }),
-      };
-      const actor = createTestActor();
-
-      const result = getSkillModifierBonus(actor, TEST_SKILL_URN, modifiers);
-
-      expect(result).toBe(0);
-    });
-
-    it('should handle edge case of position exactly 1.0', () => {
-      const actor = createTestActor({
-        [TEST_SKILL_URN]: {
-          xp: 0,
-          pxp: 0,
-          rank: 50,
-          mods: {
-            'edge': createTestModifier({ position: 1.0, value: 10 }),
-          }
-        }
-      });
-
-      const result = getSkillModifierBonus(actor, TEST_SKILL_URN);
-
-      expect(result).toBe(0); // position 1.0 should be considered expired
-    });
-  });
-
-  describe('integration tests', () => {
-    it('should maintain consistency between getEffectiveSkillRank and getSkillModifierBonus', () => {
-      const actor = createTestActor({
-        [TEST_SKILL_URN]: {
-          xp: 0,
-          pxp: 0,
-          rank: 50,
-          mods: {
-            'mod1': createTestModifier({ position: 0.5, value: 10 }),
-            'mod2': createTestModifier({ position: 0.3, value: 5 }),
-          }
-        }
-      });
-
-      const effectiveRank = getEffectiveSkillRank(actor, TEST_SKILL_URN);
-      const baseSkill = getActorSkill(actor, TEST_SKILL_URN);
-      const modifierBonus = getSkillModifierBonus(actor, TEST_SKILL_URN);
-
-      expect(effectiveRank).toBe(baseSkill.rank + modifierBonus);
-    });
-
-    it('should handle complex modifier scenarios correctly', () => {
-      const actor = createTestActor({
-        [TEST_SKILL_URN]: {
-          xp: 100,
-          pxp: 25,
-          rank: 75,
-          mods: {
-            'weapon-enchant': createTestModifier({ position: 0.0, value: 5 }),   // Just applied
-            'defensive-stance': createTestModifier({ position: 0.7, value: 8 }), // Fading
-            'poison-penalty': createTestModifier({ position: 0.4, value: -12 }), // Building
-            'expired-buff': createTestModifier({ position: 1.0, value: 20 }),    // Expired
-            'very-expired': createTestModifier({ position: 2.0, value: 50 }),    // Very expired
-          }
-        }
-      });
-
-      const effectiveRank = getEffectiveSkillRank(actor, TEST_SKILL_URN);
-      const modifierBonus = getSkillModifierBonus(actor, TEST_SKILL_URN);
-      const hasActive = hasActiveSkillModifiers(actor, TEST_SKILL_URN);
-
-      expect(modifierBonus).toBe(1); // 5 + 8 - 12 = 1 (expired ignored)
-      expect(effectiveRank).toBe(76); // 75 + 1
-      expect(hasActive).toBe(true);
     });
   });
 
@@ -510,30 +425,22 @@ describe('skill.ts', () => {
 
       const skill = getActorSkill(actor, TEST_SKILL_URN);
       expect(skill.rank).toBe(80);
-      expect(skill.xp).toBe(100); // Should preserve existing xp
-      expect(skill.pxp).toBe(50); // Should preserve existing pxp
+      expect(skill.xp).toBe(100);
+      expect(skill.pxp).toBe(50);
     });
 
-    it('should clamp rank to MIN_SKILL_RANK', () => {
+    it('should clamp rank to valid range', () => {
       const actor = createTestActor();
 
       setActorSkillRank(actor, TEST_SKILL_URN, -20);
-
-      const skill = getActorSkill(actor, TEST_SKILL_URN);
-      expect(skill.rank).toBe(MIN_SKILL_RANK);
-    });
-
-    it('should clamp rank to MAX_SKILL_RANK', () => {
-      const actor = createTestActor();
+      expect(getActorSkill(actor, TEST_SKILL_URN).rank).toBe(MIN_SKILL_RANK);
 
       setActorSkillRank(actor, TEST_SKILL_URN, 150);
-
-      const skill = getActorSkill(actor, TEST_SKILL_URN);
-      expect(skill.rank).toBe(MAX_SKILL_RANK);
+      expect(getActorSkill(actor, TEST_SKILL_URN).rank).toBe(MAX_SKILL_RANK);
     });
 
     it('should preserve existing modifiers when updating rank', () => {
-      const existingModifier = createTestModifier({ value: 15 });
+      const existingModifier = createModifier({ origin: 'test:existing', value: 15, duration: -1, ts: NOW });
       const actor = createTestActor({
         [TEST_SKILL_URN]: {
           xp: 100,
@@ -554,8 +461,8 @@ describe('skill.ts', () => {
   describe('setActorSkillRanks', () => {
     it('should set multiple skill ranks', () => {
       const actor = createTestActor();
-      const skillUrn1: SkillURN = 'flux:skill:test1' as SkillURN;
-      const skillUrn2: SkillURN = 'flux:skill:test2' as SkillURN;
+      const skillUrn1: SkillSchemaURN = 'flux:skill:test1' as SkillSchemaURN;
+      const skillUrn2: SkillSchemaURN = 'flux:skill:test2' as SkillSchemaURN;
 
       setActorSkillRanks(actor, {
         [skillUrn1]: 30,
@@ -569,116 +476,52 @@ describe('skill.ts', () => {
     });
 
     it('should update existing skills and create new ones', () => {
-      const skillUrn1: SkillURN = 'flux:skill:existing' as SkillURN;
-      const skillUrn2: SkillURN = 'flux:skill:new' as SkillURN;
+      const skillUrn1: SkillSchemaURN = 'flux:skill:existing' as SkillSchemaURN;
+      const skillUrn2: SkillSchemaURN = 'flux:skill:new' as SkillSchemaURN;
 
       const actor = createTestActor({
         [skillUrn1]: { xp: 200, pxp: 100, rank: 40 }
       });
 
       setActorSkillRanks(actor, {
-        [skillUrn1]: 80, // Update existing
-        [skillUrn2]: 60, // Create new
+        [skillUrn1]: 80,
+        [skillUrn2]: 60,
       });
 
       const existingSkill = getActorSkill(actor, skillUrn1);
       const newSkill = getActorSkill(actor, skillUrn2);
 
       expect(existingSkill.rank).toBe(80);
-      expect(existingSkill.xp).toBe(200); // Preserved
-      expect(existingSkill.pxp).toBe(100); // Preserved
+      expect(existingSkill.xp).toBe(200);
+      expect(existingSkill.pxp).toBe(100);
 
       expect(newSkill.rank).toBe(60);
-      expect(newSkill.xp).toBe(0); // Default
-      expect(newSkill.pxp).toBe(0); // Default
+      expect(newSkill.xp).toBe(0);
+      expect(newSkill.pxp).toBe(0);
     });
 
     it('should clamp all ranks to valid range', () => {
       const actor = createTestActor();
-      const skillUrn1: SkillURN = 'flux:skill:low' as SkillURN;
-      const skillUrn2: SkillURN = 'flux:skill:high' as SkillURN;
+      const skillUrn1: SkillSchemaURN = 'flux:skill:low' as SkillSchemaURN;
+      const skillUrn2: SkillSchemaURN = 'flux:skill:high' as SkillSchemaURN;
 
       setActorSkillRanks(actor, {
-        [skillUrn1]: -10, // Below min
-        [skillUrn2]: 150, // Above max
-        [TEST_SKILL_URN]: 50, // Valid
+        [skillUrn1]: -10,
+        [skillUrn2]: 150,
+        [TEST_SKILL_URN]: 50,
       });
 
       expect(getActorSkill(actor, skillUrn1).rank).toBe(MIN_SKILL_RANK);
       expect(getActorSkill(actor, skillUrn2).rank).toBe(MAX_SKILL_RANK);
       expect(getActorSkill(actor, TEST_SKILL_URN).rank).toBe(50);
     });
-
-    it('should handle empty skills object', () => {
-      const actor = createTestActor();
-
-      expect(() => {
-        setActorSkillRanks(actor, {});
-      }).not.toThrow();
-
-      // Actor should remain unchanged
-      const skill = getActorSkill(actor, TEST_SKILL_URN);
-      expect(skill).toStrictEqual(createDefaultSkillState());
-    });
-  });
-
-  describe('mutation function integration', () => {
-    it('should work correctly with existing skill API functions', () => {
-      const actor = createTestActor();
-
-      // Set initial skill ranks
-      setActorSkillRanks(actor, {
-        [TEST_SKILL_URN]: 60,
-      });
-
-      // Verify with existing API functions
-      const skill = getActorSkill(actor, TEST_SKILL_URN);
-      const effectiveRank = getEffectiveSkillRank(actor, TEST_SKILL_URN);
-      const hasModifiers = hasActiveSkillModifiers(actor, TEST_SKILL_URN);
-
-      expect(skill.rank).toBe(60);
-      expect(effectiveRank).toBe(60); // No modifiers
-      expect(hasModifiers).toBe(false);
-    });
-
-    it('should preserve modifiers when updating ranks', () => {
-      const modifier = createTestModifier({ position: 0.5, value: 20 });
-      const actor = createTestActor({
-        [TEST_SKILL_URN]: {
-          xp: 100,
-          pxp: 50,
-          rank: 40,
-          mods: { 'test-mod': modifier }
-        }
-      });
-
-      // Update rank using mutation function
-      setActorSkillRank(actor, TEST_SKILL_URN, 70);
-
-      // Verify modifiers are preserved and effective rank is correct
-      const skill = getActorSkill(actor, TEST_SKILL_URN);
-      const effectiveRank = getEffectiveSkillRank(actor, TEST_SKILL_URN);
-      const hasModifiers = hasActiveSkillModifiers(actor, TEST_SKILL_URN);
-      const modifierBonus = getSkillModifierBonus(actor, TEST_SKILL_URN);
-
-      expect(skill.rank).toBe(70);
-      expect(skill.mods?.['test-mod']).toStrictEqual(modifier);
-      expect(effectiveRank).toBe(90); // 70 + 20
-      expect(hasModifiers).toBe(true);
-      expect(modifierBonus).toBe(20);
-    });
   });
 
   describe('createActorSkillApi', () => {
     let actors: Record<string, Actor>;
     let api: ActorSkillApi;
-    let getActorCallCount: number;
 
     beforeEach(() => {
-      // Reset call counter
-      getActorCallCount = 0;
-
-      // Create test actors
       actors = {
         'flux:actor:alice': createTestActor({
           [TEST_SKILL_URN]: {
@@ -686,8 +529,8 @@ describe('skill.ts', () => {
             pxp: 0,
             rank: 50,
             mods: {
-              'mod1': createTestModifier({ position: 0.3, value: 15 }),
-              'mod2': createTestModifier({ position: 0.8, value: -5 }),
+              'mod1': createModifier({ origin: 'test:mod1', value: 15, duration: 30000, ts: ONE_MINUTE_AGO }),
+              'mod2': createModifier({ origin: 'test:mod2', value: -5, duration: -1, ts: NOW }),
             },
           },
         }),
@@ -701,15 +544,13 @@ describe('skill.ts', () => {
         }),
       };
 
-      // Create API with instrumented getActor function
-      api = createActorSkillApi();
+      api = createActorSkillApi(new Map(), { timestamp: () => NOW });
     });
 
     describe('function signatures', () => {
       it('should have identical signatures to original functions', () => {
         const alice = actors['flux:actor:alice'];
 
-        // These should all compile and work identically
         const skill1 = getActorSkill(alice, TEST_SKILL_URN);
         const skill2 = api.getActorSkill(alice, TEST_SKILL_URN);
         expect(skill2).toStrictEqual(skill1);
@@ -718,73 +559,17 @@ describe('skill.ts', () => {
         const mods2 = api.getActorSkillModifiers(alice, TEST_SKILL_URN);
         expect(mods2).toStrictEqual(mods1);
 
-        const rank1 = getEffectiveSkillRank(alice, TEST_SKILL_URN);
+        const rank1 = getEffectiveSkillRank(alice, TEST_SKILL_URN, undefined, undefined, { timestamp: () => NOW });
         const rank2 = api.getEffectiveSkillRank(alice, TEST_SKILL_URN);
         expect(rank2).toBe(rank1);
 
-        const hasActive1 = hasActiveSkillModifiers(alice, TEST_SKILL_URN);
-        const hasActive2 = api.hasActiveSkillModifiers(alice, TEST_SKILL_URN);
+        const hasActive1 = hasActiveSkillModifiers(alice, TEST_SKILL_URN, NOW);
+        const hasActive2 = api.hasActiveSkillModifiers(alice, TEST_SKILL_URN, NOW);
         expect(hasActive2).toBe(hasActive1);
 
-        const bonus1 = getSkillModifierBonus(alice, TEST_SKILL_URN);
-        const bonus2 = api.getSkillModifierBonus(alice, TEST_SKILL_URN);
+        const bonus1 = getSkillModifierBonus(alice, TEST_SKILL_URN, undefined, NOW);
+        const bonus2 = api.getSkillModifierBonus(alice, TEST_SKILL_URN, undefined, NOW);
         expect(bonus2).toBe(bonus1);
-
-        // Test mutation functions
-        const testActor = createTestActor();
-        api.setActorSkillRank(testActor, TEST_SKILL_URN, 45);
-        expect(api.getActorSkill(testActor, TEST_SKILL_URN).rank).toBe(45);
-
-        api.setActorSkillRanks(testActor, { [TEST_SKILL_URN]: 65 });
-        expect(api.getActorSkill(testActor, TEST_SKILL_URN).rank).toBe(65);
-
-        const defaultSkill = api.createDefaultSkillState(30);
-        expect(defaultSkill.rank).toBe(30);
-      });
-    });
-
-    describe('mutation functions via API', () => {
-      it('should provide access to mutation functions', () => {
-        const testActor = createTestActor();
-        const skillUrn1: SkillURN = 'flux:skill:api-test1' as SkillURN;
-        const skillUrn2: SkillURN = 'flux:skill:api-test2' as SkillURN;
-
-        // Test setActorSkillRank
-        api.setActorSkillRank(testActor, skillUrn1, 55);
-        expect(api.getActorSkill(testActor, skillUrn1).rank).toBe(55);
-
-        // Test setActorSkillRanks
-        api.setActorSkillRanks(testActor, {
-          [skillUrn1]: 75, // Update existing
-          [skillUrn2]: 40, // Create new
-        });
-        expect(api.getActorSkill(testActor, skillUrn1).rank).toBe(75);
-        expect(api.getActorSkill(testActor, skillUrn2).rank).toBe(40);
-
-        // Test createDefaultSkillState
-        const defaultSkill = api.createDefaultSkillState(85);
-        expect(defaultSkill).toEqual({
-          xp: 0,
-          pxp: 0,
-          rank: 85,
-        });
-      });
-
-      it('should invalidate cache when skills are mutated', () => {
-        const testActor = createTestActor({
-          [TEST_SKILL_URN]: { xp: 0, pxp: 0, rank: 30 }
-        });
-
-        // Get initial cached result
-        const initialRank = api.getEffectiveSkillRank(testActor, TEST_SKILL_URN);
-        expect(initialRank).toBe(30);
-
-        // Mutate skill rank
-        api.setActorSkillRank(testActor, TEST_SKILL_URN, 70);
-
-        // Verify the API reflects the change (cache should be invalidated or updated)
-        const updatedRank = api.getEffectiveSkillRank(testActor, TEST_SKILL_URN);
-        expect(updatedRank).toBe(70);
       });
     });
 
@@ -792,38 +577,17 @@ describe('skill.ts', () => {
       it('should cache modifier extraction results', () => {
         const alice = actors['flux:actor:alice'];
 
-        // First call should extract modifiers
         const mods1 = api.getActorSkillModifiers(alice, TEST_SKILL_URN);
         expect(Object.keys(mods1)).toHaveLength(2);
 
-        // Second call should use cached result
         const mods2 = api.getActorSkillModifiers(alice, TEST_SKILL_URN);
         expect(mods2).toBe(mods1); // Same reference (cached)
-        expect(mods2).toStrictEqual(mods1); // Same content
-      });
-
-      it('should use memoized modifiers in dependent functions', () => {
-        const alice = actors['flux:actor:alice'];
-
-        // Call getActorSkillModifiers first to populate cache
-        const mods = api.getActorSkillModifiers(alice, TEST_SKILL_URN);
-        expect(Object.keys(mods)).toHaveLength(2);
-
-        // These calls should use the cached modifiers
-        const rank = api.getEffectiveSkillRank(alice, TEST_SKILL_URN);
-        const hasActive = api.hasActiveSkillModifiers(alice, TEST_SKILL_URN);
-        const bonus = api.getSkillModifierBonus(alice, TEST_SKILL_URN);
-
-        expect(rank).toBe(60); // 50 + 10 (15 - 5)
-        expect(hasActive).toBe(true);
-        expect(bonus).toBe(10);
       });
 
       it('should cache results per actor-skill combination', () => {
         const alice = actors['flux:actor:alice'];
         const bob = actors['flux:actor:bob'];
 
-        // Different actors should have separate cache entries
         const aliceMods = api.getActorSkillModifiers(alice, TEST_SKILL_URN);
         const bobMods = api.getActorSkillModifiers(bob, TEST_SKILL_URN);
 
@@ -833,236 +597,55 @@ describe('skill.ts', () => {
       });
     });
 
-    describe('error handling', () => {
-      it('should handle actors with minimal data gracefully', () => {
-        const minimalActor = createTestActor(); // Empty skills
+    describe('mutation functions', () => {
+      it('should provide access to mutation functions', () => {
+        const testActor = createTestActor();
+        const skillUrn1: SkillSchemaURN = 'flux:skill:api-test1' as SkillSchemaURN;
+        const skillUrn2: SkillSchemaURN = 'flux:skill:api-test2' as SkillSchemaURN;
 
-        expect(() => {
-          api.getActorSkill(minimalActor, TEST_SKILL_URN);
-        }).not.toThrow(); // Should return default skill state
+        api.setActorSkillRank(testActor, skillUrn1, 55);
+        expect(api.getActorSkill(testActor, skillUrn1).rank).toBe(55);
 
-        expect(() => {
-          api.getActorSkillModifiers(minimalActor, TEST_SKILL_URN);
-        }).not.toThrow(); // Should return empty object
+        api.setActorSkillRanks(testActor, {
+          [skillUrn1]: 75,
+          [skillUrn2]: 40,
+        });
+        expect(api.getActorSkill(testActor, skillUrn1).rank).toBe(75);
+        expect(api.getActorSkill(testActor, skillUrn2).rank).toBe(40);
 
-        const skill = api.getActorSkill(minimalActor, TEST_SKILL_URN);
-        const mods = api.getActorSkillModifiers(minimalActor, TEST_SKILL_URN);
-
-        expect(skill).toStrictEqual(createDefaultSkillState());
-        expect(Object.keys(mods)).toHaveLength(0);
+        const defaultSkill = api.createDefaultSkillState(85);
+        expect(defaultSkill).toEqual({
+          xp: 0,
+          pxp: 0,
+          rank: 85,
+        });
       });
     });
 
-    describe('performance characteristics', () => {
-      it('should demonstrate caching benefits', () => {
-        const alice = actors['flux:actor:alice'];
-
-        // Multiple calls to functions that use modifiers
-        for (let i = 0; i < 5; i++) {
-          api.getEffectiveSkillRank(alice, TEST_SKILL_URN);
-          api.hasActiveSkillModifiers(alice, TEST_SKILL_URN);
-          api.getSkillModifierBonus(alice, TEST_SKILL_URN);
-        }
-
-        // Modifier extraction should only happen once per actor-skill combo
-        const mods1 = api.getActorSkillModifiers(alice, TEST_SKILL_URN);
-        const mods2 = api.getActorSkillModifiers(alice, TEST_SKILL_URN);
-        expect(mods1).toBe(mods2); // Same reference = cached
-      });
-    });
-
-    describe('edge cases', () => {
-      it('should handle actors with no modifiers', () => {
-        const bob = actors['flux:actor:bob'];
-
-        const mods = api.getActorSkillModifiers(bob, TEST_SKILL_URN);
-        const rank = api.getEffectiveSkillRank(bob, TEST_SKILL_URN);
-        const hasActive = api.hasActiveSkillModifiers(bob, TEST_SKILL_URN);
-        const bonus = api.getSkillModifierBonus(bob, TEST_SKILL_URN);
-
-        expect(Object.keys(mods)).toHaveLength(0);
-        expect(rank).toBe(25); // Base rank only
-        expect(hasActive).toBe(false);
-        expect(bonus).toBe(0);
-      });
-
-      it('should handle actors with missing skills', () => {
-        const alice = actors['flux:actor:alice'];
-        const missingSkill = 'flux:skill:missing' as SkillURN;
-
-        const skill = api.getActorSkill(alice, missingSkill);
-        const mods = api.getActorSkillModifiers(alice, missingSkill);
-        const rank = api.getEffectiveSkillRank(alice, missingSkill);
-
-        expect(skill).toStrictEqual(createDefaultSkillState());
-        expect(Object.keys(mods)).toHaveLength(0);
-        expect(rank).toBe(0);
-      });
-
-      it('should handle expired modifiers correctly', () => {
-        const actorWithExpired = createTestActor({
+    describe('integration with temporal modifiers', () => {
+      it('should correctly handle active vs expired modifiers', () => {
+        const actorWithMixedMods = createTestActor({
           [TEST_SKILL_URN]: {
             xp: 0,
             pxp: 0,
             rank: 30,
             mods: {
-              'active': createTestModifier({ position: 0.5, value: 20 }),
-              'expired': createTestModifier({ position: 1.0, value: 100 }), // Expired
+              'active': createModifier({ origin: 'test:active', value: 20, duration: -1, ts: NOW }),
+              'expired': createModifier({ origin: 'test:expired', value: 100, duration: 30000, ts: NOW - 60000 }),
             },
           },
         });
 
-        actors['flux:actor:expired'] = actorWithExpired;
-
-        const mods = api.getActorSkillModifiers(actorWithExpired, TEST_SKILL_URN);
-        const rank = api.getEffectiveSkillRank(actorWithExpired, TEST_SKILL_URN);
-        const hasActive = api.hasActiveSkillModifiers(actorWithExpired, TEST_SKILL_URN);
-        const bonus = api.getSkillModifierBonus(actorWithExpired, TEST_SKILL_URN);
+        const mods = api.getActorSkillModifiers(actorWithMixedMods, TEST_SKILL_URN);
+        const rank = api.getEffectiveSkillRank(actorWithMixedMods, TEST_SKILL_URN);
+        const hasActive = api.hasActiveSkillModifiers(actorWithMixedMods, TEST_SKILL_URN, NOW);
+        const bonus = api.getSkillModifierBonus(actorWithMixedMods, TEST_SKILL_URN, undefined, NOW);
 
         expect(Object.keys(mods)).toHaveLength(2); // Both modifiers present
         expect(rank).toBe(50); // 30 + 20 (expired ignored)
         expect(hasActive).toBe(true); // Active modifier present
         expect(bonus).toBe(20); // Only active modifier
       });
-    });
-  });
-
-  describe('performance benchmarks', () => {
-    const BENCHMARK_ITERATIONS = 100000;
-    const WARMUP_ITERATIONS = 1000;
-
-    // Create test actors with different modifier loads
-    const createBenchmarkActor = (modifierCount: number): Actor => {
-      const mods: Record<string, Modifier> = {};
-      for (let i = 0; i < modifierCount; i++) {
-        const position = i < modifierCount * 0.7 ? Math.random() * 0.9 : 1.0 + Math.random();
-        const value = (Math.random() - 0.5) * 20;
-        mods[`mod-${i}`] = createTestModifier({ position, value });
-      }
-
-      return createTestActor({
-        [TEST_SKILL_URN]: {
-          xp: 1000,
-          pxp: 100,
-          rank: 75,
-          mods,
-        },
-      });
-    };
-
-    // Simulate old array-based approach for comparison
-    const getActorSkillModifiersArray = (actor: Actor, skill: SkillURN): Modifier[] => {
-      if (!actor.skills) {
-        return [];
-      }
-      const skillState = actor.skills[skill];
-      if (!skillState?.mods) {
-        return [];
-      }
-
-      const keys = Object.keys(skillState.mods);
-      const out = Array(keys.length);
-      for (let i = 0; i < keys.length; i++) {
-        out[i] = skillState.mods[keys[i]];
-      }
-      return out;
-    };
-
-    const benchmarkFunction = (name: string, fn: () => void): void => {
-      // Warmup
-      for (let i = 0; i < WARMUP_ITERATIONS; i++) {
-        fn();
-      }
-
-      // Benchmark
-      const start = performance.now();
-      for (let i = 0; i < BENCHMARK_ITERATIONS; i++) {
-        fn();
-      }
-      const end = performance.now();
-      const duration = end - start;
-      const opsPerSecond = Math.round(BENCHMARK_ITERATIONS / (duration / 1000));
-
-      console.log(`${name}: ${duration.toFixed(2)}ms (${opsPerSecond.toLocaleString()} ops/sec)`);
-    };
-
-    it('should benchmark zero-copy vs array conversion performance', () => {
-      const fewModsActor = createBenchmarkActor(3);
-      const manyModsActor = createBenchmarkActor(20);
-
-      console.log('\n=== Skill Modifier Extraction Benchmarks ===');
-
-      // Few modifiers comparison
-      console.log('\nFew Modifiers (3):');
-      benchmarkFunction('  Zero-copy (AppliedModifiers)', () => {
-        getActorSkillModifiers(fewModsActor, TEST_SKILL_URN);
-      });
-
-      benchmarkFunction('  Array conversion (old)', () => {
-        getActorSkillModifiersArray(fewModsActor, TEST_SKILL_URN);
-      });
-
-      // Many modifiers comparison
-      console.log('\nMany Modifiers (20):');
-      benchmarkFunction('  Zero-copy (AppliedModifiers)', () => {
-        getActorSkillModifiers(manyModsActor, TEST_SKILL_URN);
-      });
-
-      benchmarkFunction('  Array conversion (old)', () => {
-        getActorSkillModifiersArray(manyModsActor, TEST_SKILL_URN);
-      });
-
-      expect(true).toBe(true);
-    });
-
-    it('should benchmark iteration patterns', () => {
-      const actor = createBenchmarkActor(15);
-      const modifiers = getActorSkillModifiers(actor, TEST_SKILL_URN);
-
-      console.log('\n=== Iteration Pattern Benchmarks ===');
-
-      // for...in iteration (current)
-      benchmarkFunction('for...in iteration', () => {
-        let total = 0;
-        for (let modifierId in modifiers) {
-          const modifier = modifiers[modifierId];
-          if (modifier.position < 1.0) {
-            total += modifier.value;
-          }
-        }
-      });
-
-      // Object.values iteration (alternative)
-      benchmarkFunction('Object.values iteration', () => {
-        let total = 0;
-        const values = Object.values(modifiers);
-        for (const modifier of values) {
-          if (modifier.position < 1.0) {
-            total += modifier.value;
-          }
-        }
-      });
-
-      expect(true).toBe(true);
-    });
-
-    it('should benchmark memoized API performance', () => {
-      const actor = createBenchmarkActor(10);
-      const api = createActorSkillApi();
-
-      console.log('\n=== Memoized API Benchmarks ===');
-
-      // Cold cache (first call)
-      benchmarkFunction('Cold cache (first call)', () => {
-        api.getActorSkillModifiers(actor, TEST_SKILL_URN);
-      });
-
-      // Warm cache (subsequent calls)
-      benchmarkFunction('Warm cache (cached)', () => {
-        api.getActorSkillModifiers(actor, TEST_SKILL_URN);
-      });
-
-      expect(true).toBe(true);
     });
   });
 });

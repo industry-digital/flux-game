@@ -39,28 +39,28 @@ describe('sortInitiativeOrder', () => {
         natural: 18,
         result: 18,
         values: [18],
-        mods: {},
+        bonus: 0,
       }], // Highest roll
       [bob.id, {
         dice: ATTACK_ROLL_SPECIFICATION,
         natural: 15,
         result: 15,
         values: [15],
-        mods: {},
+        bonus: 0,
       }],   // Medium roll
       [charlie.id, {
         dice: ATTACK_ROLL_SPECIFICATION,
         natural: 12,
         result: 12,
         values: [12],
-        mods: {},
+        bonus: 0,
       }], // Tied with Diana
       [diana.id, {
         dice: ATTACK_ROLL_SPECIFICATION,
         natural: 12,
         result: 12,
         values: [12],
-        mods: {},
+        bonus: 0,
       }],   // Tied with Charlie
     ]);
 
@@ -131,9 +131,9 @@ describe('sortInitiativeOrder', () => {
         natural: 15,
         result: 15,
         values: [15],
-        mods: {},
+        bonus: 0,
       }],
-      [lowFin.id, { dice: ATTACK_ROLL_SPECIFICATION, natural: 15, result: 15, values: [15], mods: {} }],
+      [lowFin.id, { dice: ATTACK_ROLL_SPECIFICATION, natural: 15, result: 15, values: [15], bonus: 0 }],
     ]);
 
     const actors = new Map([
@@ -179,14 +179,14 @@ describe('sortInitiativeOrder', () => {
         natural: 15,
         result: 15,
         values: [15],
-        mods: {},
+        bonus: 0,
       }],
       [zuluActor.id, {
         dice: ATTACK_ROLL_SPECIFICATION,
         natural: 15,
         result: 15,
         values: [15],
-        mods: {},
+        bonus: 0,
       }], // Same roll
     ]);
 

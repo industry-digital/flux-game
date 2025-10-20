@@ -13,7 +13,8 @@ import {
   DEFAULT_POTENTIALLY_IMPURE_OPERATIONS,
   MapFunction
 } from './context';
-import { TransformerContext, WorldProjection, PotentiallyImpureOperations, ProfileResult } from '~/types/handler';
+import { TransformerContext, PotentiallyImpureOperations, ProfileResult } from '~/types/handler';
+import { WorldProjection } from '~/types/world';
 import { ActorWasCreatedInput, EventType, WorldEvent } from '~/types/event';
 import { createSchemaManager } from '~/worldkit/schema/manager';
 import { createMassApi, createMassComputationState } from '~/worldkit/physics/mass';

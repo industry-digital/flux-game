@@ -10,7 +10,6 @@ import { Actor, Stat } from '~/types/entity/actor';
 import { ATTACK_ROLL_SPECIFICATION, CombatSession, computeDistanceBetweenCombatants, canWeaponHitFromDistance } from '~/worldkit/combat';
 import { ActionCost, AttackType, AttackOutcome, Combatant } from '~/types/combat';
 import { EventType, WorldEvent } from '~/types/event';
-import { RollResult } from '~/types/dice';
 import { calculateActorEvasionRating, resolveHitAttempt } from '~/worldkit/combat/evasion';
 import { calculateWeaponDamage } from '~/worldkit/combat/damage';
 import { createWorldEvent } from '~/worldkit/event';
@@ -112,14 +111,7 @@ export function createStrikeMethod(
       return [];
     }
 
-    const { values, sum: natural } = context.rollDice(ATTACK_ROLL_SPECIFICATION, context.random);
-    const roll: RollResult = {
-      dice: ATTACK_ROLL_SPECIFICATION,
-      values,
-      mods: {},
-      natural,
-      result: natural, // TODO: compute result based on `mods` and `natural`.
-    };
+    const roll = context.rollDice(ATTACK_ROLL_SPECIFICATION, context.random);
 
     const targetActor = context.world.actors[combatant.target!];
     const defenderEvasionRating = calculateActorEvasionRatingImpl(

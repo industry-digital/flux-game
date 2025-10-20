@@ -6,7 +6,7 @@ import { createTransformerContext } from '~/worldkit/context';
 import { createSwordSchema } from '~/worldkit/schema/weapon/sword';
 import { registerWeapons } from '../testing/schema';
 import { ActorURN } from '~/types/taxonomy';
-import { CombatantDidAttack, CombatantDidDie, CombatantWasAttacked, EventType } from '~/types/event';
+import { CombatantDidAttack, CombatantDidDie, CombatantDidStrike, CombatantWasAttacked, EventType } from '~/types/event';
 import { Team } from '~/types/combat';
 import { createStrikeCost } from '~/worldkit/combat/tactical-cost';
 import { calculateWeaponApCost } from '~/worldkit/combat/damage';
@@ -144,11 +144,11 @@ describe('Strike Method', () => {
     it('should use specified target when provided', () => {
       const result = strike(SPECIFIC_TARGET_ID);
 
-      const attackEvent = extractFirstEventOfType<CombatantDidAttack>(result, EventType.COMBATANT_DID_ATTACK);
-      const damageEvent = extractFirstEventOfType<CombatantWasAttacked>(result, EventType.COMBATANT_WAS_ATTACKED);
+      const attackEvent = extractFirstEventOfType<CombatantDidStrike>(result, EventType.COMBATANT_DID_ATTACK)!;
+      const damageEvent = extractFirstEventOfType<CombatantWasAttacked>(result, EventType.COMBATANT_WAS_ATTACKED)!;
 
-      expect(attackEvent?.payload.target).toBe(SPECIFIC_TARGET_ID);
-      expect(damageEvent?.actor).toBe(SPECIFIC_TARGET_ID);
+      expect(attackEvent.payload.target).toContain(SPECIFIC_TARGET_ID);
+      expect(damageEvent.actor).toBe(SPECIFIC_TARGET_ID);
     });
 
     it('should call declareEvent for both attack and damage events', () => {
@@ -333,7 +333,7 @@ describe('Strike Method', () => {
         expect(event.trace).toBe(customTrace);
       });
 
-      const attackEvent = extractFirstEventOfType<CombatantDidAttack>(result, EventType.COMBATANT_DID_ATTACK);
+      const attackEvent = extractFirstEventOfType<CombatantDidStrike>(result, EventType.COMBATANT_DID_ATTACK);
       const damageEvent = extractFirstEventOfType<CombatantWasAttacked>(result, EventType.COMBATANT_WAS_ATTACKED);
 
       expect(attackEvent?.payload.target).toBe(specificTarget);

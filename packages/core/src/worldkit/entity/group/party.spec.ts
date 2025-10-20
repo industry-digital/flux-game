@@ -9,7 +9,7 @@ import {
   getPartyAlliesInLocation,
 } from './party';
 import { createTestActor } from '~/testing';
-import { WorldProjection } from '~/types/handler';
+import { WorldProjection } from '~/types/world';
 import { Actor } from '~/types/entity/actor';
 import { Party, GroupType } from '~/types/entity/group';
 import { ActorURN, PartyURN, PlaceURN } from '~/types/taxonomy';

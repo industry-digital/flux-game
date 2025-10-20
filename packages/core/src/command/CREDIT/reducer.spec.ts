@@ -1,6 +1,7 @@
 import { describe, beforeEach, it, expect, vi } from 'vitest';
 import { creditReducer } from './reducer';
-import { TransformerContext, WorldProjection } from '~/types/handler';
+import { TransformerContext } from '~/types/handler';
+import { WorldProjection } from '~/types/world';
 import { createTestTransformerContext } from '~/testing/context-testing';
 import { ActorURN, PlaceURN } from '~/types/taxonomy';
 import { createActor } from '~/worldkit/entity/actor';
