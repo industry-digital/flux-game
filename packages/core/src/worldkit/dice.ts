@@ -2,8 +2,10 @@ import { RollApi, RollApiDependencies, RollResult, RollResultWithoutModifiers, R
 import { Actor } from '~/types/entity/actor';
 import { AppliedModifiers, Modifier } from '~/types/modifier';
 import { addModifier, computeSumOfModifiers } from '~/worldkit/entity/modifier';
-import { WeaponSchema } from '~/types/schema/weapon';
+import { WeaponSchema, AccuracyModel } from '~/types/schema/weapon';
 import { SkillSchema } from '~/types/schema/skill';
+import { getActorSkill, getEffectiveSkillRank } from '~/worldkit/entity/actor/skill';
+import { ATTACK_SKILL_MULTIPLIER } from '~/worldkit/combat/attack';
 
 type ParsedRollSpecification = {
   numDice: number;
@@ -152,11 +154,44 @@ export function applyModifiersToRollResult(
 
 export const DEFAULT_ROLL_API_DEPS: RollApiDependencies = Object.freeze({
   random: () => Math.random(),
+  timestamp: () => Date.now(),
+  getActorSkill,
+  getEffectiveSkillRank,
 });
 
 export const createRollApi = (deps: RollApiDependencies = DEFAULT_ROLL_API_DEPS): RollApi => {
   const rollWeaponAccuracy = (actor: Actor, weapon: WeaponSchema): RollResult => {
-    throw new Error();
+    // Roll base dice using weapon's accuracy specification
+    const baseRoll = rollDiceWithRng(weapon.accuracy.base, deps.random);
+
+    // Convert to RollResult by adding mods property
+    const rollResult: RollResult = {
+      ...baseRoll,
+      mods: {},
+    };
+
+    // Calculate and apply skill bonus based on accuracy model
+    if (weapon.accuracy.model === AccuracyModel.SKILL_SCALING) {
+      const skillState = deps.getActorSkill(actor, weapon.accuracy.skill);
+      const effectiveSkillRank = deps.getEffectiveSkillRank(actor, weapon.accuracy.skill, skillState);
+
+      // Apply skill multiplier to get bonus (0-80 points for 0-100 skill rank)
+      const skillBonus = effectiveSkillRank * ATTACK_SKILL_MULTIPLIER;
+
+      // Add skill bonus as a modifier
+      const skillModifier: Modifier = {
+        origin: `skill:${weapon.accuracy.skill}`,
+        value: skillBonus,
+        duration: -1, // Permanent modifier
+        ts: deps.timestamp(),
+      };
+
+      applyModifierToRollResult(rollResult, `skill:${weapon.accuracy.skill}`, skillModifier);
+    } else {
+      throw new Error(`Unsupported accuracy model: ${weapon.accuracy.model}`);
+    }
+
+    return rollResult;
   };
 
   const rollWeaponDamage = (actor: Actor, weapon: WeaponSchema): RollResult => {

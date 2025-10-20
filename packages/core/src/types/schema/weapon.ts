@@ -76,12 +76,6 @@ export type WeaponSchema  =
 & {
 
   /**
-   * The skill that modifies the weapon's effectiveness
-   * @deprecated - use `accuracy` instead
-   */
-  skill?: SkillSchemaURN;
-
-  /**
    * Describes how the weapon's attack rating is determined
    */
   accuracy: AccuracySpecification;

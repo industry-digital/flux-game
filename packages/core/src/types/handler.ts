@@ -9,6 +9,7 @@ import { ActorSkillApi } from '~/worldkit/entity/actor/skill';
 import { rollDiceWithRng } from '~/worldkit/dice';
 import { WorldProjection } from '~/types/world';
 import { CommandResolver } from '~/types/intent';
+import { RollApi } from '~/types/dice';
 
 /** Combat metrics collection interface for performance monitoring and telemetry */
 export type CombatMetrics = {
@@ -102,6 +103,7 @@ export type TransformerContext<W extends WorldProjection = WorldProjection> =
     inventoryApi: ActorInventoryApi;
     equipmentApi: ActorEquipmentApi;
     actorSkillApi: ActorSkillApi;
+    rollApi: RollApi;
 
     // Optional metrics collection for performance monitoring
     metrics?: CombatMetrics;

@@ -27,6 +27,7 @@ import { ActorURN, PlaceURN } from '~/types/taxonomy';
 import { WellKnownActor } from '~/types';
 import { createCombatSessionStartedEvent } from '~/testing/event/factory/combat';
 import { DEFAULT_LOCATION } from '~/testing/constants';
+import { createRollApi } from '~/worldkit/dice';
 
 describe('createTransformerContext', () => {
   let mockDeps: PotentiallyImpureOperations;
@@ -140,6 +141,7 @@ describe('createTransformerContext', () => {
       const customInventoryApi = createActorInventoryApi(createMassApi(mockSchemaManager, createMassComputationState()));
       const customEquipmentApi = createActorEquipmentApi(mockSchemaManager, customInventoryApi);
       const customActorSkillApi = createActorSkillApi();
+      const customRollApi = createRollApi();
       const customCapacitorApi = createActorCapacitorApi();
       const customMetrics = createCombatMetricsApi();
 
@@ -152,6 +154,7 @@ describe('createTransformerContext', () => {
         customInventoryApi,
         customEquipmentApi,
         customActorSkillApi,
+        customRollApi,
         customMetrics
       );
 

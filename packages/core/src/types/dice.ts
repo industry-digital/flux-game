@@ -3,6 +3,8 @@ import { AppliedModifiers } from './modifier';
 import { WeaponSchema } from '~/types/schema/weapon';
 import { SkillSchema } from '~/types/schema/skill';
 import { PotentiallyImpureOperations } from '~/types/handler';
+import { SkillSchemaURN } from '~/types/taxonomy';
+import { SkillState } from '~/types/entity/skill';
 
 export enum DieSize {
   D4 = 4,
@@ -59,4 +61,7 @@ export type RollApi = {
 
 export type RollApiDependencies = {
   random: PotentiallyImpureOperations['random'];
+  timestamp: PotentiallyImpureOperations['timestamp'];
+  getActorSkill: (actor: Actor, skill: SkillSchemaURN) => SkillState;
+  getEffectiveSkillRank: (actor: Actor, skill: SkillSchemaURN, baseSkill?: SkillState) => number;
 };
