@@ -1,15 +1,15 @@
 import { DamageModel } from '~/types/damage';
 import { createWeaponSchema } from './factory';
-import { AccuracyModel, WeaponSchema } from '~/types/schema/weapon';
+import { AccuracyModel, WeaponSchema, WeaponTimer } from '~/types/schema/weapon';
 import { ONE_HANDED_FIT, TWO_HANDED_FIT } from '~/worldkit/schema/weapon/fit';
 
 export const pistolSchema = createWeaponSchema((schema: WeaponSchema) => ({
   ...schema,
+  skill: 'flux:schema:skill:weapon:pistol',
   baseMass: 800, // 0.8kg - typical pistol mass
   fit: ONE_HANDED_FIT,
   accuracy: {
     model: AccuracyModel.SKILL_SCALING,
-    skill: 'flux:schema:skill:weapon:pistol',
     base: '1d20',
   },
   damage: {
@@ -25,13 +25,16 @@ export const pistolSchema = createWeaponSchema((schema: WeaponSchema) => ({
     capacity: 15,
   },
   timers: {
-    fire: 300,
-    reload: 6_000,
+    [WeaponTimer.SETUP]: 1_000,
+    [WeaponTimer.AIM]: 3_000,
+    [WeaponTimer.ATTACK]: 300,
+    [WeaponTimer.RELOAD]: 6_000,
   },
 }));
 
 export const rifleSchema = createWeaponSchema((schema: WeaponSchema) => ({
   ...schema,
+  skill: 'flux:schema:skill:weapon:rifle',
   baseMass: 3500, // 3.5kg - typical rifle mass
   fit: TWO_HANDED_FIT,
   range: {
@@ -42,7 +45,6 @@ export const rifleSchema = createWeaponSchema((schema: WeaponSchema) => ({
   accuracy: {
     ...schema.accuracy,
     model: AccuracyModel.SKILL_SCALING,
-    skill: 'flux:schema:skill:weapon:rifle',
     base: '1d20+5',
   },
   damage: {
@@ -53,13 +55,16 @@ export const rifleSchema = createWeaponSchema((schema: WeaponSchema) => ({
     capacity: 30,
   },
   timers: {
-    fire: 100,
-    reload: 3000,
+    [WeaponTimer.SETUP]: 3_000,
+    [WeaponTimer.AIM]: 3_000,
+    [WeaponTimer.ATTACK]: 300,
+    [WeaponTimer.RELOAD]: 6_000,
   },
 }));
 
 export const shotgunSchema = createWeaponSchema((schema: WeaponSchema) => ({
   ...schema,
+  skill: 'flux:schema:skill:weapon:shotgun',
   baseMass: 3200, // 3.2kg - typical shotgun mass
   fit: TWO_HANDED_FIT,
   range: {
@@ -70,7 +75,6 @@ export const shotgunSchema = createWeaponSchema((schema: WeaponSchema) => ({
   accuracy: {
     ...schema.accuracy,
     model: AccuracyModel.SKILL_SCALING,
-    skill: 'flux:schema:skill:weapon:shotgun',
   },
   damage: {
     model: DamageModel.FIXED,
@@ -80,7 +84,9 @@ export const shotgunSchema = createWeaponSchema((schema: WeaponSchema) => ({
     capacity: 8,
   },
   timers: {
-    fire: 800,
-    reload: 4000,
+    [WeaponTimer.SETUP]: 3_000,
+    [WeaponTimer.AIM]: 2_000,
+    [WeaponTimer.ATTACK]: 300,
+    [WeaponTimer.RELOAD]: 6_000,
   },
 }));

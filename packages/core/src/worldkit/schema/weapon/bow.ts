@@ -1,6 +1,6 @@
 import { DamageModel } from '~/types/damage';
 import { createWeaponSchema } from './factory';
-import { AccuracyModel, WeaponSchema } from '~/types/schema/weapon';
+import { AccuracyModel, WeaponSchema, WeaponTimer } from '~/types/schema/weapon';
 import { TWO_HANDED_FIT } from '~/worldkit/schema/weapon/fit';
 import { Stat } from '~/types/entity/actor';
 
@@ -27,9 +27,10 @@ export const shortbowSchema = createWeaponSchema((schema: WeaponSchema) => ({
     max: 80,
   },
   timers: {
-    aim: 3_000,
-    fire: 1_000,
-    reload: 2000,
+    [WeaponTimer.SETUP]: 2_000,
+    [WeaponTimer.AIM]: 2_000,
+    [WeaponTimer.ATTACK]: 1_000,
+    [WeaponTimer.RELOAD]: 2_000
   },
   ammo: {
     type: 'flux:schema:ammo:arrow',
@@ -63,8 +64,9 @@ export const longbowSchema = createWeaponSchema((schema: WeaponSchema) => ({
     capacity: 1,
   },
   timers: {
-    aim: 6_000,
-    fire: 1_000,
-    reload: 3_000,
+    [WeaponTimer.SETUP]: 3_000,
+    [WeaponTimer.AIM]: 3_000,
+    [WeaponTimer.ATTACK]: 1_000,
+    [WeaponTimer.RELOAD]: 3_000,
   },
 }));

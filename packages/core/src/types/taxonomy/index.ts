@@ -1,6 +1,8 @@
 import { EntityType } from '~/types/entity/entity';
 import { Biome, Climate } from '~/types/schema/ecology';
 
+export type URNLike = `${string}:${string}`;
+
 export const ROOT_NAMESPACE = 'flux' as const;
 export type RootNamespace = typeof ROOT_NAMESPACE;
 

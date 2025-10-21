@@ -6,6 +6,7 @@ import { useCombatScenario } from '~/worldkit/combat/testing/scenario';
 import { Team } from '~/types/combat';
 import { createSwordSchema } from '~/worldkit/schema/weapon/sword';
 import { ActorURN } from '~/types/taxonomy';
+import { CommandType } from '~/types/intent';
 
 const ALICE_ID: ActorURN = 'flux:actor:alice';
 const BOB_ID: ActorURN = 'flux:actor:bob';
@@ -152,7 +153,7 @@ describe('AI Combat Planning - Session Context', () => {
       ));
 
       // Should generate STRIKE command
-      const strikeCommand = actions.find(action => action.type === 'STRIKE');
+      const strikeCommand = actions.find(action => action.type === CommandType.STRIKE);
       expect(strikeCommand).toBeDefined();
       expect(strikeCommand!.session).toBe(scenario.session.id);
       expect(strikeCommand!.args.target).toBe(BOB_ID);

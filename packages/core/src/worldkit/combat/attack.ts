@@ -45,8 +45,8 @@ export const calculateAttackRating = (
   let attackRating = 0;
 
   if (weapon.accuracy.model === AccuracyModel.SKILL_SCALING) {
-    const skillState = deps.getActorSkill(actor, weapon.accuracy.skill);
-    const weaponSkillRank = deps.getEffectiveSkillRank(actor, weapon.accuracy.skill, skillState);
+    const skillState = deps.getActorSkill(actor, weapon.skill);
+    const weaponSkillRank = deps.getEffectiveSkillRank(actor, weapon.skill, skillState);
 
     // Skill bonus: 0-80 points (rank 0-100 * 0.8 multiplier)
     const skillBonus = weaponSkillRank * ATTACK_SKILL_MULTIPLIER;

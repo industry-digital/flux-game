@@ -8,19 +8,22 @@
 
 import { FullyQualifiedActionCost } from '~/types/combat';
 import { roundApCostUp } from '~/worldkit/combat/tactical-rounding';
-import { calculateWeaponApCost } from '~/worldkit/combat/damage';
+import { calculateWeaponApCost } from '~/worldkit/combat/ap';
 import { distanceToAp } from '~/worldkit/physics/movement';
 import { calculateMovementEnergyCost } from '~/worldkit/combat/energy-costs';
 import { cleanApPrecision } from '~/worldkit/combat/ap';
+import { WeaponSchema, WeaponTimer } from '~/types/schema/weapon';
+import { Actor } from '~/types/entity/actor';
 
 /**
  * Create tactical cost for weapon strike
  */
 export function createStrikeCost(
-  weaponMassKg: number,
-  finesse: number
+  actor: Actor,
+  weapon: WeaponSchema,
+  timer: WeaponTimer
 ): FullyQualifiedActionCost {
-  const preciseApCost = calculateWeaponApCost(weaponMassKg, finesse);
+  const preciseApCost = calculateWeaponApCost(actor, weapon, timer);
   return {
     ap: roundApCostUp(preciseApCost),
     energy: 0, // Strikes don't cost energy in current system
@@ -113,15 +116,16 @@ export function createMaxMovementCost(
  * Calculate CLEAVE cost - same AP as STRIKE but adds energy cost
  */
 export function createCleaveCost(
-  weaponMassKg: number,
-  finesse: number,
+  actor: Actor,
+  weapon: WeaponSchema,
 ): FullyQualifiedActionCost {
   // Same AP cost as a regular strike
-  const baseCost = createStrikeCost(weaponMassKg, finesse);
+  const baseCost = createStrikeCost(actor, weapon, WeaponTimer.ATTACK);
 
   // Energy cost for special attack capability
   // Base energy cost that scales with weapon mass (heavier weapons = more stamina)
   const baseEnergyCost = 200; // Base energy for any cleave
+  const weaponMassKg = weapon.baseMass / 1000; // Convert grams to kg
   const weaponMassEnergy = weaponMassKg * 100; // Additional energy per kg of weapon
   const totalEnergyCost = baseEnergyCost + weaponMassEnergy;
 

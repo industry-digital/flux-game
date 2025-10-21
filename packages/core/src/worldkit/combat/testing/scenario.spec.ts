@@ -503,7 +503,7 @@ describe('useCombatScenario', () => {
       });
     });
 
-    it('should use empty skills when none provided', () => {
+    it('should provide default combat skills when none provided', () => {
       const participants = {
         'flux:actor:test:no-skills': {
           team: Team.ALPHA,
@@ -516,7 +516,19 @@ describe('useCombatScenario', () => {
       });
       const actor = scenario.actors['flux:actor:test:no-skills'];
 
-      expect(actor.actor.skills).toEqual({});
+      // Should automatically provide essential combat skills
+      expect(actor.actor.skills).toEqual({
+        'flux:schema:skill:weapon:melee': {
+          xp: 0,
+          pxp: 0,
+          rank: 1,
+        },
+        'flux:schema:skill:evasion': {
+          xp: 0,
+          pxp: 0,
+          rank: 1,
+        },
+      });
     });
   });
 

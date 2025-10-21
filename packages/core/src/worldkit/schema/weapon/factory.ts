@@ -1,4 +1,4 @@
-import { AccuracyModel, WeaponSchema } from '~/types/schema/weapon';
+import { AccuracyModel, MeleeWeaponTimers, WeaponSchema, WeaponTimer } from '~/types/schema/weapon';
 import { DamageType, Stat } from '~/types';
 import { DamageModel } from '~/types/damage';
 import { ONE_HANDED_FIT } from '~/worldkit/schema/weapon/fit';
@@ -11,14 +11,17 @@ export function createWeaponSchema(inputOrTransform: WeaponSchemaInput | WeaponT
   const defaults: Partial<WeaponSchema> = {
     baseMass: 1000,
     fit: ONE_HANDED_FIT,
-    timers: {},
+    skill: 'flux:schema:skill:weapon:melee',
+    timers: <MeleeWeaponTimers>{
+      [WeaponTimer.ATTACK]: 1000, // Default 1 second for melee attacks
+      [WeaponTimer.SETUP]: 100,
+    },
     range: {
       optimal: 1,
       max: 1,
     },
     accuracy: {
       model: AccuracyModel.SKILL_SCALING,
-      skill: 'flux:schema:skill:weapon:melee',
       base: '1d20',
     },
     damage: {

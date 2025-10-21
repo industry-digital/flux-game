@@ -6,7 +6,7 @@
  * Contains the core hit mechanics that AI-assisted attacks delegate to.
  */
 
-import { Actor, Stat } from '~/types/entity/actor';
+import { Actor } from '~/types/entity/actor';
 import { CombatSession, computeDistanceBetweenCombatants, canWeaponHitFromDistance } from '~/worldkit/combat';
 import { ActionCost, AttackType, AttackOutcome, Combatant } from '~/types/combat';
 import { EventType, WorldEvent } from '~/types/event';
@@ -17,7 +17,7 @@ import { deductAp } from '~/worldkit/combat/combatant';
 import { TransformerContext } from '~/types/handler';
 import { createStrikeCost } from '~/worldkit/combat/tactical-cost';
 import { decrementHp } from '~/worldkit/entity/actor/health';
-import { getStatValue } from '~/worldkit/entity/actor/stats';
+import { WeaponTimer } from '~/types/schema/weapon';
 
 export type StrikeDependencies = {
   createWorldEvent?: typeof createWorldEvent;
@@ -78,7 +78,6 @@ export function createStrikeMethod(
       return [];
     }
 
-    const weaponMassKg = weapon.baseMass / 1000;
 
     const targetCombatant = session.data.combatants.get(combatant.target!);
     if (!targetCombatant) {
@@ -92,8 +91,7 @@ export function createStrikeMethod(
       return [];
     }
 
-    const finesse = getStatValue(actor, Stat.FIN);
-    const cost: ActionCost = createStrikeCostImpl(weaponMassKg, finesse);
+    const cost: ActionCost = createStrikeCostImpl(actor, weapon, WeaponTimer.ATTACK);
     if (cost.ap! > combatant.ap.eff.cur) {
       declareError(`You don't have enough AP to strike.`, trace);
       return [];

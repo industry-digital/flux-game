@@ -76,8 +76,8 @@ export const createShellDiff = (
   const previewShell = createShellPreview(shell, mutations);
 
   // 2. Generate performance changes
-  const currentPerf = calculateShellPerformance(shell, performanceDeps);
-  const previewPerf = calculateShellPerformance(previewShell, performanceDeps);
+  const currentPerf = calculateShellPerformance(actor, shell, performanceDeps);
+  const previewPerf = calculateShellPerformance(actor, previewShell, performanceDeps);
   const perfChanges = createPerformanceDiff(currentPerf, previewPerf);
 
   // 3. Generate stat changes (only include those that actually changed)

@@ -2,7 +2,7 @@ import { CombatCommand, Combatant, CombatSession } from '~/types/combat';
 import { WeaponSchema } from '~/types/schema/weapon';
 import { ActorURN } from '~/types/taxonomy';
 import { CHANCE_ACTIONS, PLAN_ENDING_ACTIONS } from '~/worldkit/combat/action/constants';
-import { calculateWeaponApCost } from '~/worldkit/combat/damage';
+import { calculateWeaponApCost } from '~/worldkit/combat/ap';
 
 /**
  * Cache for memoizing expensive plan generation computations

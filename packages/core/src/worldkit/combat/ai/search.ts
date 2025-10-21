@@ -15,7 +15,7 @@ import { evaluateNode, createScoredPlan } from '~/worldkit/combat/ai/heuristics'
 import { apToDistance, distanceToAp } from '~/worldkit/physics/movement';
 import { extractApCost } from '~/worldkit/combat/ap';
 import { roundApCostUp, calculateTacticalApCost, calculateTacticalDistance, roundDistanceDown } from '~/worldkit/combat/tactical-rounding';
-import { calculateWeaponApCost } from '~/worldkit/combat/damage';
+import { calculateWeaponApCost } from '~/worldkit/combat/ap';
 import { TransformerContext } from '~/types/handler';
 import { CHANCE_ACTIONS, PLAN_ENDING_ACTIONS } from '~/worldkit/combat/action/constants';
 import { assessWeaponCapabilities } from '~/worldkit/combat/ai/analysis';
@@ -24,6 +24,7 @@ import { TARGET_COST } from '~/worldkit/combat/action/target';
 import { CombatPlanningDependencies, DEFAULT_COMBAT_PLANNING_DEPS } from './deps';
 import { Stat } from '~/types/entity/actor';
 import { getStatValue } from '~/worldkit/entity/actor/stats';
+import { WeaponTimer } from '~/types/schema/weapon';
 
 /**
  * Zero-allocation action sequence builder
@@ -481,7 +482,7 @@ export function* getValidActions(
   if (hasTarget && assessments.canAttack) {
     // Calculate actual attack cost based on weapon and actor stats with tactical rounding
     // Convert weapon mass from grams to kilograms (weaponSchema.baseMass is in grams)
-    const preciseAttackApCost = calculateWeaponApCostImpl(weaponSchema.baseMass / 1000, finesse);
+    const preciseAttackApCost = calculateWeaponApCostImpl(actor, weaponSchema, WeaponTimer.ATTACK);
     const tacticalAttackApCost = roundApCostUp(preciseAttackApCost);
     const attackCost = { ap: tacticalAttackApCost, energy: 0 };
 
@@ -697,7 +698,7 @@ export function* getValidActions(
   // Check if we can afford another STRIKE action
   const canAffordAnotherStrike = hasTarget && assessments.canAttack && (() => {
     // Convert weapon mass from grams to kilograms (weaponSchema.baseMass is in grams)
-    const preciseAttackApCost = calculateWeaponApCostImpl(weaponSchema.baseMass / 1000, finesse);
+    const preciseAttackApCost = calculateWeaponApCost(actor, weaponSchema, WeaponTimer.ATTACK);
     const tacticalAttackApCost = roundApCostUp(preciseAttackApCost);
     return currentState.ap >= tacticalAttackApCost;
   })();

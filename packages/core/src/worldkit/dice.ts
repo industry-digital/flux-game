@@ -155,6 +155,19 @@ export function applyModifiersToRollResult(
   roll.result = roll.natural + roll.bonus + computeSumOfModifiers(roll.mods);
 }
 
+const ZERO_ALLOCATION_PARSED_ROLL: ParsedRollSpecification = {
+  numDice: 0,
+  dieSize: 0,
+  flatBonus: 0,
+};
+
+export const calculateAverageRollResult = (
+  dice: RollSpecification,
+): number => {
+  const { numDice, dieSize, flatBonus } = parseRollSpecification(dice, ZERO_ALLOCATION_PARSED_ROLL);
+  return (numDice * dieSize / 2) + flatBonus;
+};
+
 export const DEFAULT_ROLL_API_DEPS: RollApiDependencies = Object.freeze({
   random: () => Math.random(),
   timestamp: () => Date.now(),
@@ -173,21 +186,21 @@ export const createRollApi = (deps: RollApiDependencies = DEFAULT_ROLL_API_DEPS)
 
     // Calculate and apply skill bonus based on accuracy model
     if (weapon.accuracy.model === AccuracyModel.SKILL_SCALING) {
-      const skillState = deps.getActorSkill(actor, weapon.accuracy.skill);
-      const effectiveSkillRank = deps.getEffectiveSkillRank(actor, weapon.accuracy.skill, skillState);
+      const skillState = deps.getActorSkill(actor, weapon.skill);
+      const effectiveSkillRank = deps.getEffectiveSkillRank(actor, weapon.skill, skillState);
 
       // Apply skill multiplier to get bonus (0-80 points for 0-100 skill rank)
       const skillBonus = effectiveSkillRank * ATTACK_SKILL_MULTIPLIER;
 
       // Add skill bonus as a modifier
       const skillModifier: Modifier = {
-        origin: `skill:${weapon.accuracy.skill}`,
+        origin: `skill:${weapon.skill}`,
         value: skillBonus,
         duration: -1, // Permanent modifier
         ts: deps.timestamp(),
       };
 
-      applyModifierToRollResult(rollResult, `skill:${weapon.accuracy.skill}`, skillModifier);
+      applyModifierToRollResult(rollResult, `skill:${weapon.skill}`, skillModifier);
     } else {
       throw new Error(`Unsupported accuracy model: ${weapon.accuracy.model}`);
     }

@@ -2,7 +2,7 @@ import { analyzeBattlefield } from './analysis';
 import { optimizeMovementSequence } from './search';
 import { createHeuristicProfile } from './heuristics';
 import { findOptimalPlan } from './search';
-import { calculateWeaponApCost } from '~/worldkit/combat/damage';
+import { calculateWeaponApCost } from '~/worldkit/combat/ap';
 import { areEnemies } from '~/worldkit/combat/team';
 import { filterValidTargets, chooseTarget } from './targeting';
 import { computeDistanceBetweenCombatants } from '~/worldkit/combat/range';

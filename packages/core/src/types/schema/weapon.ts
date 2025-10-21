@@ -15,9 +15,7 @@ export type AbstractAccuracySpecification<TAccuracyModel extends AccuracyModel> 
   base: RollSpecification;
 }
 
-export type SkillScalingAccuracySpecification = AbstractAccuracySpecification<AccuracyModel.SKILL_SCALING> & {
-  skill: SkillSchemaURN;
-}
+export type SkillScalingAccuracySpecification = AbstractAccuracySpecification<AccuracyModel.SKILL_SCALING>;
 
 export type AccuracySpecification = SkillScalingAccuracySpecification;
 
@@ -26,36 +24,16 @@ export type WeaponAmmoSpecification = {
   capacity: number;
 }
 
-/**
- * All timers are in milliseconds
- */
-export type WeaponTimers = {
-  /**
-   * The time it takes to ready the weapon for combat, after combat starts
-   */
-  setup?: number;
-
-  /**
-   * The time it takes to "charge" or "wind up" the weapon before firing
-   * This is a separate concept from loading the weapon with ammo.
-   */
-  charge?: number;
-
-  /**
-   * The time it takes to fire or swing the weapon
-   */
-  fire?: number;
-
-  /**
-   * The time it takes to cool down the weapon after firing
-   */
-  cooldown?: number;
-
-  /**
-   * The time it takes to load the weapon
-   */
-  reload?: number;
+export enum WeaponTimer {
+  SETUP = 'setup',
+  ATTACK = 'attack',
+  RELOAD = 'reload',
+  AIM = 'aim',
 }
+
+export type MeleeWeaponTimers = Record<Exclude<WeaponTimer, WeaponTimer.RELOAD | WeaponTimer.AIM>, number>;
+export type RangedWeaponTimers = Record<WeaponTimer, number>;
+export type WeaponTimers = MeleeWeaponTimers | RangedWeaponTimers;
 
 export type WeaponRangeSpecification = {
   optimal: number;
@@ -106,6 +84,8 @@ export type WeaponSchema  =
 & (MeleeStatScalingDamageMixin | RangedStatScalingDamageMixin | FixedDamageMixin)
 & {
 
+  skill: SkillSchemaURN;
+
   /**
    * The anatomical locations this item occupies while the weapon is equipped.
    */
@@ -124,5 +104,5 @@ export type WeaponSchema  =
   /**
    * The timers that affect the weapon's performance
    */
-  timers?: WeaponTimers;
+  timers: WeaponTimers;
 };

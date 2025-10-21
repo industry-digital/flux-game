@@ -2,6 +2,8 @@ import { Actor } from '~/types/entity/actor';
 import { PotentiallyImpureOperations } from '~/types/handler';
 import { ActionCost, Combatant } from '~/types/combat';
 import { TACTICAL_AP_PRECISION_FACTOR } from '~/worldkit/combat/tactical-rounding';
+import { WeaponSchema, WeaponTimer } from '~/types/schema/weapon';
+import { getEffectiveSkillRank, MAX_SKILL_RANK } from '~/worldkit/entity/actor/skill';
 
 export const TURN_DURATION_SECONDS = 6;
 export const MAX_AP = TURN_DURATION_SECONDS;
@@ -93,4 +95,40 @@ export function restoreApToFull(combatant: Combatant): void {
   const newAp = combatant.ap.eff.max;
   combatant.ap.eff.cur = newAp;
   combatant.ap.nat.cur = newAp;
+}
+
+const MAX_AP_REDUCTION_FACTOR = 0.5;
+
+/**
+ * Calculate ranged weapon action cost with skill-based timer reduction
+ *
+ * Skill scaling reduces action time:
+ * - Skill rank 0: Full timer duration (no reduction)
+ * - Skill rank 100: 50% timer reduction (maximum efficiency)
+ * - Linear scaling: time = baseTime * (1 - skillRank/200)
+ *
+ * @param actor - The actor using the weapon
+ * @param weapon - The weapon being used
+ * @param timer - The timer to calculate the AP cost
+ * @returns Action cost in seconds, reduced by skill proficiency
+ */
+export function calculateWeaponApCost(actor: Actor, weapon: WeaponSchema, timer: WeaponTimer): number {
+  // @ts-expect-error - weapon.timers is a union type
+  const baseTimerMs = weapon.timers[timer];
+  if (baseTimerMs === undefined) {
+    throw new Error(`Weapon ${weapon.urn} must have a timer specified for ${timer}`);
+  }
+
+  // Get actor's effective skill rank (includes modifiers)
+  const effectiveSkillRank = getEffectiveSkillRank(actor, weapon.skill);
+
+  // Calculate skill reduction factor (0% to 50% reduction)
+  // Formula: reduction = (skillRank / MAX_SKILL_RANK) * 0.5
+  const skillReductionFactor = (effectiveSkillRank / MAX_SKILL_RANK) * MAX_AP_REDUCTION_FACTOR;
+
+  // Apply reduction: finalTime = baseTime * (1 - reductionFactor)
+  const reducedTimerMs = baseTimerMs * (1 - skillReductionFactor);
+
+  // Convert milliseconds to seconds for AP system
+  return reducedTimerMs / 1_000;
 }

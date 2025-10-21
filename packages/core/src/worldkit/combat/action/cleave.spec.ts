@@ -83,7 +83,7 @@ describe('Cleave Method', () => {
         [ATTACKER_ID]: {
           team: Team.ALPHA,
           stats: { pow: 50, fin: 50, res: 50 },
-          skills: { 'flux:skill:evasion': { xp: 0, pxp: 0, rank: 1 } },
+          skills: { 'flux:schema:skill:evasion': { xp: 0, pxp: 0, rank: 1 } },
           equipment: { weapon: twoHandedSwordSchema.urn },
           position: { coordinate: 100, facing: 1, speed: 0 },
         },
@@ -120,7 +120,6 @@ describe('Cleave Method', () => {
 
     const attacker = scenario.actors[ATTACKER_ID];
     const attackerCombatant = scenario.session.data.combatants.get(ATTACKER_ID)!;
-
 
     // Ensure attacker has sufficient energy
     setEnergy(attacker.actor, 15000); // Plenty of energy for testing
@@ -315,13 +314,13 @@ describe('Cleave Method', () => {
       const attackerCombatant = scenario.session.data.combatants.get(ATTACKER_ID)!;
 
       // Reduce AP to insufficient amount
-      attackerCombatant.ap.eff.cur = 1;
+      attackerCombatant.ap.eff.cur = 0;
 
       const result = cleave();
 
       expect(result).toHaveLength(0);
       expect(context.declareError).toHaveBeenCalledWith(
-        expect.stringMatching(/CLEAVE would cost [\d.]+ AP \(you have 1 AP\)\./),
+        expect.stringMatching(/CLEAVE would cost [\d.]+ AP \(you have 0 AP\)\./),
         expect.any(String)
       );
     });
@@ -350,7 +349,7 @@ describe('Cleave Method', () => {
       const finesse = getStatValue(attacker, Stat.FIN);
 
       // Calculate expected cost
-      const expectedCost = createCleaveCost(weaponMassKg, finesse);
+      const expectedCost = createCleaveCost(attacker, weapon);
 
       const attackerCombatant = scenario.session.data.combatants.get(ATTACKER_ID)!;
       const initialAP = attackerCombatant.ap.eff.cur;
@@ -375,18 +374,27 @@ describe('Cleave Method', () => {
     });
 
     it('should demonstrate energy cost scaling with weapon mass', () => {
+      const attacker = scenario.actors[ATTACKER_ID].actor;
+
       // Test with different weapon masses to verify energy scaling
       const testCases = [
-        { weaponMassKg: 1.0, description: 'light weapon' },
-        { weaponMassKg: 2.0, description: 'medium weapon' },
-        { weaponMassKg: 3.0, description: 'heavy weapon' },
+        { baseMass: 1000, description: 'light weapon' }, // 1kg
+        { baseMass: 2000, description: 'medium weapon' }, // 2kg
+        { baseMass: 3000, description: 'heavy weapon' }, // 3kg
       ];
 
       for (const testCase of testCases) {
-        const cost = createCleaveCost(testCase.weaponMassKg, 50);
+        // Create a mock weapon with the test mass
+        const mockWeapon = {
+          ...context.equipmentApi.getEquippedWeaponSchema(attacker),
+          baseMass: testCase.baseMass,
+        };
+
+        const cost = createCleaveCost(attacker, mockWeapon);
 
         // Energy should scale with weapon mass (base 200 + 100 per kg)
-        const expectedEnergy = 200 + (testCase.weaponMassKg * 100);
+        const weaponMassKg = testCase.baseMass / 1000;
+        const expectedEnergy = 200 + (weaponMassKg * 100);
         expect(cost.energy).toBe(expectedEnergy);
 
         // AP should be same as STRIKE (no energy scaling affects AP)

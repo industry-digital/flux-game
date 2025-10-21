@@ -4,17 +4,18 @@ import { Actor, Stat } from '~/types/entity/actor';
 import { AccuracyModel, WeaponSchema } from '~/types/schema/weapon';
 import { createTestWeapon } from '~/worldkit/combat/testing/weapon';
 import { DamageModel, DamageType } from '~/types/damage';
+import { MELEE_WEAPON_SKILL } from '~/worldkit/combat/testing/constants';
 
 describe('Attack Rating Calculation', () => {
   const mockWeapon: WeaponSchema = createTestWeapon((schema: WeaponSchema) => ({
     ...schema,
     urn: 'flux:schema:weapon:test-sword',
     name: 'Test Sword',
+    skill: MELEE_WEAPON_SKILL,
     baseMass: 2000,
     range: { optimal: 1 },
     accuracy: {
       model: AccuracyModel.SKILL_SCALING,
-      skill: 'flux:schema:skill:combat:melee',
       base: '1d20',
     },
     damage: {
@@ -40,7 +41,7 @@ describe('Attack Rating Calculation', () => {
       per: { eff: 50 },
     },
     skills: {
-      'flux:schema:skill:combat:melee': {
+      [MELEE_WEAPON_SKILL]: {
         xp: 0,
         pxp: 0,
         rank: skillRank

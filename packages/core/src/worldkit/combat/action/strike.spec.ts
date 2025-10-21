@@ -9,9 +9,9 @@ import { ActorURN } from '~/types/taxonomy';
 import { CombatantDidAttack, CombatantDidDie, CombatantDidStrike, CombatantWasAttacked, EventType } from '~/types/event';
 import { Team } from '~/types/combat';
 import { createStrikeCost } from '~/worldkit/combat/tactical-cost';
-import { calculateWeaponApCost } from '~/worldkit/combat/damage';
-import { getStatValue } from '~/worldkit/entity/actor/stats';
-import { Stat } from '~/types/entity/actor';
+import { calculateWeaponApCost } from '~/worldkit/combat/ap';
+import { WeaponTimer } from '~/types/schema/weapon';
+import { createDefaultSkillState } from '~/worldkit/entity/actor/skill';
 
 describe('Strike Method', () => {
   let scenario: ReturnType<typeof useCombatScenario>;
@@ -22,6 +22,11 @@ describe('Strike Method', () => {
   const ATTACKER_ID: ActorURN = 'flux:actor:test:attacker';
   const TARGET_ID: ActorURN = 'flux:actor:test:target';
   const SPECIFIC_TARGET_ID: ActorURN = 'flux:actor:test:specific';
+
+  const swordSchema = createSwordSchema({
+    urn: 'flux:schema:weapon:test',
+    name: 'Test Weapon',
+  });
 
   beforeEach(() => {
     mockComputeActorMass = vi.fn().mockReturnValue(70000); // 70kg in grams
@@ -47,14 +52,16 @@ describe('Strike Method', () => {
           team: Team.ALPHA,
           target: TARGET_ID,
           stats: { pow: 10, fin: 10, res: 10 },
-          skills: { 'flux:skill:evasion': { xp: 0, pxp: 0, rank: 1 } },
+          skills: {
+            'flux:schema:skill:weapon:sword': createDefaultSkillState(),
+          },
           equipment: { weapon: swordSchema.urn },
           position: { coordinate: 100, facing: 1, speed: 0 },
         },
         [TARGET_ID]: {
           team: Team.BRAVO,
           stats: { pow: 10, fin: 10, res: 10 },
-          skills: { 'flux:skill:evasion': { xp: 0, pxp: 0, rank: 1 } },
+          skills: { 'flux:schema:skill:weapon:sword': createDefaultSkillState() },
           equipment: { weapon: swordSchema.urn },
           position: { coordinate: 101, facing: -1, speed: 0 }, // 1m away, within weapon range
         },
@@ -193,11 +200,12 @@ describe('Strike Method', () => {
       const initialAP = attackerCombatant.ap.eff.cur;
       const result = strikeWithMocks();
 
-      // Verify tactical cost factory was called with weapon mass and finesse
+      // Verify tactical cost factory was called with actor and weapon
       expect(mockCreateStrikeCost).toHaveBeenCalled();
-      const [weaponMassKg, finesse] = mockCreateStrikeCost.mock.calls[0];
-      expect(weaponMassKg).toBeGreaterThan(0);
-      expect(finesse).toBe(getStatValue(attacker.actor, Stat.FIN));
+      const [actor, weapon] = mockCreateStrikeCost.mock.calls[0];
+      expect(actor).toBeDefined();
+      expect(weapon).toBeDefined();
+      expect(weapon.baseMass).toBeGreaterThan(0);
 
       // Verify the tactical AP cost was used
       const finalAP = attackerCombatant.ap.eff.cur;
@@ -229,10 +237,10 @@ describe('Strike Method', () => {
         attackerCombatant.ap.eff.cur = 10.0;
 
         // Calculate what the precise cost would be
-        const preciseApCost = calculateWeaponApCost(testCase.weaponMassKg, testCase.finesse);
+        const preciseApCost = calculateWeaponApCost(attacker.actor, swordSchema, WeaponTimer.ATTACK);
 
         // Calculate what the tactical cost should be
-        const tacticalCost = createStrikeCost(testCase.weaponMassKg, testCase.finesse);
+        const tacticalCost = createStrikeCost(attacker.actor, swordSchema, WeaponTimer.ATTACK);
 
         const strikeWithRealCost = createStrikeMethod(
           context,

@@ -1,9 +1,8 @@
 import { Actor, Stat, ActorStats } from '~/types/entity/actor';
 import { WeaponSchema } from '~/types/schema/weapon';
-import { ActorURN, PlaceURN, SkillURN, WeaponItemURN, WeaponSchemaURN } from '~/types/taxonomy';
+import { ActorURN, PlaceURN, SkillSchemaURN, WeaponItemURN, WeaponSchemaURN } from '~/types/taxonomy';
 import { TransformerContext } from '~/types/handler';
 import { Battlefield, BattlefieldPosition, Combatant, CombatFacing, CombatSession, Team } from '~/types/combat';
-import { createTestActor } from '~/testing/world-testing';
 import { createCombatSessionApi } from '../session/session';
 import { CombatantApi } from '~/worldkit/combat/combatant';
 import { DEFAULT_BATTLEFIELD } from '~/worldkit/combat/battlefield';
@@ -11,6 +10,7 @@ import { SkillState } from '~/types/entity/skill';
 import { SchemaManager } from '~/worldkit/schema/manager';
 import { createDefaultSkillState } from '~/worldkit/entity/actor/skill';
 import { setEnergy, setPosition } from '~/worldkit/entity/actor/capacitor';
+import { createActor } from '~/worldkit/entity/actor';
 
 export type CombatScenarioDependencies = {
   useCombatSession: typeof createCombatSessionApi;
@@ -45,7 +45,7 @@ export type CombatScenarioActorInput = {
   team: Team | string;
   name?: string;
   stats?: ActorStatsSetup;
-  skills?: Record<SkillURN, ActorSkillSetup>;
+  skills?: Record<SkillSchemaURN, ActorSkillSetup>;
   ap?: ActorApSetup;
   energy?: ActorEnergySetup;
   balance?: ActorBalanceSetup;
@@ -158,22 +158,31 @@ export function useCombatScenario(
     };
 
     // Create the actor with stats, skills, HP, and location
-    const actor = createTestActor({
-      id: actorId,
-      name: actorName,
-      location: TEST_PLACE_ID // Ensure actor is at the combat location
-    }, (actor: Actor) => {
+    // Start with default combat skills that all actors need
+    const defaultSkills: Record<SkillSchemaURN, SkillState> = {};
+    defaultSkills['flux:schema:skill:weapon:melee'] = { ...DEFAULT_SKILL_STATE, rank: 1 };
+    defaultSkills['flux:schema:skill:evasion'] = { ...DEFAULT_SKILL_STATE, rank: 1 };
+
+    // Add any explicitly configured skills, allowing overrides of defaults
+    const configuredSkills = Object.keys(participant.skills || {}).reduce((acc, skillUrn) => {
+      const skillInputValue = participant.skills?.[skillUrn as SkillSchemaURN];
+      if (typeof skillInputValue === 'number') {
+        acc[skillUrn as SkillSchemaURN] = { ...DEFAULT_SKILL_STATE, rank: skillInputValue };
+      } else {
+        acc[skillUrn as SkillSchemaURN] = { ...DEFAULT_SKILL_STATE, ...skillInputValue };
+      }
+      return acc;
+    }, {} as Record<SkillSchemaURN, SkillState>);
+
+    const actor = createActor((actor: Actor) => {
+      const finalSkills = { ...defaultSkills, ...configuredSkills } as Record<SkillSchemaURN, SkillState>;
+
       return {
         ...actor,
-        skills: Object.keys(participant.skills || {}).reduce((acc, skillUrn) => {
-          const skillInputValue = participant.skills?.[skillUrn as SkillURN];
-          if (typeof skillInputValue === 'number') {
-            acc[skillUrn as SkillURN] = { ...DEFAULT_SKILL_STATE, rank: skillInputValue };
-          } else {
-            acc[skillUrn as SkillURN] = { ...DEFAULT_SKILL_STATE, ...skillInputValue };
-          }
-          return acc;
-        }, {} as Record<SkillURN, SkillState>),
+        id: actorId as ActorURN,
+        name: actorName,
+        location: TEST_PLACE_ID, // Ensure actor is at the combat location
+        skills: finalSkills,
         stats: {
           ...actor.stats,
           [Stat.INT]: processSingleStat(stats?.int, 10),
@@ -196,8 +205,8 @@ export function useCombatScenario(
       };
     });
 
-    // Add actor to world context
-    testContext.world.actors[actorId as ActorURN] = actor;
+    // Add actor to world context BEFORE adding combatant
+    testContext.world.actors[actor.id] = actor;
 
     // Create default position if not provided
     const defaultPosition: BattlefieldPosition = {
@@ -212,12 +221,12 @@ export function useCombatScenario(
       ...participant.position,
     };
 
-    // Add combatant to session with processed position
-    sessionHook.addCombatant(actorId as ActorURN, participant.team, finalPosition);
+    // Add combatant to session with processed position using the actor's actual ID
+    sessionHook.addCombatant(actor.id, participant.team, finalPosition);
 
     // Set target if specified
     if (participant.target) {
-      const combatant = sessionHook.session.data.combatants.get(actorId as ActorURN);
+      const combatant = sessionHook.session.data.combatants.get(actor.id);
       if (combatant) {
         combatant.target = participant.target;
       }
@@ -230,7 +239,7 @@ export function useCombatScenario(
     const actor = testContext.world.actors[actorId as ActorURN];
 
     // Create combatant hook now that the combatant exists in the session
-    const combatantHook = sessionHook.getCombatantApi(actorId as ActorURN);
+    const combatantHook = sessionHook.getCombatantApi(actor.id);
 
     // Use equipment/inventory APIs from context (not exposed in public interface)
     const inventoryApi = testContext.inventoryApi;
@@ -256,9 +265,9 @@ export function useCombatScenario(
     };
 
     // Process combatant attributes (AP, balance)
-    const combatant = sessionHook.session.data.combatants.get(actorId as ActorURN);
+    const combatant = sessionHook.session.data.combatants.get(actor.id);
     if (!combatant) {
-      throw new Error(`Combatant not found for actor ${actorId}`);
+      throw new Error(`Combatant not found for actor ${actor.id}`);
     }
 
     if (ap !== undefined) {
@@ -292,7 +301,7 @@ export function useCombatScenario(
     }
 
     // Store the scenario actor with only the combatant hook (clean public interface)
-    scenario.actors[actorId as ActorURN] = {
+    scenario.actors[actor.id] = {
       actor,
       hooks: {
         combatant: combatantHook,

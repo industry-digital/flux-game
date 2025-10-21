@@ -2,14 +2,14 @@ import { Shell } from '~/types/entity/shell';
 import { Actor, Stat } from '~/types/entity/actor';
 import { ShellPerformanceProfile } from '~/types/shell';
 import { calculateMovementTime } from '~/worldkit/physics/movement';
-import { calculateWeaponDamage, calculateWeaponApCost, calculateWeaponDps } from '~/worldkit/combat/damage';
+import { calculateWeaponDps, calculateAverageWeaponDamagePerHit } from '~/worldkit/combat/damage/resolution';
+import { calculateWeaponApCost } from '~/worldkit/combat/ap';
 import { calculatePeakPowerOutput, calculateInertialMass, calculateTopSpeed } from '~/worldkit/physics/physics';
 import { MassApi } from '~/worldkit/physics/mass';
 import { ActorEquipmentApi } from '~/worldkit/entity/actor/equipment';
 import { getMaxEnergy, getMaxRecoveryRate } from '~/worldkit/entity/actor/capacitor';
-import { createActor } from '~/worldkit/entity/actor';
-import { ActorURN } from '~/types/taxonomy';
 import { getShellStatValue, getShellNaturalStatValue } from '~/worldkit/entity/actor/shell';
+import { WeaponTimer } from '~/types/schema/weapon';
 
 /**
  * Predefined distances for performance analysis, in meters
@@ -33,6 +33,7 @@ export type ShellPerformanceDependencies = {
  * Connects stat configuration to meaningful combat metrics
  */
 export function calculateShellPerformance(
+  actor: Actor,
   shell: Shell,
   deps: ShellPerformanceDependencies
 ): ShellPerformanceProfile {
@@ -48,19 +49,11 @@ export function calculateShellPerformance(
   const effectiveFinStat = getShellStatValue(shell, Stat.FIN);
   const effectiveResStat = getShellStatValue(shell, Stat.RES);
 
-  // Create a temporary actor-like object for mass/equipment calculations
-  const tempActor: Actor = createActor((actor) => ({
-    ...actor,
-    id: shell.id as ActorURN,
-    inventory: shell.inventory,
-    equipment: shell.equipment,
-  }));
-
   // Calculate total mass in kilograms for physics
-  const totalMassKg = massApi.computeCombatMass(tempActor);
+  const totalMassKg = massApi.computeCombatMass(actor);
 
   // Get equipped weapon for damage calculations
-  const equippedWeaponSchema = equipmentApi.getEquippedWeaponSchemaOrFail(tempActor);
+  const equippedWeaponSchema = equipmentApi.getEquippedWeaponSchema(actor);
   const weaponMassKg = equippedWeaponSchema.baseMass / 1_000;
 
   // === MOVEMENT PERFORMANCE ===
@@ -88,9 +81,9 @@ export function calculateShellPerformance(
   // === COMBAT EFFECTIVENESS ===
 
   // Weapon damage and AP costs
-  const weaponDamage = calculateWeaponDamage(weaponMassKg, effectivePowStat);
-  const weaponApCost = calculateWeaponApCost(weaponMassKg, effectiveFinStat);
-  const weaponDps = calculateWeaponDps(weaponMassKg, effectivePowStat, effectiveFinStat);
+  const weaponDamage = calculateAverageWeaponDamagePerHit(actor, equippedWeaponSchema);
+  const weaponApCost = calculateWeaponApCost(actor, equippedWeaponSchema, WeaponTimer.ATTACK);
+  const weaponDps = calculateWeaponDps(actor, equippedWeaponSchema);
 
   // === DERIVED METRICS ===
 
@@ -107,8 +100,8 @@ export function calculateShellPerformance(
   // === ENERGY SYSTEM METRICS ===
 
   // Capacitor capacity and recharge rate (based on RES stat)
-  const capacitorCapacity = getMaxEnergy(tempActor);
-  const maxRechargeRate = getMaxRecoveryRate(tempActor);
+  const capacitorCapacity = getMaxEnergy(actor);
+  const maxRechargeRate = getMaxRecoveryRate(actor);
 
   return {
     naturalPowStat,

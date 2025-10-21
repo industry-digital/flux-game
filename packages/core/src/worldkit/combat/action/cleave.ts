@@ -5,7 +5,7 @@
  * Requires a two-handed weapon and costs significantly more AP than individual strikes.
  */
 
-import { Actor, Stat } from '~/types/entity/actor';
+import { Actor } from '~/types/entity/actor';
 import { CombatSession, computeDistanceBetweenCombatants } from '~/worldkit/combat';
 import { ActionCost, AttackOutcome, AttackType, Combatant } from '~/types/combat';
 import { CombatantDidAttack, CombatantWasAttacked, EventType, WorldEvent } from '~/types/event';
@@ -15,7 +15,6 @@ import { ActorURN } from '~/types/taxonomy';
 import { deductAp } from '~/worldkit/combat/combatant';
 import { TransformerContext } from '~/types/handler';
 import { decrementHp } from '~/worldkit/entity/actor/health';
-import { getStatValue } from '~/worldkit/entity/actor/stats';
 import { isTwoHandedWeapon } from '~/worldkit/schema/weapon/util';
 import { isActorAlive } from '~/worldkit/entity/actor';
 import { canWeaponHitFromDistance } from '~/worldkit/combat/weapon';
@@ -122,9 +121,7 @@ export function createCleaveMethod(
       return [];
     }
 
-    const weaponMassKg = weapon.baseMass / 1000;
-    const finesse = getStatValue(actor, Stat.FIN);
-    const cost: ActionCost = createCleaveCost(weaponMassKg, finesse);
+    const cost: ActionCost = createCleaveCost(actor, weapon);
 
     // Check AP affordability
     if (cost.ap! > combatant.ap.eff.cur) {
