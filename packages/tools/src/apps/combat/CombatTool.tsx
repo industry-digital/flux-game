@@ -11,7 +11,7 @@ import {
   CHARLIE_ID,
   FRANZ_ID,
 } from './hooks/useCombatScenario';
-import { Team, EventType, Stat, type SkillURN, type WeaponSchemaURN, Gender } from '@flux/core';
+import { Team, EventType, Stat, type WeaponSchemaURN, Gender } from '@flux/core';
 import { useCombatActors } from './hooks/useCombatActors';
 import { useCombatSession } from './hooks/useCombatSession';
 import { useCombatState } from './hooks/useCombatState';
@@ -22,7 +22,7 @@ import { CombatantCard } from './components/CombatantCard';
 import { TeamManager, type TeamActor } from './components/TeamManager';
 import { BattlefieldVisualization } from '@flux/ui';
 import { type TransformerContext } from '@flux/core';
-import type { ActorURN } from '@flux/core';
+import type { ActorURN, SkillSchemaURN } from '@flux/core';
 import { attempt } from '~/shared/utils/error-handling';
 import './CombatTool.css';
 import { useTransformerContext } from '~/apps/combat/hooks/useTransformerContext';
@@ -171,7 +171,7 @@ export function createCombatTool(_deps: CombatToolDependencies = DEFAULT_COMBAT_
     }, [updateActorStats, actors.updateActorStats]);
 
     // Bridge function to handle skill updates with dual updates
-    const handleSkillChange = useCallback((actorId: ActorURN, skillUrn: SkillURN, rank: number) => {
+    const handleSkillChange = useCallback((actorId: ActorURN, skillUrn: SkillSchemaURN, rank: number) => {
       if (!context) return;
 
       const actor = context.world.actors[actorId];

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import type { Actor, ActorURN, WeaponSchemaURN, SkillURN, WeaponSchema } from '@flux/core';
+import type { Actor, ActorURN, WeaponSchemaURN, SkillURN, WeaponSchema, SkillSchemaURN } from '@flux/core';
 import { getCurrentHp, getMaxHp, getStatValue, isActorAlive, Stat, getHealthPercentage, getCurrentEnergy, getMaxEnergy } from '@flux/core';
 import type { ActorStatsInput, DerivedStats } from '../hooks/useCombatScenario';
 import { CombatantForm } from './CombatantForm';
@@ -17,12 +17,12 @@ export interface CombatantCardProps {
   // Editing props (only used during setup phase)
   isInSetupPhase?: boolean;
   scenarioStats?: ActorStatsInput;
-  scenarioSkills?: Record<SkillURN, number>;
+  scenarioSkills?: Record<SkillSchemaURN, number>;
   selectedWeapon?: WeaponSchemaURN;
   availableWeapons?: Map<WeaponSchemaURN, WeaponSchema>;
   derivedStats?: DerivedStats;
   onStatsChange?: (actorId: ActorURN, stats: Partial<ActorStatsInput>) => void;
-  onSkillChange?: (actorId: ActorURN, skillUrn: SkillURN, rank: number) => void;
+  onSkillChange?: (actorId: ActorURN, skillUrn: SkillSchemaURN, rank: number) => void;
   onWeaponChange?: (actorId: ActorURN, weaponUrn: WeaponSchemaURN) => void;
 }
 

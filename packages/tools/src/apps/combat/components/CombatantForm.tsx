@@ -1,5 +1,5 @@
 import { useState, useCallback, useEffect } from 'react';
-import type { ActorURN, WeaponSchemaURN, SkillURN, WeaponSchema } from '@flux/core';
+import type { ActorURN, WeaponSchemaURN, WeaponSchema, SkillSchemaURN } from '@flux/core';
 import type { ActorStatsInput, DerivedStats } from '../hooks/useCombatScenario';
 import './CombatantForm.css';
 
@@ -7,12 +7,12 @@ export interface CombatantFormProps {
   actorId: ActorURN;
   actorName: string;
   stats: ActorStatsInput;
-  skills: Record<SkillURN, number>;
+  skills: Record<SkillSchemaURN, number>;
   selectedWeapon: WeaponSchemaURN;
   availableWeapons: Map<WeaponSchemaURN, WeaponSchema>;
   derivedStats: DerivedStats;
   onStatsChange: (actorId: ActorURN, stats: Partial<ActorStatsInput>) => void;
-  onSkillChange: (actorId: ActorURN, skillUrn: SkillURN, rank: number) => void;
+  onSkillChange: (actorId: ActorURN, skillUrn: SkillSchemaURN, rank: number) => void;
   onWeaponChange: (actorId: ActorURN, weaponUrn: WeaponSchemaURN) => void;
   isExpanded?: boolean;
 }
@@ -48,7 +48,7 @@ export function CombatantForm({
   }, [actorId, localStats, onStatsChange]);
 
   // Handle skill rank changes
-  const handleSkillChange = useCallback((skillUrn: SkillURN, rank: number) => {
+  const handleSkillChange = useCallback((skillUrn: SkillSchemaURN, rank: number) => {
     onSkillChange(actorId, skillUrn, rank);
   }, [actorId, onSkillChange]);
 
@@ -129,7 +129,7 @@ export function CombatantForm({
           {Object.entries(skills).map(([skillUrn, currentRank]) => (
             <div key={skillUrn} className="skill-input-group">
               <label className="skill-label">
-                <span className="skill-name">{getSkillDisplayName(skillUrn as SkillURN)}</span>
+                <span className="skill-name">{getSkillDisplayName(skillUrn as SkillSchemaURN)}</span>
               </label>
               <div className="skill-input-container">
                 <input
@@ -137,7 +137,7 @@ export function CombatantForm({
                   min="0"
                   max="100"
                   value={currentRank}
-                  onChange={(e) => handleSkillChange(skillUrn as SkillURN, parseInt(e.target.value))}
+                  onChange={(e) => handleSkillChange(skillUrn as SkillSchemaURN, parseInt(e.target.value))}
                   className="skill-slider"
                 />
                 <input
@@ -145,7 +145,7 @@ export function CombatantForm({
                   min="0"
                   max="100"
                   value={currentRank}
-                  onChange={(e) => handleSkillChange(skillUrn as SkillURN, parseInt(e.target.value) || 0)}
+                  onChange={(e) => handleSkillChange(skillUrn as SkillSchemaURN, parseInt(e.target.value) || 0)}
                   className="skill-number-input"
                 />
               </div>
@@ -188,7 +188,7 @@ export function CombatantForm({
 /**
  * Convert skill URN to display name
  */
-function getSkillDisplayName(skillUrn: SkillURN): string {
+function getSkillDisplayName(skillUrn: SkillSchemaURN): string {
   const skillName = skillUrn.split(':').pop() || skillUrn;
   return skillName
     .split(/[-_]/)

@@ -1,9 +1,8 @@
 import { useCallback } from 'react';
 import { useStorage } from '@flux/ui';
-import type { ActorURN, WeaponSchemaURN, SkillURN } from '@flux/core';
+import type { ActorURN, WeaponSchemaURN, SkillURN, SkillSchemaURN } from '@flux/core';
 import { Team, Gender } from '@flux/core';
 import { BASE_HP, HP_PER_RES_BONUS, DEFAULT_BASE_AP, calculateStatBonus } from '@flux/core';
-
 
 export type OptionalActorName = 'charlie' | 'eric' | 'dave' | 'franz';
 
@@ -56,12 +55,14 @@ export const TEAM_ASSIGNMENTS: Record<ActorURN, Team> = {
 };
 
 // Default combat skills for new actors
-export const DEFAULT_COMBAT_SKILLS: Record<SkillURN, number> = {
-  'flux:skill:evasion': 0,
-  'flux:skill:weapon:melee': 0,
-  'flux:skill:weapon:ranged': 0,
-  'flux:skill:athletics': 0,
-  'flux:skill:perception': 0,
+export const DEFAULT_COMBAT_SKILLS: Record<SkillSchemaURN, number> = {
+  'flux:schema:skill:evasion': 0,
+  'flux:schema:skill:weapon:bow': 0,
+  'flux:schema:skill:weapon:melee': 0,
+  'flux:schema:skill:weapon:pistol': 0,
+  'flux:schema:skill:weapon:smg': 0,
+  'flux:schema:skill:weapon:rifle': 0,
+  'flux:schema:skill:weapon:shotgun': 0,
 };
 
 // Helper functions
@@ -106,7 +107,7 @@ export interface UseCombatScenarioResult {
   scenarioData: CombatScenarioData;
   updateActorStats: (actorId: ActorURN, stats: Partial<ActorStatsInput>) => void;
   updateActorWeapon: (actorId: ActorURN, weaponUrn: WeaponSchemaURN) => void;
-  updateActorSkill: (actorId: ActorURN, skillUrn: SkillURN, rank: number) => void;
+  updateActorSkill: (actorId: ActorURN, skillUrn: SkillSchemaURN, rank: number) => void;
   updateActorAiControl: (actorId: ActorURN, enabled: boolean) => void;
   addOptionalActor: (name: OptionalActorName, onSessionAdd?: (actorId: ActorURN, team: Team) => void) => void;
   removeOptionalActor: (name: OptionalActorName, onSessionRemove?: (actorId: ActorURN) => void) => void;
@@ -169,7 +170,7 @@ export function useCombatScenario(
     }));
   }, [setScenarioData]);
 
-  const updateActorSkill = useCallback((actorId: ActorURN, skillUrn: SkillURN, rank: number) => {
+  const updateActorSkill = useCallback((actorId: ActorURN, skillUrn: SkillSchemaURN, rank: number) => {
     setScenarioData((prev: CombatScenarioData) => ({
       ...prev,
       actors: {
