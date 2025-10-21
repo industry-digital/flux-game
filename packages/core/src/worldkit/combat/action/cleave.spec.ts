@@ -13,6 +13,7 @@ import { Stat } from '~/types/entity/actor';
 import { HumanAnatomy } from '~/types/taxonomy/anatomy';
 import { getCurrentEnergy, setEnergy } from '~/worldkit/entity/actor/capacitor';
 import { createWeaponSchema } from '~/worldkit/schema/weapon';
+import { EVASION_SKILL } from '~/worldkit/combat/testing/constants';
 
 // Type guard to help TypeScript understand CLEAVE attack events
 function isCleaveAttack(event: CombatantDidAttack): event is CombatantDidCleave {
@@ -90,19 +91,19 @@ describe('Cleave Method', () => {
         [TARGET1_ID]: {
           team: Team.BRAVO,
           stats: { pow: 30, fin: 30, res: 30 },
-          skills: { 'flux:skill:evasion': { xp: 0, pxp: 0, rank: 1 } },
+          skills: { [EVASION_SKILL]: { xp: 0, pxp: 0, rank: 1 } },
           position: { coordinate: 102, facing: -1, speed: 0 }, // 2m away, at reach weapon range
         },
         [TARGET2_ID]: {
           team: Team.BRAVO,
           stats: { pow: 30, fin: 30, res: 30 },
-          skills: { 'flux:skill:evasion': { xp: 0, pxp: 0, rank: 1 } },
+          skills: { [EVASION_SKILL]: { xp: 0, pxp: 0, rank: 1 } },
           position: { coordinate: 102, facing: -1, speed: 0 }, // 2m away, at reach weapon range
         },
         [TARGET3_ID]: {
           team: Team.BRAVO,
           stats: { pow: 30, fin: 30, res: 30 },
-          skills: { 'flux:skill:evasion': { xp: 0, pxp: 0, rank: 1 } },
+          skills: { [EVASION_SKILL]: { xp: 0, pxp: 0, rank: 1 } },
           position: { coordinate: 102, facing: -1, speed: 0 }, // 2m away, at reach weapon range
         },
         [ALLY_ID]: {
