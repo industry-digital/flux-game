@@ -10,6 +10,7 @@ import { extractApCost } from '~/worldkit/combat/ap';
 import { Team } from '~/types/combat';
 import { DoneMethod } from '~/worldkit/combat/action/done';
 import { extractFirstEventOfType } from '~/testing/event';
+import { EVASION_SKILL } from '~/worldkit/combat/testing/constants';
 
 describe('Defend Method', () => {
   let scenario: ReturnType<typeof useCombatScenario>;
@@ -38,7 +39,7 @@ describe('Defend Method', () => {
         [DEFENDER_ID]: {
           team: Team.ALPHA,
           stats: { pow: 10, fin: 10, res: 10 },
-          skills: { 'flux:skill:evasion': { xp: 0, pxp: 0, rank: 1 } },
+          skills: { [EVASION_SKILL]: { xp: 0, pxp: 0, rank: 1 } },
           equipment: { weapon: swordSchema.urn },
           position: { coordinate: 100, facing: 1, speed: 0 },
           ap: 6.0, // Set initial AP

@@ -7,6 +7,7 @@ import { registerWeapons } from '../testing/schema';
 import { EventType } from '~/types/event';
 import { ActorURN } from '~/types/taxonomy';
 import { Team } from '~/types/combat';
+import { EVASION_SKILL } from '~/worldkit/combat/testing/constants';
 
 describe('Done Method (New Architecture)', () => {
   let scenario: ReturnType<typeof useCombatScenario>;
@@ -35,7 +36,7 @@ describe('Done Method (New Architecture)', () => {
         [ACTOR_ID]: {
           team: Team.ALPHA,
           stats: { pow: 20, fin: 15, res: 25 },
-          skills: { 'flux:skill:evasion': { xp: 0, pxp: 0, rank: 1 } },
+          skills: { [EVASION_SKILL]: { xp: 0, pxp: 0, rank: 1 } },
           equipment: { weapon: swordSchema.urn },
           position: { coordinate: 100, facing: 1, speed: 0 },
           ap: 6.0,

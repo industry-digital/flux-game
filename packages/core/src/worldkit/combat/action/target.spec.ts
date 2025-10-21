@@ -7,6 +7,7 @@ import { registerWeapons } from '../testing/schema';
 import { ActorURN } from '~/types/taxonomy';
 import { EventType } from '~/types/event';
 import { Team } from '~/types/combat';
+import { EVASION_SKILL } from '~/worldkit/combat/testing/constants';
 
 describe('Target Method', () => {
   let scenario: ReturnType<typeof useCombatScenario>;
@@ -39,7 +40,7 @@ describe('Target Method', () => {
         [TARGETER_ID]: {
           team: Team.ALPHA,
           stats: { pow: 10, fin: 10, res: 10 },
-          skills: { 'flux:skill:evasion': { xp: 0, pxp: 0, rank: 1 } },
+          skills: { [EVASION_SKILL]: { xp: 0, pxp: 0, rank: 1 } },
           equipment: { weapon: swordSchema.urn },
           position: { coordinate: 100, facing: 1, speed: 0 },
           // Note: No initial target - starts as null for testing

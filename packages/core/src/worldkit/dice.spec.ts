@@ -6,6 +6,7 @@ import { SkillState } from '~/types/entity/skill';
 import { ATTACK_SKILL_MULTIPLIER } from '~/worldkit/combat/attack';
 import { createActor } from '~/worldkit/entity/actor';
 import { createWeaponSchema } from '~/worldkit/schema/weapon/factory';
+import { MELEE_WEAPON_SKILL } from '~/worldkit/combat/testing/constants';
 
 describe('rollWeaponAccuracy', () => {
   const mockActor: Actor = createActor({
@@ -17,9 +18,9 @@ describe('rollWeaponAccuracy', () => {
   const mockWeapon: WeaponSchema = createWeaponSchema({
     urn: 'flux:schema:weapon:test-sword',
     name: 'Test Sword',
+    skill: MELEE_WEAPON_SKILL,
     accuracy: {
       model: AccuracyModel.SKILL_SCALING,
-      skill: 'flux:schema:skill:weapon:melee',
       base: '1d20',
     },
   });
@@ -51,15 +52,15 @@ describe('rollWeaponAccuracy', () => {
 
     // Verify skill bonus calculation
     const expectedSkillBonus = 50 * ATTACK_SKILL_MULTIPLIER; // 50 * 0.8 = 40
-    expect(result.mods).toHaveProperty(`skill:${mockWeapon.accuracy.skill}`);
-    expect(result.mods![`skill:${mockWeapon.accuracy.skill}`].value).toBe(expectedSkillBonus);
+    expect(result.mods).toHaveProperty(`skill:${mockWeapon.skill}`);
+    expect(result.mods![`skill:${mockWeapon.skill}`].value).toBe(expectedSkillBonus);
 
     // Verify final result
     expect(result.result).toBe(11 + expectedSkillBonus); // 11 + 40 = 51
 
     // Verify dependencies were called correctly
-    expect(mockDeps.getActorSkill).toHaveBeenCalledWith(mockActor, mockWeapon.accuracy.skill);
-    expect(mockDeps.getEffectiveSkillRank).toHaveBeenCalledWith(mockActor, mockWeapon.accuracy.skill, mockSkillState);
+    expect(mockDeps.getActorSkill).toHaveBeenCalledWith(mockActor, mockWeapon.skill);
+    expect(mockDeps.getEffectiveSkillRank).toHaveBeenCalledWith(mockActor, mockWeapon.skill, mockSkillState);
   });
 
   it('should handle zero skill rank', () => {
@@ -82,7 +83,7 @@ describe('rollWeaponAccuracy', () => {
     const result = rollApi.rollWeaponAccuracy(mockActor, mockWeapon);
 
     expect(result.natural).toBe(19); // Math.floor(0.9 * 20) + 1 = 19
-    expect(result.mods![`skill:${mockWeapon.accuracy.skill}`].value).toBe(0); // 0 * 0.8 = 0
+    expect(result.mods![`skill:${mockWeapon.skill}`].value).toBe(0); // 0 * 0.8 = 0
     expect(result.result).toBe(19); // 19 + 0 = 19
   });
 
@@ -107,7 +108,7 @@ describe('rollWeaponAccuracy', () => {
 
     expect(result.natural).toBe(2); // Math.floor(0.05 * 20) + 1 = 2
     const expectedSkillBonus = 100 * ATTACK_SKILL_MULTIPLIER; // 100 * 0.8 = 80
-    expect(result.mods![`skill:${mockWeapon.accuracy.skill}`].value).toBe(expectedSkillBonus);
+    expect(result.mods![`skill:${mockWeapon.skill}`].value).toBe(expectedSkillBonus);
     expect(result.result).toBe(2 + expectedSkillBonus); // 2 + 80 = 82
   });
 
@@ -146,9 +147,9 @@ describe('rollWeaponAccuracy', () => {
     const rollApi = createRollApi(mockDeps);
     const result = rollApi.rollWeaponAccuracy(mockActor, mockWeapon);
 
-    const skillModifier = result.mods![`skill:${mockWeapon.accuracy.skill}`];
+    const skillModifier = result.mods![`skill:${mockWeapon.skill}`];
     expect(skillModifier).toMatchObject({
-      origin: `skill:${mockWeapon.accuracy.skill}`,
+      origin: `skill:${mockWeapon.skill}`,
       value: 25 * ATTACK_SKILL_MULTIPLIER, // 25 * 0.8 = 20
       duration: -1, // Permanent
       ts: 4000000, // Uses injected timestamp
