@@ -10,4 +10,5 @@ export type AmmoDamageSpecification = Omit<DamageSpecification, 'model' | 'base'
  */
 export type AmmoSchema = PhysicalEntitySchema<AmmoSchemaURN> & {
   damage: Pick<DamageSpecification, 'base' | 'types'>;
+  capacity: number;
 };

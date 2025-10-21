@@ -6,6 +6,7 @@ export type AmmoTransformer = (schema: AmmoSchema) => AmmoSchema;
 export function createAmmoSchema(transform: AmmoTransformer): AmmoSchema {
   const defaults: Partial<AmmoSchema> = {
     baseMass: 12, // 12g - typical pistol bullet mass
+    capacity: 16,
     damage: {
       base: '3d6',
       types: {

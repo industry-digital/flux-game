@@ -41,7 +41,7 @@ export const DEFAULT_INVENTORY_ITEM_DEPENDENCIES: Readonly<InventoryItemDependen
 };
 
 export type InventoryItemInput<TCategory extends ItemType = ItemType> = {
-  id?: ItemURN<TCategory>;
+  id?: ItemURN;
   schema: SchemaURN<TCategory>;
 };
 

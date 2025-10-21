@@ -327,12 +327,30 @@ export type TopicURN = Taxonomy.Topics;
 export type ResourceURN = Taxonomy.Resources;
 export type EcosystemURN = `${RootNamespace}:eco:${Biome}:${Climate}`;
 export type ItemType = 'weapon' | 'armor' | 'ammo' | 'container' | 'resource' | 'mod' | 'device' | 'component';
-export type ItemURN<TItemType extends ItemType = ItemType> = `${RootNamespace}:item:${TItemType}:${string}`;
+export type ItemURN<TItemType extends ItemType = any> = `${RootNamespace}:item:${string}`;
+/**
+ * @deprecated Use ItemURN
+ */
 export type WeaponItemURN = ItemURN<'weapon'>;
+/**
+ * @deprecated Use ItemURN
+ */
 export type ArmorItemURN = ItemURN<'armor'>;
+/**
+ * @deprecated Use ItemURN
+ */
 export type AmmoItemURN = ItemURN<'ammo'>;
+/**
+ * @deprecated Use ItemURN
+ */
 export type ContainerItemURN = ItemURN<'container'>;
+/**
+ * @deprecated Use ItemURN
+ */
 export type ResourceItemURN = ItemURN<'resource'>;
+/**
+ * @deprecated Use BonusURN
+ */
 export type BonusURN = `${RootNamespace}:bonus:${string}`;
 
 export type SchemaType = keyof Omit<typeof TAXONOMY.terms, 'schema'>;

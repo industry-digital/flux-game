@@ -4,6 +4,7 @@ import { AmmoSchema } from '~/types/schema/ammo';
 
 export const arrowSchema = createAmmoSchema((schema: AmmoSchema) => ({
   ...schema,
+  urn: 'flux:schema:ammo:arrow',
   name: 'arrow',
   baseMass: 60,
   damage: {

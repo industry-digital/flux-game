@@ -12,7 +12,6 @@ export const shortbowSchema = createWeaponSchema((schema: WeaponSchema) => ({
   accuracy: {
     ...schema.accuracy,
     model: AccuracyModel.SKILL_SCALING,
-    skill: 'flux:schema:skill:weapon:shortbow',
   },
   damage: {
     model: DamageModel.STAT_SCALING,
@@ -46,7 +45,6 @@ export const longbowSchema = createWeaponSchema((schema: WeaponSchema) => ({
   accuracy: {
     ...schema.accuracy,
     model: AccuracyModel.SKILL_SCALING,
-    skill: 'flux:schema:skill:weapon:longbow',
   },
   damage: {
     model: DamageModel.STAT_SCALING,

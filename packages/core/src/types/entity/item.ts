@@ -1,6 +1,5 @@
 import { NormalizedValueBetweenZeroAndOne, StatefulBoundedValue } from '~/types/entity/attribute';
 import { Container } from '~/types/entity/container';
-import { Nameable } from '~/types/entity/entity';
 import { SchemaURN, ItemType, ItemURN } from '~/types/taxonomy';
 
 /**
@@ -41,9 +40,7 @@ export type ChargeableMixin = {
   charges: StatefulBoundedValue;
 };
 
-export type AbstractItem<TItemType extends ItemType> =
-& Nameable
-& {
+export type AbstractItem<TItemType extends ItemType> = {
   id: ItemURN<TItemType>;
   schema: SchemaURN<TItemType>;
 };

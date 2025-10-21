@@ -185,6 +185,7 @@ describe('SchemaManager', () => {
       expect(registeredTypes).toContain('ability');
       expect(registeredTypes).toContain('skill');
       expect(registeredTypes).toContain('container');
+      expect(registeredTypes).toContain('ammo');
     });
 
     it('should have schemas loaded and ready to use', () => {

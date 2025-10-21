@@ -7,6 +7,7 @@ import {
   SkillSchemaURN,
   ContainerSchemaURN,
   ComponentSchemaURN,
+  AmmoSchemaURN,
 } from '~/types/taxonomy';
 import {
   BulkResourceSchema,
@@ -17,6 +18,7 @@ import { ArmorSchema } from '~/types/schema/armor';
 import { AbilitySchema } from '~/types/schema/ability';
 import { SkillSchema } from '~/types/schema/skill';
 import { ContainerSchema } from '~/types/schema/container';
+import { AmmoSchema } from '~/types/schema/ammo';
 import {
   loadResourceSchemas,
   loadWeaponSchemas,
@@ -24,6 +26,7 @@ import {
   loadAbilitySchemas,
   loadSkillSchemas,
   loadContainerSchemas,
+  loadAmmoSchemas,
 } from './loaders';
 import { ComponentSchema } from '~/types/schema/component';
 import { SchemaLoader } from '~/types/schema/loader';
@@ -40,6 +43,7 @@ export type SchemaRegistry = {
   [key: SkillSchemaURN]: SkillSchema;
   [key: ContainerSchemaURN]: ContainerSchema;
   [key: ComponentSchemaURN]: ComponentSchema;
+  [key: AmmoSchemaURN]: AmmoSchema;
   // TODO: Add effect, trait schemas when available
   // [key: EffectSchemaURN]: EffectSchema;
   // [key: TraitSchemaURN]: TraitSchema;
@@ -201,6 +205,7 @@ const DEFAULT_LOADERS = new Map<string, SchemaLoader<any, any>>([
   ['ability', loadAbilitySchemas],
   ['skill', loadSkillSchemas],
   ['container', loadContainerSchemas],
+  ['ammo', loadAmmoSchemas],
 ]);
 
 /**

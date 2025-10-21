@@ -1,6 +1,7 @@
 import { Actor, Stat, ActorStats } from '~/types/entity/actor';
 import { WeaponSchema } from '~/types/schema/weapon';
-import { ActorURN, PlaceURN, SkillSchemaURN, WeaponItemURN, WeaponSchemaURN } from '~/types/taxonomy';
+import { AmmoSchema } from '~/types/schema/ammo';
+import { ActorURN, PlaceURN, SkillSchemaURN, WeaponItemURN, WeaponSchemaURN, AmmoSchemaURN } from '~/types/taxonomy';
 import { TransformerContext } from '~/types/handler';
 import { Battlefield, BattlefieldPosition, Combatant, CombatFacing, CombatSession, Team } from '~/types/combat';
 import { createCombatSessionApi } from '../session/session';
@@ -31,6 +32,7 @@ export type CombatScenarioActor = {
 
 export type ActorEquipmentSetup = {
   weapon: WeaponSchemaURN;
+  ammo?: AmmoSchemaURN | number; // URN or quantity (auto-detects from weapon)
 };
 
 export type ActorSingleStatSetup = number | Partial<ActorStats[keyof ActorStats]>;
@@ -66,6 +68,7 @@ const DEFAULT_SKILL_STATE: Readonly<SkillState> = createDefaultSkillState();
 export type CombatScenarioInput = {
   participants: Record<ActorURN, CombatScenarioActorInput>;
   weapons: WeaponSchema[];
+  ammo?: AmmoSchema[]; // Optional ammo schemas, auto-loaded if not provided
   battlefield?: Battlefield;
   schemaManager?: SchemaManager;
   location?: PlaceURN; // Optional custom location, defaults to TEST_PLACE_ID
@@ -89,10 +92,11 @@ export function useCombatScenario(
   {
     useCombatSession: useCombatSessionImpl,
   }: CombatScenarioDependencies = DEFAULT_TEST_SCENARIO_DEPS,
-) {
+): CombatScenarioHook {
   const {
     participants,
     weapons,
+    ammo,
     battlefield = DEFAULT_BATTLEFIELD,
     location,
   } = input;
@@ -111,13 +115,40 @@ export function useCombatScenario(
     context: testContext,
   };
 
-  // Set up testing infrastructure to handle weapon schemas
+  // Set up testing infrastructure to handle weapon and ammo schemas
   if (weapons) {
-    const loaderMap: Map<WeaponSchemaURN, WeaponSchema> = new Map();
+    const weaponLoaderMap: Map<WeaponSchemaURN, WeaponSchema> = new Map();
     for (const weaponSchema of weapons) {
-      loaderMap.set(weaponSchema.urn as WeaponSchemaURN, weaponSchema);
+      weaponLoaderMap.set(weaponSchema.urn as WeaponSchemaURN, weaponSchema);
     }
-    testContext.schemaManager.registerLoader('weapon', () => loaderMap, true);
+    testContext.schemaManager.registerLoader('weapon', () => weaponLoaderMap, true);
+  }
+
+  // Set up ammo schemas - either provided or auto-loaded from schema manager
+  let ammoSchemas: AmmoSchema[] = [];
+  if (ammo) {
+    ammoSchemas = ammo;
+  } else {
+    // Auto-load ammo schemas from the schema manager
+    try {
+      const ammoLoaderMap = testContext.schemaManager.getSchemasOfType('ammo');
+      ammoSchemas = Array.from(ammoLoaderMap.values()) as AmmoSchema[];
+    } catch {
+      // If no ammo loader registered, create empty array
+      ammoSchemas = [];
+    }
+  }
+
+  if (ammoSchemas.length > 0) {
+    const ammoLoaderMap: Map<AmmoSchemaURN, AmmoSchema> = new Map();
+    for (const ammoSchema of ammoSchemas) {
+      ammoLoaderMap.set(ammoSchema.urn as AmmoSchemaURN, ammoSchema);
+    }
+    testContext.schemaManager.registerLoader('ammo', () => ammoLoaderMap, true);
+  }
+
+  // Load all schemas after registering loaders
+  if (weapons || ammoSchemas.length > 0) {
     testContext.schemaManager.loadAllSchemas(true);
   }
 
@@ -298,6 +329,37 @@ export function useCombatScenario(
     if (equipment?.weapon) {
       const weaponItem = inventoryApi.addItem(actor, { schema: equipment.weapon });
       equipmentApi.equipWeapon(actor, weaponItem.id as WeaponItemURN);
+
+      // Auto-add appropriate ammo for the weapon
+      const weaponSchema = testContext.schemaManager.getSchema(equipment.weapon);
+      if ('ammo' in weaponSchema && weaponSchema.ammo?.type) {
+        const ammoType = weaponSchema.ammo.type as AmmoSchemaURN;
+        let ammoQuantity = 30; // Default quantity
+
+        // Handle custom ammo setup
+        if (equipment.ammo !== undefined) {
+          if (typeof equipment.ammo === 'number') {
+            ammoQuantity = equipment.ammo;
+          } else {
+            // Custom ammo type specified - add multiple items for quantity
+            for (let i = 0; i < ammoQuantity; i++) {
+              inventoryApi.addItem(actor, { schema: equipment.ammo });
+            }
+            // Skip auto-ammo since custom ammo was added - continue to next actor
+            continue;
+          }
+        }
+
+        // Add auto-detected ammo type - add multiple items for quantity
+        try {
+          for (let i = 0; i < ammoQuantity; i++) {
+            inventoryApi.addItem(actor, { schema: ammoType });
+          }
+        } catch (error) {
+          // Ammo schema not found - continue without ammo
+          console.warn(`Ammo schema not found for weapon ${equipment.weapon}: ${ammoType}`);
+        }
+      }
     }
 
     // Store the scenario actor with only the combatant hook (clean public interface)
