@@ -308,6 +308,9 @@ export type PlaceURN = Taxonomy.Places;
 export type ActorURN = Taxonomy.Actors;
 export type TraitURN = Taxonomy.Traits;
 export type AbilityURN = Taxonomy.Abilities;
+/**
+ * @deprecated Use `SkillSchemaURN`
+ */
 export type SkillURN = Taxonomy.Skills;
 export type EffectURN = Taxonomy.Effects;
 export type DirectionURN = Taxonomy.Directions;

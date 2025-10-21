@@ -5,7 +5,8 @@ import { ONE_HANDED_FIT, TWO_HANDED_FIT } from '~/worldkit/schema/weapon/fit';
 
 export const pistolSchema = createWeaponSchema((schema: WeaponSchema) => ({
   ...schema,
-  skill: 'flux:schema:skill:weapon:pistol',
+  urn: 'flux:schema:weapon:gun:pistol',
+  skill: 'flux:schema:skill:weapon:gun',
   baseMass: 800, // 0.8kg - typical pistol mass
   fit: ONE_HANDED_FIT,
   accuracy: {
@@ -21,7 +22,7 @@ export const pistolSchema = createWeaponSchema((schema: WeaponSchema) => ({
     max: 50,
   },
   ammo: {
-    type: 'flux:schema:ammo:pistol',
+    type: 'flux:schema:ammo:gun:pistol',
     capacity: 15,
   },
   timers: {
@@ -34,7 +35,8 @@ export const pistolSchema = createWeaponSchema((schema: WeaponSchema) => ({
 
 export const rifleSchema = createWeaponSchema((schema: WeaponSchema) => ({
   ...schema,
-  skill: 'flux:schema:skill:weapon:rifle',
+  urn: 'flux:schema:weapon:gun:rifle',
+  skill: 'flux:schema:skill:weapon:gun',
   baseMass: 3500, // 3.5kg - typical rifle mass
   fit: TWO_HANDED_FIT,
   range: {
@@ -64,7 +66,8 @@ export const rifleSchema = createWeaponSchema((schema: WeaponSchema) => ({
 
 export const shotgunSchema = createWeaponSchema((schema: WeaponSchema) => ({
   ...schema,
-  skill: 'flux:schema:skill:weapon:shotgun',
+  urn: 'flux:schema:weapon:gun:shotgun',
+  skill: 'flux:schema:skill:weapon:gun',
   baseMass: 3200, // 3.2kg - typical shotgun mass
   fit: TWO_HANDED_FIT,
   range: {

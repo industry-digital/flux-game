@@ -6,6 +6,7 @@ import { Stat } from '~/types/entity/actor';
 
 export const shortbowSchema = createWeaponSchema((schema: WeaponSchema) => ({
   ...schema,
+  urn: 'flux:schema:weapon:shortbow',
   name: 'shortbow',
   baseMass: 1_000, // 1kg - typical shortbow mass
   fit: TWO_HANDED_FIT,
@@ -39,6 +40,7 @@ export const shortbowSchema = createWeaponSchema((schema: WeaponSchema) => ({
 
 export const longbowSchema = createWeaponSchema((schema: WeaponSchema) => ({
   ...schema,
+  urn: 'flux:schema:weapon:longbow',
   name: 'longbow',
   baseMass: 2_500, // 2.5kg - typical longbow mass
   fit: TWO_HANDED_FIT,

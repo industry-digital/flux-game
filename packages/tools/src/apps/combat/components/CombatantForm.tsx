@@ -61,6 +61,12 @@ export function CombatantForm({
     return null;
   }
 
+  const handleSelectWeapon = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const weaponUrn = e.target.value;
+    console.log(`handleSelectWeapon: ${weaponUrn}`);
+    handleWeaponChange(e.target.value as WeaponSchemaURN);
+  };
+
   return (
     <div className="combatant-form">
       <div className="form-header">
@@ -160,12 +166,12 @@ export function CombatantForm({
         <div className="weapon-selection">
           <select
             value={selectedWeapon}
-            onChange={(e) => handleWeaponChange(e.target.value as WeaponSchemaURN)}
+            onChange={handleSelectWeapon}
             className="weapon-select"
           >
             {[...availableWeapons].map(([weaponUrn, weaponSchema]) => (
               <option key={weaponUrn} value={weaponUrn}>
-                {weaponSchema.name || weaponUrn}
+                {weaponSchema.urn}
               </option>
             ))}
           </select>
@@ -175,7 +181,7 @@ export function CombatantForm({
             <div className="weapon-preview">
               <div className="weapon-stat">
                 <span className="weapon-label">Selected:</span>
-                <span className="weapon-value">{availableWeapons.get(selectedWeapon)?.name || selectedWeapon}</span>
+                <span className="weapon-value">{availableWeapons.get(selectedWeapon)?.urn}</span>
               </div>
             </div>
           )}

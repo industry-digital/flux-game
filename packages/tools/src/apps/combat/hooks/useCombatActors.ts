@@ -7,8 +7,7 @@ import {
   type ActorURN,
   type PlaceURN,
   type WeaponSchema,
-  type WeaponSchemaURN,
-  type SkillURN,
+  type WeaponSchemaURN, type SkillURN,
   type ItemURN,
   Stat,
   type TransformerContext,
@@ -18,6 +17,8 @@ import {
   initializeHpFromRes,
   updateMaxHpFromRes,
   setNaturalStatValue,
+  type AmmoSchemaURN,
+  type AmmoSchema,
 } from '@flux/core';
 import type { CombatScenarioData } from './useCombatScenario';
 
@@ -70,14 +71,22 @@ export function useCombatActors(
       const weaponMap = context.schemaManager.getSchemasOfType<WeaponSchemaURN, WeaponSchema>('weapon');
       setAvailableWeapons(weaponMap);
 
+      // Get ammo schemas for auto-detection
+      let ammoMap: Map<AmmoSchemaURN, AmmoSchema> = new Map();
+      try {
+        ammoMap = context.schemaManager.getSchemasOfType<AmmoSchemaURN, AmmoSchema>('ammo');
+      } catch (error) {
+        console.warn('Ammo schemas not available:', error);
+      }
+
       const newActors: Record<ActorURN, Actor> = {};
 
       // Create actors from scenario data
       for (const [actorId, actorData] of Object.entries(scenarioData.actors) as [ActorURN, any][]) {
         const weaponSchema = weaponMap.get(actorData.weapon);
         if (!weaponSchema) {
-          console.warn(`Weapon schema not found: ${actorData.weapon}`);
-          continue;
+          // Crash the program to find the root cause of malformed weapon URNs
+          throw new Error(`Weapon schema not found: '${actorData.weapon}' for actor '${actorId}'. Available weapons: ${Array.from(weaponMap.keys()).join(', ')}. This indicates a malformed weapon URN in the scenario data.`);
         }
 
         const actor = createActorFromScenarioData(
@@ -85,6 +94,7 @@ export function useCombatActors(
           actorId,
           actorData,
           weaponSchema,
+          ammoMap,
           placeId,
           deps
         );
@@ -202,12 +212,14 @@ const TEST_WEAPON_ENTITY_URN: ItemURN = 'flux:item:weapon:test';
 /**
  * Create an actor from scenario data using @flux/core utilities
  * Enhanced to use TransformerContext APIs for proper customization
+ * Automatically adds appropriate ammo based on weapon requirements
  */
 function createActorFromScenarioData(
   context: TransformerContext,
   actorId: ActorURN,
   actorData: any,
   weaponSchema: WeaponSchema,
+  ammoMap: Map<AmmoSchemaURN, AmmoSchema>,
   placeId: PlaceURN,
   deps: CombatActorsDependencies
 ): Actor {
@@ -275,7 +287,58 @@ function createActorFromScenarioData(
   // Initialize HP based on RES stat (this sets both max and current HP)
   deps.initializeHpFromRes(actor);
 
+  // Add ammo to inventory if weapon requires it
+  addAmmoToActor(context, actor, weaponSchema, actorData.ammo, ammoMap);
+
   return actor;
+}
+
+/**
+ * Add appropriate ammo to actor's inventory based on weapon requirements
+ */
+function addAmmoToActor(
+  context: TransformerContext,
+  actor: Actor,
+  weaponSchema: WeaponSchema,
+  ammoConfig: AmmoSchemaURN | number | undefined,
+  ammoMap: Map<AmmoSchemaURN, AmmoSchema>
+): void {
+  // Check if weapon requires ammo (ranged weapons have ammo property)
+  if (!('ammo' in weaponSchema) || !weaponSchema.ammo?.type) {
+    return; // Melee weapons don't need ammo
+  }
+
+  const weaponAmmoType = weaponSchema.ammo.type as AmmoSchemaURN;
+  let ammoQuantity = 30; // Default quantity
+  let ammoType = weaponAmmoType; // Default to weapon's ammo type
+
+  // Handle custom ammo configuration
+  if (ammoConfig !== undefined) {
+    if (typeof ammoConfig === 'number') {
+      ammoQuantity = ammoConfig;
+    } else {
+      // Custom ammo type specified
+      ammoType = ammoConfig;
+    }
+  }
+
+  // Verify ammo schema exists
+  const ammoSchema = ammoMap.get(ammoType);
+  if (!ammoSchema) {
+    console.warn(`Ammo schema not found for ${ammoType}, skipping ammo setup`);
+    return;
+  }
+
+  // Add ammo items to inventory using the proper inventory API
+  const ammoInputs = Array.from({ length: ammoQuantity }, () => ({
+    schema: ammoSchema.urn,
+  }));
+
+  try {
+    context.inventoryApi.addItems(actor, ammoInputs);
+  } catch (error) {
+    console.warn(`Failed to add ammo to actor ${actor.id}:`, error);
+  }
 }
 
 /**

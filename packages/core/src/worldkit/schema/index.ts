@@ -6,3 +6,5 @@ export * from './weapon';
 
 // Schema loaders
 export * from './loaders';
+
+export * from './ammo';

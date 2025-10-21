@@ -200,10 +200,12 @@ export {
 
 export {
   WeaponSchema,
-  AccuracySpecification as WeaponAttackSpecification,
+  AccuracySpecification,
   WeaponTimers,
   WeaponRangeSpecification,
 } from './schema/weapon';
+
+export * from './schema/ammo';
 
 export {
   SkillSchema,
@@ -239,6 +241,7 @@ export {
 export {
   AbilityURN,
   ActorURN,
+  AmmoSchemaURN,
   AnatomyURN,
   ArmorItemURN,
   DirectionURN,
@@ -255,6 +258,7 @@ export {
   SchemaURN,
   SessionURN,
   SkillURN,
+  SkillSchemaURN,
   StatURN,
   TAXONOMY,
   Taxonomy,

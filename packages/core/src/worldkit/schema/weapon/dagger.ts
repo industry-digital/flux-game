@@ -6,6 +6,7 @@ import { Stat } from '~/types/entity/actor';
 export const createDaggerSchema = (input: WeaponSchemaInput): WeaponSchema => {
   return createWeaponSchema({
     ...input,
+    urn: 'flux:schema:weapon:dagger',
     name: input.name || 'dagger',
     baseMass: 500, // 0.5kg - light, fast weapon
     range: {

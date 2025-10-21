@@ -1,6 +1,6 @@
 import { useCallback } from 'react';
 import { useStorage } from '@flux/ui';
-import type { ActorURN, WeaponSchemaURN, SkillURN, SkillSchemaURN } from '@flux/core';
+import type { ActorURN, WeaponSchemaURN, SkillSchemaURN, AmmoSchemaURN } from '@flux/core';
 import { Team, Gender } from '@flux/core';
 import { BASE_HP, HP_PER_RES_BONUS, DEFAULT_BASE_AP, calculateStatBonus } from '@flux/core';
 
@@ -27,7 +27,8 @@ export interface CombatScenarioActorData {
   stats: ActorStatsInput;
   aiControlled: boolean;
   weapon: WeaponSchemaURN;
-  skills: Record<SkillURN, number>;
+  ammo?: AmmoSchemaURN | number; // URN or quantity (auto-detects from weapon)
+  skills: Record<SkillSchemaURN, number>;
   team: Team;
   gender: Gender;
 }
@@ -107,11 +108,13 @@ export interface UseCombatScenarioResult {
   scenarioData: CombatScenarioData;
   updateActorStats: (actorId: ActorURN, stats: Partial<ActorStatsInput>) => void;
   updateActorWeapon: (actorId: ActorURN, weaponUrn: WeaponSchemaURN) => void;
+  updateActorAmmo: (actorId: ActorURN, ammo: AmmoSchemaURN | number) => void;
   updateActorSkill: (actorId: ActorURN, skillUrn: SkillSchemaURN, rank: number) => void;
   updateActorAiControl: (actorId: ActorURN, enabled: boolean) => void;
   addOptionalActor: (name: OptionalActorName, onSessionAdd?: (actorId: ActorURN, team: Team) => void) => void;
   removeOptionalActor: (name: OptionalActorName, onSessionRemove?: (actorId: ActorURN) => void) => void;
   resetScenario: () => void;
+  clearStoredData: () => void;
   getTeamActors: (team: Team) => ActorURN[];
   getAvailableOptionalActors: (team: Team) => OptionalActorName[];
   calculateDerivedStats: (actorId: ActorURN) => DerivedStats;
@@ -165,6 +168,19 @@ export function useCombatScenario(
         [actorId]: {
           ...prev.actors[actorId],
           weapon: weaponUrn
+        }
+      }
+    }));
+  }, [setScenarioData]);
+
+  const updateActorAmmo = useCallback((actorId: ActorURN, ammo: AmmoSchemaURN | number) => {
+    setScenarioData((prev: CombatScenarioData) => ({
+      ...prev,
+      actors: {
+        ...prev.actors,
+        [actorId]: {
+          ...prev.actors[actorId],
+          ammo
         }
       }
     }));
@@ -287,6 +303,7 @@ export function useCombatScenario(
     scenarioData,
     updateActorStats,
     updateActorWeapon,
+    updateActorAmmo,
     updateActorSkill,
     updateActorAiControl,
     addOptionalActor,
