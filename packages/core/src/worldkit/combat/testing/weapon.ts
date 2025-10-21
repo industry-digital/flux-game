@@ -1,8 +1,8 @@
 import { Stat } from '~/types';
 import { DamageModel, DamageType } from '~/types/damage';
 import { AccuracyModel, WeaponSchema } from '~/types/schema/weapon';
-import { HumanAnatomy } from '~/types/taxonomy/anatomy';
 import { createWeaponSchema } from '~/worldkit/schema/weapon/factory';
+import { ONE_HANDED_FIT } from '~/worldkit/schema/weapon/fit';
 
 export type WeaponTransformer = (schema: WeaponSchema) => WeaponSchema;
 const identity: WeaponTransformer = (schema) => schema;
@@ -11,17 +11,14 @@ export const createTestWeapon = (transform: WeaponTransformer = identity): Weapo
     createWeaponSchema((schema: WeaponSchema) => ({
       ...schema,
       urn: 'flux:schema:weapon:test',
-      name: 'Test Weapon',
+      skill: 'flux:schema:skill:weapon:melee',
       baseMass: 1_000,
+      fit: ONE_HANDED_FIT,
       range: {
         optimal: 1,
       },
-      fit: {
-        [HumanAnatomy.RIGHT_HAND]: 1,
-      },
       accuracy: {
         model: AccuracyModel.SKILL_SCALING,
-        skill: 'flux:schema:skill:weapon:melee',
         base: '1d6',
       },
       damage: {

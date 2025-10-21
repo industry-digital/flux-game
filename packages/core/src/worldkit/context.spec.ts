@@ -20,7 +20,6 @@ import { createSchemaManager } from '~/worldkit/schema/manager';
 import { createMassApi, createMassComputationState } from '~/worldkit/physics/mass';
 import { createActorInventoryApi } from '~/worldkit/entity/actor/inventory';
 import { createActorEquipmentApi } from '~/worldkit/entity/actor/equipment';
-import { createActorCapacitorApi } from '~/worldkit/entity/actor/capacitor';
 import { createActorSkillApi } from '~/worldkit/entity/actor/skill';
 import { createCombatMetricsApi } from '~/worldkit/combat/metrics';
 import { ActorURN, PlaceURN } from '~/types/taxonomy';
@@ -28,6 +27,7 @@ import { WellKnownActor } from '~/types';
 import { createCombatSessionStartedEvent } from '~/testing/event/factory/combat';
 import { DEFAULT_LOCATION } from '~/testing/constants';
 import { createRollApi } from '~/worldkit/dice';
+import { createActorWeaponApi } from '~/worldkit/entity/weapon';
 
 describe('createTransformerContext', () => {
   let mockDeps: PotentiallyImpureOperations;
@@ -59,7 +59,7 @@ describe('createTransformerContext', () => {
       expect(context.mass).toBeDefined();
       expect(context.inventoryApi).toBeDefined();
       expect(context.equipmentApi).toBeDefined();
-      expect(context.actorSkillApi).toBeDefined();
+      expect(context.skillApi).toBeDefined();
       expect(context.metrics).toBeDefined();
     });
 
@@ -142,8 +142,8 @@ describe('createTransformerContext', () => {
       const customEquipmentApi = createActorEquipmentApi(mockSchemaManager, customInventoryApi);
       const customActorSkillApi = createActorSkillApi();
       const customRollApi = createRollApi();
-      const customCapacitorApi = createActorCapacitorApi();
       const customMetrics = createCombatMetricsApi();
+      const customWeaponApi = createActorWeaponApi(mockSchemaManager, customInventoryApi, customEquipmentApi);
 
       const context = createTransformerContext(
         undefined,
@@ -153,6 +153,7 @@ describe('createTransformerContext', () => {
         undefined,
         customInventoryApi,
         customEquipmentApi,
+        customWeaponApi,
         customActorSkillApi,
         customRollApi,
         customMetrics
@@ -160,7 +161,7 @@ describe('createTransformerContext', () => {
 
       expect(context.inventoryApi).toBe(customInventoryApi);
       expect(context.equipmentApi).toBe(customEquipmentApi);
-      expect(context.actorSkillApi).toBe(customActorSkillApi);
+      expect(context.skillApi).toBe(customActorSkillApi);
       expect(context.metrics).toBe(customMetrics);
     });
   });

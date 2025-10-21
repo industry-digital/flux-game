@@ -10,6 +10,7 @@ export const createInventory = (now: number = Date.now()): Inventory => {
   return {
     mass: 0,
     items: {},
+    ammo: {},
     ts: now,
   };
 };
@@ -33,8 +34,6 @@ export function createInventoryItemUrn<TItemType extends ItemType>(
 export type InventoryItemDependencies = {
   createInventoryItemUrn: typeof createInventoryItemUrn;
 };
-
-
 
 export const DEFAULT_INVENTORY_ITEM_DEPENDENCIES: Readonly<InventoryItemDependencies> = {
   createInventoryItemUrn,
@@ -186,6 +185,7 @@ export function createActorInventoryApi(
     // Mark as clean
     itemCounts.set(actor, Object.keys(actor.inventory.items).length);
   }
+
 
   return {
     getItem,

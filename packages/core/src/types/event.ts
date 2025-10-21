@@ -1,6 +1,6 @@
 import { Weather } from '~/types/entity/weather';
 import { ResourceNodes } from '~/types/entity/resource';
-import { ActorURN, ItemURN, PlaceURN, SessionURN } from '~/types/taxonomy';
+import { ActorURN, AmmoSchemaURN, ItemURN, PlaceURN, SessionURN } from '~/types/taxonomy';
 import {
   ActionCost,
   AttackOutcome,
@@ -127,6 +127,11 @@ export enum EventType {
   ACTOR_DID_LIST_INVENTORY_COMPONENTS = 'actor:inventory:components:listed',
   ACTOR_DID_LIST_INVENTORY_MATERIALS = 'actor:inventory:materials:listed',
   ACTOR_DID_COMPLETE_CURRENCY_TRANSACTION = 'actor:currency:transaction:completed',
+  ACTOR_DID_GAIN_INVENTORY_AMMO = 'actor:inventory:ammo:gained',
+  ACTOR_DID_LOSE_INVENTORY_AMMO = 'actor:inventory:ammo:lost',
+  ACTOR_DID_LOAD_WEAPON = 'actor:weapon:loaded',
+  ACTOR_DID_UNLOAD_WEAPON = 'actor:weapon:unloaded',
+  ACTOR_DID_FIRE_WEAPON = 'actor:weapon:fired',
 }
 
 export type EventBase = {
@@ -526,53 +531,77 @@ export type ActorDidCompleteCurrencyTransactionInput = AbstractWorldEventInput<
   }
 >;
 
+export type ActorDidGainInventoryAmmo = EventBase & ActorDidGainInventoryAmmoInput;
+export type ActorDidGainInventoryAmmoInput = AbstractWorldEventInput<
+  EventType.ACTOR_DID_GAIN_INVENTORY_AMMO,
+  {
+    itemId: ItemURN;
+    schema: AmmoSchemaURN;
+    quantity: number;
+    source: 'unloaded' | 'found' | 'purchased';
+  }
+>;
+
+export type ActorDidLoseInventoryAmmo = EventBase & ActorDidLoseInventoryAmmoInput;
+export type ActorDidLoseInventoryAmmoInput = AbstractWorldEventInput<
+  EventType.ACTOR_DID_LOSE_INVENTORY_AMMO,
+  {
+    itemId: ItemURN;
+    schema: AmmoSchemaURN;
+    quantity: number;
+  }
+>;
 /**
  * Union of all valid event inputs
  */
 export type WorldEventInput =
-  | PlaceWasCreatedInput
-  | ActorWasCreatedInput
-  | ActorDidMaterializeInput
-  | ActorDidDematerializeInput
-  | ActorDidMoveInput
   | ActorDidArriveInput
-  | ActorDidDepartInput
-  | ActorDidLookInput
-  | ResourcesDidChangeInput
-  | WeatherDidChangeInput
-  | CombatSessionStatusDidChangeInput
-  | CombatSessionStartedInput
-  | CombatSessionEndedInput
-  | CombatantDidAcquireTargetInput
-  | CombatantDidDefendInput
-  | CombatantDidMoveInput
-  | CombatantDidAttackInput
-  | CombatantWasAttackedInput
-  | CombatRoundDidStartInput
-  | CombatRoundDidEndInput
-  | CombatTurnDidStartInput
-  | CombatTurnDidEndInput
-  | CombatantDidDieInput
-  | CombatantDidRecoverApInput
-  | CombatantDidAcquireRangeInput
-  | WorkbenchSessionDidStartInput
-  | WorkbenchSessionDidEndInput
-  | ActorDidStageShellMutationInput
-  | ActorDidDiffShellMutationsInput
-  | ActorDidUndoShellMutationsInput
   | ActorDidCommitShellMutationsInput
-  | ActorDidSwapShellInput
-  | ActorDidOpenHelpFileInput
-  | ActorDidListShellsInput
-  | ActorDidInspectShellStatusInput
-  | ActorDidReviewShellStatsInput
-  | ActorDidListShellComponentsInput
+  | ActorDidCompleteCurrencyTransactionInput
+  | ActorDidDematerializeInput
+  | ActorDidDepartInput
+  | ActorDidDiffShellMutationsInput
   | ActorDidExamineComponentInput
-  | ActorDidMountComponentInput
-  | ActorDidUnmountComponentInput
+  | ActorDidGainInventoryAmmoInput
+  | ActorDidInspectShellStatusInput
   | ActorDidListInventoryComponentsInput
   | ActorDidListInventoryMaterialsInput
-  | ActorDidCompleteCurrencyTransactionInput;
+  | ActorDidListShellComponentsInput
+  | ActorDidListShellsInput
+  | ActorDidLookInput
+  | ActorDidLoseInventoryAmmoInput
+  | ActorDidMaterializeInput
+  | ActorDidMountComponentInput
+  | ActorDidMoveInput
+  | ActorDidOpenHelpFileInput
+  | ActorDidReviewShellStatsInput
+  | ActorDidStageShellMutationInput
+  | ActorDidSwapShellInput
+  | ActorDidUndoShellMutationsInput
+  | ActorDidUnmountComponentInput
+  | ActorWasCreatedInput
+  | CombatRoundDidEndInput
+  | CombatRoundDidStartInput
+  | CombatSessionEndedInput
+  | CombatSessionStartedInput
+  | CombatSessionStatusDidChangeInput
+  | CombatTurnDidEndInput
+  | CombatTurnDidStartInput
+  | CombatantDidAcquireRangeInput
+  | CombatantDidAcquireTargetInput
+  | CombatantDidAttackInput
+  | CombatantDidDefendInput
+  | CombatantDidDieInput
+  | CombatantDidMoveInput
+  | CombatantDidRecoverApInput
+  | CombatantWasAttackedInput
+  | PlaceWasCreatedInput
+  | ResourcesDidChangeInput
+  | WeatherDidChangeInput
+  | WorkbenchSessionDidEndInput
+  | WorkbenchSessionDidStartInput
+  ;
+
 /**
  * Union of all valid events
  */

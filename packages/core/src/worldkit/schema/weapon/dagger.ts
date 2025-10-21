@@ -2,12 +2,14 @@ import { createWeaponSchema, WeaponSchemaInput } from './factory';
 import { WeaponSchema } from '~/types/schema/weapon';
 import { DamageModel, DamageType } from '~/types/damage';
 import { Stat } from '~/types/entity/actor';
+import { ONE_HANDED_FIT } from '~/worldkit/schema/weapon/fit';
 
 export const createDaggerSchema = (input: WeaponSchemaInput): WeaponSchema => {
   return createWeaponSchema({
     ...input,
     urn: 'flux:schema:weapon:dagger',
     name: input.name || 'dagger',
+    fit: ONE_HANDED_FIT,
     baseMass: 500, // 0.5kg - light, fast weapon
     range: {
       optimal: 1,

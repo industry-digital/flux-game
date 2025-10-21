@@ -17,7 +17,7 @@ describe('createShellDiff', () => {
         [Stat.FIN]: { nat: 8, eff: 8, mods: {} },
         [Stat.RES]: { nat: 12, eff: 12, mods: {} },
       },
-      inventory: { items: {}, mass: 0, ts: 123456790000 },
+      inventory: { items: {}, mass: 0, ts: 123456790000, ammo: {} },
       equipment: {},
     };
 

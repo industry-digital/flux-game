@@ -6,6 +6,7 @@ import {
   SchemaURN,
   SessionURN,
   SkillSchemaURN,
+  AmmoSchemaURN,
 } from '~/types/taxonomy';
 import { AppliedEffects } from '~/types/taxonomy/effect';
 import { EntityType, AbstractEntity, Describable } from '~/types/entity/entity';
@@ -128,9 +129,15 @@ export type Inventory = {
   mass: number;
 
   /**
-   * Map of item IDs to their state
+   * Map of item IDs to their state (non-ammo items)
    */
   items: Record<string, InventoryItem>;
+
+  /**
+   * Unified ammo storage by schema URN
+   * All ammo of the same type is aggregated into logical magazines
+   */
+  ammo: Record<AmmoSchemaURN, number>;
 
   /**
    * Last inventory update timestamp

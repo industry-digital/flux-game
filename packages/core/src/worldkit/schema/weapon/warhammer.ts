@@ -8,12 +8,14 @@ export const createWarhammerSchema = (input: WeaponSchemaInput): WeaponSchema =>
   return createWeaponSchema({
     ...input,
     name: input.name || 'warhammer',
+    urn: 'flux:schema:weapon:warhammer',
+    skill: 'flux:schema:skill:weapon:melee',
+    fit: TWO_HANDED_FIT,
     baseMass: 12_000,
     range: {
       optimal: 1,
       max: 1,
     },
-    fit: TWO_HANDED_FIT,
     damage: {
       model: DamageModel.STAT_SCALING,
       stat: Stat.POW,

@@ -14,8 +14,9 @@ import { HumanAnatomy } from '~/types/taxonomy/anatomy';
 import { WeaponSchema } from '~/types/schema/weapon';
 import { SchemaManager } from '~/worldkit/schema/manager';
 import { MassApi } from '~/worldkit/physics/mass';
-
-const DEFAULT_TIMESTAMP = 1234567890000;
+import { registerWeapons } from '~/worldkit/combat/testing/schema';
+import { createTestWeapon } from '~/worldkit/combat/testing/weapon';
+import { DEFAULT_TIMESTAMP } from '~/testing/constants';
 
 describe('createActorEquipmentApi', () => {
   let context: TransformerContext;
@@ -571,6 +572,45 @@ describe('createActorEquipmentApi', () => {
 
       // Verify final state
       expect(equipmentApi.getEquippedWeapon(actor)).toBeNull();
+    });
+  });
+
+  describe('real schema manager integration', () => {
+    it('should reproduce the schema lookup issue with real SchemaManager', () => {
+      // Create a real SchemaManager instead of a mock
+      const realSchemaManager = new SchemaManager();
+
+      // Create a test weapon schema
+      const testWeapon = createTestWeapon((schema) => ({
+        ...schema,
+        urn: 'flux:schema:weapon:test-rifle',
+        name: 'Test Rifle',
+      }));
+
+      // Register the weapon schema using the helper function
+      registerWeapons(realSchemaManager, [testWeapon]);
+      realSchemaManager.loadAllSchemas(true);
+
+      // Verify schema is registered
+      console.log('Real schema manager - available schemas:', Array.from(realSchemaManager.getSchemasOfType('weapon').keys()));
+
+      // Create equipment API with real schema manager
+      const realEquipmentApi = createActorEquipmentApi(realSchemaManager, inventoryApi);
+
+      // Add weapon to inventory
+      const weaponItem = inventoryApi.addItem(actor, { schema: testWeapon.urn });
+      console.log('Added weapon item:', weaponItem);
+
+      // Try to get the schema directly (this should work)
+      try {
+        const directSchema = realSchemaManager.getSchema(weaponItem.schema as any);
+        console.log('Direct schema lookup succeeded:', directSchema.name);
+      } catch (error) {
+        console.log('Direct schema lookup failed:', (error as Error).message);
+      }
+
+      // This should reproduce the issue
+      expect(() => realEquipmentApi.equipWeapon(actor, weaponItem.id)).not.toThrow();
     });
   });
 });

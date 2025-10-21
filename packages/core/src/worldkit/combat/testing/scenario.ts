@@ -275,6 +275,7 @@ export function useCombatScenario(
     // Use equipment/inventory APIs from context (not exposed in public interface)
     const inventoryApi = testContext.inventoryApi;
     const equipmentApi = testContext.equipmentApi;
+    const weaponApi = testContext.weaponApi;
 
     const { ap, energy, balance, equipment } = participant;
 
@@ -341,20 +342,16 @@ export function useCombatScenario(
           if (typeof equipment.ammo === 'number') {
             ammoQuantity = equipment.ammo;
           } else {
-            // Custom ammo type specified - add multiple items for quantity
-            for (let i = 0; i < ammoQuantity; i++) {
-              inventoryApi.addItem(actor, { schema: equipment.ammo });
-            }
+            // Custom ammo type specified - use unified magazine system
+            weaponApi.addAmmoToInventory(actor, equipment.ammo, ammoQuantity);
             // Skip auto-ammo since custom ammo was added - continue to next actor
             continue;
           }
         }
 
-        // Add auto-detected ammo type - add multiple items for quantity
+        // Add auto-detected ammo type using unified magazine system
         try {
-          for (let i = 0; i < ammoQuantity; i++) {
-            inventoryApi.addItem(actor, { schema: ammoType });
-          }
+          weaponApi.addAmmoToInventory(actor, ammoType, ammoQuantity);
         } catch (error) {
           // Ammo schema not found - continue without ammo
           console.warn(`Ammo schema not found for weapon ${equipment.weapon}: ${ammoType}`);

@@ -52,6 +52,13 @@ export type FixedDamageMixin = {
   };
 };
 
+export type RequiresAmmoMixin = {
+  ammo: {
+    type: AmmoSchemaURN;
+    capacity: number;
+  };
+};
+
 export type MeleeStatScalingDamageMixin = {
   damage: {
     model: DamageModel.STAT_SCALING;
@@ -62,16 +69,12 @@ export type MeleeStatScalingDamageMixin = {
   };
 };
 
-export type RangedStatScalingDamageMixin = {
+export type RangedStatScalingDamageMixin = RequiresAmmoMixin & {
   damage: {
     model: DamageModel.STAT_SCALING;
     stat: Stat;
     base: RollSpecification;
     efficiency: number;
-  };
-  ammo: {
-    type: AmmoSchemaURN;
-    capacity: number;
   };
 };
 

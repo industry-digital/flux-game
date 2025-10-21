@@ -16,32 +16,36 @@ export const createTestTransformerContext = (overrides?: Partial<TransformerCont
   const declaredEvents: any[] = [];
   const declaredErrors: any[] = [];
 
-  const schemaManager = createSchemaManager();
+  const schemaManager = overrides?.schemaManager ?? createSchemaManager();
   const mockSearchCache = overrides?.searchCache ?? new Map();
   const impureOps = createPotentiallyImpureOperations();
 
-  const defaultContext: TransformerContext = createTransformerContext((c: TransformerContext) => ({
-    ...c,
-    world: createWorldProjection(),
-    declareEvent: vi.fn((event: any) => {
-      declaredEvents.push(event);
+  const defaultContext: TransformerContext = createTransformerContext(
+    (c: TransformerContext) => ({
+      ...c,
+      world: createWorldProjection(),
+      declareEvent: vi.fn((event: any) => {
+        declaredEvents.push(event);
+      }),
+      declareError: vi.fn((error: any) => {
+        declaredErrors.push(error);
+      }),
+      getDeclaredEvents: vi.fn((pattern?: RegExp | EventType) => {
+        return declaredEvents.filter(event => pattern ? (pattern instanceof RegExp ? pattern.test(event.type) : pattern === event.type) : true);
+      }),
+      getDeclaredEventsByCommand: vi.fn((trace: string) => {
+        return declaredEvents.filter(event => event.trace === trace);
+      }),
+      searchCache: mockSearchCache,
+      rollDice: vi.fn(() => ({ values: [10], sum: 10, dice: '1d20', natural: 10, result: 10, bonus: 0 } as RollResultWithoutModifiers)),
+      executeRoll: vi.fn(() => ({ dice: '1d20' , natural: 10, result: 10, values: [10], mods: {} })),
+      ...impureOps,
     }),
-    declareError: vi.fn((error: any) => {
-      declaredErrors.push(error);
-    }),
-    getDeclaredEvents: vi.fn((pattern?: RegExp | EventType) => {
-      return declaredEvents.filter(event => pattern ? (pattern instanceof RegExp ? pattern.test(event.type) : pattern === event.type) : true);
-    }),
-    getDeclaredEventsByCommand: vi.fn((trace: string) => {
-      return declaredEvents.filter(event => event.trace === trace);
-    }),
-    schemaManager,
-    mass: createMassApi(schemaManager, createMassComputationState()),
-    searchCache: mockSearchCache,
-    rollDice: vi.fn(() => ({ values: [10], sum: 10, dice: '1d20', natural: 10, result: 10, bonus: 0 } as RollResultWithoutModifiers)),
-    executeRoll: vi.fn(() => ({ dice: '1d20' , natural: 10, result: 10, values: [10], mods: {} })),
-    ...impureOps,
-  }));
+    createWorldProjection(), // world
+    schemaManager, // Pass the correct schema manager so all APIs use it
+    impureOps, // deps
+    createMassApi(schemaManager, createMassComputationState()) // mass with correct schema manager
+  );
 
   return {
     ...defaultContext,

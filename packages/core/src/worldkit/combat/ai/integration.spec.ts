@@ -62,6 +62,7 @@ describe('Combat System Integration (Post CombatCommand Refactor)', () => {
       inventory: {
         mass: 0,
         items: { [TEST_WEAPON_ENTITY_URN]: { id: TEST_WEAPON_ENTITY_URN, schema: swordSchema.urn } },
+        ammo: {},
         ts: 0,
       },
     });
@@ -73,6 +74,7 @@ describe('Combat System Integration (Post CombatCommand Refactor)', () => {
       inventory: {
         mass: 0,
         items: { [TEST_WEAPON_ENTITY_URN]: { id: TEST_WEAPON_ENTITY_URN, schema: swordSchema.urn } },
+        ammo: {},
         ts: 0,
       },
     });

@@ -2,12 +2,16 @@ import { WeaponSchema } from '~/types/schema/weapon';
 import { createWeaponSchema, WeaponSchemaInput } from './factory';
 import { DamageModel, DamageType } from '~/types/damage';
 import { Stat } from '~/types/entity/actor';
+import { ONE_HANDED_FIT } from '~/worldkit/schema/weapon/fit';
 
 export const createSwordSchema = (input: WeaponSchemaInput): WeaponSchema => {
   return createWeaponSchema({
     ...input,
     baseMass: 2_000, // 2kg - typical sword mass
+    urn: 'flux:schema:weapon:sword',
+    skill: 'flux:schema:skill:weapon:melee',
     name: input.name || 'sword',
+    fit: ONE_HANDED_FIT,
     range: {
       optimal: 1,
       max: 1,

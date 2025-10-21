@@ -249,7 +249,7 @@ export function createMockWorkbenchContext(overrides: Partial<TransformerContext
     // Stub APIs (not used by workbench)
     inventoryApi: {} as any,
     capacitorApi: {} as any,
-    actorSkillApi: {} as any,
+    skillApi: {} as any,
     metrics: {} as any,
 
     // Apply any overrides

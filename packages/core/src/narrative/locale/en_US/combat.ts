@@ -1,18 +1,18 @@
 import {
-  CombatantDidAttack,
-  CombatantDidDefend,
-  CombatantDidMove,
-  CombatantDidDie,
-  CombatTurnDidEnd,
-  CombatTurnDidStart,
-  CombatRoundDidStart,
-  CombatRoundDidEnd,
-  CombatSessionStarted,
-  CombatSessionEnded,
-  CombatSessionStatusDidChange,
-  CombatantDidRecoverAp,
-  CombatantWasAttacked,
-  CombatantDidAcquireRange,
+    CombatantDidAttack,
+    CombatantDidDefend,
+    CombatantDidMove,
+    CombatantDidDie,
+    CombatTurnDidEnd,
+    CombatTurnDidStart,
+    CombatRoundDidStart,
+    CombatRoundDidEnd,
+    CombatSessionStarted,
+    CombatSessionEnded,
+    CombatSessionStatusDidChange,
+    CombatantDidRecoverAp,
+    CombatantWasAttacked,
+    CombatantDidAcquireRange,
 } from '~/types/event';
 import { AttackType, MovementDirection } from '~/types/combat';
 import { SessionStatus } from '~/types/session';
@@ -20,12 +20,12 @@ import { TemplateFunction } from '~/types/narrative';
 import { ActorURN } from '~/types/taxonomy';
 import { Actor, Gender } from '~/types/entity/actor';
 import {
-  withUserEventValidation,
-  withInteractionValidation,
-  createPerspectiveTemplate,
-  createSystemTemplate,
-  createSystemPerspectiveTemplate,
-  createDynamicSystemPerspectiveTemplate,
+    withUserEventValidation,
+    withInteractionValidation,
+    createPerspectiveTemplate,
+    createSystemTemplate,
+    createSystemPerspectiveTemplate,
+    createDynamicSystemPerspectiveTemplate,
 } from '~/narrative/util';
 import { getAllStats, getMaxHp } from '~/worldkit/entity/actor';
 import { getPrimaryDamageType } from '~/worldkit/combat/damage/damage-type';
@@ -249,7 +249,7 @@ export const renderAttackNarrative: TemplateFunction<CombatantDidAttack, ActorUR
 };
 
 export const renderWasAttackedNarrative: TemplateFunction<CombatantWasAttacked, ActorURN> = (context, event, actorId) => {
-  const { world, equipmentApi, actorSkillApi } = context;
+  const { world, equipmentApi, skillApi: actorSkillApi } = context;
   const attacker = world.actors[event.payload.source];
   const target = world.actors[event.actor];
   const { damage, outcome, attackRating, evasionRating } = event.payload;

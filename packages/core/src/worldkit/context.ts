@@ -12,6 +12,7 @@ import { createActorEquipmentApi } from '~/worldkit/entity/actor/equipment';
 import { createCombatMetricsApi } from '~/worldkit/combat/metrics';
 import { createActorSkillApi } from '~/worldkit/entity/actor/skill';
 import { createRollApi } from '~/worldkit/dice';
+import { createActorWeaponApi } from '~/worldkit/entity/weapon';
 
 export type MapFunction<T> = (context: T) => T;
 const identity = <T extends any>(context: T): T => context;
@@ -55,7 +56,8 @@ export const createTransformerContext = (
   mass = createMassApi(schemaManager, createMassComputationState()),
   inventoryApi = createActorInventoryApi(mass),
   equipmentApi = createActorEquipmentApi(schemaManager, inventoryApi),
-  actorSkillApi = createActorSkillApi(),
+  weaponApi = createActorWeaponApi(schemaManager, inventoryApi, equipmentApi),
+  skillApi = createActorSkillApi(),
   rollApi = createRollApi(),
   metrics = createCombatMetricsApi(),
 ): TransformerContext => {
@@ -96,6 +98,7 @@ export const createTransformerContext = (
       declaredEventsByCommand.get(event.trace)?.push(event);
     }
   };
+
 
   // Overloaded declareError function to match ErrorDeclarationProducer interface
   function declareError(error: Error): void;
@@ -167,7 +170,8 @@ export const createTransformerContext = (
 
     inventoryApi,
     equipmentApi,
-    actorSkillApi,
+    skillApi,
+    weaponApi,
     rollApi,
     metrics,
 

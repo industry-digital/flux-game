@@ -198,6 +198,7 @@ describe('Shell Creation', () => {
         createInventory: () => ({
           mass: 100,
           items: {},
+          ammo: {},
           ts: DEFAULT_TIMESTAMP,
         }),
         generateRandomShellName: () => 'Test Shell',
