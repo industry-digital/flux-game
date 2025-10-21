@@ -5,6 +5,7 @@ import { SkillSchema } from '~/types/schema/skill';
 import { PotentiallyImpureOperations } from '~/types/handler';
 import { SkillSchemaURN } from '~/types/taxonomy';
 import { SkillState } from '~/types/entity/skill';
+import { AmmoSchema } from '~/types/schema/ammo';
 
 export enum DieSize {
   D4 = 4,
@@ -62,8 +63,10 @@ export type RollApi = {
 export type RollApiDependencies = {
   random: PotentiallyImpureOperations['random'];
   timestamp: PotentiallyImpureOperations['timestamp'];
+  rollDiceWithRng: (dice: RollSpecification, rng: PotentiallyImpureOperations['random']) => RollResultWithoutModifiers;
   getActorSkill: (actor: Actor, skill: SkillSchemaURN) => SkillState;
   getEffectiveSkillRank: (actor: Actor, skill: SkillSchemaURN, baseSkill?: SkillState) => number;
   getNaturalStatValue: (actor: Actor, stat: Stat) => number;
   calculateStatBonus: (statValue: number) => number;
+  getWeaponBaseDamage: (weapon: WeaponSchema, ammo?: AmmoSchema) => RollSpecification;
 };

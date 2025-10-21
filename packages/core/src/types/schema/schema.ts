@@ -4,7 +4,7 @@ import { SchemaURN } from '~/types/taxonomy';
  * Base schema that all entity schemas should extend
  * Provides common properties and behaviors shared across all schema types
  */
-type EntitySchemaDefaults = {
+export type EntitySchemaBase = {
   /**
    * Human-readable name for this schema type
    */
@@ -16,7 +16,7 @@ type EntitySchemaDefaults = {
   description?: string;
 };
 
-export type EntitySchema<URN extends SchemaURN, TEntityState = any> = EntitySchemaDefaults & {
+export type EntitySchema<URN extends SchemaURN, TEntityState = any> = EntitySchemaBase & {
   urn: URN;
 };
 

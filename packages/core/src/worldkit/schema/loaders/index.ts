@@ -5,3 +5,4 @@ export { loadArmorSchemas } from './armor';
 export { loadAbilitySchemas } from './ability';
 export { loadSkillSchemas } from './skill';
 export { loadContainerSchemas } from './container';
+export { loadAmmoSchemas } from './ammo';

@@ -1,9 +1,10 @@
 import { AmmoSchemaURN, SkillSchemaURN, Taxonomy } from '~/types/taxonomy';
 import { Equippable } from '~/types/schema/equipment';
-import { ChargeableMixin } from '~/types/entity/item';
-import { DamageSpecification } from '~/types/damage';
+import { DamageModel, DamageType } from '~/types/damage';
 import { AbstractItemSchema } from '~/types/schema/item';
 import { RollSpecification } from '~/types/dice';
+import { Stat } from '~/types/entity/actor';
+import { NormalizedValueBetweenZeroAndOne } from '~/types/entity/attribute';
 
 export enum AccuracyModel {
   SKILL_SCALING = 'skill',
@@ -66,25 +67,54 @@ export type WeaponRangeSpecification = {
   max?: number;
 }
 
+export type FixedDamageMixin = {
+  damage: {
+    model: DamageModel.FIXED;
+    base?: RollSpecification;
+  };
+};
+
+export type MeleeStatScalingDamageMixin = {
+  damage: {
+    model: DamageModel.STAT_SCALING;
+    stat: Stat;
+    base: RollSpecification;
+    efficiency: number;
+    types: Partial<Record<DamageType, NormalizedValueBetweenZeroAndOne>>;
+  };
+};
+
+export type RangedStatScalingDamageMixin = {
+  damage: {
+    model: DamageModel.STAT_SCALING;
+    stat: Stat;
+    base: RollSpecification;
+    efficiency: number;
+  };
+  ammo: {
+    type: AmmoSchemaURN;
+    capacity: number;
+  };
+};
+
 /**
  * Complete attributes for a weapon item
  */
 export type WeaponSchema  =
 & AbstractItemSchema<'weapon'>
 & Equippable
-& Partial<ChargeableMixin>
+& (MeleeStatScalingDamageMixin | RangedStatScalingDamageMixin | FixedDamageMixin)
 & {
+
+  /**
+   * The anatomical locations this item occupies while the weapon is equipped.
+   */
+  fit: Partial<Record<Taxonomy.Anatomy, 1>>;
 
   /**
    * Describes how the weapon's attack rating is determined
    */
   accuracy: AccuracySpecification;
-
-  /**
-   * How the weapon deals damage
-   * If not specified, the weapon deals damage based on its ammo
-   */
-  damage: DamageSpecification;
 
   /**
    * Weapon range specifications
@@ -95,15 +125,4 @@ export type WeaponSchema  =
    * The timers that affect the weapon's performance
    */
   timers?: WeaponTimers;
-
-  /**
-   * If this weapon consumes ammo, this is the type of ammo it uses
-   * If the `damage` model is `ammo-based`, this is required.
-   */
-  ammo?: WeaponAmmoSpecification;
-
-  /**
-   * The anatomical locations this item occupies while the weapon is equipped.
-   */
-  fit?: Partial<Record<Taxonomy.Anatomy, 1>>;
 };

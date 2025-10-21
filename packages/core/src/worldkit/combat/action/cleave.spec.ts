@@ -350,7 +350,7 @@ describe('Cleave Method', () => {
       const finesse = getStatValue(attacker, Stat.FIN);
 
       // Calculate expected cost
-      const expectedCost = createCleaveCost(weaponMassKg, finesse, 3);
+      const expectedCost = createCleaveCost(weaponMassKg, finesse);
 
       const attackerCombatant = scenario.session.data.combatants.get(ATTACKER_ID)!;
       const initialAP = attackerCombatant.ap.eff.cur;
@@ -383,7 +383,7 @@ describe('Cleave Method', () => {
       ];
 
       for (const testCase of testCases) {
-        const cost = createCleaveCost(testCase.weaponMassKg, 50, 2);
+        const cost = createCleaveCost(testCase.weaponMassKg, 50);
 
         // Energy should scale with weapon mass (base 200 + 100 per kg)
         const expectedEnergy = 200 + (testCase.weaponMassKg * 100);
@@ -469,7 +469,6 @@ describe('Cleave Method', () => {
         attacker.actor,
         attackerCombatant,
         {
-          calculateWeaponDamage: mockCalculateWeaponDamage,
           resolveHitAttempt: mockResolveHitAttempt,
         }
       );

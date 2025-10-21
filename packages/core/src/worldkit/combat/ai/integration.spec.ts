@@ -3,7 +3,6 @@ import { useCombatScenario } from '../testing/scenario';
 import { createTransformerContext } from '~/worldkit/context';
 import { createSwordSchema } from '~/worldkit/schema/weapon/sword';
 import { createSpearSchema } from '~/worldkit/schema/weapon/spear';
-import { createBowSchema } from '~/worldkit/schema/weapon/bow';
 import { registerWeapons } from '../testing/schema';
 import { ActorURN } from '~/types/taxonomy';
 import { CombatFacing, Team } from '~/types/combat';
@@ -13,6 +12,7 @@ import { createActor } from '~/worldkit/entity/actor';
 import { Actor } from '~/types/entity/actor';
 import { HumanAnatomy } from '~/types/taxonomy/anatomy';
 import { createMassApi } from '~/worldkit/physics/mass';
+import { longbowSchema } from '~/worldkit/schema/weapon/bow';
 
 const TEST_WEAPON_ENTITY_URN = 'flux:item:weapon:test';
 
@@ -20,7 +20,7 @@ describe('Combat System Integration (Post CombatCommand Refactor)', () => {
   let context: ReturnType<typeof createTransformerContext>;
   let swordSchema: ReturnType<typeof createSwordSchema>;
   let spearSchema: ReturnType<typeof createSpearSchema>;
-  let bowSchema: ReturnType<typeof createBowSchema>;
+  let bowSchema = longbowSchema;
 
   const ALICE_ID: ActorURN = 'flux:actor:alice';
   const BOB_ID: ActorURN = 'flux:actor:bob';
@@ -49,12 +49,6 @@ describe('Combat System Integration (Post CombatCommand Refactor)', () => {
       urn: 'flux:schema:weapon:spear',
       name: 'Test Spear',
       range: { optimal: 2, max: 2 }, // 2m reach weapon
-    });
-
-    bowSchema = createBowSchema({
-      urn: 'flux:schema:weapon:bow',
-      name: 'Test Bow',
-      range: { optimal: 10, falloff: 5, max: 25 }, // 10m optimal, 5m falloff, 25m max
     });
 
     // Register weapons

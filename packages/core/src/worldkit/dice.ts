@@ -8,6 +8,7 @@ import { DamageModel, StatScalingDamageSpecification } from '~/types/damage';
 import { getActorSkill, getEffectiveSkillRank } from '~/worldkit/entity/actor/skill';
 import { getNaturalStatValue, calculateStatBonus } from '~/worldkit/entity/actor/stats';
 import { ATTACK_SKILL_MULTIPLIER } from '~/worldkit/combat/attack';
+import { getWeaponBaseDamage } from '~/worldkit/combat/damage/damage-type';
 
 type ParsedRollSpecification = {
   numDice: number;
@@ -161,18 +162,14 @@ export const DEFAULT_ROLL_API_DEPS: RollApiDependencies = Object.freeze({
   getEffectiveSkillRank,
   getNaturalStatValue,
   calculateStatBonus,
+  getWeaponBaseDamage,
+  rollDiceWithRng,
 });
 
 export const createRollApi = (deps: RollApiDependencies = DEFAULT_ROLL_API_DEPS): RollApi => {
   const rollWeaponAccuracy = (actor: Actor, weapon: WeaponSchema): RollResult => {
     // Roll base dice using weapon's accuracy specification
-    const baseRoll = rollDiceWithRng(weapon.accuracy.base, deps.random);
-
-    // Convert to RollResult by adding mods property
-    const rollResult: RollResult = {
-      ...baseRoll,
-      mods: {},
-    };
+    const rollResult: RollResult = deps.rollDiceWithRng(weapon.accuracy.base, deps.random);
 
     // Calculate and apply skill bonus based on accuracy model
     if (weapon.accuracy.model === AccuracyModel.SKILL_SCALING) {
@@ -200,13 +197,7 @@ export const createRollApi = (deps: RollApiDependencies = DEFAULT_ROLL_API_DEPS)
 
   const rollWeaponDamage = (actor: Actor, weapon: WeaponSchema): RollResult => {
     // Roll base dice using weapon's damage specification
-    const baseRoll = rollDiceWithRng(weapon.damage.base, deps.random);
-
-    // Convert to RollResult by adding mods property
-    const rollResult: RollResult = {
-      ...baseRoll,
-      mods: {},
-    };
+    const rollResult: RollResult = rollDiceWithRng(getWeaponBaseDamage(weapon), deps.random);
 
     // Apply damage model-specific modifiers
     if (weapon.damage.model === DamageModel.FIXED) {

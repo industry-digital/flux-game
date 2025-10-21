@@ -68,6 +68,27 @@ const IMPACT_NARRATIVE: Readonly<DamageTypeNarrative> = Object.freeze({
   weaponActionThirdPerson: 'swings'
 });
 
+const KINETIC_NARRATIVE: Readonly<DamageTypeNarrative> = Object.freeze({
+  verb: 'strikes',
+  impact: 'striking with force',
+  weaponAction: 'swing',
+  weaponActionThirdPerson: 'swings'
+});
+
+const THERMAL_NARRATIVE: Readonly<DamageTypeNarrative> = Object.freeze({
+  verb: 'burns',
+  impact: 'burning with heat',
+  weaponAction: 'burn',
+  weaponActionThirdPerson: 'burns'
+});
+
+const EXPLOSIVE_NARRATIVE: Readonly<DamageTypeNarrative> = Object.freeze({
+  verb: 'detonates',
+  impact: 'detonating with force',
+  weaponAction: 'detonate',
+  weaponActionThirdPerson: 'detonates'
+});
+
 const DEFAULT_DAMAGE_TYPE_NARRATIVE: Readonly<DamageTypeNarrative> = Object.freeze({
   verb: 'attacks',
   impact: 'striking',
@@ -76,6 +97,9 @@ const DEFAULT_DAMAGE_TYPE_NARRATIVE: Readonly<DamageTypeNarrative> = Object.free
 });
 
 const NARRATIVES_BY_DAMAGE_TYPE: Record<DamageType, DamageTypeNarrative> = {
+  [DamageType.KINETIC]: KINETIC_NARRATIVE,
+  [DamageType.THERMAL]: THERMAL_NARRATIVE,
+  [DamageType.EXPLOSIVE]: EXPLOSIVE_NARRATIVE,
   [DamageType.SLASH]: SLASH_NARRATIVE,
   [DamageType.PIERCE]: PIERCE_NARRATIVE,
   [DamageType.IMPACT]: IMPACT_NARRATIVE,

@@ -4,6 +4,8 @@ import { AmmoSchema } from '~/types/schema/ammo';
 import { NormalizedValueBetweenZeroAndOne } from '~/types/entity/attribute';
 import { RollSpecification } from '~/types/dice';
 
+export const NO_DAMAGE_TYPES: Partial<Record<DamageType, NormalizedValueBetweenZeroAndOne>> = Object.freeze({});
+
 /**
  * Resolves the damage types for a weapon, considering ammunition for ranged weapons
  */
@@ -12,11 +14,14 @@ export function getWeaponDamageTypes(
   ammo?: AmmoSchema
 ): Partial<Record<DamageType, NormalizedValueBetweenZeroAndOne>> {
   // If weapon uses ammo and ammo is provided, use the ammo's damage types
-  if (weapon.ammo && ammo) {
+  if ('ammo' in weapon && weapon.ammo && ammo) {
     return ammo.damage.types;
   }
 
-  // Otherwise, use the weapon's damage types
+  if (!weapon.damage || !('types' in weapon.damage)) {
+    throw new Error(`Could not resolve damage types for weapon: ${weapon.urn}`);
+  }
+
   return weapon.damage.types;
 }
 
@@ -54,10 +59,13 @@ export function getWeaponBaseDamage(
   ammo?: AmmoSchema
 ): RollSpecification {
   // If weapon uses ammo and ammo is provided, use the ammo's base damage
-  if (weapon.ammo && ammo) {
+  if ('ammo' in weapon && weapon.ammo && ammo) {
     return ammo.damage.base;
   }
 
-  // Otherwise, use the weapon's base damage
+  if (!weapon.damage.base) {
+    throw new Error(`Could not resolve base damage for weapon: ${weapon.urn}`);
+  }
+
   return weapon.damage.base;
 }

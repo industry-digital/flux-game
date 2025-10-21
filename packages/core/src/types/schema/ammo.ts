@@ -1,14 +1,13 @@
-import { FixedDamageSpecification } from '~/types/damage';
-import { AbstractItemSchema } from '~/types/schema/item';
+import { DamageSpecification } from '~/types/damage';
+import { PhysicalEntitySchema } from '~/types/schema/schema';
+import { AmmoSchemaURN } from '~/types/taxonomy';
+
+export type AmmoDamageSpecification = Omit<DamageSpecification, 'model' | 'base'>;
 
 /**
  * Schema for ammunition items
  * Defines the damage characteristics and properties of ammunition
  */
-export type AmmoSchema = AbstractItemSchema<'ammo'> & {
-  /**
-   * The types of damage this ammunition deals
-   * All entries must sum to 1.0
-   */
-  damage: FixedDamageSpecification;
+export type AmmoSchema = PhysicalEntitySchema<AmmoSchemaURN> & {
+  damage: Pick<DamageSpecification, 'base' | 'types'>;
 };

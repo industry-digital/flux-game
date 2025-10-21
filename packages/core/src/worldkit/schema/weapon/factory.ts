@@ -1,6 +1,7 @@
 import { AccuracyModel, WeaponSchema } from '~/types/schema/weapon';
-import { DamageType, HUMAN_ANATOMY, Stat } from '~/types';
+import { DamageType, Stat } from '~/types';
 import { DamageModel } from '~/types/damage';
+import { ONE_HANDED_FIT } from '~/worldkit/schema/weapon/fit';
 
 export type WeaponSchemaInput = Partial<WeaponSchema>;
 
@@ -8,14 +9,12 @@ export type WeaponTransformer = (schema: WeaponSchema) => WeaponSchema;
 
 export function createWeaponSchema(inputOrTransform: WeaponSchemaInput | WeaponTransformer): WeaponSchema {
   const defaults: Partial<WeaponSchema> = {
+    baseMass: 1000,
+    fit: ONE_HANDED_FIT,
+    timers: {},
     range: {
       optimal: 1,
       max: 1,
-    },
-    timers: {},
-    baseMass: 1000,
-    fit: {
-      [HUMAN_ANATOMY.RIGHT_HAND]: 1,
     },
     accuracy: {
       model: AccuracyModel.SKILL_SCALING,

@@ -4,7 +4,7 @@ import { AnatomyURN, ItemURN, WeaponItemURN } from '~/types/taxonomy';
 import { HumanAnatomy } from '~/types/taxonomy/anatomy';
 import { ActorInventoryApi } from '~/worldkit/entity/actor/inventory';
 import { SchemaManager, SchemaRegistry } from '~/worldkit/schema/manager';
-import { BARE_HANDS_WEAPON_SCHEMA } from '~/worldkit/schema/weapon';
+import { BARE_HANDS_WEAPON_DO_NOT_DELETE } from '~/worldkit/schema/weapon';
 
 export const WEAPON_EQUIPMENT_ANATOMICAL_LOCATIONS: AnatomyURN[] = [
   HumanAnatomy.RIGHT_HAND,
@@ -80,7 +80,7 @@ export function createActorEquipmentApi (
     const weaponId = getEquippedWeapon(actor, possibleLocations);
     if (!weaponId) {
       // Actor is never truly unarmed - return bare hands weapon
-      return BARE_HANDS_WEAPON_SCHEMA;
+      return BARE_HANDS_WEAPON_DO_NOT_DELETE;
     }
 
     const item = inventoryApi.getItem(actor, weaponId);

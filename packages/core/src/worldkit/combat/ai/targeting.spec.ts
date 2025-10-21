@@ -6,15 +6,16 @@ import { CombatFacing, Team } from '~/types/combat';
 import { createTransformerContext } from '~/worldkit/context';
 import { createSwordSchema } from '~/worldkit/schema/weapon/sword';
 import { createSpearSchema } from '~/worldkit/schema/weapon/spear';
-import { createBowSchema } from '~/worldkit/schema/weapon/bow';
 import { registerWeapons } from '../testing/schema';
 import { DEFAULT_COMBAT_PLANNING_DEPS } from './deps';
+import { WeaponSchema } from '~/types/schema/weapon';
+import { longbowSchema } from '~/worldkit/schema/weapon/bow';
 
 describe('targetingApi', () => {
   let context: ReturnType<typeof createTransformerContext>;
-  let swordSchema: ReturnType<typeof createSwordSchema>;
-  let spearSchema: ReturnType<typeof createSpearSchema>;
-  let bowSchema: ReturnType<typeof createBowSchema>;
+  let swordSchema: WeaponSchema;
+  let spearSchema: WeaponSchema;
+  let bowSchema: WeaponSchema;
 
   const ATTACKER_ID: ActorURN = 'flux:actor:test:attacker';
   const DEFENDER_ID: ActorURN = 'flux:actor:test:defender';
@@ -24,6 +25,12 @@ describe('targetingApi', () => {
   beforeEach(() => {
     context = createTransformerContext();
     context.declareEvent = vi.fn();
+
+    bowSchema = {
+      ...longbowSchema,
+      urn: 'flux:schema:weapon:test-bow',
+      range: { optimal: 15, falloff: 5, max: 25 }, // 15m optimal, 5m falloff, 25m max
+    } as WeaponSchema;
 
     // Create weapon schemas for different test scenarios
     swordSchema = createSwordSchema({
@@ -36,12 +43,6 @@ describe('targetingApi', () => {
       urn: 'flux:schema:weapon:test-spear',
       name: 'Test Spear',
       range: { optimal: 2, max: 2 }, // 2m reach weapon
-    });
-
-    bowSchema = createBowSchema({
-      urn: 'flux:schema:weapon:test-bow',
-      name: 'Test Bow',
-      range: { optimal: 15, falloff: 5, max: 25 }, // 15m optimal, 25m max ranged weapon
     });
 
     // Register weapons with the schema manager
@@ -642,11 +643,11 @@ describe('targetingApi', () => {
     describe('edge cases', () => {
       it('should handle weapons with min range requirements', () => {
         // Create a custom bow with min range
-        const customBowSchema = createBowSchema({
+        const customBowSchema = {
+          ...bowSchema,
           urn: 'flux:schema:weapon:test-bow-minrange',
-          name: 'Test Bow with Min Range',
           range: { optimal: 15, falloff: 5, max: 25, min: 5 }, // Min range of 5m
-        });
+        } as WeaponSchema;
 
         const scenario = useCombatScenario(context, {
           weapons: [customBowSchema],

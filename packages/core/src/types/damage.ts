@@ -9,17 +9,35 @@ import { Stat } from '~/types/entity/actor';
  */
 export enum DamageType {
   /**
+   * Bullets, arrows, most melee/martial weapons
+   */
+  KINETIC = 'kinetic',
+
+  /**
+   * Flame weapons, lasers
+   */
+  THERMAL = 'thermal',
+
+  /**
+   * Explosives, grenades, bombs, etc.
+   */
+  EXPLOSIVE = 'explosive',
+
+  /**
    * Relating to any kind of kinetic energy penetrators, including spears, bullets, and railguns
+   * @deprecated Use KINETIC instead
    */
   PIERCE = 'kinetic:pierce',
 
   /**
    * Relating to any kind of slashing damage, including swords, knives, and claws
+   * @deprecated Use KINETIC instead
    */
   SLASH = 'kinetic:slash',
 
   /**
    * Relating to any kind of blunt force, including hammers, clubs, and fists
+   * @deprecated Use KINETIC instead
    */
   IMPACT = 'kinetic:impact',
 }
@@ -31,6 +49,12 @@ export enum DamageModel {
 
 export type AbstractDamageSpecification<TDamageModel extends DamageModel> = {
   model: TDamageModel;
+  base: RollSpecification;
+  /**
+   * For weapons that have ammo, this will always be an empty Record.
+   * Damage type is determined by equipped ammo.
+   */
+  types: Partial<Record<DamageType, NormalizedValueBetweenZeroAndOne>>;
 }
 
 export type StatScalingDamageSpecification = AbstractDamageSpecification<DamageModel.STAT_SCALING> & {
@@ -39,19 +63,13 @@ export type StatScalingDamageSpecification = AbstractDamageSpecification<DamageM
    */
   stat: Stat;
 
-  base: RollSpecification;
-  types: Partial<Record<DamageType, NormalizedValueBetweenZeroAndOne>>;
   /**
-   * Damage transfer efficiency
-   * How this is applied depends on the nature of the weapon
+   * Stat scaling efficiency. How well does the stat bonus convert to damage?
    */
   efficiency: number;
 }
 
-export type FixedDamageSpecification = AbstractDamageSpecification<DamageModel.FIXED> & {
-  base: RollSpecification;
-  types: Partial<Record<DamageType, NormalizedValueBetweenZeroAndOne>>;
-};
+export type FixedDamageSpecification = AbstractDamageSpecification<DamageModel.FIXED>;
 
 export type DamageSpecification = StatScalingDamageSpecification | FixedDamageSpecification;
 
