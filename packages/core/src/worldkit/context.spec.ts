@@ -27,7 +27,7 @@ import { WellKnownActor } from '~/types';
 import { createCombatSessionStartedEvent } from '~/testing/event/factory/combat';
 import { DEFAULT_LOCATION } from '~/testing/constants';
 import { createRollApi } from '~/worldkit/dice';
-import { createActorWeaponApi } from '~/worldkit/entity/weapon';
+import { createActorWeaponApi } from '~/worldkit/entity/actor/weapon';
 
 describe('createTransformerContext', () => {
   let mockDeps: PotentiallyImpureOperations;

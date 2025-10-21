@@ -12,7 +12,7 @@ import { createActorEquipmentApi } from '~/worldkit/entity/actor/equipment';
 import { createCombatMetricsApi } from '~/worldkit/combat/metrics';
 import { createActorSkillApi } from '~/worldkit/entity/actor/skill';
 import { createRollApi } from '~/worldkit/dice';
-import { createActorWeaponApi } from '~/worldkit/entity/weapon';
+import { createActorWeaponApi } from '~/worldkit/entity/actor/weapon';
 
 export type MapFunction<T> = (context: T) => T;
 const identity = <T extends any>(context: T): T => context;

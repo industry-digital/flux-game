@@ -10,7 +10,7 @@ import { rollDiceWithRng } from '~/worldkit/dice';
 import { WorldProjection } from '~/types/world';
 import { CommandResolver } from '~/types/intent';
 import { RollApi } from '~/types/dice';
-import { ActorWeaponApi } from '~/worldkit/entity/weapon';
+import { ActorWeaponApi } from '~/worldkit/entity/actor/weapon';
 
 /** Combat metrics collection interface for performance monitoring and telemetry */
 export type CombatMetrics = {
