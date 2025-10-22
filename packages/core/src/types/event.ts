@@ -1,6 +1,6 @@
 import { Weather } from '~/types/entity/weather';
 import { ResourceNodes } from '~/types/entity/resource';
-import { ActorURN, AmmoSchemaURN, ItemURN, PlaceURN, SessionURN } from '~/types/taxonomy';
+import { ActorURN, AmmoSchemaURN, ItemURN, PlaceURN, SessionURN, WeaponSchemaURN } from '~/types/taxonomy';
 import {
   ActionCost,
   AttackOutcome,
@@ -90,17 +90,15 @@ export enum EventType {
   ACTOR_DID_RECOVER_ENERGY = 'actor:energy:recovered',
   ACTOR_DID_SWAP_SHELL = 'actor:shell:swapped',
   ACTOR_WAS_CREATED = 'actor:created',
-  COMBATANT_DID_ACQUIRE_TARGET = 'combat:actor:target:acquired',
-  COMBATANT_DID_ATTACK = 'combat:actor:attack',
-  COMBATANT_DID_COVER = 'combat:actor:covered',
-  COMBATANT_DID_DEFEND = 'combat:actor:defended',
-  COMBATANT_DID_DIE = 'combat:actor:died',
-  COMBATANT_DID_ACQUIRE_RANGE = 'combat:actor:range:acquired',
-  COMBATANT_DID_MOVE = 'combat:actor:moved',
-  COMBATANT_DID_RECOVER_AP = 'combat:actor:ap:recovered',
-  COMBATANT_DID_RELOAD = 'combat:actor:reloaded',
-  COMBATANT_DID_REST = 'combat:actor:rested',
-  COMBATANT_WAS_ATTACKED = 'combat:actor:attack:received',
+  ACTOR_DID_ACQUIRE_TARGET = 'combat:actor:target:acquired',
+  ACTOR_DID_ATTACK = 'combat:actor:attack',
+  ACTOR_DID_TAKE_COVER = 'combat:actor:covered',
+  ACTOR_DID_DEFEND = 'combat:actor:defended',
+  ACTOR_DID_ASSESS_RANGE = 'actor:range:acquired',
+  ACTOR_DID_MOVE_IN_COMBAT = 'actor:moved:combat',
+  ACTOR_DID_RECOVER_AP = 'actor:ap:recovered',
+  ACTOR_DID_REST = 'actor:rested',
+  ACTOR_WAS_ATTACKED = 'actor:attack:received',
   COMBAT_ROUND_DID_END = 'combat:round:ended',
   COMBAT_ROUND_DID_START = 'combat:round:started',
   COMBAT_SESSION_DID_END = 'combat:session:ended',
@@ -132,6 +130,8 @@ export enum EventType {
   ACTOR_DID_LOAD_WEAPON = 'actor:weapon:loaded',
   ACTOR_DID_UNLOAD_WEAPON = 'actor:weapon:unloaded',
   ACTOR_DID_FIRE_WEAPON = 'actor:weapon:fired',
+  ACTOR_DID_EQUIP_WEAPON = 'actor:weapon:equipped',
+  ACTOR_DID_UNEQUIP_WEAPON = 'actor:weapon:unequipped',
 }
 
 export type EventBase = {
@@ -235,26 +235,26 @@ export type CombatSessionEndedInput = AbstractWorldEventInput<
   WellKnownActor.SYSTEM
 >;
 
-export type CombatantDidAcquireTarget = EventBase & CombatantDidAcquireTargetInput;
-export type CombatantDidAcquireTargetInput = AbstractWorldEventInput<
-  EventType.COMBATANT_DID_ACQUIRE_TARGET,
+export type ActorDidAcquireTarget = EventBase & ActorDidAcquireTargetInput;
+export type ActorDidAcquireTargetInput = AbstractWorldEventInput<
+  EventType.ACTOR_DID_ACQUIRE_TARGET,
   {
     sessionId: SessionURN;
     target: ActorURN;
   }
 >;
 
-export type CombatantDidDefend = EventBase & CombatantDidDefendInput;
-export type CombatantDidDefendInput = AbstractWorldEventInput<
-  EventType.COMBATANT_DID_DEFEND,
+export type ActorDidDefend = EventBase & ActorDidDefendInput;
+export type ActorDidDefendInput = AbstractWorldEventInput<
+  EventType.ACTOR_DID_DEFEND,
   {
     cost: ActionCost;
   }
 >;
 
-export type CombatantDidMove = EventBase & CombatantDidMoveInput;
-export type CombatantDidMoveInput = AbstractWorldEventInput<
-  EventType.COMBATANT_DID_MOVE,
+export type ActorDidMoveInCombat = EventBase & ActorDidMoveInCombatInput;
+export type ActorDidMoveInCombatInput = AbstractWorldEventInput<
+  EventType.ACTOR_DID_MOVE_IN_COMBAT,
   {
     cost: ActionCost;
     from: BattlefieldPosition;
@@ -264,30 +264,30 @@ export type CombatantDidMoveInput = AbstractWorldEventInput<
   }
 >;
 
-type CombatantDidAttackPayloadBase = {
+type ActorDidAttackPayloadBase = {
   cost: ActionCost;
   roll: RollResultWithoutModifiers;
   attackRating: number;
 };
 
-export type CombatantDidCleave = EventBase & CombatantDidCleaveInput
-type CombatantDidCleaveInput = AbstractWorldEventInput<
-  EventType.COMBATANT_DID_ATTACK,
-  CombatantDidAttackPayloadBase & { attackType: AttackType.CLEAVE; targets: ActorURN[]; }
+export type ActorDidCleave = EventBase & ActorDidCleaveInput
+type ActorDidCleaveInput = AbstractWorldEventInput<
+  EventType.ACTOR_DID_ATTACK,
+  ActorDidAttackPayloadBase & { attackType: AttackType.CLEAVE; targets: ActorURN[]; }
 >;
 
-export type CombatantDidStrike = EventBase & CombatantDidStrikeInput;
-type CombatantDidStrikeInput = AbstractWorldEventInput<
-  EventType.COMBATANT_DID_ATTACK,
-  CombatantDidAttackPayloadBase & { attackType: AttackType.STRIKE; target: ActorURN; }
+export type ActorDidStrike = EventBase & ActorDidStrikeInput;
+type ActorDidStrikeInput = AbstractWorldEventInput<
+  EventType.ACTOR_DID_ATTACK,
+  ActorDidAttackPayloadBase & { attackType: AttackType.STRIKE; target: ActorURN; }
 >;
 
-export type CombatantDidAttackInput = CombatantDidCleaveInput | CombatantDidStrikeInput;
-export type CombatantDidAttack = CombatantDidCleave | CombatantDidStrike;
+export type ActorDidAttackInput = ActorDidCleaveInput | ActorDidStrikeInput;
+export type ActorDidAttack = ActorDidCleave | ActorDidStrike;
 
-export type CombatantWasAttacked = EventBase & CombatantWasAttackedInput;
-export type CombatantWasAttackedInput = AbstractWorldEventInput<
-  EventType.COMBATANT_WAS_ATTACKED,
+export type ActorWasAttacked = EventBase & ActorWasAttackedInput;
+export type ActorWasAttackedInput = AbstractWorldEventInput<
+  EventType.ACTOR_WAS_ATTACKED,
   {
     source: ActorURN;
     type: AttackType;
@@ -344,17 +344,17 @@ export type CombatRoundDidEndInput = AbstractWorldEventInput<
   WellKnownActor.SYSTEM
 >;
 
-export type CombatantDidDie = EventBase & CombatantDidDieInput;
-export type CombatantDidDieInput = AbstractWorldEventInput<
-  EventType.COMBATANT_DID_DIE,
+export type ActorDidDie = EventBase & ActorDidDieInput;
+export type ActorDidDieInput = AbstractWorldEventInput<
+  EventType.ACTOR_DID_DIE,
   {
     killer: ActorURN;
   }
 >;
 
-export type CombatantDidRecoverAp = EventBase & CombatantDidRecoverApInput;
-export type CombatantDidRecoverApInput = AbstractWorldEventInput<
-  EventType.COMBATANT_DID_RECOVER_AP,
+export type ActorDidRecoverAp = EventBase & ActorDidRecoverApInput;
+export type ActorDidRecoverApInput = AbstractWorldEventInput<
+  EventType.ACTOR_DID_RECOVER_AP,
   {
     before: number;
     after: number;
@@ -362,9 +362,9 @@ export type CombatantDidRecoverApInput = AbstractWorldEventInput<
   }
 >;
 
-export type CombatantDidAcquireRange = EventBase & CombatantDidAcquireRangeInput;
-export type CombatantDidAcquireRangeInput = AbstractWorldEventInput<
-  EventType.COMBATANT_DID_ACQUIRE_RANGE,
+export type ActorDidAssessRange = EventBase & ActorDidAssessRangeInput;
+export type ActorDidAssessRangeInput = AbstractWorldEventInput<
+  EventType.ACTOR_DID_ASSESS_RANGE,
   {
     target: ActorURN;
     range: number;
@@ -551,16 +551,41 @@ export type ActorDidLoseInventoryAmmoInput = AbstractWorldEventInput<
     quantity: number;
   }
 >;
+
+export type ActorDidEquipWeapon = EventBase & ActorDidEquipWeaponInput;
+export type ActorDidEquipWeaponInput = AbstractWorldEventInput<
+  EventType.ACTOR_DID_EQUIP_WEAPON,
+  {
+    itemId: ItemURN;
+    schema: WeaponSchemaURN;
+  }
+>;
+
+export type ActorDidUnequipWeapon = EventBase & ActorDidUnequipWeaponInput;
+export type ActorDidUnequipWeaponInput = AbstractWorldEventInput<
+  EventType.ACTOR_DID_UNEQUIP_WEAPON,
+  {
+    itemId: ItemURN;
+    schema: WeaponSchemaURN;
+  }
+>;
+
 /**
  * Union of all valid event inputs
  */
 export type WorldEventInput =
+  | ActorDidAcquireTargetInput
   | ActorDidArriveInput
+  | ActorDidAssessRangeInput
+  | ActorDidAttackInput
   | ActorDidCommitShellMutationsInput
   | ActorDidCompleteCurrencyTransactionInput
+  | ActorDidDefendInput
   | ActorDidDematerializeInput
   | ActorDidDepartInput
+  | ActorDidDieInput
   | ActorDidDiffShellMutationsInput
+  | ActorDidEquipWeaponInput
   | ActorDidExamineComponentInput
   | ActorDidGainInventoryAmmoInput
   | ActorDidInspectShellStatusInput
@@ -572,13 +597,17 @@ export type WorldEventInput =
   | ActorDidLoseInventoryAmmoInput
   | ActorDidMaterializeInput
   | ActorDidMountComponentInput
+  | ActorDidMoveInCombatInput
   | ActorDidMoveInput
   | ActorDidOpenHelpFileInput
+  | ActorDidRecoverApInput
   | ActorDidReviewShellStatsInput
   | ActorDidStageShellMutationInput
   | ActorDidSwapShellInput
   | ActorDidUndoShellMutationsInput
+  | ActorDidUnequipWeaponInput
   | ActorDidUnmountComponentInput
+  | ActorWasAttackedInput
   | ActorWasCreatedInput
   | CombatRoundDidEndInput
   | CombatRoundDidStartInput
@@ -587,14 +616,6 @@ export type WorldEventInput =
   | CombatSessionStatusDidChangeInput
   | CombatTurnDidEndInput
   | CombatTurnDidStartInput
-  | CombatantDidAcquireRangeInput
-  | CombatantDidAcquireTargetInput
-  | CombatantDidAttackInput
-  | CombatantDidDefendInput
-  | CombatantDidDieInput
-  | CombatantDidMoveInput
-  | CombatantDidRecoverApInput
-  | CombatantWasAttackedInput
   | PlaceWasCreatedInput
   | ResourcesDidChangeInput
   | WeatherDidChangeInput

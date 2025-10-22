@@ -61,25 +61,26 @@ export const en_US: LanguageTemplates = {
   [EventType.ACTOR_DID_MOVE]: renderActorMoveNarrative,
   [EventType.ACTOR_DID_ARRIVE]: renderActorArriveNarrative,
   [EventType.ACTOR_DID_DEPART]: renderActorDepartNarrative,
-  [EventType.ACTOR_DID_DIE]: NOT_IMPLEMENTED, // This event type doesn't exist - handled by COMBATANT_DID_DIE
   [EventType.ACTOR_DID_RECOVER_ENERGY]: NOT_IMPLEMENTED, // This event type doesn't exist
   [EventType.ACTOR_DID_COMPLETE_CURRENCY_TRANSACTION]: renderCurrencyTransactionNarrative,
   [EventType.ACTOR_DID_SWAP_SHELL]: renderSwapShellNarrative,
   [EventType.ACTOR_DID_QUERY_HELPFILE]: renderHelpFileNarrative,
+  [EventType.ACTOR_DID_EQUIP_WEAPON]: NOT_IMPLEMENTED,
+  [EventType.ACTOR_DID_UNEQUIP_WEAPON]: NOT_IMPLEMENTED,
 
   // Look Events
   [EventType.ACTOR_DID_LOOK]: narrateActorDidLook,
   [EventType.ACTOR_DID_EXAMINE_SHELL]: NOT_IMPLEMENTED,
 
   // Combat Events
-  [EventType.COMBATANT_DID_ATTACK]: renderAttackNarrative,
-  [EventType.COMBATANT_WAS_ATTACKED]: renderWasAttackedNarrative,
-  [EventType.COMBATANT_DID_DEFEND]: renderDefendNarrative,
-  [EventType.COMBATANT_DID_MOVE]: renderMoveNarrative,
-  [EventType.COMBATANT_DID_ACQUIRE_TARGET]: renderTargetNarrative,
-  [EventType.COMBATANT_DID_DIE]: renderDeathNarrative,
-  [EventType.COMBATANT_DID_RECOVER_AP]: renderApRecoveryNarrative,
-  [EventType.COMBATANT_DID_ACQUIRE_RANGE]: renderAcquireRangeNarrative,
+  [EventType.ACTOR_DID_ATTACK]: renderAttackNarrative,
+  [EventType.ACTOR_WAS_ATTACKED]: renderWasAttackedNarrative,
+  [EventType.ACTOR_DID_DEFEND]: renderDefendNarrative,
+  [EventType.ACTOR_DID_MOVE_IN_COMBAT]: renderMoveNarrative,
+  [EventType.ACTOR_DID_ACQUIRE_TARGET]: renderTargetNarrative,
+  [EventType.ACTOR_DID_DIE]: renderDeathNarrative,
+  [EventType.ACTOR_DID_RECOVER_AP]: renderApRecoveryNarrative,
+  [EventType.ACTOR_DID_ASSESS_RANGE]: renderAcquireRangeNarrative,
   [EventType.COMBAT_TURN_DID_START]: renderTurnStartNarrative,
   [EventType.COMBAT_TURN_DID_END]: renderTurnEndNarrative,
   [EventType.COMBAT_ROUND_DID_START]: renderRoundStartNarrative,
@@ -89,9 +90,9 @@ export const en_US: LanguageTemplates = {
   [EventType.COMBAT_SESSION_STATUS_DID_CHANGE]: renderCombatStatusChangeNarrative,
 
   // Combat Events - Not Yet Implemented
-  [EventType.COMBATANT_DID_COVER]: NOT_IMPLEMENTED,
-  [EventType.COMBATANT_DID_RELOAD]: NOT_IMPLEMENTED,
-  [EventType.COMBATANT_DID_REST]: NOT_IMPLEMENTED,
+  [EventType.ACTOR_DID_TAKE_COVER]: NOT_IMPLEMENTED,
+  [EventType.ACTOR_DID_LOAD_WEAPON]: NOT_IMPLEMENTED,
+  [EventType.ACTOR_DID_REST]: NOT_IMPLEMENTED,
 
   // World Events
   [EventType.PLACE_WAS_CREATED]: renderPlaceCreatedNarrative, // Returns empty string for admin events
@@ -115,7 +116,6 @@ export const en_US: LanguageTemplates = {
   [EventType.ACTOR_DID_LIST_INVENTORY_MATERIALS]: NOT_IMPLEMENTED,
   [EventType.ACTOR_DID_GAIN_INVENTORY_AMMO]: NOT_IMPLEMENTED,
   [EventType.ACTOR_DID_LOSE_INVENTORY_AMMO]: NOT_IMPLEMENTED,
-  [EventType.ACTOR_DID_LOAD_WEAPON]: NOT_IMPLEMENTED,
   [EventType.ACTOR_DID_UNLOAD_WEAPON]: NOT_IMPLEMENTED,
   [EventType.ACTOR_DID_FIRE_WEAPON]: NOT_IMPLEMENTED,
 };

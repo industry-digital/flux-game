@@ -96,7 +96,7 @@ describe('Large Scale Combat Integration', () => {
 
       // Death events are only emitted by combat actions, not by turn advancement
       // Manual HP changes don't generate death events in our new architecture
-      const deathEvents = events.filter(e => e.type === EventType.COMBATANT_DID_DIE);
+      const deathEvents = events.filter(e => e.type === EventType.ACTOR_DID_DIE);
       expect(deathEvents.length).toBe(0);
 
       // Should have combat end event
@@ -139,7 +139,7 @@ describe('Large Scale Combat Integration', () => {
 
       // Death events are only emitted by combat actions, not by turn advancement
       // Manual HP changes don't generate death events in our new architecture
-      const deathEvents = events.filter(e => e.type === EventType.COMBATANT_DID_DIE);
+      const deathEvents = events.filter(e => e.type === EventType.ACTOR_DID_DIE);
       expect(deathEvents.length).toBe(0);
 
       // Should end combat with no winner (mutual destruction)

@@ -132,7 +132,7 @@ export function createStrikeMethod(
 
     // Create COMBATANT_DID_ATTACK event (attacker's perspective)
     const combatantDidAttackEvent = createWorldEventImpl({
-      type: EventType.COMBATANT_DID_ATTACK,
+      type: EventType.ACTOR_DID_ATTACK,
       location: actor.location,
       trace: trace,
       actor: actor.id,
@@ -147,7 +147,7 @@ export function createStrikeMethod(
 
     // Create COMBATANT_WAS_ATTACKED event (target's perspective)
     const combatantWasAttackedEvent = createWorldEventImpl({
-      type: EventType.COMBATANT_WAS_ATTACKED,
+      type: EventType.ACTOR_WAS_ATTACKED,
       location: targetActor.location,
       trace: trace,
       actor: combatant.target!,
@@ -171,7 +171,7 @@ export function createStrikeMethod(
 
     if (damage > 0 && targetActor.hp.eff.cur <= 0) {
       const deathEvent = createWorldEventImpl({
-        type: EventType.COMBATANT_DID_DIE,
+        type: EventType.ACTOR_DID_DIE,
         location: actor.location,
         actor: combatant.target!,
         trace: trace,

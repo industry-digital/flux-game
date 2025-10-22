@@ -180,7 +180,7 @@ describe('Done Method (New Architecture)', () => {
 
       // Mock advanceTurn to simulate resource recovery events
       const mockResourceRecoveryEvents = [
-        { type: EventType.COMBATANT_DID_RECOVER_AP, payload: { actor: actor.id } },
+        { type: EventType.ACTOR_DID_RECOVER_AP, payload: { actor: actor.id } },
         { type: EventType.COMBAT_TURN_DID_START, actor: 'next-actor' },
       ];
       mockAdvanceTurn.mockReturnValue(mockResourceRecoveryEvents);

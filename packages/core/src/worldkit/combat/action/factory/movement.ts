@@ -13,7 +13,7 @@
 import { Actor, Stat } from '~/types/entity/actor';
 import { Combatant, CombatSession } from '~/types/combat';
 import { TransformerContext } from '~/types/handler';
-import { CombatantDidMove, EventType, WorldEvent } from '~/types/event';
+import { ActorDidMoveInCombat, EventType, WorldEvent } from '~/types/event';
 import { createWorldEvent } from '~/worldkit/event';
 import { calculateTacticalMovement, roundApCostUp } from '~/worldkit/combat/tactical-rounding';
 import { distanceToAp, apToDistance } from '~/worldkit/physics/movement';
@@ -428,8 +428,8 @@ export function createMovementMethod(
     // Calculate actual tactical distance moved (always a whole number due to tactical rounding)
     const actualDistance = Math.abs(movementResult.tactical.position - originalPosition);
 
-    const event: CombatantDidMove = createWorldEventImpl({
-      type: EventType.COMBATANT_DID_MOVE,
+    const event: ActorDidMoveInCombat = createWorldEventImpl({
+      type: EventType.ACTOR_DID_MOVE_IN_COMBAT,
       actor: actor.id,
       location: actor.location,
       trace: trace,

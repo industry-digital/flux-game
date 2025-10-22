@@ -80,7 +80,7 @@ describe('Target Method', () => {
 
       expect(targeterCombatant.target).toBe(ENEMY_ID);
       expect(result).toHaveLength(1);
-      expect(result[0].type).toBe(EventType.COMBATANT_DID_ACQUIRE_TARGET);
+      expect(result[0].type).toBe(EventType.ACTOR_DID_ACQUIRE_TARGET);
     });
 
     it('should call declareEvent on context', () => {
@@ -89,7 +89,7 @@ describe('Target Method', () => {
       expect(context.declareEvent).toHaveBeenCalledTimes(1);
       expect(context.declareEvent).toHaveBeenCalledWith(
         expect.objectContaining({
-          type: EventType.COMBATANT_DID_ACQUIRE_TARGET
+          type: EventType.ACTOR_DID_ACQUIRE_TARGET
         })
       );
     });
@@ -107,7 +107,7 @@ describe('Target Method', () => {
 
       // Validate complete event structure
       expect(event).toMatchObject({
-        type: EventType.COMBATANT_DID_ACQUIRE_TARGET,
+        type: EventType.ACTOR_DID_ACQUIRE_TARGET,
         actor: targeter.id,
         location: targeter.location,
         trace: customTrace,
@@ -133,7 +133,7 @@ describe('Target Method', () => {
 
       expect(result).toHaveLength(1);
       expect(result[0].trace).toBe(customTrace);
-      expect(result[0].type).toBe(EventType.COMBATANT_DID_ACQUIRE_TARGET);
+      expect(result[0].type).toBe(EventType.ACTOR_DID_ACQUIRE_TARGET);
     });
 
     it('should use generated trace when none provided', () => {
@@ -146,7 +146,7 @@ describe('Target Method', () => {
       expect(result).toHaveLength(1);
       expect(result[0].trace).toBe(generatedTrace);
       expect(context.uniqid).toHaveBeenCalled();
-      expect(result[0].type).toBe(EventType.COMBATANT_DID_ACQUIRE_TARGET);
+      expect(result[0].type).toBe(EventType.ACTOR_DID_ACQUIRE_TARGET);
     });
   });
 
@@ -157,7 +157,7 @@ describe('Target Method', () => {
       // First target call - should generate event
       const firstResult = target(ENEMY_ID);
       expect(firstResult).toHaveLength(1);
-      expect(firstResult[0].type).toBe(EventType.COMBATANT_DID_ACQUIRE_TARGET);
+      expect(firstResult[0].type).toBe(EventType.ACTOR_DID_ACQUIRE_TARGET);
       expect(targeterCombatant.target).toBe(ENEMY_ID);
 
       // Reset mock to count only subsequent calls
@@ -184,13 +184,13 @@ describe('Target Method', () => {
       // Second target call with different target - should generate event
       const secondResult = target(ENEMY2_ID);
       expect(secondResult).toHaveLength(1);
-      expect(secondResult[0].type).toBe(EventType.COMBATANT_DID_ACQUIRE_TARGET);
+      expect(secondResult[0].type).toBe(EventType.ACTOR_DID_ACQUIRE_TARGET);
       expect((secondResult[0].payload as any).target).toBe(ENEMY2_ID);
       expect(targeterCombatant.target).toBe(ENEMY2_ID);
       expect(context.declareEvent).toHaveBeenCalledTimes(1);
       expect(context.declareEvent).toHaveBeenCalledWith(
         expect.objectContaining({
-          type: EventType.COMBATANT_DID_ACQUIRE_TARGET
+          type: EventType.ACTOR_DID_ACQUIRE_TARGET
         })
       );
     });
@@ -224,12 +224,12 @@ describe('Target Method', () => {
       // First call should generate event
       const result = target(ENEMY_ID);
       expect(result).toHaveLength(1);
-      expect(result[0].type).toBe(EventType.COMBATANT_DID_ACQUIRE_TARGET);
+      expect(result[0].type).toBe(EventType.ACTOR_DID_ACQUIRE_TARGET);
       expect(targeterCombatant.target).toBe(ENEMY_ID);
       expect(context.declareEvent).toHaveBeenCalledTimes(1);
       expect(context.declareEvent).toHaveBeenCalledWith(
         expect.objectContaining({
-          type: EventType.COMBATANT_DID_ACQUIRE_TARGET
+          type: EventType.ACTOR_DID_ACQUIRE_TARGET
         })
       );
     });

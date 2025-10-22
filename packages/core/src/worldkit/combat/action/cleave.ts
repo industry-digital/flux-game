@@ -8,7 +8,7 @@
 import { Actor } from '~/types/entity/actor';
 import { CombatSession, computeDistanceBetweenCombatants } from '~/worldkit/combat';
 import { ActionCost, AttackOutcome, AttackType, Combatant } from '~/types/combat';
-import { CombatantDidAttack, CombatantWasAttacked, EventType, WorldEvent } from '~/types/event';
+import { ActorDidAttack, ActorWasAttacked, EventType, WorldEvent } from '~/types/event';
 import { calculateActorEvasionRating, resolveHitAttempt } from '~/worldkit/combat/evasion';
 import { createWorldEvent } from '~/worldkit/event';
 import { ActorURN } from '~/types/taxonomy';
@@ -148,8 +148,8 @@ export function createCleaveMethod(
     const attackRating = accuracyRoll.result;
 
     // Create single COMBATANT_DID_ATTACK event for the cleave action
-    const cleaveAttackEvent: CombatantDidAttack = createWorldEventImpl({
-      type: EventType.COMBATANT_DID_ATTACK,
+    const cleaveAttackEvent: ActorDidAttack = createWorldEventImpl({
+      type: EventType.ACTOR_DID_ATTACK,
       location: actor.location,
       trace: trace,
       actor: actor.id,
@@ -199,8 +199,8 @@ export function createCleaveMethod(
       }
 
       // Generate COMBATANT_WAS_ATTACKED event for this target
-      const wasAttackedEvent: CombatantWasAttacked = createWorldEventImpl({
-        type: EventType.COMBATANT_WAS_ATTACKED,
+      const wasAttackedEvent: ActorWasAttacked = createWorldEventImpl({
+        type: EventType.ACTOR_WAS_ATTACKED,
         location: targetActor.location,
         trace: trace,
         actor: targetId,
@@ -220,7 +220,7 @@ export function createCleaveMethod(
       // Generate death event if target died
       if (damage > 0 && targetActor.hp.eff.cur <= 0) {
         const deathEvent = createWorldEventImpl({
-          type: EventType.COMBATANT_DID_DIE,
+          type: EventType.ACTOR_DID_DIE,
           location: actor.location,
           actor: targetId,
           trace: trace,

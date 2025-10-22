@@ -27,7 +27,7 @@ export function createTargetMethod (
     combatant.target = target;
 
     const event = createWorldEvent({
-      type: EventType.COMBATANT_DID_ACQUIRE_TARGET,
+      type: EventType.ACTOR_DID_ACQUIRE_TARGET,
       actor: actor.id,
       location: actor.location,
       trace: trace,

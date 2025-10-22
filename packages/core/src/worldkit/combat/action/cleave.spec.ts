@@ -5,7 +5,7 @@ import { createTransformerContext } from '~/worldkit/context';
 import { extractEventsByType } from '../../../testing/event/parsing';
 import { registerWeapons } from '../testing/schema';
 import { ActorURN } from '~/types/taxonomy';
-import { CombatantDidAttack, CombatantDidCleave, CombatantDidDie, CombatantWasAttacked, EventType } from '~/types/event';
+import { ActorDidAttack, ActorDidCleave, ActorDidDie, ActorWasAttacked, EventType } from '~/types/event';
 import { AttackType, Team } from '~/types/combat';
 import { createCleaveCost } from '~/worldkit/combat/tactical-cost';
 import { getStatValue } from '~/worldkit/entity/actor/stats';
@@ -16,7 +16,7 @@ import { createWeaponSchema } from '~/worldkit/schema/weapon';
 import { EVASION_SKILL } from '~/worldkit/combat/testing/constants';
 
 // Type guard to help TypeScript understand CLEAVE attack events
-function isCleaveAttack(event: CombatantDidAttack): event is CombatantDidCleave {
+function isCleaveAttack(event: ActorDidAttack): event is ActorDidCleave {
   return event.payload.attackType === AttackType.CLEAVE;
 }
 
@@ -143,8 +143,8 @@ describe('Cleave Method', () => {
       const result = cleave();
 
       // Should have 1 attack event (cleave action) and 3 damage events (one per target)
-      const attackEvents = extractEventsByType<CombatantDidAttack>(result, EventType.COMBATANT_DID_ATTACK);
-      const damageEvents = extractEventsByType<CombatantWasAttacked>(result, EventType.COMBATANT_WAS_ATTACKED);
+      const attackEvents = extractEventsByType<ActorDidAttack>(result, EventType.ACTOR_DID_ATTACK);
+      const damageEvents = extractEventsByType<ActorWasAttacked>(result, EventType.ACTOR_WAS_ATTACKED);
 
       expect(attackEvents).toHaveLength(1); // Single cleave attack
 
@@ -184,8 +184,8 @@ describe('Cleave Method', () => {
       const attacker = scenario.actors[ATTACKER_ID].actor;
 
       const result = cleave();
-      const attackEvents = extractEventsByType<CombatantDidAttack>(result, EventType.COMBATANT_DID_ATTACK);
-      const damageEvents = extractEventsByType<CombatantWasAttacked>(result, EventType.COMBATANT_WAS_ATTACKED);
+      const attackEvents = extractEventsByType<ActorDidAttack>(result, EventType.ACTOR_DID_ATTACK);
+      const damageEvents = extractEventsByType<ActorWasAttacked>(result, EventType.ACTOR_WAS_ATTACKED);
 
       // Should have 1 attack event and 3 damage events
       expect(attackEvents).toHaveLength(1);
@@ -198,7 +198,7 @@ describe('Cleave Method', () => {
 
       // Attack event should have proper structure (attacker's perspective)
       expect(attackEvent).toMatchObject({
-        type: EventType.COMBATANT_DID_ATTACK,
+        type: EventType.ACTOR_DID_ATTACK,
         location: attacker.location,
         actor: attacker.id,
         payload: expect.objectContaining({
@@ -216,7 +216,7 @@ describe('Cleave Method', () => {
       // Damage events should have proper structure (targets' perspective)
       damageEvents.forEach(damageEvent => {
         expect(damageEvent).toMatchObject({
-          type: EventType.COMBATANT_WAS_ATTACKED,
+          type: EventType.ACTOR_WAS_ATTACKED,
           actor: expect.any(String), // Target actor
           payload: expect.objectContaining({
             source: attacker.id,
@@ -369,7 +369,7 @@ describe('Cleave Method', () => {
       expect(actualEnergyCost).toBeCloseTo(expectedCost.energy!, 10);
 
       // Verify first attack event shows the total cost
-      const attackEvents = extractEventsByType<CombatantDidAttack>(result, EventType.COMBATANT_DID_ATTACK);
+      const attackEvents = extractEventsByType<ActorDidAttack>(result, EventType.ACTOR_DID_ATTACK);
       expect(attackEvents[0].payload.cost.ap).toBe(expectedCost.ap);
       expect(attackEvents[0].payload.cost.energy).toBe(expectedCost.energy);
     });
@@ -407,7 +407,7 @@ describe('Cleave Method', () => {
   describe('Target Selection', () => {
     it('should only hit enemies at optimal range', () => {
       const result = cleave();
-      const damageEvents = extractEventsByType<CombatantWasAttacked>(result, EventType.COMBATANT_WAS_ATTACKED);
+      const damageEvents = extractEventsByType<ActorWasAttacked>(result, EventType.ACTOR_WAS_ATTACKED);
 
       // Should hit exactly 3 targets (all enemies at optimal range)
       expect(damageEvents).toHaveLength(3);
@@ -420,7 +420,7 @@ describe('Cleave Method', () => {
 
     it('should not hit allies even if at optimal range', () => {
       const result = cleave();
-      const damageEvents = extractEventsByType<CombatantWasAttacked>(result, EventType.COMBATANT_WAS_ATTACKED);
+      const damageEvents = extractEventsByType<ActorWasAttacked>(result, EventType.ACTOR_WAS_ATTACKED);
 
       const targetIds = damageEvents.map(e => e.actor);
       expect(targetIds).not.toContain(ALLY_ID);
@@ -428,7 +428,7 @@ describe('Cleave Method', () => {
 
     it('should not hit enemies outside optimal range', () => {
       const result = cleave();
-      const damageEvents = extractEventsByType<CombatantWasAttacked>(result, EventType.COMBATANT_WAS_ATTACKED);
+      const damageEvents = extractEventsByType<ActorWasAttacked>(result, EventType.ACTOR_WAS_ATTACKED);
 
       const targetIds = damageEvents.map(e => e.actor);
       expect(targetIds).not.toContain(FAR_TARGET_ID);
@@ -443,7 +443,7 @@ describe('Cleave Method', () => {
       target3Combatant.position.coordinate = 110; // Far away
 
       const result = cleave();
-      const damageEvents = extractEventsByType<CombatantWasAttacked>(result, EventType.COMBATANT_WAS_ATTACKED);
+      const damageEvents = extractEventsByType<ActorWasAttacked>(result, EventType.ACTOR_WAS_ATTACKED);
 
       expect(damageEvents).toHaveLength(1);
       expect(damageEvents[0].actor).toBe(TARGET1_ID);
@@ -484,8 +484,8 @@ describe('Cleave Method', () => {
 
       const result = cleaveWithMocks();
 
-      const damageEvents = extractEventsByType<CombatantWasAttacked>(result, EventType.COMBATANT_WAS_ATTACKED);
-      const deathEvents = extractEventsByType<CombatantDidDie>(result, EventType.COMBATANT_DID_DIE);
+      const damageEvents = extractEventsByType<ActorWasAttacked>(result, EventType.ACTOR_WAS_ATTACKED);
+      const deathEvents = extractEventsByType<ActorDidDie>(result, EventType.ACTOR_DID_DIE);
 
       expect(damageEvents).toHaveLength(3); // 3 damage events
       expect(deathEvents).toHaveLength(2); // 2 deaths (target1 and target2)
@@ -507,8 +507,8 @@ describe('Cleave Method', () => {
 
       const result = cleave();
 
-      const damageEvents = extractEventsByType<CombatantWasAttacked>(result, EventType.COMBATANT_WAS_ATTACKED);
-      const deathEvents = extractEventsByType<CombatantDidDie>(result, EventType.COMBATANT_DID_DIE);
+      const damageEvents = extractEventsByType<ActorWasAttacked>(result, EventType.ACTOR_WAS_ATTACKED);
+      const deathEvents = extractEventsByType<ActorDidDie>(result, EventType.ACTOR_DID_DIE);
 
       expect(damageEvents).toHaveLength(3); // 3 damage events
       expect(deathEvents).toHaveLength(0); // No deaths
@@ -548,7 +548,7 @@ describe('Cleave Method', () => {
       target1Actor.hp.eff.cur = 0;
 
       const result = cleave();
-      const damageEvents = extractEventsByType<CombatantWasAttacked>(result, EventType.COMBATANT_WAS_ATTACKED);
+      const damageEvents = extractEventsByType<ActorWasAttacked>(result, EventType.ACTOR_WAS_ATTACKED);
 
       // Should only hit living targets
       expect(damageEvents).toHaveLength(2);
@@ -563,7 +563,7 @@ describe('Cleave Method', () => {
       scenario.session.data.combatants.delete(TARGET1_ID);
 
       const result = cleave();
-      const damageEvents = extractEventsByType<CombatantWasAttacked>(result, EventType.COMBATANT_WAS_ATTACKED);
+      const damageEvents = extractEventsByType<ActorWasAttacked>(result, EventType.ACTOR_WAS_ATTACKED);
 
       // Should still work with remaining targets
       expect(damageEvents).toHaveLength(2);

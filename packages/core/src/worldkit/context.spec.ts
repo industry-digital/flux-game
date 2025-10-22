@@ -7,11 +7,11 @@
 
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import {
-  createTransformerContext,
-  createWorldProjection,
-  createPotentiallyImpureOperations,
-  DEFAULT_POTENTIALLY_IMPURE_OPERATIONS,
-  MapFunction
+    createTransformerContext,
+    createWorldProjection,
+    createPotentiallyImpureOperations,
+    DEFAULT_POTENTIALLY_IMPURE_OPERATIONS,
+    MapFunction
 } from './context';
 import { TransformerContext, PotentiallyImpureOperations, ProfileResult } from '~/types/handler';
 import { WorldProjection } from '~/types/world';
@@ -452,7 +452,7 @@ describe('createTransformerContext', () => {
 
       context.declareEvent({
         id: 'test-event-2',
-        type: EventType.COMBATANT_DID_ATTACK,
+        type: EventType.ACTOR_DID_ATTACK,
         location: 'flux:place:arena' as PlaceURN,
         actor: 'flux:actor:attacker' as ActorURN,
         trace: 'combat-init',

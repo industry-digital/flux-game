@@ -12,6 +12,7 @@ export type InputMetadata = { __type: 'command' | 'intent' };
  */
 export enum CommandType {
   ADVANCE = 'ADVANCE',
+  EQUIP = 'EQUIP',
   ATTACK = 'ATTACK',
   CHARGE = 'CHARGE',
   CLEAVE = 'CLEAVE',

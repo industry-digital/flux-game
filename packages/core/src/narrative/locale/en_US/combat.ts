@@ -1,8 +1,8 @@
 import {
-    CombatantDidAttack,
-    CombatantDidDefend,
-    CombatantDidMove,
-    CombatantDidDie,
+    ActorDidAttack,
+    ActorDidDefend,
+    ActorDidMoveInCombat,
+    ActorDidDie,
     CombatTurnDidEnd,
     CombatTurnDidStart,
     CombatRoundDidStart,
@@ -10,9 +10,9 @@ import {
     CombatSessionStarted,
     CombatSessionEnded,
     CombatSessionStatusDidChange,
-    CombatantDidRecoverAp,
-    CombatantWasAttacked,
-    CombatantDidAcquireRange,
+    ActorDidRecoverAp,
+    ActorWasAttacked,
+    ActorDidAssessRange,
 } from '~/types/event';
 import { AttackType, MovementDirection } from '~/types/combat';
 import { SessionStatus } from '~/types/session';
@@ -161,7 +161,7 @@ const renderCleaveNarrative = (actor: Actor, targets: Actor[], weapon: any, view
   }
 };
 
-export const renderAttackNarrative: TemplateFunction<CombatantDidAttack, ActorURN> = (context, event, actorId) => {
+export const renderAttackNarrative: TemplateFunction<ActorDidAttack, ActorURN> = (context, event, actorId) => {
   const { world, equipmentApi } = context;
   const actor = world.actors[event.actor];
 
@@ -248,7 +248,7 @@ export const renderAttackNarrative: TemplateFunction<CombatantDidAttack, ActorUR
   return `${actor.name} ${attackDescription} ${weaponName}, striking ${target.name}.`;
 };
 
-export const renderWasAttackedNarrative: TemplateFunction<CombatantWasAttacked, ActorURN> = (context, event, actorId) => {
+export const renderWasAttackedNarrative: TemplateFunction<ActorWasAttacked, ActorURN> = (context, event, actorId) => {
   const { world, equipmentApi, skillApi: actorSkillApi } = context;
   const attacker = world.actors[event.payload.source];
   const target = world.actors[event.actor];
@@ -337,13 +337,13 @@ export const renderWasAttackedNarrative: TemplateFunction<CombatantWasAttacked, 
 };
 
 export const renderDefendNarrative = withUserEventValidation(
-  createPerspectiveTemplate<CombatantDidDefend>(
+  createPerspectiveTemplate<ActorDidDefend>(
     'You take a defensive stance.',
     (actorName) => `${actorName} takes a defensive stance.`
   )
 );
 
-export const renderMoveNarrative: TemplateFunction<CombatantDidMove> = (context, event, actorId) => {
+export const renderMoveNarrative: TemplateFunction<ActorDidMoveInCombat> = (context, event, actorId) => {
   const { world, equipmentApi } = context;
   const actor = world.actors[event.actor];
 
@@ -431,7 +431,7 @@ export const renderTargetNarrative = withInteractionValidation(
   }
 );
 
-export const renderDeathNarrative: TemplateFunction<CombatantDidDie> = (context, event, actorId) => {
+export const renderDeathNarrative: TemplateFunction<ActorDidDie> = (context, event, actorId) => {
   const { world } = context;
   const actor = world.actors[event.actor];
 
@@ -506,7 +506,7 @@ export const renderCombatStatusChangeNarrative = createSystemTemplate<CombatSess
   }
 );
 
-export const renderApRecoveryNarrative: TemplateFunction<CombatantDidRecoverAp, ActorURN> = (context, event, recipientId) => {
+export const renderApRecoveryNarrative: TemplateFunction<ActorDidRecoverAp, ActorURN> = (context, event, recipientId) => {
   const { world } = context;
   const actor = world.actors[event.actor];
   const recovered = event.payload.recovered;
@@ -518,7 +518,7 @@ export const renderApRecoveryNarrative: TemplateFunction<CombatantDidRecoverAp, 
   return `${actor.name} recovers ${recovered} action points.`;
 };
 
-export const renderAcquireRangeNarrative: TemplateFunction<CombatantDidAcquireRange, ActorURN> = (context, event, actorId) => {
+export const renderAcquireRangeNarrative: TemplateFunction<ActorDidAssessRange, ActorURN> = (context, event, actorId) => {
   const { world, schemaManager } = context;
   const actor = world.actors[event.actor];
   const target = world.actors[event.payload.target];

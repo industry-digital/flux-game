@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { createRangeMethod } from './range';
-import { CombatantDidAcquireRange, EventType } from '~/types/event';
+import { ActorDidAssessRange, EventType } from '~/types/event';
 import { CombatFacing, MovementDirection } from '~/types/combat';
 import { useCombatMovementTestScenario } from '../testing/movement';
 import { extractFirstEventOfType } from '~/testing/event/parsing';
@@ -33,7 +33,7 @@ describe('createRangeMethod', () => {
 
   // Helper function to extract range event from results
   const extractRangeEvent = (result: any[]) =>
-    extractFirstEventOfType<CombatantDidAcquireRange>(result, EventType.COMBATANT_DID_ACQUIRE_RANGE)!;
+    extractFirstEventOfType<ActorDidAssessRange>(result, EventType.ACTOR_DID_ASSESS_RANGE)!;
 
   describe('basic range calculation', () => {
     it('should calculate and return range to target', () => {
@@ -44,7 +44,7 @@ describe('createRangeMethod', () => {
       expect(mockComputeDistance).toHaveBeenCalledWith(attacker, expect.any(Object));
 
       const event = extractRangeEvent(result);
-      expect(event.type).toBe(EventType.COMBATANT_DID_ACQUIRE_RANGE);
+      expect(event.type).toBe(EventType.ACTOR_DID_ASSESS_RANGE);
       expect(event.payload.range).toBe(50);
       expect(event.payload.target).toBe(defaultScenario.ENEMY_ID);
     });
@@ -191,7 +191,7 @@ describe('createRangeMethod', () => {
       const result = range(defaultScenario.ENEMY_ID);
       const event = extractRangeEvent(result);
 
-      expect(event.type).toBe(EventType.COMBATANT_DID_ACQUIRE_RANGE);
+      expect(event.type).toBe(EventType.ACTOR_DID_ASSESS_RANGE);
       expect(event.actor).toBe(attackerActor.id);
       expect(event.location).toBe(attackerActor.location);
       expect(event.payload.target).toBe(defaultScenario.ENEMY_ID);

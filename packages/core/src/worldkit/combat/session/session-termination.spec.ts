@@ -124,7 +124,7 @@ describe('Combat Session - Termination Integration', () => {
       const events = sessionHook.advanceTurn();
 
       // Should NOT contain death event (only STRIKE actions emit death events)
-      const deathEvent = events.find(e => e.type === EventType.COMBATANT_DID_DIE);
+      const deathEvent = events.find(e => e.type === EventType.ACTOR_DID_DIE);
       expect(deathEvent).toBeUndefined();
 
       // Should still contain turn advancement and termination events based on HP
@@ -213,7 +213,7 @@ describe('Combat Session - Termination Integration', () => {
       const events = sessionHook.advanceTurn();
 
       // Should NOT contain death event (only STRIKE actions emit death events)
-      const deathEvent = events.find(e => e.type === EventType.COMBATANT_DID_DIE);
+      const deathEvent = events.find(e => e.type === EventType.ACTOR_DID_DIE);
       expect(deathEvent).toBeUndefined();
 
       // Should contain turn advancement but NOT termination (combat continues)
@@ -235,7 +235,7 @@ describe('Combat Session - Termination Integration', () => {
       // This tests that session termination works regardless of the death event source
       const externalDeathEvent:any = {
         id: context.uniqid(),
-        type: EventType.COMBATANT_DID_DIE,
+        type: EventType.ACTOR_DID_DIE,
         location,
         trace: 'external-death-test',
         payload: { actor: BOB_ID },
@@ -256,7 +256,7 @@ describe('Combat Session - Termination Integration', () => {
       // The externally declared death event should be in the context's event log
       const declaredEvents = context.getDeclaredEvents();
       // @ts-expect-error - payload.actor is not typed
-      expect(declaredEvents.some(e => e.type === EventType.COMBATANT_DID_DIE && e.payload.actor === BOB_ID)).toBe(true);
+      expect(declaredEvents.some(e => e.type === EventType.ACTOR_DID_DIE && e.payload.actor === BOB_ID)).toBe(true);
     });
   });
 

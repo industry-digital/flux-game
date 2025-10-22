@@ -6,7 +6,7 @@ import { createTransformerContext } from '~/worldkit/context';
 import { createSwordSchema } from '~/worldkit/schema/weapon/sword';
 import { registerWeapons } from '../testing/schema';
 import { ActorURN } from '~/types/taxonomy';
-import { CombatantDidAttack, CombatantDidDie, CombatantDidStrike, CombatantWasAttacked, EventType } from '~/types/event';
+import { ActorDidAttack, ActorDidDie, ActorDidStrike, ActorWasAttacked, EventType } from '~/types/event';
 import { Team } from '~/types/combat';
 import { createStrikeCost } from '~/worldkit/combat/tactical-cost';
 import { calculateWeaponApCost } from '~/worldkit/combat/ap';
@@ -91,8 +91,8 @@ describe('Strike Method', () => {
       const result = strike();
 
       // Should emit both attack and damage events
-      const attackEvents = extractEventsByType<CombatantDidAttack>(result, EventType.COMBATANT_DID_ATTACK);
-      const damageEvents = extractEventsByType<CombatantWasAttacked>(result, EventType.COMBATANT_WAS_ATTACKED);
+      const attackEvents = extractEventsByType<ActorDidAttack>(result, EventType.ACTOR_DID_ATTACK);
+      const damageEvents = extractEventsByType<ActorWasAttacked>(result, EventType.ACTOR_WAS_ATTACKED);
 
       expect(attackEvents).toHaveLength(1);
       expect(damageEvents).toHaveLength(1);
@@ -105,9 +105,9 @@ describe('Strike Method', () => {
 
       const result = strike();
 
-      const attackEvent = extractFirstEventOfType<CombatantDidAttack>(result, EventType.COMBATANT_DID_ATTACK);
-      const damageEvent = extractFirstEventOfType<CombatantWasAttacked>(result, EventType.COMBATANT_WAS_ATTACKED);
-      const deathEvent = extractFirstEventOfType<CombatantDidDie>(result, EventType.COMBATANT_DID_DIE);
+      const attackEvent = extractFirstEventOfType<ActorDidAttack>(result, EventType.ACTOR_DID_ATTACK);
+      const damageEvent = extractFirstEventOfType<ActorWasAttacked>(result, EventType.ACTOR_WAS_ATTACKED);
+      const deathEvent = extractFirstEventOfType<ActorDidDie>(result, EventType.ACTOR_DID_DIE);
 
       // Event count validation: 1 attack + 1 damage + 0 deaths (target survives)
       expect(attackEvent).toBeDefined();
@@ -116,7 +116,7 @@ describe('Strike Method', () => {
 
       // Attack event validation (attacker's perspective)
       expect(attackEvent).toMatchObject({
-        type: EventType.COMBATANT_DID_ATTACK,
+        type: EventType.ACTOR_DID_ATTACK,
         location: attacker.location,
         actor: attacker.id,
         payload: expect.objectContaining({
@@ -132,7 +132,7 @@ describe('Strike Method', () => {
 
       // Damage event validation (target's perspective)
       expect(damageEvent).toMatchObject({
-        type: EventType.COMBATANT_WAS_ATTACKED,
+        type: EventType.ACTOR_WAS_ATTACKED,
         actor: attackerCombatant.target, // Target actor
         payload: expect.objectContaining({
           source: attacker.id,
@@ -151,8 +151,8 @@ describe('Strike Method', () => {
     it('should use specified target when provided', () => {
       const result = strike(SPECIFIC_TARGET_ID);
 
-      const attackEvent = extractFirstEventOfType<CombatantDidStrike>(result, EventType.COMBATANT_DID_ATTACK)!;
-      const damageEvent = extractFirstEventOfType<CombatantWasAttacked>(result, EventType.COMBATANT_WAS_ATTACKED)!;
+      const attackEvent = extractFirstEventOfType<ActorDidStrike>(result, EventType.ACTOR_DID_ATTACK)!;
+      const damageEvent = extractFirstEventOfType<ActorWasAttacked>(result, EventType.ACTOR_WAS_ATTACKED)!;
 
       expect(attackEvent.payload.target).toContain(SPECIFIC_TARGET_ID);
       expect(damageEvent.actor).toBe(SPECIFIC_TARGET_ID);
@@ -165,8 +165,8 @@ describe('Strike Method', () => {
       expect(context.declareEvent).toHaveBeenCalledTimes(2);
 
       const calls = (context.declareEvent as any).mock.calls;
-      const attackCall = calls.find((call: any) => call[0].type === EventType.COMBATANT_DID_ATTACK);
-      const damageCall = calls.find((call: any) => call[0].type === EventType.COMBATANT_WAS_ATTACKED);
+      const attackCall = calls.find((call: any) => call[0].type === EventType.ACTOR_DID_ATTACK);
+      const damageCall = calls.find((call: any) => call[0].type === EventType.ACTOR_WAS_ATTACKED);
 
       expect(attackCall).toBeDefined();
       expect(damageCall).toBeDefined();
@@ -213,7 +213,7 @@ describe('Strike Method', () => {
       expect(actualApCost).toBeCloseTo(tacticalApCost, 10);
 
       // Verify event contains tactical AP cost
-      const event = extractFirstEventOfType<CombatantDidAttack>(result, EventType.COMBATANT_DID_ATTACK)!;
+      const event = extractFirstEventOfType<ActorDidAttack>(result, EventType.ACTOR_DID_ATTACK)!;
       expect(event).toBeDefined();
       expect(event.payload.cost.ap).toBe(tacticalApCost);
     });
@@ -261,7 +261,7 @@ describe('Strike Method', () => {
         // Verify tactical cost was used
         expect(actualApCost).toBeCloseTo(tacticalCost.ap!, 10);
 
-        const event = extractFirstEventOfType<CombatantDidAttack>(result, EventType.COMBATANT_DID_ATTACK)!;
+        const event = extractFirstEventOfType<ActorDidAttack>(result, EventType.ACTOR_DID_ATTACK)!;
         expect(event.payload.cost.ap).toBe(tacticalCost.ap);
 
         // Verify conservative rounding (tactical >= precise)
@@ -285,9 +285,9 @@ describe('Strike Method', () => {
         expect(event.trace).toBe(customTrace);
       });
 
-      const attackEvent = extractFirstEventOfType<CombatantDidAttack>(result, EventType.COMBATANT_DID_ATTACK);
+      const attackEvent = extractFirstEventOfType<ActorDidAttack>(result, EventType.ACTOR_DID_ATTACK);
       expect(attackEvent).toMatchObject({
-        type: EventType.COMBATANT_DID_ATTACK,
+        type: EventType.ACTOR_DID_ATTACK,
         trace: customTrace,
         actor: attacker.id,
         payload: expect.objectContaining({
@@ -316,9 +316,9 @@ describe('Strike Method', () => {
 
       expect(context.uniqid).toHaveBeenCalled();
 
-      const attackEvent = extractFirstEventOfType<CombatantDidAttack>(result, EventType.COMBATANT_DID_ATTACK);
+      const attackEvent = extractFirstEventOfType<ActorDidAttack>(result, EventType.ACTOR_DID_ATTACK);
       expect(attackEvent).toMatchObject({
-        type: EventType.COMBATANT_DID_ATTACK,
+        type: EventType.ACTOR_DID_ATTACK,
         trace: generatedTrace,
         actor: attacker.id,
         payload: expect.objectContaining({
@@ -341,8 +341,8 @@ describe('Strike Method', () => {
         expect(event.trace).toBe(customTrace);
       });
 
-      const attackEvent = extractFirstEventOfType<CombatantDidStrike>(result, EventType.COMBATANT_DID_ATTACK);
-      const damageEvent = extractFirstEventOfType<CombatantWasAttacked>(result, EventType.COMBATANT_WAS_ATTACKED);
+      const attackEvent = extractFirstEventOfType<ActorDidStrike>(result, EventType.ACTOR_DID_ATTACK);
+      const damageEvent = extractFirstEventOfType<ActorWasAttacked>(result, EventType.ACTOR_WAS_ATTACKED);
 
       expect(attackEvent?.payload.target).toBe(specificTarget);
       expect(damageEvent?.actor).toBe(specificTarget);
@@ -398,9 +398,9 @@ describe('Strike Method', () => {
       // Should contain attack, damage, and death events
       expect(result).toHaveLength(3);
 
-      const attackEvent = extractFirstEventOfType<CombatantDidAttack>(result, EventType.COMBATANT_DID_ATTACK);
-      const damageEvent = extractFirstEventOfType<CombatantWasAttacked>(result, EventType.COMBATANT_WAS_ATTACKED);
-      const deathEvent = extractFirstEventOfType<CombatantDidDie>(result, EventType.COMBATANT_DID_DIE);
+      const attackEvent = extractFirstEventOfType<ActorDidAttack>(result, EventType.ACTOR_DID_ATTACK);
+      const damageEvent = extractFirstEventOfType<ActorWasAttacked>(result, EventType.ACTOR_WAS_ATTACKED);
+      const deathEvent = extractFirstEventOfType<ActorDidDie>(result, EventType.ACTOR_DID_DIE);
 
       expect(attackEvent).toBeDefined();
       expect(damageEvent).toBeDefined();
@@ -427,9 +427,9 @@ describe('Strike Method', () => {
       // Should contain attack and damage events, but no death event
       expect(result).toHaveLength(2);
 
-      const attackEvent = extractFirstEventOfType<CombatantDidAttack>(result, EventType.COMBATANT_DID_ATTACK);
-      const damageEvent = extractFirstEventOfType<CombatantWasAttacked>(result, EventType.COMBATANT_WAS_ATTACKED);
-      const deathEvent = extractFirstEventOfType<CombatantDidDie>(result, EventType.COMBATANT_DID_DIE);
+      const attackEvent = extractFirstEventOfType<ActorDidAttack>(result, EventType.ACTOR_DID_ATTACK);
+      const damageEvent = extractFirstEventOfType<ActorWasAttacked>(result, EventType.ACTOR_WAS_ATTACKED);
+      const deathEvent = extractFirstEventOfType<ActorDidDie>(result, EventType.ACTOR_DID_DIE);
 
       expect(attackEvent).toBeDefined();
       expect(damageEvent).toBeDefined();

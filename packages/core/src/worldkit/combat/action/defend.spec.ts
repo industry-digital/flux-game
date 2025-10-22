@@ -5,7 +5,7 @@ import { createTransformerContext } from '~/worldkit/context';
 import { createSwordSchema } from '~/worldkit/schema/weapon/sword';
 import { registerWeapons } from '../testing/schema';
 import { ActorURN } from '~/types/taxonomy';
-import { CombatantDidDefend, EventType } from '~/types/event';
+import { ActorDidDefend, EventType } from '~/types/event';
 import { extractApCost } from '~/worldkit/combat/ap';
 import { Team } from '~/types/combat';
 import { DoneMethod } from '~/worldkit/combat/action/done';
@@ -74,7 +74,7 @@ describe('Defend Method', () => {
         id: expect.any(String),
         ts: expect.any(Number),
         trace: expect.any(String),
-        type: EventType.COMBATANT_DID_DEFEND,
+        type: EventType.ACTOR_DID_DEFEND,
         location: defender.location,
         actor: defender.id,
         payload: {
@@ -93,8 +93,8 @@ describe('Defend Method', () => {
 
       expect(defenderCombatant.ap.eff.cur).toBe(0);
       expect(result).toHaveLength(1);
-      const defendEvent = extractFirstEventOfType<CombatantDidDefend>(result, EventType.COMBATANT_DID_DEFEND)!;
-      expect(defendEvent.type).toBe(EventType.COMBATANT_DID_DEFEND);
+      const defendEvent = extractFirstEventOfType<ActorDidDefend>(result, EventType.ACTOR_DID_DEFEND)!;
+      expect(defendEvent.type).toBe(EventType.ACTOR_DID_DEFEND);
       expect(extractApCost(defendEvent.payload.cost)).toBe(initialAP);
     });
 
@@ -103,7 +103,7 @@ describe('Defend Method', () => {
 
       expect(context.declareEvent).toHaveBeenCalledWith(
         expect.objectContaining({
-          type: EventType.COMBATANT_DID_DEFEND,
+          type: EventType.ACTOR_DID_DEFEND,
           payload: expect.objectContaining({
             cost: expect.any(Object)
           })
@@ -119,7 +119,7 @@ describe('Defend Method', () => {
 
       expect(defenderCombatant.ap.eff.cur).toBe(0);
       expect(result).toHaveLength(1);
-      const defendEvent = extractFirstEventOfType<CombatantDidDefend>(result, EventType.COMBATANT_DID_DEFEND)!;
+      const defendEvent = extractFirstEventOfType<ActorDidDefend>(result, EventType.ACTOR_DID_DEFEND)!;
       expect(extractApCost(defendEvent.payload.cost)).toBe(0);
     });
   });
@@ -132,7 +132,7 @@ describe('Defend Method', () => {
 
       expect(result).toHaveLength(1);
       expect(result[0].trace).toBe(customTrace);
-      expect(result[0].type).toBe(EventType.COMBATANT_DID_DEFEND);
+      expect(result[0].type).toBe(EventType.ACTOR_DID_DEFEND);
     });
 
     it('should use generated trace when none provided', () => {
@@ -145,7 +145,7 @@ describe('Defend Method', () => {
       expect(result).toHaveLength(1);
       expect(result[0].trace).toBe(generatedTrace);
       expect(context.uniqid).toHaveBeenCalled();
-      expect(result[0].type).toBe(EventType.COMBATANT_DID_DEFEND);
+      expect(result[0].type).toBe(EventType.ACTOR_DID_DEFEND);
     });
   });
 
@@ -159,7 +159,7 @@ describe('Defend Method', () => {
 
       // Should only generate DEFEND event, not turn advancement events
       expect(result).toHaveLength(1);
-      expect(result[0].type).toBe(EventType.COMBATANT_DID_DEFEND);
+      expect(result[0].type).toBe(EventType.ACTOR_DID_DEFEND);
     });
 
     it('should auto-advance turn when autoDone is true', () => {
@@ -176,7 +176,7 @@ describe('Defend Method', () => {
 
       // Should generate DEFEND event + turn advancement events
       expect(result).toHaveLength(3);
-      expect(result[0].type).toBe(EventType.COMBATANT_DID_DEFEND);
+      expect(result[0].type).toBe(EventType.ACTOR_DID_DEFEND);
       expect(result[1].type).toBe(EventType.COMBAT_TURN_DID_END);
       expect(result[2].type).toBe(EventType.COMBAT_TURN_DID_START);
       expect(mockDone).toHaveBeenCalledOnce();
@@ -193,7 +193,7 @@ describe('Defend Method', () => {
 
       // Should only generate DEFEND event
       expect(result).toHaveLength(1);
-      expect(result[0].type).toBe(EventType.COMBATANT_DID_DEFEND);
+      expect(result[0].type).toBe(EventType.ACTOR_DID_DEFEND);
       expect(mockDone).not.toHaveBeenCalled();
     });
   });

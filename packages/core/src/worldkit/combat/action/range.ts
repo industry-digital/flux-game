@@ -1,4 +1,4 @@
-import { WorldEvent, EventType, CombatantDidAcquireRange } from '~/types/event';
+import { WorldEvent, EventType, ActorDidAssessRange } from '~/types/event';
 import { TransformerContext } from '~/types/handler';
 import { ActorURN } from '~/types/taxonomy';
 import { CombatSession, MovementDirection } from '~/types/combat';
@@ -56,8 +56,8 @@ export const createRangeMethod = (
       : MovementDirection.BACKWARD;
 
     // Create the range acquisition event
-    const rangeEvent: CombatantDidAcquireRange = createWorldEvent({
-      type: EventType.COMBATANT_DID_ACQUIRE_RANGE,
+    const rangeEvent: ActorDidAssessRange = createWorldEvent({
+      type: EventType.ACTOR_DID_ASSESS_RANGE,
       location: actor.location,
       trace: trace,
       actor: actor.id,

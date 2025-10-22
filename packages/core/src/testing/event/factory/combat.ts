@@ -1,16 +1,16 @@
 import { AttackOutcome, AttackType, MovementDirection } from '~/types/combat';
 import {
-  CombatantDidAttack,
-  CombatantWasAttacked,
-  CombatantDidDie,
-  CombatantDidDefend,
-  CombatantDidAcquireTarget,
-  CombatantDidMove,
-  CombatantDidRecoverAp,
-  CombatTurnDidStart,
-  CombatTurnDidEnd,
-  EventType,
-  CombatSessionStarted
+    ActorDidAttack,
+    ActorWasAttacked,
+    ActorDidDie,
+    ActorDidDefend,
+    ActorDidAcquireTarget,
+    ActorDidMoveInCombat,
+    ActorDidRecoverAp,
+    CombatTurnDidStart,
+    CombatTurnDidEnd,
+    EventType,
+    CombatSessionStarted
 } from '~/types/event';
 import { ActorURN, SessionURN } from '~/types/taxonomy';
 import { ActionCost } from '~/types/combat';
@@ -21,13 +21,13 @@ import { ALICE_ID, BOB_ID } from '~/testing/constants';
 import { WellKnownActor } from '~/types/actor';
 
 // Transform function types for each factory
-export type CombatantDidAttackTransform = (event: CombatantDidAttack) => CombatantDidAttack;
-export type CombatantWasAttackedTransform = (event: CombatantWasAttacked) => CombatantWasAttacked;
-export type CombatantDidDieTransform = (event: CombatantDidDie) => CombatantDidDie;
-export type CombatantDidDefendTransform = (event: CombatantDidDefend) => CombatantDidDefend;
-export type CombatantDidAcquireTargetTransform = (event: CombatantDidAcquireTarget) => CombatantDidAcquireTarget;
-export type CombatantDidMoveTransform = (event: CombatantDidMove) => CombatantDidMove;
-export type CombatantDidRecoverApTransform = (event: CombatantDidRecoverAp) => CombatantDidRecoverAp;
+export type CombatantDidAttackTransform = (event: ActorDidAttack) => ActorDidAttack;
+export type CombatantWasAttackedTransform = (event: ActorWasAttacked) => ActorWasAttacked;
+export type CombatantDidDieTransform = (event: ActorDidDie) => ActorDidDie;
+export type CombatantDidDefendTransform = (event: ActorDidDefend) => ActorDidDefend;
+export type CombatantDidAcquireTargetTransform = (event: ActorDidAcquireTarget) => ActorDidAcquireTarget;
+export type CombatantDidMoveTransform = (event: ActorDidMoveInCombat) => ActorDidMoveInCombat;
+export type CombatantDidRecoverApTransform = (event: ActorDidRecoverAp) => ActorDidRecoverAp;
 export type CombatTurnDidStartTransform = (event: CombatTurnDidStart) => CombatTurnDidStart;
 export type CombatTurnDidEndTransform = (event: CombatTurnDidEnd) => CombatTurnDidEnd;
 
@@ -63,11 +63,11 @@ const identity = <T>(x: T): T => x;
 export function createCombatantDidAttackEvent(
   transform: CombatantDidAttackTransform = identity,
   deps: CombatEventFactoryDependencies = DEFAULT_COMBAT_EVENT_FACTORY_DEPS
-): CombatantDidAttack {
+): ActorDidAttack {
   const { createWorldEvent } = deps;
 
   const baseEvent = createWorldEvent({
-    type: EventType.COMBATANT_DID_ATTACK,
+    type: EventType.ACTOR_DID_ATTACK,
     location: DEFAULT_LOCATION,
     actor: ALICE_ID,
     trace: DEFAULT_TRACE,
@@ -78,7 +78,7 @@ export function createCombatantDidAttackEvent(
       roll: DEFAULT_ROLL,
       attackRating: 75,
     },
-  }) as CombatantDidAttack;
+  }) as ActorDidAttack;
 
   return transform(baseEvent);
 }
@@ -89,11 +89,11 @@ export function createCombatantDidAttackEvent(
 export function createCombatantWasAttackedEvent(
   transform: CombatantWasAttackedTransform = identity,
   deps: CombatEventFactoryDependencies = DEFAULT_COMBAT_EVENT_FACTORY_DEPS
-): CombatantWasAttacked {
+): ActorWasAttacked {
   const { createWorldEvent } = deps;
 
   const baseEvent = createWorldEvent({
-    type: EventType.COMBATANT_WAS_ATTACKED,
+    type: EventType.ACTOR_WAS_ATTACKED,
     location: DEFAULT_LOCATION,
     actor: 'flux:actor:test:target' as ActorURN,
     trace: DEFAULT_TRACE,
@@ -105,7 +105,7 @@ export function createCombatantWasAttackedEvent(
       evasionRating: 45,
       damage: 10,
     },
-  }) as CombatantWasAttacked;
+  }) as ActorWasAttacked;
 
   return transform(baseEvent);
 }
@@ -116,18 +116,18 @@ export function createCombatantWasAttackedEvent(
 export function createCombatantDidDieEvent(
   transform: CombatantDidDieTransform = identity,
   deps: CombatEventFactoryDependencies = DEFAULT_COMBAT_EVENT_FACTORY_DEPS
-): CombatantDidDie {
+): ActorDidDie {
   const { createWorldEvent } = deps;
 
   const baseEvent = createWorldEvent({
-    type: EventType.COMBATANT_DID_DIE,
+    type: EventType.ACTOR_DID_DIE,
     location: DEFAULT_LOCATION,
     actor: BOB_ID,
     trace: DEFAULT_TRACE,
     payload: {
       killer: ALICE_ID,
     },
-  }) as CombatantDidDie;
+  }) as ActorDidDie;
 
   return transform(baseEvent);
 }
@@ -138,18 +138,18 @@ export function createCombatantDidDieEvent(
 export function createCombatantDidDefendEvent(
   transform: CombatantDidDefendTransform = identity,
   deps: CombatEventFactoryDependencies = DEFAULT_COMBAT_EVENT_FACTORY_DEPS
-): CombatantDidDefend {
+): ActorDidDefend {
   const { createWorldEvent } = deps;
 
   const baseEvent = createWorldEvent({
-    type: EventType.COMBATANT_DID_DEFEND,
+    type: EventType.ACTOR_DID_DEFEND,
     location: DEFAULT_LOCATION,
     actor: ALICE_ID,
     trace: DEFAULT_TRACE,
     payload: {
       cost: DEFAULT_COST,
     },
-  }) as CombatantDidDefend;
+  }) as ActorDidDefend;
 
   return transform(baseEvent);
 }
@@ -160,11 +160,11 @@ export function createCombatantDidDefendEvent(
 export function createCombatantDidAcquireTargetEvent(
   transform: CombatantDidAcquireTargetTransform = identity,
   deps: CombatEventFactoryDependencies = DEFAULT_COMBAT_EVENT_FACTORY_DEPS
-): CombatantDidAcquireTarget {
+): ActorDidAcquireTarget {
   const { createWorldEvent } = deps;
 
   const baseEvent = createWorldEvent({
-    type: EventType.COMBATANT_DID_ACQUIRE_TARGET,
+    type: EventType.ACTOR_DID_ACQUIRE_TARGET,
     location: DEFAULT_LOCATION,
     actor: ALICE_ID,
     trace: DEFAULT_TRACE,
@@ -172,7 +172,7 @@ export function createCombatantDidAcquireTargetEvent(
       sessionId: DEFAULT_SESSION_ID,
       target: BOB_ID,
     },
-  }) as CombatantDidAcquireTarget;
+  }) as ActorDidAcquireTarget;
 
   return transform(baseEvent);
 }
@@ -183,7 +183,7 @@ export function createCombatantDidAcquireTargetEvent(
 export function createCombatantDidMoveEvent(
   transform: CombatantDidMoveTransform = identity,
   deps: CombatEventFactoryDependencies = DEFAULT_COMBAT_EVENT_FACTORY_DEPS
-): CombatantDidMove {
+): ActorDidMoveInCombat {
   const { createWorldEvent } = deps;
 
   const fromPosition = DEFAULT_POSITION;
@@ -191,7 +191,7 @@ export function createCombatantDidMoveEvent(
   const distance = Math.abs(toPosition.coordinate - fromPosition.coordinate);
 
   const baseEvent = createWorldEvent({
-    type: EventType.COMBATANT_DID_MOVE,
+    type: EventType.ACTOR_DID_MOVE_IN_COMBAT,
     location: DEFAULT_LOCATION,
     actor: ALICE_ID,
     trace: DEFAULT_TRACE,
@@ -202,7 +202,7 @@ export function createCombatantDidMoveEvent(
       direction: MovementDirection.FORWARD,
       cost: DEFAULT_COST,
     },
-  }) as CombatantDidMove;
+  }) as ActorDidMoveInCombat;
 
   return transform(baseEvent);
 }
@@ -213,11 +213,11 @@ export function createCombatantDidMoveEvent(
 export function createCombatantDidRecoverApEvent(
   transform: CombatantDidRecoverApTransform = identity,
   deps: CombatEventFactoryDependencies = DEFAULT_COMBAT_EVENT_FACTORY_DEPS
-): CombatantDidRecoverAp {
+): ActorDidRecoverAp {
   const { createWorldEvent } = deps;
 
   const baseEvent = createWorldEvent({
-    type: EventType.COMBATANT_DID_RECOVER_AP,
+    type: EventType.ACTOR_DID_RECOVER_AP,
     location: DEFAULT_LOCATION,
     actor: ALICE_ID,
     trace: DEFAULT_TRACE,
@@ -226,7 +226,7 @@ export function createCombatantDidRecoverApEvent(
       after: 12.0,
       recovered: 2.0,
     },
-  }) as CombatantDidRecoverAp;
+  }) as ActorDidRecoverAp;
 
   return transform(baseEvent);
 }

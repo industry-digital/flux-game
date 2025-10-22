@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { useCombatMovementTestScenario } from '../testing/movement';
-import { CombatantDidMove, EventType } from '~/types/event';
+import { ActorDidMoveInCombat, EventType } from '~/types/event';
 import { CombatFacing, MovementDirection } from '~/types/combat';
 import { MOVE_BY_AP, MOVE_BY_DISTANCE, MOVE_BY_MAX } from '~/worldkit/combat/combatant';
 import { extractFirstEventOfType } from '~/testing/event';
@@ -26,7 +26,7 @@ describe('Retreat Method', () => {
       const result = retreat(MOVE_BY_DISTANCE, 5);
 
       expect(result).toHaveLength(1);
-      expect(result[0].type).toBe(EventType.COMBATANT_DID_MOVE);
+      expect(result[0].type).toBe(EventType.ACTOR_DID_MOVE_IN_COMBAT);
       expect(attacker.position.coordinate).toBeLessThan(initialPosition); // Moved backward
     });
 
@@ -37,9 +37,9 @@ describe('Retreat Method', () => {
       const result = retreat(MOVE_BY_DISTANCE, 5);
 
       expect(result).toHaveLength(1);
-      const moveEvent: CombatantDidMove = extractFirstEventOfType<CombatantDidMove>(result, EventType.COMBATANT_DID_MOVE)!;
+      const moveEvent: ActorDidMoveInCombat = extractFirstEventOfType<ActorDidMoveInCombat>(result, EventType.ACTOR_DID_MOVE_IN_COMBAT)!;
       expect(moveEvent).toMatchObject({
-        type: EventType.COMBATANT_DID_MOVE,
+        type: EventType.ACTOR_DID_MOVE_IN_COMBAT,
         location: attackerActor.location,
         actor: attackerActor.id,
         payload: {
@@ -59,7 +59,7 @@ describe('Retreat Method', () => {
       const result = retreat(MOVE_BY_AP, 2.0);
 
       expect(result).toHaveLength(1);
-      expect(result[0].type).toBe(EventType.COMBATANT_DID_MOVE);
+      expect(result[0].type).toBe(EventType.ACTOR_DID_MOVE_IN_COMBAT);
       expect(attacker.ap.eff.cur).toBeLessThan(initialAP); // AP consumed
     });
 
@@ -70,7 +70,7 @@ describe('Retreat Method', () => {
 
       expect(context.declareEvent).toHaveBeenCalledWith(
         expect.objectContaining({
-          type: EventType.COMBATANT_DID_MOVE,
+          type: EventType.ACTOR_DID_MOVE_IN_COMBAT,
           payload: expect.objectContaining({
             cost: expect.any(Object),
             from: expect.any(Object),
@@ -154,11 +154,11 @@ describe('Retreat Method', () => {
       const { retreat, attackerActor, context } = defaultScenario;
 
       const result = retreat(MOVE_BY_DISTANCE, 5);
-      const event = result[0] as CombatantDidMove;
+      const event = result[0] as ActorDidMoveInCombat;
 
       expect(result).toHaveLength(1);
       expect(event).toMatchObject({
-        type: EventType.COMBATANT_DID_MOVE,
+        type: EventType.ACTOR_DID_MOVE_IN_COMBAT,
         trace: expect.any(String),
         actor: attackerActor.id,
         payload: {
@@ -177,7 +177,7 @@ describe('Retreat Method', () => {
       const result = retreat(MOVE_BY_DISTANCE, 5);
 
       expect(result).toHaveLength(1);
-      const event = result[0] as CombatantDidMove;
+      const event = result[0] as ActorDidMoveInCombat;
       expect(event.payload.from.facing).toBe(CombatFacing.RIGHT);
       expect(event.payload.to.facing).toBe(CombatFacing.RIGHT); // Should maintain facing
     });
@@ -238,7 +238,7 @@ describe('Retreat Method', () => {
       const result = retreat(MOVE_BY_DISTANCE, 7.7);
 
       expect(result).toHaveLength(1);
-      const event = result[0] as CombatantDidMove;
+      const event = result[0] as ActorDidMoveInCombat;
 
       // Event payload should contain whole number coordinates
       expect(Number.isInteger(event.payload.to.coordinate)).toBe(true);
@@ -256,7 +256,7 @@ describe('Retreat Method', () => {
       const result = retreat(MOVE_BY_AP, 1.5);
 
       expect(result).toHaveLength(1);
-      const event = result[0] as CombatantDidMove;
+      const event = result[0] as ActorDidMoveInCombat;
 
       // Distance in event should be a whole number (tactical rounding applied)
       expect(Number.isInteger(event.payload.distance)).toBe(true);
@@ -273,7 +273,7 @@ describe('Retreat Method', () => {
       const result = retreat(MOVE_BY_DISTANCE, 8);
 
       expect(result).toHaveLength(1);
-      const event = result[0] as CombatantDidMove;
+      const event = result[0] as ActorDidMoveInCombat;
 
       // Event distance should match actual movement (from tactical positions)
       const actualMovement = Math.abs(event.payload.to.coordinate - event.payload.from.coordinate);
@@ -307,7 +307,7 @@ describe('Retreat Method', () => {
       expect(result).toHaveLength(1);
       expect(result[0].trace).toBe(customTrace);
       expect(result[0]).toMatchObject({
-        type: EventType.COMBATANT_DID_MOVE,
+        type: EventType.ACTOR_DID_MOVE_IN_COMBAT,
         trace: customTrace,
         payload: expect.any(Object)
       });
@@ -339,7 +339,7 @@ describe('Retreat Method', () => {
 
       // Should only generate MOVE event, not turn advancement events
       expect(result).toHaveLength(1);
-      expect(result[0].type).toBe(EventType.COMBATANT_DID_MOVE);
+      expect(result[0].type).toBe(EventType.ACTOR_DID_MOVE_IN_COMBAT);
     });
 
     it('should auto-advance turn when autoDone is true and AP is depleted by MOVE_BY_MAX', () => {
@@ -367,7 +367,7 @@ describe('Retreat Method', () => {
 
       // Should generate MOVE event + turn advancement events
       expect(result).toHaveLength(3);
-      expect(result[0].type).toBe(EventType.COMBATANT_DID_MOVE);
+      expect(result[0].type).toBe(EventType.ACTOR_DID_MOVE_IN_COMBAT);
       expect(result[1].type).toBe(EventType.COMBAT_TURN_DID_END);
       expect(result[2].type).toBe(EventType.COMBAT_TURN_DID_START);
       expect(mockDone).toHaveBeenCalledOnce();
@@ -393,7 +393,7 @@ describe('Retreat Method', () => {
 
       // Should generate MOVE event + turn advancement events due to AP depletion
       expect(result.length).toBeGreaterThan(1);
-      expect(result[0].type).toBe(EventType.COMBATANT_DID_MOVE);
+      expect(result[0].type).toBe(EventType.ACTOR_DID_MOVE_IN_COMBAT);
       expect(result[result.length - 1].type).toBe(EventType.COMBAT_TURN_DID_END);
       expect(mockDone).toHaveBeenCalledOnce();
 
@@ -413,7 +413,7 @@ describe('Retreat Method', () => {
 
       // Should only generate MOVE event since AP is not depleted
       expect(result).toHaveLength(1);
-      expect(result[0].type).toBe(EventType.COMBATANT_DID_MOVE);
+      expect(result[0].type).toBe(EventType.ACTOR_DID_MOVE_IN_COMBAT);
       expect(mockDone).not.toHaveBeenCalled();
 
       // Verify AP is not depleted
@@ -431,7 +431,7 @@ describe('Retreat Method', () => {
 
       // Should only generate MOVE event
       expect(result).toHaveLength(1);
-      expect(result[0].type).toBe(EventType.COMBATANT_DID_MOVE);
+      expect(result[0].type).toBe(EventType.ACTOR_DID_MOVE_IN_COMBAT);
       expect(mockDone).not.toHaveBeenCalled();
     });
 
@@ -468,7 +468,7 @@ describe('Retreat Method', () => {
 
       // Should only generate MOVE event since done is not available
       expect(result).toHaveLength(1);
-      expect(result[0].type).toBe(EventType.COMBATANT_DID_MOVE);
+      expect(result[0].type).toBe(EventType.ACTOR_DID_MOVE_IN_COMBAT);
     });
   });
 
@@ -481,7 +481,7 @@ describe('Retreat Method', () => {
       const result = retreat(MOVE_BY_AP, testAP);
 
       expect(result).toHaveLength(1);
-      const event = result[0] as CombatantDidMove;
+      const event = result[0] as ActorDidMoveInCombat;
       const actualDistance = Math.abs(event.payload.to.coordinate - initialPosition);
 
       // RETREAT should move less distance than ADVANCE would with same AP due to efficiency penalty
@@ -498,7 +498,7 @@ describe('Retreat Method', () => {
       const result = retreat(MOVE_BY_DISTANCE, testDistance);
 
       expect(result).toHaveLength(1);
-      const event = result[0] as CombatantDidMove;
+      const event = result[0] as ActorDidMoveInCombat;
 
       // Should cost more AP than advance would for same distance due to efficiency penalty
       expect(event.payload.cost.ap).toBeGreaterThan(testDistance * 0.18); // Base cost would be ~1.8 AP for 10m
@@ -516,7 +516,7 @@ describe('Retreat Method', () => {
       const result = retreat(MOVE_BY_MAX, 0);
 
       expect(result).toHaveLength(1);
-      const event = result[0] as CombatantDidMove;
+      const event = result[0] as ActorDidMoveInCombat;
 
       // Should use all available AP (same as advance)
       expect(event.payload.cost.ap).toBe(initialAP);
@@ -546,8 +546,8 @@ describe('Retreat Method', () => {
       expect(advanceResult).toHaveLength(1);
       expect(retreatResult).toHaveLength(1);
 
-      const advanceEvent = advanceResult[0] as CombatantDidMove;
-      const retreatEvent = retreatResult[0] as CombatantDidMove;
+      const advanceEvent = advanceResult[0] as ActorDidMoveInCombat;
+      const retreatEvent = retreatResult[0] as ActorDidMoveInCombat;
 
       // Both should use same AP
       expect(advanceEvent.payload.cost.ap).toBe(testAP);

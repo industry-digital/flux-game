@@ -48,7 +48,7 @@ export function createDefendMethod (
 
 
     const defendEvent = createWorldEvent({
-      type: EventType.COMBATANT_DID_DEFEND,
+      type: EventType.ACTOR_DID_DEFEND,
       location: actor.location,
       trace: trace,
       actor: actor.id,

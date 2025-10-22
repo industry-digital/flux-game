@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { createAdvanceMethod } from './advance';
-import { CombatantDidMove, EventType } from '~/types/event';
+import { ActorDidMoveInCombat, EventType } from '~/types/event';
 import { CombatFacing, MovementDirection } from '~/types/combat';
 import { createWorldEvent } from '~/worldkit/event';
 import { distanceToAp, apToDistance } from '~/worldkit/physics/movement';
@@ -320,11 +320,11 @@ describe('createAdvanceMethod', () => {
       const initialPosition = defaultScenario.attacker.position.coordinate;
 
       const result = advance(MOVE_BY_MAX, 0);
-      const event = result[0] as CombatantDidMove;
+      const event = result[0] as ActorDidMoveInCombat;
       const distance = Math.abs(event.payload.from.coordinate - event.payload.to.coordinate);
 
       expect(result).toHaveLength(1);
-      expect(event.type).toBe(EventType.COMBATANT_DID_MOVE);
+      expect(event.type).toBe(EventType.ACTOR_DID_MOVE_IN_COMBAT);
       expect(event.actor).toBe(attackerActor.id);
       expect(event.payload.from.coordinate).toBe(initialPosition);
       expect(event.payload.to.coordinate).toBeGreaterThan(initialPosition);
@@ -411,10 +411,10 @@ describe('createAdvanceMethod', () => {
       const { advance, attackerActor, context } = defaultScenario;
 
       const result = advance(MOVE_BY_DISTANCE, 15);
-      const event = result[0] as CombatantDidMove;
+      const event = result[0] as ActorDidMoveInCombat;
 
       expect(result).toHaveLength(1);
-      expect(event.type).toBe(EventType.COMBATANT_DID_MOVE);
+      expect(event.type).toBe(EventType.ACTOR_DID_MOVE_IN_COMBAT);
       expect(event.actor).toBe(attackerActor.id);
       expect(event.payload.from.coordinate).toBe(100);
       expect(event.payload.to.coordinate).toBe(115);
@@ -467,7 +467,7 @@ describe('createAdvanceMethod', () => {
       const result = advance(MOVE_BY_DISTANCE, 7.7);
 
       expect(result).toHaveLength(1);
-      const event = result[0] as CombatantDidMove;
+      const event = result[0] as ActorDidMoveInCombat;
 
       // Both from and to coordinates should be whole numbers
       expect(Number.isInteger(event.payload.from.coordinate)).toBe(true);
@@ -481,7 +481,7 @@ describe('createAdvanceMethod', () => {
       const result = advance(MOVE_BY_AP, 2.5);
 
       expect(result).toHaveLength(1);
-      const event = result[0] as CombatantDidMove;
+      const event = result[0] as ActorDidMoveInCombat;
 
       // Distance in event should be a whole number (tactical rounding applied)
       expect(Number.isInteger(event.payload.distance)).toBe(true);
@@ -494,7 +494,7 @@ describe('createAdvanceMethod', () => {
       const result = advance(MOVE_BY_DISTANCE, 15);
 
       expect(result).toHaveLength(1);
-      const event = result[0] as CombatantDidMove;
+      const event = result[0] as ActorDidMoveInCombat;
 
       // Event distance should match actual movement (from tactical positions)
       const actualMovement = Math.abs(event.payload.to.coordinate - event.payload.from.coordinate);
@@ -623,7 +623,7 @@ describe('createAdvanceMethod', () => {
 
       // Should only generate MOVE event, not turn advancement events
       expect(result).toHaveLength(1);
-      expect(result[0].type).toBe(EventType.COMBATANT_DID_MOVE);
+      expect(result[0].type).toBe(EventType.ACTOR_DID_MOVE_IN_COMBAT);
     });
 
     it('should auto-advance turn when autoDone is true and AP is depleted by MOVE_BY_MAX', () => {
@@ -651,7 +651,7 @@ describe('createAdvanceMethod', () => {
 
       // Should generate MOVE event + turn advancement events
       expect(result).toHaveLength(3);
-      expect(result[0].type).toBe(EventType.COMBATANT_DID_MOVE);
+      expect(result[0].type).toBe(EventType.ACTOR_DID_MOVE_IN_COMBAT);
       expect(result[1].type).toBe(EventType.COMBAT_TURN_DID_END);
       expect(result[2].type).toBe(EventType.COMBAT_TURN_DID_START);
       expect(mockDone).toHaveBeenCalledOnce();
@@ -677,7 +677,7 @@ describe('createAdvanceMethod', () => {
 
       // Should generate MOVE event + turn advancement events
       expect(result.length).toBeGreaterThan(1);
-      expect(result[0].type).toBe(EventType.COMBATANT_DID_MOVE);
+      expect(result[0].type).toBe(EventType.ACTOR_DID_MOVE_IN_COMBAT);
       expect(result[result.length - 1].type).toBe(EventType.COMBAT_TURN_DID_END);
       expect(mockDone).toHaveBeenCalledOnce();
 
@@ -705,7 +705,7 @@ describe('createAdvanceMethod', () => {
 
       // Should generate MOVE event + turn advancement events
       expect(result.length).toBeGreaterThan(1);
-      expect(result[0].type).toBe(EventType.COMBATANT_DID_MOVE);
+      expect(result[0].type).toBe(EventType.ACTOR_DID_MOVE_IN_COMBAT);
       expect(result[result.length - 1].type).toBe(EventType.COMBAT_TURN_DID_END);
       expect(mockDone).toHaveBeenCalledOnce();
 
@@ -725,7 +725,7 @@ describe('createAdvanceMethod', () => {
 
       // Should only generate MOVE event since AP is not depleted
       expect(result).toHaveLength(1);
-      expect(result[0].type).toBe(EventType.COMBATANT_DID_MOVE);
+      expect(result[0].type).toBe(EventType.ACTOR_DID_MOVE_IN_COMBAT);
       expect(mockDone).not.toHaveBeenCalled();
 
       // Verify AP is not depleted
@@ -743,7 +743,7 @@ describe('createAdvanceMethod', () => {
 
       // Should only generate MOVE event
       expect(result).toHaveLength(1);
-      expect(result[0].type).toBe(EventType.COMBATANT_DID_MOVE);
+      expect(result[0].type).toBe(EventType.ACTOR_DID_MOVE_IN_COMBAT);
       expect(mockDone).not.toHaveBeenCalled();
     });
 
@@ -774,7 +774,7 @@ describe('createAdvanceMethod', () => {
 
       // Should only generate MOVE event since done is not available
       expect(result).toHaveLength(1);
-      expect(result[0].type).toBe(EventType.COMBATANT_DID_MOVE);
+      expect(result[0].type).toBe(EventType.ACTOR_DID_MOVE_IN_COMBAT);
     });
   });
 
@@ -787,7 +787,7 @@ describe('createAdvanceMethod', () => {
       const result = advance(MOVE_BY_AP, testAP);
 
       expect(result).toHaveLength(1);
-      const event = result[0] as CombatantDidMove;
+      const event = result[0] as ActorDidMoveInCombat;
       const actualDistance = Math.abs(event.payload.to.coordinate - initialPosition);
 
       // ADVANCE should move the full distance that the AP allows (no efficiency penalty)
@@ -805,7 +805,7 @@ describe('createAdvanceMethod', () => {
       const result = advance(MOVE_BY_MAX, 0);
 
       expect(result).toHaveLength(1);
-      const event = result[0] as CombatantDidMove;
+      const event = result[0] as ActorDidMoveInCombat;
 
       // Should use all available AP
       expect(event.payload.cost.ap).toBe(initialAP);

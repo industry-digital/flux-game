@@ -341,7 +341,7 @@ describe('Attack Method with AI Integration', () => {
       // Verify advance method was called with correct args
       expect(mockAdvance).toHaveBeenCalledWith('distance', 10, expect.any(String), { autoDone: undefined });
       expect(result).toContainEqual(
-        expect.objectContaining({ type: 'combat:actor:moved' })
+        expect.objectContaining({ type: EventType.ACTOR_DID_MOVE_IN_COMBAT })
       );
     });
 
@@ -375,7 +375,7 @@ describe('Attack Method with AI Integration', () => {
       // Verify retreat method was called with correct args
       expect(mockRetreat).toHaveBeenCalledWith('distance', 5, expect.any(String), { autoDone: undefined });
       expect(result).toContainEqual(
-        expect.objectContaining({ type: 'combat:actor:moved' })
+        expect.objectContaining({ type: EventType.ACTOR_DID_MOVE_IN_COMBAT })
       );
     });
 
@@ -421,8 +421,8 @@ describe('Attack Method with AI Integration', () => {
       expect(mockStrike).toHaveBeenCalledWith('flux:actor:bob', expect.any(String));
       // Should have 2 events: advance + strike (no target acquisition since combatant already targets 'flux:actor:bob')
       expect(result).toHaveLength(2);
-      expect(result).toContainEqual(expect.objectContaining({ type: 'combat:actor:moved' }));
-      expect(result).toContainEqual(expect.objectContaining({ type: 'combat:actor:attack' }));
+      expect(result).toContainEqual(expect.objectContaining({ type: EventType.ACTOR_DID_MOVE_IN_COMBAT }));
+      expect(result).toContainEqual(expect.objectContaining({ type: EventType.ACTOR_DID_ATTACK }));
     });
   });
 
@@ -726,7 +726,7 @@ describe('Attack Method with AI Integration', () => {
         createWorldEvent({
           id: 'test-id',
           ts: DEFAULT_TIMESTAMP,
-          type: EventType.COMBATANT_DID_ATTACK,
+          type: EventType.ACTOR_DID_ATTACK,
           actor: actor.id,
           location: actor.location,
           trace: trace, // Use the trace parameter passed to the function
@@ -768,7 +768,7 @@ describe('Attack Method with AI Integration', () => {
 
       expect(events).toHaveLength(1);
       // Only event should be the combat plan execution event (no target acquisition since combatant already targets 'flux:actor:bob')
-      expect(events[0].type).toBe(EventType.COMBATANT_DID_ATTACK);
+      expect(events[0].type).toBe(EventType.ACTOR_DID_ATTACK);
       expect(events[0].trace).toBe(customTrace);
       expect(mockExecuteCombatPlan).toHaveBeenCalled();
     });
@@ -799,7 +799,7 @@ describe('Attack Method with AI Integration', () => {
         createWorldEvent({
           id: 'test-id',
           ts: DEFAULT_TIMESTAMP,
-          type: EventType.COMBATANT_DID_ATTACK,
+          type: EventType.ACTOR_DID_ATTACK,
           actor: actor.id,
           location: actor.location,
           trace: generatedTrace,
