@@ -2,7 +2,7 @@
  * Damage resolution functions for weapons
  */
 import { DamageModel } from '~/types/damage';
-import { RollResultWithoutModifiers, RollSpecification } from '~/types/dice';
+import { RollResult, RollResultWithoutModifiers, RollSpecification } from '~/types/dice';
 import { Actor } from '~/types/entity/actor';
 import { WeaponSchema, WeaponTimer } from '~/types/schema/weapon';
 import { URNLike } from '~/types/taxonomy';
@@ -30,6 +30,7 @@ export const calculateAverageWeaponDamagePerHit = (
 ): number => {
   const baseDamage = getWeaponBaseDamage(weapon);
   const averageBaseDamage = calculateAverageRollResult(baseDamage);
+
   if (weapon.damage?.model !== DamageModel.STAT_SCALING) {
     return averageBaseDamage;
   }
@@ -48,7 +49,7 @@ export function rollWeaponDamage(
   actor: Actor,
   weapon: WeaponSchema,
   deps: CalculateWeaponDamageDependencies = DEFAULT_CALCULATE_WEAPON_DAMAGE_DEPS,
-): RollResultWithoutModifiers {
+): RollResult {
   const baseDamageRoll = deps.rollDice(getWeaponBaseDamage(weapon));
 
   if (weapon.damage.model === DamageModel.FIXED) {
@@ -56,12 +57,12 @@ export function rollWeaponDamage(
   }
 
   const scalingStatValue = getStatValue(actor, weapon.damage.stat);
-  const bonusDamage = (scalingStatValue / MAX_STAT_VALUE) * weapon.damage.efficiency;
+  const damageBonus = (scalingStatValue / MAX_STAT_VALUE) * weapon.damage.efficiency;
   const modifierId: URNLike = `stat:${weapon.damage.stat}`;
 
   applyModifierToRollResult(baseDamageRoll, modifierId, {
     origin: modifierId,
-    value: bonusDamage,
+    value: damageBonus,
     duration: -1,
     ts: deps.timestamp(),
   });

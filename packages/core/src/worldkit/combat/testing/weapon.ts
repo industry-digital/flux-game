@@ -8,7 +8,7 @@ export type WeaponTransformer = (schema: WeaponSchema) => WeaponSchema;
 const identity: WeaponTransformer = (schema) => schema;
 export const createTestWeapon = (transform: WeaponTransformer = identity): WeaponSchema => {
   return transform(
-    createWeaponSchema((schema: WeaponSchema) => ({
+    createWeaponSchema((schema) => ({
       ...schema,
       urn: 'flux:schema:weapon:test',
       skill: 'flux:schema:skill:weapon:melee',
