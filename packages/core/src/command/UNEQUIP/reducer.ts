@@ -1,17 +1,19 @@
 import { Transformer, TransformerContext } from '~/types/handler';
-import { EquipCommand } from './types';
+import { UnequipCommand } from './types';
 import { withBasicWorldStateValidation } from '../validation';
 import { withExistingCombatSession } from '~/worldkit/combat/validation';
 import { withCombatCost } from '../withCombatCost';
-import { WeaponItemURN, WeaponSchemaURN } from '~/types/taxonomy';
+import { WeaponSchemaURN } from '~/types/taxonomy';
 import { createWorldEvent } from '~/worldkit/event';
-import { ActorDidEquipWeapon, EventType } from '~/types/event';
+import { ActorDidUnequipWeapon, EventType } from '~/types/event';
 import { ActionCost } from '~/types/combat';
 
+const ITEM_NOT_EQUIPPED_ERROR = `\`UNEQUIP\`: Item is not equipped`;
+
 /**
- * Core EQUIP command logic (without combat costs)
+ * Core UNEQUIP command logic (without combat costs)
  */
-const equipReducerCore: Transformer<EquipCommand> = (context, command) => {
+const unequipReducerCore: Transformer<UnequipCommand> = (context, command) => {
   const { actors } = context.world;
   const actor = actors[command.actor];
   const item = actor.inventory.items[command.args.item];
@@ -24,56 +26,58 @@ const equipReducerCore: Transformer<EquipCommand> = (context, command) => {
     return context;
   }
 
-  if (!item.schema.startsWith('flux:schema:weapon:')) {
-    context.declareError(
-      `Item ${command.args.item} is not a weapon`,
-      command.id
-    );
+  if (item.schema.startsWith('flux:schema:weapon:')) {
+    // Check if the weapon is actually equipped
+    const equippedWeaponId = context.equipmentApi.getEquippedWeapon(actor);
+    if (equippedWeaponId !== item.id) {
+      context.declareError(ITEM_NOT_EQUIPPED_ERROR, command.id);
+      return context;
+    }
+
+    context.equipmentApi.unequipWeapon(actor, item.id);
+
+    const unequipEvent: ActorDidUnequipWeapon = createWorldEvent({
+      type: EventType.ACTOR_DID_UNEQUIP_WEAPON,
+      trace: command.id,
+      location: command.location!,
+      actor: command.actor!,
+      payload: {
+        itemId: item.id,
+        schema: item.schema as WeaponSchemaURN,
+      },
+    });
+
+    context.declareEvent(unequipEvent);
+
     return context;
   }
 
-  context.equipmentApi.equipWeapon(actor, item.id as WeaponItemURN);
-
-  const didEquipWeaponEvent: ActorDidEquipWeapon = createWorldEvent({
-    type: EventType.ACTOR_DID_EQUIP_WEAPON,
-    trace: command.id,
-    location: command.location!,
-    actor: command.actor!,
-    payload: {
-      itemId: item.id,
-      schema: item.schema as WeaponSchemaURN,
-    },
-  });
-
-  context.declareEvent(didEquipWeaponEvent);
+  context.declareError(ITEM_NOT_EQUIPPED_ERROR, command.id);
 
   return context;
 };
 
+const FREE_ACTION_COST: Readonly<ActionCost> = Object.freeze({ energy: 0, ap: 0 });
+
 /**
  * Calculate AP cost for equipping a weapon
  */
-const calculateEquipCost = (context: TransformerContext, command: EquipCommand): ActionCost => {
-  // Equipping a weapon takes 0.5 AP (half a second)
-  return { ap: 0.5, energy: 0 };
+const calculateUnequipCost = (context: TransformerContext, command: UnequipCommand): ActionCost => {
+  return FREE_ACTION_COST;
 };
 
-/**
- * EQUIP command reducer with conditional combat cost support
- * Works both in and out of combat, but only applies AP costs when in combat
- */
-export const equipReducer: Transformer<EquipCommand> = withBasicWorldStateValidation(
+export const unequipReducer: Transformer<UnequipCommand> = withBasicWorldStateValidation(
   (context, command) => {
     // If no session provided, execute without combat costs (out of combat)
     if (!command.session) {
-      return equipReducerCore(context, command);
+      return unequipReducerCore(context, command);
     }
 
     // If session provided, validate combat context and apply costs
     return withExistingCombatSession(
       withCombatCost(
-        equipReducerCore,
-        calculateEquipCost
+        unequipReducerCore,
+        calculateUnequipCost
       )
     )(context, command);
   }

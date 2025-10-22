@@ -559,6 +559,10 @@ export type ActorDidUnequipWeaponInput = AbstractWorldEventInput<
   {
     itemId: ItemURN;
     schema: WeaponSchemaURN;
+    /**
+     * If the command was executed in combat, the cost of the action will be included in the payload.
+     */
+    cost?: ActionCost;
   }
 >;
 

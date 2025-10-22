@@ -16,6 +16,7 @@ import { WeaponSchema } from '~/types/schema/weapon';
 import { createWeaponSchema } from '~/worldkit/schema/weapon';
 import { createPlace } from '~/worldkit/entity/place';
 import { Place } from '~/types/entity/place';
+import { MAX_AP } from '~/worldkit/combat/ap';
 
 describe('EQUIP Command Reducer', () => {
   const DEFAULT_WEAPON: ItemURN = 'flux:item:weapon:iron-sword';
@@ -30,6 +31,10 @@ describe('EQUIP Command Reducer', () => {
     defaultWeaponSchema = createWeaponSchema((w: WeaponSchema) => ({
       ...w,
       urn: DEFAULT_WEAPON_SCHEMA,
+      timers: {
+        ...w.timers,
+        setup: 500, // 500ms = 0.5 AP
+      },
     }));
 
     context = createTransformerContext((c: TransformerContext) => ({
@@ -149,7 +154,7 @@ describe('EQUIP Command Reducer', () => {
           [ALICE_ID]: {
             team: 'heroes',
             name: 'Test Warrior',
-            ap: 2.0, // More than enough for 0.5 AP cost
+            ap: MAX_AP,
             // Don't pre-equip - we want to test equipping it
           }
         },
@@ -196,7 +201,7 @@ describe('EQUIP Command Reducer', () => {
 
       // Should have deducted AP from combatant
       const updatedCombatant = result.world.sessions[scenario.session.id].data.combatants.get(ALICE_ID)!;
-      expect(updatedCombatant.ap.eff.cur).toBe(1.5); // 2.0 - 0.5
+      expect(updatedCombatant.ap.eff.cur).toBe(5.5); // 6.0 - 0.5
     });
 
     it('should error when insufficient AP in combat', () => {

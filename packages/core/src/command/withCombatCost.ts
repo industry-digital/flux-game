@@ -9,6 +9,7 @@ import { Command } from '~/types/intent';
 import { Transformer, TransformerContext } from '~/types/handler';
 import { ActionCost } from '~/types/combat';
 import { createCombatSessionApi } from '~/worldkit/combat/session/session';
+import { roundApCostUp } from '~/worldkit/combat/tactical-rounding';
 
 /**
  * Cost calculation function type
@@ -48,7 +49,7 @@ export function withCombatCost<TCommand extends Command>(
 
     // Calculate cost
     const cost = calculateCost(context, command);
-    const apCost = cost.ap ?? 0;
+    const apCost = roundApCostUp(cost.ap ?? 0);
     const energyCost = cost.energy ?? 0;
 
     // Validate affordability

@@ -1,7 +1,5 @@
 import { describe, it, expect, beforeEach } from 'vitest';
-import { equipReducer } from './reducer';
-import { EquipCommand } from './types';
-import { ActorDidEquipWeapon, EventType } from '~/types/event';
+import { ActorDidUnequipWeapon, EventType } from '~/types/event';
 import { useCombatScenario } from '~/worldkit/combat/testing/scenario';
 import { createTransformerContext, createWorldProjection } from '~/worldkit/context';
 import { ActorURN, ItemURN, WeaponSchemaURN } from '~/types/taxonomy';
@@ -9,20 +7,22 @@ import { ALICE_ID, DEFAULT_LOCATION, DEFAULT_TIMESTAMP } from '~/testing/constan
 import { WorldProjection } from '~/types/world';
 import { createActor } from '~/worldkit/entity/actor';
 import { TransformerContext } from '~/types/handler';
-import { createEquipCommand } from '~/testing/command/factory/equipment';
+import { createUnequipCommand } from '~/testing/command/factory/equipment';
 import { Actor } from '~/types/entity/actor';
 import { extractFirstEventOfType } from '~/testing/event';
 import { WeaponSchema } from '~/types/schema/weapon';
 import { createWeaponSchema } from '~/worldkit/schema/weapon';
 import { createPlace } from '~/worldkit/entity/place';
 import { Place } from '~/types/entity/place';
+import { UnequipCommand } from '~/command/UNEQUIP/types';
+import { unequipReducer } from '~/command/UNEQUIP/reducer';
 
-describe('EQUIP Command Reducer', () => {
+describe('UNEQUIP Command Reducer', () => {
   const DEFAULT_WEAPON: ItemURN = 'flux:item:weapon:iron-sword';
   const DEFAULT_WEAPON_SCHEMA: WeaponSchemaURN = 'flux:schema:weapon:sword';
 
   let context: TransformerContext;
-  let command: EquipCommand;
+  let command: UnequipCommand;
   let alice: Actor;
 
   let defaultWeaponSchema: WeaponSchema;
@@ -55,9 +55,11 @@ describe('EQUIP Command Reducer', () => {
     // Get the alice actor from the context (not a separate instance)
     alice = context.world.actors[ALICE_ID];
 
+    // Add weapon to inventory and equip it (since UNEQUIP tests need an equipped weapon)
     context.inventoryApi.addItem(alice, { id: DEFAULT_WEAPON, schema: DEFAULT_WEAPON_SCHEMA });
+    context.equipmentApi.equipWeapon(alice, DEFAULT_WEAPON);
 
-    command = createEquipCommand((command: EquipCommand) => ({
+    command = createUnequipCommand((command: UnequipCommand) => ({
       ...command,
       args: {
         item: DEFAULT_WEAPON,
@@ -67,27 +69,27 @@ describe('EQUIP Command Reducer', () => {
   });
 
   describe('Out of Combat (No Session)', () => {
-    it('should equip weapon without AP costs when not in combat', () => {
-      const result = equipReducer(context, command);
+    it('should unequip weapon without AP costs when not in combat', () => {
+      const result = unequipReducer(context, command);
 
       // Should succeed without errors
       expect(result.getDeclaredErrors()).toHaveLength(0);
 
-      // Should declare ACTOR_DID_EQUIP_WEAPON event
+      // Should declare ACTOR_DID_UNEQUIP_WEAPON event
       const events = result.getDeclaredEvents();
       expect(events).toHaveLength(1);
 
-      const equipEvent = extractFirstEventOfType<ActorDidEquipWeapon>(events, EventType.ACTOR_DID_EQUIP_WEAPON)!;
-      expect(equipEvent).toBeDefined();
-      expect(equipEvent.payload.itemId).toBe(DEFAULT_WEAPON);
-      expect(equipEvent.payload.schema).toBe(DEFAULT_WEAPON_SCHEMA);
+      const unequipEvent = extractFirstEventOfType<ActorDidUnequipWeapon>(events, EventType.ACTOR_DID_UNEQUIP_WEAPON)!;
+      expect(unequipEvent).toBeDefined();
+      expect(unequipEvent.payload.itemId).toBe(DEFAULT_WEAPON);
+      expect(unequipEvent.payload.schema).toBe(DEFAULT_WEAPON_SCHEMA);
 
       // Should NOT have cost in payload (out of combat)
-      expect(equipEvent.payload.cost).toBeUndefined();
+      expect(unequipEvent.payload.cost).toBeUndefined();
 
-      // Should have equipped the weapon
+      // Should have unequipped the weapon
       const actor = result.world.actors[ALICE_ID];
-      expect(result.equipmentApi.getEquippedWeapon(actor)).toBe(DEFAULT_WEAPON);
+      expect(result.equipmentApi.getEquippedWeapon(actor)).toBeNull();
     });
 
     it('should error when item not found in inventory', () => {
@@ -95,7 +97,7 @@ describe('EQUIP Command Reducer', () => {
       const actor = context.world.actors[ALICE_ID];
       delete actor.inventory.items[DEFAULT_WEAPON];
 
-      const result = equipReducer(context, command);
+      const result = unequipReducer(context, command);
 
       const errors = result.getDeclaredErrors();
       expect(errors).toHaveLength(1);
@@ -103,32 +105,32 @@ describe('EQUIP Command Reducer', () => {
       expect(result.getDeclaredEvents()).toHaveLength(0);
     });
 
-    it('should error when item is not a weapon', () => {
-      const nonWeaponId = 'flux:item:health-potion' as ItemURN;
-
-      // Add a non-weapon item to inventory and update command to reference it
+    it('should error when item is not equipped', () => {
+      // Add a weapon to inventory but don't equip it (use the same weapon as the equipped one for simplicity)
+      const unequippedWeapon = 'flux:item:weapon:second-sword' as ItemURN;
       const actor = context.world.actors[ALICE_ID];
-      actor.inventory.items[nonWeaponId] = {
-        id: nonWeaponId,
-        schema: 'flux:schema:armor:leather-jacket',
-      };
 
-      const testCommand = createEquipCommand((cmd: EquipCommand) => ({
+      context.inventoryApi.addItem(actor, {
+        id: unequippedWeapon,
+        schema: DEFAULT_WEAPON_SCHEMA // Use the same schema as the equipped weapon
+      });
+
+      const testCommand = createUnequipCommand((cmd: UnequipCommand) => ({
         ...cmd,
-        args: { item: nonWeaponId }
+        args: { item: unequippedWeapon }
       }));
 
-      const result = equipReducer(context, testCommand);
+      const result = unequipReducer(context, testCommand);
 
       const errors = result.getDeclaredErrors();
       expect(errors).toHaveLength(1);
-      expect(errors[0].error.message).toContain('is not a weapon');
+      expect(errors[0].error.message).toContain('Item is not equipped');
       expect(result.getDeclaredEvents()).toHaveLength(0);
     });
   });
 
   describe('In Combat (With Session)', () => {
-    it('should equip weapon with AP costs when in combat', () => {
+    it('should unequip weapon with AP costs when in combat', () => {
       // Create a base context with the proper place setup (like our beforeEach)
       const baseContext = createTransformerContext((c: TransformerContext) => ({
         ...c,
@@ -149,130 +151,64 @@ describe('EQUIP Command Reducer', () => {
           [ALICE_ID]: {
             team: 'heroes',
             name: 'Test Warrior',
-            ap: 2.0, // More than enough for 0.5 AP cost
-            // Don't pre-equip - we want to test equipping it
+            ap: 2.0, // More than enough for any AP cost
+            equipment: { weapon: defaultWeaponSchema.urn } // Pre-equip the weapon
           }
         },
         weapons: [defaultWeaponSchema],
         location: DEFAULT_LOCATION // Use the same location as our other tests
       });
 
-      // Add the weapon to inventory manually (since we didn't pre-equip)
-      const weaponItem = scenario.context.inventoryApi.addItem(
-        scenario.actors[ALICE_ID].actor,
-        { schema: defaultWeaponSchema.urn as WeaponSchemaURN }
-      );
+      // Get the equipped weapon from the actor
+      const actor = scenario.actors[ALICE_ID].actor;
+      const equippedWeaponId = scenario.context.equipmentApi.getEquippedWeapon(actor);
 
-      const command = createEquipCommand((cmd: EquipCommand) => ({
+      const command = createUnequipCommand((cmd: UnequipCommand) => ({
         ...cmd,
         actor: ALICE_ID,
         location: DEFAULT_LOCATION,
         session: scenario.session.id,
         ts: DEFAULT_TIMESTAMP,
-        args: { item: weaponItem.id }
+        args: { item: equippedWeaponId! }
       }));
 
-
-      const result = equipReducer(scenario.context, command);
+      const result = unequipReducer(scenario.context, command);
 
       // Should succeed without errors
       expect(result.getDeclaredErrors()).toHaveLength(0);
 
-      // Should declare ACTOR_DID_EQUIP_WEAPON event with cost
+      // Should declare ACTOR_DID_UNEQUIP_WEAPON event with cost
       const events = result.getDeclaredEvents();
       expect(events).toHaveLength(1);
 
-      const equipEvent = extractFirstEventOfType<ActorDidEquipWeapon>(events, EventType.ACTOR_DID_EQUIP_WEAPON)!;
-      expect(equipEvent).toBeDefined();
-      expect(equipEvent.payload.itemId).toBe(weaponItem.id);
-      expect(equipEvent.payload.schema).toBe(defaultWeaponSchema.urn);
+      const unequipEvent = extractFirstEventOfType<ActorDidUnequipWeapon>(events, EventType.ACTOR_DID_UNEQUIP_WEAPON)!;
+      expect(unequipEvent).toBeDefined();
+      expect(unequipEvent.payload.itemId).toBe(equippedWeaponId);
+      expect(unequipEvent.payload.schema).toBe(defaultWeaponSchema.urn);
 
-      // Should have cost in payload (in combat)
-      expect(equipEvent.payload.cost).toEqual({ ap: 0.5, energy: 0 });
+      // Should have cost in payload (in combat) - UNEQUIP is free action
+      expect(unequipEvent.payload.cost).toEqual({ ap: 0, energy: 0 });
 
-      // Should have equipped the weapon
-      const actor = result.world.actors[ALICE_ID];
-      expect(result.equipmentApi.getEquippedWeapon(actor)).toBe(weaponItem.id);
+      // Should have unequipped the weapon
+      const resultActor = result.world.actors[ALICE_ID];
+      expect(result.equipmentApi.getEquippedWeapon(resultActor)).toBeNull();
 
-      // Should have deducted AP from combatant
+      // AP should remain unchanged (free action)
       const updatedCombatant = result.world.sessions[scenario.session.id].data.combatants.get(ALICE_ID)!;
-      expect(updatedCombatant.ap.eff.cur).toBe(1.5); // 2.0 - 0.5
+      expect(updatedCombatant.ap.eff.cur).toBe(2.0); // No AP deducted
     });
 
-    it('should error when insufficient AP in combat', () => {
-      // Create a base context with the proper place setup (like our successful test)
-      const baseContext = createTransformerContext((c: TransformerContext) => ({
-        ...c,
-        world: createWorldProjection((w: WorldProjection) => ({
-          ...w,
-          places: {
-            [DEFAULT_LOCATION]: createPlace((p: Place) => ({
-              ...p,
-              id: DEFAULT_LOCATION,
-            })),
-          },
-        })),
-      }));
-
-      // Use useCombatScenario with our properly configured context
-      const scenario = useCombatScenario(baseContext, {
-        participants: {
-          [ALICE_ID]: {
-            team: 'heroes',
-            name: 'Test Warrior',
-            ap: 0.3, // Less than 0.5 AP required
-            // Don't pre-equip - we want to test equipping it
-          }
-        },
-        weapons: [defaultWeaponSchema],
-        location: DEFAULT_LOCATION // Use the same location as our other tests
-      });
-
-      // Add the weapon to inventory manually (since we didn't pre-equip)
-      const weaponItem = scenario.context.inventoryApi.addItem(
-        scenario.actors[ALICE_ID].actor,
-        { schema: defaultWeaponSchema.urn as WeaponSchemaURN }
-      );
-
-      const command = createEquipCommand((cmd: EquipCommand) => ({
-        ...cmd,
-        actor: ALICE_ID,
-        location: DEFAULT_LOCATION,
-        session: scenario.session.id,
-        ts: DEFAULT_TIMESTAMP,
-        args: { item: weaponItem.id }
-      }));
-
-      const result = equipReducer(scenario.context, command);
-      const errors = result.getDeclaredErrors();
-
-      // Should error due to insufficient AP
-      expect(errors).toHaveLength(1);
-      expect(errors[0].error.message).toContain('Not enough AP to equip');
-      expect(errors[0].error.message).toContain('Need 0.5 AP, have 0.3 AP');
-
-      // Should not declare any events
-      expect(result.getDeclaredEvents()).toHaveLength(0);
-
-      // Should not have equipped the weapon
-      const actor = result.world.actors[ALICE_ID];
-      expect(result.equipmentApi.getEquippedWeapon(actor)).toBeNull();
-
-      // AP should remain unchanged
-      const updatedCombatant = result.world.sessions[scenario.session.id].data.combatants.get(ALICE_ID)!;
-      expect(updatedCombatant.ap.eff.cur).toBe(0.3);
-    });
 
     it('should error when session does not exist', () => {
       // Use a fresh context for this test since we need no combat session
 
-      const command = createEquipCommand((cmd: EquipCommand) => ({
+      const command = createUnequipCommand((cmd: UnequipCommand) => ({
         ...cmd,
         session: 'flux:session:combat:nonexistent',
         args: { item: DEFAULT_WEAPON }
       }));
 
-      const result = equipReducer(context, command);
+      const result = unequipReducer(context, command);
 
       const errors = result.getDeclaredErrors();
       expect(errors).toHaveLength(1);
@@ -316,12 +252,14 @@ describe('EQUIP Command Reducer', () => {
         location: DEFAULT_LOCATION, // Ensure proper location
       }));
 
+      // Add weapon to ALICE's inventory and equip it
       const weaponItem = scenario.context.inventoryApi.addItem(
         scenario.context.world.actors[ALICE_ID],
         { schema: defaultWeaponSchema.urn as WeaponSchemaURN }
       );
+      scenario.context.equipmentApi.equipWeapon(scenario.context.world.actors[ALICE_ID], weaponItem.id);
 
-      const command = createEquipCommand((cmd: EquipCommand) => ({
+      const command = createUnequipCommand((cmd: UnequipCommand) => ({
         ...cmd,
         actor: ALICE_ID,
         location: DEFAULT_LOCATION,
@@ -330,7 +268,7 @@ describe('EQUIP Command Reducer', () => {
         args: { item: weaponItem.id }
       }));
 
-      const result = equipReducer(scenario.context, command);
+      const result = unequipReducer(scenario.context, command);
 
       const errors = result.getDeclaredErrors();
       expect(errors).toHaveLength(1);

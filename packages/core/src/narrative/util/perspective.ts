@@ -166,6 +166,7 @@ export function createDynamicSystemPerspectiveTemplate<T extends WorldEvent & { 
 /**
  * Safely gets weapon information for an actor
  * Returns both the display name and the full weapon schema
+ * @deprecated - Schemas don't have `name` field anymore
  */
 export function getWeaponInfo(context: TransformerContext, actor: Actor): { name: string; schema: any } {
   const weapon = context.equipmentApi.getEquippedWeaponSchema(actor);

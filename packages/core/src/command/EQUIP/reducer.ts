@@ -7,6 +7,7 @@ import { WeaponItemURN, WeaponSchemaURN } from '~/types/taxonomy';
 import { createWorldEvent } from '~/worldkit/event';
 import { ActorDidEquipWeapon, EventType } from '~/types/event';
 import { ActionCost } from '~/types/combat';
+import { WeaponSchema } from '~/types/schema/weapon';
 
 /**
  * Core EQUIP command logic (without combat costs)
@@ -54,8 +55,11 @@ const equipReducerCore: Transformer<EquipCommand> = (context, command) => {
  * Calculate AP cost for equipping a weapon
  */
 const calculateEquipCost = (context: TransformerContext, command: EquipCommand): ActionCost => {
-  // Equipping a weapon takes 0.5 AP (half a second)
-  return { ap: 0.5, energy: 0 };
+  const actor = context.world.actors[command.actor];
+  const item = actor.inventory.items[command.args.item]!;
+  const schema = context.schemaManager.getSchema(item.schema as WeaponSchemaURN) as WeaponSchema;
+  const setupTimeSeconds = (schema.timers.setup ?? 0 ) / 1_000;
+  return { energy: 0, ap: setupTimeSeconds };
 };
 
 /**

@@ -16,7 +16,7 @@ import {
 import { AttackType, MovementDirection } from '~/types/combat';
 import { SessionStatus } from '~/types/session';
 import { TemplateFunction } from '~/types/narrative';
-import { ActorURN } from '~/types/taxonomy';
+import { ActorURN, SchemaURN } from '~/types/taxonomy';
 import { Actor, Gender } from '~/types/entity/actor';
 import {
   withUserEventValidation,
@@ -29,6 +29,8 @@ import {
 import { getAllStats, getMaxHp } from '~/worldkit/entity/actor';
 import { getPrimaryDamageType } from '~/worldkit/combat/damage/damage-type';
 import { DamageType } from '~/types/damage';
+import { Locale, SchemaTranslation } from '~/types/i18n';
+import { TransformerContext } from '~/types/handler';
 
 const HIS = 'his';
 const HER = 'her';
@@ -37,6 +39,13 @@ const HER = 'her';
  */
 const getPossessivePronoun = (gender: Gender): string => {
   return gender === Gender.MALE ? HIS : HER;
+};
+
+/**
+ * Get localized weapon name from schema (en_US)
+ */
+const getLocalizedSchemaTranslation = (context: TransformerContext, schemaUrn: SchemaURN): SchemaTranslation => {
+  return context.getSchemaTranslation(Locale.en_US, schemaUrn);
 };
 
 type DamageTypeNarrative = {
@@ -111,8 +120,8 @@ const getDamageTypeNarrative = (damageType: DamageType): DamageTypeNarrative => 
   return NARRATIVES_BY_DAMAGE_TYPE[damageType] ?? DEFAULT_DAMAGE_TYPE_NARRATIVE;
 };
 
-const renderCleaveNarrative = (actor: Actor, targets: Actor[], weapon: any, viewerActorId: ActorURN): string => {
-  const weaponName = weapon.name;
+const renderCleaveNarrative = (context: any, actor: Actor, targets: Actor[], weapon: any, viewerActorId: ActorURN): string => {
+  const weaponName = getLocalizedSchemaTranslation(context, weapon);
   const possessive = getPossessivePronoun(actor.gender);
   const primaryDamageType = getPrimaryDamageType(weapon);
 
@@ -170,7 +179,7 @@ export const renderAttackNarrative: TemplateFunction<ActorDidAttack, ActorURN> =
     if (!actor || targets.length === 0) {
       return '';
     }
-    return renderCleaveNarrative(actor, targets, equipmentApi.getEquippedWeaponSchema(actor), actorId);
+    return renderCleaveNarrative(context, actor, targets, equipmentApi.getEquippedWeaponSchema(actor), actorId);
   }
 
   // Handle STRIKE attacks (original logic)
@@ -181,7 +190,7 @@ export const renderAttackNarrative: TemplateFunction<ActorDidAttack, ActorURN> =
 
   const weapon = equipmentApi.getEquippedWeaponSchema(actor);
   const { roll } = event.payload;
-  const weaponName = weapon.name;
+  const weaponName = getLocalizedSchemaTranslation(context, weapon.urn);
 
   const actorStats = getAllStats(actor);
 
@@ -259,7 +268,7 @@ export const renderWasAttackedNarrative: TemplateFunction<ActorWasAttacked, Acto
   }
 
   const weapon = equipmentApi.getEquippedWeaponSchema(attacker);
-  const weaponName = weapon.name;
+  const weaponName = getLocalizedSchemaTranslation(context, weapon.urn).name.singular;
 
   // Enhanced damage descriptions based on damage amount and target health
   const getDamageDescription = (damage: number, perspective: 'target' | 'attacker' | 'observer') => {
@@ -515,7 +524,8 @@ export const renderAcquireRangeNarrative: TemplateFunction<ActorDidAssessRange, 
   if (actorId === event.actor) {
     // Get weapon information for the actor
     const weapon = context.equipmentApi.getEquippedWeaponSchema(actor);
-    const weaponInfo = `Your ${weapon.name.toLowerCase()}'s optimal range is ${weapon.range.optimal || 1}m.`;
+    const weaponName = getLocalizedSchemaTranslation(context, weapon.urn).name.singular;
+    const weaponInfo = `Your ${weaponName}'s optimal range is ${weapon.range.optimal || 1}m.`;
 
     // Convert MovementDirection to readable text
     const directionText = direction === MovementDirection.FORWARD ? 'in front of you' : 'behind you';

@@ -1,15 +1,15 @@
 import { PureHandlerInterface, TransformerContext } from '~/types/handler';
-import { EquipCommand, EquipCommandArgs } from './types';
-import { equipReducer } from './reducer';
-import { equipResolver } from './resolver';
+import { UnequipCommand, UnequipCommandArgs } from './types';
+import { unequipReducer } from './reducer';
+import { unequipResolver } from './resolver';
 import { Command, CommandType } from '~/types/intent';
 import { isCommandOfType } from '~/lib/intent';
 
-export class EQUIP implements PureHandlerInterface<TransformerContext, EquipCommand> {
+export class UNEQUIP implements PureHandlerInterface<TransformerContext, UnequipCommand> {
   dependencies = [];
-  reduce = equipReducer;
-  resolve = equipResolver;
-  handles = (command: Command): command is EquipCommand => {
-    return isCommandOfType<CommandType.EQUIP, EquipCommandArgs>(command, CommandType.EQUIP);
+  reduce = unequipReducer;
+  resolve = unequipResolver;
+  handles = (command: Command): command is UnequipCommand => {
+    return isCommandOfType<CommandType.UNEQUIP, UnequipCommandArgs>(command, CommandType.UNEQUIP);
   };
 }
