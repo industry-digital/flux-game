@@ -1,30 +1,42 @@
 import { PureReducer, TransformerContext } from '~/types/handler';
 import { Command } from '~/types/intent';
-import { ActorURN, PlaceURN } from '~/types/taxonomy';
 
 export const withBasicWorldStateValidation = <TCommand extends Command>(
   reducer: PureReducer<TransformerContext, TCommand>,
 ): PureReducer<TransformerContext, TCommand> => {
   return (context, command) => {
-    const { actors, places } = context.world;
+    const { world } = context;
+
+    const declareError = (message: string) => {
+      context.declareError(`\`${command.type}\`: ${message}`, command.id);
+    };
 
     // Validate actor exists
-    const actor = actors[command.actor as ActorURN];
+    const actor = world.actors[command.actor];
     if (!actor) {
-      context.declareError(`Could not find \`${command.type}\` actor in world projection`, command.id);
+      declareError('Could not find actor in world projection');
       return context;
     }
 
     // Validate actor has a location
     if (!actor.location) {
-      context.declareError(`\`${command.type}\` actor must have a location`, command.id);
+      declareError('Actor must have a location');
       return context;
     }
 
     // Validate actor's location exists in world
-    if (!places[actor.location as PlaceURN]) {
-      context.declareError(`Could not find \`${command.type}\` location in world projection`, command.id);
+    if (!world.places[actor.location]) {
+      declareError('Could not find location in world projection');
       return context;
+    }
+
+    // Validate supplied session exists if the client provided it
+    if (command.session) {
+      const session = world.sessions[command.session];
+      if (!session) {
+        declareError('Could not find session in world projection');
+        return context;
+      }
     }
 
     return reducer(context, command);

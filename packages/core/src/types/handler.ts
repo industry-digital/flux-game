@@ -111,6 +111,8 @@ export type TransformerContext<W extends WorldProjection = WorldProjection> =
     metrics?: CombatMetrics;
   };
 
+export type Transformer<I extends Command> = PureReducer<TransformerContext, I>;
+
 /** Handlers that immutably update world state and declare emergent events */
 export type TransformerInterface<
   I extends Command,
@@ -118,7 +120,7 @@ export type TransformerInterface<
   handles: (command: Command) => command is I;
   dependencies: TransformerImplementation<I>[];
   /** Pure reducer that updates world projection and declares events */
-  reduce: PureReducer<TransformerContext, I>;
+  reduce: Transformer<I>;
 }
 
 export type TransformerImplementation<

@@ -11,8 +11,8 @@ import { createTargetMethod } from './action/target';
 import { createStrikeMethod, StrikeDependencies } from './action/strike';
 import { createCleaveMethod, CleaveDependencies } from '~/worldkit/combat/action/cleave';
 import { createRangeMethod, RangeMethod } from '~/worldkit/combat/action/range';
-import { calculateMaxAp } from '~/worldkit/combat/ap';
-import { getMaxEnergy } from '~/worldkit/entity/actor/capacitor';
+import { calculateMaxAp, deductAp } from '~/worldkit/combat/ap';
+import { getMaxEnergy, consumeEnergy } from '~/worldkit/entity/actor/capacitor';
 import { createDoneMethod } from '~/worldkit/combat/action/done';
 import { cleanApPrecision } from '~/worldkit/combat/ap';
 import { computeInitiativeRoll } from '~/worldkit/combat/initiative';
@@ -32,6 +32,7 @@ export type CombatantAttributes = {
 export interface CombatantApi {
   combatant: Combatant;
   canAct: () => boolean;
+  deductCost: (ap: number, energy: number) => void;
   target: (targetId: ActorURN, trace?: string) => WorldEvent[];
   advance: AdvanceMethod;
   retreat: RetreatMethod;
@@ -94,9 +95,19 @@ export function createCombatantApiFactory(actionDeps: ActionDependencies = DEFAU
 
     const canAct = (): boolean => cleanApPrecision(combatant.ap.eff.cur || 0) > 0;
 
+    const deductCost = (ap: number, energy: number): void => {
+      if (ap > 0) {
+        deductAp(combatant, ap);
+      }
+      if (energy > 0) {
+        consumeEnergy(actor, energy);
+      }
+    };
+
     return {
       combatant,
       canAct,
+      deductCost,
       target,
       advance,
       retreat,

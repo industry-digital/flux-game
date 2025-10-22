@@ -15,6 +15,7 @@ import { defendReducer } from '~/command/DEFEND';
 import { retreatReducer } from '~/command/RETREAT';
 import { targetReducer } from '~/command/TARGET';
 import { useWorkbenchReducer } from '~/command/USE_WORKBENCH';
+import { equipReducer } from '~/command/EQUIP';
 import { PureReducer, TransformerContext } from '~/types/handler';
 import { CommandType } from '~/types/intent';
 
@@ -37,6 +38,7 @@ export const COMMAND_TRANSFORMERS: Partial<Record<CommandType, PureReducer<Trans
   [CommandType.RETREAT]: retreatReducer,
   [CommandType.TARGET]: targetReducer,
   [CommandType.USE_WORKBENCH]: useWorkbenchReducer,
+  [CommandType.EQUIP]: equipReducer,
 };
 
 /**
@@ -68,3 +70,4 @@ export { DEFEND, DefendCommand, DefendCommandArgs } from './DEFEND';
 export { RETREAT, RetreatCommand, RetreatCommandArgs } from './RETREAT';
 export { TARGET, TargetCommand, TargetCommandArgs } from './TARGET';
 export { USE_WORKBENCH, UseWorkbenchCommand, UseWorkbenchCommandArgs } from './USE_WORKBENCH';
+export { EQUIP, EquipCommand, EquipCommandArgs } from './EQUIP';
