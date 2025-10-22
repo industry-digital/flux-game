@@ -5,8 +5,10 @@ import { createActor } from '~/worldkit/entity/actor';
 import { ActorType } from '~/types/entity/actor';
 import { Team } from '~/types/combat';
 import { SessionStatus } from '~/types/session';
-import { CombatSessionEnded, EventType, WorldEvent } from '~/types/event';
+import { ActorDidDie, CombatSessionEnded, EventType, WorldEvent } from '~/types/event';
 import { ActorURN, PlaceURN } from '~/types/taxonomy';
+import { extractFirstEventOfType } from '~/testing/event';
+import { createActorDidDieEvent } from '~/testing/event/factory/combat';
 
 const extractTerminationEvent = (events: WorldEvent[]): CombatSessionEnded => {
   const terminationEvent = events.find(e => e.type === EventType.COMBAT_SESSION_DID_END) as CombatSessionEnded;
@@ -233,14 +235,15 @@ describe('Combat Session - Termination Integration', () => {
 
       // Simulate a death event being declared externally (e.g., from combat action)
       // This tests that session termination works regardless of the death event source
-      const externalDeathEvent:any = {
-        id: context.uniqid(),
-        type: EventType.ACTOR_DID_DIE,
+      const externalDeathEvent = createActorDidDieEvent((event) => ({
+        ...event,
         location,
+        actor: BOB_ID,
         trace: 'external-death-test',
-        payload: { actor: BOB_ID },
-        timestamp: Date.now(),
-      };
+        payload: {
+          killer: ALICE_ID,
+        },
+      }));
 
       // Kill Bob and declare the death event (simulating what a combat action would do)
       context.world.actors[BOB_ID].hp.eff.cur = 0;
@@ -250,13 +253,16 @@ describe('Combat Session - Termination Integration', () => {
       const events = sessionHook.advanceTurn();
 
       // Should contain termination events (combat should end due to victory)
-      expect(events.some(e => e.type === EventType.COMBAT_SESSION_DID_END)).toBe(true);
+      const sessionEndedEvent = extractFirstEventOfType<CombatSessionEnded>(events, EventType.COMBAT_SESSION_DID_END);
+      expect(sessionEndedEvent).toBeDefined();
+      expect(sessionEndedEvent?.payload.winningTeam).toBe('alpha');
+
       expect(sessionHook.session.status).toBe(SessionStatus.TERMINATED);
 
       // The externally declared death event should be in the context's event log
-      const declaredEvents = context.getDeclaredEvents();
-      // @ts-expect-error - payload.actor is not typed
-      expect(declaredEvents.some(e => e.type === EventType.ACTOR_DID_DIE && e.payload.actor === BOB_ID)).toBe(true);
+      const actorDidDieEvent = extractFirstEventOfType<ActorDidDie>(context.getDeclaredEvents(), EventType.ACTOR_DID_DIE);
+      expect(actorDidDieEvent).toBeDefined();
+      expect(actorDidDieEvent?.payload.killer).toBe(ALICE_ID);
     });
   });
 

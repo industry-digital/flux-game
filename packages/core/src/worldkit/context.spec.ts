@@ -7,11 +7,11 @@
 
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import {
-    createTransformerContext,
-    createWorldProjection,
-    createPotentiallyImpureOperations,
-    DEFAULT_POTENTIALLY_IMPURE_OPERATIONS,
-    MapFunction
+  createTransformerContext,
+  createWorldProjection,
+  createPotentiallyImpureOperations,
+  DEFAULT_POTENTIALLY_IMPURE_OPERATIONS,
+  MapFunction
 } from './context';
 import { TransformerContext, PotentiallyImpureOperations, ProfileResult } from '~/types/handler';
 import { WorldProjection } from '~/types/world';
@@ -473,7 +473,8 @@ describe('createTransformerContext', () => {
 
       // Verify event retrieval works correctly
       const allEvents = context.getDeclaredEvents();
-      const combatEvents = context.getDeclaredEvents(/^combat:/);
+      const regex = new RegExp(`^(${EventType.ACTOR_DID_ATTACK}|${EventType.COMBAT_SESSION_DID_START})$`);
+      const combatEvents = context.getDeclaredEvents(regex);
       const combatInitEvents = context.getDeclaredEventsByCommand('combat-init');
 
       expect(allEvents).toHaveLength(2);

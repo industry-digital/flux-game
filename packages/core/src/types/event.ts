@@ -86,18 +86,16 @@ export enum EventType {
   ACTOR_DID_LOOK = 'actor:looked',
   ACTOR_DID_MATERIALIZE = 'actor:materialized',
   ACTOR_DID_MOVE = 'actor:moved',
-  ACTOR_DID_QUERY_HELPFILE = 'actor:helpfile:queried',
+  ACTOR_DID_OPEN_HELPFILE = 'actor:helpfile:opened',
   ACTOR_DID_RECOVER_ENERGY = 'actor:energy:recovered',
   ACTOR_DID_SWAP_SHELL = 'actor:shell:swapped',
   ACTOR_WAS_CREATED = 'actor:created',
-  ACTOR_DID_ACQUIRE_TARGET = 'combat:actor:target:acquired',
-  ACTOR_DID_ATTACK = 'combat:actor:attack',
-  ACTOR_DID_TAKE_COVER = 'combat:actor:covered',
-  ACTOR_DID_DEFEND = 'combat:actor:defended',
+  ACTOR_DID_ACQUIRE_TARGET = 'actor:target:acquired',
+  ACTOR_DID_ATTACK = 'actor:attack:performed',
+  ACTOR_DID_TAKE_COVER = 'actor:cover:taken',
+  ACTOR_DID_DEFEND = 'actor:did:defend',
   ACTOR_DID_ASSESS_RANGE = 'actor:range:acquired',
-  ACTOR_DID_MOVE_IN_COMBAT = 'actor:moved:combat',
-  ACTOR_DID_RECOVER_AP = 'actor:ap:recovered',
-  ACTOR_DID_REST = 'actor:rested',
+  ACTOR_DID_MOVE_IN_COMBAT = 'actor:combat:moved',
   ACTOR_WAS_ATTACKED = 'actor:attack:received',
   COMBAT_ROUND_DID_END = 'combat:round:ended',
   COMBAT_ROUND_DID_START = 'combat:round:started',
@@ -352,16 +350,6 @@ export type ActorDidDieInput = AbstractWorldEventInput<
   }
 >;
 
-export type ActorDidRecoverAp = EventBase & ActorDidRecoverApInput;
-export type ActorDidRecoverApInput = AbstractWorldEventInput<
-  EventType.ACTOR_DID_RECOVER_AP,
-  {
-    before: number;
-    after: number;
-    recovered: number;
-  }
->;
-
 export type ActorDidAssessRange = EventBase & ActorDidAssessRangeInput;
 export type ActorDidAssessRangeInput = AbstractWorldEventInput<
   EventType.ACTOR_DID_ASSESS_RANGE,
@@ -433,7 +421,7 @@ export type ActorDidSwapShellInput = AbstractWorldEventInput<
 
 export type ActorDidOpenHelpFile = EventBase & ActorDidOpenHelpFileInput;
 export type ActorDidOpenHelpFileInput = AbstractWorldEventInput<
-  EventType.ACTOR_DID_QUERY_HELPFILE,
+  EventType.ACTOR_DID_OPEN_HELPFILE,
   {
     sessionId?: SessionURN;
     helpFile: string;
@@ -600,7 +588,6 @@ export type WorldEventInput =
   | ActorDidMoveInCombatInput
   | ActorDidMoveInput
   | ActorDidOpenHelpFileInput
-  | ActorDidRecoverApInput
   | ActorDidReviewShellStatsInput
   | ActorDidStageShellMutationInput
   | ActorDidSwapShellInput

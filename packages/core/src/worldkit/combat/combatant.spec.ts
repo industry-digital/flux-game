@@ -9,11 +9,11 @@ import {
 import { useCombatScenario } from './testing/scenario';
 import { createTransformerContext } from '~/worldkit/context';
 import { createSwordSchema } from '~/worldkit/schema/weapon/sword';
-import { EventType, WorldEvent } from '~/types/event';
 import { CombatSession, Combatant, Team, CombatFacing } from '~/types/combat';
 import { TransformerContext } from '~/types/handler';
 import { ActorURN } from '~/types/taxonomy';
 import { Actor } from '~/types/entity/actor';
+import { createCombatTurnDidEndEvent } from '~/testing/event/factory';
 
 /**
  * Helper function to create a test scenario using the new useCombatScenario hook
@@ -226,7 +226,7 @@ describe('combatant', () => {
 
     it('should accept advanceTurn callback and pass it to hook methods', () => {
       const mockAdvanceTurn = vi.fn(() => [
-        { type: EventType.COMBAT_TURN_DID_END, payload: {} } as WorldEvent
+        createCombatTurnDidEndEvent(),
       ]);
 
       const hook = createCombatantApi(context, session, actor, {

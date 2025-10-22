@@ -4,11 +4,11 @@ import { createSwordSchema } from '~/worldkit/schema/weapon/sword';
 import { registerWeapons } from '~/worldkit/combat/testing/schema';
 import { useCombatScenario } from '~/worldkit/combat/testing/scenario';
 import {
-  createCombatantDidAttackEvent,
-  createCombatantWasAttackedEvent,
-  createCombatantDidDieEvent,
-  createCombatantDidDefendEvent,
-  createCombatantDidAcquireTargetEvent,
+  createActorDidAttackEvent,
+  createActorWasAttackedEvent,
+  createActorDidDieEvent,
+  createActorDidDefendEvent,
+  createActorDidAcquireTargetEvent,
   createCombatTurnDidStartEvent,
   createCombatTurnDidEndEvent,
 } from '~/testing/event';
@@ -83,7 +83,7 @@ describe.each([
   describe('Combat Events', () => {
     describe('COMBATANT_DID_ATTACK', () => {
       it('should render attack narrative from attacker perspective', () => {
-        const event = createCombatantDidAttackEvent((e) => ({
+        const event = createActorDidAttackEvent((e) => ({
           ...e,
           payload: { ...e.payload, targets: [BOB_ID], attackType: AttackType.CLEAVE }
         }));
@@ -96,7 +96,7 @@ describe.each([
       });
 
       it('should render attack narrative from observer perspective', () => {
-        const event = createCombatantDidAttackEvent((e) => ({
+        const event = createActorDidAttackEvent((e) => ({
           ...e,
           payload: { ...e.payload, targets: [BOB_ID, CHARLIE_ID], attackType: AttackType.CLEAVE }
         }));
@@ -109,7 +109,7 @@ describe.each([
       });
 
       it('should render cleave attack narrative differently', () => {
-        const event = createCombatantDidAttackEvent((e) => ({
+        const event = createActorDidAttackEvent((e) => ({
           ...e,
           payload: {
             ...e.payload,
@@ -130,7 +130,7 @@ describe.each([
 
     describe('COMBATANT_WAS_ATTACKED', () => {
       it('should render damage narrative from target perspective (hit)', () => {
-        const event = createCombatantWasAttackedEvent((e) => ({
+        const event = createActorWasAttackedEvent((e) => ({
           ...e,
           actor: BOB_ID,
           payload: { ...e.payload, source: ALICE_ID, damage: 12 }
@@ -144,7 +144,7 @@ describe.each([
       });
 
       it('should render damage narrative from target perspective (miss)', () => {
-        const event = createCombatantWasAttackedEvent((e) => ({
+        const event = createActorWasAttackedEvent((e) => ({
           ...e,
           actor: BOB_ID,
           payload: {
@@ -163,7 +163,7 @@ describe.each([
       });
 
       it('should render damage narrative from observer perspective', () => {
-        const event = createCombatantWasAttackedEvent((e) => ({
+        const event = createActorWasAttackedEvent((e) => ({
           ...e,
           actor: BOB_ID,
           payload: { ...e.payload, source: ALICE_ID, damage: 8 }
@@ -179,7 +179,7 @@ describe.each([
 
     describe('COMBATANT_DID_DIE', () => {
       it('should render death narrative from victim perspective', () => {
-        const event = createCombatantDidDieEvent(); // Uses BOB_ID by default
+        const event = createActorDidDieEvent(); // Uses BOB_ID by default
 
         const narrative = callTemplate(context, event, BOB_ID);
 
@@ -189,7 +189,7 @@ describe.each([
       });
 
       it('should render death narrative from observer perspective', () => {
-        const event = createCombatantDidDieEvent(); // Uses BOB_ID by default
+        const event = createActorDidDieEvent(); // Uses BOB_ID by default
 
         const narrative = callTemplate(context, event, OBSERVER_ID);
 
@@ -201,7 +201,7 @@ describe.each([
 
     describe('COMBATANT_DID_DEFEND', () => {
       it('should render defend narrative from defender perspective', () => {
-        const event = createCombatantDidDefendEvent((e) => ({
+        const event = createActorDidDefendEvent((e) => ({
           ...e,
           actor: BOB_ID,
         }));
@@ -214,7 +214,7 @@ describe.each([
       });
 
       it('should render defend narrative from observer perspective', () => {
-        const event = createCombatantDidDefendEvent((e) => ({
+        const event = createActorDidDefendEvent((e) => ({
           ...e,
           actor: BOB_ID,
         }));
@@ -229,7 +229,7 @@ describe.each([
 
     describe('COMBATANT_DID_ACQUIRE_TARGET', () => {
       it('should render targeting narrative from attacker perspective', () => {
-        const event = createCombatantDidAcquireTargetEvent((e) => ({
+        const event = createActorDidAcquireTargetEvent((e) => ({
           ...e,
           actor: ALICE_ID,
           payload: {
@@ -246,7 +246,7 @@ describe.each([
       });
 
       it('should render targeting narrative from observer perspective', () => {
-        const event = createCombatantDidAcquireTargetEvent((e) => ({
+        const event = createActorDidAcquireTargetEvent((e) => ({
           ...e,
           actor: ALICE_ID,
           payload: {
@@ -410,7 +410,7 @@ describe.each([
 
   describe('Narrative Quality', () => {
     it('should generate non-empty narratives for valid events', () => {
-      const event = createCombatantDidAttackEvent((event) => ({
+      const event = createActorDidAttackEvent((event) => ({
         ...event,
         actor: ALICE_ID,
         payload: {
@@ -427,7 +427,7 @@ describe.each([
     });
 
     it('should generate different narratives for different perspectives', () => {
-      const event = createCombatantDidAttackEvent((event) => ({
+      const event = createActorDidAttackEvent((event) => ({
         ...event,
         actor: ALICE_ID,
         payload: {

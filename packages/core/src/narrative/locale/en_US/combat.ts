@@ -1,18 +1,17 @@
 import {
-    ActorDidAttack,
-    ActorDidDefend,
-    ActorDidMoveInCombat,
-    ActorDidDie,
-    CombatTurnDidEnd,
-    CombatTurnDidStart,
-    CombatRoundDidStart,
-    CombatRoundDidEnd,
-    CombatSessionStarted,
-    CombatSessionEnded,
-    CombatSessionStatusDidChange,
-    ActorDidRecoverAp,
-    ActorWasAttacked,
-    ActorDidAssessRange,
+  ActorDidAttack,
+  ActorDidDefend,
+  ActorDidMoveInCombat,
+  ActorDidDie,
+  CombatTurnDidEnd,
+  CombatTurnDidStart,
+  CombatRoundDidStart,
+  CombatRoundDidEnd,
+  CombatSessionStarted,
+  CombatSessionEnded,
+  CombatSessionStatusDidChange,
+  ActorWasAttacked,
+  ActorDidAssessRange,
 } from '~/types/event';
 import { AttackType, MovementDirection } from '~/types/combat';
 import { SessionStatus } from '~/types/session';
@@ -20,12 +19,12 @@ import { TemplateFunction } from '~/types/narrative';
 import { ActorURN } from '~/types/taxonomy';
 import { Actor, Gender } from '~/types/entity/actor';
 import {
-    withUserEventValidation,
-    withInteractionValidation,
-    createPerspectiveTemplate,
-    createSystemTemplate,
-    createSystemPerspectiveTemplate,
-    createDynamicSystemPerspectiveTemplate,
+  withUserEventValidation,
+  withInteractionValidation,
+  createPerspectiveTemplate,
+  createSystemTemplate,
+  createSystemPerspectiveTemplate,
+  createDynamicSystemPerspectiveTemplate,
 } from '~/narrative/util';
 import { getAllStats, getMaxHp } from '~/worldkit/entity/actor';
 import { getPrimaryDamageType } from '~/worldkit/combat/damage/damage-type';
@@ -505,18 +504,6 @@ export const renderCombatStatusChangeNarrative = createSystemTemplate<CombatSess
     }
   }
 );
-
-export const renderApRecoveryNarrative: TemplateFunction<ActorDidRecoverAp, ActorURN> = (context, event, recipientId) => {
-  const { world } = context;
-  const actor = world.actors[event.actor];
-  const recovered = event.payload.recovered;
-
-  if (recipientId === event.actor) {
-    return `You recover ${recovered} action points.`;
-  }
-
-  return `${actor.name} recovers ${recovered} action points.`;
-};
 
 export const renderAcquireRangeNarrative: TemplateFunction<ActorDidAssessRange, ActorURN> = (context, event, actorId) => {
   const { world, schemaManager } = context;

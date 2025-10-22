@@ -16,10 +16,9 @@ import {
   renderCombatSessionStartNarrative,
   renderCombatSessionEndNarrative,
   renderCombatStatusChangeNarrative,
-  renderApRecoveryNarrative,
   renderWasAttackedNarrative,
-  renderAcquireRangeNarrative,
   // Note: Actor death and energy recovery are handled by combat events
+  renderAcquireRangeNarrative,
 } from './combat';
 
 import {
@@ -64,7 +63,7 @@ export const en_US: LanguageTemplates = {
   [EventType.ACTOR_DID_RECOVER_ENERGY]: NOT_IMPLEMENTED, // This event type doesn't exist
   [EventType.ACTOR_DID_COMPLETE_CURRENCY_TRANSACTION]: renderCurrencyTransactionNarrative,
   [EventType.ACTOR_DID_SWAP_SHELL]: renderSwapShellNarrative,
-  [EventType.ACTOR_DID_QUERY_HELPFILE]: renderHelpFileNarrative,
+  [EventType.ACTOR_DID_OPEN_HELPFILE]: renderHelpFileNarrative,
   [EventType.ACTOR_DID_EQUIP_WEAPON]: NOT_IMPLEMENTED,
   [EventType.ACTOR_DID_UNEQUIP_WEAPON]: NOT_IMPLEMENTED,
 
@@ -79,7 +78,6 @@ export const en_US: LanguageTemplates = {
   [EventType.ACTOR_DID_MOVE_IN_COMBAT]: renderMoveNarrative,
   [EventType.ACTOR_DID_ACQUIRE_TARGET]: renderTargetNarrative,
   [EventType.ACTOR_DID_DIE]: renderDeathNarrative,
-  [EventType.ACTOR_DID_RECOVER_AP]: renderApRecoveryNarrative,
   [EventType.ACTOR_DID_ASSESS_RANGE]: renderAcquireRangeNarrative,
   [EventType.COMBAT_TURN_DID_START]: renderTurnStartNarrative,
   [EventType.COMBAT_TURN_DID_END]: renderTurnEndNarrative,
@@ -92,7 +90,6 @@ export const en_US: LanguageTemplates = {
   // Combat Events - Not Yet Implemented
   [EventType.ACTOR_DID_TAKE_COVER]: NOT_IMPLEMENTED,
   [EventType.ACTOR_DID_LOAD_WEAPON]: NOT_IMPLEMENTED,
-  [EventType.ACTOR_DID_REST]: NOT_IMPLEMENTED,
 
   // World Events
   [EventType.PLACE_WAS_CREATED]: renderPlaceCreatedNarrative, // Returns empty string for admin events

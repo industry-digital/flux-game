@@ -24,10 +24,10 @@ import { registerWeapons } from '~/worldkit/combat/testing/schema';
 import { DEFAULT_COMBAT_PLANNING_DEPS } from '~/worldkit/combat/ai/deps';
 import { createActorCommand } from '~/lib/intent';
 import {
-  createCombatantDidAttackEvent,
-  createCombatantDidAcquireTargetEvent,
-  createCombatantDidMoveEvent,
-  createCombatantDidDefendEvent,
+  createActorDidAttackEvent,
+  createActorDidAcquireTargetEvent,
+  createActorDidMoveInCombatEvent,
+  createActorDidDefendEvent,
   createCombatTurnDidEndEvent
 } from '~/testing/event/factory';
 import { WellKnownActor } from '~/types/actor';
@@ -159,7 +159,7 @@ describe('Attack Method with AI Integration', () => {
 
       const mockExecuteCombatPlan: CombatPlanExecutor = vi.fn().mockReturnValue(
         [
-          createCombatantDidAttackEvent((event) => ({ ...event, actor: actor.id }))
+          createActorDidAttackEvent((event) => ({ ...event, actor: actor.id }))
         ]
       );
 
@@ -219,7 +219,7 @@ describe('Attack Method with AI Integration', () => {
 
       // Verify result includes events from executeCombatPlan
       expect(result).toHaveLength(1);
-      expect(result[0].type).toBe('combat:actor:attack');
+      expect(result[0].type).toBe(EventType.ACTOR_DID_ATTACK);
     });
 
     it('should use default executeCombatPlan when not injected', () => {
@@ -233,7 +233,7 @@ describe('Attack Method with AI Integration', () => {
       ]);
 
       const mockStrike = vi.fn().mockReturnValue([
-        createCombatantDidAttackEvent((event) => ({ ...event, actor: actor.id }))
+        createActorDidAttackEvent((event) => ({ ...event, actor: actor.id }))
       ]);
 
       // Create attack method without executeCombatPlan injection
@@ -255,14 +255,14 @@ describe('Attack Method with AI Integration', () => {
       expect(mockStrike).toHaveBeenCalledWith('flux:actor:bob', expect.any(String));
       // Should have 1 event: only strike (no target acquisition since combatant already targets 'flux:actor:bob')
       expect(result).toHaveLength(1);
-      expect(result).toContainEqual(expect.objectContaining({ type: 'combat:actor:attack' }));
+      expect(result).toContainEqual(expect.objectContaining({ type: EventType.ACTOR_DID_ATTACK }));
     });
   });
 
   describe('Target Management', () => {
     it('should update target when provided and include target events', () => {
       const mockTarget = vi.fn().mockReturnValue([
-        createCombatantDidAcquireTargetEvent((event) => ({ ...event, actor: actor.id }))
+        createActorDidAcquireTargetEvent((event) => ({ ...event, actor: actor.id }))
       ]);
 
       const mockGenerateCombatPlan = vi.fn().mockReturnValue([]);
@@ -285,7 +285,7 @@ describe('Attack Method with AI Integration', () => {
 
       // Verify target events are included in result
       expect(result).toContainEqual(
-        expect.objectContaining({ type: 'combat:actor:target:acquired' })
+        expect.objectContaining({ type: EventType.ACTOR_DID_ACQUIRE_TARGET })
       );
     });
 
@@ -313,7 +313,7 @@ describe('Attack Method with AI Integration', () => {
   describe('Movement Actions in Combat Plans', () => {
     it('should execute ADVANCE actions through combat plan', () => {
       const mockAdvance = vi.fn().mockReturnValue([
-        createCombatantDidMoveEvent((event) => ({ ...event, actor: actor.id }))
+        createActorDidMoveInCombatEvent((event) => ({ ...event, actor: actor.id }))
       ]);
 
       const mockGenerateCombatPlan = vi.fn().mockReturnValue([
@@ -347,7 +347,7 @@ describe('Attack Method with AI Integration', () => {
 
     it('should execute RETREAT actions through combat plan', () => {
       const mockRetreat = vi.fn().mockReturnValue([
-        createCombatantDidMoveEvent((event) => ({ ...event, actor: actor.id }))
+        createActorDidMoveInCombatEvent((event) => ({ ...event, actor: actor.id }))
       ]);
 
       const mockGenerateCombatPlan = vi.fn().mockReturnValue([
@@ -381,10 +381,10 @@ describe('Attack Method with AI Integration', () => {
 
     it('should handle mixed action plans with movement and combat', () => {
       const mockAdvance = vi.fn().mockReturnValue([
-        createCombatantDidMoveEvent((event) => ({ ...event, actor: actor.id }))
+        createActorDidMoveInCombatEvent((event) => ({ ...event, actor: actor.id }))
       ]);
       const mockStrike = vi.fn().mockReturnValue([
-        createCombatantDidAttackEvent((event) => ({ ...event, actor: actor.id }))
+        createActorDidAttackEvent((event) => ({ ...event, actor: actor.id }))
       ]);
 
       const mockGenerateCombatPlan = vi.fn().mockReturnValue([
@@ -438,7 +438,7 @@ describe('Attack Method with AI Integration', () => {
       ]);
 
       const mockStrike = vi.fn().mockReturnValue([
-        createCombatantDidAttackEvent((event) => ({ ...event, actor: actor.id }))
+        createActorDidAttackEvent((event) => ({ ...event, actor: actor.id }))
       ]);
 
       const attack = createAttackMethod(
@@ -470,10 +470,10 @@ describe('Attack Method with AI Integration', () => {
       // that the attack method attempts to generate a plan by checking that
       // it doesn't immediately error out due to missing plan generation
       const mockStrike = vi.fn().mockReturnValue([
-        createCombatantDidAttackEvent((event) => ({ ...event, actor: actor.id }))
+        createActorDidAttackEvent((event) => ({ ...event, actor: actor.id }))
       ]);
       const mockDefend = vi.fn().mockReturnValue([
-        createCombatantDidDefendEvent((event) => ({ ...event, actor: actor.id }))
+        createActorDidDefendEvent((event) => ({ ...event, actor: actor.id }))
       ]);
       const mockDone = vi.fn().mockReturnValue([
         createCombatTurnDidEndEvent((event) => ({ ...event, actor: WellKnownActor.SYSTEM }))
@@ -527,10 +527,10 @@ describe('Attack Method with AI Integration', () => {
   describe('Target Assignment in Strike Actions', () => {
     it('should call target method when STRIKE action has explicit target', () => {
       const mockTarget = vi.fn().mockReturnValue([
-        createCombatantDidAcquireTargetEvent((event) => ({ ...event, actor: actor.id }))
+        createActorDidAcquireTargetEvent((event) => ({ ...event, actor: actor.id }))
       ]);
       const mockStrike = vi.fn().mockReturnValue([
-        createCombatantDidAttackEvent((event) => ({ ...event, actor: actor.id }))
+        createActorDidAttackEvent((event) => ({ ...event, actor: actor.id }))
       ]);
 
       const mockGenerateCombatPlan = vi.fn().mockReturnValue([
@@ -564,16 +564,16 @@ describe('Attack Method with AI Integration', () => {
 
       // Verify both target acquisition and strike events are in result
       expect(result).toHaveLength(2);
-      expect(result).toContainEqual(expect.objectContaining({ type: 'combat:actor:target:acquired' }));
-      expect(result).toContainEqual(expect.objectContaining({ type: 'combat:actor:attack' }));
+      expect(result).toContainEqual(expect.objectContaining({ type: EventType.ACTOR_DID_ACQUIRE_TARGET }));
+      expect(result).toContainEqual(expect.objectContaining({ type: EventType.ACTOR_DID_ATTACK }));
     });
 
     it('should call target method when ATTACK action has explicit target', () => {
       const mockTarget = vi.fn().mockReturnValue([
-        createCombatantDidAcquireTargetEvent((event) => ({ ...event, actor: actor.id }))
+        createActorDidAcquireTargetEvent((event) => ({ ...event, actor: actor.id }))
       ]);
       const mockStrike = vi.fn().mockReturnValue([
-        createCombatantDidAttackEvent((event) => ({ ...event, actor: actor.id }))
+        createActorDidAttackEvent((event) => ({ ...event, actor: actor.id }))
       ]);
 
       const mockGenerateCombatPlan = vi.fn().mockReturnValue([
@@ -608,7 +608,7 @@ describe('Attack Method with AI Integration', () => {
     it('should not call target method when STRIKE action has no explicit target', () => {
       const mockTarget = vi.fn().mockReturnValue([]);
       const mockStrike = vi.fn().mockReturnValue([
-        createCombatantDidAttackEvent((event) => ({ ...event, actor: actor.id }))
+        createActorDidAttackEvent((event) => ({ ...event, actor: actor.id }))
       ]);
 
       const mockGenerateCombatPlan = vi.fn().mockReturnValue([
@@ -640,13 +640,13 @@ describe('Attack Method with AI Integration', () => {
       // Verify strike method was called with combatant's existing target
       expect(mockStrike).toHaveBeenCalledWith('flux:actor:bob', expect.any(String));
       expect(result).toHaveLength(1);
-      expect(result).toContainEqual(expect.objectContaining({ type: 'combat:actor:attack' }));
+      expect(result).toContainEqual(expect.objectContaining({ type: EventType.ACTOR_DID_ATTACK }));
     });
 
     it('should handle STRIKE action with null target args gracefully', () => {
       const mockTarget = vi.fn().mockReturnValue([]);
       const mockStrike = vi.fn().mockReturnValue([
-        createCombatantDidAttackEvent((event) => ({ ...event, actor: actor.id }))
+        createActorDidAttackEvent((event) => ({ ...event, actor: actor.id }))
       ]);
 
       const mockGenerateCombatPlan = vi.fn().mockReturnValue([
