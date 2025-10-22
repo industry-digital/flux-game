@@ -1,6 +1,6 @@
 import { Actor } from '~/types/entity/actor';
 import { WeaponSchema } from '~/types/schema/weapon';
-import { AnatomyURN, ItemURN, WeaponItemURN } from '~/types/taxonomy';
+import { AnatomyURN, ItemURN } from '~/types/taxonomy';
 import { HumanAnatomy } from '~/types/taxonomy/anatomy';
 import { ActorInventoryApi } from '~/worldkit/entity/actor/inventory';
 import { SchemaManager, SchemaRegistry } from '~/worldkit/schema/manager';
@@ -27,15 +27,15 @@ export type ActorEquipmentApi = {
    * @param locations - The locations to search for the equipped weapon
    * @returns The equipped weapon or null if no weapon is equipped
    */
-  getEquippedWeapon: (actor: Actor, locations?: AnatomyURN[]) => WeaponItemURN | null;
+  getEquippedWeapon: (actor: Actor, locations?: AnatomyURN[]) => ItemURN | null;
 
   getEquippedWeaponSchema: (actor: Actor, locations?: AnatomyURN[]) => WeaponSchema;
   /**
    * @deprecated Just use `getEquippedWeaponSchema`
    */
   getEquippedWeaponSchemaOrFail: (actor: Actor, locations?: AnatomyURN[]) => WeaponSchema;
-  equipWeapon: (actor: Actor, itemId: WeaponItemURN) => void;
-  unequipWeapon: (actor: Actor, itemId: WeaponItemURN) => void;
+  equipWeapon: (actor: Actor, itemId: ItemURN) => void;
+  unequipWeapon: (actor: Actor, itemId: ItemURN) => void;
   /**
    * Removes undefined entries and empty location objects from equipment
    */
@@ -56,7 +56,7 @@ export function createActorEquipmentApi (
     actor.equipment ??= {};
   }
 
-  function getEquippedWeapon(actor: Actor, possibleLocations: AnatomyURN[] = allowedAnatomicalLocations): WeaponItemURN | null {
+  function getEquippedWeapon(actor: Actor, possibleLocations: AnatomyURN[] = allowedAnatomicalLocations): ItemURN | null {
     if (!actor)  {
       throw new Error('Actor argument is required');
     }
@@ -67,8 +67,8 @@ export function createActorEquipmentApi (
       const equipmentSlots = actor.equipment[location];
       if (equipmentSlots) {
         for (let itemId in equipmentSlots) {
-          if (equipmentSlots[itemId as WeaponItemURN] === 1) {
-            return itemId as WeaponItemURN;
+          if (equipmentSlots[itemId as ItemURN] === 1) {
+            return itemId as ItemURN;
           }
         }
       }
@@ -93,7 +93,7 @@ export function createActorEquipmentApi (
     return getEquippedWeaponSchema(actor, possibleLocations);
   }
 
-  function equipWeapon(actor: Actor, itemId: WeaponItemURN) {
+  function equipWeapon(actor: Actor, itemId: ItemURN) {
     ensureEquipment(actor);
 
     const item = inventoryApi.getItem(actor, itemId);
@@ -106,7 +106,7 @@ export function createActorEquipmentApi (
 
         if (equipmentSlots) {
           for (let existingItemId in equipmentSlots) {
-            if (equipmentSlots[existingItemId as WeaponItemURN] === 1) {
+            if (equipmentSlots[existingItemId as ItemURN] === 1) {
               throw new Error('Equipment slot already occupied');
             }
           }
@@ -121,7 +121,7 @@ export function createActorEquipmentApi (
     }
   }
 
-  function unequipWeapon(actor: Actor, itemId: WeaponItemURN) {
+  function unequipWeapon(actor: Actor, itemId: ItemURN) {
     const item = inventoryApi.getItem(actor, itemId);
     const schema = schemaManager.getSchemaOrFail(item.schema as keyof SchemaRegistry);
     if ('fit' in schema && schema.fit) {

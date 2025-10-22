@@ -1,9 +1,9 @@
 import { Actor } from '~/types/entity/actor';
-import { Item } from '~/types/entity/item';
+import { Item, Weapon } from '~/types/entity/item';
 import { Place } from '~/types/entity/place';
 import { Intent } from '~/types/intent';
-import { WorldProjection } from '~/types/world';
-import { ActorURN, PlaceURN } from '~/types/taxonomy';
+import { ActorURN, ItemURN, PlaceURN } from '~/types/taxonomy';
+import { TransformerContext } from '~/types/handler';
 
 class TrieNode {
   children: Map<string, TrieNode> = new Map();
@@ -67,8 +67,10 @@ class ActorTrie {
 
 export type EntityResolverApi = {
   resolveActor: (intent: Intent, matchLocation?: boolean) => Actor | undefined;
-  resolveItem: (intent: Intent) => Item | undefined;
   resolvePlace: (intent: Intent) => Place | undefined;
+  resolveItem: (intent: Intent) => Item | undefined;
+  resolveInventoryItem: (intent: Intent) => Item | undefined;
+  resolveEquippedWeapon: (intent: Intent) => Weapon | undefined;
 };
 
 type EntityResolverConfig = {
@@ -80,11 +82,13 @@ const DEFAULT_ENTITY_RESOLVER_CONFIG: EntityResolverConfig = {
 };
 
 export const createEntityResolverApi = (
-  world: WorldProjection,
+  context: TransformerContext,
   {
     prefixMatchThreshold,
   }: EntityResolverConfig = DEFAULT_ENTITY_RESOLVER_CONFIG,
 ): EntityResolverApi => {
+  const { world } = context;
+
   // Build trie and other lookup structures
   const actorTrie = new ActorTrie();
   const actorNameCache = new Map<ActorURN, string>();
@@ -187,6 +191,7 @@ export const createEntityResolverApi = (
   };
 
   const resolveItem = (intent: Intent): Item | undefined => {
+    // Search through the actor's inventory, equipment
     return undefined;
   };
 
@@ -194,9 +199,34 @@ export const createEntityResolverApi = (
     return undefined;
   };
 
+  const resolveInventoryItem = (intent: Intent): Item | undefined => {
+    throw new Error('Not implemented');
+  };
+
+  const resolveEquippedWeapon = (intent: Intent): Weapon | undefined => {
+    const actor = context.world.actors[intent.actor as ActorURN];
+    if (!actor) {
+      return undefined;
+    }
+
+    const weaponId = context.equipmentApi.getEquippedWeapon(actor);
+    if (!weaponId) {
+      return undefined;
+    }
+
+    const weapon = actor.inventory.items[weaponId as ItemURN];
+    if (!weapon) {
+      return undefined;
+    }
+
+    return weapon! as Weapon;
+  }
+
   return {
     resolveActor,
     resolveItem,
     resolvePlace,
+    resolveInventoryItem,
+    resolveEquippedWeapon,
   };
 };

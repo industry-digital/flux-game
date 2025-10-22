@@ -1,7 +1,6 @@
 import { ActorURN, PlaceURN, SessionURN } from '~/types/taxonomy';
-import { WorldProjection } from '~/types/world';
 import { EntityResolverApi } from '~/intent/resolvers';
-import { PotentiallyImpureOperations } from '~/types/handler';
+import { TransformerContext } from '~/types/handler';
 
 export type InputMetadata = { __type: 'command' | 'intent' };
 
@@ -36,6 +35,7 @@ export enum CommandType {
   TARGET = 'TARGET',
   TRAVEL = 'TRAVEL',
   VAULT = 'VAULT',
+  UNEQUIP = 'UNEQUIP',
   USE_WORKBENCH = 'USE_WORKBENCH',
 }
 
@@ -199,11 +199,7 @@ export type Command<
   A extends Record<string, any> = Record<string, any>
 > = SystemCommand<T, A> | ActorCommand<T, A>;
 
-export type CommandResolverContext = EntityResolverApi & {
-  world: WorldProjection;
-  uniqid: PotentiallyImpureOperations['uniqid'];
-  timestamp: PotentiallyImpureOperations['timestamp'];
-};
+export type CommandResolverContext = TransformerContext & EntityResolverApi
 
 export type CommandResolver<TCommand extends Command = Command> = (
   context: CommandResolverContext,

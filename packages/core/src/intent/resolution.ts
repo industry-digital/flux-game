@@ -21,13 +21,10 @@ const RESOLVERS: CommandResolver[] = (() => {
 })();
 
 export const createCommandResolverContext = (input: TransformerContext): CommandResolverContext => {
-  const resolvers = createEntityResolverApi(input.world);
+  const resolvers = createEntityResolverApi(input);
   return {
     ...input,
     ...resolvers,
-    world: input.world,
-    uniqid: input.uniqid,
-    timestamp: input.timestamp,
   };
 };
 
