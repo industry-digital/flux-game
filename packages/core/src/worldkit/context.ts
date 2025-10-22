@@ -13,6 +13,7 @@ import { createCombatMetricsApi } from '~/worldkit/combat/metrics';
 import { createActorSkillApi } from '~/worldkit/entity/actor/skill';
 import { createRollApi } from '~/worldkit/dice';
 import { createActorWeaponApi } from '~/worldkit/entity/actor/weapon';
+import { getSchemaTranslation } from '~/narrative/schema';
 
 export type MapFunction<T> = (context: T) => T;
 const identity = <T extends any>(context: T): T => context;
@@ -47,6 +48,7 @@ export const createWorldProjection = (map: MapFunction<WorldProjection> = identi
 
 /**
  * Returns a fully-formed TransformerContext with a CombatContext and a MassComputationState
+ * This is a *batch-level* construct that services an entire batch of commands.
  */
 export const createTransformerContext = (
   map: MapFunction<TransformerContext> = identity,
@@ -158,6 +160,8 @@ export const createTransformerContext = (
 
     getDeclaredEvents,
     getDeclaredEventsByCommand,
+
+    getSchemaTranslation,
 
     // Combat infrastructure
     searchCache: new Map(),

@@ -11,6 +11,8 @@ import { WorldProjection } from '~/types/world';
 import { CommandResolver } from '~/types/intent';
 import { RollApi } from '~/types/dice';
 import { ActorWeaponApi } from '~/worldkit/entity/actor/weapon';
+import { Locale, SchemaTranslation } from '~/types/i18n';
+import { SchemaURN } from '~/types/taxonomy';
 
 /** Combat metrics collection interface for performance monitoring and telemetry */
 export type CombatMetrics = {
@@ -106,6 +108,8 @@ export type TransformerContext<W extends WorldProjection = WorldProjection> =
     skillApi: ActorSkillApi;
     weaponApi: ActorWeaponApi;
     rollApi: RollApi;
+
+    getSchemaTranslation: (locale: Locale, schemaUrn: SchemaURN) => SchemaTranslation;
 
     // Optional metrics collection for performance monitoring
     metrics?: CombatMetrics;

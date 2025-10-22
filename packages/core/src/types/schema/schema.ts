@@ -7,11 +7,13 @@ import { SchemaURN } from '~/types/taxonomy';
 export type EntitySchemaBase = {
   /**
    * Human-readable name for this schema type
+   * @deprecated Schemas don't contain localized strings
    */
   name: string;
 
   /**
    * Optional description of what this schema represents
+   * @deprecated Schemas don't contain localized strings
    */
   description?: string;
 };
