@@ -1,10 +1,6 @@
 # Priorities
 
-1. [Combat: Ammo Mechanics](./docs/gameplay/combat/overview.md)
-1. [Combat: Ranged Weapons](./docs/gameplay/combat/overview.md)
 1. [Combat: Damage and Injury Mechanics](./docs/gameplay/overview.md)
-1. EQUIP
-1. UNEQUIP
 1. GET
 1. DROP
 1. Combat: Injury Mechanics + dropping weapon
@@ -49,7 +45,10 @@ graph TD
 1. [Combat: Evasion Mechanics](./docs/gameplay/overview.md)
 1. [Shell System Data Model](./docs/gameplay/core-shell.md)
 1. Combat: 3v3 Sandbox
-
+1. [Combat: Ammo Mechanics](./docs/gameplay/combat/overview.md)
+1. [Combat: Ranged Weapons](./docs/gameplay/combat/overview.md)
+1. EQUIP
+1. UNEQUIP
 
 # Abandoned
 

@@ -121,7 +121,7 @@ export function resolveIntent(
 
   // Parse raw text into structured intent (without session context)
   const intent = createIntent({
-    id: `legacy-intent-${Date.now()}`,
+    id: context.uniqid(),
     actor: actorId,
     location: actor.location,
     text: intentText,
