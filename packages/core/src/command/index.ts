@@ -21,6 +21,7 @@ import { CommandType } from '~/types/intent';
 import { partyInviteReducer } from '~/command/PARTY_INVITE/reducer';
 import { acceptPartyInvitationReducer } from '~/command/PARTY_INVITE_ACCEPT/reducer';
 import { rejectPartyInvitationReducer } from '~/command/PARTY_INVITE_REJECT/reducer';
+import { partyInspectReducer } from '~/command/PARTY_INSPECT/reducer';
 
 // Registry mapping CommandType to transformer (reducer) functions
 export const COMMAND_TRANSFORMERS: Partial<Record<CommandType, PureReducer<TransformerContext, any>>> = {
@@ -45,6 +46,7 @@ export const COMMAND_TRANSFORMERS: Partial<Record<CommandType, PureReducer<Trans
   [CommandType.PARTY_INVITE]: partyInviteReducer,
   [CommandType.PARTY_INVITE_ACCEPT]: acceptPartyInvitationReducer,
   [CommandType.PARTY_INVITE_REJECT]: rejectPartyInvitationReducer,
+  [CommandType.PARTY_INSPECT]: partyInspectReducer,
 };
 
 /**
