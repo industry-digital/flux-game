@@ -9,17 +9,14 @@ import { Transform } from '~/worldkit/entity/group/factory';
  */
 export const DEFAULT_MAX_PARTY_SIZE = 3;
 
-export type PartyRemovalResult = {
-  partyDisbanded: boolean;
-  disbandedPartyId?: PartyURN;
-};
+type WasPartyDisbanded = boolean;
 
 export type PartyApi = {
   createParty: (transform?: Transform<Party>) => Party;
   getParty: (partyId: PartyURN) => Party;
   isPartyMember: (party: Party, memberId: ActorURN) => boolean;
   addPartyMember: (party: Party, memberId: ActorURN) => void;
-  removePartyMember: (party: Party, memberId: ActorURN) => PartyRemovalResult;
+  removePartyMember: (party: Party, memberId: ActorURN) => WasPartyDisbanded;
   setPartyLeader: (party: Party, leaderId: ActorURN) => void;
   areInSameParty: (partyA: Party, partyB: Party) => boolean;
   inviteToParty: (party: Party, inviteeId: ActorURN) => void;
@@ -83,7 +80,7 @@ export const createPartyApi = (
     actor.party = party.id;
   };
 
-  const removePartyMember = (party: Party, memberId: ActorURN): PartyRemovalResult => {
+  const removePartyMember = (party: Party, memberId: ActorURN): boolean => {
     const actor = context.world.actors[memberId];
     if (!actor) {
       throw new Error(`Actor ${memberId} not found`);
@@ -98,22 +95,14 @@ export const createPartyApi = (
 
     // Check if party is now empty and auto-disband if so
     if (party.size === 0) {
-      const partyId = party.id;
-
       // Remove the party from the world
       delete context.world.groups[party.id];
 
-      // Return result indicating disbandment occurred
-      return {
-        partyDisbanded: true,
-        disbandedPartyId: partyId,
-      };
+      return true;
     }
 
-    // Party still has members
-    return {
-      partyDisbanded: false,
-    };
+    // Party was *NOT* disbanded; party still has members
+    return false;
   };
 
   const acceptPartyInvitation = (party: Party, inviteeId: ActorURN): void => {

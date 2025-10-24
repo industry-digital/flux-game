@@ -17,8 +17,8 @@ import { ComponentSchemaURN } from '~/types/taxonomy';
 import { WellKnownActor } from '~/types/actor';
 import { ShellStats } from '~/types/entity/actor';
 import { CurrencyTransaction } from '~/types/currency';
-import { Party } from '~/types/entity/group';
 import { PartyLeaveReason } from '~/types/party';
+import { Party } from '~/types/entity/group';
 
 export type EventPayload = Record<string, any>;
 
@@ -140,7 +140,8 @@ export enum EventType {
   ACTOR_DID_REJECT_PARTY_INVITATION = 'actor:party:invite:rejected',
   ACTOR_DID_JOIN_PARTY = 'actor:party:joined',
   ACTOR_DID_LEAVE_PARTY = 'actor:party:left',
-  ACTOR_DID_LIST_PARTY_MEMBERS = 'actor:party:members:listed',
+  ACTOR_DID_INSPECT_PARTY = 'actor:party:members:listed',
+  ACTOR_DID_LIST_PARTY_INVITATIONS = 'actor:party:invitations:listed',
 }
 
 export type EventBase = {
@@ -590,6 +591,8 @@ export type ActorDidDisbandPartyInput = AbstractWorldEventInput<
   EventType.ACTOR_DID_DISBAND_PARTY,
   {
     partyId: PartyURN;
+    formerMembers: ActorURN[];
+    cancelledInvitations: ActorURN[];
   }
 >;
 
@@ -636,15 +639,19 @@ export type ActorDidLeavePartyInput = AbstractWorldEventInput<
   {
     partyId: PartyURN;
     reason: PartyLeaveReason;
+    newOwner?: ActorURN; // if ownership transferred
   }
 >;
 
-export type ActorDidListPartyMembers = EventBase & ActorDidListPartyMembersInput;
-export type ActorDidListPartyMembersInput = AbstractWorldEventInput<
-  EventType.ACTOR_DID_LIST_PARTY_MEMBERS,
+export type ActorDidInspectParty = EventBase & ActorDidInspectPartyInput;
+export type ActorDidInspectPartyInput = AbstractWorldEventInput<
+  EventType.ACTOR_DID_INSPECT_PARTY,
   {
-    partyId: PartyURN;
+    partyId: Party['id'];
+    owner: Party['owner'];
     members: Party['members'];
+    // Only visible to the party owner
+    invitations?: Party['invitations'];
   }
 >;
 
@@ -706,7 +713,7 @@ export type WorldEventInput =
   | ActorDidRejectPartyInvitationInput
   | ActorDidJoinPartyInput
   | ActorDidLeavePartyInput
-  | ActorDidListPartyMembersInput
+  | ActorDidInspectPartyInput
   ;
 
 /**
