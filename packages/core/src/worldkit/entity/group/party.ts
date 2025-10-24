@@ -45,19 +45,44 @@ export const createPartyApi = (
   } = createGroupApi<GroupType.PARTY, ActorURN>(GroupType.PARTY, context, deps);
 
   const addPartyMember = (party: Party, memberId: ActorURN): void => {
+    const actor = context.world.actors[memberId];
+    if (!actor) {
+      throw new Error(`Actor ${memberId} not found`);
+    }
+
+    if (actor.party) {
+      if (actor.party !== party.id) {
+        throw new Error(`Actor ${memberId} is already in a different party (${actor.party})`);
+      }
+      return;
+    }
+
     if (party.size >= policy.maxSize) {
       throw new Error(`Party ${party.id} is at maximum capacity (${policy.maxSize} members)`);
     }
+
     addGroupMember(party, memberId);
+    actor.party = party.id;
   };
 
+  const removePartyMember = (party: Party, memberId: ActorURN): void => {
+    const actor = context.world.actors[memberId];
+    if (!actor) {
+      throw new Error(`Actor ${memberId} not found`);
+    }
+    if (actor.party !== party.id) {
+      throw new Error(`Actor ${memberId} is not in party ${party.id}`);
+    }
+    removeGroupMember(party, memberId);
+    actor.party = undefined;
+  };
 
   return {
     createParty: createGroup,
     getParty: getGroup,
     isPartyMember: isGroupMember,
     addPartyMember,
-    removePartyMember: removeGroupMember,
+    removePartyMember,
     setPartyLeader: setGroupLeader,
     areInSameParty: areInSameGroup,
     refreshParty: refreshGroup,
