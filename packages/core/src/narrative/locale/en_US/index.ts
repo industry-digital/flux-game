@@ -4,21 +4,21 @@ import { NOT_IMPLEMENTED } from '~/narrative/stub';
 
 // Import all template functions
 import {
-  renderAttackNarrative,
-  renderDefendNarrative,
-  renderMoveNarrative,
-  renderTargetNarrative,
-  renderDeathNarrative,
-  renderTurnEndNarrative,
-  renderTurnStartNarrative,
-  renderRoundStartNarrative,
-  renderRoundEndNarrative,
-  renderCombatSessionStartNarrative,
-  renderCombatSessionEndNarrative,
-  renderCombatStatusChangeNarrative,
+  narrateActorDidAttack,
+  narrateActorDidDefend,
+  narrateActorDidMoveInCombat,
+  narrateActorDidAcquireTarget,
+  narrateActorDidDie,
+  narrateCombatTurnDidEnd,
+  narrateCombatTurnDidStart,
+  narrateCombatRoundDidStart,
+  narrateCombatRoundDidEnd,
+  narrateCombatSessionStarted,
+  narrateCombatSessionEnded,
+  narrateCombatSessionStatusDidChange,
   renderWasAttackedNarrative,
   // Note: Actor death and energy recovery are handled by combat events
-  renderAcquireRangeNarrative,
+  narrateActorDidAssessRange,
 } from './combat';
 
 import {
@@ -40,16 +40,16 @@ import {
 } from './world';
 
 import {
-  renderWorkbenchSessionStartNarrative,
-  renderWorkbenchSessionEndNarrative,
-  renderStageMutationNarrative,
-  renderDiffMutationsNarrative,
-  renderUndoMutationsNarrative,
-  renderCommitMutationsNarrative,
+  narrateWorkbenchSessionDidStart,
+  narrateWorkbenchSessionDidEnd,
+  narrateActorDidStageShellMutation,
+  narrateActorDidDiffShellMutations,
+  narrateActorDidUndoShellMutations,
+  narrateActorDidCommitShellMutations,
 } from './workbench';
 
 import {
-  renderCurrencyTransactionNarrative,
+  narrateActorDidCompleteCurrencyTransaction,
 } from './currency';
 
 export const en_US: LanguageTemplates = {
@@ -61,7 +61,7 @@ export const en_US: LanguageTemplates = {
   [EventType.ACTOR_DID_ARRIVE]: renderActorArriveNarrative,
   [EventType.ACTOR_DID_DEPART]: renderActorDepartNarrative,
   [EventType.ACTOR_DID_RECOVER_ENERGY]: NOT_IMPLEMENTED, // This event type doesn't exist
-  [EventType.ACTOR_DID_COMPLETE_CURRENCY_TRANSACTION]: renderCurrencyTransactionNarrative,
+  [EventType.ACTOR_DID_COMPLETE_CURRENCY_TRANSACTION]: narrateActorDidCompleteCurrencyTransaction,
   [EventType.ACTOR_DID_SWAP_SHELL]: renderSwapShellNarrative,
   [EventType.ACTOR_DID_OPEN_HELPFILE]: renderHelpFileNarrative,
   [EventType.ACTOR_DID_EQUIP_WEAPON]: NOT_IMPLEMENTED,
@@ -72,20 +72,20 @@ export const en_US: LanguageTemplates = {
   [EventType.ACTOR_DID_EXAMINE_SHELL]: NOT_IMPLEMENTED,
 
   // Combat Events
-  [EventType.ACTOR_DID_ATTACK]: renderAttackNarrative,
+  [EventType.ACTOR_DID_ATTACK]: narrateActorDidAttack,
   [EventType.ACTOR_WAS_ATTACKED]: renderWasAttackedNarrative,
-  [EventType.ACTOR_DID_DEFEND]: renderDefendNarrative,
-  [EventType.ACTOR_DID_MOVE_IN_COMBAT]: renderMoveNarrative,
-  [EventType.ACTOR_DID_ACQUIRE_TARGET]: renderTargetNarrative,
-  [EventType.ACTOR_DID_DIE]: renderDeathNarrative,
-  [EventType.ACTOR_DID_ASSESS_RANGE]: renderAcquireRangeNarrative,
-  [EventType.COMBAT_TURN_DID_START]: renderTurnStartNarrative,
-  [EventType.COMBAT_TURN_DID_END]: renderTurnEndNarrative,
-  [EventType.COMBAT_ROUND_DID_START]: renderRoundStartNarrative,
-  [EventType.COMBAT_ROUND_DID_END]: renderRoundEndNarrative,
-  [EventType.COMBAT_SESSION_DID_START]: renderCombatSessionStartNarrative,
-  [EventType.COMBAT_SESSION_DID_END]: renderCombatSessionEndNarrative,
-  [EventType.COMBAT_SESSION_STATUS_DID_CHANGE]: renderCombatStatusChangeNarrative,
+  [EventType.ACTOR_DID_DEFEND]: narrateActorDidDefend,
+  [EventType.ACTOR_DID_MOVE_IN_COMBAT]: narrateActorDidMoveInCombat,
+  [EventType.ACTOR_DID_ACQUIRE_TARGET]: narrateActorDidAcquireTarget,
+  [EventType.ACTOR_DID_DIE]: narrateActorDidDie,
+  [EventType.ACTOR_DID_ASSESS_RANGE]: narrateActorDidAssessRange,
+  [EventType.COMBAT_TURN_DID_START]: narrateCombatTurnDidStart,
+  [EventType.COMBAT_TURN_DID_END]: narrateCombatTurnDidEnd,
+  [EventType.COMBAT_ROUND_DID_START]: narrateCombatRoundDidStart,
+  [EventType.COMBAT_ROUND_DID_END]: narrateCombatRoundDidEnd,
+  [EventType.COMBAT_SESSION_DID_START]: narrateCombatSessionStarted,
+  [EventType.COMBAT_SESSION_DID_END]: narrateCombatSessionEnded,
+  [EventType.COMBAT_SESSION_STATUS_DID_CHANGE]: narrateCombatSessionStatusDidChange,
 
   // Combat Events - Not Yet Implemented
   [EventType.ACTOR_DID_TAKE_COVER]: NOT_IMPLEMENTED,
@@ -97,12 +97,12 @@ export const en_US: LanguageTemplates = {
   [EventType.RESOURCES_DID_CHANGE]: renderResourcesChangeNarrative,
 
   // Workbench Events
-  [EventType.WORKBENCH_SESSION_DID_START]: renderWorkbenchSessionStartNarrative,
-  [EventType.WORKBENCH_SESSION_DID_END]: renderWorkbenchSessionEndNarrative,
-  [EventType.WORKBENCH_SHELL_MUTATION_STAGED]: renderStageMutationNarrative,
-  [EventType.WORKBENCH_SHELL_MUTATIONS_DIFFED]: renderDiffMutationsNarrative,
-  [EventType.WORKBENCH_SHELL_MUTATIONS_UNDONE]: renderUndoMutationsNarrative,
-  [EventType.WORKBENCH_SHELL_MUTATIONS_COMMITTED]: renderCommitMutationsNarrative,
+  [EventType.WORKBENCH_SESSION_DID_START]: narrateWorkbenchSessionDidStart,
+  [EventType.WORKBENCH_SESSION_DID_END]: narrateWorkbenchSessionDidEnd,
+  [EventType.WORKBENCH_SHELL_MUTATION_STAGED]: narrateActorDidStageShellMutation,
+  [EventType.WORKBENCH_SHELL_MUTATIONS_DIFFED]: narrateActorDidDiffShellMutations,
+  [EventType.WORKBENCH_SHELL_MUTATIONS_UNDONE]: narrateActorDidUndoShellMutations,
+  [EventType.WORKBENCH_SHELL_MUTATIONS_COMMITTED]: narrateActorDidCommitShellMutations,
   [EventType.ACTOR_DID_MOUNT_COMPONENT]: NOT_IMPLEMENTED,
   [EventType.ACTOR_DID_UNMOUNT_COMPONENT]: NOT_IMPLEMENTED,
   [EventType.ACTOR_DID_LIST_SHELLS]: NOT_IMPLEMENTED,

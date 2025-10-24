@@ -16,7 +16,7 @@ const CURRENCY_FORMATTER = new Intl.NumberFormat('en-US', {
 /**
  * Renders narrative for currency transaction completion events
  */
-export const renderCurrencyTransactionNarrative: TemplateFunction<ActorDidCompleteCurrencyTransaction, ActorURN> = (context, event, actorId) => {
+export const narrateActorDidCompleteCurrencyTransaction: TemplateFunction<ActorDidCompleteCurrencyTransaction, ActorURN> = (context, event, actorId) => {
   const { world } = context;
   const actor = world.actors[event.actor];
   const { transaction } = event.payload;

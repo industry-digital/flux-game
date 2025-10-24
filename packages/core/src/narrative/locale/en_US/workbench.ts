@@ -10,7 +10,7 @@ import { ShellMutationType } from '~/types/workbench';
 import { TemplateFunction } from '~/types/narrative';
 import { ActorURN } from '~/types/taxonomy';
 
-export const renderWorkbenchSessionStartNarrative: TemplateFunction<WorkbenchSessionDidStart, ActorURN> = (context, event, recipientId) => {
+export const narrateWorkbenchSessionDidStart: TemplateFunction<WorkbenchSessionDidStart, ActorURN> = (context, event, recipientId) => {
   const { world } = context;
   const actor = world.actors[event.actor!];
 
@@ -21,7 +21,7 @@ export const renderWorkbenchSessionStartNarrative: TemplateFunction<WorkbenchSes
   return `${actor.name} begins working at a shell workbench.`;
 };
 
-export const renderWorkbenchSessionEndNarrative: TemplateFunction<WorkbenchSessionDidEnd, ActorURN> = (context, event, recipientId) => {
+export const narrateWorkbenchSessionDidEnd: TemplateFunction<WorkbenchSessionDidEnd, ActorURN> = (context, event, recipientId) => {
   const { world } = context;
   const actor = world.actors[event.actor!];
 
@@ -32,7 +32,7 @@ export const renderWorkbenchSessionEndNarrative: TemplateFunction<WorkbenchSessi
   return `${actor.name} finishes working at the shell workbench.`;
 };
 
-export const renderStageMutationNarrative: TemplateFunction<ActorDidStageShellMutation, ActorURN> = (context, event, recipientId) => {
+export const narrateActorDidStageShellMutation: TemplateFunction<ActorDidStageShellMutation, ActorURN> = (context, event, recipientId) => {
   const { world } = context;
   const actor = world.actors[event.actor!];
   const { mutation } = event.payload;
@@ -51,7 +51,7 @@ export const renderStageMutationNarrative: TemplateFunction<ActorDidStageShellMu
   return `${actor.name} makes adjustments to their shell design.`;
 };
 
-export const renderDiffMutationsNarrative: TemplateFunction<ActorDidDiffShellMutations, ActorURN> = (context, event, recipientId) => {
+export const narrateActorDidDiffShellMutations: TemplateFunction<ActorDidDiffShellMutations, ActorURN> = (context, event, recipientId) => {
   const { world } = context;
   const actor = world.actors[event.actor!];
 
@@ -62,7 +62,7 @@ export const renderDiffMutationsNarrative: TemplateFunction<ActorDidDiffShellMut
   return `${actor.name} reviews their shell modifications.`;
 };
 
-export const renderUndoMutationsNarrative: TemplateFunction<ActorDidUndoShellMutations, ActorURN> = (context, event, recipientId) => {
+export const narrateActorDidUndoShellMutations: TemplateFunction<ActorDidUndoShellMutations, ActorURN> = (context, event, recipientId) => {
   const { world } = context;
   const actor = world.actors[event.actor!];
 
@@ -73,7 +73,7 @@ export const renderUndoMutationsNarrative: TemplateFunction<ActorDidUndoShellMut
   return `${actor.name} undoes some shell modifications.`;
 };
 
-export const renderCommitMutationsNarrative: TemplateFunction<ActorDidCommitShellMutations, ActorURN> = (context, event, recipientId) => {
+export const narrateActorDidCommitShellMutations: TemplateFunction<ActorDidCommitShellMutations, ActorURN> = (context, event, recipientId) => {
   const { world } = context;
   const actor = world.actors[event.actor!];
   const { cost, mutations } = event.payload;
