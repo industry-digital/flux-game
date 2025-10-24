@@ -591,8 +591,8 @@ export type ActorDidDisbandPartyInput = AbstractWorldEventInput<
   EventType.ACTOR_DID_DISBAND_PARTY,
   {
     partyId: PartyURN;
-    formerMembers: ActorURN[];
-    cancelledInvitations: ActorURN[];
+    formerMembers: Party['members'];
+    cancelledInvitations: Party['invitations'];
   }
 >;
 

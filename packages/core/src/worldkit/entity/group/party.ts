@@ -9,14 +9,17 @@ import { Transform } from '~/worldkit/entity/group/factory';
  */
 export const DEFAULT_MAX_PARTY_SIZE = 3;
 
-type WasPartyDisbanded = boolean;
+export type PartyRemovalResult = {
+  wasPartyDisbanded: boolean;
+  newOwner?: ActorURN; // Set if ownership was transferred
+};
 
 export type PartyApi = {
   createParty: (transform?: Transform<Party>) => Party;
   getParty: (partyId: PartyURN) => Party;
   isPartyMember: (party: Party, memberId: ActorURN) => boolean;
   addPartyMember: (party: Party, memberId: ActorURN) => void;
-  removePartyMember: (party: Party, memberId: ActorURN) => WasPartyDisbanded;
+  removePartyMember: (party: Party, memberId: ActorURN, result?: PartyRemovalResult) => PartyRemovalResult;
   setPartyLeader: (party: Party, leaderId: ActorURN) => void;
   areInSameParty: (partyA: Party, partyB: Party) => boolean;
   inviteToParty: (party: Party, inviteeId: ActorURN) => void;
@@ -80,7 +83,14 @@ export const createPartyApi = (
     actor.party = party.id;
   };
 
-  const removePartyMember = (party: Party, memberId: ActorURN): boolean => {
+  const removePartyMember = (
+    party: Party,
+    memberId: ActorURN,
+    result: PartyRemovalResult = { wasPartyDisbanded: false, newOwner: undefined },
+  ): PartyRemovalResult => {
+    result.newOwner = undefined;
+    result.wasPartyDisbanded = false;
+
     const actor = context.world.actors[memberId];
     if (!actor) {
       throw new Error(`Actor ${memberId} not found`);
@@ -89,20 +99,45 @@ export const createPartyApi = (
       throw new Error(`Actor ${memberId} is not in party ${party.id}`);
     }
 
-    // Remove the member
+    let newOwner: ActorURN | undefined;
+
+    // Check if this is the last member (auto-disband case)
+    if (party.size === 1) {
+      // Last member leaving - disband the party directly
+      actor.party = undefined;
+      delete context.world.groups[party.id];
+
+      result.wasPartyDisbanded = true;
+      return result;
+    }
+
+    // Check if ownership transfer is needed (owner leaving with members remaining)
+    const isOwnerLeaving = party.owner === memberId;
+    if (isOwnerLeaving) {
+      // Find the longest-standing member to transfer ownership to
+      for (const candidateId in party.members) {
+        if (candidateId !== memberId) {
+          newOwner = candidateId as ActorURN;
+          break; // For now, just take the first non-leaving member
+        }
+      }
+
+      if (newOwner) {
+        // Transfer ownership before removing the member
+        party.owner = newOwner;
+      }
+    }
+
+    // Remove the member using the generic group API
     removeGroupMember(party, memberId);
     actor.party = undefined;
 
-    // Check if party is now empty and auto-disband if so
-    if (party.size === 0) {
-      // Remove the party from the world
-      delete context.world.groups[party.id];
+    // Refresh the party after removal
+    refreshGroup(party);
 
-      return true;
-    }
+    result.newOwner = newOwner;
 
-    // Party was *NOT* disbanded; party still has members
-    return false;
+    return result;
   };
 
   const acceptPartyInvitation = (party: Party, inviteeId: ActorURN): void => {
