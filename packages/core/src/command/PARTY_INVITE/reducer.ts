@@ -2,7 +2,7 @@ import { Transformer } from '~/types/handler';
 import { PartyInviteCommand } from './types';
 import { withBasicWorldStateValidation } from '../validation';
 import { createWorldEvent } from '~/worldkit/event';
-import { ActorDidReceivePartyInvitation, EventType } from '~/types/event';
+import { ActorDidCreateParty, ActorDidReceivePartyInvitation, EventType } from '~/types/event';
 import { ErrorCode } from '~/types/error';
 import { Party } from '~/types/entity/group';
 
@@ -19,7 +19,20 @@ export const partyInviteReducer: Transformer<PartyInviteCommand> = withBasicWorl
     if (!party) {
       // Create the party and add the inviting actor as the first member
       party = context.partyApi.createParty();
+
       context.partyApi.addPartyMember(party, actor.id);
+
+      const partyCreatedEvent: ActorDidCreateParty = createWorldEvent({
+        type: EventType.ACTOR_DID_CREATE_PARTY,
+        trace: command.id,
+        location: actor.location,
+        actor: actor.id,
+        payload: {
+          partyId: party.id,
+        },
+      });
+
+      context.declareEvent(partyCreatedEvent);
     }
 
     const invitee = world.actors[command.args.invitee];
