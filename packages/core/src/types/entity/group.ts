@@ -1,5 +1,5 @@
 import { EntityType, AbstractEntity, Nameable } from './entity';
-import { EntityURN } from '~/types/taxonomy';
+import { ActorURN, GroupURN, URNLike } from '~/types/taxonomy';
 
 /**
  * Known group types in the game
@@ -27,21 +27,51 @@ export type GroupSymbolicLink<G extends GroupType> =
  * Instead, use one of the concrete group types in the Group union.
  */
 export type AbstractGroup<
-  T extends EntityType = EntityType,
   G extends GroupType = GroupType,
-  ItemsKey extends string = 'items',
+  TGroupMemberKey extends URNLike = URNLike,
 > =
-  & AbstractEntity<EntityType.GROUP>
+  & Omit<AbstractEntity<EntityType.GROUP>, 'id'>
+  & { readonly id: GroupURN<G> }
   & Nameable
   & { readonly kind: G }
-  & { [K in ItemsKey]: Record<EntityURN<T>, 1> };
+  & {
+    /**
+     * The owner of the group
+     */
+    owner?: TGroupMemberKey;
+
+    /**
+     * The members of the group
+     */
+    members: Record<TGroupMemberKey, 1>;
+
+    /**
+     * The number of members in the group
+     */
+    size: number;
+    /**
+     * The moment the group was created
+     */
+    ts: number;
+  };
+
+type Transform<T> = (input: T) => T;
+
+export type AbstractGroupApi<TGroupType extends GroupType, TGroupMemberKey extends URNLike> = {
+  createGroup: (transform: Transform<AbstractGroup<TGroupType, TGroupMemberKey>>) => AbstractGroup<TGroupType, TGroupMemberKey>;
+  getGroup: (groupId: GroupURN<TGroupType>) => AbstractGroup<TGroupType, TGroupMemberKey>;
+  isGroupMember: (group: AbstractGroup<TGroupType, TGroupMemberKey>, groupMemberId: TGroupMemberKey) => boolean;
+  addGroupMember: (group: AbstractGroup<TGroupType, TGroupMemberKey>, groupMemberId: TGroupMemberKey) => void;
+  removeGroupMember: (group: AbstractGroup<TGroupType, TGroupMemberKey>, groupMemberId: TGroupMemberKey) => void;
+  setGroupLeader: (group: AbstractGroup<TGroupType, TGroupMemberKey>, groupLeaderId: TGroupMemberKey) => void;
+  areInSameGroup: (groupA: AbstractGroup<TGroupType, TGroupMemberKey>, groupB: AbstractGroup<TGroupType, TGroupMemberKey>) => boolean;
+  refreshGroup: (group: AbstractGroup<TGroupType, TGroupMemberKey>) => void;
+};
 
 /**
  * A Party is a group of Characters that can travel as a single unit through the game world.
  */
-export type Party = AbstractGroup<EntityType.ACTOR, GroupType.PARTY, 'members'>;
-export type PartyRef = GroupSymbolicLink<GroupType.PARTY>;
-// PartyURN is now imported from taxonomy
+export type Party = AbstractGroup<GroupType.PARTY, ActorURN>;
 
 /**
  * A Faction is a group of characters that share allegiance or ideology.
@@ -49,26 +79,10 @@ export type PartyRef = GroupSymbolicLink<GroupType.PARTY>;
  * - Military organization
  * - Guild or alliance
  */
-export type Faction = AbstractGroup<EntityType.ACTOR, GroupType.FACTION, 'members'>;
-export type FactionRef = GroupSymbolicLink<GroupType.FACTION>;
-// FactionURN is now imported from taxonomy
+export type Faction = AbstractGroup<GroupType.FACTION, ActorURN>;
 
 /**
  * Union of all concrete group types.
  * Use this type when working with groups in a generic way.
  */
 export type Group = Party | Faction;
-
-/**
- * Input type for creating a new Party, containing only the required fields
- * that need to be provided when creating a Party.
- */
-export type PartyInput = Omit<Party, keyof AbstractEntity<EntityType.GROUP>> & {
-  kind: GroupType.PARTY;
-};
-
-export type FactionInput = Omit<Faction, keyof AbstractEntity<EntityType.GROUP>> & {
-  kind: GroupType.FACTION;
-};
-
-export type GroupInput = PartyInput | FactionInput;

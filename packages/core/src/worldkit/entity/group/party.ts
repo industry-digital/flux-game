@@ -1,155 +1,65 @@
-import { Actor } from '~/types/entity/actor';
-import { Party, GroupType } from '~/types/entity/group';
-import { WorldProjection } from '~/types/world';
-import { ActorURN, GroupURN, PartyURN, PlaceURN } from '~/types/taxonomy';
+import { GroupType, Party } from '~/types/entity/group';
+import { ActorURN, PartyURN } from '~/types/taxonomy';
+import { createGroupApi, DEFAULT_GROUP_API_DEPS, GroupApiContext, GroupApiDependencies } from '~/worldkit/entity/group/api';
+import { Transform } from '~/worldkit/entity/group/factory';
 
 /**
- * Get all members of a party
+ * There is a point past which a party goes from an intimate group of humans, to a sprawling mass
+ * of strangers -- each mechanically reduced to a certain role. That's not what we want.
  */
-export function getPartyMembers(
-  world: WorldProjection,
-  partyId: PartyURN,
-  output: ActorURN[] = [], // consumers can opt-into zero-allocation performance
-): ActorURN[] {
-  output.length = 0;
+export const DEFAULT_MAX_PARTY_SIZE = 3;
 
-  const group = world.groups[partyId];
-  if (!group || group.kind !== GroupType.PARTY) {
-    return output;
-  }
-
-  const party = group as Party;
-  for (let actorId in party.members) {
-    if (world.actors[actorId as ActorURN]) {
-      output.push(actorId as ActorURN);
-    }
-  }
-
-  return output;
-}
-
-/**
- * Get all party members who are currently in the specified location
- */
-export function getPartyMembersInLocation(
-  world: WorldProjection,
-  partyId: PartyURN,
-  location: PlaceURN,
-  output: ActorURN[] = [], // consumers can opt-into zero-allocation performance
-): ActorURN[] {
-  output.length = 0;
-
-  const group = world.groups[partyId];
-  if (!group || group.kind !== GroupType.PARTY) {
-    return output;
-  }
-
-  const party = group as Party;
-  for (let actorId in party.members) {
-    const actor = world.actors[actorId as ActorURN];
-    if (!actor) {
-      continue;
-    }
-
-    if (actor.location === location) {
-      output.push(actorId as ActorURN);
-    }
-  }
-
-  return output;
+export type PartyApi = {
+  createParty: (transform: Transform<Party>) => Party;
+  getParty: (partyId: PartyURN) => Party;
+  isPartyMember: (party: Party, memberId: ActorURN) => boolean;
+  addPartyMember: (party: Party, memberId: ActorURN) => void;
+  removePartyMember: (party: Party, memberId: ActorURN) => void;
+  setPartyLeader: (party: Party, leaderId: ActorURN) => void;
+  areInSameParty: (partyA: Party, partyB: Party) => boolean;
+  refreshParty: (party: Party) => void;
 };
 
-/**
- * Get the party that an actor belongs to, if any
- */
-export function getActorParty(world: WorldProjection, actor: Actor): Party | null {
-  if (!actor.party) {
-    return null;
-  }
+export type PartyPolicy = {
+  maxSize: number;
+};
 
-  const group = world.groups[actor.party];
-  if (!group || group.kind !== GroupType.PARTY) {
-    return null;
-  }
+export const DEFAULT_PARTY_POLICY: PartyPolicy = {
+  maxSize: DEFAULT_MAX_PARTY_SIZE,
+};
 
-  return group as Party;
-}
+export const createPartyApi = (
+  context: GroupApiContext,
+  policy: PartyPolicy = DEFAULT_PARTY_POLICY,
+  deps: GroupApiDependencies<GroupType.PARTY> = DEFAULT_GROUP_API_DEPS,
+): PartyApi => {
+  const {
+    createGroup,
+    getGroup,
+    isGroupMember,
+    addGroupMember,
+    removeGroupMember,
+    setGroupLeader,
+    areInSameGroup,
+    refreshGroup,
+  } = createGroupApi<GroupType.PARTY, ActorURN>(GroupType.PARTY, context, deps);
 
-/**
- * Check if two actors belong to the same party
- */
-export function areInSameParty(actorA: Actor, actorB: Actor, world: WorldProjection): boolean {
-  if (!actorA.party || !actorB.party) {
-    return false;
-  }
-
-  return actorA.party === actorB.party;
-}
-
-/**
- * Check if an actor is a member of a specific party
- */
-export function isPartyMember(actor: Actor, partyId: GroupURN, world: WorldProjection): boolean {
-  const party = world.groups[partyId];
-  if (!party || party.kind !== GroupType.PARTY) {
-    return false;
-  }
-
-  const partyObj = party as Party;
-  return actor.id in partyObj.members;
-}
-
-/**
- * Get all actors in the same party as the given actor, excluding the actor themselves
- */
-export function getPartyAllies(
-  world: WorldProjection,
-  actor: Actor,
-  output: ActorURN[] = [], // consumers can opt-into zero-allocation performance
-): ActorURN[] {
-  output.length = 0;
-
-  const party = getActorParty(world, actor);
-  if (!party) {
-    return output;
-  }
-
-  for (let actorId in party.members) {
-    if (actorId !== actor.id) {
-      output.push(actorId as ActorURN);
+  const addPartyMember = (party: Party, memberId: ActorURN): void => {
+    if (party.size >= policy.maxSize) {
+      throw new Error(`Party ${party.id} is at maximum capacity (${policy.maxSize} members)`);
     }
-  }
+    addGroupMember(party, memberId);
+  };
 
-  return output;
-}
 
-/**
- * Get all actors in the same party as the given actor who are in the same location
- */
-export function getPartyAlliesInLocation(
-  world: WorldProjection,
-  actor: Actor,
-  output: ActorURN[] = [], // consumers can opt-into zero-allocation performance
-): ActorURN[] {
-  output.length = 0;
-
-  const party = getActorParty(world, actor);
-  if (!party) {
-    return [];
-  }
-
-  for (let partyMemberId in party.members) {
-    if (partyMemberId === actor.id) {
-      continue;
-    }
-    const partyMember = world.actors[partyMemberId as ActorURN];
-    if (!partyMember) {
-      continue;
-    }
-    if (partyMember.location === actor.location) {
-      output.push(partyMember.id as ActorURN);
-    }
-  }
-
-  return output;
-}
+  return {
+    createParty: createGroup,
+    getParty: getGroup,
+    isPartyMember: isGroupMember,
+    addPartyMember,
+    removePartyMember: removeGroupMember,
+    setPartyLeader: setGroupLeader,
+    areInSameParty: areInSameGroup,
+    refreshParty: refreshGroup,
+  };
+};

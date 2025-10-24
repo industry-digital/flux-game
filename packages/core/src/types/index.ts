@@ -62,8 +62,6 @@ export {
   Faction,
   GroupType,
   GroupSymbolicLink,
-  PartyRef,
-  FactionRef,
 } from './entity/group';
 
 export {

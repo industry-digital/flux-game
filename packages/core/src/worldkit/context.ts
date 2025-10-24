@@ -14,6 +14,8 @@ import { createActorSkillApi } from '~/worldkit/entity/actor/skill';
 import { createRollApi } from '~/worldkit/dice';
 import { createActorWeaponApi } from '~/worldkit/entity/actor/weapon';
 import { getSchemaTranslation } from '~/narrative/schema';
+import { createPartyApi, PartyApi } from '~/worldkit/entity/group/party';
+import { GroupApiContext } from '~/worldkit/entity/group/api';
 
 export type MapFunction<T> = (context: T) => T;
 const identity = <T extends any>(context: T): T => context;
@@ -45,6 +47,8 @@ export const createWorldProjection = (map: MapFunction<WorldProjection> = identi
     groups: {},
   });
 };
+
+type PartyApiResolver = (context: GroupApiContext) => PartyApi;
 
 /**
  * Returns a fully-formed TransformerContext with a CombatContext and a MassComputationState
@@ -148,7 +152,9 @@ export const createTransformerContext = (
     declaredEventIds.clear();
   };
 
-  const transformerContext: TransformerContext = {
+
+  // @ts-expect-error - partyApi is not yet defined
+  const context: TransformerContext = {
     resetEvents,
     resetErrors,
     world,
@@ -182,5 +188,7 @@ export const createTransformerContext = (
     ...deps,
   };
 
-  return map(transformerContext as TransformerContext);
+  context.partyApi = createPartyApi(context);
+
+  return map(context as TransformerContext);
 };

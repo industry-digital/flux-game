@@ -7,7 +7,7 @@ import { AbstractSession } from '~/types/session';
 
 export type WorldProjection = {
   actors: Record<ActorURN, Actor>;
-  groups: Record<GroupURN, Group>;
+  groups: Record<GroupURN<any>, Group>;
   places: Record<PlaceURN, Place>;
   items: Record<ItemURN, Item>;
   sessions: Record<SessionURN, AbstractSession<any, any>>;
