@@ -1,0 +1,42 @@
+import { Transformer } from '~/types/handler';
+import { RejectPartyInvitationCommand } from './types';
+import { withBasicWorldStateValidation } from '../validation';
+import { withPartyInvitee } from '../party';
+import { ErrorCode } from '~/types/error';
+import { ActorDidRejectPartyInvitation, EventType } from '~/types/event';
+import { createWorldEvent } from '~/worldkit/event';
+
+/**
+ * Party invite rejection command reducer
+ */
+export const rejectPartyInvitationReducer: Transformer<RejectPartyInvitationCommand> = withBasicWorldStateValidation(
+  withPartyInvitee(
+    (context, command, party) => {
+      const rejecter = context.world.actors[command.actor];
+
+      try {
+        context.partyApi.rejectInvitation(party, command.actor);
+      } catch (error) {
+        // Handle cases like: no pending invitation, etc.
+        context.declareError(ErrorCode.INVALID_TARGET, command.id);
+        return context;
+      }
+
+      // Emit event that the actor rejected the invitation
+      const didRejectPartyInvitationEvent: ActorDidRejectPartyInvitation = createWorldEvent({
+        type: EventType.ACTOR_DID_REJECT_PARTY_INVITATION,
+        trace: command.id,
+        location: rejecter.location,
+        actor: rejecter.id,
+        payload: {
+          partyId: party.id,
+          inviteeId: rejecter.id,
+        }
+      });
+
+      context.declareEvent(didRejectPartyInvitationEvent);
+
+      return context;
+    }
+  ),
+);
