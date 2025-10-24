@@ -70,9 +70,10 @@ describe('PARTY_INVITE Reducer', () => {
     const alice = result.world.actors[ALICE_ID];
     expect(alice.party).toBeDefined();
 
-    // The party should exist and have Alice as a member
+    // The party should exist and have Alice as a member and owner
     const party = result.world.groups[alice.party!];
     expect(party).toBeDefined();
+    expect(party.owner).toBe(ALICE_ID);
     expect(party.size).toBe(1);
     expect(party.members[ALICE_ID]).toBe(1);
 
