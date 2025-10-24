@@ -1,6 +1,7 @@
 import { CommandResolver, CommandResolverContext, CommandType, Intent } from '~/types/intent';
 import { createActorCommand } from '~/lib/intent';
 import { EquipCommand } from './types';
+import { ErrorCode } from '~/types/error';
 
 const EQUIP_VERB = 'equip';
 
@@ -8,13 +9,19 @@ export const equipResolver: CommandResolver<EquipCommand> = (
   context: CommandResolverContext,
   intent: Intent,
 ): EquipCommand | undefined => {
-  // Check if this is a done command
   if (intent.verb !== EQUIP_VERB) {
     return undefined;
   }
 
-  const item = context.resolveItem(intent);
+  if (intent.tokens.length < 1) {
+    context.declareError(ErrorCode.INVALID_TARGET, intent.id);
+    return undefined;
+  }
+
+  const itemToken = intent.tokens[0];
+  const item = context.resolveItem(intent, itemToken);
   if (!item) {
+    context.declareError(ErrorCode.INVALID_TARGET, intent.id);
     return undefined;
   }
 

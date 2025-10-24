@@ -8,14 +8,19 @@ export const targetResolver: CommandResolver<TargetCommand> = (
   context: CommandResolverContext,
   intent: Intent,
 ): TargetCommand | undefined => {
-  const { world, resolveActor } = context;
+  const { world } = context;
 
   // Check if this is a target command
   if (intent.verb !== TARGET_VERB) {
     return undefined;
   }
 
-  const target = resolveActor(intent);
+  if (intent.tokens.length < 1) {
+    return undefined;
+  }
+
+  const targetToken = intent.tokens[0];
+  const target = context.resolveActor(intent, targetToken, true);
   if (!target) {
     return undefined;
   }
@@ -25,14 +30,10 @@ export const targetResolver: CommandResolver<TargetCommand> = (
     return undefined;
   }
 
-  if (actor.location !== target.location) {
-    return undefined;
-  }
-
   return createActorCommand({
     id: intent.id,
-    actor: intent.actor,
-    location: intent.location,
+    actor: actor.id,
+    location: actor.location,
     type: CommandType.TARGET,
     args: {
       target: target.id

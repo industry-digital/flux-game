@@ -158,7 +158,7 @@ describe('Intent Resolution', () => {
         location: PLACE_ID,
         text: 'attack bob',
       });
-      const resolvedActor = parserContext.resolveActor(intent);
+      const resolvedActor = parserContext.resolveActor(intent, 'Bob');
 
       expect(resolvedActor?.id).toBe(TARGET_ID);
     });
@@ -170,7 +170,7 @@ describe('Intent Resolution', () => {
         location: PLACE_ID,
         text: 'attack Bob', // Using exact name match
       });
-      const resolvedActor = parserContext.resolveActor(intent);
+      const resolvedActor = parserContext.resolveActor(intent, 'Bob');
 
       expect(resolvedActor?.id).toBe(TARGET_ID);
     });

@@ -15,7 +15,8 @@ import { createRollApi } from '~/worldkit/dice';
 import { createActorWeaponApi } from '~/worldkit/entity/actor/weapon';
 import { getSchemaTranslation } from '~/narrative/schema';
 import { createPartyApi, PartyApi } from '~/worldkit/entity/group/party';
-import { GroupApiContext } from '~/worldkit/entity/group/api';
+import { GroupApiContext } from '~/worldkit/entity/group/api/api';
+import { ErrorCode } from '~/types/error';
 
 export type MapFunction<T> = (context: T) => T;
 const identity = <T extends any>(context: T): T => context;
@@ -107,23 +108,18 @@ export const createTransformerContext = (
 
 
   // Overloaded declareError function to match ErrorDeclarationProducer interface
-  function declareError(error: Error): void;
-  function declareError(message: string): void;
-  function declareError(message: string, trace: string): void;
-  function declareError(errorOrMessage: Error | string, trace: string = 'unknown'): void {
-    const errorObj = typeof errorOrMessage === 'string' ? new Error(errorOrMessage) : errorOrMessage;
+  function declareError(message: ErrorCode | string, trace: string = ''): void {
+    const error = new Error(message as string);
+    Error.captureStackTrace(error);
+
     const executionError: ExecutionError = {
       ts: deps.timestamp(),
-      error: errorObj,
+      code: message as ErrorCode,
       trace,
+      stack: error.stack ?? '',
     };
 
     // Log all declared errors to console for debugging
-    console.error(`❌ TransformerContext Error [${trace}]:`, errorObj.message);
-    if (errorObj.stack) {
-      console.error(`   Stack:`, errorObj.stack);
-    }
-
     declaredErrors.push(executionError);
   };
 

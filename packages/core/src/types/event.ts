@@ -1,6 +1,6 @@
 import { Weather } from '~/types/entity/weather';
 import { ResourceNodes } from '~/types/entity/resource';
-import { ActorURN, AmmoSchemaURN, ItemURN, PlaceURN, SessionURN, WeaponSchemaURN } from '~/types/taxonomy';
+import { ActorURN, AmmoSchemaURN, ItemURN, PartyURN, PlaceURN, SessionURN, WeaponSchemaURN } from '~/types/taxonomy';
 import {
   ActionCost,
   AttackOutcome,
@@ -17,6 +17,7 @@ import { ComponentSchemaURN } from '~/types/taxonomy';
 import { WellKnownActor } from '~/types/actor';
 import { ShellStats } from '~/types/entity/actor';
 import { CurrencyTransaction } from '~/types/currency';
+import { Party } from '~/types/entity/group';
 
 export type EventPayload = Record<string, any>;
 
@@ -132,14 +133,12 @@ export enum EventType {
   ACTOR_DID_UNEQUIP_WEAPON = 'actor:weapon:unequipped',
   ACTOR_DID_CREATE_PARTY = 'actor:party:created',
   ACTOR_DID_DISBAND_PARTY = 'actor:party:disbanded',
-  ACTOR_DID_ISSUE_PARTY_INVITATION = 'actor:party:invite:issued',
   ACTOR_DID_RECEIVE_PARTY_INVITATION = 'actor:party:invite:received',
   ACTOR_DID_ACCEPT_PARTY_INVITATION = 'actor:party:invite:accepted',
   ACTOR_DID_REJECT_PARTY_INVITATION = 'actor:party:invite:rejected',
+  ACTOR_DID_JOIN_PARTY = 'actor:party:joined',
   ACTOR_DID_LEAVE_PARTY = 'actor:party:left',
-  ACTOR_DID_KICK_PARTY_MEMBER = 'actor:party:member:kicked',
   ACTOR_DID_LIST_PARTY_MEMBERS = 'actor:party:members:listed',
-
 }
 
 export type EventBase = {
@@ -576,6 +575,81 @@ export type ActorDidUnequipWeaponInput = AbstractWorldEventInput<
   }
 >;
 
+export type ActorDidCreateParty = EventBase & ActorDidCreatePartyInput;
+export type ActorDidCreatePartyInput = AbstractWorldEventInput<
+  EventType.ACTOR_DID_CREATE_PARTY,
+  {
+    partyId: PartyURN;
+  }
+>;
+
+export type ActorDidDisbandParty = EventBase & ActorDidDisbandPartyInput;
+export type ActorDidDisbandPartyInput = AbstractWorldEventInput<
+  EventType.ACTOR_DID_DISBAND_PARTY,
+  {
+    partyId: PartyURN;
+  }
+>;
+
+export type ActorDidReceivePartyInvitation = EventBase & ActorDidReceivePartyInvitationInput;
+export type ActorDidReceivePartyInvitationInput = AbstractWorldEventInput<
+  EventType.ACTOR_DID_RECEIVE_PARTY_INVITATION,
+  {
+    partyId: PartyURN;
+    inviteeId: ActorURN;
+  }
+>;
+
+export type ActorDidAcceptPartyInvitation = EventBase & ActorDidAcceptPartyInvitationInput;
+export type ActorDidAcceptPartyInvitationInput = AbstractWorldEventInput<
+  EventType.ACTOR_DID_ACCEPT_PARTY_INVITATION,
+  {
+    partyId: PartyURN;
+    inviteeId: ActorURN;
+  }
+>;
+
+export type ActorDidRejectPartyInvitation = EventBase & ActorDidRejectPartyInvitationInput;
+export type ActorDidRejectPartyInvitationInput = AbstractWorldEventInput<
+  EventType.ACTOR_DID_REJECT_PARTY_INVITATION,
+  {
+    partyId: PartyURN;
+    inviteeId: ActorURN;
+  }
+>;
+
+export type ActorDidJoinParty = EventBase & ActorDidJoinPartyInput;
+export type ActorDidJoinPartyInput = AbstractWorldEventInput<
+  EventType.ACTOR_DID_JOIN_PARTY,
+  {
+    partyId: PartyURN;
+  }
+>;
+
+export enum PartyLeaveReason {
+  VOLUNTARY = 'voluntary',
+  KICKED = 'kicked',
+  DISBANDED = 'disbanded',
+}
+
+export type ActorDidLeaveParty = EventBase & ActorDidLeavePartyInput;
+export type ActorDidLeavePartyInput = AbstractWorldEventInput<
+  EventType.ACTOR_DID_LEAVE_PARTY,
+  {
+    partyId: PartyURN;
+    reason?: PartyLeaveReason;
+  }
+>;
+
+export type ActorDidListPartyMembers = EventBase & ActorDidListPartyMembersInput;
+export type ActorDidListPartyMembersInput = AbstractWorldEventInput<
+  EventType.ACTOR_DID_LIST_PARTY_MEMBERS,
+  {
+    partyId: PartyURN;
+    members: Party['members'];
+  }
+>;
+
 /**
  * Union of all valid event inputs
  */
@@ -626,6 +700,14 @@ export type WorldEventInput =
   | WeatherDidChangeInput
   | WorkbenchSessionDidEndInput
   | WorkbenchSessionDidStartInput
+  | ActorDidCreatePartyInput
+  | ActorDidDisbandPartyInput
+  | ActorDidReceivePartyInvitationInput
+  | ActorDidAcceptPartyInvitationInput
+  | ActorDidRejectPartyInvitationInput
+  | ActorDidJoinPartyInput
+  | ActorDidLeavePartyInput
+  | ActorDidListPartyMembersInput
   ;
 
 /**

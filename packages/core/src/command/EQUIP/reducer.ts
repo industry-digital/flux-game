@@ -3,11 +3,12 @@ import { EquipCommand } from './types';
 import { withBasicWorldStateValidation } from '../validation';
 import { withExistingCombatSession } from '~/worldkit/combat/validation';
 import { withCombatCost } from '../withCombatCost';
-import { WeaponItemURN, WeaponSchemaURN } from '~/types/taxonomy';
+import { WeaponSchemaURN } from '~/types/taxonomy';
 import { createWorldEvent } from '~/worldkit/event';
 import { ActorDidEquipWeapon, EventType } from '~/types/event';
 import { ActionCost } from '~/types/combat';
 import { WeaponSchema } from '~/types/schema/weapon';
+import { ErrorCode } from '~/types/error';
 
 /**
  * Core EQUIP command logic (without combat costs)
@@ -18,22 +19,16 @@ const equipReducerCore: Transformer<EquipCommand> = (context, command) => {
   const item = actor.inventory.items[command.args.item];
 
   if (!item) {
-    context.declareError(
-      `Item ${command.args.item} not found in actor ${actor.id}'s inventory`,
-      command.id
-    );
+    context.declareError(ErrorCode.INVALID_TARGET, command.id);
     return context;
   }
 
   if (!item.schema.startsWith('flux:schema:weapon:')) {
-    context.declareError(
-      `Item ${command.args.item} is not a weapon`,
-      command.id
-    );
+    context.declareError(ErrorCode.INVALID_TARGET, command.id);
     return context;
   }
 
-  context.equipmentApi.equipWeapon(actor, item.id as WeaponItemURN);
+  context.equipmentApi.equipWeapon(actor, item.id);
 
   const didEquipWeaponEvent: ActorDidEquipWeapon = createWorldEvent({
     type: EventType.ACTOR_DID_EQUIP_WEAPON,

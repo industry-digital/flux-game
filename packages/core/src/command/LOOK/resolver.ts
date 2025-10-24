@@ -12,7 +12,36 @@ export const lookResolver: CommandResolver<LookCommand> = (
     return undefined;
   }
 
-  const targetActor = context.resolveActor(intent)
+  const world = context.world;
+  const actor = world.actors[intent.actor];
+  if (!actor) {
+    return undefined;
+  }
+
+  const place = world.places[actor.location];
+  if (!place) {
+    return undefined;
+  }
+
+  // LOOK without a target is interpreted as "look at the place I am in"
+  if (intent.tokens.length === 0) {
+    return createActorCommand({
+      id: intent.id,
+      type: CommandType.LOOK,
+      actor: actor.id,
+      location: place.id,
+      session: intent.session,
+      args: {
+        target: place.id,
+      },
+    });
+  }
+
+  // Fell through, so there is a target token
+  const [targetToken] = intent.tokens;
+
+  // See if it matches an actor
+  const targetActor = context.resolveActor(intent, targetToken);
   if (targetActor) {
     return createActorCommand({
       id: intent.id,
@@ -26,7 +55,8 @@ export const lookResolver: CommandResolver<LookCommand> = (
     });
   }
 
-  const targetPlace = context.resolvePlace(intent);
+  // See if it matches a place
+  const targetPlace = context.resolvePlace(intent, targetToken);
   if (targetPlace) {
     return createActorCommand({
       id: intent.id,
@@ -40,7 +70,8 @@ export const lookResolver: CommandResolver<LookCommand> = (
     });
   }
 
-  const targetItem = context.resolveItem(intent);
+  // See if it matches an item
+  const targetItem = context.resolveItem(intent, targetToken);
   if (targetItem) {
     return createActorCommand({
       id: intent.id,

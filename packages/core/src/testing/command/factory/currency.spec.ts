@@ -6,7 +6,7 @@ import {
 import { CommandType } from '~/types/intent';
 import { CurrencyType } from '~/types/currency';
 import { WellKnownActor } from '~/types';
-import { ALICE_ID, BOB_ID, DEFAULT_LOCATION, DEFAULT_CURRENCY_SESSION } from '~/testing/constants';
+import { ALICE_ID, BOB_ID, DEFAULT_LOCATION, DEFAULT_CURRENCY_SESSION, DEFAULT_TIMESTAMP } from '~/testing/constants';
 
 describe('Currency Command Factories', () => {
   describe('createCreditCommand', () => {
@@ -141,8 +141,8 @@ describe('Currency Command Factories', () => {
     });
 
     it('should have consistent timestamps', () => {
-      const command1 = createCreditCommand();
-      const command2 = createDebitCommand();
+      const command1 = createCreditCommand((cmd) => ({ ...cmd, ts: DEFAULT_TIMESTAMP }));
+      const command2 = createDebitCommand((cmd) => ({ ...cmd, ts: DEFAULT_TIMESTAMP }));
 
       expect(command1.ts).toBe(command2.ts); // Should use the same default timestamp
       expect(typeof command1.ts).toBe('number');

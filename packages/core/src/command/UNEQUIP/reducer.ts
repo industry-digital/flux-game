@@ -7,8 +7,7 @@ import { WeaponSchemaURN } from '~/types/taxonomy';
 import { createWorldEvent } from '~/worldkit/event';
 import { ActorDidUnequipWeapon, EventType } from '~/types/event';
 import { ActionCost } from '~/types/combat';
-
-const ITEM_NOT_EQUIPPED_ERROR = `\`UNEQUIP\`: Item is not equipped`;
+import { ErrorCode } from '~/types/error';
 
 /**
  * Core UNEQUIP command logic (without combat costs)
@@ -19,10 +18,7 @@ const unequipReducerCore: Transformer<UnequipCommand> = (context, command) => {
   const item = actor.inventory.items[command.args.item];
 
   if (!item) {
-    context.declareError(
-      `Item ${command.args.item} not found in actor ${actor.id}'s inventory`,
-      command.id
-    );
+    context.declareError(ErrorCode.INVALID_TARGET, command.id);
     return context;
   }
 
@@ -30,7 +26,7 @@ const unequipReducerCore: Transformer<UnequipCommand> = (context, command) => {
     // Check if the weapon is actually equipped
     const equippedWeaponId = context.equipmentApi.getEquippedWeapon(actor);
     if (equippedWeaponId !== item.id) {
-      context.declareError(ITEM_NOT_EQUIPPED_ERROR, command.id);
+      context.declareError(ErrorCode.INVALID_TARGET, command.id);
       return context;
     }
 
@@ -52,7 +48,7 @@ const unequipReducerCore: Transformer<UnequipCommand> = (context, command) => {
     return context;
   }
 
-  context.declareError(ITEM_NOT_EQUIPPED_ERROR, command.id);
+  context.declareError(ErrorCode.INVALID_TARGET, command.id);
 
   return context;
 };

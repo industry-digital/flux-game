@@ -28,8 +28,8 @@ export const defendResolver: CommandResolver<DefendCommand> = (
   return createActorCommand({
     id: intent.id,
     type: CommandType.DEFEND,
-    actor: intent.actor,
-    location: intent.location,
+    actor: actor.id,
+    location: actor.location,
     session: intent.session,
     args: {
       autoDone: false // User-initiated defend, not auto-generated

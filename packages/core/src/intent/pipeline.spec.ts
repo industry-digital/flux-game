@@ -6,7 +6,7 @@ import { TransformerContext } from '~/types/handler';
 import { WorldProjection } from '~/types/world';
 import { CommandType } from '~/types/intent';
 import { createTestTransformerContext } from '~/testing/context-testing';
-import { ActorURN, SessionURN } from '~/types/taxonomy';
+import { SessionURN } from '~/types/taxonomy';
 import { createActor } from '~/worldkit/entity/actor';
 import { createPlace } from '~/worldkit/entity/place';
 import { createWorldProjection } from '~/worldkit/context';
@@ -186,22 +186,40 @@ describe('3-Step Intent Pipeline Integration', () => {
       // Pipeline stops here - this is expected behavior
     });
 
-    it('should handle execution errors without crashing', () => {
-      // Step 1: Create Intent
+    it('should handle resolution failures with invalid actors', () => {
+      // Step 1: Create Intent with nonexistent actor
       const intent = createIntent({
-        actor: 'flux:actor:nonexistent' as ActorURN,
+        actor: 'flux:actor:nonexistent',
         location: DEFAULT_LOCATION,
         text: 'look bob',
       });
 
-      // Step 2: Resolve to Command
+      // Step 2: Resolution should fail gracefully (actor doesn't exist)
+      const command = resolveCommandFromIntent(context, intent);
+      expect(command).toBeNull();
+
+      // This demonstrates that resolution now validates actor existence
+      // which is better than failing during execution
+    });
+
+    it('should handle execution errors without crashing', () => {
+      // Step 1: Create Intent with valid actor but invalid target
+      const intent = createIntent({
+        actor: ALICE_ID, // Valid actor
+        location: DEFAULT_LOCATION,
+        text: 'look nonexistent_target', // Invalid target that will fail during execution
+      });
+
+      // Step 2: Resolve to Command (should succeed - valid actor and syntax)
       const command = resolveCommandFromIntent(context, intent);
       expect(command).toBeTruthy();
+      expect(command?.type).toBe(CommandType.LOOK);
 
-      // Step 3: Execute Command (should handle invalid actor gracefully)
+      // Step 3: Execute Command (should handle invalid target gracefully during execution)
       const result = executeCommand(context, command!);
       expect(result).toBeTruthy();
-      // Errors should be captured in context, not thrown
+      // The command should execute but may produce errors for the invalid target
+      // This tests that execution errors don't crash the pipeline
     });
   });
 

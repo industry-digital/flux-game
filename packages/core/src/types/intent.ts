@@ -1,6 +1,6 @@
 import { ActorURN, PlaceURN, SessionURN } from '~/types/taxonomy';
 import { EntityResolverApi } from '~/intent/resolvers';
-import { TransformerContext } from '~/types/handler';
+import { ErrorDeclarationProducer, TransformerContext } from '~/types/handler';
 
 export type InputMetadata = { __type: 'command' | 'intent' };
 
@@ -37,6 +37,12 @@ export enum CommandType {
   VAULT = 'VAULT',
   UNEQUIP = 'UNEQUIP',
   USE_WORKBENCH = 'USE_WORKBENCH',
+  PARTY_INVITE= 'PARTY_INVITE',
+  PARTY_ACCEPT = 'PARTY_ACCEPT',
+  PARTY_REJECT = 'PARTY_REJECT',
+  PARTY_LEAVE = 'PARTY_LEAVE',
+  PARTY_DISBAND = 'PARTY_DISBAND',
+  PARTY_LIST = 'PARTY_LIST',
 }
 
 /**
@@ -199,7 +205,10 @@ export type Command<
   A extends Record<string, any> = Record<string, any>
 > = SystemCommand<T, A> | ActorCommand<T, A>;
 
-export type CommandResolverContext = TransformerContext & EntityResolverApi
+export type CommandResolverContext =
+  & TransformerContext
+  & ErrorDeclarationProducer
+  & EntityResolverApi;
 
 export type CommandResolver<TCommand extends Command = Command> = (
   context: CommandResolverContext,

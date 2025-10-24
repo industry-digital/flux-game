@@ -17,6 +17,7 @@ import { createWeaponSchema } from '~/worldkit/schema/weapon';
 import { createPlace } from '~/worldkit/entity/place';
 import { Place } from '~/types/entity/place';
 import { MAX_AP } from '~/worldkit/combat/ap';
+import { ErrorCode } from '~/types/error';
 
 describe('EQUIP Command Reducer', () => {
   const DEFAULT_WEAPON: ItemURN = 'flux:item:weapon:iron-sword';
@@ -104,7 +105,7 @@ describe('EQUIP Command Reducer', () => {
 
       const errors = result.getDeclaredErrors();
       expect(errors).toHaveLength(1);
-      expect(errors[0].error.message).toContain('not found in actor');
+      expect(errors[0].code).toBe(ErrorCode.INVALID_TARGET);
       expect(result.getDeclaredEvents()).toHaveLength(0);
     });
 
@@ -127,7 +128,7 @@ describe('EQUIP Command Reducer', () => {
 
       const errors = result.getDeclaredErrors();
       expect(errors).toHaveLength(1);
-      expect(errors[0].error.message).toContain('is not a weapon');
+      expect(errors[0].code).toBe(ErrorCode.INVALID_TARGET);
       expect(result.getDeclaredEvents()).toHaveLength(0);
     });
   });
@@ -253,8 +254,7 @@ describe('EQUIP Command Reducer', () => {
 
       // Should error due to insufficient AP
       expect(errors).toHaveLength(1);
-      expect(errors[0].error.message).toContain('Not enough AP to equip');
-      expect(errors[0].error.message).toContain('Need 0.5 AP, have 0.3 AP');
+      expect(errors[0].code).toBe(ErrorCode.INSUFFICIENT_AP);
 
       // Should not declare any events
       expect(result.getDeclaredEvents()).toHaveLength(0);
@@ -281,7 +281,7 @@ describe('EQUIP Command Reducer', () => {
 
       const errors = result.getDeclaredErrors();
       expect(errors).toHaveLength(1);
-      expect(errors[0].error.message).toContain('Could not find session in world projection');
+      expect(errors[0].code).toBe(ErrorCode.INVALID_SESSION);
       expect(result.getDeclaredEvents()).toHaveLength(0);
     });
 
@@ -339,7 +339,7 @@ describe('EQUIP Command Reducer', () => {
 
       const errors = result.getDeclaredErrors();
       expect(errors).toHaveLength(1);
-      expect(errors[0].error.message).toContain('Combat session required');
+      expect(errors[0].code).toBe(ErrorCode.FORBIDDEN);
       expect(result.getDeclaredEvents()).toHaveLength(0);
     });
   });

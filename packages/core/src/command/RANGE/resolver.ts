@@ -8,14 +8,24 @@ export const rangeResolver: CommandResolver<RangeCommand> = (
   context: CommandResolverContext,
   intent: Intent,
 ): RangeCommand | undefined => {
-  const { resolveActor } = context;
+  const { world } = context;
 
   // Check if this is a range command
   if (intent.verb !== RANGE_VERB) {
     return undefined;
   }
 
-  const target = resolveActor(intent, true);
+  const actor = world.actors[intent.actor];
+  if (!actor) {
+    return undefined;
+  }
+
+  if (intent.tokens.length < 1) {
+    return undefined;
+  }
+
+  const [targetToken] = intent.tokens;
+  const target = context.resolveActor(intent, targetToken, true);
   if (!target) {
     return undefined;
   }
@@ -23,8 +33,8 @@ export const rangeResolver: CommandResolver<RangeCommand> = (
   return createActorCommand({
     id: intent.id,
     type: CommandType.RANGE,
-    actor: intent.actor,
-    location: intent.location,
+    actor: actor.id,
+    location: actor.location,
     session: intent.session,
     args: {
       target: target.id,

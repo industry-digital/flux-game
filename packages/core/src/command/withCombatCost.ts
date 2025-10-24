@@ -10,6 +10,7 @@ import { Transformer, TransformerContext } from '~/types/handler';
 import { ActionCost } from '~/types/combat';
 import { createCombatSessionApi } from '~/worldkit/combat/session/session';
 import { roundApCostUp } from '~/worldkit/combat/tactical-rounding';
+import { ErrorCode } from '~/types/error';
 
 /**
  * Cost calculation function type
@@ -54,10 +55,7 @@ export function withCombatCost<TCommand extends Command>(
 
     // Validate affordability
     if (apCost > combatantApi.combatant.ap.eff.cur) {
-      context.declareError(
-        `Not enough AP to ${command.type.toLowerCase()}. Need ${apCost} AP, have ${combatantApi.combatant.ap.eff.cur} AP.`,
-        command.id
-      );
+      context.declareError(ErrorCode.INSUFFICIENT_AP, command.id);
       return context;
     }
 

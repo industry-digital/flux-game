@@ -10,6 +10,7 @@ import { ActorURN, PlaceURN } from '~/types/taxonomy';
 import { CommandType, Command } from '~/types/intent';
 import { Team } from '~/types/combat';
 import { createTestActor } from '~/testing/world-testing';
+import { ErrorCode } from '~/types/error';
 
 // Mock command type for testing
 type TestCommand = Command & {
@@ -69,7 +70,6 @@ describe('Combat Validation Decorators', () => {
     // Track errors
     errors = [];
 
-    // @ts-expect-error - id is optional
     context.declareError = (message: string, trace?: string) => {
       errors.push(message);
     };
@@ -141,7 +141,7 @@ describe('Combat Validation Decorators', () => {
 
       expect(mockReducer).not.toHaveBeenCalled();
       expect(errors).toHaveLength(1);
-      expect(errors[0]).toContain('Combat session required');
+      expect(errors[0]).toContain(ErrorCode.FORBIDDEN);
       expect(result).toBe(context);
     });
 
@@ -152,7 +152,7 @@ describe('Combat Validation Decorators', () => {
 
       expect(mockReducer).not.toHaveBeenCalled();
       expect(errors).toHaveLength(1);
-      expect(errors[0]).toContain('Combat session required');
+      expect(errors[0]).toContain(ErrorCode.FORBIDDEN);
     });
   });
 
@@ -262,7 +262,7 @@ describe('Combat Validation Decorators', () => {
 
       expect(mockReducer).not.toHaveBeenCalled();
       expect(errors).toHaveLength(1);
-      expect(errors[0]).toContain('Combat session required');
+      expect(errors[0]).toContain(ErrorCode.FORBIDDEN);
       expect(result).toBe(context);
     });
 
@@ -320,7 +320,7 @@ describe('Combat Validation Decorators', () => {
       expect(mockReducer).not.toHaveBeenCalled();
       expect(errors).toHaveLength(1);
       // Should fail on the first validation (required combat session)
-      expect(errors[0]).toContain('Combat session required');
+      expect(errors[0]).toContain(ErrorCode.FORBIDDEN);
       expect(result).toBe(context);
     });
   });

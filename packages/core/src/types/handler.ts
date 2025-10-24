@@ -14,6 +14,7 @@ import { ActorWeaponApi } from '~/worldkit/entity/actor/weapon';
 import { Locale, SchemaTranslation } from '~/types/i18n';
 import { SchemaURN } from '~/types/taxonomy';
 import { PartyApi } from '~/worldkit/entity/group/party';
+import { ErrorCode } from '~/types/error';
 
 /** Combat metrics collection interface for performance monitoring and telemetry */
 export type CombatMetrics = {
@@ -23,17 +24,27 @@ export type CombatMetrics = {
 }
 
 export type ExecutionError = {
+  /** Error code */
+  code: ErrorCode;
   /** Timestamp in milliseconds since Unix epoch */
   ts: number;
-  error: Error;
   /** Identifies the Intent or Command that caused the error */
   trace: string;
+  /** Stack trace */
+  stack: string;
 };
 
 export type ErrorDeclarationProducer = {
-  declareError(error: Error): void;
+  declareError(message: ErrorCode, trace?: string): void;
+
+  /**
+   * @deprecated
+   */
   declareError(message: string): void;
-  declareError(message: string, trace: string): void;
+  /**
+   * @deprecated
+   */
+  declareError(message: string, trace?: string): void;
 };
 
 export type ErrorDeclarationConsumer = {

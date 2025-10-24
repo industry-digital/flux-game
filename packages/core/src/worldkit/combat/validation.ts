@@ -3,6 +3,7 @@ import { Command } from '~/types/intent';
 import { ActorURN, SessionURN } from '~/types/taxonomy';
 import { SessionStrategy } from '~/types/session';
 import { CombatSession } from '~/types/combat';
+import { ErrorCode } from '~/types/error';
 
 /**
  * Higher-order function that ensures the command has a valid combat session
@@ -18,36 +19,29 @@ export function withExistingCombatSession<TCommand extends Command>(
   return (context: TransformerContext, command: TCommand) => {
     // Check that command has a session field
     if (!command.session) {
-      context.declareError(`${command.type}: Expected combat session ID`, command.id);
+      context.declareError(ErrorCode.INVALID_SESSION, command.id);
       return context;
     }
 
     // Check that the session exists in the world
     const session = context.world.sessions[command.session];
     if (!session) {
-      context.declareError(`${command.type}: Session not found: ${command.session}`, command.id);
+      context.declareError(ErrorCode.INVALID_SESSION, command.id);
       return context;
     }
 
     // Check that it's a combat session
     if (session.strategy !== SessionStrategy.COMBAT) {
-      context.declareError(`${command.type}: Expected combat session, got ${session.strategy}`, command.id);
+      context.declareError(ErrorCode.INVALID_SESSION, command.id);
       return context;
     }
 
     const combatSession = session as CombatSession;
 
-    // Check that the actor exists in the world
-    const actor = context.world.actors[command.actor! as ActorURN];
-    if (!actor) {
-      context.declareError(`${command.type}: Combat session required`, command.id);
-      return context;
-    }
-
     // Check that the actor is actually in this combat session
     const actorCombatant = combatSession.data.combatants.get(command.actor);
     if (!actorCombatant) {
-      context.declareError(`${command.type}: Combat session required`, command.id);
+      context.declareError(ErrorCode.FORBIDDEN, command.id);
       return context;
     }
 

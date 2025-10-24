@@ -9,7 +9,7 @@ export const strikeResolver: CommandResolver<StrikeCommand> = (
   context: CommandResolverContext,
   intent: Intent,
 ): StrikeCommand | undefined => {
-  const { world, resolveActor } = context;
+  const { world } = context;
 
   // Check if this is a strike command
   if (intent.verb !== STRIKE_VERB) {
@@ -23,12 +23,13 @@ export const strikeResolver: CommandResolver<StrikeCommand> = (
 
   // Target is optional for strike (can use current target)
   let target: ActorURN | undefined;
-  const resolvedTarget = resolveActor(intent);
-  if (resolvedTarget) {
-    if (attacker.location !== resolvedTarget.location) {
+  if (intent.tokens.length > 0) {
+    const targetToken = intent.tokens[0];
+    const target = context.resolveActor(intent, targetToken, true);
+    if (!target) {
+      context.declareError(`STRIKE: invalid target "${targetToken}"`);
       return undefined;
     }
-    target = resolvedTarget.id;
   }
 
   return createActorCommand({
@@ -38,7 +39,7 @@ export const strikeResolver: CommandResolver<StrikeCommand> = (
     session: intent.session,
     type: CommandType.STRIKE,
     args: {
-      target
+      target,
     },
   });
 };

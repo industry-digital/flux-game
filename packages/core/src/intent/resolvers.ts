@@ -66,11 +66,41 @@ class ActorTrie {
 }
 
 export type EntityResolverApi = {
-  resolveActor: (intent: Intent, matchLocation?: boolean) => Actor | undefined;
-  resolvePlace: (intent: Intent) => Place | undefined;
-  resolveItem: (intent: Intent) => Item | undefined;
-  resolveInventoryItem: (intent: Intent) => Item | undefined;
-  resolveEquippedWeapon: (intent: Intent) => Weapon | undefined;
+  /**
+   * Convert a specific token to an Actor
+   * @param intent - The intent containing location context
+   * @param token - The specific token to resolve (e.g., "alice", "bob")
+   * @param matchLocation - Whether to filter by actor's location (default: true)
+   */
+  resolveActor: (intent: Intent, token: string, matchLocation?: boolean) => Actor | undefined;
+
+  /**
+   * Convert a token to a Place, or return current location if no token provided
+   * @param intent - The intent containing current location
+   * @param token - Optional token to resolve as place name
+   */
+  resolvePlace: (intent: Intent, token?: string) => Place | undefined;
+
+  /**
+   * Convert a token to an Item from actor's inventory
+   * @param intent - The intent containing actor context
+   * @param token - The token to resolve as item name
+   */
+  resolveItem: (intent: Intent, token: string) => Item | undefined;
+
+  /**
+   * Convert a token to an Item from actor's inventory (specialized version)
+   * @param intent - The intent containing actor context
+   * @param token - The token to resolve as item name
+   */
+  resolveInventoryItem: (intent: Intent, token: string) => Item | undefined;
+
+  /**
+   * Get the currently equipped weapon, optionally validating against a token
+   * @param intent - The intent containing actor context
+   * @param token - Optional token to validate weapon name
+   */
+  resolveEquippedWeapon: (intent: Intent, token?: string) => Weapon | undefined;
 };
 
 type EntityResolverConfig = {
@@ -115,27 +145,23 @@ export const createEntityResolverApi = (
     actorsByLocation.set(actor.location, locationActors);
   }
 
-  const resolveActor = (intent: Intent, matchLocation = true): Actor | undefined => {
-    // ASSUMPTION: Server provides tokens as Set<string> with duplicates removed and 1-char tokens filtered
+  const findActorByToken = (token: string, location: PlaceURN, matchLocation: boolean): Actor | undefined => {
+    const lowerToken = token.toLowerCase();
 
-    // First, check if any token looks like an ActorURN and resolve it directly
-    for (const token of intent.uniques) {
-      if (token.startsWith('flux:actor:')) {
-        const actor = world.actors[token as ActorURN];
-        if (actor && (!matchLocation || intent.location === actor.location)) {
-          return actor; // Direct URN match
-        }
+    // First, check if token looks like an ActorURN and resolve it directly
+    if (lowerToken.startsWith('flux:actor:')) {
+      const actor = world.actors[lowerToken as ActorURN];
+      if (actor && (!matchLocation || location === actor.location)) {
+        return actor; // Direct URN match
       }
     }
 
     // Fast path: Check exact matches first using O(1) lookup
-    for (const token of intent.uniques) {
-      const exactMatchId = exactNameLookup.get(token);
-      if (exactMatchId) {
-        const actor = world.actors[exactMatchId];
-        if (!matchLocation || intent.location === actor.location) {
-          return actor; // Immediate return for exact match
-        }
+    const exactMatchId = exactNameLookup.get(lowerToken);
+    if (exactMatchId) {
+      const actor = world.actors[exactMatchId];
+      if (!matchLocation || location === actor.location) {
+        return actor; // Immediate return for exact match
       }
     }
 
@@ -143,72 +169,83 @@ export const createEntityResolverApi = (
     let bestScore = 0;
 
     // O(log N) prefix matching using trie
-    for (const token of intent.uniques) {
-      // Find all actors with this token as prefix - O(token_length + results)
-      const candidateIds = actorTrie.findByPrefix(token, 2);
+    const candidateIds = actorTrie.findByPrefix(lowerToken, 2);
 
-      for (const actorId of candidateIds) {
-        const actor = world.actors[actorId];
-        const inSameLocation = intent.location === actor.location;
+    for (const actorId of candidateIds) {
+      const actor = world.actors[actorId];
+      const inSameLocation = location === actor.location;
 
-        // Skip if location filtering is enabled and actor is elsewhere
-        if (matchLocation && !inSameLocation) {
-          continue;
+      // Skip if location filtering is enabled and actor is elsewhere
+      if (matchLocation && !inSameLocation) {
+        continue;
+      }
+
+      // Calculate match score based on prefix length
+      const actorName = actorNameCache.get(actorId)!;
+
+      // Find actual prefix length (how much of token matches actor name)
+      let prefixLength = 0;
+      const maxLen = Math.min(lowerToken.length, actorName.length, prefixMatchThreshold);
+
+      for (let i = 0; i < maxLen; i++) {
+        if (lowerToken[i] === actorName[i]) {
+          prefixLength = i + 1;
+        } else {
+          break;
         }
+      }
 
-        // Calculate match score based on prefix length
-        const actorName = actorNameCache.get(actorId)!;
+      // Only consider if we have a meaningful prefix match
+      if (prefixLength < 2) {
+        continue;
+      }
 
-        // Find actual prefix length (how much of token matches actor name)
-        let prefixLength = 0;
-        const maxLen = Math.min(token.length, actorName.length, prefixMatchThreshold);
+      let score = prefixLength;
+      if (inSameLocation) score += 100; // Location bonus
+      // Removed noun bonus - no longer using NLP categorization
 
-        for (let i = 0; i < maxLen; i++) {
-          if (token[i] === actorName[i]) {
-            prefixLength = i + 1;
-          } else {
-            break;
-          }
-        }
-
-        // Only consider if we have a meaningful prefix match
-        if (prefixLength < 2) {
-          continue;
-        }
-
-        let score = prefixLength;
-        if (inSameLocation) score += 100; // Location bonus
-        // Removed noun bonus - no longer using NLP categorization
-
-        if (score > bestScore) {
-          bestMatch = actor;
-          bestScore = score;
-        }
+      if (score > bestScore) {
+        bestMatch = actor;
+        bestScore = score;
       }
     }
 
     return bestMatch;
   };
 
-  const resolveItem = (intent: Intent): Item | undefined => {
+  const resolveActor = (intent: Intent, token: string, matchLocation = true): Actor | undefined => {
+    // Direct token-to-actor resolution
+    return findActorByToken(token, intent.location, matchLocation);
+  };
+
+  const resolveItem = (intent: Intent, token: string): Item | undefined => {
     // Search through the actor's inventory, equipment
     return undefined;
   };
 
-  const resolvePlace = (intent: Intent): Place | undefined => {
-    return undefined;
+  const resolvePlace = (intent: Intent, token?: string): Place | undefined => {
+    if (!token) {
+      // Default to current location when no token provided
+      return world.places[intent.location];
+    }
+
+    // TODO: Implement place resolution by token
+    // For now, just return current location for any token
+    return world.places[intent.location];
   };
 
-  const resolveInventoryItem = (intent: Intent): Item | undefined => {
+  const resolveInventoryItem = (intent: Intent, token: string): Item | undefined => {
     throw new Error('Not implemented');
   };
 
-  const resolveEquippedWeapon = (intent: Intent): Weapon | undefined => {
+  const resolveEquippedWeapon = (intent: Intent, token?: string): Weapon | undefined => {
     const actor = context.world.actors[intent.actor as ActorURN];
     if (!actor) {
       return undefined;
     }
 
+    // If token provided, could validate it matches the equipped weapon name
+    // For now, ignore token and return currently equipped weapon
     const weaponId = context.equipmentApi.getEquippedWeapon(actor);
     if (!weaponId) {
       return undefined;

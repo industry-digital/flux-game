@@ -8,14 +8,20 @@ export const attackResolver: CommandResolver<AttackCommand> = (
   context: CommandResolverContext,
   intent: Intent,
 ): AttackCommand | undefined => {
-  const { world, resolveActor } = context;
+  const { world } = context;
 
   // Check if this is an attack command
   if (intent.verb !== ATTACK_VERB) {
     return undefined;
   }
 
-  const target = resolveActor(intent);
+  if (intent.tokens.length < 1) {
+    context.declareError("Attack who?");
+    return undefined;
+  }
+
+  const targetToken = intent.tokens[0];
+  const target = context.resolveActor(intent, targetToken);
   if (!target) {
     return undefined;
   }
@@ -32,8 +38,8 @@ export const attackResolver: CommandResolver<AttackCommand> = (
   return createActorCommand({
     id: intent.id,
     type: CommandType.ATTACK,
-    actor: intent.actor,
-    location: intent.location,
+    actor: attacker.id,
+    location: attacker.location,
     session: intent.session,
     args: {
       target: target.id

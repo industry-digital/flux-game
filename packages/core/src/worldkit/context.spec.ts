@@ -28,6 +28,7 @@ import { createCombatSessionStartedEvent } from '~/testing/event/factory/combat'
 import { DEFAULT_LOCATION } from '~/testing/constants';
 import { createRollApi } from '~/worldkit/dice';
 import { createActorWeaponApi } from '~/worldkit/entity/actor/weapon';
+import { ErrorCode } from '~/types/error';
 
 describe('createTransformerContext', () => {
   let mockDeps: PotentiallyImpureOperations;
@@ -373,13 +374,6 @@ describe('createTransformerContext', () => {
       context = createTransformerContext(undefined, undefined, undefined, mockDeps);
     });
 
-    it('should declare error from Error object', () => {
-      const error = new Error('Test error');
-
-      expect(() => context.declareError(error)).not.toThrow();
-      expect(mockDeps.timestamp).toHaveBeenCalled();
-    });
-
     it('should declare error from string message', () => {
       expect(() => context.declareError('Test error message')).not.toThrow();
       expect(mockDeps.timestamp).toHaveBeenCalled();
@@ -393,11 +387,6 @@ describe('createTransformerContext', () => {
     it('should use default trace when not provided', () => {
       // Test the overloaded function behavior
       expect(() => context.declareError('Test error message')).not.toThrow();
-    });
-
-    it('should handle Error object with default trace', () => {
-      const error = new Error('Test error');
-      expect(() => context.declareError(error)).not.toThrow();
     });
   });
 
@@ -469,7 +458,7 @@ describe('createTransformerContext', () => {
 
       // Declare errors
       context.declareError('Combat validation failed', 'combat-init');
-      context.declareError(new Error('Critical system error'));
+      context.declareError(ErrorCode.INVALID_ACTION, 'combat-init');
 
       // Verify event retrieval works correctly
       const allEvents = context.getDeclaredEvents();

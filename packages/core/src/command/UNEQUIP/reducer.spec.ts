@@ -16,6 +16,7 @@ import { createPlace } from '~/worldkit/entity/place';
 import { Place } from '~/types/entity/place';
 import { UnequipCommand } from '~/command/UNEQUIP/types';
 import { unequipReducer } from '~/command/UNEQUIP/reducer';
+import { ErrorCode } from '~/types/error';
 
 describe('UNEQUIP Command Reducer', () => {
   const DEFAULT_WEAPON: ItemURN = 'flux:item:weapon:iron-sword';
@@ -101,7 +102,7 @@ describe('UNEQUIP Command Reducer', () => {
 
       const errors = result.getDeclaredErrors();
       expect(errors).toHaveLength(1);
-      expect(errors[0].error.message).toContain('not found in actor');
+      expect(errors[0].code).toBe(ErrorCode.INVALID_TARGET);
       expect(result.getDeclaredEvents()).toHaveLength(0);
     });
 
@@ -124,7 +125,7 @@ describe('UNEQUIP Command Reducer', () => {
 
       const errors = result.getDeclaredErrors();
       expect(errors).toHaveLength(1);
-      expect(errors[0].error.message).toContain('Item is not equipped');
+      expect(errors[0].code).toBe(ErrorCode.INVALID_TARGET);
       expect(result.getDeclaredEvents()).toHaveLength(0);
     });
   });
@@ -212,7 +213,7 @@ describe('UNEQUIP Command Reducer', () => {
 
       const errors = result.getDeclaredErrors();
       expect(errors).toHaveLength(1);
-      expect(errors[0].error.message).toContain('Could not find session in world projection');
+      expect(errors[0].code).toBe(ErrorCode.INVALID_SESSION);
       expect(result.getDeclaredEvents()).toHaveLength(0);
     });
 
@@ -272,7 +273,7 @@ describe('UNEQUIP Command Reducer', () => {
 
       const errors = result.getDeclaredErrors();
       expect(errors).toHaveLength(1);
-      expect(errors[0].error.message).toContain('Combat session required');
+      expect(errors[0].code).toBe(ErrorCode.FORBIDDEN);
       expect(result.getDeclaredEvents()).toHaveLength(0);
     });
   });
