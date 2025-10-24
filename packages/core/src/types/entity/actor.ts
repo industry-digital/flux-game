@@ -2,11 +2,11 @@ import {
   Taxonomy,
   ItemURN,
   PlaceURN,
-  GroupURN,
   SchemaURN,
   SessionURN,
   SkillSchemaURN,
   AmmoSchemaURN,
+  PartyURN,
 } from '~/types/taxonomy';
 import { AppliedEffects } from '~/types/taxonomy/effect';
 import { EntityType, AbstractEntity, Describable } from '~/types/entity/entity';
@@ -199,7 +199,7 @@ export type Actor =
   /**
    * Optional party membership; places this actor in a party with other actors
    */
-  party?: GroupURN;
+  party?: PartyURN;
 
   /**
    * Character level. e.g., "You are a 5th level barbarian."

@@ -18,6 +18,7 @@ import { useWorkbenchReducer } from '~/command/USE_WORKBENCH';
 import { equipReducer } from '~/command/EQUIP';
 import { PureReducer, TransformerContext } from '~/types/handler';
 import { CommandType } from '~/types/intent';
+import { partyInviteReducer } from '~/command/PARTY_INVITE/reducer';
 
 // Registry mapping CommandType to transformer (reducer) functions
 export const COMMAND_TRANSFORMERS: Partial<Record<CommandType, PureReducer<TransformerContext, any>>> = {
@@ -39,6 +40,7 @@ export const COMMAND_TRANSFORMERS: Partial<Record<CommandType, PureReducer<Trans
   [CommandType.TARGET]: targetReducer,
   [CommandType.USE_WORKBENCH]: useWorkbenchReducer,
   [CommandType.EQUIP]: equipReducer,
+  [CommandType.PARTY_INVITE]: partyInviteReducer,
 };
 
 /**
@@ -71,3 +73,4 @@ export { RETREAT, RetreatCommand, RetreatCommandArgs } from './RETREAT';
 export { TARGET, TargetCommand, TargetCommandArgs } from './TARGET';
 export { USE_WORKBENCH, UseWorkbenchCommand, UseWorkbenchCommandArgs } from './USE_WORKBENCH';
 export { EQUIP, EquipCommand, EquipCommandArgs } from './EQUIP';
+export { PARTY_INVITE, PartyInviteCommand, PartyInviteCommandArgs } from './PARTY_INVITE';

@@ -10,13 +10,19 @@ import { Transform } from '~/worldkit/entity/group/factory';
 export const DEFAULT_MAX_PARTY_SIZE = 3;
 
 export type PartyApi = {
-  createParty: (transform: Transform<Party>) => Party;
+  createParty: (transform?: Transform<Party>) => Party;
   getParty: (partyId: PartyURN) => Party;
   isPartyMember: (party: Party, memberId: ActorURN) => boolean;
   addPartyMember: (party: Party, memberId: ActorURN) => void;
   removePartyMember: (party: Party, memberId: ActorURN) => void;
   setPartyLeader: (party: Party, leaderId: ActorURN) => void;
   areInSameParty: (partyA: Party, partyB: Party) => boolean;
+  inviteToParty: (party: Party, inviteeId: ActorURN) => void;
+  acceptInvitation: (party: Party, inviteeId: ActorURN) => void;
+  rejectInvitation: (party: Party, inviteeId: ActorURN) => void;
+  isInvited: (party: Party, inviteeId: ActorURN) => boolean;
+  getInvitations: (party: Party) => Record<ActorURN, number>;
+  cleanupExpiredInvitations: (party: Party) => void;
   refreshParty: (party: Party) => void;
 };
 
@@ -43,6 +49,12 @@ export const createPartyApi = (
     setGroupLeader,
     areInSameGroup,
     refreshGroup,
+    inviteToGroup,
+    acceptInvitation,
+    rejectInvitation,
+    isInvited,
+    getInvitations,
+    cleanupExpiredInvitations,
   } = createGroupApi<GroupType.PARTY, ActorURN>(GroupType.PARTY, context, policy, deps);
 
   const addPartyMember = (party: Party, memberId: ActorURN): void => {
@@ -87,5 +99,11 @@ export const createPartyApi = (
     setPartyLeader: setGroupLeader,
     areInSameParty: areInSameGroup,
     refreshParty: refreshGroup,
+    inviteToParty: inviteToGroup,
+    acceptInvitation: acceptInvitation,
+    rejectInvitation: rejectInvitation,
+    isInvited: isInvited,
+    getInvitations: getInvitations,
+    cleanupExpiredInvitations: cleanupExpiredInvitations,
   };
 };

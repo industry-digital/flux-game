@@ -133,6 +133,7 @@ export enum EventType {
   ACTOR_DID_UNEQUIP_WEAPON = 'actor:weapon:unequipped',
   ACTOR_DID_CREATE_PARTY = 'actor:party:created',
   ACTOR_DID_DISBAND_PARTY = 'actor:party:disbanded',
+  ACTOR_DID_ISSUE_PARTY_INVITATION = 'actor:party:invite:issued',
   ACTOR_DID_RECEIVE_PARTY_INVITATION = 'actor:party:invite:received',
   ACTOR_DID_ACCEPT_PARTY_INVITATION = 'actor:party:invite:accepted',
   ACTOR_DID_REJECT_PARTY_INVITATION = 'actor:party:invite:rejected',
@@ -591,31 +592,33 @@ export type ActorDidDisbandPartyInput = AbstractWorldEventInput<
   }
 >;
 
+export type PartyInvitationEventPayload = {
+  partyId: PartyURN;
+  inviteeId: ActorURN;
+};
+
+export type ActorDidIssuePartyInvitation = EventBase & ActorDidIssuePartyInvitationInput;
+export type ActorDidIssuePartyInvitationInput = AbstractWorldEventInput<
+  EventType.ACTOR_DID_ISSUE_PARTY_INVITATION,
+  PartyInvitationEventPayload
+>;
+
 export type ActorDidReceivePartyInvitation = EventBase & ActorDidReceivePartyInvitationInput;
 export type ActorDidReceivePartyInvitationInput = AbstractWorldEventInput<
   EventType.ACTOR_DID_RECEIVE_PARTY_INVITATION,
-  {
-    partyId: PartyURN;
-    inviteeId: ActorURN;
-  }
+  PartyInvitationEventPayload
 >;
 
 export type ActorDidAcceptPartyInvitation = EventBase & ActorDidAcceptPartyInvitationInput;
 export type ActorDidAcceptPartyInvitationInput = AbstractWorldEventInput<
   EventType.ACTOR_DID_ACCEPT_PARTY_INVITATION,
-  {
-    partyId: PartyURN;
-    inviteeId: ActorURN;
-  }
+  PartyInvitationEventPayload
 >;
 
 export type ActorDidRejectPartyInvitation = EventBase & ActorDidRejectPartyInvitationInput;
 export type ActorDidRejectPartyInvitationInput = AbstractWorldEventInput<
   EventType.ACTOR_DID_REJECT_PARTY_INVITATION,
-  {
-    partyId: PartyURN;
-    inviteeId: ActorURN;
-  }
+  PartyInvitationEventPayload
 >;
 
 export type ActorDidJoinParty = EventBase & ActorDidJoinPartyInput;
@@ -702,6 +705,7 @@ export type WorldEventInput =
   | WorkbenchSessionDidStartInput
   | ActorDidCreatePartyInput
   | ActorDidDisbandPartyInput
+  | ActorDidIssuePartyInvitationInput
   | ActorDidReceivePartyInvitationInput
   | ActorDidAcceptPartyInvitationInput
   | ActorDidRejectPartyInvitationInput
