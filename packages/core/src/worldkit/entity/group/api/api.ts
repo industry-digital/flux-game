@@ -1,7 +1,7 @@
 import { AbstractGroup, AbstractGroupApi, Group, GroupType } from '~/types/entity/group';
 import { GroupURN, URNLike } from '~/types/taxonomy';
 import { EventDeclarationProducer, WorldProjectionConsumer } from '~/types/handler';
-import { Transform, GroupFactoryDependencies, DEFAULT_GROUP_FACTORY_DEPS, createGroup } from './factory';
+import { Transform, GroupFactoryDependencies, DEFAULT_GROUP_FACTORY_DEPS, createGroup } from '../factory';
 
 export type GroupApiDependencies<TGroupType extends GroupType> = GroupFactoryDependencies<TGroupType>;
 
@@ -12,13 +12,22 @@ export const DEFAULT_GROUP_API_DEPS: GroupApiDependencies<any> = DEFAULT_GROUP_F
  */
 export type GroupApiContext = EventDeclarationProducer & WorldProjectionConsumer;
 
+export type GroupPolicy = {
+  invitationTimeout: number;
+};
+
+export const DEFAULT_GROUP_POLICY: GroupPolicy = {
+  invitationTimeout: 1_000 * 60, // One minute
+};
+
 export const createGroupApi = <TGroupType extends GroupType, TGroupMemberKey extends URNLike>(
   groupType: TGroupType,
   context: GroupApiContext,
+  policy: GroupPolicy = DEFAULT_GROUP_POLICY,
   deps: GroupFactoryDependencies<TGroupType> = DEFAULT_GROUP_FACTORY_DEPS,
 ): AbstractGroupApi<TGroupType, TGroupMemberKey> => {
 
-  const createGroupMethod = (transform: Transform<AbstractGroup<TGroupType, TGroupMemberKey>>): AbstractGroup<TGroupType, TGroupMemberKey> => {
+  const createGroupMethod = (transform?: Transform<AbstractGroup<TGroupType, TGroupMemberKey>>): AbstractGroup<TGroupType, TGroupMemberKey> => {
     const group: AbstractGroup<TGroupType, TGroupMemberKey> = createGroup<TGroupType, TGroupMemberKey>(groupType, transform, deps) as AbstractGroup<TGroupType, TGroupMemberKey>;
     context.world.groups[group.id] = group as Group;
     return group;
@@ -88,6 +97,64 @@ export const createGroupApi = <TGroupType extends GroupType, TGroupMemberKey ext
     return groupA.id === groupB.id;
   };
 
+  const inviteToGroup = (group: AbstractGroup<TGroupType, TGroupMemberKey>, inviteeId: TGroupMemberKey): void => {
+    // Can't invite someone who is already a member
+    if (isGroupMember(group, inviteeId)) {
+      throw new Error(`${inviteeId} is already a member of group ${group.id}`);
+    }
+
+    // Refresh the timestamp, even if the invitation already exists
+    group.invitations[inviteeId] = deps.timestamp();
+  };
+
+  const acceptInvitation = (group: AbstractGroup<TGroupType, TGroupMemberKey>, inviteeId: TGroupMemberKey): void => {
+    // Clean up expired invitations first
+    cleanupExpiredInvitations(group);
+
+    // Must have a pending invitation
+    if (!(inviteeId in group.invitations)) {
+      throw new Error(`No pending invitation for ${inviteeId} to group ${group.id}`);
+    }
+
+    // Remove invitation and add as member
+    delete group.invitations[inviteeId];
+    addGroupMember(group, inviteeId);
+  };
+
+  const rejectInvitation = (group: AbstractGroup<TGroupType, TGroupMemberKey>, inviteeId: TGroupMemberKey): void => {
+    cleanupExpiredInvitations(group);
+
+    // Must have a pending invitation
+    if (!(inviteeId in group.invitations)) {
+      throw new Error(`No pending invitation for ${inviteeId} to group ${group.id}`);
+    }
+
+    delete group.invitations[inviteeId];
+  };
+
+  const isInvitationExpired = (invitationTimestamp: number, now = deps.timestamp()): boolean => {
+    return (now - invitationTimestamp) > policy.invitationTimeout;
+  };
+
+  const cleanupExpiredInvitations = (group: AbstractGroup<TGroupType, TGroupMemberKey>): void => {
+    for (const inviteeId in group.invitations) {
+      const timestamp = group.invitations[inviteeId as TGroupMemberKey];
+      if (isInvitationExpired(timestamp)) {
+        delete group.invitations[inviteeId as TGroupMemberKey];
+      }
+    }
+  };
+
+  const isInvited = (group: AbstractGroup<TGroupType, TGroupMemberKey>, inviteeId: TGroupMemberKey): boolean => {
+    cleanupExpiredInvitations(group);
+    return inviteeId in group.invitations;
+  };
+
+  const getInvitations = (group: AbstractGroup<TGroupType, TGroupMemberKey>): Readonly<Record<TGroupMemberKey, number>> => {
+    cleanupExpiredInvitations(group);
+    return group.invitations; // Zero-copy
+  };
+
   return {
     createGroup: createGroupMethod,
     getGroup: getGroup,
@@ -97,5 +164,11 @@ export const createGroupApi = <TGroupType extends GroupType, TGroupMemberKey ext
     setGroupLeader: setGroupLeader,
     areInSameGroup: areInSameGroup,
     refreshGroup: refreshGroup,
+    inviteToGroup: inviteToGroup,
+    acceptInvitation: acceptInvitation,
+    rejectInvitation: rejectInvitation,
+    isInvited: isInvited,
+    getInvitations: getInvitations,
+    cleanupExpiredInvitations: cleanupExpiredInvitations,
   };
 };

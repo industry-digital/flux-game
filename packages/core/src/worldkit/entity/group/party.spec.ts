@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import { createPartyApi, PartyApi, DEFAULT_MAX_PARTY_SIZE } from './party';
-import { GroupApiContext } from './api';
+import { GroupApiContext } from './api/api';
 import { ActorURN } from '~/types/taxonomy';
 import { createTransformerContext } from '~/worldkit/context';
 import { createTestActor } from '~/testing/world-testing';
@@ -103,7 +103,7 @@ describe('Party API', () => {
     });
 
     it('should respect custom party size policy', () => {
-      const customPolicy = { maxSize: 5 };
+      const customPolicy = { maxSize: 5, invitationTimeout: 60000 };
       const customPartyApi = createPartyApi(context, customPolicy);
       const party = customPartyApi.createParty((defaults) => defaults);
 

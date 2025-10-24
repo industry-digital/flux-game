@@ -27,19 +27,22 @@ export const DEFAULT_GROUP_FACTORY_DEPS: GroupFactoryDependencies<any> = {
   timestamp: () => Date.now(),
 };
 
+const identity = <T>(x: T): T => x;
+
 export const createGroup = <TGroupType extends GroupType, TGroupMemberKey extends URNLike>(
   groupType: TGroupType,
-  transform: Transform<AbstractGroup<TGroupType, TGroupMemberKey>>,
+  transform: Transform<AbstractGroup<TGroupType, TGroupMemberKey>> = identity,
   deps: GroupFactoryDependencies<TGroupType> = DEFAULT_GROUP_FACTORY_DEPS,
 ): AbstractGroup<TGroupType, TGroupMemberKey> => {
   const defaults: AbstractGroup<TGroupType, TGroupMemberKey> = {
     id: deps.generateGroupId(groupType),
     ts: deps.timestamp(),
     type: EntityType.GROUP,
+    name: '',  //--> Assigned by the player, if they want to name the group
     kind: groupType,
     owner: undefined,
-    name: '',
     members: {} as Record<TGroupMemberKey, 1>,
+    invitations: {} as Record<TGroupMemberKey, number>,
     size: 0,
   };
 

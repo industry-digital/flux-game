@@ -49,6 +49,12 @@ export type AbstractGroup<
      * The number of members in the group
      */
     size: number;
+
+    /**
+     * The invitations to the group
+     */
+    invitations: Record<TGroupMemberKey, number>;
+
     /**
      * The moment the group was created
      */
@@ -58,7 +64,7 @@ export type AbstractGroup<
 type Transform<T> = (input: T) => T;
 
 export type AbstractGroupApi<TGroupType extends GroupType, TGroupMemberKey extends URNLike> = {
-  createGroup: (transform: Transform<AbstractGroup<TGroupType, TGroupMemberKey>>) => AbstractGroup<TGroupType, TGroupMemberKey>;
+  createGroup: (transform?: Transform<AbstractGroup<TGroupType, TGroupMemberKey>>) => AbstractGroup<TGroupType, TGroupMemberKey>;
   getGroup: (groupId: GroupURN<TGroupType>) => AbstractGroup<TGroupType, TGroupMemberKey>;
   isGroupMember: (group: AbstractGroup<TGroupType, TGroupMemberKey>, groupMemberId: TGroupMemberKey) => boolean;
   addGroupMember: (group: AbstractGroup<TGroupType, TGroupMemberKey>, groupMemberId: TGroupMemberKey) => void;
@@ -66,6 +72,12 @@ export type AbstractGroupApi<TGroupType extends GroupType, TGroupMemberKey exten
   setGroupLeader: (group: AbstractGroup<TGroupType, TGroupMemberKey>, groupLeaderId: TGroupMemberKey) => void;
   areInSameGroup: (groupA: AbstractGroup<TGroupType, TGroupMemberKey>, groupB: AbstractGroup<TGroupType, TGroupMemberKey>) => boolean;
   refreshGroup: (group: AbstractGroup<TGroupType, TGroupMemberKey>) => void;
+  inviteToGroup: (group: AbstractGroup<TGroupType, TGroupMemberKey>, inviteeId: TGroupMemberKey) => void;
+  acceptInvitation: (group: AbstractGroup<TGroupType, TGroupMemberKey>, inviteeId: TGroupMemberKey) => void;
+  rejectInvitation: (group: AbstractGroup<TGroupType, TGroupMemberKey>, inviteeId: TGroupMemberKey) => void;
+  isInvited: (group: AbstractGroup<TGroupType, TGroupMemberKey>, inviteeId: TGroupMemberKey) => boolean;
+  getInvitations: (group: AbstractGroup<TGroupType, TGroupMemberKey>) => Record<TGroupMemberKey, number>;
+  cleanupExpiredInvitations: (group: AbstractGroup<TGroupType, TGroupMemberKey>) => void;
 };
 
 /**

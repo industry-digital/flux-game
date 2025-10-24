@@ -1,6 +1,6 @@
 import { GroupType, Party } from '~/types/entity/group';
 import { ActorURN, PartyURN } from '~/types/taxonomy';
-import { createGroupApi, DEFAULT_GROUP_API_DEPS, GroupApiContext, GroupApiDependencies } from '~/worldkit/entity/group/api';
+import { createGroupApi, DEFAULT_GROUP_API_DEPS, DEFAULT_GROUP_POLICY, GroupApiContext, GroupApiDependencies, GroupPolicy } from '~/worldkit/entity/group/api/api';
 import { Transform } from '~/worldkit/entity/group/factory';
 
 /**
@@ -20,11 +20,12 @@ export type PartyApi = {
   refreshParty: (party: Party) => void;
 };
 
-export type PartyPolicy = {
+export type PartyPolicy = GroupPolicy & {
   maxSize: number;
 };
 
 export const DEFAULT_PARTY_POLICY: PartyPolicy = {
+  ...DEFAULT_GROUP_POLICY,
   maxSize: DEFAULT_MAX_PARTY_SIZE,
 };
 
@@ -42,7 +43,7 @@ export const createPartyApi = (
     setGroupLeader,
     areInSameGroup,
     refreshGroup,
-  } = createGroupApi<GroupType.PARTY, ActorURN>(GroupType.PARTY, context, deps);
+  } = createGroupApi<GroupType.PARTY, ActorURN>(GroupType.PARTY, context, policy, deps);
 
   const addPartyMember = (party: Party, memberId: ActorURN): void => {
     const actor = context.world.actors[memberId];

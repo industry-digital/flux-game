@@ -130,6 +130,16 @@ export enum EventType {
   ACTOR_DID_FIRE_WEAPON = 'actor:weapon:fired',
   ACTOR_DID_EQUIP_WEAPON = 'actor:weapon:equipped',
   ACTOR_DID_UNEQUIP_WEAPON = 'actor:weapon:unequipped',
+  ACTOR_DID_CREATE_PARTY = 'actor:party:created',
+  ACTOR_DID_DISBAND_PARTY = 'actor:party:disbanded',
+  ACTOR_DID_ISSUE_PARTY_INVITATION = 'actor:party:invite:issued',
+  ACTOR_DID_RECEIVE_PARTY_INVITATION = 'actor:party:invite:received',
+  ACTOR_DID_ACCEPT_PARTY_INVITATION = 'actor:party:invite:accepted',
+  ACTOR_DID_REJECT_PARTY_INVITATION = 'actor:party:invite:rejected',
+  ACTOR_DID_LEAVE_PARTY = 'actor:party:left',
+  ACTOR_DID_KICK_PARTY_MEMBER = 'actor:party:member:kicked',
+  ACTOR_DID_LIST_PARTY_MEMBERS = 'actor:party:members:listed',
+
 }
 
 export type EventBase = {
