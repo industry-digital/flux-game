@@ -1,4 +1,4 @@
-import { ActorURN, PlaceURN, SessionURN } from '~/types/taxonomy';
+import { ActorURN, GroupURN, PlaceURN, SessionURN } from '~/types/taxonomy';
 import { EntityResolverApi } from '~/intent/resolvers';
 import { ErrorDeclarationProducer, TransformerContext } from '~/types/handler';
 
@@ -37,12 +37,12 @@ export enum CommandType {
   VAULT = 'VAULT',
   UNEQUIP = 'UNEQUIP',
   USE_WORKBENCH = 'USE_WORKBENCH',
-  PARTY_INVITE= 'PARTY_INVITE',
-  PARTY_ACCEPT = 'PARTY_ACCEPT',
-  PARTY_REJECT = 'PARTY_REJECT',
+  PARTY_INVITE = 'PARTY_INVITE',
+  PARTY_INVITE_ACCEPT = 'PARTY_INVITE_ACCEPT',
+  PARTY_INVITE_REJECT = 'PARTY_INVITE_REJECT',
   PARTY_LEAVE = 'PARTY_LEAVE',
   PARTY_DISBAND = 'PARTY_DISBAND',
-  PARTY_LIST = 'PARTY_LIST',
+  PARTY_LIST_MEMBERS = 'PARTY_LIST_MEMBERS',
 }
 
 /**
@@ -77,6 +77,11 @@ export type CommandInput<
    * If this command is part of a session, the session ID
    */
   session?: SessionURN;
+
+  /**
+   * If this command is related to a Group, the group ID
+   */
+  group?: GroupURN;
 
   /**
    * Optional trace identifier for command chaining and causality tracking.
@@ -194,6 +199,16 @@ export type ActorCommand<
      * When a command spawns other commands, this field maintains the causal chain.
      */
     trace?: string;
+
+    /**
+     * If this command is part of a session, the session ID
+     */
+    session?: SessionURN;
+
+    /**
+     * If this command is related to a Group, the group ID
+     */
+    group?: GroupURN;
   };
 
 /**
@@ -226,6 +241,7 @@ export type Intent<TOptions extends IntentOptions = undefined> = {
   actor: ActorURN;
   location: PlaceURN;
   session?: SessionURN;
+  group?: GroupURN;
   /**
    * Raw string input from the user
    */

@@ -18,6 +18,7 @@ import { WellKnownActor } from '~/types/actor';
 import { ShellStats } from '~/types/entity/actor';
 import { CurrencyTransaction } from '~/types/currency';
 import { Party } from '~/types/entity/group';
+import { PartyLeaveReason } from '~/types/party';
 
 export type EventPayload = Record<string, any>;
 
@@ -629,18 +630,12 @@ export type ActorDidJoinPartyInput = AbstractWorldEventInput<
   }
 >;
 
-export enum PartyLeaveReason {
-  VOLUNTARY = 'voluntary',
-  KICKED = 'kicked',
-  DISBANDED = 'disbanded',
-}
-
 export type ActorDidLeaveParty = EventBase & ActorDidLeavePartyInput;
 export type ActorDidLeavePartyInput = AbstractWorldEventInput<
   EventType.ACTOR_DID_LEAVE_PARTY,
   {
     partyId: PartyURN;
-    reason?: PartyLeaveReason;
+    reason: PartyLeaveReason;
   }
 >;
 

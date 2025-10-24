@@ -9,12 +9,17 @@ import { Transform } from '~/worldkit/entity/group/factory';
  */
 export const DEFAULT_MAX_PARTY_SIZE = 3;
 
+export type PartyRemovalResult = {
+  partyDisbanded: boolean;
+  disbandedPartyId?: PartyURN;
+};
+
 export type PartyApi = {
   createParty: (transform?: Transform<Party>) => Party;
   getParty: (partyId: PartyURN) => Party;
   isPartyMember: (party: Party, memberId: ActorURN) => boolean;
   addPartyMember: (party: Party, memberId: ActorURN) => void;
-  removePartyMember: (party: Party, memberId: ActorURN) => void;
+  removePartyMember: (party: Party, memberId: ActorURN) => PartyRemovalResult;
   setPartyLeader: (party: Party, leaderId: ActorURN) => void;
   areInSameParty: (partyA: Party, partyB: Party) => boolean;
   inviteToParty: (party: Party, inviteeId: ActorURN) => void;
@@ -78,7 +83,7 @@ export const createPartyApi = (
     actor.party = party.id;
   };
 
-  const removePartyMember = (party: Party, memberId: ActorURN): void => {
+  const removePartyMember = (party: Party, memberId: ActorURN): PartyRemovalResult => {
     const actor = context.world.actors[memberId];
     if (!actor) {
       throw new Error(`Actor ${memberId} not found`);
@@ -86,8 +91,43 @@ export const createPartyApi = (
     if (actor.party !== party.id) {
       throw new Error(`Actor ${memberId} is not in party ${party.id}`);
     }
+
+    // Remove the member
     removeGroupMember(party, memberId);
     actor.party = undefined;
+
+    // Check if party is now empty and auto-disband if so
+    if (party.size === 0) {
+      const partyId = party.id;
+
+      // Remove the party from the world
+      delete context.world.groups[party.id];
+
+      // Return result indicating disbandment occurred
+      return {
+        partyDisbanded: true,
+        disbandedPartyId: partyId,
+      };
+    }
+
+    // Party still has members
+    return {
+      partyDisbanded: false,
+    };
+  };
+
+  const acceptPartyInvitation = (party: Party, inviteeId: ActorURN): void => {
+    // Clean up expired invitations first
+    cleanupExpiredInvitations(party);
+
+    // Must have a pending invitation
+    if (!(inviteeId in party.invitations)) {
+      throw new Error(`No pending invitation for ${inviteeId} to group ${party.id}`);
+    }
+
+    // Remove invitation and add as party member (which sets actor.party)
+    delete party.invitations[inviteeId];
+    addPartyMember(party, inviteeId);
   };
 
   return {
@@ -100,7 +140,7 @@ export const createPartyApi = (
     areInSameParty: areInSameGroup,
     refreshParty: refreshGroup,
     inviteToParty: inviteToGroup,
-    acceptInvitation: acceptInvitation,
+    acceptInvitation: acceptPartyInvitation,
     rejectInvitation: rejectInvitation,
     isInvited: isInvited,
     getInvitations: getInvitations,

@@ -74,3 +74,4 @@ export { TARGET, TargetCommand, TargetCommandArgs } from './TARGET';
 export { USE_WORKBENCH, UseWorkbenchCommand, UseWorkbenchCommandArgs } from './USE_WORKBENCH';
 export { EQUIP, EquipCommand, EquipCommandArgs } from './EQUIP';
 export { PARTY_INVITE, PartyInviteCommand, PartyInviteCommandArgs } from './PARTY_INVITE';
+export { PARTY_INVITE_ACCEPT, AcceptPartyInvitationCommand } from './PARTY_INVITE_ACCEPT';

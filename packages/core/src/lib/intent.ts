@@ -41,6 +41,7 @@ export const createActorCommand = <
     actor: input.actor,
     location: input.location,
     session: input.session,
+    group: input.group,
     type: input.type,
     ts: input.ts || deps.timestamp(),
     args: input.args as A,

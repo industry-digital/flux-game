@@ -1,6 +1,6 @@
 import { AbstractGroup, AbstractGroupApi, Group, GroupType } from '~/types/entity/group';
 import { GroupURN, URNLike } from '~/types/taxonomy';
-import { EventDeclarationProducer, WorldProjectionConsumer } from '~/types/handler';
+import { WorldProjectionConsumer } from '~/types/handler';
 import { Transform, GroupFactoryDependencies, DEFAULT_GROUP_FACTORY_DEPS, createGroup } from '../factory';
 
 export type GroupApiDependencies<TGroupType extends GroupType> = GroupFactoryDependencies<TGroupType>;
@@ -10,7 +10,7 @@ export const DEFAULT_GROUP_API_DEPS: GroupApiDependencies<any> = DEFAULT_GROUP_F
 /**
  * A subset of TransformerContext
  */
-export type GroupApiContext = EventDeclarationProducer & WorldProjectionConsumer;
+export type GroupApiContext = WorldProjectionConsumer;
 
 export type GroupPolicy = {
   invitationTimeout: number;
