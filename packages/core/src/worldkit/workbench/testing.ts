@@ -1,4 +1,4 @@
-import { Actor, Stat, ActorStats, ShellStat } from '~/types/entity/actor';
+import { Actor, Stat, ActorStats, ShellStat, Gender } from '~/types/entity/actor';
 import { Shell } from '~/types/entity/shell';
 import { ShellMutation, ShellMutationType, StatMutation, StatMutationOperation } from '~/types/workbench';
 import { ActorURN, PlaceURN } from '~/types/taxonomy';
@@ -36,6 +36,7 @@ export type ShellStatsSetup = ActorStatsSetup;
 
 export type WorkbenchScenarioActorInput = {
   name?: string;
+  gender?: Gender;
   stats?: ActorStatsSetup;
   shellStats?: ShellStatsSetup;
   pendingMutations?: ShellMutation[];
@@ -101,6 +102,7 @@ export function useWorkbenchScenario(
       // Update actor stats if provided
       const updatedActor = {
         ...actor,
+        gender: participant.gender ?? Gender.MALE,
         stats: {
           ...actor.stats,
           [Stat.POW]: processSingleStat(participant.stats?.pow, 10),

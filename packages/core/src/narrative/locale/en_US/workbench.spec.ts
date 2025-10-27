@@ -1,0 +1,699 @@
+import { describe, it, expect, beforeEach } from 'vitest';
+import { createTransformerContext } from '~/worldkit/context';
+import { useWorkbenchScenario } from '~/worldkit/workbench/testing';
+import {
+  createWorkbenchSessionDidStartEvent,
+  createWorkbenchSessionDidEndEvent,
+  createActorDidStageShellMutationEvent,
+  createActorDidDiffShellMutationsEvent,
+  createActorDidUndoShellMutationsEvent,
+  createActorDidCommitShellMutationsEvent,
+  createStatMutation,
+} from '~/testing/event/factory/workbench';
+import { ShellMutationType, StatMutationOperation } from '~/types/workbench';
+import { Gender, Stat } from '~/types/entity/actor';
+import { ActorURN } from '~/types/taxonomy';
+import { ALICE_ID, BOB_ID, CHARLIE_ID } from '~/testing/constants';
+import {
+  withObjectSerializationValidation,
+  withDebuggingArtifactValidation,
+  withNonEmptyValidation,
+  withNarrativeQuality,
+  withPerspectiveDifferentiation,
+  withComposedValidation,
+} from '~/testing/narrative-quality';
+
+// Import the specific narrative functions we're testing
+import {
+  narrateWorkbenchSessionDidStart,
+  narrateWorkbenchSessionDidEnd,
+  narrateActorDidStageShellMutation,
+  narrateActorDidDiffShellMutations,
+  narrateActorDidUndoShellMutations,
+  narrateActorDidCommitShellMutations,
+} from './workbench';
+
+const OBSERVER_ID: ActorURN = 'flux:actor:test:observer';
+const DAVID_ID: ActorURN = 'flux:actor:test:david';
+
+describe('English Workbench Narratives - Snapshot Tests', () => {
+  let context: ReturnType<typeof createTransformerContext>;
+  let scenario: ReturnType<typeof useWorkbenchScenario>;
+
+  beforeEach(() => {
+    context = createTransformerContext();
+
+    scenario = useWorkbenchScenario(context, {
+      participants: {
+        [ALICE_ID]: {
+          name: 'Alice',
+          gender: Gender.FEMALE,
+          stats: { pow: 50, fin: 50, res: 50 },
+          shellStats: { pow: 40, fin: 40, res: 40 },
+        },
+        [BOB_ID]: {
+          name: 'Bob',
+          stats: { pow: 30, fin: 30, res: 30 },
+          shellStats: { pow: 25, fin: 25, res: 25 },
+        },
+        [CHARLIE_ID]: {
+          name: 'Charlie',
+          stats: { pow: 40, fin: 40, res: 40 },
+          shellStats: { pow: 35, fin: 35, res: 35 },
+        },
+        [OBSERVER_ID]: {
+          name: 'Observer',
+          stats: { pow: 20, fin: 20, res: 20 },
+          shellStats: { pow: 15, fin: 15, res: 15 },
+        },
+        [DAVID_ID]: {
+          name: 'David',
+          stats: { pow: 70, fin: 20, res: 50 },
+          shellStats: { pow: 60, fin: 15, res: 45 },
+        },
+      },
+    });
+  });
+
+  describe('narrateWorkbenchSessionDidStart', () => {
+    it('should render exact session start from actor perspective', () => {
+      const event = createWorkbenchSessionDidStartEvent((e) => ({
+        ...e,
+        actor: ALICE_ID,
+      }));
+
+      const narrative = narrateWorkbenchSessionDidStart(context, event, ALICE_ID);
+      expect(narrative).toBe('You begin working at the shell workbench.');
+    });
+
+    it('should render exact session start from observer perspective', () => {
+      const event = createWorkbenchSessionDidStartEvent((e) => ({
+        ...e,
+        actor: ALICE_ID,
+      }));
+
+      const narrative = narrateWorkbenchSessionDidStart(context, event, OBSERVER_ID);
+      expect(narrative).toBe('Alice begins working at a shell workbench.');
+    });
+
+    it('should render exact session start with different actor names', () => {
+      const event = createWorkbenchSessionDidStartEvent((e) => ({
+        ...e,
+        actor: BOB_ID,
+      }));
+
+      const narrative = narrateWorkbenchSessionDidStart(context, event, OBSERVER_ID);
+      expect(narrative).toBe('Bob begins working at a shell workbench.');
+    });
+  });
+
+  describe('narrateWorkbenchSessionDidEnd', () => {
+    it('should render exact session end from actor perspective', () => {
+      const event = createWorkbenchSessionDidEndEvent((e) => ({
+        ...e,
+        actor: ALICE_ID,
+      }));
+
+      const narrative = narrateWorkbenchSessionDidEnd(context, event, ALICE_ID);
+      expect(narrative).toBe('You finish your work at the shell workbench.');
+    });
+
+    it('should render exact session end from observer perspective', () => {
+      const event = createWorkbenchSessionDidEndEvent((e) => ({
+        ...e,
+        actor: ALICE_ID,
+      }));
+
+      const narrative = narrateWorkbenchSessionDidEnd(context, event, OBSERVER_ID);
+      expect(narrative).toBe('Alice finishes working at the shell workbench.');
+    });
+
+    it('should render exact session end with different actor names', () => {
+      const event = createWorkbenchSessionDidEndEvent((e) => ({
+        ...e,
+        actor: CHARLIE_ID,
+      }));
+
+      const narrative = narrateWorkbenchSessionDidEnd(context, event, OBSERVER_ID);
+      expect(narrative).toBe('Charlie finishes working at the shell workbench.');
+    });
+  });
+
+  describe('narrateActorDidStageShellMutation', () => {
+    it('should render exact stat mutation staging from actor perspective', () => {
+      const event = createActorDidStageShellMutationEvent((e) => ({
+        ...e,
+        actor: ALICE_ID,
+        payload: {
+          ...e.payload,
+          mutation: createStatMutation(Stat.POW, StatMutationOperation.ADD, 5),
+        },
+      }));
+
+      const narrative = narrateActorDidStageShellMutation(context, event, ALICE_ID);
+      expect(narrative).toBe('You stage a stat modification to the shell design.');
+    });
+
+    it('should render exact component mutation staging from actor perspective', () => {
+      const event = createActorDidStageShellMutationEvent((e) => ({
+        ...e,
+        actor: ALICE_ID,
+        payload: {
+          ...e.payload,
+          mutation: {
+            type: ShellMutationType.COMPONENT,
+          } as any,
+        },
+      }));
+
+      const narrative = narrateActorDidStageShellMutation(context, event, ALICE_ID);
+      expect(narrative).toBe('You stage a component change to the shell design.');
+    });
+
+    it('should render exact unknown mutation staging from actor perspective', () => {
+      const event = createActorDidStageShellMutationEvent((e) => ({
+        ...e,
+        actor: ALICE_ID,
+        payload: {
+          ...e.payload,
+          mutation: {
+            type: 'UNKNOWN_TYPE' as any,
+          } as any,
+        },
+      }));
+
+      const narrative = narrateActorDidStageShellMutation(context, event, ALICE_ID);
+      expect(narrative).toBe('You stage a change to the shell design.');
+    });
+
+    it('should render exact mutation staging from observer perspective', () => {
+      const event = createActorDidStageShellMutationEvent((e) => ({
+        ...e,
+        actor: ALICE_ID,
+        payload: {
+          ...e.payload,
+          mutation: createStatMutation(Stat.FIN, StatMutationOperation.ADD, 25),
+        },
+      }));
+
+      const narrative = narrateActorDidStageShellMutation(context, event, OBSERVER_ID);
+      expect(narrative).toBe('Alice makes adjustments to their shell design.');
+    });
+
+    it('should render exact mutation staging with different actor names', () => {
+      const event = createActorDidStageShellMutationEvent((e) => ({
+        ...e,
+        actor: BOB_ID,
+        payload: {
+          ...e.payload,
+          mutation: createStatMutation(Stat.RES, StatMutationOperation.REMOVE, 3),
+        },
+      }));
+
+      const narrative = narrateActorDidStageShellMutation(context, event, OBSERVER_ID);
+      expect(narrative).toBe('Bob makes adjustments to their shell design.');
+    });
+  });
+
+  describe('narrateActorDidDiffShellMutations', () => {
+    it('should render exact diff review from actor perspective with no changes', () => {
+      const event = createActorDidDiffShellMutationsEvent((e) => ({
+        ...e,
+        actor: ALICE_ID,
+      }));
+
+      const narrative = narrateActorDidDiffShellMutations(context, event, ALICE_ID);
+      expect(narrative).toBe('You review your shell design. No changes detected.');
+    });
+
+    it('should render exact diff review from actor perspective with performance changes', () => {
+      const event = createActorDidDiffShellMutationsEvent((e) => ({
+        ...e,
+        actor: ALICE_ID,
+        payload: {
+          ...e.payload,
+          perf: {
+            ...e.payload.perf,
+            gapClosing10: '2.5 -> 2.1',
+            peakPowerOutput: '5000 -> 5500',
+            weaponDamage: '50 -> 55',
+          },
+        },
+      }));
+
+      const narrative = narrateActorDidDiffShellMutations(context, event, ALICE_ID);
+      expect(narrative).toContain('Shell Configuration Analysis:');
+      expect(narrative).toContain('Gap Closing (10m):     2.5 -> 2.1s (-0.4s)');
+      expect(narrative).toContain('Peak Power Output:     5000 -> 5500W (+500W)');
+      expect(narrative).toContain('Weapon Damage:         50 -> 55 dmg (+5 dmg)');
+    });
+
+    it('should render exact diff review from actor perspective with stat changes', () => {
+      const event = createActorDidDiffShellMutationsEvent((e) => ({
+        ...e,
+        actor: ALICE_ID,
+        payload: {
+          ...e.payload,
+          stats: {
+            pow: '45 -> 50',
+            fin: '30 -> 35',
+            res: '25',
+          },
+        },
+      }));
+
+      const narrative = narrateActorDidDiffShellMutations(context, event, ALICE_ID);
+      expect(narrative).toContain('Shell Configuration Analysis:');
+      expect(narrative).toContain('SHELL STATS');
+      expect(narrative).toContain('  POW:              45 -> 50 (+5)');
+      expect(narrative).toContain('  FIN:              30 -> 35 (+5)');
+      expect(narrative).toContain('  RES:              25');
+    });
+
+    it('should render exact diff review from actor perspective with both stat and performance changes', () => {
+      const event = createActorDidDiffShellMutationsEvent((e) => ({
+        ...e,
+        actor: ALICE_ID,
+        payload: {
+          ...e.payload,
+          stats: {
+            pow: '40 -> 45',
+          },
+          perf: {
+            ...e.payload.perf,
+            weaponDamage: '48 -> 52',
+          },
+        },
+      }));
+
+      const narrative = narrateActorDidDiffShellMutations(context, event, ALICE_ID);
+      expect(narrative).toContain('Shell Configuration Analysis:');
+      expect(narrative).toContain('SHELL STATS');
+      expect(narrative).toContain('  POW:              40 -> 45 (+5)');
+      expect(narrative).toContain('WEAPON SYSTEM');
+      expect(narrative).toContain('  Weapon Damage:         48 -> 52 dmg (+4 dmg)');
+    });
+
+    it('should show all shell stats including unchanged ones', () => {
+      const event = createActorDidDiffShellMutationsEvent((e) => ({
+        ...e,
+        actor: ALICE_ID,
+        payload: {
+          ...e.payload,
+          stats: {
+            pow: '40 -> 45', // Only POW is changing
+          },
+          perf: {
+            ...e.payload.perf,
+            weaponDamage: '48 -> 52',
+          },
+        },
+      }));
+
+      const narrative = narrateActorDidDiffShellMutations(context, event, ALICE_ID);
+      expect(narrative).toContain('SHELL STATS');
+      expect(narrative).toContain('  POW:              40 -> 45 (+5)'); // Changed stat
+      expect(narrative).toContain('  FIN:              40'); // Unchanged stat (current value)
+      expect(narrative).toContain('  RES:              40'); // Unchanged stat (current value)
+    });
+
+    it('should render exact diff review from observer perspective', () => {
+      const event = createActorDidDiffShellMutationsEvent((e) => ({
+        ...e,
+        actor: ALICE_ID,
+      }));
+
+      const narrative = narrateActorDidDiffShellMutations(context, event, OBSERVER_ID);
+      expect(narrative).toBe('Alice reviews their shell modifications.');
+    });
+
+    it('should render exact diff review with different actor names', () => {
+      const event = createActorDidDiffShellMutationsEvent((e) => ({
+        ...e,
+        actor: DAVID_ID,
+      }));
+
+      const narrative = narrateActorDidDiffShellMutations(context, event, OBSERVER_ID);
+      expect(narrative).toBe('David reviews their shell modifications.');
+    });
+  });
+
+  describe('narrateActorDidUndoShellMutations', () => {
+    it('should render exact undo from actor perspective', () => {
+      const event = createActorDidUndoShellMutationsEvent((e) => ({
+        ...e,
+        actor: ALICE_ID,
+      }));
+
+      const narrative = narrateActorDidUndoShellMutations(context, event, ALICE_ID);
+      expect(narrative).toBe('You undo your recent shell modifications.');
+    });
+
+    it('should render exact undo from observer perspective', () => {
+      const event = createActorDidUndoShellMutationsEvent((e) => ({
+        ...e,
+        actor: ALICE_ID,
+      }));
+
+      const narrative = narrateActorDidUndoShellMutations(context, event, OBSERVER_ID);
+      expect(narrative).toBe('Alice undoes some shell modifications.');
+    });
+
+    it('should render exact undo with different actor names', () => {
+      const event = createActorDidUndoShellMutationsEvent((e) => ({
+        ...e,
+        actor: CHARLIE_ID,
+      }));
+
+      const narrative = narrateActorDidUndoShellMutations(context, event, OBSERVER_ID);
+      expect(narrative).toBe('Charlie undoes some shell modifications.');
+    });
+  });
+
+  describe('narrateActorDidCommitShellMutations', () => {
+    it('should render exact commit with cost from actor perspective', () => {
+      const event = createActorDidCommitShellMutationsEvent((e) => ({
+        ...e,
+        actor: ALICE_ID,
+        payload: {
+          ...e.payload,
+          cost: 150,
+          mutations: [
+            createStatMutation(Stat.POW, StatMutationOperation.ADD, 5),
+            createStatMutation(Stat.FIN, StatMutationOperation.ADD, 3),
+          ],
+        },
+      }));
+
+      const narrative = narrateActorDidCommitShellMutations(context, event, ALICE_ID);
+      expect(narrative).toBe('You commit 2 shell modifications for 150 credits.');
+    });
+
+    it('should render exact commit without cost from actor perspective', () => {
+      const event = createActorDidCommitShellMutationsEvent((e) => ({
+        ...e,
+        actor: ALICE_ID,
+        payload: {
+          ...e.payload,
+          cost: 0,
+          mutations: [createStatMutation(Stat.RES, StatMutationOperation.ADD, 30)],
+        },
+      }));
+
+      const narrative = narrateActorDidCommitShellMutations(context, event, ALICE_ID);
+      expect(narrative).toBe('You commit 1 shell modification.');
+    });
+
+    it('should render exact commit with single mutation from actor perspective', () => {
+      const event = createActorDidCommitShellMutationsEvent((e) => ({
+        ...e,
+        actor: ALICE_ID,
+        payload: {
+          ...e.payload,
+          cost: 75,
+          mutations: [createStatMutation(Stat.POW, StatMutationOperation.ADD, 10)],
+        },
+      }));
+
+      const narrative = narrateActorDidCommitShellMutations(context, event, ALICE_ID);
+      expect(narrative).toBe('You commit 1 shell modification for 75 credits.');
+    });
+
+    it('should render exact commit from observer perspective', () => {
+      const event = createActorDidCommitShellMutationsEvent((e) => ({
+        ...e,
+        actor: ALICE_ID,
+        payload: {
+          ...e.payload,
+          cost: 200,
+          mutations: [
+            createStatMutation(Stat.POW, StatMutationOperation.ADD, 5),
+            createStatMutation(Stat.FIN, StatMutationOperation.ADD, 5),
+            createStatMutation(Stat.RES, StatMutationOperation.ADD, 5),
+          ],
+        },
+      }));
+
+      const narrative = narrateActorDidCommitShellMutations(context, event, OBSERVER_ID);
+      expect(narrative).toBe('Alice commits their shell modifications.');
+    });
+
+    it('should render exact commit with different actor names', () => {
+      const event = createActorDidCommitShellMutationsEvent((e) => ({
+        ...e,
+        actor: BOB_ID,
+        payload: {
+          ...e.payload,
+          cost: 50,
+          mutations: [createStatMutation(Stat.FIN, StatMutationOperation.REMOVE, 2)],
+        },
+      }));
+
+      const narrative = narrateActorDidCommitShellMutations(context, event, OBSERVER_ID);
+      expect(narrative).toBe('Bob commits their shell modifications.');
+    });
+  });
+
+  describe('Error handling', () => {
+    it('should return empty string for missing actor in session start', () => {
+      const event = createWorkbenchSessionDidStartEvent((e) => ({
+        ...e,
+        actor: 'flux:actor:nonexistent' as ActorURN,
+      }));
+
+      const narrative = narrateWorkbenchSessionDidStart(context, event, OBSERVER_ID);
+      expect(narrative).toBe('');
+    });
+
+    it('should return empty string for missing actor in session end', () => {
+      const event = createWorkbenchSessionDidEndEvent((e) => ({
+        ...e,
+        actor: 'flux:actor:nonexistent' as ActorURN,
+      }));
+
+      const narrative = narrateWorkbenchSessionDidEnd(context, event, OBSERVER_ID);
+      expect(narrative).toBe('');
+    });
+
+    it('should return empty string for missing actor in stage mutation', () => {
+      const event = createActorDidStageShellMutationEvent((e) => ({
+        ...e,
+        actor: 'flux:actor:nonexistent' as ActorURN,
+      }));
+
+      const narrative = narrateActorDidStageShellMutation(context, event, OBSERVER_ID);
+      expect(narrative).toBe('');
+    });
+
+    it('should return empty string for missing actor in diff mutations', () => {
+      const event = createActorDidDiffShellMutationsEvent((e) => ({
+        ...e,
+        actor: 'flux:actor:nonexistent' as ActorURN,
+      }));
+
+      const narrative = narrateActorDidDiffShellMutations(context, event, OBSERVER_ID);
+      expect(narrative).toBe('');
+    });
+
+    it('should return empty string for missing actor in undo mutations', () => {
+      const event = createActorDidUndoShellMutationsEvent((e) => ({
+        ...e,
+        actor: 'flux:actor:nonexistent' as ActorURN,
+      }));
+
+      const narrative = narrateActorDidUndoShellMutations(context, event, OBSERVER_ID);
+      expect(narrative).toBe('');
+    });
+
+    it('should return empty string for missing actor in commit mutations', () => {
+      const event = createActorDidCommitShellMutationsEvent((e) => ({
+        ...e,
+        actor: 'flux:actor:nonexistent' as ActorURN,
+      }));
+
+      const narrative = narrateActorDidCommitShellMutations(context, event, OBSERVER_ID);
+      expect(narrative).toBe('');
+    });
+  });
+
+  describe('Narrative Quality Validation', () => {
+    describe('narrateWorkbenchSessionDidStart - Quality validation', () => {
+      it('should not contain [object Object] in session start narratives', () => {
+        const event = createWorkbenchSessionDidStartEvent((e) => ({
+          ...e,
+          actor: ALICE_ID,
+        }));
+
+        const perspectives = [ALICE_ID, OBSERVER_ID];
+        perspectives.forEach(perspective => {
+          withObjectSerializationValidation(narrateWorkbenchSessionDidStart, context, event, perspective)();
+        });
+      });
+
+      it('should pass comprehensive quality validation', () => {
+        const event = createWorkbenchSessionDidStartEvent((e) => ({
+          ...e,
+          actor: ALICE_ID,
+        }));
+
+        withNarrativeQuality(narrateWorkbenchSessionDidStart, context, event, OBSERVER_ID)();
+      });
+
+      it('should generate different narratives for different perspectives', () => {
+        const event = createWorkbenchSessionDidStartEvent((e) => ({
+          ...e,
+          actor: ALICE_ID,
+        }));
+
+        withPerspectiveDifferentiation(narrateWorkbenchSessionDidStart, context, event, [ALICE_ID, OBSERVER_ID])();
+      });
+    });
+
+    describe('narrateWorkbenchSessionDidEnd - Quality validation', () => {
+      it('should pass quality validation for session end narratives', () => {
+        const event = createWorkbenchSessionDidEndEvent((e) => ({
+          ...e,
+          actor: ALICE_ID,
+        }));
+
+        const perspectives = [ALICE_ID, OBSERVER_ID];
+        perspectives.forEach(perspective => {
+          withNarrativeQuality(narrateWorkbenchSessionDidEnd, context, event, perspective)();
+        });
+      });
+    });
+
+    describe('narrateActorDidStageShellMutation - Quality validation', () => {
+      it('should pass quality validation for stat mutation staging', () => {
+        const event = createActorDidStageShellMutationEvent((e) => ({
+          ...e,
+          actor: ALICE_ID,
+          payload: {
+            ...e.payload,
+            mutation: createStatMutation(Stat.POW, StatMutationOperation.ADD, 5),
+          },
+        }));
+
+        const perspectives = [ALICE_ID, OBSERVER_ID];
+        perspectives.forEach(perspective => {
+          withNarrativeQuality(narrateActorDidStageShellMutation, context, event, perspective)();
+        });
+      });
+
+      it('should pass quality validation for component mutation staging', () => {
+        const event = createActorDidStageShellMutationEvent((e) => ({
+          ...e,
+          actor: ALICE_ID,
+          payload: {
+            ...e.payload,
+            mutation: {
+              type: ShellMutationType.COMPONENT,
+            } as any,
+          },
+        }));
+
+        const perspectives = [ALICE_ID, OBSERVER_ID];
+        perspectives.forEach(perspective => {
+          withNarrativeQuality(narrateActorDidStageShellMutation, context, event, perspective)();
+        });
+      });
+    });
+
+    describe('narrateActorDidDiffShellMutations - Quality validation', () => {
+      it('should pass quality validation for diff review narratives', () => {
+        const event = createActorDidDiffShellMutationsEvent((e) => ({
+          ...e,
+          actor: ALICE_ID,
+        }));
+
+        const perspectives = [ALICE_ID, OBSERVER_ID];
+        perspectives.forEach(perspective => {
+          withNarrativeQuality(narrateActorDidDiffShellMutations, context, event, perspective)();
+        });
+      });
+    });
+
+    describe('narrateActorDidUndoShellMutations - Quality validation', () => {
+      it('should pass quality validation for undo narratives', () => {
+        const event = createActorDidUndoShellMutationsEvent((e) => ({
+          ...e,
+          actor: ALICE_ID,
+        }));
+
+        const perspectives = [ALICE_ID, OBSERVER_ID];
+        perspectives.forEach(perspective => {
+          withNarrativeQuality(narrateActorDidUndoShellMutations, context, event, perspective)();
+        });
+      });
+    });
+
+    describe('narrateActorDidCommitShellMutations - Quality validation', () => {
+      it('should pass quality validation for commit narratives', () => {
+        const event = createActorDidCommitShellMutationsEvent((e) => ({
+          ...e,
+          actor: ALICE_ID,
+          payload: {
+            ...e.payload,
+            cost: 100,
+            mutations: [createStatMutation(Stat.POW, StatMutationOperation.ADD, 5)],
+          },
+        }));
+
+        const perspectives = [ALICE_ID, OBSERVER_ID];
+        perspectives.forEach(perspective => {
+          withNarrativeQuality(narrateActorDidCommitShellMutations, context, event, perspective)();
+        });
+      });
+    });
+
+    describe('Composed quality validation', () => {
+      it('should pass all quality checks with composed validators', () => {
+        const event = createWorkbenchSessionDidStartEvent((e) => ({
+          ...e,
+          actor: ALICE_ID,
+        }));
+
+        // Demonstrate composition of validators
+        const composedValidator = withComposedValidation(
+          withObjectSerializationValidation,
+          withDebuggingArtifactValidation,
+          withNonEmptyValidation
+        );
+
+        composedValidator(narrateWorkbenchSessionDidStart, context, event, OBSERVER_ID)();
+      });
+
+      it('should validate perspective differentiation across all narrative functions', () => {
+        const sessionStartEvent = createWorkbenchSessionDidStartEvent((e) => ({
+          ...e,
+          actor: ALICE_ID,
+        }));
+
+        withPerspectiveDifferentiation(narrateWorkbenchSessionDidStart, context, sessionStartEvent, [ALICE_ID, OBSERVER_ID])();
+
+        const stageEvent = createActorDidStageShellMutationEvent((e) => ({
+          ...e,
+          actor: ALICE_ID,
+          payload: {
+            ...e.payload,
+            mutation: createStatMutation(Stat.POW, StatMutationOperation.ADD, 5),
+          },
+        }));
+
+        withPerspectiveDifferentiation(narrateActorDidStageShellMutation, context, stageEvent, [ALICE_ID, OBSERVER_ID])();
+
+        const commitEvent = createActorDidCommitShellMutationsEvent((e) => ({
+          ...e,
+          actor: ALICE_ID,
+          payload: {
+            ...e.payload,
+            cost: 100,
+            mutations: [createStatMutation(Stat.POW, StatMutationOperation.ADD, 5)],
+          },
+        }));
+
+        withPerspectiveDifferentiation(narrateActorDidCommitShellMutations, context, commitEvent, [ALICE_ID, OBSERVER_ID])();
+      });
+    });
+  });
+});
