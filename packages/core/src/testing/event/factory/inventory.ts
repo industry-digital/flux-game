@@ -5,17 +5,17 @@ import { createWorldEvent } from '~/worldkit/event';
 
 const identity = <T>(x: T): T => x;
 
-export type AmmoEventFactoryDependencies = {
+export type InventoryEventFactoryDependencies = {
   createWorldEvent: (input: WorldEventInput) => WorldEvent;
 };
 
-export const DEFAULT_AMMO_EVENT_FACTORY_DEPS: AmmoEventFactoryDependencies = {
+export const DEFAULT_INVENTORY_EVENT_FACTORY_DEPS: InventoryEventFactoryDependencies = {
   createWorldEvent,
 };
 
 export const createActorDidGainAmmoEvent = (
   transform: Transform<ActorDidGainAmmo> = identity,
-  deps: AmmoEventFactoryDependencies = DEFAULT_AMMO_EVENT_FACTORY_DEPS
+  deps: InventoryEventFactoryDependencies = DEFAULT_INVENTORY_EVENT_FACTORY_DEPS
 ): ActorDidGainAmmo => {
   const { createWorldEvent } = deps;
 
@@ -37,7 +37,7 @@ export const createActorDidGainAmmoEvent = (
 
 export const createActorDidLoseAmmoEvent = (
   transform: Transform<ActorDidLoseAmmo> = identity,
-  deps: AmmoEventFactoryDependencies = DEFAULT_AMMO_EVENT_FACTORY_DEPS
+  deps: InventoryEventFactoryDependencies = DEFAULT_INVENTORY_EVENT_FACTORY_DEPS
 ): ActorDidLoseAmmo => {
   const { createWorldEvent } = deps;
 

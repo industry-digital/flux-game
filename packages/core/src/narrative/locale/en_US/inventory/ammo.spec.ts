@@ -3,7 +3,7 @@ import { narrateActorDidGainInventoryAmmo, narrateActorDidLoseInventoryAmmo } fr
 import { createTransformerContext } from '~/worldkit/context';
 import { ActorURN, AmmoSchemaURN } from '~/types/taxonomy';
 import { ALICE_ID, BOB_ID } from '~/testing/constants';
-import { createActorDidGainAmmoEvent, createActorDidLoseAmmoEvent } from '~/testing/event/factory/ammo';
+import { createActorDidGainAmmoEvent, createActorDidLoseAmmoEvent } from '~/testing/event/factory/inventory';
 import { Gender } from '~/types/entity/actor';
 import { createActor } from '~/worldkit/entity/actor';
 

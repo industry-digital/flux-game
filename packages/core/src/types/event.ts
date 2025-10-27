@@ -127,7 +127,6 @@ export enum EventType {
   ACTOR_DID_LOSE_AMMO = 'actor:inventory:ammo:lost',
   ACTOR_DID_LOAD_WEAPON = 'actor:weapon:loaded',
   ACTOR_DID_UNLOAD_WEAPON = 'actor:weapon:unloaded',
-  ACTOR_DID_FIRE_WEAPON = 'actor:weapon:fired',
   ACTOR_DID_EQUIP_WEAPON = 'actor:weapon:equipped',
   ACTOR_DID_UNEQUIP_WEAPON = 'actor:weapon:unequipped',
   ACTOR_DID_CREATE_PARTY = 'actor:party:created',

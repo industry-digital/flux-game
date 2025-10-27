@@ -123,7 +123,6 @@ export const en_US: LanguageTemplates = {
   [EventType.ACTOR_DID_GAIN_AMMO]: narrateActorDidGainInventoryAmmo,
   [EventType.ACTOR_DID_LOSE_AMMO]: narrateActorDidLoseInventoryAmmo,
   [EventType.ACTOR_DID_UNLOAD_WEAPON]: NOT_IMPLEMENTED,
-  [EventType.ACTOR_DID_FIRE_WEAPON]: NOT_IMPLEMENTED,
   [EventType.ACTOR_DID_CREATE_PARTY]: NOT_IMPLEMENTED,
   [EventType.ACTOR_DID_DISBAND_PARTY]: NOT_IMPLEMENTED,
   [EventType.ACTOR_DID_ISSUE_PARTY_INVITATION]: NOT_IMPLEMENTED,
