@@ -180,6 +180,81 @@ const ATTACK_VERBS_FINESS_BIAS: Readonly<Partial<Record<DamageType, Record<Persp
 
 const DEFAULT_ATTACK_VERB = 'attacks';
 
+/**
+ * Generate damage description based on damage amount, target health, and perspective
+ */
+const getDamageDescription = (
+  damage: number,
+  perspective: Perspective,
+  weaponName: string,
+  target: Actor,
+  attackRating: number,
+  evasionRating: number
+): string => {
+  if (damage === 0) {
+    // Miss descriptions based on evasion vs attack rating
+    const isCloseCall = Math.abs(attackRating - evasionRating) <= 2;
+    if (perspective === Perspective.TARGET) {
+      return isCloseCall
+        ? `narrowly dodges the ${weaponName}`
+        : `easily evades the ${weaponName}`;
+    }
+
+    if (perspective === Perspective.SELF) {
+      return isCloseCall
+        ? `narrowly misses ${target.name} with your ${weaponName}`
+        : `misses ${target.name} completely with your ${weaponName}`;
+    }
+
+    // Fell through; render OBSERVER perspective
+    return isCloseCall
+      ? `barely misses ${target.name} with the ${weaponName}`
+      : `misses ${target.name} with the ${weaponName}`;
+  }
+
+  const targetMaxHp = getMaxHp(target);
+  const damagePercent = damage / targetMaxHp;
+
+  // Damage intensity descriptions
+  if (damagePercent >= 0.3) {
+    if (perspective === Perspective.TARGET) {
+      return `are devastated by the ${weaponName} for ${damage} damage`;
+    }
+    if (perspective === Perspective.SELF) {
+      return `devastate ${target.name} with your ${weaponName} for ${damage} damage`;
+    }
+    return `brutally strikes ${target.name} with the ${weaponName} for ${damage} damage`;
+  }
+
+  if (damagePercent >= 0.15) {
+    if (perspective === Perspective.TARGET) {
+      return `are wounded severely by the ${weaponName} for ${damage} damage`;
+    }
+    if (perspective === Perspective.SELF) {
+      return `land a solid hit on ${target.name} with your ${weaponName} for ${damage} damage`;
+    }
+    return `lands a solid hit on ${target.name} with the ${weaponName} for ${damage} damage`;
+  }
+
+  if (damagePercent >= 0.05) {
+    if (perspective === Perspective.TARGET) {
+      return `are struck by the ${weaponName} for ${damage} damage`;
+    }
+    if (perspective === Perspective.SELF) {
+      return `hit ${target.name} with your ${weaponName} for ${damage} damage`;
+    }
+    return `hits ${target.name} with the ${weaponName} for ${damage} damage`;
+  }
+
+  if (perspective === Perspective.TARGET) {
+    return `are grazed by the ${weaponName} for ${damage} damage`;
+  }
+  if (perspective === Perspective.SELF) {
+    return `barely scratch ${target.name} with your ${weaponName} for ${damage} damage`;
+  }
+  return `barely scratches ${target.name} with the ${weaponName} for ${damage} damage`;
+};
+
 export const narrateActorDidAttack: TemplateFunction<ActorDidAttack, ActorURN> = (context, event, actorId) => {
   const { world, equipmentApi } = context;
   const actor = world.actors[event.actor];
@@ -243,82 +318,19 @@ export const narrateActorWasAttacked: TemplateFunction<ActorWasAttacked, ActorUR
   const weapon = equipmentApi.getEquippedWeaponSchema(attacker);
   const weaponName = getLocalizedSchemaTranslation(context, weapon.urn).name.singular;
 
-  // Enhanced damage descriptions based on damage amount and target health
-  const getDamageDescription = (damage: number, perspective: 'target' | 'attacker' | 'observer') => {
-    if (damage === 0) {
-      // Miss descriptions based on evasion vs attack rating
-      const isCloseCall = Math.abs(attackRating - evasionRating) <= 2;
-      if (perspective === 'target') {
-        return isCloseCall
-          ? `narrowly dodges the ${weaponName}`
-          : `easily evades the ${weaponName}`;
-      } else if (perspective === 'attacker') {
-        return isCloseCall
-          ? `narrowly misses ${target.name} with your ${weaponName}`
-          : `misses ${target.name} completely with your ${weaponName}`;
-      } else {
-        return isCloseCall
-          ? `barely misses ${target.name} with the ${weaponName}`
-          : `misses ${target.name} with the ${weaponName}`;
-      }
-    }
-
-    const targetMaxHp = getMaxHp(target);
-    const damagePercent = damage / targetMaxHp;
-
-    // Damage intensity descriptions
-    if (damagePercent >= 0.3) {
-      if (perspective === 'target') {
-        return `are devastated by the ${weaponName} for ${damage} damage`;
-      }
-      if (perspective === 'attacker') {
-        return `devastate ${target.name} with your ${weaponName} for ${damage} damage`;
-      }
-      return `brutally strikes ${target.name} with the ${weaponName} for ${damage} damage`;
-    }
-
-    if (damagePercent >= 0.15) {
-      if (perspective === 'target') {
-        return `are wounded severely by the ${weaponName} for ${damage} damage`;
-      }
-      if (perspective === 'attacker') {
-        return `land a solid hit on ${target.name} with your ${weaponName} for ${damage} damage`;
-      }
-      return `lands a solid hit on ${target.name} with the ${weaponName} for ${damage} damage`;
-    }
-
-    if (damagePercent >= 0.05) {
-      if (perspective === 'target') {
-        return `are struck by the ${weaponName} for ${damage} damage`;
-      }
-      if (perspective === 'attacker') {
-        return `hit ${target.name} with your ${weaponName} for ${damage} damage`;
-      }
-      return `hits ${target.name} with the ${weaponName} for ${damage} damage`;
-    }
-
-    if (perspective === 'target') {
-      return `are grazed by the ${weaponName} for ${damage} damage`;
-    }
-    if (perspective === 'attacker') {
-      return `barely scratch ${target.name} with your ${weaponName} for ${damage} damage`;
-    }
-    return `barely scratches ${target.name} with the ${weaponName} for ${damage} damage`;
-  };
-
   // Generate narrative for all perspectives
   if (actorId === event.actor) {
     // actorId is the target being attacked
-    return `You ${getDamageDescription(damage, 'target')}.`;
+    return `You ${getDamageDescription(damage, Perspective.TARGET, weaponName, target, attackRating, evasionRating)}.`;
   }
 
   if (actorId === event.payload.source) {
     // actorId is the attacker
-    return `You ${getDamageDescription(damage, 'attacker')}.`;
+    return `You ${getDamageDescription(damage, Perspective.SELF, weaponName, target, attackRating, evasionRating)}.`;
   }
 
   // actorId is an observer
-  return `${attacker.name} ${getDamageDescription(damage, 'observer')}.`;
+  return `${attacker.name} ${getDamageDescription(damage, Perspective.OBSERVER, weaponName, target, attackRating, evasionRating)}.`;
 };
 
 export const narrateActorDidDefend = withUserEventValidation(
