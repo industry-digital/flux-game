@@ -60,15 +60,14 @@ describe('createCombatLifecycle', () => {
     const startEvents = lifecycle.startCombat();
 
     // Events should be returned and declared
-    expect(startEvents).toHaveLength(4);
+    expect(startEvents).toHaveLength(3);
     expect(startEvents[0].type).toBe(EventType.COMBAT_SESSION_DID_START);
     expect(startEvents[1].type).toBe(EventType.COMBAT_SESSION_STATUS_DID_CHANGE);
-    expect(startEvents[2].type).toBe(EventType.COMBAT_ROUND_DID_START);
-    expect(startEvents[3].type).toBe(EventType.COMBAT_TURN_DID_START);
+    expect(startEvents[2].type).toBe(EventType.COMBAT_TURN_DID_START);
 
     // Events should also be declared to context
     const contextEvents = context.getDeclaredEvents();
-    expect(contextEvents).toHaveLength(4);
+    expect(contextEvents).toHaveLength(3);
     expect(session.status).toBe(SessionStatus.RUNNING);
   });
 

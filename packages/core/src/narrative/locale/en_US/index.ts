@@ -14,7 +14,7 @@ import {
   narrateCombatSessionStarted,
   narrateCombatSessionEnded,
   narrateCombatSessionStatusDidChange,
-  renderWasAttackedNarrative,
+  narrateActorWasAttacked,
   // Note: Actor death and energy recovery are handled by combat events
   narrateActorDidAssessRange,
 } from './combat';
@@ -71,7 +71,7 @@ export const en_US: LanguageTemplates = {
 
   // Combat Events
   [EventType.ACTOR_DID_ATTACK]: narrateActorDidAttack,
-  [EventType.ACTOR_WAS_ATTACKED]: renderWasAttackedNarrative,
+  [EventType.ACTOR_WAS_ATTACKED]: narrateActorWasAttacked,
   [EventType.ACTOR_DID_DEFEND]: narrateActorDidDefend,
   [EventType.ACTOR_DID_MOVE_IN_COMBAT]: narrateActorDidMoveInCombat,
   [EventType.ACTOR_DID_ACQUIRE_TARGET]: narrateActorDidAcquireTarget,

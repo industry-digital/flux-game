@@ -511,11 +511,10 @@ describe('session', () => {
 
         // Now events should be declared
         const events = context.getDeclaredEvents();
-        expect(events).toHaveLength(4);
+        expect(events).toHaveLength(3);
         expect(events[0].type).toBe(EventType.COMBAT_SESSION_DID_START);
         expect(events[1].type).toBe(EventType.COMBAT_SESSION_STATUS_DID_CHANGE);
-        expect(events[2].type).toBe(EventType.COMBAT_ROUND_DID_START);
-        expect(events[3].type).toBe(EventType.COMBAT_TURN_DID_START);
+        expect(events[2].type).toBe(EventType.COMBAT_TURN_DID_START);
         expect(hook.session.status).toBe(SessionStatus.RUNNING);
       });
 

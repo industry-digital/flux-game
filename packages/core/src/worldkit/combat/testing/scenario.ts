@@ -1,4 +1,4 @@
-import { Actor, Stat, ActorStats } from '~/types/entity/actor';
+import { Actor, Stat, ActorStats, Gender } from '~/types/entity/actor';
 import { WeaponSchema } from '~/types/schema/weapon';
 import { AmmoSchema } from '~/types/schema/ammo';
 import { ActorURN, PlaceURN, SkillSchemaURN, WeaponItemURN, WeaponSchemaURN, AmmoSchemaURN } from '~/types/taxonomy';
@@ -55,6 +55,7 @@ export type CombatScenarioActorInput = {
   equipment?: ActorEquipmentSetup;
   target?: ActorURN;
   hp?: ActorHpSetup;
+  gender?: Gender;
 };
 
 export type CombatScenarioHook = {
@@ -214,6 +215,7 @@ export function useCombatScenario(
         name: actorName,
         location: TEST_PLACE_ID, // Ensure actor is at the combat location
         skills: finalSkills,
+        gender: participant.gender ?? Gender.MALE,
         stats: {
           ...actor.stats,
           [Stat.INT]: processSingleStat(stats?.int, 10),

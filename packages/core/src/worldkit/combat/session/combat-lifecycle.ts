@@ -69,14 +69,6 @@ const createCombatStartEvents = (
 
     createWorldEvent({
       trace,
-      type: EventType.COMBAT_ROUND_DID_START,
-      actor: WellKnownActor.SYSTEM,
-      location,
-      payload: { sessionId, round: 1 },
-    }),
-
-    createWorldEvent({
-      trace,
       type: EventType.COMBAT_TURN_DID_START,
       actor: WellKnownActor.SYSTEM,
       location,
