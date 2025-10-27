@@ -223,7 +223,11 @@ describe('English Workbench Narratives - Snapshot Tests', () => {
       }));
 
       const narrative = narrateActorDidDiffShellMutations(context, event, ALICE_ID);
-      expect(narrative).toBe('You review your shell design. No changes detected.');
+      expect(narrative).toBe(`You review your shell design. No changes detected.
+
+> Enter \`shell commit\` to commit your changes.
+> Enter \`shell undo\` to revert modifications.
+> Enter \`help workbench\` for available commands.`);
     });
 
     it('should render exact diff review from actor perspective with performance changes', () => {

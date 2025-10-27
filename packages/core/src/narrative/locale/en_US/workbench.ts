@@ -12,6 +12,7 @@ import {
   ActorDidReviewShellStats,
   ActorDidListShellComponents,
   ActorDidExamineComponent,
+  WorldEvent,
 } from '~/types/event';
 import { ShellMutationType } from '~/types/workbench';
 import { TemplateFunction } from '~/types/narrative';
@@ -164,7 +165,27 @@ const STAT_DISPLAY_NAMES: Readonly<Record<Stat, string>> = Object.freeze({
   [Stat.MEM]: 'MEM',
 });
 
-export const narrateActorDidDiffShellMutations: TemplateFunction<ActorDidDiffShellMutations, ActorURN> = (context, event, recipientId) => {
+/**
+ * Higher-order function that composes narrative functions with workbench prompts
+ * Zero-allocation implementation using direct string concatenation
+ */
+const withWorkbenchPrompts = <T extends WorldEvent, R extends ActorURN>(
+  narrativeFunction: TemplateFunction<T, R>
+): TemplateFunction<T, R> => {
+  return (context, event, recipientId) => {
+    const baseNarrative = narrativeFunction(context, event, recipientId);
+
+    // Only add prompts for the actor themselves
+    if (recipientId === event.actor) {
+      // Zero-allocation concatenation: direct string concatenation
+      return baseNarrative + '\n\n' + WORKBENCH_PROMPTS;
+    }
+
+    return baseNarrative;
+  };
+};
+
+const baseNarrateActorDidDiffShellMutations: TemplateFunction<ActorDidDiffShellMutations, ActorURN> = (context, event, recipientId) => {
   const { world } = context;
   const actor = world.actors[event.actor!];
 
@@ -241,6 +262,15 @@ export const narrateActorDidDiffShellMutations: TemplateFunction<ActorDidDiffShe
 
   return `${actor.name} reviews their shell modifications.`;
 };
+
+const WORKBENCH_PROMPTS = `> Enter \`shell commit\` to commit your changes.
+> Enter \`shell undo\` to revert modifications.
+> Enter \`help workbench\` for available commands.`;
+
+// Composed function with workbench prompts
+export const narrateActorDidDiffShellMutations = withWorkbenchPrompts(
+  baseNarrateActorDidDiffShellMutations
+);
 
 export const narrateActorDidUndoShellMutations: TemplateFunction<ActorDidUndoShellMutations, ActorURN> = (context, event, recipientId) => {
   const { world } = context;
