@@ -28,7 +28,6 @@ export const MIN_AP_INCREMENT = 1 / TACTICAL_AP_PRECISION_FACTOR;
  * predictable AP expenditure for tactical planning.
  *
  * Examples:
- * - 1.0001 AP → 1.0 AP
  * - 1.95 AP → 2.0 AP
  * - 2.00 AP → 2.0 AP (no change)
  *
