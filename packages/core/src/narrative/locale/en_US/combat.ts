@@ -31,9 +31,11 @@ import { DamageType } from '~/types/damage';
 import { Locale, SchemaTranslation } from '~/types/i18n';
 import { TransformerContext } from '~/types/handler';
 import { WeaponSchema } from '~/types/schema/weapon';
+import { Perspective } from '~/types/narrative';
 
 const HIS = 'his';
 const HER = 'her';
+
 /**
  * Get the appropriate possessive pronoun based on actor gender
  */
@@ -48,149 +50,153 @@ const getLocalizedSchemaTranslation = (context: TransformerContext, schemaUrn: S
   return context.getSchemaTranslation(Locale.en_US, schemaUrn);
 };
 
-type DamageTypeNarrative = {
-  verb: string;
-  impact: string;
-  weaponAction: string;
-  weaponActionThirdPerson: string;
-}
-
-const SLASH_NARRATIVE: Readonly<DamageTypeNarrative> = Object.freeze({
-  verb: 'slashes',
-  impact: 'cutting through the air',
-  weaponAction: 'sweep',
-  weaponActionThirdPerson: 'sweeps'
+export const FIRST_PERSON_VERBS: Readonly<Record<DamageType, string>> = Object.freeze({
+  [DamageType.SLASH]: 'sweep',
+  [DamageType.PIERCE]: 'drive',
+  [DamageType.IMPACT]: 'swing',
+  [DamageType.KINETIC]: 'swing',
+  [DamageType.THERMAL]: 'sweep',
+  [DamageType.EXPLOSIVE]: 'swing'
 });
 
-const PIERCE_NARRATIVE: Readonly<DamageTypeNarrative> = Object.freeze({
-  verb: 'thrusts',
-  impact: 'piercing through',
-  weaponAction: 'drive',
-  weaponActionThirdPerson: 'drives'
+export const THIRD_PERSON_VERBS: Readonly<Record<DamageType, string>> = Object.freeze({
+  [DamageType.SLASH]: 'sweeps',
+  [DamageType.PIERCE]: 'drives',
+  [DamageType.IMPACT]: 'swings',
+  [DamageType.KINETIC]: 'swings',
+  [DamageType.THERMAL]: 'sweeps',
+  [DamageType.EXPLOSIVE]: 'swings'
 });
 
-const IMPACT_NARRATIVE: Readonly<DamageTypeNarrative> = Object.freeze({
-  verb: 'strikes',
-  impact: 'smashing with force',
-  weaponAction: 'swing',
-  weaponActionThirdPerson: 'swings'
-});
+// Helper function to format target list with viewer-specific perspective
+const formatTargetList = (targets: Actor[], viewerActorId: ActorURN): string => {
+  if (targets.length === 0) return '';
+  if (targets.length === 1) {
+    return targets[0].id === viewerActorId ? 'you' : targets[0].name;
+  }
+  if (targets.length === 2) {
+    const target1 = targets[0].id === viewerActorId ? 'you' : targets[0].name;
+    const target2 = targets[1].id === viewerActorId ? 'you' : targets[1].name;
+    return `${target1} and ${target2}`;
+  }
 
-const KINETIC_NARRATIVE: Readonly<DamageTypeNarrative> = Object.freeze({
-  verb: 'strikes',
-  impact: 'striking with force',
-  weaponAction: 'swing',
-  weaponActionThirdPerson: 'swings'
-});
-
-const THERMAL_NARRATIVE: Readonly<DamageTypeNarrative> = Object.freeze({
-  verb: 'burns',
-  impact: 'burning with heat',
-  weaponAction: 'burn',
-  weaponActionThirdPerson: 'burns'
-});
-
-const EXPLOSIVE_NARRATIVE: Readonly<DamageTypeNarrative> = Object.freeze({
-  verb: 'detonates',
-  impact: 'detonating with force',
-  weaponAction: 'detonate',
-  weaponActionThirdPerson: 'detonates'
-});
-
-const DEFAULT_DAMAGE_TYPE_NARRATIVE: Readonly<DamageTypeNarrative> = Object.freeze({
-  verb: 'attacks',
-  impact: 'striking',
-  weaponAction: 'wield',
-  weaponActionThirdPerson: 'wields'
-});
-
-const NARRATIVES_BY_DAMAGE_TYPE: Record<DamageType, DamageTypeNarrative> = {
-  [DamageType.KINETIC]: KINETIC_NARRATIVE,
-  [DamageType.THERMAL]: THERMAL_NARRATIVE,
-  [DamageType.EXPLOSIVE]: EXPLOSIVE_NARRATIVE,
-  [DamageType.SLASH]: SLASH_NARRATIVE,
-  [DamageType.PIERCE]: PIERCE_NARRATIVE,
-  [DamageType.IMPACT]: IMPACT_NARRATIVE,
-};
-
-/**
- * Maps damage types to narrative descriptors for combat text
- */
-const getDamageTypeNarrative = (damageType: DamageType): DamageTypeNarrative => {
-  return NARRATIVES_BY_DAMAGE_TYPE[damageType] ?? DEFAULT_DAMAGE_TYPE_NARRATIVE;
+  const lastTarget = targets[targets.length - 1];
+  const otherTargets = targets.slice(0, -1);
+  const lastTargetName = lastTarget.id === viewerActorId ? 'you' : lastTarget.name;
+  const otherTargetNames = otherTargets.map(t => t.id === viewerActorId ? 'you' : t.name);
+  return `${otherTargetNames.join(', ')}, and ${lastTargetName}`;
 };
 
 const narrateCleaveAttack = (context: any, actor: Actor, targets: Actor[], weapon: WeaponSchema, viewerActorId: ActorURN): string => {
   const weaponName = getLocalizedSchemaTranslation(context, weapon.urn).name.singular;
   const possessive = getPossessivePronoun(actor.gender);
-  const primaryDamageType = getPrimaryDamageType(weapon) ?? DamageType.SLASH;
+  const primaryDamageType = getPrimaryDamageType(weapon);
 
-  // Pierce Brown style: simple, direct verbs
-  const getVerb = (perspective: 'first' | 'third') => {
-    const firstPersonVerbs = {
-      [DamageType.SLASH]: 'sweep',
-      [DamageType.PIERCE]: 'drive',
-      [DamageType.IMPACT]: 'swing',
-      [DamageType.KINETIC]: 'swing',
-      [DamageType.THERMAL]: 'sweep',
-      [DamageType.EXPLOSIVE]: 'swing'
-    };
-
-    const thirdPersonVerbs = {
-      [DamageType.SLASH]: 'sweeps',
-      [DamageType.PIERCE]: 'drives',
-      [DamageType.IMPACT]: 'swings',
-      [DamageType.KINETIC]: 'swings',
-      [DamageType.THERMAL]: 'sweeps',
-      [DamageType.EXPLOSIVE]: 'swings'
-    };
-
-    const verbs = perspective === 'first' ? firstPersonVerbs : thirdPersonVerbs;
-    return verbs[primaryDamageType] || (perspective === 'first' ? 'swing' : 'swings');
-  };
-
+  // Determine perspective
+  let perspective: Perspective;
   if (viewerActorId === actor.id) {
-    // Attacker perspective: "You sweep your sword in a wide arc."
-    const verb = getVerb('first');
+    perspective = Perspective.SELF;
+  } else if (targets.some(target => target.id === viewerActorId)) {
+    perspective = Perspective.TARGET;
+  } else {
+    perspective = Perspective.OBSERVER;
+  }
+
+  const verb = perspective === Perspective.SELF ? FIRST_PERSON_VERBS[primaryDamageType] : THIRD_PERSON_VERBS[primaryDamageType];
+
+  if (perspective === Perspective.SELF) {
+    // Attacker perspective: "You slash your sword at Alice and Bob."
     if (targets.length === 0) {
       return `You ${verb} your ${weaponName} in a wide arc.`;
-    } else if (targets.length === 1) {
-      return `You ${verb} your ${weaponName} at ${targets[0].name}.`;
-    } else if (targets.length === 2) {
-      return `You ${verb} your ${weaponName} at ${targets[0].name} and ${targets[1].name}.`;
-    } else {
-      const lastTarget = targets[targets.length - 1];
-      const otherTargets = targets.slice(0, -1);
-      return `You ${verb} your ${weaponName} at ${otherTargets.map(t => t.name).join(', ')}, and ${lastTarget.name}.`;
     }
-  } else {
-    // Observer/target perspective: "Alice sweeps her sword in a wide arc."
-    const verb = getVerb('third');
+    const targetList = targets.map(t => t.name).join(targets.length === 2 ? ' and ' : ', ');
+    if (targets.length === 2) {
+      return `You ${verb} your ${weaponName} at ${targetList}.`;
+    }
+    const lastTarget = targets[targets.length - 1];
+    const otherTargets = targets.slice(0, -1);
+    return `You ${verb} your ${weaponName} at ${otherTargets.map(t => t.name).join(', ')}, and ${lastTarget.name}.`;
+  }
+
+  if (perspective === Perspective.TARGET) {
+    // Target perspective: "Alice slashes her sword at you and Bob."
     if (targets.length === 0) {
       return `${actor.name} ${verb} ${possessive} ${weaponName} in a wide arc.`;
-    } else if (targets.length === 1) {
-      return `${actor.name} ${verb} ${possessive} ${weaponName} at ${targets[0].name}.`;
-    } else if (targets.length === 2) {
-      return `${actor.name} ${verb} ${possessive} ${weaponName} at ${targets[0].name} and ${targets[1].name}.`;
-    } else {
-      const lastTarget = targets[targets.length - 1];
-      const otherTargets = targets.slice(0, -1);
-      return `${actor.name} ${verb} ${possessive} ${weaponName} at ${otherTargets.map(t => t.name).join(', ')}, and ${lastTarget.name}.`;
     }
+    const targetList = formatTargetList(targets, viewerActorId);
+    return `${actor.name} ${verb} ${possessive} ${weaponName} at ${targetList}.`;
   }
+
+  // Observer perspective: "Alice slashes her sword at Bob and Charlie."
+  if (targets.length === 0) {
+    return `${actor.name} ${verb} ${possessive} ${weaponName} in a wide arc.`;
+  }
+  if (targets.length === 1) {
+    return `${actor.name} ${verb} ${possessive} ${weaponName} at ${targets[0].name}.`;
+  }
+  if (targets.length === 2) {
+    return `${actor.name} ${verb} ${possessive} ${weaponName} at ${targets[0].name} and ${targets[1].name}.`;
+  }
+  const lastTarget = targets[targets.length - 1];
+  const otherTargets = targets.slice(0, -1);
+  return `${actor.name} ${verb} ${possessive} ${weaponName} at ${otherTargets.map(t => t.name).join(', ')}, and ${lastTarget.name}.`;
 };
+
+const ATTACK_VERBS_POWER_BIAS: Readonly<Partial<Record<DamageType, Record<Perspective, string>>>> = Object.freeze({
+  [DamageType.SLASH]: {
+    [Perspective.SELF]: 'hack',
+    [Perspective.TARGET]: 'hacks',
+    [Perspective.OBSERVER]: 'hacks'
+  },
+  [DamageType.PIERCE]: {
+    [Perspective.SELF]: 'drive',
+    [Perspective.TARGET]: 'drives',
+    [Perspective.OBSERVER]: 'drives'
+  },
+  [DamageType.IMPACT]: {
+    [Perspective.SELF]: 'crush',
+    [Perspective.TARGET]: 'crushes',
+    [Perspective.OBSERVER]: 'crushes'
+  },
+});
+
+const ATTACK_VERBS_FINESS_BIAS: Readonly<Partial<Record<DamageType, Record<Perspective, string>>>> = Object.freeze({
+  [DamageType.SLASH]: {
+    [Perspective.SELF]: 'slash',
+    [Perspective.TARGET]: 'slashes',
+    [Perspective.OBSERVER]: 'slashes'
+  },
+  [DamageType.PIERCE]: {
+    [Perspective.SELF]: 'stab',
+    [Perspective.TARGET]: 'stabs',
+    [Perspective.OBSERVER]: 'stabs',
+  },
+  [DamageType.IMPACT]: {
+    [Perspective.SELF]: 'strike',
+    [Perspective.TARGET]: 'strikes',
+    [Perspective.OBSERVER]: 'strikes'
+  },
+});
+
+const DEFAULT_ATTACK_VERB = 'attacks';
 
 export const narrateActorDidAttack: TemplateFunction<ActorDidAttack, ActorURN> = (context, event, actorId) => {
   const { world, equipmentApi } = context;
   const actor = world.actors[event.actor];
 
+  if (!actor) {
+    return '';
+  }
+
+  const weapon = equipmentApi.getEquippedWeaponSchema(actor);
+
   // Handle CLEAVE vs STRIKE attack types
   if (event.payload.attackType === AttackType.CLEAVE) {
     const targets = event.payload.targets.map(id => world.actors[id]).filter(Boolean);
-    if (!actor || targets.length === 0) {
+    if (targets.length === 0) {
       return '';
     }
-    return narrateCleaveAttack(context, actor, targets, equipmentApi.getEquippedWeaponSchema(actor), actorId);
+    return narrateCleaveAttack(context, actor, targets, weapon, actorId);
   }
 
   // Handle STRIKE attacks (original logic)
@@ -199,59 +205,29 @@ export const narrateActorDidAttack: TemplateFunction<ActorDidAttack, ActorURN> =
     return '';
   }
 
-  const weapon = equipmentApi.getEquippedWeaponSchema(actor);
-  const { roll } = event.payload;
   const weaponName = getLocalizedSchemaTranslation(context, weapon.urn).name.singular;
-
   const actorStats = getAllStats(actor);
-
-  // Pierce Brown style: short, visceral, direct
   const primaryDamageType = getPrimaryDamageType(weapon) ?? DamageType.SLASH;
-  const isHighRoll = roll.result >= 15;
   const actorPower = actorStats.pow?.eff || 0;
   const actorFinesse = actorStats.fin?.eff || 0;
-  const isPowerfulAttack = actorPower > actorFinesse;
-
-  // Get the right verb based on damage type and attack style
-  const getAttackVerb = (perspective: 'first' | 'third') => {
-    const firstPersonVerbs = {
-      [DamageType.SLASH]: isPowerfulAttack ? 'hack' : 'slash',
-      [DamageType.PIERCE]: isPowerfulAttack ? 'drive' : 'stab',
-      [DamageType.IMPACT]: isPowerfulAttack ? 'crush' : 'strike',
-      [DamageType.KINETIC]: 'strike',
-      [DamageType.THERMAL]: 'burn',
-      [DamageType.EXPLOSIVE]: 'blast'
-    };
-
-    const thirdPersonVerbs = {
-      [DamageType.SLASH]: isPowerfulAttack ? 'hacks' : 'slashes',
-      [DamageType.PIERCE]: isPowerfulAttack ? 'drives' : 'stabs',
-      [DamageType.IMPACT]: isPowerfulAttack ? 'crushes' : 'strikes',
-      [DamageType.KINETIC]: 'strikes',
-      [DamageType.THERMAL]: 'burns',
-      [DamageType.EXPLOSIVE]: 'blasts'
-    };
-
-    const verbs = perspective === 'first' ? firstPersonVerbs : thirdPersonVerbs;
-    return verbs[primaryDamageType] || (perspective === 'first' ? 'strike' : 'strikes');
-  };
+  const isPowerBiased = actorPower > actorFinesse;
+  const perspective = actorId === event.actor ? Perspective.SELF : Perspective.TARGET;
+  const attackVerbs = isPowerBiased ? ATTACK_VERBS_POWER_BIAS[primaryDamageType] : ATTACK_VERBS_FINESS_BIAS[primaryDamageType];
+  const attackVerb = attackVerbs?.[perspective] ?? DEFAULT_ATTACK_VERB;
 
   // Generate narrative for all perspectives (STRIKE attacks only)
-  if (actorId === event.actor) {
+  if (perspective === Perspective.SELF) {
     // Attacker perspective: "You slash Bob with your sword."
-    const verb = getAttackVerb('first');
-    return `You ${verb} ${target.name} with your ${weaponName}.`;
+    return `You ${attackVerb} ${target.name} with your ${weaponName}.`;
   }
 
   if (actorId === event.payload.target) {
     // Target perspective: "Alice slashes you with her sword."
-    const verb = getAttackVerb('third');
-    return `${actor.name} ${verb} you with ${getPossessivePronoun(actor.gender)} ${weaponName}.`;
+    return `${actor.name} ${attackVerb} you with ${getPossessivePronoun(actor.gender)} ${weaponName}.`;
   }
 
   // Observer perspective: "Alice slashes Bob with her sword."
-  const verb = getAttackVerb('third');
-  return `${actor.name} ${verb} ${target.name} with ${getPossessivePronoun(actor.gender)} ${weaponName}.`;
+  return `${actor.name} ${attackVerb} ${target.name} with ${getPossessivePronoun(actor.gender)} ${weaponName}.`;
 };
 
 export const narrateActorWasAttacked: TemplateFunction<ActorWasAttacked, ActorURN> = (context, event, actorId) => {

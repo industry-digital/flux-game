@@ -31,7 +31,7 @@ export function getWeaponDamageTypes(
 export function getPrimaryDamageType(
   weapon: WeaponSchema,
   ammo?: AmmoSchema
-): DamageType | null {
+): DamageType {
   const damageTypes = getWeaponDamageTypes(weapon, ammo);
 
   let primaryType: DamageType | null = null;
@@ -48,7 +48,7 @@ export function getPrimaryDamageType(
     }
   }
 
-  return primaryType;
+  return primaryType ?? DamageType.SLASH;
 }
 
 /**

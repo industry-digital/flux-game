@@ -4,6 +4,7 @@ import { ActorURN, PlaceURN } from '~/types/taxonomy';
 
 export enum Perspective {
   SELF = 'self',
+  TARGET = 'target',
   OBSERVER = 'observer',
 }
 

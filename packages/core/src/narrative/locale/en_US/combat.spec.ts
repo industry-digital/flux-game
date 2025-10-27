@@ -250,7 +250,7 @@ describe('English Combat Narratives - Snapshot Tests', () => {
       }));
 
       const narrative = narrateActorDidAttack(context, event, BOB_ID);
-      expect(narrative).toBe('Alice sweeps her sword at Bob and Charlie.');
+      expect(narrative).toBe('Alice sweeps her sword at you and Charlie.');
     });
 
     it('should render exact cleave attack from observer perspective with single target', () => {
