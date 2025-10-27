@@ -170,7 +170,7 @@ describe('Command Execution', () => {
         actor: ACTOR_ID,
         location: PLACE_ID,
         session: workbenchSessionId,
-        type: CommandType.USE_WORKBENCH,
+        type: CommandType.WORKBENCH_USE,
         args: {},
       });
 

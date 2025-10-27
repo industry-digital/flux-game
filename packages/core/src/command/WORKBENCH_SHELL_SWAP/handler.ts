@@ -10,6 +10,6 @@ export class USE_WORKBENCH implements PureHandlerInterface<TransformerContext, U
   reduce = useWorkbenchReducer;
   dependencies = [];
   handles = (command: Command): command is UseWorkbenchCommand => {
-    return isCommandOfType<CommandType.USE_WORKBENCH, UseWorkbenchCommandArgs>(command, CommandType.USE_WORKBENCH);
+    return isCommandOfType<CommandType.WORKBENCH_USE, UseWorkbenchCommandArgs>(command, CommandType.WORKBENCH_USE);
   };
 }

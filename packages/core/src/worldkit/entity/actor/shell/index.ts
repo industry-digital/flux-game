@@ -29,20 +29,21 @@ export const getShellsFromActor = (actor: Actor) => {
 /**
  * Find shell by exact ID or fuzzy name match
  */
-export const findShellByNameOrId = (actor: Actor, input: string): { shell: any; id: string } | null => {
+export const findShellByNameOrId = (actor: Actor, input: string): Shell | undefined => {
+  const shell = actor.shells[input];
   // Try exact ID first
-  if (actor.shells[input]) {
-    return { shell: actor.shells[input], id: input };
+  if (shell) {
+    return shell;
   }
 
   // Try fuzzy name matching
   for (const [shellId, shell] of Object.entries(actor.shells)) {
-    if (shell.name?.toLowerCase().includes(input.toLowerCase())) {
-      return { shell, id: shellId };
+    if (shell.name?.toLowerCase().startsWith(input.toLowerCase())) {
+      return shell;
     }
   }
 
-  return null;
+  return undefined;
 };
 
 

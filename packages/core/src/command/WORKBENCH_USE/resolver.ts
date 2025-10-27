@@ -20,7 +20,7 @@ export const useWorkbenchResolver: CommandResolver<UseWorkbenchCommand> = (
 
   return createActorCommand({
     id: intent.id,
-    type: CommandType.USE_WORKBENCH,
+    type: CommandType.WORKBENCH_USE,
     actor: intent.actor,
     location: intent.location,
     session: intent.session,

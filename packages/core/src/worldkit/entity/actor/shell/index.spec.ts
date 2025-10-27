@@ -122,18 +122,18 @@ describe('Shell Management Functions', () => {
       const result = findShellByNameOrId(actor, 'exact-id');
       expect(result).not.toBeNull();
       expect(result!.id).toBe('exact-id');
-      expect(result!.shell.name).toBe('Combat Shell');
+      expect(result!.name).toBe('Combat Shell');
     });
 
     it('should find shell by fuzzy name match', () => {
       const result = findShellByNameOrId(actor, 'combat');
       expect(result).not.toBeNull();
-      expect(result!.shell.name).toBe('Combat Shell');
+      expect(result!.name).toBe('Combat Shell');
     });
 
-    it('should return null for no match', () => {
+    it('should return undefined for no match', () => {
       const result = findShellByNameOrId(actor, 'non-existent');
-      expect(result).toBeNull();
+      expect(result).toBeUndefined();
     });
   });
 });

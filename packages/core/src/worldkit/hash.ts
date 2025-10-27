@@ -14,11 +14,11 @@ export const hashUnsafeString = (unsafeName: string): string => {
   const normalized = unsafeName.toLowerCase().match(CONTIGUOUS_ALPHANUMERIC_REGEX)?.join('') || '';
 
   if (normalized.length === 0) {
-    throw new Error('Shell name must contain at least one alphanumeric character');
+    throw new Error('String must contain at least one alphanumeric character');
   }
 
   if (normalized.length > 50) {
-    throw new Error('Shell name too long (max 50 alphanumeric characters)');
+    throw new Error('String is too long (max 50 alphanumeric characters)');
   }
 
   // Fast hash function optimized for short strings

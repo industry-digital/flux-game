@@ -85,7 +85,7 @@ describe('hashUnsafeString', () => {
 
   describe('validation and error handling', () => {
     it('should throw error for empty strings', () => {
-      expect(() => hashUnsafeString('')).toThrow('Shell name must contain at least one alphanumeric character');
+      expect(() => hashUnsafeString('')).toThrow('String must contain at least one alphanumeric character');
     });
 
     it('should accept whitespace-only strings', () => {
@@ -94,12 +94,12 @@ describe('hashUnsafeString', () => {
     });
 
     it('should throw error for strings with only special characters', () => {
-      expect(() => hashUnsafeString('!@#$%^&*()')).toThrow('Shell name must contain at least one alphanumeric character');
+      expect(() => hashUnsafeString('!@#$%^&*()')).toThrow('String must contain at least one alphanumeric character');
     });
 
     it('should throw error for strings that are too long', () => {
       const longString = 'a'.repeat(51);
-      expect(() => hashUnsafeString(longString)).toThrow('Shell name too long (max 50 alphanumeric characters)');
+      expect(() => hashUnsafeString(longString)).toThrow('String is too long (max 50 alphanumeric characters)');
     });
 
     it('should accept strings at the 50 character limit', () => {

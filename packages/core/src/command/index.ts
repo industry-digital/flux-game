@@ -14,7 +14,7 @@ import { advanceReducer } from '~/command/ADVANCE';
 import { defendReducer } from '~/command/DEFEND';
 import { retreatReducer } from '~/command/RETREAT';
 import { targetReducer } from '~/command/TARGET';
-import { useWorkbenchReducer } from '~/command/USE_WORKBENCH';
+import { activateWorkbenchReducer } from '~/command/WORKBENCH_USE';
 import { equipReducer } from '~/command/EQUIP';
 import { PureReducer, TransformerContext } from '~/types/handler';
 import { CommandType } from '~/types/intent';
@@ -44,7 +44,7 @@ export const COMMAND_TRANSFORMERS: Partial<Record<CommandType, PureReducer<Trans
   [CommandType.DEFEND]: defendReducer,
   [CommandType.RETREAT]: retreatReducer,
   [CommandType.TARGET]: targetReducer,
-  [CommandType.USE_WORKBENCH]: useWorkbenchReducer,
+  [CommandType.WORKBENCH_USE]: activateWorkbenchReducer,
   [CommandType.EQUIP]: equipReducer,
   [CommandType.PARTY_INVITE]: partyInviteReducer,
   [CommandType.PARTY_INVITE_ACCEPT]: acceptPartyInvitationReducer,
@@ -83,7 +83,7 @@ export { ADVANCE, AdvanceCommand, AdvanceCommandArgs } from './ADVANCE';
 export { DEFEND, DefendCommand, DefendCommandArgs } from './DEFEND';
 export { RETREAT, RetreatCommand, RetreatCommandArgs } from './RETREAT';
 export { TARGET, TargetCommand, TargetCommandArgs } from './TARGET';
-export { USE_WORKBENCH, UseWorkbenchCommand, UseWorkbenchCommandArgs } from './USE_WORKBENCH';
+export { USE_WORKBENCH, UseWorkbenchCommand, UseWorkbenchCommandArgs } from './WORKBENCH_USE';
 export { EQUIP, EquipCommand, EquipCommandArgs } from './EQUIP';
 export { PARTY_INVITE, PartyInviteCommand, PartyInviteCommandArgs } from './PARTY_INVITE';
 export { PARTY_INVITE_ACCEPT, AcceptPartyInvitationCommand } from './PARTY_INVITE_ACCEPT';

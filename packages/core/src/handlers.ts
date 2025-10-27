@@ -26,7 +26,7 @@ import { RANGE } from '~/command/RANGE';
 import { RETREAT } from '~/command/RETREAT';
 import { STRIKE } from '~/command/STRIKE';
 import { TARGET } from '~/command/TARGET';
-import { USE_WORKBENCH } from '~/command/USE_WORKBENCH';
+import { USE_WORKBENCH } from '~/command/WORKBENCH_USE';
 
 /**
  * The Flux World Server literally spreads this array into the Transformation stage.

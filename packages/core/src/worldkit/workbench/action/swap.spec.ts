@@ -55,7 +55,7 @@ describe('SwapShellAction', () => {
       };
 
       const swapAction = createSwapShellAction(context, session);
-      const events = swapAction(actor, 'Combat Shell');
+      const events = swapAction(actor, secondShellId);
 
       expect(events).toHaveLength(1);
       const swapEvent = events[0] as ActorDidSwapShell;
@@ -99,7 +99,7 @@ describe('SwapShellAction', () => {
       const session = scenario.actors['flux:actor:test-actor'].hooks.session.session;
 
       const swapAction = createSwapShellAction(context, session);
-      const events = swapAction(actor, 'NonexistentShell');
+      const events = swapAction(actor, 'nonexistent-shell-id');
 
       expect(events).toHaveLength(0);
       expect(context.declareError).toHaveBeenCalled();
@@ -109,10 +109,9 @@ describe('SwapShellAction', () => {
       const scenario = useSimpleWorkbenchScenario(context);
       const actor = scenario.actors['flux:actor:test-actor'].actor;
       const session = scenario.actors['flux:actor:test-actor'].hooks.session.session;
-      const currentShell = actor.shells[actor.currentShell];
 
       const swapAction = createSwapShellAction(context, session);
-      const events = swapAction(actor, currentShell.name || actor.currentShell);
+      const events = swapAction(actor, actor.currentShell);
 
       expect(events).toHaveLength(0);
       expect(context.declareError).toHaveBeenCalled();
@@ -141,7 +140,7 @@ describe('SwapShellAction', () => {
       };
 
       const swapAction = createSwapShellAction(context, session);
-      const events = swapAction(actor, 'Combat Shell');
+      const events = swapAction(actor, 'shell-2');
 
       expect(events).toHaveLength(0);
       expect(context.declareError).toHaveBeenCalled();
@@ -175,7 +174,7 @@ describe('SwapShellAction', () => {
       const swapAction = createSwapShellAction(context, session, {
         undoStagedMutations: mockUndoAction
       });
-      const events = swapAction(actor, 'Combat Shell', true);
+      const events = swapAction(actor, secondShellId, true);
 
       expect(events).toHaveLength(2);
       expect(events[0].type).toBe(EventType.WORKBENCH_SHELL_MUTATIONS_UNDONE);
@@ -207,7 +206,7 @@ describe('SwapShellAction', () => {
       const swapAction = createSwapShellAction(context, session, {
         undoStagedMutations: mockUndoAction
       });
-      const events = swapAction(actor, 'Combat Shell', true);
+      const events = swapAction(actor, secondShellId, true);
 
       expect(events).toHaveLength(1);
       expect(events[0].type).toBe(EventType.ACTOR_DID_SWAP_SHELL);
@@ -263,7 +262,7 @@ describe('SwapShellAction', () => {
       const swapAction = createSwapShellAction(context, session, {
         undoStagedMutations: mockUndoAction
       });
-      const events = swapAction(actor, 'Combat Shell', true);
+      const events = swapAction(actor, 'shell-2', true);
 
       expect(mockUndoAction).toHaveBeenCalledWith(actor, expect.any(String));
       expect(events).toHaveLength(2);
@@ -305,7 +304,7 @@ describe('SwapShellAction', () => {
       }));
 
       const swapAction = createSwapShellAction(context, session);
-      const events = swapAction(actor, 'Combat Shell', false, 'custom-trace');
+      const events = swapAction(actor, secondShellId, false, 'custom-trace');
 
       expect(events).toHaveLength(1);
       const swapEvent = events[0] as ActorDidSwapShell;

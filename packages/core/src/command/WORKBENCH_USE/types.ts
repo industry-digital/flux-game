@@ -5,4 +5,4 @@ export type UseWorkbenchCommandArgs = {
   sessionId?: SessionURN;
 };
 
-export type UseWorkbenchCommand = ActorCommand<CommandType.USE_WORKBENCH, UseWorkbenchCommandArgs>;
+export type UseWorkbenchCommand = ActorCommand<CommandType.WORKBENCH_USE, UseWorkbenchCommandArgs>;
