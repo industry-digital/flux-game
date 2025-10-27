@@ -58,6 +58,7 @@ export const partyInviteReducer: Transformer<PartyInviteCommand> = withBasicWorl
       actor: invitee.id, // The invitee is the one receiving the invitation
       payload: {
         partyId: party.id,
+        inviterId: party.owner!,
         inviteeId: invitee.id,
       },
     });

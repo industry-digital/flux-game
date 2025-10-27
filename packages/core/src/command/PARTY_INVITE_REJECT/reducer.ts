@@ -30,6 +30,7 @@ export const rejectPartyInvitationReducer: Transformer<RejectPartyInvitationComm
         actor: rejecter.id,
         payload: {
           partyId: party.id,
+          inviterId: party.owner!,
           inviteeId: rejecter.id,
         }
       });

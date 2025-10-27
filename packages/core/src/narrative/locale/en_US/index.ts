@@ -62,6 +62,19 @@ import {
   narrateActorDidLoseInventoryAmmo,
 } from './inventory/ammo';
 
+import {
+  narrateActorDidCreateParty,
+  narrateActorDidDisbandParty,
+  narrateActorDidIssuePartyInvitation,
+  narrateActorDidReceivePartyInvitation,
+  narrateActorDidAcceptPartyInvitation,
+  narrateActorDidRejectPartyInvitation,
+  narrateActorDidJoinParty,
+  narrateActorDidLeaveParty,
+  narrateActorDidInspectParty,
+  narrateActorDidListPartyInvitations,
+} from './party';
+
 export const en_US: LanguageTemplates = {
   // Actor Events
   [EventType.ACTOR_WAS_CREATED]: narrateActorWasCreated,
@@ -123,14 +136,14 @@ export const en_US: LanguageTemplates = {
   [EventType.ACTOR_DID_GAIN_AMMO]: narrateActorDidGainInventoryAmmo,
   [EventType.ACTOR_DID_LOSE_AMMO]: narrateActorDidLoseInventoryAmmo,
   [EventType.ACTOR_DID_UNLOAD_WEAPON]: NOT_IMPLEMENTED,
-  [EventType.ACTOR_DID_CREATE_PARTY]: NOT_IMPLEMENTED,
-  [EventType.ACTOR_DID_DISBAND_PARTY]: NOT_IMPLEMENTED,
-  [EventType.ACTOR_DID_ISSUE_PARTY_INVITATION]: NOT_IMPLEMENTED,
-  [EventType.ACTOR_DID_RECEIVE_PARTY_INVITATION]: NOT_IMPLEMENTED,
-  [EventType.ACTOR_DID_ACCEPT_PARTY_INVITATION]: NOT_IMPLEMENTED,
-  [EventType.ACTOR_DID_REJECT_PARTY_INVITATION]: NOT_IMPLEMENTED,
-  [EventType.ACTOR_DID_JOIN_PARTY]: NOT_IMPLEMENTED,
-  [EventType.ACTOR_DID_LEAVE_PARTY]: NOT_IMPLEMENTED,
-  [EventType.ACTOR_DID_INSPECT_PARTY]: NOT_IMPLEMENTED,
-  [EventType.ACTOR_DID_LIST_PARTY_INVITATIONS]: NOT_IMPLEMENTED,
+  [EventType.ACTOR_DID_CREATE_PARTY]: narrateActorDidCreateParty,
+  [EventType.ACTOR_DID_DISBAND_PARTY]: narrateActorDidDisbandParty,
+  [EventType.ACTOR_DID_ISSUE_PARTY_INVITATION]: narrateActorDidIssuePartyInvitation,
+  [EventType.ACTOR_DID_RECEIVE_PARTY_INVITATION]: narrateActorDidReceivePartyInvitation,
+  [EventType.ACTOR_DID_ACCEPT_PARTY_INVITATION]: narrateActorDidAcceptPartyInvitation,
+  [EventType.ACTOR_DID_REJECT_PARTY_INVITATION]: narrateActorDidRejectPartyInvitation,
+  [EventType.ACTOR_DID_JOIN_PARTY]: narrateActorDidJoinParty,
+  [EventType.ACTOR_DID_LEAVE_PARTY]: narrateActorDidLeaveParty,
+  [EventType.ACTOR_DID_INSPECT_PARTY]: narrateActorDidInspectParty,
+  [EventType.ACTOR_DID_LIST_PARTY_INVITATIONS]: narrateActorDidListPartyInvitations,
 };

@@ -577,6 +577,7 @@ export type ActorDidDisbandPartyInput = AbstractWorldEventInput<
 export type PartyInvitationEventPayload = {
   partyId: PartyURN;
   inviteeId: ActorURN;
+  inviterId: ActorURN;
 };
 
 export type ActorDidIssuePartyInvitation = EventBase & ActorDidIssuePartyInvitationInput;

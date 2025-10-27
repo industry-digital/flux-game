@@ -37,6 +37,7 @@ export const acceptPartyInvitationReducer: Transformer<AcceptPartyInvitationComm
         actor: invitee.id,
         payload: {
           partyId: party.id,
+          inviterId: party.owner!,
           inviteeId: invitee.id,
         }
       });
