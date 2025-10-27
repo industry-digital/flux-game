@@ -10,6 +10,7 @@ import { Stat } from '~/types/entity/actor';
 export enum DamageType {
   /**
    * Bullets, arrows, most melee/martial weapons
+   * @deprecated Use SLASH, PIERCE, IMPACT instead
    */
   KINETIC = 'kinetic',
 
@@ -25,19 +26,16 @@ export enum DamageType {
 
   /**
    * Relating to any kind of kinetic energy penetrators, including spears, bullets, and railguns
-   * @deprecated Use KINETIC instead
    */
   PIERCE = 'kinetic:pierce',
 
   /**
    * Relating to any kind of slashing damage, including swords, knives, and claws
-   * @deprecated Use KINETIC instead
    */
   SLASH = 'kinetic:slash',
 
   /**
    * Relating to any kind of blunt force, including hammers, clubs, and fists
-   * @deprecated Use KINETIC instead
    */
   IMPACT = 'kinetic:impact',
 }

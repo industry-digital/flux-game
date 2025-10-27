@@ -30,6 +30,7 @@ import { getPrimaryDamageType } from '~/worldkit/combat/damage/damage-type';
 import { DamageType } from '~/types/damage';
 import { Locale, SchemaTranslation } from '~/types/i18n';
 import { TransformerContext } from '~/types/handler';
+import { WeaponSchema } from '~/types/schema/weapon';
 
 const HIS = 'his';
 const HER = 'her';
@@ -119,8 +120,8 @@ const getDamageTypeNarrative = (damageType: DamageType): DamageTypeNarrative => 
   return NARRATIVES_BY_DAMAGE_TYPE[damageType] ?? DEFAULT_DAMAGE_TYPE_NARRATIVE;
 };
 
-const narrateCleaveAttack = (context: any, actor: Actor, targets: Actor[], weapon: any, viewerActorId: ActorURN): string => {
-  const weaponName = getLocalizedSchemaTranslation(context, weapon);
+const narrateCleaveAttack = (context: any, actor: Actor, targets: Actor[], weapon: WeaponSchema, viewerActorId: ActorURN): string => {
+  const weaponName = getLocalizedSchemaTranslation(context, weapon.urn);
   const possessive = getPossessivePronoun(actor.gender);
   const primaryDamageType = getPrimaryDamageType(weapon);
 
