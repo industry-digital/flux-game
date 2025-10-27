@@ -13,18 +13,18 @@ import {
 import { TemplateFunction } from '~/types/narrative';
 import { ActorURN } from '~/types/taxonomy';
 
-export const renderActorCreatedNarrative: TemplateFunction<ActorWasCreated, ActorURN> = (context, event, recipientId) => {
+export const narrateActorWasCreated: TemplateFunction<ActorWasCreated, ActorURN> = (context, event, recipientId) => {
   const { world } = context;
   const actor = world.actors[event.actor!];
 
-  if (recipientId === event.actor) {
-    return `You have entered the world.`;
+  if (recipientId !== event.actor) {
+    return `${actor.name} arrived.`;
   }
 
-  return `${actor.name} has entered the world.`;
+  return '';
 };
 
-export const renderActorMaterializeNarrative: TemplateFunction<ActorDidMaterialize, ActorURN> = (context, event, recipientId) => {
+export const narrateActorDidMaterialize: TemplateFunction<ActorDidMaterialize, ActorURN> = (context, event, recipientId) => {
   const { world } = context;
   const actor = world.actors[event.actor!];
 
@@ -35,7 +35,7 @@ export const renderActorMaterializeNarrative: TemplateFunction<ActorDidMateriali
   return `${actor.name} materializes into existence.`;
 };
 
-export const renderActorDematerializeNarrative: TemplateFunction<ActorDidDematerialize, ActorURN> = (context, event, recipientId) => {
+export const narrateActorDidDematerialize: TemplateFunction<ActorDidDematerialize, ActorURN> = (context, event, recipientId) => {
   const { world } = context;
   const actor = world.actors[event.actor!];
 
@@ -46,7 +46,7 @@ export const renderActorDematerializeNarrative: TemplateFunction<ActorDidDemater
   return `${actor.name} fades from existence.`;
 };
 
-export const renderActorMoveNarrative: TemplateFunction<ActorDidMove, ActorURN> = (context, event, recipientId) => {
+export const narrateActorDidMove: TemplateFunction<ActorDidMove, ActorURN> = (context, event, recipientId) => {
   const { world } = context;
   const actor = world.actors[event.actor!];
   const destination = world.places[event.payload.destination];
@@ -58,7 +58,7 @@ export const renderActorMoveNarrative: TemplateFunction<ActorDidMove, ActorURN> 
   return `${actor.name} moves to ${destination?.name || 'an unknown location'}.`;
 };
 
-export const renderActorArriveNarrative: TemplateFunction<ActorDidArrive, ActorURN> = (context, event, recipientId) => {
+export const narrateActorDidArrive: TemplateFunction<ActorDidArrive, ActorURN> = (context, event, recipientId) => {
   const { world } = context;
   const actor = world.actors[event.actor!];
   const origin = world.places[event.payload.origin];
@@ -70,7 +70,7 @@ export const renderActorArriveNarrative: TemplateFunction<ActorDidArrive, ActorU
   return `${actor.name} arrives from ${origin.name}.`;
 };
 
-export const renderActorDepartNarrative: TemplateFunction<ActorDidDepart, ActorURN> = (context, event, recipientId) => {
+export const narrateActorDidDepart: TemplateFunction<ActorDidDepart, ActorURN> = (context, event, recipientId) => {
   const { world } = context;
   const actor = world.actors[event.actor!];
   const destination = world.places[event.payload.destination];
@@ -87,7 +87,7 @@ export const narrateActorDidLook: TemplateFunction<ActorDidLook, ActorURN> = (co
   return `narrateActorDidLook`;
 };
 
-export const renderSwapShellNarrative: TemplateFunction<ActorDidSwapShell, ActorURN> = (context, event, recipientId) => {
+export const narrateActorDidSwapShell: TemplateFunction<ActorDidSwapShell, ActorURN> = (context, event, recipientId) => {
   const { world } = context;
   const actor = world.actors[event.actor];
 
@@ -98,7 +98,7 @@ export const renderSwapShellNarrative: TemplateFunction<ActorDidSwapShell, Actor
   return `${actor.name} reconfigures their shell.`;
 };
 
-export const renderHelpFileNarrative: TemplateFunction<ActorDidOpenHelpFile, ActorURN> = (context, event, recipientId) => {
+export const narrateActorDidOpenHelpFile: TemplateFunction<ActorDidOpenHelpFile, ActorURN> = (context, event, recipientId) => {
   const { world } = context;
   const actor = world.actors[event.actor!];
   const helpFile = event.payload.helpFile;
@@ -108,28 +108,4 @@ export const renderHelpFileNarrative: TemplateFunction<ActorDidOpenHelpFile, Act
   }
 
   return `${actor.name} consults a help file.`;
-};
-
-export const renderSpendCurrencyNarrative: TemplateFunction<any, ActorURN> = (context, event, recipientId) => {
-  const { world } = context;
-  const actor = world.actors[event.actor!];
-  const { amount, currency } = event.payload;
-
-  if (recipientId === event.actor) {
-    return `You spend ${amount} ${currency}.`;
-  }
-
-  return `${actor.name} makes a transaction.`;
-};
-
-export const renderGainCurrencyNarrative: TemplateFunction<any, ActorURN> = (context, event, recipientId) => {
-  const { world } = context;
-  const actor = world.actors[event.actor!];
-  const { amount, currency } = event.payload;
-
-  if (recipientId === event.actor) {
-    return `You receive ${amount} ${currency}.`;
-  }
-
-  return `${actor.name} receives payment.`;
 };

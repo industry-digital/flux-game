@@ -4,66 +4,66 @@ import { NOT_IMPLEMENTED } from '~/narrative/stub';
 
 // Import all template functions
 import {
-  narrateActorDidAttack,
-  narrateActorDidDefend,
-  narrateActorDidMoveInCombat,
-  narrateActorDidAcquireTarget,
-  narrateActorDidDie,
-  narrateCombatTurnDidEnd,
-  narrateCombatTurnDidStart,
-  narrateCombatRoundDidStart,
-  narrateCombatRoundDidEnd,
-  narrateCombatSessionStarted,
-  narrateCombatSessionEnded,
-  narrateCombatSessionStatusDidChange,
-  renderWasAttackedNarrative,
-  // Note: Actor death and energy recovery are handled by combat events
-  narrateActorDidAssessRange,
+    narrateActorDidAttack,
+    narrateActorDidDefend,
+    narrateActorDidMoveInCombat,
+    narrateActorDidAcquireTarget,
+    narrateActorDidDie,
+    narrateCombatTurnDidEnd,
+    narrateCombatTurnDidStart,
+    narrateCombatRoundDidStart,
+    narrateCombatRoundDidEnd,
+    narrateCombatSessionStarted,
+    narrateCombatSessionEnded,
+    narrateCombatSessionStatusDidChange,
+    renderWasAttackedNarrative,
+    // Note: Actor death and energy recovery are handled by combat events
+    narrateActorDidAssessRange,
 } from './combat';
 
 import {
-  renderActorCreatedNarrative,
-  renderActorMaterializeNarrative,
-  renderActorDematerializeNarrative,
-  renderActorMoveNarrative,
-  renderActorArriveNarrative,
-  renderActorDepartNarrative,
-  renderSwapShellNarrative,
-  renderHelpFileNarrative,
-  narrateActorDidLook,
+    narrateActorWasCreated,
+    narrateActorDidMaterialize,
+    narrateActorDidDematerialize,
+    narrateActorDidMove,
+    narrateActorDidArrive,
+    narrateActorDidDepart,
+    narrateActorDidSwapShell,
+    narrateActorDidOpenHelpFile,
+    narrateActorDidLook,
 } from './actor';
 
 import {
-  renderPlaceCreatedNarrative,
-  renderWeatherChangeNarrative,
-  renderResourcesChangeNarrative,
+    renderPlaceCreatedNarrative,
+    renderWeatherChangeNarrative,
+    renderResourcesChangeNarrative,
 } from './world';
 
 import {
-  narrateWorkbenchSessionDidStart,
-  narrateWorkbenchSessionDidEnd,
-  narrateActorDidStageShellMutation,
-  narrateActorDidDiffShellMutations,
-  narrateActorDidUndoShellMutations,
-  narrateActorDidCommitShellMutations,
+    narrateWorkbenchSessionDidStart,
+    narrateWorkbenchSessionDidEnd,
+    narrateActorDidStageShellMutation,
+    narrateActorDidDiffShellMutations,
+    narrateActorDidUndoShellMutations,
+    narrateActorDidCommitShellMutations,
 } from './workbench';
 
 import {
-  narrateActorDidCompleteCurrencyTransaction,
+    narrateActorDidCompleteCurrencyTransaction,
 } from './currency';
 
 export const en_US: LanguageTemplates = {
   // Actor Events
-  [EventType.ACTOR_WAS_CREATED]: renderActorCreatedNarrative,
-  [EventType.ACTOR_DID_MATERIALIZE]: renderActorMaterializeNarrative,
-  [EventType.ACTOR_DID_DEMATERIALIZE]: renderActorDematerializeNarrative,
-  [EventType.ACTOR_DID_MOVE]: renderActorMoveNarrative,
-  [EventType.ACTOR_DID_ARRIVE]: renderActorArriveNarrative,
-  [EventType.ACTOR_DID_DEPART]: renderActorDepartNarrative,
+  [EventType.ACTOR_WAS_CREATED]: narrateActorWasCreated,
+  [EventType.ACTOR_DID_MATERIALIZE]: narrateActorDidMaterialize,
+  [EventType.ACTOR_DID_DEMATERIALIZE]: narrateActorDidDematerialize,
+  [EventType.ACTOR_DID_MOVE]: narrateActorDidMove,
+  [EventType.ACTOR_DID_ARRIVE]: narrateActorDidArrive,
+  [EventType.ACTOR_DID_DEPART]: narrateActorDidDepart,
   [EventType.ACTOR_DID_RECOVER_ENERGY]: NOT_IMPLEMENTED, // This event type doesn't exist
   [EventType.ACTOR_DID_COMPLETE_CURRENCY_TRANSACTION]: narrateActorDidCompleteCurrencyTransaction,
-  [EventType.ACTOR_DID_SWAP_SHELL]: renderSwapShellNarrative,
-  [EventType.ACTOR_DID_OPEN_HELPFILE]: renderHelpFileNarrative,
+  [EventType.ACTOR_DID_SWAP_SHELL]: narrateActorDidSwapShell,
+  [EventType.ACTOR_DID_OPEN_HELPFILE]: narrateActorDidOpenHelpFile,
   [EventType.ACTOR_DID_EQUIP_WEAPON]: NOT_IMPLEMENTED,
   [EventType.ACTOR_DID_UNEQUIP_WEAPON]: NOT_IMPLEMENTED,
 
