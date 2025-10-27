@@ -57,6 +57,11 @@ import {
   narrateActorDidCompleteCurrencyTransaction,
 } from './currency';
 
+import {
+  narrateActorDidGainInventoryAmmo,
+  narrateActorDidLoseInventoryAmmo,
+} from './inventory/ammo';
+
 export const en_US: LanguageTemplates = {
   // Actor Events
   [EventType.ACTOR_WAS_CREATED]: narrateActorWasCreated,
@@ -115,8 +120,8 @@ export const en_US: LanguageTemplates = {
   [EventType.ACTOR_DID_EXAMINE_COMPONENT]: narrateActorDidExamineComponent,
   [EventType.ACTOR_DID_LIST_INVENTORY_COMPONENTS]: NOT_IMPLEMENTED,
   [EventType.ACTOR_DID_LIST_INVENTORY_MATERIALS]: NOT_IMPLEMENTED,
-  [EventType.ACTOR_DID_GAIN_INVENTORY_AMMO]: NOT_IMPLEMENTED,
-  [EventType.ACTOR_DID_LOSE_INVENTORY_AMMO]: NOT_IMPLEMENTED,
+  [EventType.ACTOR_DID_GAIN_AMMO]: narrateActorDidGainInventoryAmmo,
+  [EventType.ACTOR_DID_LOSE_AMMO]: narrateActorDidLoseInventoryAmmo,
   [EventType.ACTOR_DID_UNLOAD_WEAPON]: NOT_IMPLEMENTED,
   [EventType.ACTOR_DID_FIRE_WEAPON]: NOT_IMPLEMENTED,
   [EventType.ACTOR_DID_CREATE_PARTY]: NOT_IMPLEMENTED,

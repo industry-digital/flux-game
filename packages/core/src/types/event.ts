@@ -123,8 +123,8 @@ export enum EventType {
   ACTOR_DID_LIST_INVENTORY_COMPONENTS = 'actor:inventory:components:listed',
   ACTOR_DID_LIST_INVENTORY_MATERIALS = 'actor:inventory:materials:listed',
   ACTOR_DID_COMPLETE_CURRENCY_TRANSACTION = 'actor:currency:transaction:completed',
-  ACTOR_DID_GAIN_INVENTORY_AMMO = 'actor:inventory:ammo:gained',
-  ACTOR_DID_LOSE_INVENTORY_AMMO = 'actor:inventory:ammo:lost',
+  ACTOR_DID_GAIN_AMMO = 'actor:inventory:ammo:gained',
+  ACTOR_DID_LOSE_AMMO = 'actor:inventory:ammo:lost',
   ACTOR_DID_LOAD_WEAPON = 'actor:weapon:loaded',
   ACTOR_DID_UNLOAD_WEAPON = 'actor:weapon:unloaded',
   ACTOR_DID_FIRE_WEAPON = 'actor:weapon:fired',
@@ -510,9 +510,9 @@ export type ActorDidCompleteCurrencyTransactionInput = AbstractWorldEventInput<
   }
 >;
 
-export type ActorDidGainInventoryAmmo = EventBase & ActorDidGainInventoryAmmoInput;
-export type ActorDidGainInventoryAmmoInput = AbstractWorldEventInput<
-  EventType.ACTOR_DID_GAIN_INVENTORY_AMMO,
+export type ActorDidGainAmmo = EventBase & ActorDidGainAmmoInput;
+export type ActorDidGainAmmoInput = AbstractWorldEventInput<
+  EventType.ACTOR_DID_GAIN_AMMO,
   {
     itemId: ItemURN;
     schema: AmmoSchemaURN;
@@ -521,9 +521,9 @@ export type ActorDidGainInventoryAmmoInput = AbstractWorldEventInput<
   }
 >;
 
-export type ActorDidLoseInventoryAmmo = EventBase & ActorDidLoseInventoryAmmoInput;
-export type ActorDidLoseInventoryAmmoInput = AbstractWorldEventInput<
-  EventType.ACTOR_DID_LOSE_INVENTORY_AMMO,
+export type ActorDidLoseAmmo = EventBase & ActorDidLoseAmmoInput;
+export type ActorDidLoseAmmoInput = AbstractWorldEventInput<
+  EventType.ACTOR_DID_LOSE_AMMO,
   {
     itemId: ItemURN;
     schema: AmmoSchemaURN;
@@ -651,14 +651,14 @@ export type WorldEventInput =
   | ActorDidDiffShellMutationsInput
   | ActorDidEquipWeaponInput
   | ActorDidExamineComponentInput
-  | ActorDidGainInventoryAmmoInput
+  | ActorDidGainAmmoInput
   | ActorDidInspectShellStatusInput
   | ActorDidListInventoryComponentsInput
   | ActorDidListInventoryMaterialsInput
   | ActorDidListShellComponentsInput
   | ActorDidListShellsInput
   | ActorDidLookInput
-  | ActorDidLoseInventoryAmmoInput
+  | ActorDidLoseAmmoInput
   | ActorDidMaterializeInput
   | ActorDidMountComponentInput
   | ActorDidMoveInCombatInput
