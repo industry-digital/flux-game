@@ -5,8 +5,6 @@ import {
   ActorDidDie,
   CombatTurnDidEnd,
   CombatTurnDidStart,
-  CombatRoundDidStart,
-  CombatRoundDidEnd,
   CombatSessionStarted,
   CombatSessionEnded,
   CombatSessionStatusDidChange,
@@ -469,14 +467,6 @@ export const narrateCombatTurnDidStart = createSystemPerspectiveTemplate<CombatT
   (event) => event.payload.turnActor,
   'Your turn begins.',
   (actorName) => `${actorName}'s turn begins.`
-);
-
-export const narrateCombatRoundDidStart = createSystemTemplate<CombatRoundDidStart>(
-  (context, event) => `Round ${event.payload.round} begins!`
-);
-
-export const narrateCombatRoundDidEnd = createSystemTemplate<CombatRoundDidEnd>(
-  (context, event) => `Round ${event.payload.round} ends.`
 );
 
 export const narrateCombatSessionStarted = createSystemTemplate<CombatSessionStarted>(

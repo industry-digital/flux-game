@@ -99,14 +99,6 @@ export enum EventType {
   ACTOR_DID_ASSESS_RANGE = 'actor:range:acquired',
   ACTOR_DID_MOVE_IN_COMBAT = 'actor:combat:moved',
   ACTOR_WAS_ATTACKED = 'actor:attack:received',
-  /**
-   * @deprecated Use `COMBAT_TURN_DID_END` instead
-   */
-  COMBAT_ROUND_DID_END = 'combat:round:ended',
-  /**
-   * @deprecated Use `COMBAT_TURN_DID_START` instead
-   */
-  COMBAT_ROUND_DID_START = 'combat:round:started',
   COMBAT_SESSION_DID_END = 'combat:session:ended',
   COMBAT_SESSION_DID_START = 'combat:session:started',
   COMBAT_SESSION_STATUS_DID_CHANGE = 'combat:session:status:changed',
@@ -337,37 +329,6 @@ export type CombatTurnDidEndInput = AbstractWorldEventInput<
     turn: number;
     turnActor: ActorURN;
     energy: CombatantResourceChange;
-  },
-  WellKnownActor.SYSTEM
->;
-
-/**
- * @deprecated Use `COMBAT_TURN_DID_START` instead
- */
-export type CombatRoundDidStart = EventBase & CombatRoundDidStartInput;
-/**
- * @deprecated Use `COMBAT_TURN_DID_START` instead
- */
-export type CombatRoundDidStartInput = AbstractWorldEventInput<
-  EventType.COMBAT_ROUND_DID_START,
-  {
-    sessionId: SessionURN;
-    round: number;
-  },
-  WellKnownActor.SYSTEM
->;
-
-/**
- * @deprecated Use `COMBAT_TURN_DID_END` instead
- */
-export type CombatRoundDidEnd = EventBase & CombatRoundDidEndInput;
-/**
- * @deprecated Use `COMBAT_TURN_DID_END` instead
- */
-export type CombatRoundDidEndInput = AbstractWorldEventInput<
-  EventType.COMBAT_ROUND_DID_END,
-  {
-    round: number;
   },
   WellKnownActor.SYSTEM
 >;
@@ -711,8 +672,6 @@ export type WorldEventInput =
   | ActorDidUnmountComponentInput
   | ActorWasAttackedInput
   | ActorWasCreatedInput
-  | CombatRoundDidEndInput
-  | CombatRoundDidStartInput
   | CombatSessionEndedInput
   | CombatSessionStartedInput
   | CombatSessionStatusDidChangeInput

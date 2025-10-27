@@ -366,48 +366,6 @@ describe.each([
     });
   });
 
-  describe('Combat Round Events', () => {
-    it('should render round start narrative', () => {
-      const event: WorldEvent = {
-        id: 'test-event',
-        type: EventType.COMBAT_ROUND_DID_START,
-        location: 'flux:place:test',
-        actor: 'flux:actor:system',
-        trace: 'test-trace',
-        ts: Date.now(),
-        payload: {
-          round: 2,
-        },
-      };
-
-      const narrative = callTemplate(context, event, ALICE_ID);
-
-      expect(narrative).toBeTruthy();
-      expect(typeof narrative).toBe('string');
-      expect(narrative.length).toBeGreaterThan(0);
-    });
-
-    it('should render round end narrative', () => {
-      const event: WorldEvent = {
-        id: 'test-event',
-        type: EventType.COMBAT_ROUND_DID_END,
-        location: 'flux:place:test',
-        actor: 'flux:actor:system',
-        trace: 'test-trace',
-        ts: Date.now(),
-        payload: {
-          round: 2,
-        },
-      };
-
-      const narrative = callTemplate(context, event, ALICE_ID);
-
-      expect(narrative).toBeTruthy();
-      expect(typeof narrative).toBe('string');
-      expect(narrative.length).toBeGreaterThan(0);
-    });
-  });
-
   describe('Narrative Quality', () => {
     it('should generate non-empty narratives for valid events', () => {
       const event = createActorDidAttackEvent((event) => ({

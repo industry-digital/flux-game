@@ -4,52 +4,50 @@ import { NOT_IMPLEMENTED } from '~/narrative/stub';
 
 // Import all template functions
 import {
-    narrateActorDidAttack,
-    narrateActorDidDefend,
-    narrateActorDidMoveInCombat,
-    narrateActorDidAcquireTarget,
-    narrateActorDidDie,
-    narrateCombatTurnDidEnd,
-    narrateCombatTurnDidStart,
-    narrateCombatRoundDidStart,
-    narrateCombatRoundDidEnd,
-    narrateCombatSessionStarted,
-    narrateCombatSessionEnded,
-    narrateCombatSessionStatusDidChange,
-    renderWasAttackedNarrative,
-    // Note: Actor death and energy recovery are handled by combat events
-    narrateActorDidAssessRange,
+  narrateActorDidAttack,
+  narrateActorDidDefend,
+  narrateActorDidMoveInCombat,
+  narrateActorDidAcquireTarget,
+  narrateActorDidDie,
+  narrateCombatTurnDidEnd,
+  narrateCombatTurnDidStart,
+  narrateCombatSessionStarted,
+  narrateCombatSessionEnded,
+  narrateCombatSessionStatusDidChange,
+  renderWasAttackedNarrative,
+  // Note: Actor death and energy recovery are handled by combat events
+  narrateActorDidAssessRange,
 } from './combat';
 
 import {
-    narrateActorWasCreated,
-    narrateActorDidMaterialize,
-    narrateActorDidDematerialize,
-    narrateActorDidMove,
-    narrateActorDidArrive,
-    narrateActorDidDepart,
-    narrateActorDidSwapShell,
-    narrateActorDidOpenHelpFile,
-    narrateActorDidLook,
+  narrateActorWasCreated,
+  narrateActorDidMaterialize,
+  narrateActorDidDematerialize,
+  narrateActorDidMove,
+  narrateActorDidArrive,
+  narrateActorDidDepart,
+  narrateActorDidSwapShell,
+  narrateActorDidOpenHelpFile,
+  narrateActorDidLook,
 } from './actor';
 
 import {
-    renderPlaceCreatedNarrative,
-    renderWeatherChangeNarrative,
-    renderResourcesChangeNarrative,
+  renderPlaceCreatedNarrative,
+  renderWeatherChangeNarrative,
+  renderResourcesChangeNarrative,
 } from './world';
 
 import {
-    narrateWorkbenchSessionDidStart,
-    narrateWorkbenchSessionDidEnd,
-    narrateActorDidStageShellMutation,
-    narrateActorDidDiffShellMutations,
-    narrateActorDidUndoShellMutations,
-    narrateActorDidCommitShellMutations,
+  narrateWorkbenchSessionDidStart,
+  narrateWorkbenchSessionDidEnd,
+  narrateActorDidStageShellMutation,
+  narrateActorDidDiffShellMutations,
+  narrateActorDidUndoShellMutations,
+  narrateActorDidCommitShellMutations,
 } from './workbench';
 
 import {
-    narrateActorDidCompleteCurrencyTransaction,
+  narrateActorDidCompleteCurrencyTransaction,
 } from './currency';
 
 export const en_US: LanguageTemplates = {
@@ -81,8 +79,6 @@ export const en_US: LanguageTemplates = {
   [EventType.ACTOR_DID_ASSESS_RANGE]: narrateActorDidAssessRange,
   [EventType.COMBAT_TURN_DID_START]: narrateCombatTurnDidStart,
   [EventType.COMBAT_TURN_DID_END]: narrateCombatTurnDidEnd,
-  [EventType.COMBAT_ROUND_DID_START]: narrateCombatRoundDidStart,
-  [EventType.COMBAT_ROUND_DID_END]: narrateCombatRoundDidEnd,
   [EventType.COMBAT_SESSION_DID_START]: narrateCombatSessionStarted,
   [EventType.COMBAT_SESSION_DID_END]: narrateCombatSessionEnded,
   [EventType.COMBAT_SESSION_STATUS_DID_CHANGE]: narrateCombatSessionStatusDidChange,
