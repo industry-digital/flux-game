@@ -192,9 +192,6 @@ export type CombatSessionData = {
 
 export type CombatSession = AbstractSession<SessionStrategy.COMBAT, CombatSessionData>;
 
-/**
- * @deprecated Use `string` instead
- */
 export enum Team {
   ALPHA = 'alpha',
   BRAVO = 'bravo',
