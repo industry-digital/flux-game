@@ -118,9 +118,7 @@ describe('Defend Method', () => {
       const result = defend();
 
       expect(defenderCombatant.ap.eff.cur).toBe(0);
-      expect(result).toHaveLength(1);
-      const defendEvent = extractFirstEventOfType<ActorDidDefend>(result, EventType.ACTOR_DID_DEFEND)!;
-      expect(extractApCost(defendEvent.payload.cost)).toBe(0);
+      expect(result).toHaveLength(0); // No event declared when AP investment is below minimum threshold
     });
   });
 

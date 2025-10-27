@@ -6,6 +6,7 @@ import { createWorldEvent } from '~/worldkit/event';
 import { deductAp } from '~/worldkit/combat/combatant';
 import { createDoneMethod, DoneMethod } from '~/worldkit/combat/action/done';
 import { createDefendCost } from '~/worldkit/combat/tactical-cost';
+import { MIN_AP_INCREMENT } from '~/worldkit/combat/tactical-rounding';
 
 type DefendOptions = {
   autoDone?: boolean;
@@ -43,20 +44,26 @@ export function createDefendMethod (
     // Use tactical cost factory for defend action (uses all remaining AP)
     const cost: ActionCost = createDefendCostImpl(combatant.ap.eff.cur);
 
+    // Check if AP investment meets minimum threshold for meaningful defense
+    const apInvested = cost.ap!;
+    const isEventWorthy = apInvested >= MIN_AP_INCREMENT;
+
     // Apply AP cost (already tactically calculated)
     deductAp(combatant, cost.ap!);
 
+    // Only declare event if AP investment is appreciable (>= 0.1 AP)
+    if (isEventWorthy) {
+      const defendEvent = createWorldEvent({
+        type: EventType.ACTOR_DID_DEFEND,
+        location: actor.location,
+        trace: trace,
+        actor: actor.id,
+        payload: { cost },
+      });
 
-    const defendEvent = createWorldEvent({
-      type: EventType.ACTOR_DID_DEFEND,
-      location: actor.location,
-      trace: trace,
-      actor: actor.id,
-      payload: { cost },
-    });
-
-    context.declareEvent(defendEvent);
-    events.push(defendEvent);
+      context.declareEvent(defendEvent);
+      events.push(defendEvent);
+    }
 
     // Auto-advance turn if requested
     if (autoDone && done) {

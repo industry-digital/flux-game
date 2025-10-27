@@ -17,6 +17,11 @@
 export const TACTICAL_AP_PRECISION_FACTOR = 10;
 
 /**
+ * Minimum AP cost.  This is the smallest increment of AP that can be represented.
+ */
+export const MIN_AP_INCREMENT = 1 / TACTICAL_AP_PRECISION_FACTOR;
+
+/**
  * Round AP cost up to nearest 0.1 AP
  *
  * This ensures players can never exploit fractional AP costs and creates
