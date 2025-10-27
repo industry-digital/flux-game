@@ -1,6 +1,7 @@
 import { Actor, InventoryItem } from '~/types/entity/actor';
 import { Item } from '~/types/entity/item';
 import { Container } from '~/types/entity/container';
+import { Shell } from '~/types/entity/shell';
 import { EntityType } from '~/types/entity/entity';
 import { SchemaManager } from '~/worldkit/schema/manager';
 import { PhysicalEntitySchema } from '~/types/schema/schema';
@@ -378,6 +379,7 @@ export type MassApi = {
   computeInventoryMass: (inventory: Record<string, InventoryItem>) => number;
   computeEquipmentMass: (equipment: Record<string, Item>) => number;
   computeCombatMass: (actor: Actor) => number;
+  computeShellMass: (shell: Shell) => number;
 
   // Legacy compatibility - maps to computeMass for backward compatibility
   computeEntityMass: <T extends PhysicalEntity>(entity: T) => number;
@@ -534,6 +536,15 @@ export function createMassApi(
   }
 
   /**
+   * Compute shell mass (base shell mass + equipment + inventory)
+   * Shell mass computation is simpler than Actor since it doesn't need full dependency resolution
+   */
+  function computeShellMass(shell: Shell): number {
+    // Shell base mass is same as actor base mass
+    return ACTOR_BASE_MASS + computeInventoryMass(shell.inventory.items);
+  }
+
+  /**
    * Legacy compatibility method - maps to computeMass
    * Maintains backward compatibility with old MassComputer interface
    */
@@ -553,6 +564,7 @@ export function createMassApi(
     computeInventoryMass,
     computeEquipmentMass,
     computeCombatMass,
+    computeShellMass,
     computeEntityMass,
   };
 }

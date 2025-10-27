@@ -6,6 +6,7 @@ import {
   ActorDidUndoShellMutations,
   ActorDidCommitShellMutations,
   EventType,
+  ActorDidListShells,
 } from '~/types/event';
 import { ShellMutation, ShellMutationType, StatMutation, StatMutationOperation } from '~/types/workbench';
 import { ShellStat, Stat } from '~/types/entity/actor';
@@ -216,4 +217,21 @@ export function createComponentMutation(): ShellMutation {
     type: ShellMutationType.COMPONENT,
     // Add component-specific fields as needed
   } as ShellMutation;
+}
+
+export function createActorDidListShellsEvent(
+  transform: EventTransform<ActorDidListShells> = identity,
+  deps: CombatEventFactoryDependencies = DEFAULT_COMBAT_EVENT_FACTORY_DEPS
+): ActorDidListShells {
+  const { createWorldEvent } = deps;
+
+  const baseEvent = createWorldEvent({
+    type: EventType.ACTOR_DID_LIST_SHELLS,
+    location: DEFAULT_LOCATION,
+    actor: ALICE_ID,
+    trace: DEFAULT_TRACE,
+    payload: {},
+  }) as ActorDidListShells;
+
+  return transform(baseEvent);
 }

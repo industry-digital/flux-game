@@ -341,8 +341,11 @@ export const narrateActorDidUnmountComponent: TemplateFunction<ActorDidUnmountCo
   return `${actor.name} unmounts a component from their shell.`;
 };
 
+const ACTIVE_SHELL_INDICATOR = '✓';
+
 /**
  * Narrative for when an actor lists their available shells
+ * Single-pass iteration over shells using for...in (zero-allocation)
  */
 export const narrateActorDidListShells: TemplateFunction<ActorDidListShells, ActorURN> = (context, event, recipientId) => {
   const { world } = context;
@@ -352,19 +355,73 @@ export const narrateActorDidListShells: TemplateFunction<ActorDidListShells, Act
     return '';
   }
 
-  const shellCount = Object.keys(event.payload.shells).length;
-
-  if (recipientId === event.actor) {
-    if (shellCount === 0) {
-      return 'You have no shells available.';
-    }
-    if (shellCount === 1) {
-      return 'You review your shell.';
-    }
-    return `You review your ${shellCount} shells.`;
+  // Only show to the shell owner
+  if (recipientId !== event.actor) {
+    return '';
   }
 
-  return `${actor.name} reviews their shell configurations.`;
+  // Check if actor has any shells (zero-allocation check)
+  let hasShells = false;
+  for (const shellId in actor.shells) {
+    hasShells = true;
+    break;
+  }
+
+  if (!hasShells) {
+    return 'You have no shells available.';
+  }
+
+  // Create mass API for shell mass calculations
+  const massApi = context.mass;
+
+  // Build table header
+  let result = 'SHELL INVENTORY\n\n';
+  result += 'ID NAME                 POW FIN RES  MASS\n';
+  result += '-- -------------------- --- --- --- ------\n';
+
+  // Single-pass iteration over shells using for...in (zero-allocation)
+  let shellCounter = 0;
+  for (const shellId in actor.shells) {
+    shellCounter++;
+    const shell = actor.shells[shellId];
+    const isActive = shell.id === actor.currentShell;
+    const shellName = shell.name || 'Unnamed Shell';
+    const powStat = shell.stats[Stat.POW]?.nat || 0;
+    const finStat = shell.stats[Stat.FIN]?.nat || 0;
+    const resStat = shell.stats[Stat.RES]?.nat || 0;
+
+    // Calculate shell mass (equipment + base shell mass) and convert to kg
+    const shellMassKg = massApi.computeShellMass(shell) / 1000;
+
+    // Format shell ID as simple counter (right-aligned in 2-char column)
+    const displayShellId = shellCounter.toString().padStart(2);
+
+    // Format shell name (truncate if needed)
+    const displayName = shellName.length > 20 ? shellName.substring(0, 17) + '...' : shellName;
+
+    // Format individual stats (right-aligned in 3-char columns, max 999)
+    const powDisplay = powStat.toFixed(0).padStart(3);
+    const finDisplay = finStat.toFixed(0).padStart(3);
+    const resDisplay = resStat.toFixed(0).padStart(3);
+
+    // Format mass (right-aligned in 6-char column, max 999.9kg)
+    const massDisplay = `${shellMassKg.toFixed(1)}kg`.padStart(6);
+
+    // Add active shell indicator
+    const activeIndicator = isActive ? ACTIVE_SHELL_INDICATOR + ' ' : '  ';
+
+    result += activeIndicator +
+              displayShellId + ' ' +
+              displayName.padEnd(20) + ' ' +
+              powDisplay + ' ' +
+              finDisplay + ' ' +
+              resDisplay + ' ' +
+              massDisplay + '\n';
+  }
+
+  result += '\n' + ACTIVE_SHELL_INDICATOR + ' Currently active shell';
+
+  return result;
 };
 
 /**

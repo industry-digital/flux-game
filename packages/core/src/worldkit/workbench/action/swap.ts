@@ -27,14 +27,14 @@ export const createSwapShellAction = (
     undoStagedMutations = createUndoStagedMutationsAction(context, session),
   }: SwapShellActionDependencies = DEFAULT_SWAP_DEPS,
 ): SwapShellAction => {
-  const { declareError } = context;
+  const { declareError, declareEvent } = context;
 
   return function swapShell(
     actor: Actor,
     shellId: string,
     force: boolean = false,
     trace: string = context.uniqid(),
-    output: WorldEvent[] = [], // Optional output array to collect events
+    output: WorldEvent[] = [], // Consumers may opt into zero-allocation
   ): WorldEvent[] {
     output.length = 0;
 
@@ -84,6 +84,8 @@ export const createSwapShellAction = (
         sessionId: session.id,
       },
     });
+
+    declareEvent(shellSwapEvent);
 
     output.push(shellSwapEvent);
 

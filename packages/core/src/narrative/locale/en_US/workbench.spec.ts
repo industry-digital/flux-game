@@ -8,12 +8,13 @@ import {
   createActorDidDiffShellMutationsEvent,
   createActorDidUndoShellMutationsEvent,
   createActorDidCommitShellMutationsEvent,
+  createActorDidListShellsEvent,
   createStatMutation,
 } from '~/testing/event/factory/workbench';
 import { ShellMutationType, StatMutationOperation } from '~/types/workbench';
 import { Gender, Stat } from '~/types/entity/actor';
 import { ActorURN } from '~/types/taxonomy';
-import { ALICE_ID, BOB_ID, CHARLIE_ID } from '~/testing/constants';
+import { ALICE_ID, BOB_ID, CHARLIE_ID, DAVID_ID } from '~/testing/constants';
 import {
   withObjectSerializationValidation,
   withDebuggingArtifactValidation,
@@ -31,10 +32,10 @@ import {
   narrateActorDidDiffShellMutations,
   narrateActorDidUndoShellMutations,
   narrateActorDidCommitShellMutations,
+  narrateActorDidListShells,
 } from './workbench';
 
 const OBSERVER_ID: ActorURN = 'flux:actor:test:observer';
-const DAVID_ID: ActorURN = 'flux:actor:test:david';
 
 describe('English Workbench Narratives - Snapshot Tests', () => {
   let context: ReturnType<typeof createTransformerContext>;
@@ -458,6 +459,168 @@ describe('English Workbench Narratives - Snapshot Tests', () => {
     });
   });
 
+  describe('narrateActorDidListShells', () => {
+    it('should render exact shell listing from actor perspective with multiple shells', () => {
+      const event = createActorDidListShellsEvent((e) => ({
+        ...e,
+        actor: ALICE_ID,
+      }));
+
+      const narrative = narrateActorDidListShells(context, event, ALICE_ID);
+      expect(narrative).toContain('SHELL INVENTORY');
+      expect(narrative).toContain('ID NAME                 POW FIN RES  MASS');
+      expect(narrative).toContain('-- -------------------- --- --- --- ------');
+      expect(narrative).toContain('✓ Currently active shell');
+      // Should show Alice's shell with her stats (40/40/40)
+      expect(narrative).toMatch(/✓.*40.*40.*40/);
+    });
+
+    it('should render exact shell listing from actor perspective with single shell', () => {
+      const event = createActorDidListShellsEvent((e) => ({
+        ...e,
+        actor: BOB_ID,
+      }));
+
+      const narrative = narrateActorDidListShells(context, event, BOB_ID);
+      expect(narrative).toContain('SHELL INVENTORY');
+      expect(narrative).toContain('ID NAME                 POW FIN RES  MASS');
+      // Should show Bob's shell with his stats (25/25/25)
+      expect(narrative).toMatch(/✓.*25.*25.*25/);
+      expect(narrative).toContain('✓ Currently active shell');
+    });
+
+    it('should show active shell indicator correctly', () => {
+      const event = createActorDidListShellsEvent((e) => ({
+        ...e,
+        actor: ALICE_ID,
+      }));
+
+      const narrative = narrateActorDidListShells(context, event, ALICE_ID);
+      // Should have exactly one active shell marked with ✓ in the data rows (exclude footer)
+      const lines = narrative.split('\n');
+      const dataRows = lines.filter(line =>
+        line.startsWith('✓ ') &&
+        !line.includes('Currently active shell') // Exclude footer
+      );
+      expect(dataRows).toHaveLength(1);
+    });
+
+    it('should format stats correctly in individual columns', () => {
+      const event = createActorDidListShellsEvent((e) => ({
+        ...e,
+        actor: DAVID_ID, // David has stats 60/15/45
+      }));
+
+      const narrative = narrateActorDidListShells(context, event, DAVID_ID);
+      // Should show David's shell stats right-aligned in 3-char columns
+      expect(narrative).toMatch(/✓.*\s+60\s+15\s+45\s+/);
+    });
+
+    it('should format mass correctly', () => {
+      const event = createActorDidListShellsEvent((e) => ({
+        ...e,
+        actor: ALICE_ID,
+      }));
+
+      const narrative = narrateActorDidListShells(context, event, ALICE_ID);
+      // Should show mass in kg format, right-aligned
+      expect(narrative).toMatch(/\d+\.\d+kg$/m);
+    });
+
+    it('should truncate long shell names correctly', () => {
+      // Create a shell with a very long name to test truncation
+      const actor = context.world.actors[ALICE_ID];
+      const shellId = Object.keys(actor.shells)[0];
+      actor.shells[shellId].name = 'This is a very long shell name that should be truncated';
+
+      const event = createActorDidListShellsEvent((e) => ({
+        ...e,
+        actor: ALICE_ID,
+      }));
+
+      const narrative = narrateActorDidListShells(context, event, ALICE_ID);
+      expect(narrative).toContain('This is a very lo...');
+    });
+
+    it('should handle shells with no name (show "Unnamed Shell")', () => {
+      // Remove the name from Alice's shell
+      const actor = context.world.actors[ALICE_ID];
+      const shellId = Object.keys(actor.shells)[0];
+      delete actor.shells[shellId].name;
+
+      const event = createActorDidListShellsEvent((e) => ({
+        ...e,
+        actor: ALICE_ID,
+      }));
+
+      const narrative = narrateActorDidListShells(context, event, ALICE_ID);
+      expect(narrative).toContain('Unnamed Shell');
+    });
+
+    it('should display shell IDs as simple counters', () => {
+      const event = createActorDidListShellsEvent((e) => ({
+        ...e,
+        actor: ALICE_ID,
+      }));
+
+      const narrative = narrateActorDidListShells(context, event, ALICE_ID);
+      // Should show simple counter ID (right-aligned)
+      expect(narrative).toMatch(/✓\s+1\s/);
+      expect(narrative).not.toContain('flux:');
+    });
+
+    it('should return empty string from observer perspective', () => {
+      const event = createActorDidListShellsEvent((e) => ({
+        ...e,
+        actor: ALICE_ID,
+      }));
+
+      const narrative = narrateActorDidListShells(context, event, OBSERVER_ID);
+      expect(narrative).toBe('');
+    });
+
+    it('should return "no shells available" message when actor has no shells', () => {
+      // Remove all shells from Alice
+      const actor = context.world.actors[ALICE_ID];
+      actor.shells = {};
+
+      const event = createActorDidListShellsEvent((e) => ({
+        ...e,
+        actor: ALICE_ID,
+      }));
+
+      const narrative = narrateActorDidListShells(context, event, ALICE_ID);
+      expect(narrative).toBe('You have no shells available.');
+    });
+
+    it('should return empty string for missing actor', () => {
+      const event = createActorDidListShellsEvent((e) => ({
+        ...e,
+        actor: 'flux:actor:nonexistent' as ActorURN,
+      }));
+
+      const narrative = narrateActorDidListShells(context, event, OBSERVER_ID);
+      expect(narrative).toBe('');
+    });
+
+    it('should log actual shell listing output for inspection', () => {
+      const event = createActorDidListShellsEvent((e) => ({
+        ...e,
+        actor: ALICE_ID,
+      }));
+
+      const narrative = narrateActorDidListShells(context, event, ALICE_ID);
+
+      console.log('\n=== SHELL LISTING OUTPUT ===');
+      console.log(narrative);
+      console.log('=== END SHELL LISTING ===\n');
+
+      // Basic validation to ensure test passes
+      expect(narrative).toContain('SHELL INVENTORY');
+      expect(narrative).toContain('✓ Currently active shell');
+    });
+  });
+
   describe('Error handling', () => {
     it('should return empty string for missing actor in session start', () => {
       const event = createWorkbenchSessionDidStartEvent((e) => ({
@@ -647,6 +810,58 @@ describe('English Workbench Narratives - Snapshot Tests', () => {
         perspectives.forEach(perspective => {
           withNarrativeQuality(narrateActorDidCommitShellMutations, context, event, perspective)();
         });
+      });
+    });
+
+    describe('narrateActorDidListShells - Quality validation', () => {
+      it('should pass quality validation for shell listing narratives', () => {
+        const event = createActorDidListShellsEvent((e) => ({
+          ...e,
+          actor: ALICE_ID,
+        }));
+
+        // Only test actor perspective - observer intentionally returns empty string for privacy
+        withNarrativeQuality(narrateActorDidListShells, context, event, ALICE_ID)();
+      });
+
+      it('should not contain [object Object] in shell listing narratives', () => {
+        const event = createActorDidListShellsEvent((e) => ({
+          ...e,
+          actor: ALICE_ID,
+        }));
+
+        const perspectives = [ALICE_ID, OBSERVER_ID];
+        perspectives.forEach(perspective => {
+          withObjectSerializationValidation(narrateActorDidListShells, context, event, perspective)();
+        });
+      });
+
+      it('should generate different narratives for different perspectives', () => {
+        const event = createActorDidListShellsEvent((e) => ({
+          ...e,
+          actor: ALICE_ID,
+        }));
+
+        // Actor should see shell listing, observer should see empty string
+        const actorNarrative = narrateActorDidListShells(context, event, ALICE_ID);
+        const observerNarrative = narrateActorDidListShells(context, event, OBSERVER_ID);
+
+        expect(actorNarrative).not.toBe(observerNarrative);
+        expect(actorNarrative).toContain('SHELL INVENTORY');
+        expect(observerNarrative).toBe('');
+      });
+
+      it('should pass comprehensive quality validation with no shells', () => {
+        // Remove all shells from Alice
+        const actor = context.world.actors[ALICE_ID];
+        actor.shells = {};
+
+        const event = createActorDidListShellsEvent((e) => ({
+          ...e,
+          actor: ALICE_ID,
+        }));
+
+        withNarrativeQuality(narrateActorDidListShells, context, event, ALICE_ID)();
       });
     });
 

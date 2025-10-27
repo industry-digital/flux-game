@@ -1,15 +1,14 @@
 import { PureReducer, TransformerContext } from '~/types/handler';
-import { SwapShellCommand } from './types';
+import { ListShellsCommand } from './types';
 import { createWorkbenchSessionApi } from '~/worldkit/workbench/session/session';
 import { withBasicWorldStateValidation } from '~/command/validation';
 import { ErrorCode } from '~/types/error';
-import { findShellByNameOrId } from '~/worldkit/entity/actor/shell';
-import { createSwapShellAction } from '~/worldkit/workbench/action/swap';
 import { WorldEvent } from '~/types/event';
+import { createListShellsAction } from '~/worldkit/workbench/action/list';
 
-const PREALLOCATED_EVENTS: WorldEvent[] = [];
+const PREALLOCATED_WORLD_EVENTS: WorldEvent[] = [];
 
-export const swapShellReducer: PureReducer<TransformerContext, SwapShellCommand> = withBasicWorldStateValidation(
+export const listShellsReducer: PureReducer<TransformerContext, ListShellsCommand> = withBasicWorldStateValidation(
   (context, command) => {
     const actor = context.world.actors[command.actor];
 
@@ -26,14 +25,9 @@ export const swapShellReducer: PureReducer<TransformerContext, SwapShellCommand>
       return context;
     }
 
-    const shell = findShellByNameOrId(actor, command.args.targetShellNameOrId);
-    if (!shell) {
-      context.declareError(ErrorCode.INVALID_TARGET, command.id);
-      return context;
-    }
+    const listShellsAction = createListShellsAction(context, session);
 
-    const swapAction = createSwapShellAction(context, session);
-    swapAction(actor, shell.id, false, command.id, PREALLOCATED_EVENTS);
+    listShellsAction(actor, command.id, PREALLOCATED_WORLD_EVENTS);
 
     return context;
   }

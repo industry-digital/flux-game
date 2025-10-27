@@ -422,10 +422,7 @@ export type ActorDidOpenHelpFileInput = AbstractWorldEventInput<
 // New workbench events
 export type ActorDidListShells = EventBase & ActorDidListShellsInput;
 export type ActorDidListShellsInput = AbstractWorldEventInput<
-  EventType.ACTOR_DID_LIST_SHELLS,
-  {
-    shells: Record<string, any>; // TODO: Replace `any` with a discrete type
-  }
+  EventType.ACTOR_DID_LIST_SHELLS
 >;
 
 export type ActorDidInspectShellStatus = EventBase & ActorDidInspectShellStatusInput;
