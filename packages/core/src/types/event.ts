@@ -123,6 +123,7 @@ export enum EventType {
   ACTOR_DID_LIST_INVENTORY_COMPONENTS = 'actor:inventory:components:listed',
   ACTOR_DID_LIST_INVENTORY_MATERIALS = 'actor:inventory:materials:listed',
   ACTOR_DID_COMPLETE_CURRENCY_TRANSACTION = 'actor:currency:transaction:completed',
+  ACTOR_DID_RENAME_SHELL = 'actor:shell:renamed',
   ACTOR_DID_GAIN_AMMO = 'actor:inventory:ammo:gained',
   ACTOR_DID_LOSE_AMMO = 'actor:inventory:ammo:lost',
   ACTOR_DID_LOAD_WEAPON = 'actor:weapon:loaded',

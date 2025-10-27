@@ -68,8 +68,8 @@ export function createActor(
 };
 
 const createDefaultActor = (deps: ActorFactoryDependencies): Actor => {
-  const defaultShell = deps.createShell();
-  return {
+  // Create actor with empty shells first
+  const actor: Actor = {
     id: `flux:actor:${deps.uniqid()}`,
     type: EntityType.ACTOR,
     name: '',
@@ -108,12 +108,19 @@ const createDefaultActor = (deps: ActorFactoryDependencies): Actor => {
       primary: {},
       secondary: {},
     },
-    currentShell: defaultShell.id,
-    shells: {
-      [defaultShell.id]: defaultShell,
-    },
+    currentShell: '', // Will be set after shell creation
+    shells: {}, // Start empty
     sessions: {},
   };
+
+  // Create the first shell with hardcoded ID "1" to avoid circular dependency
+  const defaultShell = deps.createShell({ id: '1' });
+
+  // Add the shell to the actual actor
+  actor.shells[defaultShell.id] = defaultShell;
+  actor.currentShell = defaultShell.id;
+
+  return actor;
 };
 
 export const createActorUrn = (...terms: string[]): ActorURN => {

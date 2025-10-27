@@ -10,7 +10,56 @@ import { generateRandomShellName } from './name';
 // Re-export for testing
 export { generateRandomShellName };
 
-export const addShellToActor = (actor: Actor, shell: Shell = createShell()) => {
+const computeHighestShellId = (actor: Actor): number => {
+  let highestShellId = 0;
+  for (const shellIdString in actor.shells) {
+    const shellId = parseInt(shellIdString, 10);
+    if (shellId > highestShellId) {
+      highestShellId = shellId;
+    }
+  }
+
+  return highestShellId;
+};
+
+/**
+ * Create a shell with a sequential ID for the given actor
+ * The ID will be the next integer in sequence (1, 2, 3, etc.)
+ */
+export const createSequentialShell = (
+  actor: Actor,
+  inputOrTransform?: ShellInput | ShellTransformer,
+  deps: ShellFactoryDependencies = DEFAULT_SHELL_FACTORY_DEPS,
+): Shell => {
+  const nextShellId = (computeHighestShellId(actor) + 1).toString();
+
+  // Handle the input/transform pattern like createShell
+  let input: ShellInput | undefined;
+  let transform: ShellTransformer = identity;
+
+  if (typeof inputOrTransform === 'function') {
+    transform = inputOrTransform as ShellTransformer;
+  } else if (inputOrTransform) {
+    input = inputOrTransform as ShellInput;
+  }
+
+  // Merge the sequential ID with any provided input
+  const shellInput: ShellInput = {
+    ...input,
+    id: nextShellId, // Always use sequential ID
+  };
+
+  const shell = createShell(shellInput, deps);
+  return transform(shell);
+};
+
+
+export const addShellToActor = (actor: Actor, shell?: Shell) => {
+  // If no shell provided, create a new one with sequential ID
+  if (!shell) {
+    shell = createSequentialShell(actor);
+  }
+
   actor.shells[shell.id] = shell;
 };
 
@@ -37,8 +86,11 @@ export const findShellByNameOrId = (actor: Actor, input: string): Shell | undefi
   }
 
   // Try fuzzy name matching
-  for (const [shellId, shell] of Object.entries(actor.shells)) {
-    if (shell.name?.toLowerCase().startsWith(input.toLowerCase())) {
+  for (const shellId in actor.shells) {
+    const shell = actor.shells[shellId];
+
+    // ASSUMPTION: `input` is always lowercase
+    if (shell.name.toLowerCase().startsWith(input)) {
       return shell;
     }
   }

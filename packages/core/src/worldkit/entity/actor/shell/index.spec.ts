@@ -9,6 +9,7 @@ import {
   removeShellFromActor,
   getShellFromActor, findShellByNameOrId,
   createShell,
+  createSequentialShell,
   mutateShellStats,
   applyShellStats,
   cloneShell,
@@ -16,6 +17,7 @@ import {
   ShellInput
 } from './index';
 import { createActor } from '../index';
+import { createTestActor } from '~/testing/world-testing';
 import { createModifier } from '~/worldkit/entity/modifier';
 
 const DEFAULT_TIMESTAMP = 1234567890000;
@@ -528,5 +530,156 @@ describe('Shell Name Generation', () => {
     const name1 = generateRandomShellName(() => 0.1);
     const name2 = generateRandomShellName(() => 0.9);
     expect(name1).not.toBe(name2);
+  });
+});
+
+describe('Sequential Shell Creation', () => {
+  let actor: Actor;
+
+  beforeEach(() => {
+    actor = createTestActor();
+  });
+
+  describe('createSequentialShell', () => {
+    it('should create shell with ID "1" for actor with no shells', () => {
+      // Start with empty shells
+      actor.shells = {};
+
+      const shell = createSequentialShell(actor);
+
+      expect(shell.id).toBe('1');
+      expect(shell.name).toBeDefined();
+      expect(shell.stats).toBeDefined();
+    });
+
+    it('should create shell with ID "2" when actor has one shell', () => {
+      // Actor already has shell with ID "1" from createTestActor
+      expect(Object.keys(actor.shells)).toHaveLength(1);
+      expect(actor.shells['1']).toBeDefined();
+
+      const shell = createSequentialShell(actor);
+
+      expect(shell.id).toBe('2');
+    });
+
+    it('should create shell with ID "3" when actor has two shells', () => {
+      // Add a second shell manually
+      actor.shells['2'] = createShell({ id: '2' });
+
+      const shell = createSequentialShell(actor);
+
+      expect(shell.id).toBe('3');
+    });
+
+    it('should handle non-sequential existing IDs correctly', () => {
+      // Create actor with shells having IDs "1", "5", "3"
+      actor.shells = {
+        '1': createShell({ id: '1' }),
+        '5': createShell({ id: '5' }),
+        '3': createShell({ id: '3' }),
+      };
+
+      const shell = createSequentialShell(actor);
+
+      // Should use next ID after highest (5 + 1 = 6)
+      expect(shell.id).toBe('6');
+    });
+
+    it('should accept input parameters like createShell', () => {
+      actor.shells = {};
+
+      const shell = createSequentialShell(actor, {
+        name: 'Custom Shell',
+        stats: {
+          [Stat.POW]: { nat: 25, eff: 25, mods: {} },
+        },
+      });
+
+      expect(shell.id).toBe('1');
+      expect(shell.name).toBe('Custom Shell');
+      expect(shell.stats[Stat.POW].nat).toBe(25);
+    });
+
+    it('should accept transform function like createShell', () => {
+      actor.shells = {};
+
+      const shell = createSequentialShell(actor, (shell) => ({
+        ...shell,
+        name: 'Transformed Shell',
+      }));
+
+      expect(shell.id).toBe('1');
+      expect(shell.name).toBe('Transformed Shell');
+    });
+
+    it('should use custom dependencies', () => {
+      actor.shells = {};
+      const customDeps = createShellFactoryDependencies({
+        generateRandomShellName: () => 'TestShell',
+      });
+
+      const shell = createSequentialShell(actor, undefined, customDeps);
+
+      expect(shell.id).toBe('1');
+      expect(shell.name).toBe('TestShell');
+    });
+
+    it('should work with string IDs that are not numbers', () => {
+      // Mix of numeric and non-numeric IDs - should only consider numeric ones
+      actor.shells = {
+        '1': createShell({ id: '1' }),
+        'custom-shell': createShell({ id: 'custom-shell' }),
+        '3': createShell({ id: '3' }),
+        'another-shell': createShell({ id: 'another-shell' }),
+      };
+
+      const shell = createSequentialShell(actor);
+
+      // Should use next ID after highest numeric ID (3 + 1 = 4)
+      expect(shell.id).toBe('4');
+    });
+  });
+
+  describe('computeHighestShellId (internal function behavior)', () => {
+    it('should return 0 for actor with no shells', () => {
+      actor.shells = {};
+
+      // Test via createSequentialShell behavior
+      const shell = createSequentialShell(actor);
+      expect(shell.id).toBe('1'); // 0 + 1 = 1
+    });
+
+    it('should return highest numeric ID', () => {
+      actor.shells = {
+        '1': createShell({ id: '1' }),
+        '10': createShell({ id: '10' }),
+        '5': createShell({ id: '5' }),
+      };
+
+      const shell = createSequentialShell(actor);
+      expect(shell.id).toBe('11'); // 10 + 1 = 11
+    });
+
+    it('should ignore non-numeric IDs', () => {
+      actor.shells = {
+        'abc': createShell({ id: 'abc' }),
+        '2': createShell({ id: '2' }),
+        'xyz': createShell({ id: 'xyz' }),
+      };
+
+      const shell = createSequentialShell(actor);
+      expect(shell.id).toBe('3'); // 2 + 1 = 3
+    });
+
+    it('should handle IDs that start with numbers but contain letters', () => {
+      actor.shells = {
+        '5abc': createShell({ id: '5abc' }), // parseInt('5abc') = 5
+        '10xyz': createShell({ id: '10xyz' }), // parseInt('10xyz') = 10
+        '3': createShell({ id: '3' }),
+      };
+
+      const shell = createSequentialShell(actor);
+      expect(shell.id).toBe('11'); // 10 + 1 = 11
+    });
   });
 });
