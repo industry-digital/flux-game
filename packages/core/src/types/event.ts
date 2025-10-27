@@ -226,6 +226,7 @@ export type CombatSessionStartedInput = AbstractWorldEventInput<
     sessionId: SessionURN;
     initiative: [ActorURN, RollResultWithoutModifiers][];
     combatants: [ActorURN, CombatantSummary][];
+    namesByTeam: Record<string, string[]>;
   },
   WellKnownActor.SYSTEM
 >;

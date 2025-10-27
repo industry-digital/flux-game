@@ -9,6 +9,7 @@ import { createCombatantSummary } from '~/worldkit/combat/combatant';
 import { TransformerContext } from '~/types/handler';
 import { CombatGameStateApi } from '~/worldkit/combat/session/game-state';
 import { WellKnownActor } from '~/types/actor';
+import { Actor } from '~/types/entity/actor';
 
 /**
  * Given a map of combatants, throw an error if there are not at least 2 different teams with a
@@ -28,10 +29,26 @@ const validateOpposingTeams = (combatants: Map<ActorURN, Combatant>): void => {
   }
 };
 
+const getActorNamesByTeam = (actors: Record<ActorURN, Actor>, combatants: Map<ActorURN, Combatant>): Record<string, string[]> => {
+  const namesByTeam: Record<string, string[]> = {};
+  for (const [, combatant] of combatants) {
+    if (!namesByTeam[combatant.team]) {
+      namesByTeam[combatant.team] = [];
+    }
+    const actor = actors[combatant.actorId];
+    if (!actor) {
+      throw new Error(`Actor ${combatant.actorId} not found`);
+    }
+    namesByTeam[combatant.team].push(actor.name);
+  }
+  return namesByTeam;
+};
+
 /**
  * Creates combat start events for session, round, and turn.
  */
 const createCombatStartEvents = (
+  context: TransformerContext,
   sessionId: SessionURN,
   location: PlaceURN,
   trace: string,
@@ -39,6 +56,7 @@ const createCombatStartEvents = (
   combatants: Map<ActorURN, Combatant>,
   firstActorId: ActorURN
 ): WorldEvent[] => {
+  const actors = context.world.actors;
   return [
 
     createWorldEvent({
@@ -48,6 +66,7 @@ const createCombatStartEvents = (
       location,
       payload: {
         sessionId,
+        namesByTeam: getActorNamesByTeam(actors, combatants),
         initiative: [...initiativeRolls.entries()],
         combatants: [...combatants.entries()].map(([actorId, combatant]) => {
           return [actorId, createCombatantSummary(combatant)];
@@ -196,6 +215,7 @@ export function createCombatLifecycle(
     session.data.currentTurn.actor = firstActorId;
 
     const startEvents = createCombatStartEvents(
+      context,
       sessionId,
       location,
       trace,

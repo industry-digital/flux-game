@@ -258,6 +258,7 @@ export function createCombatSessionStartedEvent(
       sessionId: DEFAULT_SESSION_ID,
       initiative: [],
       combatants: [],
+      namesByTeam: {},
     },
   });
 

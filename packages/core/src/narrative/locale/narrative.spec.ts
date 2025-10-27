@@ -274,11 +274,16 @@ describe.each([
         trace: 'test-trace',
         ts: Date.now(),
         payload: {
-          session: scenario.session.id,
+          sessionId: scenario.session.id,
+          initiative: [],
           combatants: [
-            [ALICE_ID, Team.ALPHA],
-            [BOB_ID, Team.BRAVO],
+            [ALICE_ID, { team: Team.ALPHA }],
+            [BOB_ID, { team: Team.BRAVO }],
           ],
+          namesByTeam: {
+            [Team.ALPHA]: ['Alice'],
+            [Team.BRAVO]: ['Bob'],
+          },
         },
       };
 

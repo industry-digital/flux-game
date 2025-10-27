@@ -471,16 +471,49 @@ export const narrateCombatTurnDidStart = createSystemPerspectiveTemplate<CombatT
   (actorName) => `${actorName}'s turn begins.`
 );
 
+// Format side descriptions
+const formatSide = (members: string[]): string => {
+  if (members.length === 1) {
+    return members[0];
+  }
+  if (members.length === 2) {
+    return `${members[0]} and ${members[1]}`;
+  }
+  return `${members.slice(0, -1).join(', ')}, and ${members[members.length - 1]}`;
+};
+
 export const narrateCombatSessionStarted = createSystemTemplate<CombatSessionStarted>(
   (context, event) => {
-    const { world } = context;
-    const combatantNames = event.payload.combatants.map(([actorId]) => world.actors[actorId]?.name).filter(Boolean);
+    const { namesByTeam } = event.payload;
 
-    if (combatantNames.length <= 2) {
-      return `Combat begins between ${combatantNames.join(' and ')}!`;
+    // Zero-copy iteration - collect side descriptions directly
+    let side1Desc = '';
+    let side2Desc = '';
+    let isFirstTeam = true;
+    let side1Length = 0;
+    let side2Length = 0;
+
+    // ASSUMPTION: There are exactly two teams in a combat session
+    for (const teamName in namesByTeam) {
+      const members = namesByTeam[teamName];
+      const sideDesc = formatSide(members);
+
+      if (isFirstTeam) {
+        side1Desc = sideDesc;
+        side1Length = members.length;
+        isFirstTeam = false;
+      } else {
+        side2Desc = sideDesc;
+        side2Length = members.length;
+      }
     }
 
-    return `A fierce battle erupts involving ${combatantNames.length} combatants!`;
+    // Generate side-focused narrative
+    if (side1Length === 1 && side2Length === 1) {
+      return `${side1Desc} faces off against ${side2Desc}!`;
+    }
+
+    return `${side1Desc} clash with ${side2Desc}!`;
   }
 );
 

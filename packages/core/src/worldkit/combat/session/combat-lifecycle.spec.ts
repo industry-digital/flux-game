@@ -9,7 +9,7 @@ import { ActorURN, PlaceURN, SessionURN } from '~/types/taxonomy';
 import { Team } from '~/types/combat';
 import { SessionStatus } from '~/types/session';
 import { RollResult, RollResultWithoutModifiers } from '~/types/dice';
-import { EventType } from '~/types/event';
+import { CombatSessionStarted, EventType } from '~/types/event';
 
 const TEST_PLACE_ID: PlaceURN = 'flux:place:test-place';
 const TEST_SESSION_ID: SessionURN = 'flux:session:combat:test-session';
@@ -62,6 +62,11 @@ describe('createCombatLifecycle', () => {
     // Events should be returned and declared
     expect(startEvents).toHaveLength(3);
     expect(startEvents[0].type).toBe(EventType.COMBAT_SESSION_DID_START);
+    const sessionStartEvent = startEvents[0] as CombatSessionStarted;
+    expect(sessionStartEvent.payload.namesByTeam).toEqual({
+      [Team.BRAVO]: [actor1.name],
+      [Team.ALPHA]: [actor2.name],
+    });
     expect(startEvents[1].type).toBe(EventType.COMBAT_SESSION_STATUS_DID_CHANGE);
     expect(startEvents[2].type).toBe(EventType.COMBAT_TURN_DID_START);
 
