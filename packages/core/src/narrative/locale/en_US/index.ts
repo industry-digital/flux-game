@@ -124,6 +124,7 @@ export const en_US: LanguageTemplates = {
   [EventType.WORKBENCH_SHELL_MUTATIONS_DIFFED]: narrateActorDidDiffShellMutations,
   [EventType.WORKBENCH_SHELL_MUTATIONS_UNDONE]: narrateActorDidUndoShellMutations,
   [EventType.WORKBENCH_SHELL_MUTATIONS_COMMITTED]: narrateActorDidCommitShellMutations,
+  [EventType.ACTOR_DID_RENAME_SHELL]: NOT_IMPLEMENTED,
   [EventType.ACTOR_DID_MOUNT_COMPONENT]: narrateActorDidMountComponent,
   [EventType.ACTOR_DID_UNMOUNT_COMPONENT]: narrateActorDidUnmountComponent,
   [EventType.ACTOR_DID_LIST_SHELLS]: narrateActorDidListShells,

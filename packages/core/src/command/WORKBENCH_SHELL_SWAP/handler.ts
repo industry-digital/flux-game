@@ -5,7 +5,7 @@ import { swapShellResolver } from './resolver';
 import { Command, CommandType } from '~/types/intent';
 import { isCommandOfType } from '~/lib/intent';
 
-export class SWAP_SHELL implements PureHandlerInterface<TransformerContext, SwapShellCommand> {
+export class WORKBENCH_SHELL_SWAP implements PureHandlerInterface<TransformerContext, SwapShellCommand> {
   resolve = swapShellResolver;
   reduce = swapShellReducer;
   dependencies = [];

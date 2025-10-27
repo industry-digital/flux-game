@@ -6,7 +6,7 @@ const USE_VERB = 'use';
 const NO_ARGS: Readonly<UseWorkbenchCommandArgs> = Object.freeze({});
 const WORKBENCH = 'workbench';
 
-export const useWorkbenchResolver: CommandResolver<UseWorkbenchCommand> = (
+export const activateWorkbenchResolver: CommandResolver<UseWorkbenchCommand> = (
   context: CommandResolverContext,
   intent: Intent,
 ): UseWorkbenchCommand | undefined => {

@@ -446,6 +446,17 @@ export type ActorDidReviewShellStatsInput = AbstractWorldEventInput<
   }
 >;
 
+export type ActorDidRenameShell = EventBase & ActorDidRenameShellInput;
+export type ActorDidRenameShellInput = AbstractWorldEventInput<
+  EventType.ACTOR_DID_RENAME_SHELL,
+  {
+    sessionId: SessionURN;
+    shellId: string;
+    oldName: string;
+    newName: string;
+  }
+>;
+
 export type ActorDidListShellComponents = EventBase & ActorDidListShellComponentsInput;
 export type ActorDidListShellComponentsInput = AbstractWorldEventInput<
   EventType.ACTOR_DID_LIST_SHELL_COMPONENTS,
@@ -690,6 +701,7 @@ export type WorldEventInput =
   | ActorDidJoinPartyInput
   | ActorDidLeavePartyInput
   | ActorDidInspectPartyInput
+  | ActorDidRenameShellInput
   ;
 
 /**

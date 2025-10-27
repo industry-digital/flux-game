@@ -83,7 +83,7 @@ export { ADVANCE, AdvanceCommand, AdvanceCommandArgs } from './ADVANCE';
 export { DEFEND, DefendCommand, DefendCommandArgs } from './DEFEND';
 export { RETREAT, RetreatCommand, RetreatCommandArgs } from './RETREAT';
 export { TARGET, TargetCommand, TargetCommandArgs } from './TARGET';
-export { USE_WORKBENCH, UseWorkbenchCommand, UseWorkbenchCommandArgs } from './WORKBENCH_USE';
+export { WORKBENCH_USE as USE_WORKBENCH, UseWorkbenchCommand, UseWorkbenchCommandArgs } from './WORKBENCH_USE';
 export { EQUIP, EquipCommand, EquipCommandArgs } from './EQUIP';
 export { PARTY_INVITE, PartyInviteCommand, PartyInviteCommandArgs } from './PARTY_INVITE';
 export { PARTY_INVITE_ACCEPT, AcceptPartyInvitationCommand } from './PARTY_INVITE_ACCEPT';

@@ -26,7 +26,10 @@ import { RANGE } from '~/command/RANGE';
 import { RETREAT } from '~/command/RETREAT';
 import { STRIKE } from '~/command/STRIKE';
 import { TARGET } from '~/command/TARGET';
-import { USE_WORKBENCH } from '~/command/WORKBENCH_USE';
+import { WORKBENCH_SHELL_LIST } from '~/command/WORKBENCH_SHELL_LIST';
+import { WORKBENCH_SHELL_RENAME } from '~/command/WORKBENCH_SHELL_RENAME';
+import { WORKBENCH_SHELL_SWAP } from '~/command/WORKBENCH_SHELL_SWAP';
+import { WORKBENCH_USE } from '~/command/WORKBENCH_USE';
 
 /**
  * The Flux World Server literally spreads this array into the Transformation stage.
@@ -54,7 +57,10 @@ export const PURE_GAME_LOGIC_HANDLERS: PureHandlerImplementation<TransformerCont
     RETREAT,
     STRIKE,
     TARGET,
-    USE_WORKBENCH,
+    WORKBENCH_SHELL_LIST,
+    WORKBENCH_SHELL_RENAME,
+    WORKBENCH_SHELL_SWAP,
+    WORKBENCH_USE,
   ],
   (Handler) => Handler.prototype.dependencies ?? [],
 );
