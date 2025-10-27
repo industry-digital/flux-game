@@ -68,7 +68,7 @@ export function useCombatSession(
       setSessionId(api.session.id);
 
       // Set the initial current actor from the session
-      const initialCurrentActor = api.session.data.rounds.current.turns.current.actor;
+      const initialCurrentActor = api.session.data.currentTurn.actor;
       setCurrentActorId(initialCurrentActor);
     }
   }, [context, placeId, sessionApi, deps]);
@@ -179,7 +179,7 @@ export function useCombatSession(
       const events = sessionApi.advanceTurn(trace);
 
       // Update current actor from session state
-      const newActorId = session?.data.rounds.current.turns.current.actor;
+      const newActorId = session?.data.currentTurn.actor;
       if (newActorId) {
         setCurrentActorId(newActorId);
       }

@@ -166,8 +166,8 @@ describe('session', () => {
       expect(session.data.combatants.has(TEST_ACTOR_2_ID)).toBe(true);
       expect(session.data.initiative.size).toBe(2);
       expect(session.data.battlefield).toBeDefined();
-      expect(session.data.rounds.current.number).toBe(1);
-      expect(session.data.rounds.current.turns.current.number).toBe(1);
+      expect(session.data.currentTurn.round).toBe(1);
+      expect(session.data.currentTurn.number).toBe(1);
     });
 
     it('should use provided session ID', () => {
@@ -227,8 +227,8 @@ describe('session', () => {
 
       const session = createCombatSession(context, input);
 
-      expect(session.data.rounds.current.turns.current.actor).toBeDefined();
-      expect([TEST_ACTOR_ID, TEST_ACTOR_2_ID]).toContain(session.data.rounds.current.turns.current.actor);
+      expect(session.data.currentTurn.actor).toBeDefined();
+      expect([TEST_ACTOR_ID, TEST_ACTOR_2_ID]).toContain(session.data.currentTurn.actor);
     });
 
     it('should use provided initiative when specified', () => {
@@ -273,7 +273,7 @@ describe('session', () => {
       expect(session.data.initiative.get(TEST_ACTOR_2_ID)?.result).toBe(20);
 
       // First actor should be the one with highest initiative (actor2)
-      expect(session.data.rounds.current.turns.current.actor).toBe(TEST_ACTOR_2_ID);
+      expect(session.data.currentTurn.actor).toBe(TEST_ACTOR_2_ID);
     });
   });
 
@@ -430,10 +430,10 @@ describe('session', () => {
       hook.startCombat();
 
       // Get initial turn state
-      const initialTurn = hook.session.data.rounds.current.turns.current;
+      const initialTurn = hook.session.data.currentTurn;
       const initialActor = initialTurn.actor;
       const initialTurnNumber = initialTurn.number;
-      const initialRoundNumber = hook.session.data.rounds.current.number;
+      const initialRoundNumber = hook.session.data.currentTurn.round;
 
       // Clear any events from combat start
       context.getDeclaredEvents();
@@ -443,10 +443,10 @@ describe('session', () => {
       const events = combatantHook.done('test-done-trace');
 
       // Verify turn advanced
-      const newTurn = hook.session.data.rounds.current.turns.current;
+      const newTurn = hook.session.data.currentTurn;
       expect(newTurn.actor).not.toBe(initialActor); // Should be different actor
       expect(newTurn.number).toBe(initialTurnNumber + 1); // Turn number incremented
-      expect(hook.session.data.rounds.current.number).toBe(initialRoundNumber); // Same round
+      expect(hook.session.data.currentTurn.round).toBe(initialRoundNumber); // Same round
 
       // Verify that events were generated (at least one)
       expect(events.length).toBeGreaterThanOrEqual(1);
@@ -678,7 +678,7 @@ describe('session', () => {
       expect(hook.session.data.initiative.get(TEST_ACTOR_2_ID)?.result).toBe(20);
 
       // First actor should be the one with highest initiative (actor2)
-      expect(hook.session.data.rounds.current.turns.current.actor).toBe(TEST_ACTOR_2_ID);
+      expect(hook.session.data.currentTurn.actor).toBe(TEST_ACTOR_2_ID);
     });
 
   });
@@ -713,7 +713,7 @@ describe('session', () => {
 
       expect(session.data.combatants.size).toBe(1);
       expect(session.data.initiative.size).toBe(1);
-      expect(session.data.rounds.current.turns.current.actor).toBe(TEST_ACTOR_ID);
+      expect(session.data.currentTurn.actor).toBe(TEST_ACTOR_ID);
     });
 
     it('should handle multiple combatants with same team', () => {

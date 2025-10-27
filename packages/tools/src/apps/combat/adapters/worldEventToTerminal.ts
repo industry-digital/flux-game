@@ -1,5 +1,5 @@
 import type { WorldEvent, ActorURN, TransformerContext } from '@flux/core';
-import { EventType, getTemplatesForLanguage, Language } from '@flux/core';
+import { EventType, getTemplatesForLocale, Locale } from '@flux/core';
 import type { TerminalEntry } from '@flux/ui';
 
 const OBSERVER_ID: ActorURN = 'flux:actor:observer';
@@ -11,9 +11,9 @@ const OBSERVER_ID: ActorURN = 'flux:actor:observer';
 function generateNarrativeFromEvent(
   context: TransformerContext,
   event: WorldEvent,
-  language: Language = Language.en_US
+  locale: Locale = Locale.en_US
 ): string {
-  const templates = getTemplatesForLanguage(language);
+  const templates = getTemplatesForLocale(locale);
   const templateFunction = templates[event.type];
 
   if (!templateFunction) {
@@ -78,13 +78,13 @@ function formatEventFallback(event: WorldEvent): string {
 
   // Format based on event type for better readability
   switch (event.type) {
-    case EventType.COMBATANT_DID_ATTACK:
+    case EventType.ACTOR_DID_ATTACK:
       return `[${timestamp}] ${event.actor} attacks ${(event.payload as any)?.target || 'unknown target'}`;
 
-    case EventType.COMBATANT_DID_DEFEND:
+    case EventType.ACTOR_DID_DEFEND:
       return `[${timestamp}] ${event.actor} defends`;
 
-    case EventType.COMBATANT_DID_MOVE:
+    case EventType.ACTOR_DID_MOVE_IN_COMBAT:
       return `[${timestamp}] ${event.actor} moves in combat`;
 
     case EventType.COMBAT_SESSION_DID_START:

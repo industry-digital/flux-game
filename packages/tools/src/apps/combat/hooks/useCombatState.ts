@@ -62,7 +62,7 @@ export function useCombatState(
 
   const logErrors = useCallback((errors: ExecutionError[]) => {
     for (const error of errors) {
-      log.error('executeCommand failed:', error.error.stack);
+      log.error('executeCommand failed:', error.stack);
     }
   }, []);
 

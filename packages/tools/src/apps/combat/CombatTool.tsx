@@ -11,7 +11,7 @@ import {
   CHARLIE_ID,
   FRANZ_ID,
 } from './hooks/useCombatScenario';
-import { Team, EventType, Stat, type WeaponSchemaURN, Gender } from '@flux/core';
+import { Team, Stat, type WeaponSchemaURN, Gender } from '@flux/core';
 import { useCombatActors } from './hooks/useCombatActors';
 import { useCombatSession } from './hooks/useCombatSession';
 import { useCombatState } from './hooks/useCombatState';
@@ -120,15 +120,6 @@ export function createCombatTool(_deps: CombatToolDependencies = DEFAULT_COMBAT_
 
     const handleEventsGenerated = useCallback((events: any[]) => {
       // Debug logging for AI events
-      const movementEvents = events.filter(e => e.type === EventType.COMBATANT_DID_MOVE);
-      if (movementEvents.length > 0) {
-        console.log('AI movement events reaching handleEventsGenerated:', movementEvents.map(e => ({
-          type: e.type,
-          actor: e.actor,
-          distance: e.payload?.distance
-        })));
-      }
-
       addEvents(events);
       actors.syncActorsFromContext();
 
@@ -182,7 +173,7 @@ export function createCombatTool(_deps: CombatToolDependencies = DEFAULT_COMBAT_
 
       // Update both scenario data (for persistence) and actor data (for immediate effect)
       updateActorSkill(actorId, skillUrn, rank); // Update scenario data
-      context.actorSkillApi.setActorSkillRank(actor, skillUrn, rank); // Update actor data with mutations
+      context.skillApi.setActorSkillRank(actor, skillUrn, rank); // Update actor data with mutations
       actors.syncActorsFromContext(); // Force re-render
     }, [updateActorSkill, context, actors.syncActorsFromContext]);
 

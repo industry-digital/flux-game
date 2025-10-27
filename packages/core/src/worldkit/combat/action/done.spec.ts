@@ -52,8 +52,8 @@ describe('Done Method (New Architecture)', () => {
         location: scenario.actors[ACTOR_ID].actor.location,
         trace: 'test-trace',
         payload: {
-          round: scenario.session.data.rounds.current.number,
-          turn: scenario.session.data.rounds.current.turns.current.number,
+          round: scenario.session.data.currentTurn.round,
+          turn: scenario.session.data.currentTurn.number,
           actor: ACTOR_ID,
           ap: 'before=0 after=6 recovered=6',
           energy: 'before=60 after=60 recovered=0',
@@ -228,8 +228,8 @@ describe('Done Method (New Architecture)', () => {
           location: scenario.actors[ACTOR_ID].actor.location,
           trace: 'integration-test-trace',
           payload: {
-            round: scenario.session.data.rounds.current.number,
-            turn: scenario.session.data.rounds.current.turns.current.number,
+            round: scenario.session.data.currentTurn.round,
+            turn: scenario.session.data.currentTurn.number,
             actor: ACTOR_ID,
             ap: 'before=2 after=6 recovered=4',
             energy: 'before=60 after=60 recovered=0',

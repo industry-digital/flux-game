@@ -315,7 +315,7 @@ describe('Large Scale Combat Integration', () => {
       sessionHook.startCombat();
 
       // Get the current actor and remove them from world (simulating data inconsistency)
-      const currentActor = sessionHook.session.data.rounds.current.turns.current.actor;
+      const currentActor = sessionHook.session.data.currentTurn.actor;
       delete context.world.actors[currentActor];
 
       // Should handle missing actor gracefully and end combat due to victory conditions

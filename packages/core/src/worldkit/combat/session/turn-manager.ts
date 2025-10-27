@@ -1,5 +1,5 @@
 import { ActorURN } from '~/types/taxonomy';
-import { CombatSession, CombatRound, CombatTurn } from '~/types/combat';
+import { CombatSession } from '~/types/combat';
 import { WorldEvent, EventType } from '~/types/event';
 import { createWorldEvent } from '~/worldkit/event';
 import { TransformerContext } from '~/types/handler';
@@ -63,59 +63,24 @@ export function createTurnManager(
 
     const events: WorldEvent[] = [];
 
-    const currentRound = session.data.rounds.current;
-    const currentTurn = currentRound.turns.current;
-    currentRound.turns.completed.push(currentTurn);
+    const currentTurn = session.data.currentTurn;
+    const currentRound = currentTurn.round;
+    session.data.completedTurns.push(currentTurn);
 
     const initiativeOrder: ActorURN[] = Array.from(session.data.initiative.keys());
-    const currentActorIndex = initiativeOrder.indexOf(currentTurn.actor);
+    const currentActorIndex = initiativeOrder.indexOf(session.data.currentTurn.actor);
     const isLastActorInRound = currentActorIndex === initiativeOrder.length - 1;
 
     if (isLastActorInRound) {
-      const roundDidEndEvent = createWorldEvent({
-        type: EventType.COMBAT_ROUND_DID_END,
-        actor: WellKnownActor.SYSTEM,
-        location: session.data.location,
-        trace,
-        payload: { round: currentRound.number }
-      });
 
-      context.declareEvent(roundDidEndEvent);
-      events.push(roundDidEndEvent);
-
-      session.data.rounds.completed.push(currentRound);
-
-      const nextRoundNumber = currentRound.number + 1;
+      const nextRoundNumber = currentTurn.round + 1;
       const firstAliveActor = findNextAliveCombatant(initiativeOrder, 0);
 
       if (firstAliveActor) {
-        const newRound: CombatRound = {
-          number: nextRoundNumber,
-          turns: {
-            current: {
-              number: 1,
-              actor: firstAliveActor,
-              actions: [],
-            },
-            completed: [],
-          },
-        };
-
-        session.data.rounds.current = newRound;
-
-        const roundStartEvent = createWorldEvent({
-          trace,
-          type: EventType.COMBAT_ROUND_DID_START,
-          actor: WellKnownActor.SYSTEM,
-          location: session.data.location,
-          payload: {
-            sessionId: session.id,
-            round: nextRoundNumber,
-          },
-        });
-
-        context.declareEvent(roundStartEvent);
-        events.push(roundStartEvent);
+        session.data.currentTurn.round = nextRoundNumber;
+        session.data.currentTurn.number = 1;
+        session.data.currentTurn.actor = firstAliveActor;
+        session.data.currentTurn.actions = [];
 
         events.push(...startNewTurn(firstAliveActor, nextRoundNumber, 1, trace));
       }
@@ -126,63 +91,21 @@ export function createTurnManager(
       const nextAliveActor = findNextAliveCombatant(initiativeOrder, currentActorIndex + 1);
 
       if (nextAliveActor) {
-        const nextTurnNumber = currentRound.turns.completed.length + 1;
+        session.data.currentTurn.number = currentTurn.number + 1;
+        session.data.currentTurn.actor = nextAliveActor;
+        session.data.currentTurn.actions = [];
 
-        const newTurn: CombatTurn = {
-          number: nextTurnNumber,
-          actor: nextAliveActor,
-          actions: [],
-        };
-
-        session.data.rounds.current.turns.current = newTurn;
-
-        events.push(...startNewTurn(nextAliveActor, currentRound.number, nextTurnNumber, trace));
+        events.push(...startNewTurn(nextAliveActor, currentTurn.round, currentTurn.number + 1, trace));
       } else {
         // No alive combatants left in this round, advance to next round
-        const roundDidEndEvent = createWorldEvent({
-          trace,
-          type: EventType.COMBAT_ROUND_DID_END,
-          actor: WellKnownActor.SYSTEM,
-          location: session.data.location,
-          payload: { round: currentRound.number }
-        });
-
-        context.declareEvent(roundDidEndEvent);
-        events.push(roundDidEndEvent);
-
-        session.data.rounds.completed.push(currentRound);
-
-        const nextRoundNumber = currentRound.number + 1;
+        const nextRoundNumber = currentTurn.round + 1;
         const firstAliveActor = findNextAliveCombatant(initiativeOrder, 0);
 
         if (firstAliveActor) {
-          const newRound: CombatRound = {
-            number: nextRoundNumber,
-            turns: {
-              current: {
-                number: 1,
-                actor: firstAliveActor,
-                actions: [],
-              },
-              completed: [],
-            },
-          };
-
-          session.data.rounds.current = newRound;
-
-          const roundStartEvent = createWorldEvent({
-            trace,
-            type: EventType.COMBAT_ROUND_DID_START,
-            actor: WellKnownActor.SYSTEM,
-            location: session.data.location,
-            payload: {
-              sessionId: session.id,
-              round: nextRoundNumber,
-            },
-          });
-
-          context.declareEvent(roundStartEvent);
-          events.push(roundStartEvent);
+          session.data.currentTurn.round = nextRoundNumber;
+          session.data.currentTurn.number = 1;
+          session.data.currentTurn.actor = firstAliveActor;
+          session.data.currentTurn.actions = [];
 
           events.push(...startNewTurn(firstAliveActor, nextRoundNumber, 1, trace));
         }

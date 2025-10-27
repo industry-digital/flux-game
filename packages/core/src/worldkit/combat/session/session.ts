@@ -63,20 +63,13 @@ export const createCombatSession = (
     combatants: new Map(input.combatants.map(c => [c.actorId, c])),
     initiative: initiativeRolls,
     battlefield: input.battlefield ?? createDefaultBattlefield(),
-    rounds: {
-      current: {
-        number: 1,
-        turns: {
-          completed: [],
-          current: {
-            number: 1,
-            actor: firstActor,
-            actions: [],
-          },
-        },
-      },
-      completed: [],
+    currentTurn: {
+      round: 1,
+      number: 1,
+      actor: firstActor,
+      actions: [],
     },
+    completedTurns: [],
   };
 
   return {
@@ -170,7 +163,7 @@ export const createCombatSessionApi = (
     const events: WorldEvent[] = [];
 
     // 1. Handle resource recovery for the current actor (before turn advancement)
-    const currentActor = session.data.rounds.current.turns.current.actor;
+    const currentActor = session.data.currentTurn.actor;
     events.push(...gameState.handleEndOfTurn(currentActor, trace));
 
     // 2. Advance the turn using the turn manager

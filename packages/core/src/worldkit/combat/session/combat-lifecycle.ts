@@ -201,7 +201,7 @@ export function createCombatLifecycle(
       throw new Error('Failed to resolve first actor to start combat');
     }
 
-    session.data.rounds.current.turns.current.actor = firstActorId;
+    session.data.currentTurn.actor = firstActorId;
 
     const startEvents = createCombatStartEvents(
       sessionId,
@@ -256,8 +256,8 @@ export function createCombatLifecycle(
       payload: {
         sessionId,
         winningTeam, // null for mutual destruction, Team for victory
-        finalRound: session.data.rounds.current.number,
-        finalTurn: session.data.rounds.current.turns.current.number,
+        finalRound: session.data.currentTurn.round,
+        finalTurn: session.data.currentTurn.number,
       },
     });
 

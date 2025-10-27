@@ -99,7 +99,13 @@ export enum EventType {
   ACTOR_DID_ASSESS_RANGE = 'actor:range:acquired',
   ACTOR_DID_MOVE_IN_COMBAT = 'actor:combat:moved',
   ACTOR_WAS_ATTACKED = 'actor:attack:received',
+  /**
+   * @deprecated Use `COMBAT_TURN_DID_END` instead
+   */
   COMBAT_ROUND_DID_END = 'combat:round:ended',
+  /**
+   * @deprecated Use `COMBAT_TURN_DID_START` instead
+   */
   COMBAT_ROUND_DID_START = 'combat:round:started',
   COMBAT_SESSION_DID_END = 'combat:session:ended',
   COMBAT_SESSION_DID_START = 'combat:session:started',
@@ -335,7 +341,13 @@ export type CombatTurnDidEndInput = AbstractWorldEventInput<
   WellKnownActor.SYSTEM
 >;
 
+/**
+ * @deprecated Use `COMBAT_TURN_DID_START` instead
+ */
 export type CombatRoundDidStart = EventBase & CombatRoundDidStartInput;
+/**
+ * @deprecated Use `COMBAT_TURN_DID_START` instead
+ */
 export type CombatRoundDidStartInput = AbstractWorldEventInput<
   EventType.COMBAT_ROUND_DID_START,
   {
@@ -345,7 +357,13 @@ export type CombatRoundDidStartInput = AbstractWorldEventInput<
   WellKnownActor.SYSTEM
 >;
 
+/**
+ * @deprecated Use `COMBAT_TURN_DID_END` instead
+ */
 export type CombatRoundDidEnd = EventBase & CombatRoundDidEndInput;
+/**
+ * @deprecated Use `COMBAT_TURN_DID_END` instead
+ */
 export type CombatRoundDidEndInput = AbstractWorldEventInput<
   EventType.COMBAT_ROUND_DID_END,
   {

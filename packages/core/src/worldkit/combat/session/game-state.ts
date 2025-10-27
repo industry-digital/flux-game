@@ -202,8 +202,8 @@ export function createCombatGameStateApi(
       payload: {
         sessionId: session.id,
         turnActor: actorId,
-        round: session.data.rounds.current.number,
-        turn: session.data.rounds.current.turns.current.number,
+        round: session.data.currentTurn.round,
+        turn: session.data.currentTurn.number,
         energy: {
           before: energyBefore,
           after: energyAfterRecovery,

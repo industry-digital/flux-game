@@ -55,16 +55,16 @@ describe('createTurnManager', () => {
 
     const turnManager = createTurnManager(context, session);
 
-    const currentActor = session.data.rounds.current.turns.current.actor;
-    const currentRound = session.data.rounds.current.number;
-    const completedTurnsCount = session.data.rounds.current.turns.completed.length;
+    const currentActor = session.data.currentTurn.actor;
+    const currentRound = session.data.currentTurn.round;
+    const completedTurnsCount = session.data.completedTurns.length;
 
     const events = turnManager.advanceTurn('test-trace-2');
 
     // Should advance to next actor in same round
-    expect(session.data.rounds.current.number).toBe(currentRound);
-    expect(session.data.rounds.current.turns.completed.length).toBe(completedTurnsCount + 1);
-    expect(session.data.rounds.current.turns.current.actor).not.toBe(currentActor);
+    expect(session.data.currentTurn.round).toBe(currentRound);
+    expect(session.data.completedTurns.length).toBe(completedTurnsCount + 1);
+    expect(session.data.currentTurn.actor).not.toBe(currentActor);
 
     // Should emit turn start event
     expect(events).toHaveLength(1);
@@ -96,7 +96,7 @@ describe('createTurnManager', () => {
 
     // Advance through all actors in the round
     const initiativeOrder = Array.from(session.data.initiative.keys());
-    const currentRound = session.data.rounds.current.number;
+    const currentRound = session.data.currentTurn.round;
 
     // Advance to the last actor
     for (let i = 0; i < initiativeOrder.length - 1; i++) {
@@ -106,16 +106,14 @@ describe('createTurnManager', () => {
     // Now advance from the last actor - should start new round
     const events = turnManager.advanceTurn();
 
-    expect(session.data.rounds.current.number).toBe(currentRound + 1);
-    expect(session.data.rounds.current.turns.current.number).toBe(1);
-    expect(session.data.rounds.current.turns.current.actor).toBe(initiativeOrder[0]);
-    expect(session.data.rounds.completed.length).toBe(1);
+    expect(session.data.currentTurn.round).toBe(currentRound + 1);
+    expect(session.data.currentTurn.number).toBe(1);
+    expect(session.data.currentTurn.actor).toBe(initiativeOrder[0]);
+    expect(session.data.completedTurns.length).toBe(initiativeOrder.length);
 
     // Should emit round end, round start, and turn start events
-    expect(events).toHaveLength(3);
-    expect(events[0].type).toBe('combat:round:ended');
-    expect(events[1].type).toBe('combat:round:started');
-    expect(events[2].type).toBe('combat:turn:started');
+    expect(events).toHaveLength(1);
+    expect(events[0].type).toBe('combat:turn:started');
   });
 
   it('should properly track completed turns', () => {
@@ -141,14 +139,14 @@ describe('createTurnManager', () => {
 
     const turnManager = createTurnManager(context, session);
 
-    const initialCompletedTurns = session.data.rounds.current.turns.completed.length;
-    const currentTurn = session.data.rounds.current.turns.current;
+    const initialCompletedTurns = session.data.completedTurns.length;
+    const currentTurn = session.data.currentTurn;
 
     turnManager.advanceTurn();
 
     // Previous turn should be in completed list
-    expect(session.data.rounds.current.turns.completed.length).toBe(initialCompletedTurns + 1);
-    expect(session.data.rounds.current.turns.completed).toContainEqual(currentTurn);
+    expect(session.data.completedTurns.length).toBe(initialCompletedTurns + 1);
+    expect(session.data.completedTurns).toContainEqual(currentTurn);
   });
 
   it('should emit events with correct payload data', () => {
@@ -224,7 +222,7 @@ describe('createTurnManager', () => {
     lifecycle.startCombat('test-trace', { initiativeRolls });
 
     // Verify initial state: Alice's turn
-    expect(session.data.rounds.current.turns.current.actor).toBe(ALICE_ID);
+    expect(session.data.currentTurn.actor).toBe(ALICE_ID);
 
     // Kill Bob during Alice's turn (simulate Alice killing Bob)
     context.world.actors[BOB_ID].hp.eff.cur = 0;
@@ -236,7 +234,7 @@ describe('createTurnManager', () => {
 
     // EXPECTED BEHAVIOR: Should skip Bob (who is dead) and go to Charlie
     // This test will fail until we implement the fix
-    expect(session.data.rounds.current.turns.current.actor).toBe(CHARLIE_ID);
+    expect(session.data.currentTurn.actor).toBe(CHARLIE_ID);
   });
 
   it('should advance to next round when all remaining combatants in current round are dead', () => {
@@ -277,8 +275,8 @@ describe('createTurnManager', () => {
     lifecycle.startCombat('test-trace', { initiativeRolls });
 
     // Verify initial state: Alice's turn, Round 1
-    expect(session.data.rounds.current.turns.current.actor).toBe(ALICE_ID);
-    expect(session.data.rounds.current.number).toBe(1);
+    expect(session.data.currentTurn.actor).toBe(ALICE_ID);
+    expect(session.data.currentTurn.round).toBe(1);
 
     // Kill both Bob and Charlie during Alice's turn
     context.world.actors[BOB_ID].hp.eff.cur = 0;
@@ -290,9 +288,9 @@ describe('createTurnManager', () => {
     const events = turnManager.advanceTurn('test-trace');
 
     // Should advance to Round 2 and give Alice the first turn again
-    expect(session.data.rounds.current.number).toBe(2);
-    expect(session.data.rounds.current.turns.current.actor).toBe(ALICE_ID);
-    expect(session.data.rounds.current.turns.current.number).toBe(1);
+    expect(session.data.currentTurn.round).toBe(2);
+    expect(session.data.currentTurn.actor).toBe(ALICE_ID);
+    expect(session.data.currentTurn.number).toBe(1);
   });
 
   it('should handle complex death scenario - 1v3 combat with deaths mid-combat', () => {
@@ -338,7 +336,7 @@ describe('createTurnManager', () => {
     lifecycle.startCombat('test-trace', { initiativeRolls });
 
     // Verify initial state: Dave's turn
-    expect(session.data.rounds.current.turns.current.actor).toBe(DAVE_ID);
+    expect(session.data.currentTurn.actor).toBe(DAVE_ID);
 
     const turnManager = createTurnManager(context, session);
 
@@ -346,18 +344,18 @@ describe('createTurnManager', () => {
 
     // 1. Dave's turn completes
     let events = turnManager.advanceTurn('dave-turn');
-    expect(session.data.rounds.current.turns.current.actor).toBe(FRANZ_ID);
+    expect(session.data.currentTurn.actor).toBe(FRANZ_ID);
 
     // 2. Franz's turn completes
     events = turnManager.advanceTurn('franz-turn');
-    expect(session.data.rounds.current.turns.current.actor).toBe(ALICE_ID);
+    expect(session.data.currentTurn.actor).toBe(ALICE_ID);
 
     // 3. During Alice's turn, Franz dies (simulate Alice killing Franz)
     context.world.actors[FRANZ_ID].hp.eff.cur = 0;
 
     // 4. Alice's turn completes
     events = turnManager.advanceTurn('alice-turn');
-    expect(session.data.rounds.current.turns.current.actor).toBe(BOB_ID);
+    expect(session.data.currentTurn.actor).toBe(BOB_ID);
 
     // 5. Now Bob dies (simulate death from damage over time or other effect)
     context.world.actors[BOB_ID].hp.eff.cur = 0;
@@ -366,9 +364,9 @@ describe('createTurnManager', () => {
     events = turnManager.advanceTurn('bob-turn-skip');
 
     // Should skip Bob and advance to Round 2 with Dave (first alive actor)
-    expect(session.data.rounds.current.number).toBe(2);
-    expect(session.data.rounds.current.turns.current.actor).toBe(DAVE_ID);
-    expect(session.data.rounds.current.turns.current.number).toBe(1);
+    expect(session.data.currentTurn.round).toBe(2);
+    expect(session.data.currentTurn.actor).toBe(DAVE_ID);
+    expect(session.data.currentTurn.number).toBe(1);
 
     // 7. Now Dave dies too (simulate Alice killing Dave in previous round)
     context.world.actors[DAVE_ID].hp.eff.cur = 0;
@@ -377,7 +375,7 @@ describe('createTurnManager', () => {
     events = turnManager.advanceTurn('dave-turn-skip');
 
     // Should skip Dave and give turn to Alice (only alive combatant)
-    expect(session.data.rounds.current.turns.current.actor).toBe(ALICE_ID);
+    expect(session.data.currentTurn.actor).toBe(ALICE_ID);
   });
 });
 });

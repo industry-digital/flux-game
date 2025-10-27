@@ -249,8 +249,8 @@ describe('Combat Lifecycle - Termination', () => {
       });
 
       session.status = SessionStatus.RUNNING;
-      session.data.rounds.current.number = 3;
-      session.data.rounds.current.turns.current.number = 2;
+      session.data.currentTurn.round = 3;
+      session.data.currentTurn.number = 2;
 
       const gameState = createCombatGameStateApi(context, session, location);
       const lifecycle = createCombatLifecycle(context, session, sessionId, location, gameState);

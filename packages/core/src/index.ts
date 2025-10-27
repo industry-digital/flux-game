@@ -9,6 +9,8 @@ export * from '~/worldkit/combat';
 export * from '~/worldkit/context';
 export * from '~/worldkit/physics/mass';
 export * from '~/worldkit/session';
+
+export * from '~/types/i18n';
 export * from '~/narrative';
 
 export { profile, profileAsync } from '~/lib/profile';

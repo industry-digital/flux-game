@@ -114,7 +114,6 @@ export interface UseCombatScenarioResult {
   addOptionalActor: (name: OptionalActorName, onSessionAdd?: (actorId: ActorURN, team: Team) => void) => void;
   removeOptionalActor: (name: OptionalActorName, onSessionRemove?: (actorId: ActorURN) => void) => void;
   resetScenario: () => void;
-  clearStoredData: () => void;
   getTeamActors: (team: Team) => ActorURN[];
   getAvailableOptionalActors: (team: Team) => OptionalActorName[];
   calculateDerivedStats: (actorId: ActorURN) => DerivedStats;
@@ -222,7 +221,7 @@ export function useCombatScenario(
     const defaultData: CombatScenarioActorData = {
       stats: { pow: 10, fin: 10, res: 10, int: 10, per: 10, mem: 10 },
       aiControlled: true, // Optional actors are AI-controlled by default
-      weapon: 'flux:schema:weapon:longsword' as WeaponSchemaURN,
+      weapon: 'flux:schema:weapon:sword' as WeaponSchemaURN,
       skills: { ...DEFAULT_COMBAT_SKILLS },
       team,
       gender: Gender.MALE // Default gender for optional actors

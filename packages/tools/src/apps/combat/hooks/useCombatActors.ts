@@ -208,7 +208,6 @@ export function useCombatActors(
 // Constants for equipment setup
 const TEST_WEAPON_ENTITY_URN: ItemURN = 'flux:item:weapon:test';
 
-
 /**
  * Create an actor from scenario data using @flux/core utilities
  * Enhanced to use TransformerContext APIs for proper customization
@@ -263,6 +262,7 @@ function createActorFromScenarioData(
     inventory: {
       mass: 1_000, // 1kg default mass
       ts: deps.timestamp(),
+      ammo: {},
       items: {
         [TEST_WEAPON_ENTITY_URN]: {
           id: TEST_WEAPON_ENTITY_URN,
@@ -274,7 +274,7 @@ function createActorFromScenarioData(
 
   // Apply skill customizations using context API
   if (actorData.skills && Object.keys(actorData.skills).length > 0) {
-    context.actorSkillApi.setActorSkillRanks(actor, actorData.skills);
+    context.skillApi.setActorSkillRanks(actor, actorData.skills);
   }
 
   // Apply stat customizations using context utilities

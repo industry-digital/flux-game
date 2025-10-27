@@ -99,6 +99,11 @@ export type CombatCommand<
  */
 export type CombatTurn = {
   /**
+   * The sequence number of the round, starting with `1`
+   */
+  round: number;
+
+  /**
    * The sequence number of the turn, starting with `1`
    */
   number: number;
@@ -171,10 +176,8 @@ export type CombatSessionData = {
    */
   battlefield: Battlefield;
 
-  /**
-   * The rounds of the combat session
-   */
-  rounds: CombatRounds;
+  currentTurn: CombatTurn;
+  completedTurns: CombatTurn[];
 
   /**
    * Initiative sorting optimization - tracks if initiative is already sorted

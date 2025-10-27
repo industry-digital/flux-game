@@ -195,8 +195,8 @@ describe('createCombatLifecycle', () => {
     const lifecycle = createCombatLifecycle(context, session, TEST_SESSION_ID, TEST_PLACE_ID, gameState);
     lifecycle.startCombat();
 
-    expect(session.data.rounds.current.turns.current.actor).toBeDefined();
-    expect([TEST_ACTOR_ID, TEST_ACTOR_2_ID]).toContain(session.data.rounds.current.turns.current.actor);
+    expect(session.data.currentTurn.actor).toBeDefined();
+    expect([TEST_ACTOR_ID, TEST_ACTOR_2_ID]).toContain(session.data.currentTurn.actor);
   });
 
   it('should preserve existing initiative when starting combat', () => {
@@ -251,7 +251,7 @@ describe('createCombatLifecycle', () => {
     expect(session.data.initiative.get(TEST_ACTOR_2_ID)?.result).toBe(20);
 
     // First actor should be the one with highest initiative (actor2)
-    expect(session.data.rounds.current.turns.current.actor).toBe(TEST_ACTOR_2_ID);
+    expect(session.data.currentTurn.actor).toBe(TEST_ACTOR_2_ID);
   });
 
   it('should use initiative rolls from options when provided', () => {
@@ -305,7 +305,7 @@ describe('createCombatLifecycle', () => {
     expect(session.data.initiative.get(TEST_ACTOR_2_ID)?.result).toBe(5);
 
     // First actor should be the one with highest initiative from options (actor1)
-    expect(session.data.rounds.current.turns.current.actor).toBe(TEST_ACTOR_ID);
+    expect(session.data.currentTurn.actor).toBe(TEST_ACTOR_ID);
   });
 
   it('should override existing initiative when options are provided', () => {
@@ -379,7 +379,7 @@ describe('createCombatLifecycle', () => {
     expect(session.data.initiative.get(TEST_ACTOR_2_ID)?.result).toBe(2);
 
     // First actor should be from options initiative (actor1)
-    expect(session.data.rounds.current.turns.current.actor).toBe(TEST_ACTOR_ID);
+    expect(session.data.currentTurn.actor).toBe(TEST_ACTOR_ID);
   });
 
   describe('pauseCombat and resumeCombat', () => {
