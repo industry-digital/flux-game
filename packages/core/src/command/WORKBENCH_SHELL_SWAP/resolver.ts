@@ -5,7 +5,7 @@ import { createActorCommand } from '~/lib/intent';
 const SHELL_VERB = 'shell';
 const SWAP_VERB = 'swap';
 
-export const shellSwapResolver: CommandResolver<SwapShellCommand> = (
+export const swapShellResolver: CommandResolver<SwapShellCommand> = (
   context: CommandResolverContext,
   intent: Intent,
 ): SwapShellCommand | undefined => {
