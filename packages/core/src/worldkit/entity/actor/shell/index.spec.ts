@@ -17,7 +17,6 @@ import {
   ShellInput
 } from './index';
 import { createActor } from '../index';
-import { createTestActor } from '~/testing/world-testing';
 import { createModifier } from '~/worldkit/entity/modifier';
 
 const DEFAULT_TIMESTAMP = 1234567890000;
