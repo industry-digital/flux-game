@@ -1,6 +1,7 @@
 import { CommandResolver, CommandResolverContext, CommandType, Intent } from '~/types/intent';
 import { RenameShellCommand } from './types';
 import { createActorCommand } from '~/lib/intent';
+import { sanitize } from '~/intent/sanitization';
 
 const SHELL_VERB = 'shell';
 const RENAME_VERB = 'rename';
@@ -45,6 +46,15 @@ export const renameShellResolver: CommandResolver<RenameShellCommand> = (
     return undefined;
   }
 
+  // Sanitize the new name to ensure it's safe
+  let sanitizedNewName: string;
+  try {
+    sanitizedNewName = sanitize(newName);
+  } catch (error) {
+    // Invalid shell name, reject the command
+    return undefined;
+  }
+
   return createActorCommand({
     id: intent.id,
     type: CommandType.WORKBENCH_SHELL_RENAME,
@@ -52,7 +62,7 @@ export const renameShellResolver: CommandResolver<RenameShellCommand> = (
     location: intent.location,
     session: intent.session,
     args: {
-      newName,
+      newName: sanitizedNewName,
       shellNameOrId,
     },
   });

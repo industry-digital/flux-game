@@ -1,6 +1,7 @@
 import { CommandResolver, CommandResolverContext, Intent, CommandType } from '~/types/intent';
 import { createActorCommand } from '~/lib/intent';
 import { AttackCommand } from './types';
+import { ErrorCode } from '~/types/error';
 
 const ATTACK_VERB = 'attack';
 
@@ -16,12 +17,12 @@ export const attackResolver: CommandResolver<AttackCommand> = (
   }
 
   if (intent.tokens.length < 1) {
-    context.declareError("Attack who?");
+    context.declareError(ErrorCode.INVALID_TARGET, intent.id);
     return undefined;
   }
 
   const targetToken = intent.tokens[0];
-  const target = context.resolveActor(intent, targetToken);
+  const target = context.resolveActor(intent, targetToken, true);
   if (!target) {
     return undefined;
   }

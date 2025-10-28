@@ -9,21 +9,31 @@ import * as readline from 'readline';
 import { createTransformerContext } from '~/worldkit/context';
 import { createIntent, executeIntent, getAvailableHandlers } from '~/intent';
 import { TransformerContext } from '~/types/handler';
-import { ActorURN, PlaceURN } from '~/types/taxonomy';
+import { ActorURN, PlaceURN, SessionURN } from '~/types/taxonomy';
 import { PURE_GAME_LOGIC_HANDLERS } from '~/handlers';
 import { createDefaultWorldScenario } from '~/testing/scenarios/default';
 import { getTemplatesForLocale } from '~/narrative';
 import { Locale } from '~/types/i18n';
 import { TemplateFunction } from '~/types';
+import { WorldScenarioHook } from '~/worldkit/scenario';
+import { ALICE_ID } from '~/testing/constants';
+import { parseSessionStrategyFromUrn } from '~/worldkit/session';
+
+
+// Actor state tracking
+type ActorTracker = {
+  sessions: Map<ActorURN, SessionURN>;
+  locations: Map<ActorURN, PlaceURN>;
+};
 
 // CLI State
-interface CliState {
+type CliState = {
   context: TransformerContext;
+  scenario: WorldScenarioHook;
   currentActor?: ActorURN;
-  currentLocation?: PlaceURN;
-  workbenchSession?: any;
+  actors: ActorTracker;
   running: boolean;
-}
+};
 
 const context = createTransformerContext();
 const defaultScenario = createDefaultWorldScenario(context);
@@ -31,10 +41,80 @@ const defaultScenario = createDefaultWorldScenario(context);
 // Initialize CLI state with default actor context
 const state: CliState = {
   context,
-  currentActor: 'flux:actor:alice' as ActorURN, // Default to alice from the scenario
-  currentLocation: 'flux:place:default' as PlaceURN, // Default location
+  scenario: defaultScenario,
+  currentActor: ALICE_ID,
+  actors: {
+    sessions: new Map(),
+    locations: new Map(),
+  },
   running: true,
 };
+
+const SESSION_STARTED_REGEXP = /^(combat|workbench):session:started/;
+const SESSION_ENDED_REGEXP = /^(combat|workbench):session:ended/;
+
+/**
+ * Session management functions
+ */
+function updateSessionTracking(): void {
+  if (!state.currentActor) return;
+
+  // Check for session start events
+  const sessionStartEvents = state.context.getDeclaredEvents(SESSION_STARTED_REGEXP);
+
+  // Handle all session start events (workbench, combat, etc.)
+  for (const event of sessionStartEvents) {
+    if ('sessionId' in event.payload && event.payload.sessionId) {
+      const sessionId = event.payload.sessionId;
+      state.actors.sessions.set(state.currentActor, sessionId);
+    }
+  }
+
+  // Check for session end events
+  const sessionEndEvents = state.context.getDeclaredEvents(SESSION_ENDED_REGEXP);
+
+  // Handle session ends
+  for (const event of sessionEndEvents) {
+    if ('sessionId' in event.payload && event.payload.sessionId) {
+      const sessionId = event.payload.sessionId;
+
+      // Remove actor from this session if they were in it
+      if (state.actors.sessions.get(state.currentActor) === sessionId) {
+        state.actors.sessions.delete(state.currentActor);
+      }
+
+      // Session type is encoded in URN, no cleanup needed
+    }
+  }
+}
+
+function getCurrentActorSession(): SessionURN | undefined {
+  if (!state.currentActor) return undefined;
+  return state.actors.sessions.get(state.currentActor);
+}
+
+function getSessionType(sessionId: SessionURN): string {
+  return parseSessionStrategyFromUrn(sessionId);
+}
+
+function getCurrentActorLocation(): PlaceURN | undefined {
+  if (!state.currentActor) return undefined;
+  return state.actors.locations.get(state.currentActor);
+}
+
+function updateActorLocation(actorId: ActorURN, location: PlaceURN): void {
+  state.actors.locations.set(actorId, location);
+}
+
+// Initialize actor locations from the world state
+function initializeActorLocations(): void {
+  for (const [actorId, actor] of Object.entries(state.context.world.actors)) {
+    state.actors.locations.set(actorId as ActorURN, actor.location);
+  }
+}
+
+// Initialize on startup
+initializeActorLocations();
 
 // Create readline interface
 const rl = readline.createInterface({
@@ -61,11 +141,14 @@ function showWelcome(): void {
  * Show current context state
  */
 function showContext(): void {
+  const currentSession = getCurrentActorSession();
+  const sessionDisplay = currentSession ? `${getSessionType(currentSession)} (${currentSession})` : 'none';
+
   console.log(`
 Current Context:
   Actor: ${state.currentActor || 'none'}
-  Location: ${state.currentLocation || 'none'}
-  Workbench Session: ${state.workbenchSession ? 'active' : 'none'}
+  Location: ${getCurrentActorLocation() || 'none'}
+  Session: ${sessionDisplay}
 
 World State:
   Actors: ${Object.keys(state.context.world.actors).length}
@@ -125,6 +208,7 @@ CLI COMMANDS:
   events              - Show declared events
   errors              - Show declared errors
   handlers            - List available command handlers
+  sessions            - Show active sessions
   clear               - Clear screen
   exit                - Exit CLI
 
@@ -160,9 +244,18 @@ function switchActor(actorId: string): void {
     return;
   }
 
+  const previousActor = state.currentActor;
   state.currentActor = actorId as ActorURN;
-  state.currentLocation = actor.location;
-  console.log(`✓ Switched to actor: ${actor.name} (${actorId})`);
+  updateActorLocation(actorId as ActorURN, actor.location);
+
+  const currentSession = getCurrentActorSession();
+  const sessionInfo = currentSession ? ` (in ${getSessionType(currentSession)} session)` : '';
+
+  console.log(`✓ Switched to actor: ${actor.name} (${actorId})${sessionInfo}`);
+
+  if (previousActor && currentSession) {
+    console.log(`  Session context maintained from previous commands.`);
+  }
 }
 
 /**
@@ -180,20 +273,49 @@ function showHandlers(): void {
 }
 
 /**
+ * Show session information
+ */
+function showSessions(): void {
+  console.log('\nSession Information:');
+
+  if (state.actors.sessions.size === 0) {
+    console.log('  No active sessions.');
+    return;
+  }
+
+  console.log('  Active Sessions:');
+  for (const [actorId, sessionId] of state.actors.sessions) {
+    const sessionType = getSessionType(sessionId);
+    const isCurrent = actorId === state.currentActor ? ' (current)' : '';
+    console.log(`    ${actorId}: ${sessionType} session ${sessionId}${isCurrent}`);
+  }
+}
+
+/**
  * Execute a game command via the intent system
  */
 function executeGameCommand(input: string): void {
-  if (!state.currentActor || !state.currentLocation) {
+  if (!state.currentActor || !getCurrentActorLocation()) {
     console.log('No actor context set. Use "actor <id>" or load a scenario first.');
     return;
   }
 
   try {
-    // Create intent from input
+    // Get current session for this actor (if any)
+    const currentSession = getCurrentActorSession();
+
+    // Get current location
+    const currentLocation = getCurrentActorLocation();
+    if (!currentLocation) {
+      console.log('No location set for current actor.');
+      return;
+    }
+
+    // Create intent from input, threading the session ID
     const intent = createIntent({
       actor: state.currentActor,
-      location: state.currentLocation,
-      session: state.workbenchSession?.session?.id,
+      location: currentLocation,
+      session: currentSession, // ← Thread the session ID!
       text: input,
     });
 
@@ -202,6 +324,9 @@ function executeGameCommand(input: string): void {
 
     // Update state with new context
     state.context = updatedContext;
+
+    // Update session tracking based on declared events
+    updateSessionTracking();
 
     // Show any events or errors that were declared
     const events = state.context.getDeclaredEvents();
@@ -290,6 +415,10 @@ function processCommand(input: string): void {
 
     case 'handlers':
       showHandlers();
+      break;
+
+    case 'sessions':
+      showSessions();
       break;
 
     case 'clear':

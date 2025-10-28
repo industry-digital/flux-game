@@ -18,7 +18,7 @@ export const listShellsResolver: CommandResolver<ListShellsCommand> = (
     return undefined;
   }
 
-  if (!LIST_VERBS.has(intent.tokens[1])) {
+  if (!LIST_VERBS.has(intent.tokens[0])) {
     return undefined;
   }
 
