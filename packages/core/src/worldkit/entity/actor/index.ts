@@ -113,12 +113,14 @@ const createDefaultActor = (deps: ActorFactoryDependencies): Actor => {
     sessions: {},
   };
 
-  // Create the first shell with hardcoded ID "1" to avoid circular dependency
-  const defaultShell = deps.createShell({ id: '1' });
+  // Create three shells
+  for (let i = 1; i <= 3; i++) {
+    const shell = deps.createShell({ id: i.toString() });
+    actor.shells[shell.id] = shell;
+  }
 
-  // Add the shell to the actual actor
-  actor.shells[defaultShell.id] = defaultShell;
-  actor.currentShell = defaultShell.id;
+  // The first shell is the default shell
+  actor.currentShell = '1';
 
   return actor;
 };

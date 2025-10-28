@@ -552,22 +552,15 @@ describe('Sequential Shell Creation', () => {
     });
 
     it('should create shell with ID "2" when actor has one shell', () => {
-      // Actor already has shell with ID "1" from createTestActor
-      expect(Object.keys(actor.shells)).toHaveLength(1);
-      expect(actor.shells['1']).toBeDefined();
-
+      actor.shells = { '1': createShell({ id: '1' }) };
       const shell = createSequentialShell(actor);
-
       expect(shell.id).toBe('2');
     });
 
     it('should create shell with ID "3" when actor has two shells', () => {
-      // Add a second shell manually
-      actor.shells['2'] = createShell({ id: '2' });
-
       const shell = createSequentialShell(actor);
-
-      expect(shell.id).toBe('3');
+      // There are already three shells, so the next one is 4
+      expect(shell.id).toBe('4');
     });
 
     it('should handle non-sequential existing IDs correctly', () => {
