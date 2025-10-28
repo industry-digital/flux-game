@@ -9,6 +9,7 @@ export * from '~/worldkit/combat';
 export * from '~/worldkit/context';
 export * from '~/worldkit/physics/mass';
 export * from '~/worldkit/session';
+export * from '~/worldkit/scenario';
 
 export * from '~/types/i18n';
 export * from '~/narrative';
