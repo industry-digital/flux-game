@@ -26,7 +26,6 @@ import {
   narrateActorDidMove,
   narrateActorDidArrive,
   narrateActorDidDepart,
-  narrateActorDidSwapShell,
   narrateActorDidOpenHelpFile,
   narrateActorDidLook,
 } from './actor';
@@ -51,6 +50,7 @@ import {
   narrateActorDidReviewShellStats,
   narrateActorDidListShellComponents,
   narrateActorDidExamineComponent,
+  narrateActorDidSwapShell,
 } from './workbench';
 
 import {

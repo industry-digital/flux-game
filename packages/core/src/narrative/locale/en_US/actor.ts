@@ -5,9 +5,8 @@ import {
   ActorDidMove,
   ActorDidArrive,
   ActorDidDepart,
-  ActorDidSwapShell,
   ActorDidOpenHelpFile,
-  ActorDidLook
+  ActorDidLook,
 } from '~/types/event';
 
 import { TemplateFunction } from '~/types/narrative';
@@ -83,19 +82,7 @@ export const narrateActorDidDepart: TemplateFunction<ActorDidDepart, ActorURN> =
 };
 
 export const narrateActorDidLook: TemplateFunction<ActorDidLook, ActorURN> = (context, event, recipientId) => {
-  const { world } = context;
   return `narrateActorDidLook`;
-};
-
-export const narrateActorDidSwapShell: TemplateFunction<ActorDidSwapShell, ActorURN> = (context, event, recipientId) => {
-  const { world } = context;
-  const actor = world.actors[event.actor];
-
-  if (recipientId === event.actor) {
-    return `You swap to a different shell configuration.`;
-  }
-
-  return `${actor.name} reconfigures their shell.`;
 };
 
 export const narrateActorDidOpenHelpFile: TemplateFunction<ActorDidOpenHelpFile, ActorURN> = (context, event, recipientId) => {

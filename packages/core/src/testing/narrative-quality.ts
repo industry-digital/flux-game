@@ -66,7 +66,9 @@ export const withNonEmptyValidation = <T extends WorldEvent>(
 };
 
 /**
- * Comprehensive higher-order function that combines all narrative quality validations.
+ * Higher-order function that combines core narrative quality validations.
+ * Validates against serialization artifacts and debugging remnants, but does not
+ * assume narratives should be non-empty (that's a separate concern).
  * Returns a test function that can be used with vitest's `it()`.
  */
 export const withNarrativeQuality = <T extends WorldEvent>(
@@ -77,7 +79,6 @@ export const withNarrativeQuality = <T extends WorldEvent>(
 ) => () => {
   withObjectSerializationValidation(narrativeFunction, context, event, perspective)();
   withDebuggingArtifactValidation(narrativeFunction, context, event, perspective)();
-  withNonEmptyValidation(narrativeFunction, context, event, perspective)();
 };
 
 /**
@@ -127,32 +128,3 @@ export const withComposedValidation = <T extends WorldEvent>(
     validator(narrativeFunction, context, event, perspective)();
   });
 };
-
-/**
- * Convenience function for testing multiple perspectives with the same validation.
- * Returns an array of test functions that can be used with vitest's `it()`.
- */
-export const withMultiplePerspectives = <T extends WorldEvent>(
-  validator: NarrativeValidator<T>,
-  narrativeFunction: TemplateFunction<T, ActorURN, string>,
-  context: TransformerContext,
-  event: T,
-  perspectives: ActorURN[]
-) => perspectives.map(perspective => ({
-  perspective,
-  testFn: validator(narrativeFunction, context, event, perspective)
-}));
-
-/**
- * Convenience function for applying composed validation to multiple perspectives.
- */
-export const withComposedMultiplePerspectives = <T extends WorldEvent>(
-  validators: NarrativeValidator<T>[],
-  narrativeFunction: TemplateFunction<T, ActorURN, string>,
-  context: TransformerContext,
-  event: T,
-  perspectives: ActorURN[]
-) => perspectives.map(perspective => ({
-  perspective,
-  testFn: withComposedValidation(...validators)(narrativeFunction, context, event, perspective)
-}));

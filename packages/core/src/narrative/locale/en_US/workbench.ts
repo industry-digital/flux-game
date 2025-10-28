@@ -13,6 +13,7 @@ import {
   ActorDidListShellComponents,
   ActorDidExamineComponent,
   WorldEvent,
+  ActorDidSwapShell,
 } from '~/types/event';
 import { ShellMutationType } from '~/types/workbench';
 import { TemplateFunction } from '~/types/narrative';
@@ -261,7 +262,8 @@ const baseNarrateActorDidDiffShellMutations: TemplateFunction<ActorDidDiffShellM
     return result;
   }
 
-  return `${actor.name} reviews their shell modifications.`;
+  // No narrative for observers
+  return '';
 };
 
 const WORKBENCH_PROMPTS = `> Enter \`shell commit\` to commit your changes.
@@ -274,72 +276,49 @@ export const narrateActorDidDiffShellMutations = withWorkbenchPrompts(
 );
 
 export const narrateActorDidUndoShellMutations: TemplateFunction<ActorDidUndoShellMutations, ActorURN> = (context, event, recipientId) => {
-  const { world } = context;
-  const actor = world.actors[event.actor!];
-
-  if (!actor) {
-    return '';
-  }
-
   if (recipientId === event.actor) {
-    return 'You have reversed your staged shell modifications.';
+    return 'You have discarded your staged shell modifications.';
   }
 
-  return `${actor.name} reverses ${getPossessivePronoun(actor.gender)} recent shell modifications.`;
+  // No narrative for observers
+  return '';
 };
 
 export const narrateActorDidCommitShellMutations: TemplateFunction<ActorDidCommitShellMutations, ActorURN> = (context, event, recipientId) => {
-  const { world } = context;
-  const actor = world.actors[event.actor!];
-  const { cost, mutations } = event.payload;
-
-  if (!actor) {
-    return '';
-  }
 
   if (recipientId === event.actor) {
+    const { cost, mutations } = event.payload;
     const mutationCount = mutations.length;
     const costText = cost > 0 ? ` for ${cost} credits` : '';
     return `You commit ${mutationCount} shell modification${mutationCount !== 1 ? 's' : ''}${costText}.`;
   }
 
-  return `${actor.name} commits their shell modifications.`;
+  // No narrative for observers
+  return '';
 };
 
 /**
  * Narrative for when an actor mounts a component to their shell
  */
 export const narrateActorDidMountComponent: TemplateFunction<ActorDidMountComponent, ActorURN> = (context, event, recipientId) => {
-  const { world } = context;
-  const actor = world.actors[event.actor!];
-
-  if (!actor) {
-    return '';
-  }
-
   if (recipientId === event.actor) {
     return 'You mount a component to your shell.';
   }
 
-  return `${actor.name} mounts a component to their shell.`;
+  // No narrative for observers
+  return '';
 };
 
 /**
  * Narrative for when an actor unmounts a component from their shell
  */
 export const narrateActorDidUnmountComponent: TemplateFunction<ActorDidUnmountComponent, ActorURN> = (context, event, recipientId) => {
-  const { world } = context;
-  const actor = world.actors[event.actor!];
-
-  if (!actor) {
-    return '';
-  }
-
   if (recipientId === event.actor) {
     return 'You unmount a component from your shell.';
   }
 
-  return `${actor.name} unmounts a component from their shell.`;
+  // No narrative for observers
+  return '';
 };
 
 const ACTIVE_SHELL_INDICATOR = '✓';
@@ -471,25 +450,34 @@ export const narrateActorDidListShellComponents: TemplateFunction<ActorDidListSh
     return `You examine the ${componentCount} components mounted on your shell.`;
   }
 
-  return `${actor.name} examines their shell components.`;
+  // No narrative for observers
+  return '';
 };
 
 /**
  * Narrative for when an actor examines a specific component
  */
 export const narrateActorDidExamineComponent: TemplateFunction<ActorDidExamineComponent, ActorURN> = (context, event, recipientId) => {
-  const { world } = context;
-  const actor = world.actors[event.actor!];
+  if (recipientId === event.actor) {
+    return 'You examine the component in detail.';
+  }
+
+  // No narrative for observers
+  return '';
+};
+
+export const narrateActorDidSwapShell: TemplateFunction<ActorDidSwapShell, ActorURN> = (context, event, recipientId) => {
+  const actor = context.world.actors[event.actor!];
 
   if (!actor) {
     return '';
   }
 
   if (recipientId === event.actor) {
-    return 'You examine the component in detail.';
+    const shell = actor.shells[event.payload.toShellId];
+    return `Core consciousness transferred to shell "${shell.name}."`;
   }
 
-  return `${actor.name} examines a component.`;
+  // No narrative for observers
+  return '';
 };
-
-// Note: ActorDidExamineShell is handled in actor.ts as it's an actor examination event

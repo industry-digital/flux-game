@@ -290,7 +290,7 @@ describe('English Workbench Narratives - Snapshot Tests', () => {
     it('should render exact diff review from observer perspective', () => {
       const event = createActorDidDiffShellMutationsEvent((e) => ({ ...e, actor: ALICE_ID }));
       const narrative = narrateActorDidDiffShellMutations(context, event, BOB_ID);
-      expect(narrative).toBe('Alice reviews their shell modifications.');
+      expect(narrative).toBe('');
     });
   });
 
@@ -298,13 +298,13 @@ describe('English Workbench Narratives - Snapshot Tests', () => {
     it('should render exact undo from actor perspective', () => {
       const event = createActorDidUndoShellMutationsEvent((e) => ({ ...e, actor: ALICE_ID }));
       const narrative = narrateActorDidUndoShellMutations(context, event, ALICE_ID);
-      expect(narrative).toBe('You have reversed your staged shell modifications.');
+      expect(narrative).toBe('You have discarded your staged shell modifications.');
     });
 
     it('should render exact undo from observer perspective', () => {
       const event = createActorDidUndoShellMutationsEvent((e) => ({ ...e, actor: ALICE_ID }));
       const narrative = narrateActorDidUndoShellMutations(context, event, BOB_ID);
-      expect(narrative).toBe('Alice reverses her recent shell modifications.');
+      expect(narrative).toBe('');
     });
   });
 
@@ -373,7 +373,7 @@ describe('English Workbench Narratives - Snapshot Tests', () => {
       }));
 
       const narrative = narrateActorDidCommitShellMutations(context, event, BOB_ID);
-      expect(narrative).toBe('Alice commits their shell modifications.');
+      expect(narrative).toBe('');
     });
 
     it('should render exact commit with different actor names', () => {
@@ -620,10 +620,14 @@ describe('English Workbench Narratives - Snapshot Tests', () => {
           actor: ALICE_ID,
         }));
 
+        // All perspectives should pass basic quality checks
         const perspectives = [ALICE_ID, BOB_ID];
         perspectives.forEach(perspective => {
           withNarrativeQuality(narrateActorDidDiffShellMutations, context, event, perspective)();
         });
+
+        // Only actor perspective should have content (observers return empty string for privacy)
+        withNonEmptyValidation(narrateActorDidDiffShellMutations, context, event, ALICE_ID)();
       });
     });
 
@@ -634,10 +638,14 @@ describe('English Workbench Narratives - Snapshot Tests', () => {
           actor: ALICE_ID,
         }));
 
+        // All perspectives should pass basic quality checks
         const perspectives = [ALICE_ID, BOB_ID];
         perspectives.forEach(perspective => {
           withNarrativeQuality(narrateActorDidUndoShellMutations, context, event, perspective)();
         });
+
+        // Only actor perspective should have content (observers return empty string for privacy)
+        withNonEmptyValidation(narrateActorDidUndoShellMutations, context, event, ALICE_ID)();
       });
     });
 
@@ -653,10 +661,14 @@ describe('English Workbench Narratives - Snapshot Tests', () => {
           },
         }));
 
+        // All perspectives should pass basic quality checks
         const perspectives = [ALICE_ID, BOB_ID];
         perspectives.forEach(perspective => {
           withNarrativeQuality(narrateActorDidCommitShellMutations, context, event, perspective)();
         });
+
+        // Only actor perspective should have content (observers return empty string for privacy)
+        withNonEmptyValidation(narrateActorDidCommitShellMutations, context, event, ALICE_ID)();
       });
     });
 
@@ -703,11 +715,7 @@ describe('English Workbench Narratives - Snapshot Tests', () => {
         const actor = context.world.actors[ALICE_ID];
         actor.shells = {};
 
-        const event = createActorDidListShellsEvent((e) => ({
-          ...e,
-          actor: ALICE_ID,
-        }));
-
+        const event = createActorDidListShellsEvent((e) => ({ ...e, actor: ALICE_ID }));
         withNarrativeQuality(narrateActorDidListShells, context, event, ALICE_ID)();
       });
     });
@@ -748,6 +756,7 @@ describe('English Workbench Narratives - Snapshot Tests', () => {
 
         withPerspectiveDifferentiation(narrateActorDidStageShellMutation, context, stageEvent, [ALICE_ID, BOB_ID])();
 
+        // For actor-only functions, we expect actor to have content and observer to be empty
         const commitEvent = createActorDidCommitShellMutationsEvent((e) => ({
           ...e,
           actor: ALICE_ID,
@@ -758,7 +767,13 @@ describe('English Workbench Narratives - Snapshot Tests', () => {
           },
         }));
 
-        withPerspectiveDifferentiation(narrateActorDidCommitShellMutations, context, commitEvent, [ALICE_ID, BOB_ID])();
+        // Validate that actor has content and observer is empty (which means they're different)
+        const actorCommitNarrative = narrateActorDidCommitShellMutations(context, commitEvent, ALICE_ID);
+        const observerCommitNarrative = narrateActorDidCommitShellMutations(context, commitEvent, BOB_ID);
+
+        expect(actorCommitNarrative, 'Actor should have commit narrative').toBeTruthy();
+        expect(observerCommitNarrative, 'Observer should have empty commit narrative').toBe('');
+        expect(actorCommitNarrative, 'Actor and observer narratives should be different').not.toBe(observerCommitNarrative);
       });
     });
   });
