@@ -14,6 +14,7 @@ import { PURE_GAME_LOGIC_HANDLERS } from '~/handlers';
 import { createDefaultWorldScenario } from '~/testing/scenarios/default';
 import { getTemplatesForLocale } from '~/narrative';
 import { Locale } from '~/types/i18n';
+import { TemplateFunction } from '~/types';
 
 // CLI State
 interface CliState {
@@ -212,7 +213,7 @@ function executeGameCommand(input: string): void {
       // Generate and display narrative for each event
       const templates = getTemplatesForLocale(Locale.en_US);
       for (const event of events) {
-        const template = templates[event.type];
+        const template = templates[event.type] as TemplateFunction<any, any>;
         if (template && state.currentActor) {
           const narrative = template(state.context, event, state.currentActor);
           if (narrative.trim()) {
