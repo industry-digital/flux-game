@@ -60,6 +60,20 @@ export class SchemaManager {
   private loaded = false;
 
   /**
+   * Extract schema type from URN
+   * URNs follow the pattern: flux:schema:{type}:{name}
+   * @param urn The URN to extract type from
+   * @returns The schema type
+   */
+  private extractSchemaTypeFromURN(urn: string): string {
+    const parts = urn.split(':');
+    if (parts.length < 3 || parts[0] !== 'flux' || parts[1] !== 'schema') {
+      throw new Error(`Invalid schema URN format: ${urn}. Expected flux:schema:{type}:{name}`);
+    }
+    return parts[2];
+  }
+
+  /**
    * Register a schema loader for a specific schema type
    */
   public registerLoader<TUrn extends string = SchemaURN>(
@@ -195,6 +209,77 @@ export class SchemaManager {
    */
   public getRegisteredSchemaTypes(): string[] {
     return Array.from(this.loaders.keys());
+  }
+
+  /**
+   * Add a single schema to the manager
+   * The schema type is inferred from the schema's URN
+   * @param schema The schema object (must have a urn property)
+   */
+  public addSchema<T extends keyof SchemaRegistry>(
+    schema: SchemaRegistry[T] & { urn: T }
+  ): void {
+    if (!this.loaded) {
+      throw new Error('Schemas must be loaded before adding individual schemas');
+    }
+
+    const schemaType = this.extractSchemaTypeFromURN(schema.urn);
+    if (!this.loaders.has(schemaType)) {
+      throw new Error(`No loader registered for schema type: ${schemaType}`);
+    }
+
+    this.schemas.set(schema.urn, schema);
+  }
+
+  /**
+   * Add multiple schemas to the manager
+   * Schema types are inferred from each schema's URN
+   * This operation is atomic - if any schema fails validation, none are added
+   * @param schemas Array of schema objects (each must have a urn property)
+   */
+  public addSchemas<T extends keyof SchemaRegistry>(
+    schemas: (SchemaRegistry[T] & { urn: T })[]
+  ): void {
+    if (!this.loaded) {
+      throw new Error('Schemas must be loaded before adding schemas');
+    }
+
+    // Validate all schemas first (atomic operation)
+    for (const schema of schemas) {
+      const schemaType = this.extractSchemaTypeFromURN(schema.urn);
+      if (!this.loaders.has(schemaType)) {
+        throw new Error(`No loader registered for schema type: ${schemaType}`);
+      }
+    }
+
+    // Only add schemas if all validations passed
+    for (const schema of schemas) {
+      this.schemas.set(schema.urn, schema);
+    }
+  }
+
+  /**
+   * Check if a schema exists by URN
+   * @param urn The URN to check
+   * @returns True if the schema exists, false otherwise
+   */
+  public hasSchema(urn: string): boolean {
+    if (!this.loaded) {
+      return false;
+    }
+    return this.schemas.has(urn);
+  }
+
+  /**
+   * Remove a schema by URN
+   * @param urn The URN of the schema to remove
+   * @returns True if the schema was removed, false if it didn't exist
+   */
+  public removeSchema(urn: string): boolean {
+    if (!this.loaded) {
+      throw new Error('Schemas must be loaded before removing schemas');
+    }
+    return this.schemas.delete(urn);
   }
 }
 
