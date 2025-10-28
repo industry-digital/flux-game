@@ -1,6 +1,5 @@
 import { PureReducer, TransformerContext } from '~/types/handler';
 import { UseWorkbenchCommand } from './types';
-import { EventType } from '~/types/event';
 import { createWorkbenchSessionApi } from '~/worldkit/workbench/session/session';
 import { ErrorCode } from '~/types/error';
 
@@ -26,16 +25,7 @@ export const activateWorkbenchReducer: PureReducer<TransformerContext, UseWorkbe
   // If this is a new session, add it to the actor's active sessions
   if (isNew) {
     actor.sessions[session.id] = context.timestamp();
-
-    context.declareEvent({
-      type: EventType.WORKBENCH_SESSION_DID_START,
-      actor: actor.id,
-      location: actor.location,
-      trace: command.id,
-      payload: {
-        sessionId: session.id,
-      },
-    });
+    // Note: Event declaration is handled by createWorkbenchSessionApi
   }
 
   return context;
