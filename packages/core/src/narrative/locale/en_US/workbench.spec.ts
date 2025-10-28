@@ -397,21 +397,18 @@ describe('English Workbench Narratives - Snapshot Tests', () => {
       const event = createActorDidListShellsEvent((e) => ({ ...e, actor: ALICE_ID }));
       const narrative = narrateActorDidListShells(context, event, ALICE_ID);
       expect(narrative).toContain('SHELL INVENTORY');
-      expect(narrative).toContain('  ID NAME                 POW FIN RES  MASS');
-      expect(narrative).toContain('  -- -------------------- --- --- --- ------');
       expect(narrative).toContain('✓ Currently active shell');
-      // Should show Alice's shell with her stats (40/40/40)
-      expect(narrative).toMatch(/✓.*40.*40.*40/);
+      // Should show Alice's shell with accessible format
+      expect(narrative).toMatch(/✓\s+Shell 1: ".*" \(\d+\.\d+kg, 40 POW, 40 FIN, 40 RES\)/);
     });
 
     it('should render exact shell listing from actor perspective with single shell', () => {
       const event = createActorDidListShellsEvent((e) => ({ ...e, actor: BOB_ID }));
       const narrative = narrateActorDidListShells(context, event, BOB_ID);
       expect(narrative).toContain('SHELL INVENTORY');
-      expect(narrative).toContain('  ID NAME                 POW FIN RES  MASS');
-      // Should show Bob's shell with his stats
-      expect(narrative).toMatch(/✓.*\d+.*\d+.*\d+/);
       expect(narrative).toContain('✓ Currently active shell');
+      // Should show Bob's shell with accessible format
+      expect(narrative).toMatch(/✓\s+Shell 1: ".*" \(\d+\.\d+kg, \d+ POW, \d+ FIN, \d+ RES\)/);
     });
 
     it('should show active shell indicator correctly', () => {
@@ -430,29 +427,29 @@ describe('English Workbench Narratives - Snapshot Tests', () => {
       expect(dataRows).toHaveLength(1);
     });
 
-    it('should format stats correctly in individual columns', () => {
+    it('should format stats correctly in accessible format', () => {
       const event = createActorDidListShellsEvent((e) => ({ ...e, actor: ALICE_ID }));
       const narrative = narrateActorDidListShells(context, event, ALICE_ID);
-      // Should show Alice's shell stats right-aligned in 3-char columns
-      expect(narrative).toMatch(/✓.*\s+\d+\s+\d+\s+\d+\s+/);
+      // Should show Alice's shell stats in accessible format
+      expect(narrative).toMatch(/\d+ POW, \d+ FIN, \d+ RES/);
     });
 
     it('should format mass correctly', () => {
       const event = createActorDidListShellsEvent((e) => ({ ...e, actor: ALICE_ID }));
       const narrative = narrateActorDidListShells(context, event, ALICE_ID);
-      // Should show mass in kg format, right-aligned
-      expect(narrative).toMatch(/\d+\.\d+kg$/m);
+      // Should show mass in kg format within parentheses
+      expect(narrative).toMatch(/\(\d+\.\d+kg,/);
     });
 
-    it('should truncate long shell names correctly', () => {
-      // Create a shell with a very long name to test truncation
+    it('should display long shell names correctly', () => {
+      // Create a shell with a very long name
       const actor = context.world.actors[ALICE_ID];
       const shellId = Object.keys(actor.shells)[0];
-      actor.shells[shellId].name = 'This is a very long shell name that should be truncated';
+      actor.shells[shellId].name = 'This is a very long shell name that should be displayed fully';
 
       const event = createActorDidListShellsEvent((e) => ({ ...e, actor: ALICE_ID }));
       const narrative = narrateActorDidListShells(context, event, ALICE_ID);
-      expect(narrative).toContain('This is a very lo...');
+      expect(narrative).toContain('"This is a very long shell name that should be displayed fully"');
     });
 
     it('should handle shells with no name (show "Unnamed Shell")', () => {
@@ -464,14 +461,14 @@ describe('English Workbench Narratives - Snapshot Tests', () => {
 
       const event = createActorDidListShellsEvent((e) => ({ ...e, actor: ALICE_ID }));
       const narrative = narrateActorDidListShells(context, event, ALICE_ID);
-      expect(narrative).toContain('Unnamed Shell');
+      expect(narrative).toContain('"Unnamed Shell"');
     });
 
     it('should display shell IDs as simple counters', () => {
       const event = createActorDidListShellsEvent((e) => ({ ...e, actor: ALICE_ID }));
       const narrative = narrateActorDidListShells(context, event, ALICE_ID);
-      // Should show simple counter ID (right-aligned)
-      expect(narrative).toMatch(/✓\s+1\s/);
+      // Should show simple counter ID in accessible format
+      expect(narrative).toMatch(/Shell 1:/);
       expect(narrative).not.toContain('flux:');
     });
 
@@ -941,3 +938,12 @@ describe('English Workbench Narratives - Snapshot Tests', () => {
     });
   });
 });
+
+/*
+SHELL INVENTORY
+
+✓  Shell 1: "FerociousLeopard630" (94kg, 60 POW, 40 FIN, 40 RES)
+   Shell 2: "DangerMouse837" (70kg, 80 POW, 30 FIN, 50 RES)
+   Shell 3: "SwiftShadow912" (85kg, 50 POW, 70 FIN, 60 RES)
+
+*/

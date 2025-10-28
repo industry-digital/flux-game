@@ -375,10 +375,8 @@ export const narrateActorDidListShells: TemplateFunction<ActorDidListShells, Act
   // Create mass API for shell mass calculations
   const massApi = context.mass;
 
-  // Build table header
+  // Build accessible shell listing
   let result = 'SHELL INVENTORY\n\n';
-  result += '  ID NAME                 POW FIN RES  MASS\n';
-  result += '  -- -------------------- --- --- --- ------\n';
 
   // Single-pass iteration over shells using for...in (zero-allocation)
   let shellCounter = 0;
@@ -394,30 +392,12 @@ export const narrateActorDidListShells: TemplateFunction<ActorDidListShells, Act
     // Calculate shell mass (equipment + base shell mass) and convert to kg
     const shellMassKg = massApi.computeShellMass(shell) / 1000;
 
-    // Format shell ID as simple counter (right-aligned in 2-char column)
-    const displayShellId = shellCounter.toString().padStart(2);
-
-    // Format shell name (truncate if needed)
-    const displayName = shellName.length > 20 ? shellName.substring(0, 17) + '...' : shellName;
-
-    // Format individual stats (right-aligned in 3-char columns, max 999)
-    const powDisplay = powStat.toFixed(0).padStart(3);
-    const finDisplay = finStat.toFixed(0).padStart(3);
-    const resDisplay = resStat.toFixed(0).padStart(3);
-
-    // Format mass (right-aligned in 6-char column, max 999.9kg)
-    const massDisplay = `${shellMassKg.toFixed(1)}kg`.padStart(6);
-
     // Add active shell indicator
-    const activeIndicator = isActive ? ACTIVE_SHELL_INDICATOR + ' ' : '  ';
+    const activeIndicator = isActive ? ACTIVE_SHELL_INDICATOR + '  ' : '   ';
 
+    // Format as accessible list item: Shell N: "Name" (mass, POW POW, FIN FIN, RES RES)
     result += activeIndicator +
-              displayShellId + ' ' +
-              displayName.padEnd(20) + ' ' +
-              powDisplay + ' ' +
-              finDisplay + ' ' +
-              resDisplay + ' ' +
-              massDisplay + '\n';
+              `Shell ${shellCounter}: "${shellName}" (${shellMassKg.toFixed(1)}kg, ${powStat} POW, ${finStat} FIN, ${resStat} RES)\n`;
   }
 
   result += '\n' + ACTIVE_SHELL_INDICATOR + ' Currently active shell';
