@@ -1,6 +1,6 @@
 import { Shell } from '~/types/entity/shell';
 import { ShellDiff, ShellMutation, PerformanceChanges, StatChanges, NoChange, DiffValue } from '~/types/workbench';
-import { ShellPerformanceProfile } from '~/types/entity/shell';
+import { ShellPerformanceProfile } from '~/types/shell';
 import { createShellPreview } from '~/worldkit/workbench/preview';
 import { calculateShellPerformance, ShellPerformanceDependencies } from '~/worldkit/entity/actor/shell/instrumentation';
 import { calculateTotalCost } from '~/worldkit/workbench/cost';

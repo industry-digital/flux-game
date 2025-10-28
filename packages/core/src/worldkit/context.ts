@@ -14,8 +14,7 @@ import { createActorSkillApi } from '~/worldkit/entity/actor/skill';
 import { createRollApi } from '~/worldkit/dice';
 import { createActorWeaponApi } from '~/worldkit/entity/actor/weapon';
 import { getSchemaTranslation } from '~/narrative/schema';
-import { createPartyApi, PartyApi } from '~/worldkit/entity/group/party';
-import { GroupApiContext } from '~/worldkit/entity/group/api/api';
+import { createPartyApi } from '~/worldkit/entity/group/party';
 import { ErrorCode } from '~/types/error';
 
 export type MapFunction<T> = (context: T) => T;
@@ -49,11 +48,8 @@ export const createWorldProjection = (map: MapFunction<WorldProjection> = identi
   });
 };
 
-type PartyApiResolver = (context: GroupApiContext) => PartyApi;
-
 /**
- * Returns a fully-formed TransformerContext with a CombatContext and a MassComputationState
- * This is a *batch-level* construct that services an entire batch of commands.
+ * Returns a fully-formed TransformerContext
  */
 export const createTransformerContext = (
   map: MapFunction<TransformerContext> = identity,

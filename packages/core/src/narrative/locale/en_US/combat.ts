@@ -16,7 +16,7 @@ import { AttackType, MovementDirection } from '~/types/combat';
 import { SessionStatus } from '~/types/session';
 import { TemplateFunction } from '~/types/narrative';
 import { ActorURN, SchemaURN } from '~/types/taxonomy';
-import { Actor, Gender } from '~/types/entity/actor';
+import { Actor } from '~/types/entity/actor';
 import {
   withUserEventValidation,
   withInteractionValidation,
@@ -32,16 +32,8 @@ import { Locale, SchemaTranslation } from '~/types/i18n';
 import { TransformerContext } from '~/types/handler';
 import { WeaponSchema } from '~/types/schema/weapon';
 import { Perspective } from '~/types/narrative';
+import { getPossessivePronoun } from './grammar/pronouns';
 
-const HIS = 'his';
-const HER = 'her';
-
-/**
- * Get the appropriate possessive pronoun based on actor gender
- */
-const getPossessivePronoun = (gender: Gender): string => {
-  return gender === Gender.MALE ? HIS : HER;
-};
 
 /**
  * Get localized weapon name from schema (en_US)

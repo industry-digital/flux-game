@@ -19,6 +19,7 @@ import { TemplateFunction } from '~/types/narrative';
 import { ActorURN } from '~/types/taxonomy';
 import { Stat } from '~/types/entity/actor';
 import { SHELL_STAT_NAMES, getNaturalStatValue } from '~/worldkit/entity/actor/stats';
+import { getPossessivePronoun } from '~/narrative/locale/en_US/grammar/pronouns';
 
 export const narrateWorkbenchSessionDidStart: TemplateFunction<WorkbenchSessionDidStart, ActorURN> = (context, event, recipientId) => {
   const { world } = context;
@@ -44,10 +45,10 @@ export const narrateWorkbenchSessionDidEnd: TemplateFunction<WorkbenchSessionDid
   }
 
   if (recipientId === event.actor) {
-    return 'You finish your work at the shell workbench.';
+    return 'You finish your work at the workbench.';
   }
 
-  return `${actor.name} finishes working at the shell workbench.`;
+  return `${actor.name} finishes working at the workbench.`;
 };
 
 export const narrateActorDidStageShellMutation: TemplateFunction<ActorDidStageShellMutation, ActorURN> = (context, event, recipientId) => {
@@ -70,7 +71,7 @@ export const narrateActorDidStageShellMutation: TemplateFunction<ActorDidStageSh
     }
   }
 
-  return `${actor.name} makes adjustments to their shell design.`;
+  return `${actor.name} makes adjustments to ${getPossessivePronoun(actor.gender)} shell.`;
 };
 
 const RIGHT_ARROW = ' -> ';
@@ -281,10 +282,10 @@ export const narrateActorDidUndoShellMutations: TemplateFunction<ActorDidUndoShe
   }
 
   if (recipientId === event.actor) {
-    return 'You undo your recent shell modifications.';
+    return 'You have reversed your staged shell modifications.';
   }
 
-  return `${actor.name} undoes some shell modifications.`;
+  return `${actor.name} reverses ${getPossessivePronoun(actor.gender)} recent shell modifications.`;
 };
 
 export const narrateActorDidCommitShellMutations: TemplateFunction<ActorDidCommitShellMutations, ActorURN> = (context, event, recipientId) => {
@@ -376,8 +377,8 @@ export const narrateActorDidListShells: TemplateFunction<ActorDidListShells, Act
 
   // Build table header
   let result = 'SHELL INVENTORY\n\n';
-  result += 'ID NAME                 POW FIN RES  MASS\n';
-  result += '-- -------------------- --- --- --- ------\n';
+  result += '  ID NAME                 POW FIN RES  MASS\n';
+  result += '  -- -------------------- --- --- --- ------\n';
 
   // Single-pass iteration over shells using for...in (zero-allocation)
   let shellCounter = 0;
