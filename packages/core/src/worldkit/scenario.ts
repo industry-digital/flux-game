@@ -6,10 +6,12 @@ import { TransformerContext } from '~/types/handler';
 import { AmmoSchema } from '~/types/schema/ammo';
 import { WeaponSchema } from '~/types/schema/weapon';
 import { createCurrencyTransaction, executeCurrencyTransaction } from '~/worldkit/entity';
+import { Session } from '~/types/session';
 
 export type WorldScenarioHook = {
   addPlace: (place: Place) => void,
   addActor: (actor: Actor) => void,
+  addSession: (session: Session) => void,
   assignWeapon: (actor: Actor, weapon: WeaponSchema) => void,
   assignAmmo: (actor: Actor, ammo: AmmoSchema, quantity: number) => void,
   assignCurrency: (actor: Actor, currency: CurrencyType, amount: number) => void,
@@ -20,6 +22,7 @@ export type WorldScenarioHook = {
 export type WorldScenarioInput = {
   actors?: Actor[];
   places?: Place[];
+  sessions?: Session[];
 };
 
 export const DEFAULT_WORLD_SCENARIO_INPUT: Readonly<WorldScenarioInput> = Object.freeze({
@@ -39,6 +42,10 @@ export const createWorldScenario = (
 
   const addActor = (actor: Actor) => {
     world.actors[actor.id] = actor;
+  };
+
+  const addSession = (session: Session) => {
+    world.sessions[session.id] = session;
   };
 
   const assignWeapon = (actor: Actor, weapon: WeaponSchema) => {
@@ -103,9 +110,16 @@ export const createWorldScenario = (
     }
   }
 
+  if (input.sessions) {
+    for (const session of input.sessions) {
+      addSession(session);
+    }
+  }
+
   return {
     addPlace,
     addActor,
+    addSession,
     assignWeapon,
     assignAmmo,
     assignCurrency,

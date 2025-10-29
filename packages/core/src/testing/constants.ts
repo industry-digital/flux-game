@@ -9,4 +9,5 @@ export const DEFAULT_LOCATION: PlaceURN = 'flux:place:test';
 export const DEFAULT_TRACE: string = 'test-trace';
 export const DEFAULT_CURRENCY_SESSION: SessionURN = 'flux:session:test:currency';
 export const DEFAULT_COMBAT_SESSION: SessionURN = 'flux:session:combat:test';
+export const DEFAULT_WORKBENCH_SESSION: SessionURN = 'flux:session:workbench:test';
 export const DEFAULT_PARTY_ID: PartyURN = 'flux:group:party:test:001';

@@ -29,6 +29,7 @@ import { TARGET } from '~/command/TARGET';
 import { WORKBENCH_SHELL_LIST } from '~/command/WORKBENCH_SHELL_LIST';
 import { WORKBENCH_SHELL_RENAME } from '~/command/WORKBENCH_SHELL_RENAME';
 import { WORKBENCH_SHELL_SWAP } from '~/command/WORKBENCH_SHELL_SWAP';
+import { WORKBENCH_SHELL_STATUS } from '~/command/WORKBENCH_SHELL_STATUS';
 import { WORKBENCH_USE } from '~/command/WORKBENCH_USE';
 
 /**
@@ -60,6 +61,7 @@ export const PURE_GAME_LOGIC_HANDLERS: PureHandlerImplementation<TransformerCont
     WORKBENCH_SHELL_LIST,
     WORKBENCH_SHELL_RENAME,
     WORKBENCH_SHELL_SWAP,
+    WORKBENCH_SHELL_STATUS,
     WORKBENCH_USE,
   ],
   (Handler) => Handler.prototype.dependencies ?? [],

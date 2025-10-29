@@ -86,6 +86,7 @@ export type CombatScenarioInput = {
  * @param input - Scenario configuration including participants, weapons, and optional location
  * @param dependencies - Injectable dependencies for testing (optional)
  * @returns A complete combat scenario with actors, session, and hooks
+ * @deprecated Use createWorldScenario instead
  */
 export function useCombatScenario(
   context: TransformerContext,

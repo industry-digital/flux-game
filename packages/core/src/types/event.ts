@@ -99,6 +99,7 @@ export enum EventType {
   ACTOR_DID_ASSESS_RANGE = 'actor:range:acquired',
   ACTOR_DID_MOVE_IN_COMBAT = 'actor:combat:moved',
   ACTOR_WAS_ATTACKED = 'actor:attack:received',
+  ACTOR_DID_ASSESS_SHELL_STATUS = 'actor:shell:status:assessed',
   COMBAT_SESSION_DID_END = 'combat:session:ended',
   COMBAT_SESSION_DID_START = 'combat:session:started',
   COMBAT_SESSION_STATUS_DID_CHANGE = 'combat:session:status:changed',
@@ -420,6 +421,15 @@ export type ActorDidOpenHelpFileInput = AbstractWorldEventInput<
   }
 >;
 
+export type ActorDidAssessShellStatus = EventBase & ActorDidAssessShellStatusInput;
+export type ActorDidAssessShellStatusInput = AbstractWorldEventInput<
+  EventType.ACTOR_DID_ASSESS_SHELL_STATUS,
+  {
+    sessionId: SessionURN;
+    shellId: string;
+  }
+>;
+
 // New workbench events
 export type ActorDidListShells = EventBase & ActorDidListShellsInput;
 export type ActorDidListShellsInput = AbstractWorldEventInput<
@@ -702,6 +712,7 @@ export type WorldEventInput =
   | ActorDidLeavePartyInput
   | ActorDidInspectPartyInput
   | ActorDidRenameShellInput
+  | ActorDidAssessShellStatusInput
   ;
 
 /**

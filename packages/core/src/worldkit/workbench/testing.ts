@@ -1,11 +1,12 @@
 import { Actor, Stat, ActorStats, ShellStat, Gender } from '~/types/entity/actor';
 import { Shell } from '~/types/entity/shell';
 import { ShellMutation, ShellMutationType, StatMutation, StatMutationOperation } from '~/types/workbench';
-import { ActorURN, PlaceURN } from '~/types/taxonomy';
+import { ActorURN, PlaceURN, SessionURN } from '~/types/taxonomy';
 import { TransformerContext } from '~/types/handler';
 import { createTestActor } from '~/testing/world-testing';
 import { createWorkbenchSessionApi } from './session/session';
 import { WorkbenchSessionApi } from './session/session';
+import { DEFAULT_WORKBENCH_SESSION } from '~/testing/constants';
 
 export type WorkbenchScenarioDependencies = {
   useWorkbenchSession: typeof createWorkbenchSessionApi;
@@ -49,6 +50,7 @@ export type WorkbenchScenarioHook = {
 };
 
 export type WorkbenchScenarioInput = {
+  sessionId?: SessionURN;
   participants: Record<ActorURN, WorkbenchScenarioActorInput>;
   location?: PlaceURN;
 };
@@ -56,6 +58,7 @@ export type WorkbenchScenarioInput = {
 /**
  * Creates a complete workbench scenario with actors, shells, and workbench sessions.
  * Leverages the fact that createActor automatically creates shells.
+ * @deprecated Use createWorldScenario instead
  */
 export function useWorkbenchScenario(
   context: TransformerContext,
@@ -65,6 +68,7 @@ export function useWorkbenchScenario(
   }: WorkbenchScenarioDependencies = DEFAULT_TEST_WORKBENCH_DEPS,
 ) {
   const {
+    sessionId = DEFAULT_WORKBENCH_SESSION,
     participants,
     location,
   } = input;

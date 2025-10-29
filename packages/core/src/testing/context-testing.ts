@@ -10,6 +10,7 @@ import { RollResultWithoutModifiers } from '~/types/dice';
 /**
  * Factory function for creating mock TransformerContext with sensible defaults
  * Pure function that returns a new mock context each time
+ * @deprecated Use `createTransformerContext` instead
  */
 export const createTestTransformerContext = (overrides?: Partial<TransformerContext>): TransformerContext => {
   // Create arrays to store events for proper testing
