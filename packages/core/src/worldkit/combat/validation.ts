@@ -1,6 +1,6 @@
 import { PureReducer, TransformerContext } from '~/types/handler';
 import { Command } from '~/types/intent';
-import { ActorURN, SessionURN } from '~/types/taxonomy';
+import { ActorURN } from '~/types/taxonomy';
 import { SessionStrategy } from '~/types/session';
 import { CombatSession } from '~/types/combat';
 import { ErrorCode } from '~/types/error';
@@ -14,7 +14,7 @@ import { ErrorCode } from '~/types/error';
  * 4. The actor is actually in the combat session
  */
 export function withExistingCombatSession<TCommand extends Command>(
-  reducer: PureReducer<TransformerContext, TCommand>
+  reducer: (context: TransformerContext, command: TCommand, session: CombatSession) => TransformerContext
 ): PureReducer<TransformerContext, TCommand> {
   return (context: TransformerContext, command: TCommand) => {
     // Check that command has a session field
@@ -46,7 +46,7 @@ export function withExistingCombatSession<TCommand extends Command>(
     }
 
     // All validations passed, call the wrapped reducer
-    return reducer(context, command);
+    return reducer(context, command, combatSession);
   };
 }
 
@@ -56,74 +56,20 @@ export function withExistingCombatSession<TCommand extends Command>(
  * Works with the new stateless approach where session ID is in the command
  */
 export function withPreventCrossSessionTargeting<TCommand extends Command>(
-  reducer: PureReducer<TransformerContext, TCommand>,
+  reducer: (context: TransformerContext, command: TCommand, session: CombatSession) => TransformerContext,
   targetOptional: boolean = false
-): PureReducer<TransformerContext, TCommand> {
-  return (context: TransformerContext, command: TCommand) => {
+): (context: TransformerContext, command: TCommand, session: CombatSession) => TransformerContext {
+  return (context: TransformerContext, command: TCommand, session: CombatSession) => {
     const target = (command as any).args?.target as ActorURN | undefined;
 
     // If target is optional and not provided, validation passes
     if (!target && targetOptional) {
-      return reducer(context, command);
+      return reducer(context, command, session);
     }
 
     // If target is required but not provided, validation fails
     if (!target && !targetOptional) {
       context.declareError(`${command.type}: Target is required`, command.id);
-      return context;
-    }
-
-    // Get the session from the command
-    const session = command.session ? context.world.sessions[command.session] as CombatSession : null;
-
-    // If no session or session not found, check if both actors have no combat sessions
-    if (!command.session || !session) {
-      // Check if the actor has any combat sessions
-      const actor = context.world.actors[command.actor];
-      const targetActor = context.world.actors[target!];
-
-
-      if (actor && targetActor) {
-        let actorCombatSession = '';
-        let targetCombatSession = '';
-
-        // Single pass through all sessions, checking both actors
-        for (const sessionId in context.world.sessions) {
-          const session = context.world.sessions[sessionId as SessionURN];
-          if (session && session.strategy === SessionStrategy.COMBAT) {
-            // Check if actor is in this combat session
-            if (!actorCombatSession && sessionId in actor.sessions) {
-              actorCombatSession = sessionId;
-            }
-            // Check if target is in this combat session
-            if (!targetCombatSession && sessionId in targetActor.sessions) {
-              targetCombatSession = sessionId;
-            }
-            // Early exit if both found
-            if (actorCombatSession && targetCombatSession) {
-              break;
-            }
-          }
-        }
-
-        // Allow only if BOTH actors have no combat sessions
-        if (!actorCombatSession && !targetCombatSession) {
-          return reducer(context, command);
-        }
-
-        // Block if one actor is in combat and the other isn't
-        if (actorCombatSession && !targetCombatSession) {
-          context.declareError(`${command.type}: Target is outside your combat session`, command.id);
-          return context;
-        }
-
-        if (!actorCombatSession && targetCombatSession) {
-          context.declareError(`${command.type}: Target is already in combat`, command.id);
-          return context;
-        }
-      }
-
-      context.declareError(`${command.type}: Session not found: ${command.session}`, command.id);
       return context;
     }
 
@@ -134,19 +80,6 @@ export function withPreventCrossSessionTargeting<TCommand extends Command>(
       return context;
     }
 
-    return reducer(context, command);
+    return reducer(context, command, session);
   };
-}
-
-/**
- * Convenience function for commands that require combat session and target validation
- * Composes withExistingCombatSession and withPreventCrossSessionTargeting
- */
-export function withCombatSessionAndTarget<TCommand extends Command>(
-  reducer: PureReducer<TransformerContext, TCommand>,
-  targetOptional: boolean = false
-): PureReducer<TransformerContext, TCommand> {
-  return withExistingCombatSession(
-    withPreventCrossSessionTargeting(reducer, targetOptional)
-  );
 }

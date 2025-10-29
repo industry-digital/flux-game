@@ -36,7 +36,7 @@ export type TemplateFunction<
  * complete narrative coverage across all supported game events.
  */
 export type LanguageTemplates = {
-  [K in EventType]: TemplateFunction<Extract<WorldEvent, { type: K }>, any>;
+  [K in EventType]: TemplateFunction<Extract<WorldEvent, { type: K }>, any, TemplateOutput>;
 };
 
 export type LanguageTemplatesResolver = () => LanguageTemplates;

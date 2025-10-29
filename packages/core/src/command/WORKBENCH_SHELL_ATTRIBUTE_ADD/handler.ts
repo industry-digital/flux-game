@@ -1,15 +1,15 @@
 import { PureHandlerInterface, TransformerContext } from '~/types/handler';
-import { ListShellsCommand, ListShellsCommandArgs } from './types';
-import { listShellsReducer } from './reducer';
-import { listShellsResolver } from './resolver';
+import { AddShellAttributeCommand, AddShellAttributeCommandArgs } from './types';
+import { addShellAttributeReducer } from './reducer';
+import { addShellAttributeResolver } from './resolver';
 import { Command, CommandType } from '~/types/intent';
 import { isCommandOfType } from '~/lib/intent';
 
-export class WORKBENCH_SHELL_LIST implements PureHandlerInterface<TransformerContext, ListShellsCommand> {
-  resolve = listShellsResolver;
-  reduce = listShellsReducer;
+export class WORKBENCH_SHELL_ATTRIBUTE_ADD implements PureHandlerInterface<TransformerContext, AddShellAttributeCommand> {
+  resolve = addShellAttributeResolver;
+  reduce = addShellAttributeReducer;
   dependencies = [];
-  handles = (command: Command): command is ListShellsCommand => {
-    return isCommandOfType<CommandType.WORKBENCH_SHELL_LIST, ListShellsCommandArgs>(command, CommandType.WORKBENCH_SHELL_LIST);
+  handles = (command: Command): command is AddShellAttributeCommand => {
+    return isCommandOfType<CommandType.WORKBENCH_SHELL_ATTRIBUTE_ADD, AddShellAttributeCommandArgs>(command, CommandType.WORKBENCH_SHELL_ATTRIBUTE_ADD);
   };
 }

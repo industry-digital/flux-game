@@ -7,10 +7,9 @@ import { withExistingCombatSession, withPreventCrossSessionTargeting } from '~/w
 export const strikeReducer: PureReducer<TransformerContext, StrikeCommand> = withBasicWorldStateValidation(
   withExistingCombatSession(
     withPreventCrossSessionTargeting(
-      (context, command) => {
-        const { actors, sessions } = context.world;
+      (context, command, session) => {
+        const { actors } = context.world;
         const actor = actors[command.actor];
-        const session = sessions[command.session!];
 
         const { combatant, ...combatantApi } = createCombatantApi(context, session, actor);
 

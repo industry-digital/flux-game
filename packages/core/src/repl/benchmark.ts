@@ -25,6 +25,7 @@ const SAMPLE_MESSAGES = [
 ];
 
 // Mock console that doesn't actually output (for clean benchmarking)
+// @ts-expect-error: Low-fidelity mock
 class MockConsole implements Console {
   log(...args: any[]): void {
     // Simulate the syscall overhead without actual I/O
@@ -126,7 +127,7 @@ async function runBenchmark(): Promise<void> {
   console.log('🚀 Starting Output Strategy Benchmark\n');
   console.log('This benchmark compares syscall amortization strategies:\n');
 
-  const mockConsole = new MockConsole();
+  const mockConsole = new MockConsole() as any;
   const results: BenchmarkResult[] = [];
 
   for (const messageCount of MESSAGE_COUNTS) {

@@ -1,20 +1,17 @@
 import { PureReducer, TransformerContext } from '~/types/handler';
 import { AttackCommand } from './types';
 import { createCombatSessionApi } from '~/worldkit/combat/session/session';
-import { Team, CombatSession } from '~/types/combat';
+import { Team } from '~/types/combat';
 import { withBasicWorldStateValidation } from '~/command/validation';
 import { withExistingCombatSession, withPreventCrossSessionTargeting } from '~/worldkit/combat/validation';
 
 export const attackReducer: PureReducer<TransformerContext, AttackCommand> = withBasicWorldStateValidation(
   withExistingCombatSession(
     withPreventCrossSessionTargeting(
-      (context, command) => {
+      (context, command, session) => {
         const { actors } = context.world;
         const actor = actors[command.actor];
         const targetActor = actors[command.args.target];
-
-        // Get the session from the command (already validated by withExistingCombatSession)
-        const session = context.world.sessions[command.session!] as CombatSession;
 
         // Get combat session API for the existing session
         const { getCombatantApi, addCombatant, startCombat } = createCombatSessionApi(context, actor.location, session.id);
