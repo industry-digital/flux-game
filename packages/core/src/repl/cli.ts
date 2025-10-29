@@ -53,6 +53,10 @@ const state: CliState = {
 const SESSION_STARTED_REGEXP = /^(combat|workbench):session:started/;
 const SESSION_ENDED_REGEXP = /^(combat|workbench):session:ended/;
 
+function print(text: string): void {
+  console.log(text);
+}
+
 /**
  * Session management functions
  */
@@ -127,7 +131,7 @@ const rl = readline.createInterface({
  * Display welcome message and basic help
  */
 function showWelcome(): void {
-  console.log(`
+  print(`
 ╔══════════════════════════════════════════════════════════════════╗
 ║                    Flux Game Engine CLI/REPL                     ║
 ║                                                                  ║
@@ -137,23 +141,32 @@ function showWelcome(): void {
 `);
 }
 
+function countKeysInPlainObject(obj: object): number {
+  let output = 0;
+  for (let _ in obj) {
+    output++;
+  }
+  return output;
+}
+
 /**
  * Show current context state
  */
 function showContext(): void {
+  const { world } = state.context;
   const currentSession = getCurrentActorSession();
   const sessionDisplay = currentSession ? `${getSessionType(currentSession)} (${currentSession})` : 'none';
 
-  console.log(`
+  print(`
 Current Context:
   Actor: ${state.currentActor || 'none'}
   Location: ${getCurrentActorLocation() || 'none'}
   Session: ${sessionDisplay}
 
 World State:
-  Actors: ${Object.keys(state.context.world.actors).length}
-  Places: ${Object.keys(state.context.world.places).length}
-  Sessions: ${Object.keys(state.context.world.sessions).length}
+  Actors: ${countKeysInPlainObject(world.actors)}
+  Places: ${countKeysInPlainObject(world.places)}
+  Sessions: ${countKeysInPlainObject(world.sessions)}
 `);
 }
 
@@ -163,13 +176,13 @@ World State:
 function showEvents(): void {
   const events = state.context.getDeclaredEvents();
   if (events.length === 0) {
-    console.log('No events declared.');
+    print('No events declared.');
     return;
   }
 
-  console.log(`\nDeclared Events (${events.length}):`);
+  print(`\nDeclared Events (${events.length}):`);
   for (const event of events) {
-    console.log(`  ${event.type} - ${event.trace || 'no trace'}`);
+    print(`  ${event.type} - ${event.trace || 'no trace'}`);
   }
 }
 
@@ -179,13 +192,13 @@ function showEvents(): void {
 function showErrors(): void {
   const errors = state.context.getDeclaredErrors();
   if (errors.length === 0) {
-    console.log('No errors declared.');
+    print('No errors declared.');
     return;
   }
 
-  console.log(`\nDeclared Errors (${errors.length}):`);
+  print(`\nDeclared Errors (${errors.length}):`);
   for (const error of errors) {
-    console.log(`  ${error.code || 'unknown'} - ${error.trace || 'no trace'}`);
+    print(`  ${error.code || 'unknown'} - ${error.trace || 'no trace'}`);
   }
 }
 
@@ -194,11 +207,11 @@ function showErrors(): void {
  */
 function showHelp(command?: string): void {
   if (command) {
-    console.log(`No specific help available for '${command}'. Type 'help' for all commands.`);
+    print(`No specific help available for '${command}'. Type 'help' for all commands.`);
     return;
   }
 
-  console.log(`
+  print(`
 Available Commands:
 
 CLI COMMANDS:
@@ -224,14 +237,14 @@ Type any game command to execute it through the intent system.
  * Load a predefined scenario
  */
 function loadScenario(scenarioName: string): void {
-  console.log(`Scenario loading not yet implemented: ${scenarioName}`);
+  print(`Scenario loading not yet implemented: ${scenarioName}`);
 }
 
 /**
  * Create a new actor
  */
 function createActor(name: string): void {
-  console.log(`Actor creation not yet implemented: ${name}`);
+  print(`Actor creation not yet implemented: ${name}`);
 }
 
 /**
@@ -240,7 +253,7 @@ function createActor(name: string): void {
 function switchActor(actorId: string): void {
   const actor = state.context.world.actors[actorId as ActorURN];
   if (!actor) {
-    console.log(`Actor not found: ${actorId}`);
+    print(`Actor not found: ${actorId}`);
     return;
   }
 
@@ -251,10 +264,10 @@ function switchActor(actorId: string): void {
   const currentSession = getCurrentActorSession();
   const sessionInfo = currentSession ? ` (in ${getSessionType(currentSession)} session)` : '';
 
-  console.log(`✓ Switched to actor: ${actor.name} (${actorId})${sessionInfo}`);
+  print(`✓ Switched to actor: ${actor.name} (${actorId})${sessionInfo}`);
 
   if (previousActor && currentSession) {
-    console.log(`  Session context maintained from previous commands.`);
+    print(`  Session context maintained from previous commands.`);
   }
 }
 
@@ -262,13 +275,13 @@ function switchActor(actorId: string): void {
  * Show available command handlers
  */
 function showHandlers(): void {
-  console.log(`\nAvailable Command Handlers (${PURE_GAME_LOGIC_HANDLERS.length}):`);
+  print(`\nAvailable Command Handlers (${PURE_GAME_LOGIC_HANDLERS.length}):`);
 
   const handlers = getAvailableHandlers();
   for (const handler of handlers) {
     // Try to get the command type from the handler
     const handlerName = handler.constructor.name;
-    console.log(`  ${handlerName}`);
+    print(`  ${handlerName}`);
   }
 }
 
@@ -276,18 +289,18 @@ function showHandlers(): void {
  * Show session information
  */
 function showSessions(): void {
-  console.log('\nSession Information:');
+  print('\nSession Information:');
 
   if (state.actors.sessions.size === 0) {
-    console.log('  No active sessions.');
+    print('  No active sessions.');
     return;
   }
 
-  console.log('  Active Sessions:');
+  print('  Active Sessions:');
   for (const [actorId, sessionId] of state.actors.sessions) {
     const sessionType = getSessionType(sessionId);
     const isCurrent = actorId === state.currentActor ? ' (current)' : '';
-    console.log(`    ${actorId}: ${sessionType} session ${sessionId}${isCurrent}`);
+    print(`    ${actorId}: ${sessionType} session ${sessionId}${isCurrent}`);
   }
 }
 
@@ -296,14 +309,14 @@ function showSessions(): void {
  */
 async function renderNarrativeSequence(sequence: NarrativeSequence): Promise<void> {
   for (const item of sequence) {
-    if (item.text.trim()) {
-      console.log(`📖 ${item.text}`);
-    }
     if (item.delay > 0) {
       await new Promise(resolve => setTimeout(resolve, item.delay));
     }
+    if (item.text.trim()) {
+      print(item.text);
+    }
   }
-  console.log(); // Add final newline after sequence
+  print(''); // Add final newline after sequence
 }
 
 /**
@@ -311,7 +324,7 @@ async function renderNarrativeSequence(sequence: NarrativeSequence): Promise<voi
  */
 async function executeGameCommand(input: string): Promise<void> {
   if (!state.currentActor || !getCurrentActorLocation()) {
-    console.log('No actor context set. Use "actor <id>" or load a scenario first.');
+    print('No actor context set. Use "actor <id>" or load a scenario first.');
     return;
   }
 
@@ -326,7 +339,7 @@ async function executeGameCommand(input: string): Promise<void> {
     // Get current location
     const currentLocation = getCurrentActorLocation();
     if (!currentLocation) {
-      console.log('No location set for current actor.');
+      print('No location set for current actor.');
       return;
     }
 
@@ -361,7 +374,7 @@ async function executeGameCommand(input: string): Promise<void> {
           const narrative = template(state.context, event, state.currentActor);
           if (typeof narrative === 'string') {
             if (narrative.trim()) {
-              console.log(`📖 ${narrative}\n`);
+              print(`📖 ${narrative}\n`);
             }
            } else if (Array.isArray(narrative)) {
              // Block input until the narrative sequence is done rendering
@@ -371,10 +384,10 @@ async function executeGameCommand(input: string): Promise<void> {
         }
       }
     } else if (errors.length > 0) {
-      console.log(`✗ Command failed. ${errors.length} error(s) declared.`);
+      print(`✗ Command failed. ${errors.length} error(s) declared.`);
       showErrors();
     } else {
-      console.log('✓ Command executed successfully.');
+      print('✓ Command executed successfully.');
     }
 
   } catch (error) {
@@ -398,8 +411,8 @@ async function processCommand(input: string): Promise<void> {
 
     case 'scenario':
       if (args.length === 0) {
-        console.log('Usage: scenario <name>');
-        console.log('Available: combat-basic, workbench-simple, party-test');
+        print('Usage: scenario <name>');
+        print('Available: combat-basic, workbench-simple, party-test');
       } else {
         loadScenario(args[0]);
       }
@@ -407,19 +420,19 @@ async function processCommand(input: string): Promise<void> {
 
     case 'create':
       if (args.length < 2) {
-        console.log('Usage: create <type> <name>');
-        console.log('Types: actor, place');
+        print('Usage: create <type> <name>');
+        print('Types: actor, place');
       } else if (args[0] === 'actor') {
         createActor(args.slice(1).join(' '));
       } else {
-        console.log(`Unknown create type: ${args[0]}`);
+        print(`Unknown create type: ${args[0]}`);
       }
       break;
 
     case 'actor':
       if (args.length === 0) {
-        console.log('Usage: actor <id>');
-        console.log('Available actors:', Object.keys(state.context.world.actors));
+        print('Usage: actor <id>');
+        print('Available actors:', Object.keys(state.context.world.actors));
       } else {
         switchActor(args[0]);
       }
@@ -469,9 +482,9 @@ function startRepl(): void {
   showWelcome();
 
   // Show initial context
-  console.log('Default scenario loaded with Alice and Bob.');
+  print('Default scenario loaded with Alice and Bob.');
   showContext();
-  console.log('Ready to accept commands!\n');
+  print('Ready to accept commands!\n');
 
   rl.on('line', async (input: string) => {
     await processCommand(input);
@@ -481,7 +494,7 @@ function startRepl(): void {
   });
 
   rl.on('close', () => {
-    console.log('\nGoodbye!');
+    print('\nGoodbye!');
     process.exit(0);
   });
 
