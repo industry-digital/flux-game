@@ -730,11 +730,7 @@ describe('English Workbench Narratives - Snapshot Tests', () => {
 
     describe('Composed quality validation', () => {
       it.skip('should pass all quality checks with composed validators', () => {
-        const event = createWorkbenchSessionDidStartEvent((e) => ({
-          ...e,
-          actor: ALICE_ID,
-        }));
-
+        const event = createWorkbenchSessionDidStartEvent((e) => ({ ...e, actor: ALICE_ID }));
         // Demonstrate composition of validators
         const composedValidator = withComposedValidation<WorkbenchSessionDidStart, NarrativeSequence>(
           withObjectSerializationValidation,
