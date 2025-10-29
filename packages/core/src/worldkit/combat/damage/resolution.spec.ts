@@ -12,7 +12,7 @@ import {
 } from './resolution';
 import { createTestWeapon } from '../testing/weapon';
 import { createActor } from '~/worldkit/entity/actor';
-import { MAX_STAT_VALUE } from '~/worldkit/entity';
+import { MAX_STAT_VALUE } from '~/worldkit/entity/actor/stats';
 
 describe('damage resolution utilities', () => {
   const createTestActor = (powValue: number = 10): Actor => {

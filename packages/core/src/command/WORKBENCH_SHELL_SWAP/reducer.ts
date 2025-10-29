@@ -3,7 +3,6 @@ import { SwapShellCommand } from './types';
 import { createWorkbenchSessionApi } from '~/worldkit/workbench/session/session';
 import { withBasicWorldStateValidation } from '~/command/validation';
 import { ErrorCode } from '~/types/error';
-import { findShellByNameOrId } from '~/worldkit/entity/actor/shell';
 import { createSwapShellAction } from '~/worldkit/workbench/action/swap';
 import { WorldEvent } from '~/types/event';
 
@@ -26,9 +25,9 @@ export const swapShellReducer: PureReducer<TransformerContext, SwapShellCommand>
       return context;
     }
 
-    const shell = findShellByNameOrId(actor, command.args.targetShellNameOrId);
+    const shell = actor.shells[command.args.targetShellId];
     if (!shell) {
-      context.declareError(ErrorCode.INVALID_TARGET, command.id);
+      context.declareError(ErrorCode.NOT_FOUND, command.id);
       return context;
     }
 

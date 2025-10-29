@@ -7,14 +7,14 @@ import { createModifiableScalarAttribute } from '~/worldkit/entity';
 import {
   addShellToActor,
   removeShellFromActor,
-  getShellFromActor, findShellByNameOrId,
+  getShellFromActor,
   createShell,
   createSequentialShell,
   mutateShellStats,
   applyShellStats,
   cloneShell,
   generateRandomShellName,
-  ShellInput
+  ShellInput,
 } from './index';
 import { createActor } from '../index';
 import { createModifier } from '~/worldkit/entity/modifier';
@@ -108,33 +108,6 @@ describe('Shell Management Functions', () => {
     it('should return undefined for non-existent shell', () => {
       const retrieved = getShellFromActor(actor, 'non-existent-id');
       expect(retrieved).toBeUndefined();
-    });
-  });
-
-  describe('findShellByNameOrId', () => {
-    beforeEach(() => {
-      const shell1 = createTestShell({ id: 'exact-id', name: 'Combat Shell' });
-      const shell2 = createTestShell({ id: 'another-id', name: 'Stealth Shell' });
-      addShellToActor(actor, shell1);
-      addShellToActor(actor, shell2);
-    });
-
-    it('should find shell by exact id', () => {
-      const result = findShellByNameOrId(actor, 'exact-id');
-      expect(result).not.toBeNull();
-      expect(result!.id).toBe('exact-id');
-      expect(result!.name).toBe('Combat Shell');
-    });
-
-    it('should find shell by fuzzy name match', () => {
-      const result = findShellByNameOrId(actor, 'combat');
-      expect(result).not.toBeNull();
-      expect(result!.name).toBe('Combat Shell');
-    });
-
-    it('should return undefined for no match', () => {
-      const result = findShellByNameOrId(actor, 'non-existent');
-      expect(result).toBeUndefined();
     });
   });
 });

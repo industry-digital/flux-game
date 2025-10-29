@@ -75,30 +75,6 @@ export const getShellsFromActor = (actor: Actor) => {
   return actor.shells;
 };
 
-/**
- * Find shell by exact ID or fuzzy name match
- */
-export const findShellByNameOrId = (actor: Actor, input: string): Shell | undefined => {
-  const shell = actor.shells[input];
-  // Try exact ID first
-  if (shell) {
-    return shell;
-  }
-
-  // Try fuzzy name matching
-  for (const shellId in actor.shells) {
-    const shell = actor.shells[shellId];
-
-    // ASSUMPTION: `input` is always lowercase
-    if (shell.name.toLowerCase().startsWith(input)) {
-      return shell;
-    }
-  }
-
-  return undefined;
-};
-
-
 export type ShellInput = {
   id?: Shell['id'];
   name?: Shell['name'];

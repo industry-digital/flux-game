@@ -52,19 +52,19 @@ export const createSwapShellAction = (
     // Invariant: The target shell exists in the actor's arsenal.
     const targetShell = actor.shells[shellId];
     if (!targetShell) {
-      declareError(ErrorCode.INVALID_TARGET, trace);
+      declareError(ErrorCode.NOT_FOUND, trace);
       return output;
     }
 
     if (actor.currentShell === targetShell.id) {
-      declareError(ErrorCode.INVALID_TARGET, trace);
+      declareError(ErrorCode.PRECONDITION_FAILED, trace);
       return output;
     }
 
     // Invariant: Core always occupies Shell
     const currentShell = actor.shells[actor.currentShell];
     if (!currentShell) {
-      declareError(ErrorCode.INVALID_TARGET, trace);
+      declareError(ErrorCode.PRECONDITION_FAILED, trace);
       return output;
     }
 

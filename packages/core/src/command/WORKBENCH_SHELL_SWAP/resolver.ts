@@ -4,6 +4,7 @@ import { createActorCommand } from '~/lib/intent';
 
 const SHELL_VERB = 'shell';
 const SWAP_VERB = 'swap';
+const DIGITS_ONLY = /^\d+$/;
 
 export const swapShellResolver: CommandResolver<SwapShellCommand> = (
   context: CommandResolverContext,
@@ -21,7 +22,10 @@ export const swapShellResolver: CommandResolver<SwapShellCommand> = (
     return undefined;
   }
 
-  const targetShellNameOrId = intent.tokens[2];
+  const targetShellId = intent.tokens[2];
+  if (!DIGITS_ONLY.test(targetShellId)) {
+    return undefined;
+  }
 
   return createActorCommand({
     id: intent.id,
@@ -30,7 +34,7 @@ export const swapShellResolver: CommandResolver<SwapShellCommand> = (
     location: intent.location,
     session: intent.session,
     args: {
-      targetShellNameOrId,
+      targetShellId,
     },
   });
 };
