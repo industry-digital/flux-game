@@ -18,6 +18,7 @@ import { NarrativeSequence, TemplateFunction } from '~/types';
 import { WorldScenarioHook } from '~/worldkit/scenario';
 import { ALICE_ID } from '~/testing/constants';
 import { parseSessionStrategyFromUrn } from '~/worldkit/session';
+import { BatchSchedulingOutput } from '~/repl/output';
 
 
 // Actor state tracking
@@ -53,8 +54,10 @@ const state: CliState = {
 const SESSION_STARTED_REGEXP = /^(combat|workbench):session:started/;
 const SESSION_ENDED_REGEXP = /^(combat|workbench):session:ended/;
 
+const output = new BatchSchedulingOutput();
+
 function print(text: string): void {
-  console.log(text);
+  output.print(text);
 }
 
 /**
@@ -432,7 +435,7 @@ async function processCommand(input: string): Promise<void> {
     case 'actor':
       if (args.length === 0) {
         print('Usage: actor <id>');
-        print('Available actors:', Object.keys(state.context.world.actors));
+        print(`Available actors: ${Object.keys(state.context.world.actors).join(', ')}`);
       } else {
         switchActor(args[0]);
       }
@@ -494,7 +497,9 @@ function startRepl(): void {
   });
 
   rl.on('close', () => {
-    print('\nGoodbye!');
+    print('Goodbye. See you next time!');
+    output.flush();
+    output.stop();
     process.exit(0);
   });
 
