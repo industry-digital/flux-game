@@ -1,6 +1,6 @@
 import { PureReducer, TransformerContext } from '~/types/handler';
 import { UseWorkbenchCommand } from './types';
-import { createWorkbenchSessionApi } from '~/worldkit/workbench/session/session';
+import { createWorkbenchSessionApi } from '~/worldkit/workbench/session';
 import { ErrorCode } from '~/types/error';
 
 export const activateWorkbenchReducer: PureReducer<TransformerContext, UseWorkbenchCommand> = (context, command) => {

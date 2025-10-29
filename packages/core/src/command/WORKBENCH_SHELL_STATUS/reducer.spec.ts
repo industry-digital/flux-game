@@ -14,7 +14,7 @@ import { createPlace } from '~/worldkit/entity/place';
 import { Actor } from '~/types/entity/actor';
 import { Place } from '~/types/entity/place';
 import { createActorCommand } from '~/lib/intent';
-import { createWorkbenchSessionApi } from '~/worldkit/workbench/session/session';
+import { createWorkbenchSessionApi } from '~/worldkit/workbench/session';
 import { WorkbenchSession } from '~/types/workbench';
 import { ActorURN } from '~/types/taxonomy';
 

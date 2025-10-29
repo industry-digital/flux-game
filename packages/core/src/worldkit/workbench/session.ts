@@ -48,6 +48,7 @@ export const createWorkbenchSession = (
   }
 
   const data: WorkbenchSessionData = {
+    actorId: input.actorId,
     currentShellId,
     pendingMutations: [],
   };

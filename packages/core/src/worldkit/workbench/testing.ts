@@ -4,8 +4,8 @@ import { ShellMutation, ShellMutationType, StatMutation, StatMutationOperation }
 import { ActorURN, PlaceURN, SessionURN } from '~/types/taxonomy';
 import { TransformerContext } from '~/types/handler';
 import { createTestActor } from '~/testing/world-testing';
-import { createWorkbenchSessionApi } from './session/session';
-import { WorkbenchSessionApi } from './session/session';
+import { createWorkbenchSessionApi } from './session';
+import { WorkbenchSessionApi } from './session';
 import { DEFAULT_WORKBENCH_SESSION } from '~/testing/constants';
 
 export type WorkbenchScenarioDependencies = {
