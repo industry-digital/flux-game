@@ -6,8 +6,11 @@ import { ActorInventoryApi } from '~/worldkit/entity/actor/inventory';
 import { SchemaManager, SchemaRegistry } from '~/worldkit/schema/manager';
 import { BARE_HANDS_WEAPON_DO_NOT_DELETE } from '~/worldkit/schema/weapon';
 import { EntityWithInventory } from '~/worldkit/entity/actor/inventory';
-import { ShellComponent } from '~/types/entity/item';
+import { Item, ShellComponent } from '~/types/entity/item';
 import { ErrorCode } from '~/types/error';
+
+const COMPONENT_SCHEMA_URN_PREFIX = 'flux:schema:component:';
+const WEAPON_SCHEMA_URN_PREFIX = 'flux:schema:weapon:';
 
 export type EntityWithEquipment = EntityWithInventory & {
   equipment: Equipment;
@@ -78,23 +81,7 @@ export function createActorEquipmentApi (
   }
 
   function getEquippedWeapon(entity: EntityWithEquipment, possibleLocations: AnatomyURN[] = allowedAnatomicalLocations): ItemURN | null {
-    if (!entity)  {
-      throw new Error('Entity argument is required');
-    }
-
-    ensureEquipment(entity);
-
-    for (let location of possibleLocations) {
-      const equipmentSlots = entity.equipment[location];
-      if (equipmentSlots) {
-        for (let itemId in equipmentSlots) {
-          if (equipmentSlots[itemId as ItemURN] === 1) {
-            return itemId as ItemURN;
-          }
-        }
-      }
-    }
-    return null;
+    return findAnyEquippedItemMatchingSchemaURNPrefix(entity, WEAPON_SCHEMA_URN_PREFIX, possibleLocations)?.id ?? null;
   }
 
   function getEquippedWeaponSchema(entity: EntityWithEquipment, possibleLocations: AnatomyURN[] = allowedAnatomicalLocations): WeaponSchema {
@@ -178,10 +165,41 @@ export function createActorEquipmentApi (
     }
   }
 
-  function getMountedComponents(
+  function findAnyEquippedItemMatchingSchemaURNPrefix<T extends Item>(
+   entity: EntityWithEquipment,
+   prefix: string,
+   possibleLocations: AnatomyURN[] = allowedAnatomicalLocations,
+  ): T | null {
+    if (!entity)  {
+      throw new Error('Entity argument is required');
+    }
+    if (!prefix) {
+      throw new Error('Prefix argument is required');
+    }
+
+    ensureEquipment(entity);
+
+    for (let location of possibleLocations) {
+      const equipmentSlots = entity.equipment[location];
+      if (equipmentSlots) {
+        for (let itemId in equipmentSlots) {
+          if (equipmentSlots[itemId as ItemURN] === 1) {
+            const item = inventoryApi.getItem(entity, itemId as ItemURN);
+            if (item.schema.startsWith(prefix)) {
+              return item as T;
+            }
+          }
+        }
+      }
+    }
+    return null;
+  }
+
+  function getEquippedItemsMatchingSchemaURNPrefix<T extends Item>(
     entity: EntityWithEquipment,
-    output: ShellComponent[] = [], // Consumers may opt into zero-allocation by passing an empty array
-  ): ShellComponent[] {
+    prefix: string,
+    output: T[] = [],
+  ): T[] {
     output.length = 0;
 
     if (!entity) {
@@ -197,8 +215,8 @@ export function createActorEquipmentApi (
           if (equipmentSlots[itemId as ItemURN] === 1) {
             const item = inventoryApi.getItem(entity, itemId as ItemURN);
             // Check if this is a component by schema URN pattern
-            if (item.schema.startsWith('flux:schema:component:')) {
-              output.push(item as ShellComponent);
+            if (item.schema.startsWith(prefix)) {
+              output.push(item as T);
             }
           }
         }
@@ -206,6 +224,13 @@ export function createActorEquipmentApi (
     }
 
     return output;
+  }
+
+  function getMountedComponents(
+    entity: EntityWithEquipment,
+    output: ShellComponent[] = [], // Consumers may opt into zero-allocation by passing an empty array
+  ): ShellComponent[] {
+    return getEquippedItemsMatchingSchemaURNPrefix(entity, COMPONENT_SCHEMA_URN_PREFIX, output);
   }
 
   return {

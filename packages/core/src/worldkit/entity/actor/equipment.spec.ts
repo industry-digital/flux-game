@@ -216,14 +216,14 @@ describe('createActorEquipmentApi', () => {
       const nonExistentId = 'flux:item:non-existent' as WeaponItemURN;
 
       expect(() => equipmentApi.equip(actor, nonExistentId))
-        .toThrow('Inventory item flux:item:non-existent not found');
+        .toThrow(ErrorCode.NOT_FOUND);
     });
 
     it('should throw error when unequipping non-existent item', () => {
       const nonExistentId = 'flux:item:non-existent' as WeaponItemURN;
 
       expect(() => equipmentApi.unequip(actor, nonExistentId))
-        .toThrow('Inventory item flux:item:non-existent not found');
+        .toThrow(ErrorCode.NOT_FOUND);
     });
 
     it('should handle schema without fit property', () => {
@@ -440,7 +440,7 @@ describe('createActorEquipmentApi', () => {
       expect(equipmentApi.getEquippedWeapon(actor)).toBe(weapon.id);
     });
 
-    it('should handle equipment operations when inventory changes', () => {
+    it('should enforce inventory-equipment consistency invariant', () => {
       // Add and equip weapon
       const weapon = inventoryApi.addItem(actor, { schema: 'flux:schema:weapon:sword' });
       const weaponId = weapon.id as WeaponItemURN;
@@ -448,12 +448,13 @@ describe('createActorEquipmentApi', () => {
 
       expect(equipmentApi.getEquippedWeapon(actor)).toBe(weaponId);
 
-      // Remove weapon from inventory (this would leave equipment in inconsistent state)
+      // Remove weapon from inventory (this creates inconsistent state)
       inventoryApi.removeItem(actor, weaponId);
 
-      // Equipment API should still report the weapon as equipped
-      // (This is expected behavior - equipment cleanup is a separate concern)
-      expect(equipmentApi.getEquippedWeapon(actor)).toBe(weaponId);
+      // Equipment API should throw because the invariant is violated
+      // This enforces the invariant: "If an item is equipped, it is in the inventory"
+      expect(() => equipmentApi.getEquippedWeapon(actor))
+        .toThrow(ErrorCode.NOT_FOUND);
     });
   });
 

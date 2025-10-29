@@ -94,9 +94,10 @@ const createDefaultActor = (deps: ActorFactoryDependencies): Actor => {
     },
     effects: {},
     inventory: {
-      mass: 0,
       items: {},
       ammo: {},
+      mass: 0,
+      count: 0,
       ts: deps.timestamp(),
     },
     equipment: {},

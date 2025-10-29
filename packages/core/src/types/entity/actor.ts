@@ -134,6 +134,11 @@ export type Inventory = {
   items: Record<string, InventoryItem>;
 
   /**
+   * Number of items in the inventory
+   */
+  count: number;
+
+  /**
    * Unified ammo storage by schema URN
    * All ammo of the same type is aggregated into logical magazines
    */

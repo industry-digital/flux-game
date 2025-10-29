@@ -1,5 +1,6 @@
 import { BASE62_CHARSET, uniqid as uniqidImpl } from '~/lib/random';
-import { Actor, Inventory, InventoryItem } from '~/types/entity/actor';
+import { Inventory, InventoryItem } from '~/types/entity/actor';
+import { ErrorCode } from '~/types/error';
 import { PotentiallyImpureOperations } from '~/types/handler';
 import { ROOT_NAMESPACE, ItemURN, SchemaURN, ItemType } from '~/types/taxonomy';
 import { MassApi } from '~/worldkit/physics/mass';
@@ -10,6 +11,7 @@ export const createInventory = (now: number = Date.now()): Inventory => {
   return {
     mass: 0,
     items: {},
+    count: 0,
     ammo: {},
     ts: now,
   };
@@ -94,102 +96,86 @@ export function createActorInventoryApi(
     timestamp: timestampImpl = () => Date.now(),
   } = deps;
 
-  const itemCounts = new Map<Actor, number>();
-  const totalMasses = new Map<Actor, number>();
-
-  function getItem(actor: Actor, itemId: ItemURN): InventoryItem {
-    const item = actor.inventory.items[itemId];
+  function getItem(entity: EntityWithInventory, itemId: ItemURN): InventoryItem {
+    const item = entity.inventory.items[itemId];
     if (!item) {
-      throw new Error(`Inventory item ${itemId} not found`);
+      throw new Error(ErrorCode.NOT_FOUND);
     }
     return item;
   }
 
-  function hasItem(actor: Actor, itemId: ItemURN): boolean {
-    return itemId in actor.inventory.items;
+  function hasItem(entity: EntityWithInventory, itemId: ItemURN): boolean {
+    return itemId in entity.inventory.items;
   }
 
-  function addItem(actor: Actor, input: InventoryItemInput): InventoryItem {
-    if (input.id && input.id in actor.inventory.items) {
+  function addItem(entity: EntityWithInventory, input: InventoryItemInput): InventoryItem {
+    if (input.id && input.id in entity.inventory.items) {
       throw new Error(`Inventory item ${input.id} already exists`);
     }
     const item = createInventoryItemImpl(input, deps);
-    actor.inventory.items[item.id] = item;
-
-    // Invalidate caches
-    itemCounts.delete(actor);
-    totalMasses.delete(actor);
+    entity.inventory.items[item.id] = item;
+    entity.inventory.count += 1;
 
     return item;
   }
 
-  function removeItem(actor: Actor, itemId: ItemURN): InventoryItem {
-    const item = getItem(actor, itemId);
-    delete actor.inventory.items[itemId];
-
-    // Invalidate caches
-    itemCounts.delete(actor);
-    totalMasses.delete(actor);
-
+  function removeItem(entity: EntityWithInventory, itemId: ItemURN): InventoryItem {
+    const item = getItem(entity, itemId);
+    delete entity.inventory.items[itemId];
+    entity.inventory.count = Math.max(0, entity.inventory.count - 1);
     return item;
   }
 
-  function addItems(actor: Actor, inputs: InventoryItemInput[]): InventoryItem[] {
+  function addItems(entity: EntityWithInventory, inputs: InventoryItemInput[]): InventoryItem[] {
     const output: InventoryItem[] = Array(inputs.length);
 
     for (let i = 0; i < inputs.length; i++) {
       const input = inputs[i];
-      const item = addItem(actor, input);
+      const item = addItem(entity, input);
       output[i] = item;
     }
 
     return output;
   }
 
-  function removeItems(actor: Actor, itemIds: ItemURN[]): InventoryItem[] {
+  function removeItems(entity: EntityWithInventory, itemIds: ItemURN[]): InventoryItem[] {
     const output: InventoryItem[] = Array(itemIds.length);
 
     for (let i = 0; i < itemIds.length; i++) {
       const itemId = itemIds[i];
-      const item = removeItem(actor, itemId);
+      const item = removeItem(entity, itemId);
       output[i] = item;
     }
 
     return output;
   }
 
-  function getItemCount(actor: Actor): number {
-    let cachedCount = itemCounts.get(actor);
-    if (cachedCount === undefined) {
-      cachedCount = Object.keys(actor.inventory.items).length;
-      itemCounts.set(actor, cachedCount);
-    }
-    return cachedCount;
+  function getItemCount(entity: EntityWithInventory): number {
+    return entity.inventory.count;
   }
 
-  function getTotalMass(actor: Actor): number {
-    let cachedMass = totalMasses.get(actor);
-    if (cachedMass === undefined) {
-      cachedMass = massApi.computeInventoryMass(actor.inventory.items);
-      totalMasses.set(actor, cachedMass);
-    }
-    return cachedMass;
+  function getTotalMass(entity: EntityWithInventory): number {
+    return massApi.computeInventoryMass(entity.inventory.items);
   }
 
-  function refreshInventory(actor: Actor): void {
+  function computeItemCount(entity: EntityWithInventory): number {
+    let output = 0;
+    for (let _ in entity.inventory.items) {
+      output++;
+    }
+    return output;
+  }
+
+  function refreshInventory(entity: EntityWithInventory): void {
     // Recompute item count
     // Recompute total mass
-    const totalMass = massApi.computeInventoryMass(actor.inventory.items);
-    totalMasses.set(actor, totalMass);
+    const totalMass = massApi.computeInventoryMass(entity.inventory.items);
 
     // Update inventory metadata
-    actor.inventory.mass = totalMass;
-    actor.inventory.ts = timestampImpl();
-
-    // Mark as clean
-    itemCounts.set(actor, Object.keys(actor.inventory.items).length);
+    entity.inventory.mass = totalMass;
+    entity.inventory.count = computeItemCount(entity);
+    entity.inventory.ts = timestampImpl();
   }
-
 
   return {
     getItem,

@@ -11,6 +11,7 @@ const createNeuralInterfaceComponentSchema = (transform: Transform<ComponentSche
     powerDraw: 100,
     baseMass: 100,
     abilities: [],
+    staticModifiers: [],
     fit: {
       [HumanAnatomy.HEAD]: 1,
     },

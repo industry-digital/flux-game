@@ -53,6 +53,7 @@ export const createWorldScenario = (
       schemaManager.addSchema(weapon);
     }
     const weaponItem = inventoryApi.addItem(actor, { schema: weapon.urn });
+    inventoryApi.refreshInventory(actor);
     equipmentApi.equip(actor, weaponItem.id);
   };
 
