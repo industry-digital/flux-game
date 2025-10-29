@@ -17,7 +17,7 @@ import {
   ActorDidAssessShellStatus,
 } from '~/types/event';
 import { ShellMutationType } from '~/types/workbench';
-import { TemplateFunction } from '~/types/narrative';
+import { NarrativeSequence, TemplateFunction } from '~/types/narrative';
 import { ActorURN } from '~/types/taxonomy';
 import { Stat } from '~/types/entity/actor';
 import { SHELL_STAT_NAMES, getNaturalStatValue } from '~/worldkit/entity/actor/stats';
@@ -26,19 +26,19 @@ import { calculateShellPerformance, ShellPerformanceDependencies } from '~/world
 import { getSchemaTranslation } from '~/narrative/schema';
 import { Locale } from '~/types/i18n';
 
-export const narrateWorkbenchSessionDidStart: TemplateFunction<WorkbenchSessionDidStart, ActorURN> = (context, event, recipientId) => {
-  const { world } = context;
-  const actor = world.actors[event.actor!];
+const EMPTY_NARRATIVE_SEQUENCE: NarrativeSequence = [];
 
-  if (!actor) {
-    return '';
+const WORKBENCH_SESSION_DID_START_SEQUENCE: NarrativeSequence = [
+  { text: 'Connecting to workbench interface...', delay: 0 },
+  { text: 'ShellOS v2.7.4-pre-collapse | Build 20847 | Neural Protocol Stack: ACTIVE', delay: 1_000 },
+  { text: 'Connection established.', delay: 1_000 },
+];
+
+export const narrateWorkbenchSessionDidStart: TemplateFunction<WorkbenchSessionDidStart, ActorURN, NarrativeSequence> = (context, event, recipientId): NarrativeSequence => {
+  if (recipientId !== event.actor) {
+    return EMPTY_NARRATIVE_SEQUENCE;
   }
-
-  if (recipientId === event.actor) {
-    return 'You begin working at the shell workbench.';
-  }
-
-  return `${actor.name} begins working at a shell workbench.`;
+  return WORKBENCH_SESSION_DID_START_SEQUENCE;
 };
 
 export const narrateWorkbenchSessionDidEnd: TemplateFunction<WorkbenchSessionDidEnd, ActorURN> = (context, event, recipientId) => {
@@ -183,7 +183,6 @@ const withWorkbenchPrompts = <T extends WorldEvent, R extends ActorURN>(
 
     // Only add prompts for the actor themselves
     if (recipientId === event.actor) {
-      // Zero-allocation concatenation: direct string concatenation
       return baseNarrative + '\n\n' + WORKBENCH_PROMPTS;
     }
 
@@ -192,6 +191,10 @@ const withWorkbenchPrompts = <T extends WorldEvent, R extends ActorURN>(
 };
 
 const baseNarrateActorDidDiffShellMutations: TemplateFunction<ActorDidDiffShellMutations, ActorURN> = (context, event, recipientId) => {
+  if (recipientId !== event.actor) {
+    return '';
+  }
+
   const { world } = context;
   const actor = world.actors[event.actor!];
 
@@ -202,7 +205,6 @@ const baseNarrateActorDidDiffShellMutations: TemplateFunction<ActorDidDiffShellM
   const perf = event.payload.perf;
   const stats = event.payload.stats;
 
-  if (recipientId === event.actor) {
     const hasStats = hasStatChanges(stats);
     const hasPerf = hasPerformanceChanges(perf);
 
@@ -261,7 +263,6 @@ const baseNarrateActorDidDiffShellMutations: TemplateFunction<ActorDidDiffShellM
         'ENERGY\n' +
         '  Capacitor Capacity:    ' + formatDiffValue(perf.capacitorCapacity, 'J', 0) + '\n' +
         '  Max Recharge Rate:     ' + formatDiffValue(perf.maxRechargeRate, 'W', 0) + '\n';
-    }
 
     return result;
   }
@@ -346,7 +347,7 @@ export const narrateActorDidListShells: TemplateFunction<ActorDidListShells, Act
 
   // Check if actor has any shells (zero-allocation check)
   let hasShells = false;
-  for (const shellId in actor.shells) {
+  for (const _ in actor.shells) {
     hasShells = true;
     break;
   }
@@ -359,7 +360,7 @@ export const narrateActorDidListShells: TemplateFunction<ActorDidListShells, Act
   const massApi = context.mass;
 
   // Build accessible shell listing
-  let result = 'SHELL INVENTORY\n\n';
+  let result = '';
 
   // Single-pass iteration over shells using for...in (zero-allocation)
   let shellCounter = 0;

@@ -57,7 +57,7 @@ describe('SwapShellAction', () => {
       const swapAction = createSwapShellAction(context, session);
       const events = swapAction(actor, secondShellId);
 
-      expect(events).toHaveLength(1);
+      expect(events).toHaveLength(2);
       const swapEvent = events[0] as ActorDidSwapShell;
       expect(swapEvent.type).toBe(EventType.ACTOR_DID_SWAP_SHELL);
       expect(swapEvent.payload.fromShellId).toBe(originalShellId);
@@ -87,7 +87,7 @@ describe('SwapShellAction', () => {
       const swapAction = createSwapShellAction(context, session);
       const events = swapAction(actor, secondShellId);
 
-      expect(events).toHaveLength(1);
+      expect(events).toHaveLength(2);
       expect(actor.currentShell).toBe(secondShellId);
     });
   });
@@ -176,9 +176,10 @@ describe('SwapShellAction', () => {
       });
       const events = swapAction(actor, secondShellId, true);
 
-      expect(events).toHaveLength(2);
+      expect(events).toHaveLength(3);
       expect(events[0].type).toBe(EventType.WORKBENCH_SHELL_MUTATIONS_UNDONE);
       expect(events[1].type).toBe(EventType.ACTOR_DID_SWAP_SHELL);
+      expect(events[2].type).toBe(EventType.ACTOR_DID_LIST_SHELLS);
       expect(mockUndoAction).toHaveBeenCalledWith(actor, expect.any(String));
       expect(context.declareError).toHaveBeenCalled();
       expect(actor.currentShell).toBe(secondShellId);
@@ -208,8 +209,9 @@ describe('SwapShellAction', () => {
       });
       const events = swapAction(actor, secondShellId, true);
 
-      expect(events).toHaveLength(1);
+      expect(events).toHaveLength(2);
       expect(events[0].type).toBe(EventType.ACTOR_DID_SWAP_SHELL);
+      expect(events[1].type).toBe(EventType.ACTOR_DID_LIST_SHELLS);
       expect(mockUndoAction).not.toHaveBeenCalled();
       expect(actor.currentShell).toBe(secondShellId);
     });
@@ -265,7 +267,7 @@ describe('SwapShellAction', () => {
       const events = swapAction(actor, 'shell-2', true);
 
       expect(mockUndoAction).toHaveBeenCalledWith(actor, expect.any(String));
-      expect(events).toHaveLength(2);
+      expect(events).toHaveLength(3);
     });
 
     it('should not create unnecessary allocations with default deps', () => {
@@ -306,7 +308,7 @@ describe('SwapShellAction', () => {
       const swapAction = createSwapShellAction(context, session);
       const events = swapAction(actor, secondShellId, false, 'custom-trace');
 
-      expect(events).toHaveLength(1);
+      expect(events).toHaveLength(2);
       const swapEvent = events[0] as ActorDidSwapShell;
 
       expect(swapEvent.type).toBe(EventType.ACTOR_DID_SWAP_SHELL);
@@ -339,7 +341,7 @@ describe('SwapShellAction', () => {
       const swapAction = createSwapShellAction(context, session);
       const events = swapAction(actor, secondShellId);
 
-      expect(events).toHaveLength(1);
+      expect(events).toHaveLength(2);
       const swapEvent = events[0] as ActorDidSwapShell;
       expect(swapEvent.type).toBe(EventType.ACTOR_DID_SWAP_SHELL);
       expect(swapEvent.payload.toShellId).toBe(secondShellId);

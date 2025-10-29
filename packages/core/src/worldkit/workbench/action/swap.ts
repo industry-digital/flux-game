@@ -1,5 +1,5 @@
 import { Actor } from '~/types/entity/actor';
-import { ActorDidSwapShell, EventType, WorldEvent } from '~/types/event';
+import { ActorDidListShells, ActorDidSwapShell, EventType, WorldEvent } from '~/types/event';
 import { TransformerContext } from '~/types/handler';
 import { WorkbenchSession } from '~/types/workbench';
 import { createWorldEvent } from '~/worldkit/event';
@@ -86,8 +86,20 @@ export const createSwapShellAction = (
     });
 
     declareEvent(shellSwapEvent);
-
     output.push(shellSwapEvent);
+
+    const shellListEvent = createWorldEvent<ActorDidListShells>({
+      type: EventType.ACTOR_DID_LIST_SHELLS,
+      trace,
+      location: actor.location,
+      actor: actor.id,
+      payload: {
+        sessionId: session.id,
+      },
+    });
+
+    declareEvent(shellListEvent);
+    output.push(shellListEvent);
 
     return output;
   };

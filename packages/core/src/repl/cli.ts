@@ -14,7 +14,7 @@ import { PURE_GAME_LOGIC_HANDLERS } from '~/handlers';
 import { createDefaultWorldScenario } from '~/testing/scenarios/default';
 import { getTemplatesForLocale } from '~/narrative';
 import { Locale } from '~/types/i18n';
-import { TemplateFunction } from '~/types';
+import { NarrativeSequence, TemplateFunction } from '~/types';
 import { WorldScenarioHook } from '~/worldkit/scenario';
 import { ALICE_ID } from '~/testing/constants';
 import { parseSessionStrategyFromUrn } from '~/worldkit/session';
@@ -292,15 +292,34 @@ function showSessions(): void {
 }
 
 /**
+ * Render a narrative sequence with timed delays
+ */
+async function renderNarrativeSequence(sequence: NarrativeSequence): Promise<void> {
+  for (const item of sequence) {
+    if (item.text.trim()) {
+      console.log(`📖 ${item.text}`);
+    }
+    if (item.delay > 0) {
+      await new Promise(resolve => setTimeout(resolve, item.delay));
+    }
+  }
+  console.log(); // Add final newline after sequence
+}
+
+/**
  * Execute a game command via the intent system
  */
-function executeGameCommand(input: string): void {
+async function executeGameCommand(input: string): Promise<void> {
   if (!state.currentActor || !getCurrentActorLocation()) {
     console.log('No actor context set. Use "actor <id>" or load a scenario first.');
     return;
   }
 
   try {
+    // Clear any previously accumulated events and errors to prevent overlap
+    state.context.resetEvents();
+    state.context.resetErrors();
+
     // Get current session for this actor (if any)
     const currentSession = getCurrentActorSession();
 
@@ -333,7 +352,6 @@ function executeGameCommand(input: string): void {
     const errors = state.context.getDeclaredErrors();
 
     if (events.length > 0) {
-      console.log(`✓ Command executed. ${events.length} event(s) declared.\n`);
 
       // Generate and display narrative for each event
       const templates = getTemplatesForLocale(Locale.en_US);
@@ -341,9 +359,15 @@ function executeGameCommand(input: string): void {
         const template = templates[event.type] as TemplateFunction<any, any>;
         if (template && state.currentActor) {
           const narrative = template(state.context, event, state.currentActor);
-          if (narrative.trim()) {
-            console.log(`📖 ${narrative}\n`);
-          }
+          if (typeof narrative === 'string') {
+            if (narrative.trim()) {
+              console.log(`📖 ${narrative}\n`);
+            }
+           } else if (Array.isArray(narrative)) {
+             // Block input until the narrative sequence is done rendering
+             const sequence: NarrativeSequence = narrative;
+             await renderNarrativeSequence(sequence);
+           }
         }
       }
     } else if (errors.length > 0) {
@@ -361,7 +385,7 @@ function executeGameCommand(input: string): void {
 /**
  * Process a single command line input
  */
-function processCommand(input: string): void {
+async function processCommand(input: string): Promise<void> {
   const trimmed = input.trim();
   if (!trimmed) return;
 
@@ -433,7 +457,7 @@ function processCommand(input: string): void {
 
     default:
       // Try to execute as a game command
-      executeGameCommand(trimmed);
+      await executeGameCommand(trimmed);
       break;
   }
 }
@@ -449,8 +473,8 @@ function startRepl(): void {
   showContext();
   console.log('Ready to accept commands!\n');
 
-  rl.on('line', (input: string) => {
-    processCommand(input);
+  rl.on('line', async (input: string) => {
+    await processCommand(input);
     if (state.running) {
       rl.prompt();
     }

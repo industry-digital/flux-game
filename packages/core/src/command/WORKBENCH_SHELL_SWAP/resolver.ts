@@ -2,7 +2,7 @@ import { CommandResolver, CommandResolverContext, CommandType, Intent } from '~/
 import { SwapShellCommand } from './types';
 import { createActorCommand } from '~/lib/intent';
 
-const SHELL_VERB = 'shell';
+const SHELL_PREFIX = 'shell';
 const SWAP_VERB = 'swap';
 const DIGITS_ONLY = /^\d+$/;
 
@@ -10,7 +10,7 @@ export const swapShellResolver: CommandResolver<SwapShellCommand> = (
   context: CommandResolverContext,
   intent: Intent,
 ): SwapShellCommand | undefined => {
-  if (intent.prefix !== SHELL_VERB) {
+  if (intent.prefix !== SHELL_PREFIX) {
     return undefined;
   }
 
@@ -18,11 +18,11 @@ export const swapShellResolver: CommandResolver<SwapShellCommand> = (
     return undefined;
   }
 
-  if (intent.tokens[1] !== SWAP_VERB) {
+  if (intent.tokens[0] !== SWAP_VERB) {
     return undefined;
   }
 
-  const targetShellId = intent.tokens[2];
+  const targetShellId = intent.tokens[1];
   if (!DIGITS_ONLY.test(targetShellId)) {
     return undefined;
   }
