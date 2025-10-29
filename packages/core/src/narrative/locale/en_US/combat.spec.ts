@@ -36,6 +36,7 @@ import {
   narrateActorDidAssessRange,
 } from './combat';
 import { Gender } from '~/types/entity/actor';
+import { ActorDidAttack } from '~/types/event';
 
 const OBSERVER_ID: ActorURN = 'flux:actor:test:observer';
 const DAVID_ID: ActorURN = 'flux:actor:test:david';
@@ -1002,7 +1003,7 @@ describe('English Combat Narratives - Snapshot Tests', () => {
         }));
 
         // Demonstrate composition of validators
-        const composedValidator = withComposedValidation(
+        const composedValidator = withComposedValidation<ActorDidAttack>(
           withObjectSerializationValidation,
           withDebuggingArtifactValidation,
           withNonEmptyValidation

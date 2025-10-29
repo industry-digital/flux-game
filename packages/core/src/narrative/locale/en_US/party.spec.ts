@@ -1,6 +1,7 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import { createTransformerContext } from '~/worldkit/context';
 import { ActorURN } from '~/types/taxonomy';
+import { ActorDidCreateParty } from '~/types/event';
 import { ALICE_ID, BOB_ID, CHARLIE_ID, DEFAULT_PARTY_ID } from '~/testing/constants';
 import { Gender } from '~/types/entity/actor';
 import { PartyLeaveReason } from '~/types/party';
@@ -747,7 +748,7 @@ describe('English Party Narratives - Snapshot Tests', () => {
         }));
 
         // Demonstrate composition of validators
-        const composedValidator = withComposedValidation(
+        const composedValidator = withComposedValidation<ActorDidCreateParty>(
           withObjectSerializationValidation,
           withDebuggingArtifactValidation,
           withNonEmptyValidation
