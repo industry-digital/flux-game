@@ -1,18 +1,22 @@
+The Workbench is a diagetic interface through which you can make modifications
+to your shell.
+
 ```text
 # Establish neural connection with the Workbench
 # Only works while the player's consciousness is "co-located" with the workbench object in the game world
 > use workbench
 
 # Arsenal management - consciousness surveys available shells
-> shell list                    # Display all shells in the three-shell arsenal
-> shell swap <shell_name>       # Transfer consciousness to different shell
-> shell status                  # Comprehensive analysis of active shell
-> shell reorder <from> <to>     # Change shell list order
+> shell list                                  # Display all shells in the three-shell arsenal
 
-# Shell optimization - direct stat manipulation
-> shell stats                                 # Display current shell stats
-> shell stats add POW|FIN|RES <increment>     # Allocate enhancement points
-> shell stats remove POW|FIN|RES <increment>  # Redistribute capabilities
+> shell swap <id>                             # Transfer consciousness to different shell
+
+> shell status                                # Comprehensive analysis of active shell
+> shell reorder <from> <to>                   # Change shell list order
+
+# Stat optimization
+> shell attributes                              # Display current shell attributes (POW, FIN, RES)
+> shell attributes add POW|FIN|RES <increment>  # Stages a change
 
 # Component integration - physical shell modification
 > shell component list                        # Inventory mounted systems
@@ -20,12 +24,11 @@
 > shell component mount <component_name>      # Install new hardware
 > shell component unmount <component_name>    # Remove existing systems
 
-# Inventory and resource management
+> shell commit                                # Commit all staged changes
+> shell undo                                  # Revert staged changes
+
 > inventory components                        # List available components
 > inventory materials                         # Show raw materials and resources
-
-> shell commit                          # Finalize stat modifications; consumes resources
-> shell undo                            # Revert pending stat changes
 
 # Exit the Workbench
 > exit|quit|bye
