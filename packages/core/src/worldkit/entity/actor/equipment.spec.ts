@@ -17,6 +17,7 @@ import { MassApi } from '~/worldkit/physics/mass';
 import { registerWeapons } from '~/worldkit/combat/testing/schema';
 import { createTestWeapon } from '~/worldkit/combat/testing/weapon';
 import { DEFAULT_TIMESTAMP } from '~/testing/constants';
+import { ErrorCode } from '~/types/error';
 
 describe('createActorEquipmentApi', () => {
   let context: TransformerContext;
@@ -254,7 +255,7 @@ describe('createActorEquipmentApi', () => {
 
       // Attempting to equip second weapon should throw
       expect(() => equipmentApi.equip(actor, weapon2.id as WeaponItemURN))
-        .toThrow('Equipment slot already occupied');
+        .toThrow(ErrorCode.CONFLICT);
     });
   });
 
@@ -344,7 +345,7 @@ describe('createActorEquipmentApi', () => {
 
       // Attempting to equip second weapon to same slot should throw error
       expect(() => equipmentApi.equip(actor, sword2.id as WeaponItemURN))
-        .toThrow('Equipment slot already occupied');
+        .toThrow(ErrorCode.CONFLICT);
 
       // First weapon should still be equipped, second should not be
       expect(actor.equipment[HumanAnatomy.RIGHT_HAND]![sword.id as WeaponItemURN]).toBe(1);

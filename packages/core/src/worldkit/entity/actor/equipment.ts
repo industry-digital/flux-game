@@ -6,6 +6,8 @@ import { ActorInventoryApi } from '~/worldkit/entity/actor/inventory';
 import { SchemaManager, SchemaRegistry } from '~/worldkit/schema/manager';
 import { BARE_HANDS_WEAPON_DO_NOT_DELETE } from '~/worldkit/schema/weapon';
 import { EntityWithInventory } from '~/worldkit/entity/actor/inventory';
+import { ShellComponent } from '~/types/entity/item';
+import { ErrorCode } from '~/types/error';
 
 export type EntityWithEquipment = EntityWithInventory & {
   equipment: Equipment;
@@ -49,6 +51,12 @@ export type ActorEquipmentApi = {
    * Fit is determined by the item schema's `fit`
    */
   unequip: (entity: EntityWithEquipment, itemId: ItemURN) => void;
+
+  /**
+   * Gets the equipped components
+   */
+  getMountedComponents: (entity: EntityWithEquipment, output?: ShellComponent[]) => ShellComponent[];
+
   /**
    * Removes undefined entries and empty location objects from equipment
    */
@@ -106,7 +114,7 @@ export function createActorEquipmentApi (
     return getEquippedWeaponSchema(entity, possibleLocations);
   }
 
-  function equipWeapon(entity: EntityWithEquipment, itemId: ItemURN) {
+  function equip(entity: EntityWithEquipment, itemId: ItemURN) {
     ensureEquipment(entity);
 
     const item = inventoryApi.getItem(entity, itemId);
@@ -120,7 +128,7 @@ export function createActorEquipmentApi (
         if (equipmentSlots) {
           for (let existingItemId in equipmentSlots) {
             if (equipmentSlots[existingItemId as ItemURN] === 1) {
-              throw new Error('Equipment slot already occupied');
+              throw new Error(ErrorCode.CONFLICT);
             }
           }
         }
@@ -134,7 +142,7 @@ export function createActorEquipmentApi (
     }
   }
 
-  function unequipWeapon(entity: EntityWithEquipment, itemId: ItemURN) {
+  function unequip(entity: EntityWithEquipment, itemId: ItemURN) {
     const item = inventoryApi.getItem(entity, itemId);
     const schema = schemaManager.getSchemaOrFail(item.schema as keyof SchemaRegistry);
     if ('fit' in schema && schema.fit) {
@@ -170,14 +178,43 @@ export function createActorEquipmentApi (
     }
   }
 
+  function getMountedComponents(
+    entity: EntityWithEquipment,
+    output: ShellComponent[] = [], // Consumers may opt into zero-allocation by passing an empty array
+  ): ShellComponent[] {
+    output.length = 0;
 
+    if (!entity) {
+      throw new Error('Entity argument is required');
+    }
+
+    ensureEquipment(entity);
+
+    for (let location in entity.equipment) {
+      const equipmentSlots = entity.equipment[location as AnatomyURN];
+      if (equipmentSlots) {
+        for (let itemId in equipmentSlots) {
+          if (equipmentSlots[itemId as ItemURN] === 1) {
+            const item = inventoryApi.getItem(entity, itemId as ItemURN);
+            // Check if this is a component by schema URN pattern
+            if (item.schema.startsWith('flux:schema:component:')) {
+              output.push(item as ShellComponent);
+            }
+          }
+        }
+      }
+    }
+
+    return output;
+  }
 
   return {
     getEquippedWeapon,
     getEquippedWeaponSchema,
     getEquippedWeaponSchemaOrFail,
-    equip: equipWeapon,
-    unequip: unequipWeapon,
+    equip,
+    unequip,
     cleanupEquipment,
+    getMountedComponents,
   };
 }

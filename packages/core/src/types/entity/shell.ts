@@ -1,6 +1,4 @@
 import { Equipment, Inventory, ShellStats } from '~/types/entity/actor';
-import { ShellComponent } from '~/types/entity/item';
-import { ComponentSchemaURN } from '~/types/taxonomy';
 
 export type Shell = {
   /**
@@ -14,10 +12,6 @@ export type Shell = {
   stats: ShellStats;
   inventory: Inventory;
   equipment: Equipment;
-  /**
-   * Mounted components
-   */
-  components: Record<ComponentSchemaURN, ShellComponent>;
 };
 
 export type ShellPerformanceProfile = {
