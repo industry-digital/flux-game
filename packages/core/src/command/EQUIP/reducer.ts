@@ -28,7 +28,7 @@ const equipReducerCore: Transformer<EquipCommand> = (context, command) => {
     return context;
   }
 
-  context.equipmentApi.equipWeapon(actor, item.id);
+  context.equipmentApi.equip(actor, item.id);
 
   const didEquipWeaponEvent: ActorDidEquipWeapon = createWorldEvent({
     type: EventType.ACTOR_DID_EQUIP_WEAPON,

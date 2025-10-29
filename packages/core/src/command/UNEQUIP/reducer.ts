@@ -30,7 +30,7 @@ const unequipReducerCore: Transformer<UnequipCommand> = (context, command) => {
       return context;
     }
 
-    context.equipmentApi.unequipWeapon(actor, item.id);
+    context.equipmentApi.unequip(actor, item.id);
 
     const unequipEvent: ActorDidUnequipWeapon = createWorldEvent({
       type: EventType.ACTOR_DID_UNEQUIP_WEAPON,

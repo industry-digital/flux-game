@@ -160,7 +160,7 @@ describe('createWorldScenario', () => {
     it('should add weapon item to actor inventory and equip it', () => {
       const addItemSpy = vi.spyOn(context.inventoryApi, 'addItem');
       const getItemSpy = vi.spyOn(context.inventoryApi, 'getItem');
-      const equipWeaponSpy = vi.spyOn(context.equipmentApi, 'equipWeapon');
+      const equipSpy = vi.spyOn(context.equipmentApi, 'equip');
       const mockItem = { id: 'item-123', schema: weapon.urn };
       addItemSpy.mockReturnValue(mockItem as any);
       getItemSpy.mockReturnValue(mockItem as any);
@@ -168,7 +168,7 @@ describe('createWorldScenario', () => {
       scenario.assignWeapon(alice, weapon);
 
       expect(addItemSpy).toHaveBeenCalledWith(alice, { schema: weapon.urn });
-      expect(equipWeaponSpy).toHaveBeenCalledWith(alice, 'item-123');
+      expect(equipSpy).toHaveBeenCalledWith(alice, 'item-123');
     });
 
   });

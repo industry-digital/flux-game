@@ -9,7 +9,7 @@ export type EntitySchemaBase = {
    * Human-readable name for this schema type
    * @deprecated Schemas don't contain localized strings
    */
-  name: string;
+  name?: string;
 
   /**
    * Optional description of what this schema represents

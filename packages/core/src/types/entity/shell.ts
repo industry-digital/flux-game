@@ -1,14 +1,23 @@
-import { Actor, ShellStats } from '~/types/entity/actor';
+import { Equipment, Inventory, ShellStats } from '~/types/entity/actor';
+import { ShellComponent } from '~/types/entity/item';
+import { ComponentSchemaURN } from '~/types/taxonomy';
 
 export type Shell = {
+  /**
+   * A digit between 1 and 3, representing the shell's position in the actor's arsenal
+   */
   id: string;
   /**
    * The player-facing name of the shell
    */
   name: string;
   stats: ShellStats;
-  inventory: Actor['inventory'];
-  equipment: Actor['equipment'];
+  inventory: Inventory;
+  equipment: Equipment;
+  /**
+   * Mounted components
+   */
+  components: Record<ComponentSchemaURN, ShellComponent>;
 };
 
 export type ShellPerformanceProfile = {

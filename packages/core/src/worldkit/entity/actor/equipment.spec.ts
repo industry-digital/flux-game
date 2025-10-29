@@ -94,7 +94,7 @@ describe('createActorEquipmentApi', () => {
       const weapon = inventoryApi.addItem(actor, { schema: 'flux:schema:weapon:sword' });
       const weaponId = weapon.id as WeaponItemURN;
 
-      equipmentApi.equipWeapon(actor, weaponId);
+      equipmentApi.equip(actor, weaponId);
 
       expect(actor.equipment[HumanAnatomy.RIGHT_HAND]).toBeDefined();
       expect(actor.equipment[HumanAnatomy.RIGHT_HAND]![weaponId]).toBe(1);
@@ -105,13 +105,13 @@ describe('createActorEquipmentApi', () => {
       // Add and equip weapon
       const weapon = inventoryApi.addItem(actor, { schema: 'flux:schema:weapon:sword' });
       const weaponId = weapon.id as WeaponItemURN;
-      equipmentApi.equipWeapon(actor, weaponId);
+      equipmentApi.equip(actor, weaponId);
 
       // Verify it's equipped
       expect(actor.equipment[HumanAnatomy.RIGHT_HAND]![weaponId]).toBe(1);
 
       // Unequip
-      equipmentApi.unequipWeapon(actor, weaponId);
+      equipmentApi.unequip(actor, weaponId);
 
       expect(actor.equipment[HumanAnatomy.RIGHT_HAND]![weaponId]).toBeUndefined();
     });
@@ -120,7 +120,7 @@ describe('createActorEquipmentApi', () => {
       // Add and equip weapon
       const weapon = inventoryApi.addItem(actor, { schema: 'flux:schema:weapon:sword' });
       const weaponId = weapon.id as WeaponItemURN;
-      equipmentApi.equipWeapon(actor, weaponId);
+      equipmentApi.equip(actor, weaponId);
 
       const equippedWeapon = equipmentApi.getEquippedWeapon(actor);
 
@@ -131,7 +131,7 @@ describe('createActorEquipmentApi', () => {
       // Add and equip weapon to right hand
       const weapon = inventoryApi.addItem(actor, { schema: 'flux:schema:weapon:sword' });
       const weaponId = weapon.id as WeaponItemURN;
-      equipmentApi.equipWeapon(actor, weaponId);
+      equipmentApi.equip(actor, weaponId);
 
       // Should find weapon when searching right hand
       const foundInRightHand = equipmentApi.getEquippedWeapon(actor, [HumanAnatomy.RIGHT_HAND]);
@@ -153,7 +153,7 @@ describe('createActorEquipmentApi', () => {
 
       const weapon = inventoryApi.addItem(actor, { schema: 'flux:schema:weapon:sword' });
       const weaponId = weapon.id as WeaponItemURN;
-      equipmentApi.equipWeapon(actor, weaponId);
+      equipmentApi.equip(actor, weaponId);
 
       expect(actor.equipment).toBeDefined();
       expect(actor.equipment[HumanAnatomy.RIGHT_HAND]![weaponId]).toBe(1);
@@ -188,7 +188,7 @@ describe('createActorEquipmentApi', () => {
       const weapon = inventoryApi.addItem(actor, { schema: 'flux:schema:weapon:greatsword' });
       const weaponId = weapon.id as WeaponItemURN;
 
-      equipmentApi.equipWeapon(actor, weaponId);
+      equipmentApi.equip(actor, weaponId);
 
       expect(actor.equipment[HumanAnatomy.RIGHT_HAND]![weaponId]).toBe(1);
       expect(actor.equipment[HumanAnatomy.LEFT_HAND]![weaponId]).toBe(1);
@@ -197,13 +197,13 @@ describe('createActorEquipmentApi', () => {
     it('should unequip weapon from all anatomical locations', () => {
       const weapon = inventoryApi.addItem(actor, { schema: 'flux:schema:weapon:greatsword' });
       const weaponId = weapon.id as WeaponItemURN;
-      equipmentApi.equipWeapon(actor, weaponId);
+      equipmentApi.equip(actor, weaponId);
 
       // Verify it's equipped in both hands
       expect(actor.equipment[HumanAnatomy.RIGHT_HAND]![weaponId]).toBe(1);
       expect(actor.equipment[HumanAnatomy.LEFT_HAND]![weaponId]).toBe(1);
 
-      equipmentApi.unequipWeapon(actor, weaponId);
+      equipmentApi.unequip(actor, weaponId);
 
       expect(actor.equipment[HumanAnatomy.RIGHT_HAND]![weaponId]).toBeUndefined();
       expect(actor.equipment[HumanAnatomy.LEFT_HAND]![weaponId]).toBeUndefined();
@@ -214,14 +214,14 @@ describe('createActorEquipmentApi', () => {
     it('should throw error when equipping non-existent item', () => {
       const nonExistentId = 'flux:item:non-existent' as WeaponItemURN;
 
-      expect(() => equipmentApi.equipWeapon(actor, nonExistentId))
+      expect(() => equipmentApi.equip(actor, nonExistentId))
         .toThrow('Inventory item flux:item:non-existent not found');
     });
 
     it('should throw error when unequipping non-existent item', () => {
       const nonExistentId = 'flux:item:non-existent' as WeaponItemURN;
 
-      expect(() => equipmentApi.unequipWeapon(actor, nonExistentId))
+      expect(() => equipmentApi.unequip(actor, nonExistentId))
         .toThrow('Inventory item flux:item:non-existent not found');
     });
 
@@ -240,7 +240,7 @@ describe('createActorEquipmentApi', () => {
       const weaponId = weapon.id as WeaponItemURN;
 
       // Should not throw, but also should not equip anywhere
-      equipmentApi.equipWeapon(actor, weaponId);
+      equipmentApi.equip(actor, weaponId);
 
       expect(actor.equipment[HumanAnatomy.RIGHT_HAND]).toBeUndefined();
     });
@@ -250,10 +250,10 @@ describe('createActorEquipmentApi', () => {
       const weapon2 = inventoryApi.addItem(actor, { schema: 'flux:schema:weapon:sword' });
 
       // Equip first weapon
-      equipmentApi.equipWeapon(actor, weapon1.id as WeaponItemURN);
+      equipmentApi.equip(actor, weapon1.id as WeaponItemURN);
 
       // Attempting to equip second weapon should throw
-      expect(() => equipmentApi.equipWeapon(actor, weapon2.id as WeaponItemURN))
+      expect(() => equipmentApi.equip(actor, weapon2.id as WeaponItemURN))
         .toThrow('Equipment slot already occupied');
     });
   });
@@ -264,7 +264,7 @@ describe('createActorEquipmentApi', () => {
       const weapon = inventoryApi.addItem(actor, { schema: 'flux:schema:weapon:sword' });
       const weaponId = weapon.id as WeaponItemURN;
 
-      equipmentApi.equipWeapon(actor, weaponId);
+      equipmentApi.equip(actor, weaponId);
       const equippedWeapon = equipmentApi.getEquippedWeapon(actor);
 
       expect(equippedWeapon).toBe(weaponId);
@@ -280,7 +280,7 @@ describe('createActorEquipmentApi', () => {
 
       const weapon = inventoryApi.addItem(actor, { schema: 'flux:schema:weapon:sword' });
       const weaponId = weapon.id as WeaponItemURN;
-      customEquipmentApi.equipWeapon(actor, weaponId);
+      customEquipmentApi.equip(actor, weaponId);
 
       // Should find weapon when searching all locations (weapon is equipped to RIGHT_HAND)
       const foundInAll = customEquipmentApi.getEquippedWeapon(actor, WEAPON_EQUIPMENT_ANATOMICAL_LOCATIONS);
@@ -317,8 +317,8 @@ describe('createActorEquipmentApi', () => {
       const sword = inventoryApi.addItem(actor, { schema: 'flux:schema:weapon:sword' });
       const dagger = inventoryApi.addItem(actor, { schema: 'flux:schema:weapon:dagger' });
 
-      equipmentApi.equipWeapon(actor, sword.id as WeaponItemURN);
-      equipmentApi.equipWeapon(actor, dagger.id as WeaponItemURN);
+      equipmentApi.equip(actor, sword.id as WeaponItemURN);
+      equipmentApi.equip(actor, dagger.id as WeaponItemURN);
 
       // Should find the first weapon encountered when searching all locations
       const equippedWeapon = equipmentApi.getEquippedWeapon(actor);
@@ -338,12 +338,12 @@ describe('createActorEquipmentApi', () => {
       const sword2 = inventoryApi.addItem(actor, { schema: 'flux:schema:weapon:sword' });
 
       // Equip first weapon
-      equipmentApi.equipWeapon(actor, sword.id as WeaponItemURN);
+      equipmentApi.equip(actor, sword.id as WeaponItemURN);
       expect(equipmentApi.getEquippedWeapon(actor)).toBe(sword.id);
       expect(actor.equipment[HumanAnatomy.RIGHT_HAND]![sword.id as WeaponItemURN]).toBe(1);
 
       // Attempting to equip second weapon to same slot should throw error
-      expect(() => equipmentApi.equipWeapon(actor, sword2.id as WeaponItemURN))
+      expect(() => equipmentApi.equip(actor, sword2.id as WeaponItemURN))
         .toThrow('Equipment slot already occupied');
 
       // First weapon should still be equipped, second should not be
@@ -352,12 +352,12 @@ describe('createActorEquipmentApi', () => {
       expect(equipmentApi.getEquippedWeapon(actor)).toBe(sword.id);
 
       // After unequipping first weapon, second weapon can be equipped
-      equipmentApi.unequipWeapon(actor, sword.id as WeaponItemURN);
+      equipmentApi.unequip(actor, sword.id as WeaponItemURN);
       expect(actor.equipment[HumanAnatomy.RIGHT_HAND]![sword.id as WeaponItemURN]).toBeUndefined();
       expect(equipmentApi.getEquippedWeapon(actor)).toBeNull();
 
       // Now second weapon can be equipped
-      equipmentApi.equipWeapon(actor, sword2.id as WeaponItemURN);
+      equipmentApi.equip(actor, sword2.id as WeaponItemURN);
       expect(actor.equipment[HumanAnatomy.RIGHT_HAND]![sword2.id as WeaponItemURN]).toBe(1);
       expect(equipmentApi.getEquippedWeapon(actor)).toBe(sword2.id);
     });
@@ -366,7 +366,7 @@ describe('createActorEquipmentApi', () => {
       // Add and equip weapon
       const weapon = inventoryApi.addItem(actor, { schema: 'flux:schema:weapon:sword' });
       const weaponId = weapon.id as WeaponItemURN;
-      equipmentApi.equipWeapon(actor, weaponId);
+      equipmentApi.equip(actor, weaponId);
 
       // Verify weapon is equipped
       expect(actor.equipment[HumanAnatomy.RIGHT_HAND]![weaponId]).toBe(1);
@@ -413,8 +413,8 @@ describe('createActorEquipmentApi', () => {
         .mockReturnValueOnce({ fit: { [HumanAnatomy.RIGHT_HAND]: 1 } })
         .mockReturnValueOnce({ fit: { [HumanAnatomy.LEFT_HAND]: 1 } });
 
-      equipmentApi.equipWeapon(actor, sword.id as WeaponItemURN);
-      equipmentApi.equipWeapon(actor2, dagger.id as WeaponItemURN);
+      equipmentApi.equip(actor, sword.id as WeaponItemURN);
+      equipmentApi.equip(actor2, dagger.id as WeaponItemURN);
 
       expect(equipmentApi.getEquippedWeapon(actor)).toBe(sword.id);
       expect(equipmentApi.getEquippedWeapon(actor2)).toBe(dagger.id);
@@ -432,7 +432,7 @@ describe('createActorEquipmentApi', () => {
       const originalInventory = actor.inventory;
 
       const weapon = inventoryApi.addItem(actor, { schema: 'flux:schema:weapon:sword' });
-      equipmentApi.equipWeapon(actor, weapon.id as WeaponItemURN);
+      equipmentApi.equip(actor, weapon.id as WeaponItemURN);
 
       expect(actor.inventory).toBe(originalInventory);
       expect(inventoryApi.hasItem(actor, weapon.id)).toBe(true);
@@ -443,7 +443,7 @@ describe('createActorEquipmentApi', () => {
       // Add and equip weapon
       const weapon = inventoryApi.addItem(actor, { schema: 'flux:schema:weapon:sword' });
       const weaponId = weapon.id as WeaponItemURN;
-      equipmentApi.equipWeapon(actor, weaponId);
+      equipmentApi.equip(actor, weaponId);
 
       expect(equipmentApi.getEquippedWeapon(actor)).toBe(weaponId);
 
@@ -475,9 +475,9 @@ describe('createActorEquipmentApi', () => {
       let previousWeapon: WeaponItemURN | null = null;
       for (const weaponId of weapons) {
         if (previousWeapon) {
-          equipmentApi.unequipWeapon(actor, previousWeapon);
+          equipmentApi.unequip(actor, previousWeapon);
         }
-        equipmentApi.equipWeapon(actor, weaponId);
+        equipmentApi.equip(actor, weaponId);
         previousWeapon = weaponId;
       }
       const equipTime = performance.now() - startEquip;
@@ -492,7 +492,7 @@ describe('createActorEquipmentApi', () => {
       // Benchmark unequipping the last weapon (only one is equipped)
       const startUnequip = performance.now();
       if (previousWeapon) {
-        equipmentApi.unequipWeapon(actor, previousWeapon);
+        equipmentApi.unequip(actor, previousWeapon);
       }
       const unequipTime = performance.now() - startUnequip;
 
@@ -509,7 +509,7 @@ describe('createActorEquipmentApi', () => {
       // Equip a weapon
       const weapon = inventoryApi.addItem(actor, { schema: 'flux:schema:weapon:sword' });
       const weaponId = weapon.id as WeaponItemURN;
-      equipmentApi.equipWeapon(actor, weaponId);
+      equipmentApi.equip(actor, weaponId);
 
       // Measure lookup performance with different location sets
       const times: number[] = [];
@@ -549,9 +549,9 @@ describe('createActorEquipmentApi', () => {
       for (let i = 0; i < iterations; i++) {
         const start = performance.now();
 
-        equipmentApi.equipWeapon(actor, weaponId);
+        equipmentApi.equip(actor, weaponId);
         equipmentApi.getEquippedWeapon(actor);
-        equipmentApi.unequipWeapon(actor, weaponId);
+        equipmentApi.unequip(actor, weaponId);
         equipmentApi.getEquippedWeapon(actor); // Should return null
 
         const time = performance.now() - start;
@@ -610,7 +610,7 @@ describe('createActorEquipmentApi', () => {
       }
 
       // This should reproduce the issue
-      expect(() => realEquipmentApi.equipWeapon(actor, weaponItem.id)).not.toThrow();
+      expect(() => realEquipmentApi.equip(actor, weaponItem.id)).not.toThrow();
     });
   });
 });

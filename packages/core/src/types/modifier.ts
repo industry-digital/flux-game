@@ -1,3 +1,5 @@
+import { RootNamespace } from '~/types/taxonomy';
+
 /**
  * Normalized value between 0 and 1, representing position on an easing curve
  * 0 = start of effect, 1 = end of effect
@@ -5,6 +7,9 @@
 export type NormalizedValueBetweenZeroAndOne = number;
 
 type URNLike = `${string}:${string}`;
+
+export type ModifierDuration = number;
+export const PERMANENT: ModifierDuration = -1 as const;
 
 /**
  * A Modifier represents an active effect that modifies a dice roll or attribute.
@@ -19,8 +24,9 @@ export type Modifier = {
 
   /**
    * The modifier duration; milliseconds
+   * `-1` means "permanent"
    */
-  duration: number;
+  duration: ModifierDuration;
 
   /**
    * The moment the modifer took effect; epoch milliseconds
@@ -52,28 +58,27 @@ export enum BonusType {
 /**
  * How modifiers combine with base values
  */
-export enum ModifierApplicationType {
-  ADDITIVE = 'additive',      // +10 bonus
-  MULTIPLICATIVE = 'multiplicative', // x1.2 multiplier
+export enum ModifierOperationType {
+  ADD = 'add',      // +10 bonus
+  MULTIPLY = 'multiply', // x1.2 multiplier
   OVERRIDE = 'override',      // Set to exact value
 }
 
-/**
- * Enhanced modifier that includes bonus type for stacking rules
- */
-export type CombatModifier = Modifier & {
-  /**
-   * Bonus type for Pathfinder 2E-style stacking rules
-   */
-  bonusType: BonusType;
+export enum ModifierTargetType {
+  STAT = 'stat',
+  SKILL = 'skill',
+  PHYSICS = 'physics',
+}
 
-  /**
-   * How this modifier applies to the base value
-   */
-  applicationType: ModifierApplicationType;
+export type ModifierTarget<TModifierTargetType extends ModifierTargetType> = {
+  type: TModifierTargetType;
+  id: string;
+};
 
-  /**
-   * Priority for application order (higher applies later)
-   */
-  priority: number;
+export type StaticModifier<TModifierTargetType extends ModifierTargetType = ModifierTargetType.STAT> = {
+  urn: `${RootNamespace}:modifier:${TModifierTargetType}:${string}:${string}`;
+  target: ModifierTarget<TModifierTargetType>;
+  duration: ModifierDuration;
+  operation: ModifierOperationType;
+  value: number;
 };

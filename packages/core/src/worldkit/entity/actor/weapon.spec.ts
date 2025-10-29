@@ -1,8 +1,8 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import {
-    createActorWeaponApi,
-    AmmoConsumedResult,
-    AmmoReturnedResult,
+  createActorWeaponApi,
+  AmmoConsumedResult,
+  AmmoReturnedResult,
 } from './weapon';
 import { createTestWeapon } from '../../combat/testing/weapon';
 import { AmmoSchema } from '~/types/schema/ammo';
@@ -181,7 +181,7 @@ describe('ActorWeaponApi', () => {
 
       // Add weapon to inventory and equip it
       weaponItem = context.inventoryApi.addItem(actor, { schema: rifleWeapon.urn });
-      context.equipmentApi.equipWeapon(actor, weaponItem.id);
+      context.equipmentApi.equip(actor, weaponItem.id);
 
       // Add ammo to inventory
       weaponApi.addAmmoToInventory(actor, 'flux:schema:ammo:test-bullet', 90);
@@ -219,10 +219,10 @@ describe('ActorWeaponApi', () => {
         context.schemaManager.loadAllSchemas(true);
 
         // Unequip existing weapon first to avoid slot conflict
-        context.equipmentApi.unequipWeapon(actor, weaponItem.id);
+        context.equipmentApi.unequip(actor, weaponItem.id);
 
         const meleeItem = context.inventoryApi.addItem(actor, { schema: meleeWeapon.urn });
-        context.equipmentApi.equipWeapon(actor, meleeItem.id);
+        context.equipmentApi.equip(actor, meleeItem.id);
 
         expect(() => {
           weaponApi.reloadWeapon(actor, meleeItem.id);

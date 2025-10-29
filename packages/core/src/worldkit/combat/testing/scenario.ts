@@ -332,7 +332,7 @@ export function useCombatScenario(
     // Process equipment setup (internal - not exposed in public API)
     if (equipment?.weapon) {
       const weaponItem = inventoryApi.addItem(actor, { schema: equipment.weapon });
-      equipmentApi.equipWeapon(actor, weaponItem.id as WeaponItemURN);
+      equipmentApi.equip(actor, weaponItem.id as WeaponItemURN);
 
       // Auto-add appropriate ammo for the weapon
       const weaponSchema = testContext.schemaManager.getSchema(equipment.weapon);

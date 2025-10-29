@@ -8,6 +8,7 @@ import {
   createActorDidUndoShellMutationsEvent,
   createActorDidCommitShellMutationsEvent,
   createActorDidListShellsEvent,
+  createActorDidAssessShellStatusEvent,
   createStatMutation,
 } from '~/testing/event/factory/workbench';
 import { ComponentMutationOperation, ShellMutationType, StatMutationOperation } from '~/types/workbench';
@@ -33,6 +34,7 @@ import {
   narrateActorDidUndoShellMutations,
   narrateActorDidCommitShellMutations,
   narrateActorDidListShells,
+  narrateActorDidAssessShellStatus,
 } from './workbench';
 import { TransformerContext } from '~/types/handler';
 import { createDefaultActors } from '~/testing/actors';
@@ -920,6 +922,24 @@ describe('English Workbench Narratives - Snapshot Tests', () => {
 
       const observerListing = narrateActorDidListShells(context, listEvent, BOB_ID);
       console.log('👁️  Shell Listing (Observer):', observerListing || '(empty - private action)');
+
+      // Shell Status Assessment
+      console.log('\n🔍 SHELL STATUS ASSESSMENT');
+      console.log('-'.repeat(40));
+
+      const statusEvent = createActorDidAssessShellStatusEvent((e) => ({
+        ...e,
+        actor: ALICE_ID,
+        payload: {
+          ...e.payload,
+          shellId: alice.currentShell, // Use Alice's current shell
+        }
+      }));
+      const statusNarrative = narrateActorDidAssessShellStatus(context, statusEvent, ALICE_ID);
+      console.log('📊 Shell Status (Self):\n' + statusNarrative.split('\n').map(line => '    ' + line).join('\n'));
+
+      const observerStatusNarrative = narrateActorDidAssessShellStatus(context, statusEvent, BOB_ID);
+      console.log('👁️  Shell Status (Observer):', observerStatusNarrative || '(empty - private action)');
 
       // Gender Variations
       console.log('\n👤 GENDER VARIATIONS');

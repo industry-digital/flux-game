@@ -51,6 +51,7 @@ import {
   narrateActorDidListShellComponents,
   narrateActorDidExamineComponent,
   narrateActorDidSwapShell,
+  narrateActorDidAssessShellStatus,
 } from './workbench';
 
 import {
@@ -89,7 +90,7 @@ export const en_US: LanguageTemplates = {
   [EventType.ACTOR_DID_OPEN_HELPFILE]: narrateActorDidOpenHelpFile,
   [EventType.ACTOR_DID_EQUIP_WEAPON]: NOT_IMPLEMENTED,
   [EventType.ACTOR_DID_UNEQUIP_WEAPON]: NOT_IMPLEMENTED,
-  [EventType.ACTOR_DID_ASSESS_SHELL_STATUS]: NOT_IMPLEMENTED,
+  [EventType.ACTOR_DID_ASSESS_SHELL_STATUS]: narrateActorDidAssessShellStatus,
 
   // Look Events
   [EventType.ACTOR_DID_LOOK]: narrateActorDidLook,

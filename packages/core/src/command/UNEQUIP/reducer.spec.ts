@@ -58,7 +58,7 @@ describe('UNEQUIP Command Reducer', () => {
 
     // Add weapon to inventory and equip it (since UNEQUIP tests need an equipped weapon)
     context.inventoryApi.addItem(alice, { id: DEFAULT_WEAPON, schema: DEFAULT_WEAPON_SCHEMA });
-    context.equipmentApi.equipWeapon(alice, DEFAULT_WEAPON);
+    context.equipmentApi.equip(alice, DEFAULT_WEAPON);
 
     command = createUnequipCommand((command: UnequipCommand) => ({
       ...command,
@@ -258,7 +258,7 @@ describe('UNEQUIP Command Reducer', () => {
         scenario.context.world.actors[ALICE_ID],
         { schema: defaultWeaponSchema.urn as WeaponSchemaURN }
       );
-      scenario.context.equipmentApi.equipWeapon(scenario.context.world.actors[ALICE_ID], weaponItem.id);
+      scenario.context.equipmentApi.equip(scenario.context.world.actors[ALICE_ID], weaponItem.id);
 
       const command = createUnequipCommand((cmd: UnequipCommand) => ({
         ...cmd,

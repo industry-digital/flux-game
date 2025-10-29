@@ -73,7 +73,7 @@ export function calculateShellPerformance(
 
   // Component power draw (equipment burden)
   // This is a simplified calculation - in a full system, each component would have power requirements
-  const componentPowerDraw = calculateComponentPowerDraw(shell, equippedWeaponSchema);
+  const componentPowerDraw = calculateComponentPowerDraw(shell);
 
   // Free power available for other systems
   const freePower = Math.max(0, peakPowerOutput - componentPowerDraw);
@@ -135,29 +135,14 @@ export function calculateShellPerformance(
   };
 }
 
+// Minimun power draw for base shell subsystems
+const BASE_POWER_DRAW_WATTS = 50;
+
 /**
  * Calculate component power draw based on equipped items
  * This is a simplified version - full implementation would query component schemas
  */
-function calculateComponentPowerDraw(shell: Shell, weaponSchema: any): number {
-  let powerDraw = 0;
-
-  // Base shell systems power draw
-  powerDraw += 50; // Basic life support, sensors, etc.
-
-  // Weapon power draw (if any)
-  if (weaponSchema?.powerDraw) {
-    powerDraw += weaponSchema.powerDraw;
-  } else if (weaponSchema) {
-    // Estimate based on weapon mass - heavier weapons need more power
-    const weaponMassKg = weaponSchema.mass / 1000;
-    powerDraw += weaponMassKg * 10; // 10W per kg of weapon
-  }
-
-  // Equipment power draw
-  // In a full system, this would iterate through all equipped components
-  const equipmentCount = Object.keys(shell.equipment).length;
-  powerDraw += equipmentCount * 25; // 25W per equipped item
-
-  return powerDraw;
+function calculateComponentPowerDraw(shell: Shell): number {
+  // TODO: Compute total power draw from equipped components
+  return BASE_POWER_DRAW_WATTS;
 }

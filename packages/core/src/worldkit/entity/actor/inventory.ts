@@ -58,16 +58,20 @@ export  function createInventoryItem<TCategory extends ItemType = ItemType>(
 // INVENTORY HOOK
 // ============================================================================
 
+export type EntityWithInventory = {
+  inventory: Inventory;
+};
+
 export type ActorInventoryApi = {
-  getItem: (actor: Actor, itemId: ItemURN) => InventoryItem;
-  hasItem: (actor: Actor, itemId: ItemURN) => boolean;
-  addItem: (actor: Actor, input: InventoryItemInput) => InventoryItem;
-  removeItem: (actor: Actor, itemId: ItemURN) => InventoryItem;
-  addItems: (actor: Actor, inputs: InventoryItemInput[]) => InventoryItem[];
-  removeItems: (actor: Actor, itemIds: ItemURN[]) => InventoryItem[];
-  getItemCount: (actor: Actor) => number;
-  getTotalMass: (actor: Actor) => number;
-  refreshInventory: (actor: Actor) => void;
+  getItem: (entity: EntityWithInventory, itemId: ItemURN) => InventoryItem;
+  hasItem: (entity: EntityWithInventory, itemId: ItemURN) => boolean;
+  addItem: (entity: EntityWithInventory, input: InventoryItemInput) => InventoryItem;
+  removeItem: (entity: EntityWithInventory, itemId: ItemURN) => InventoryItem;
+  addItems: (entity: EntityWithInventory, inputs: InventoryItemInput[]) => InventoryItem[];
+  removeItems: (entity: EntityWithInventory, itemIds: ItemURN[]) => InventoryItem[];
+  getItemCount: (entity: EntityWithInventory) => number;
+  getTotalMass: (entity: EntityWithInventory) => number;
+  refreshInventory: (entity: EntityWithInventory) => void;
 };
 
 export type ActorInventoryApiDependencies = InventoryItemDependencies & {

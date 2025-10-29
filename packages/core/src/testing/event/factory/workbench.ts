@@ -7,6 +7,7 @@ import {
   ActorDidCommitShellMutations,
   EventType,
   ActorDidListShells,
+  ActorDidAssessShellStatus,
 } from '~/types/event';
 import { ShellMutation, ShellMutationType, StatMutation, StatMutationOperation } from '~/types/workbench';
 import { ShellStat, Stat } from '~/types/entity/actor';
@@ -232,6 +233,29 @@ export function createActorDidListShellsEvent(
     trace: DEFAULT_TRACE,
     payload: {},
   }) as ActorDidListShells;
+
+  return transform(baseEvent);
+}
+
+/**
+ * Creates an ACTOR_DID_ASSESS_SHELL_STATUS event for testing
+ */
+export function createActorDidAssessShellStatusEvent(
+  transform: EventTransform<ActorDidAssessShellStatus> = identity,
+  deps: CombatEventFactoryDependencies = DEFAULT_COMBAT_EVENT_FACTORY_DEPS
+): ActorDidAssessShellStatus {
+  const { createWorldEvent } = deps;
+
+  const baseEvent = createWorldEvent({
+    type: EventType.ACTOR_DID_ASSESS_SHELL_STATUS,
+    location: DEFAULT_LOCATION,
+    actor: ALICE_ID,
+    trace: DEFAULT_TRACE,
+    payload: {
+      sessionId: DEFAULT_WORKBENCH_SESSION,
+      shellId: '1', // Default shell ID
+    },
+  }) as ActorDidAssessShellStatus;
 
   return transform(baseEvent);
 }

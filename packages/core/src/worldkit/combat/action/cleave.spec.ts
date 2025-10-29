@@ -271,10 +271,10 @@ describe('Cleave Method', () => {
       // Clear existing equipment first
       const currentWeapon = context.equipmentApi.getEquippedWeapon(attacker);
       if (currentWeapon) {
-        context.equipmentApi.unequipWeapon(attacker, currentWeapon);
+        context.equipmentApi.unequip(attacker, currentWeapon);
       }
       // Equip the one-handed weapon
-      context.equipmentApi.equipWeapon(attacker, oneHandedWeapon.id as any);
+      context.equipmentApi.equip(attacker, oneHandedWeapon.id as any);
 
       const cleaveWithOneHanded = createCleaveMethod(
         context,

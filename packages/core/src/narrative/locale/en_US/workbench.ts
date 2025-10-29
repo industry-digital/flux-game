@@ -14,6 +14,7 @@ import {
   ActorDidExamineComponent,
   WorldEvent,
   ActorDidSwapShell,
+  ActorDidAssessShellStatus,
 } from '~/types/event';
 import { ShellMutationType } from '~/types/workbench';
 import { TemplateFunction } from '~/types/narrative';
@@ -21,6 +22,9 @@ import { ActorURN } from '~/types/taxonomy';
 import { Stat } from '~/types/entity/actor';
 import { SHELL_STAT_NAMES, getNaturalStatValue } from '~/worldkit/entity/actor/stats';
 import { getPossessivePronoun } from '~/narrative/locale/en_US/grammar/pronouns';
+import { calculateShellPerformance, ShellPerformanceDependencies } from '~/worldkit/entity/actor/shell/instrumentation';
+import { getSchemaTranslation } from '~/narrative/schema';
+import { Locale } from '~/types/i18n';
 
 export const narrateWorkbenchSessionDidStart: TemplateFunction<WorkbenchSessionDidStart, ActorURN> = (context, event, recipientId) => {
   const { world } = context;
@@ -480,4 +484,67 @@ export const narrateActorDidSwapShell: TemplateFunction<ActorDidSwapShell, Actor
 
   // No narrative for observers
   return '';
+};
+
+const PREALLOCATED_SHELL_PERFORMANCE_DEPS: ShellPerformanceDependencies = {} as any;
+
+export const narrateActorDidAssessShellStatus: TemplateFunction<ActorDidAssessShellStatus, ActorURN> = (context, event, recipientId) => {
+  const { world } = context;
+  const actor = world.actors[event.actor!];
+
+  if (!actor) {
+    return '';
+  }
+
+  const shell = actor.shells[event.payload.shellId];
+  if (!shell) {
+    return '';
+  }
+
+  // No narrative for observers
+  if (recipientId !== event.actor) {
+    return '';
+  }
+
+  const equippedWeapon = context.equipmentApi.getEquippedWeaponSchema(actor);
+
+  PREALLOCATED_SHELL_PERFORMANCE_DEPS.massApi = context.mass;
+  PREALLOCATED_SHELL_PERFORMANCE_DEPS.equipmentApi = context.equipmentApi;
+
+  const performance = calculateShellPerformance(actor, shell, PREALLOCATED_SHELL_PERFORMANCE_DEPS);
+
+  let report = '';
+
+  report += `"${shell.name}"\n\n`;
+
+  report += `STATS\n\n`;
+  report += `  POW: ${performance.naturalPowStat}\n`;
+  report += `  FIN: ${performance.naturalFinStat}\n`;
+  report += `  RES: ${performance.naturalResStat}\n\n`;
+
+  report += `MOBILITY\n\n`;
+  report += `  Gap Closing (10m):  ${performance.gapClosing10.toFixed(2)}s\n`;
+  report += `  Gap Closing (100m): ${performance.gapClosing100.toFixed(2)}s\n`;
+  report += `  Terminal Velocity:  ${performance.topSpeed.toFixed(1)} m/s\n`;
+  report += `  Total Mass:         ${performance.totalMassKg.toFixed(1)} kg\n`;
+  report += `  Inertia Reduction:  ${performance.inertiaReduction.toFixed(1)}%\n`;
+  report += `  Inertial Mass:      ${performance.inertialMassKg.toFixed(1)} kg\n`;
+  report += `  Power-to-Weight:    ${performance.powerToWeightRatio.toFixed(2)} W/kg\n\n`;
+
+  report += `POWER OUTPUT\n\n`;
+  report += `  Peak Power Output:  ${performance.peakPowerOutput.toFixed(0)}W\n`;
+  report += `  Component Draw:     ${performance.componentPowerDraw.toFixed(0)}W\n`;
+  report += `  Free Power:         ${performance.freePower.toFixed(0)}W\n`;
+
+  report += `CAPACITOR\n\n`;
+  report += `  Capacity:           ${(performance.capacitorCapacity / 1000).toFixed(1)}kJ\n`;
+  report += `  Peak Recharge:      ${performance.maxRechargeRate.toFixed(0)}W\n\n`;
+
+  report += `WEAPON\n\n`;
+  report += `  Weapon:             ${getSchemaTranslation(Locale.en_US, equippedWeapon.urn).name.singular}\n`;
+  report += `  Weapon Damage:      ${performance.weaponDamage.toFixed(1)}\n`;
+  report += `  AP Cost/Strike:     ${performance.weaponApCost.toFixed(1)} AP\n`;
+  report += `  Damage Per Second:  ${performance.weaponDps.toFixed(1)}\n\n`;
+
+  return report;
 };
