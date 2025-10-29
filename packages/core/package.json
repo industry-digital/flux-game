@@ -28,7 +28,7 @@
     "type-check": "tsc --noEmit",
     "check-circular": "npx madge --circular --extensions ts,js src/",
     "test": "vitest run",
-    "cli": "node dist/cjs/cli.js"
+    "cli": "tsx src/cli.ts"
   },
   "volta": {
     "node": "22.15.0",
