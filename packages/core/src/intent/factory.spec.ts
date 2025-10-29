@@ -21,7 +21,7 @@ describe('Intent Factory', () => {
         location: PLACE_ID,
         text: 'attack bob',
         normalized: 'attack bob',
-        verb: 'attack',
+        prefix: 'attack',
         tokens: ['bob'],
         uniques: new Set(['bob']),
       });
@@ -39,7 +39,7 @@ describe('Intent Factory', () => {
       });
 
       expect(intent.session).toBe(SESSION_ID);
-      expect(intent.verb).toBe('advance');
+      expect(intent.prefix).toBe('advance');
       expect(intent.tokens).toEqual(['10']);
     });
 
@@ -51,7 +51,7 @@ describe('Intent Factory', () => {
       });
 
       expect(intent.normalized).toBe('attack   bob   with   sword');
-      expect(intent.verb).toBe('attack');
+      expect(intent.prefix).toBe('attack');
       expect(intent.tokens).toEqual(['bob', 'with', 'sword']);
       expect(intent.uniques).toEqual(new Set(['bob', 'with', 'sword']));
     });
@@ -89,7 +89,7 @@ describe('Intent Factory', () => {
       });
 
       expect(intent.normalized).toBe('');
-      expect(intent.verb).toBe('');
+      expect(intent.prefix).toBe('');
       expect(intent.tokens).toEqual([]);
       expect(intent.uniques).toEqual(new Set());
     });
@@ -144,7 +144,7 @@ describe('Intent Factory', () => {
       });
 
       expect(intent.session).toBe(combatSessionId);
-      expect(intent.verb).toBe('advance');
+      expect(intent.prefix).toBe('advance');
       expect(intent.tokens).toEqual(['15']);
     });
 
@@ -171,7 +171,7 @@ describe('Intent Factory', () => {
         text: 'attack bob --weapon=sword --damage=10',
       });
 
-      expect(intent.verb).toBe('attack');
+      expect(intent.prefix).toBe('attack');
       expect(intent.tokens).toEqual(['bob']);
       expect(intent.options).toEqual({
         weapon: 'sword',
@@ -187,7 +187,7 @@ describe('Intent Factory', () => {
         text: '@credit flux:actor:alice gold 100 --memo="Gift from the queen"',
       });
 
-      expect(intent.verb).toBe('@credit');
+      expect(intent.prefix).toBe('@credit');
       expect(intent.tokens).toEqual(['flux:actor:alice', 'gold', '100']);
       expect(intent.options).toEqual({
         memo: 'Gift from the queen',
@@ -202,7 +202,7 @@ describe('Intent Factory', () => {
         text: 'advance 10 --stealth --fast',
       });
 
-      expect(intent.verb).toBe('advance');
+      expect(intent.prefix).toBe('advance');
       expect(intent.tokens).toEqual(['10']);
       expect(intent.options).toEqual({
         stealth: true,
@@ -218,7 +218,7 @@ describe('Intent Factory', () => {
         text: 'craft sword --material=steel --quantity=2 --enchanted from iron ore',
       });
 
-      expect(intent.verb).toBe('craft');
+      expect(intent.prefix).toBe('craft');
       expect(intent.tokens).toEqual(['sword', 'from', 'iron', 'ore']);
       expect(intent.options).toEqual({
         material: 'steel',
@@ -235,7 +235,7 @@ describe('Intent Factory', () => {
         text: 'search --filter= --verbose',
       });
 
-      expect(intent.verb).toBe('search');
+      expect(intent.prefix).toBe('search');
       expect(intent.tokens).toEqual([]);
       expect(intent.options).toEqual({
         filter: '',
@@ -251,7 +251,7 @@ describe('Intent Factory', () => {
         text: 'simple command with args',
       });
 
-      expect(intent.verb).toBe('simple');
+      expect(intent.prefix).toBe('simple');
       expect(intent.tokens).toEqual(['command', 'with', 'args']);
       expect(intent.options).toBeUndefined();
     });
@@ -264,7 +264,7 @@ describe('Intent Factory', () => {
         text: 'test -- --valid=option regular arg',
       });
 
-      expect(intent.verb).toBe('test');
+      expect(intent.prefix).toBe('test');
       expect(intent.tokens).toEqual(['--', 'regular', 'arg']);
       expect(intent.options).toEqual({
         valid: 'option',
@@ -279,7 +279,7 @@ describe('Intent Factory', () => {
         text: 'command --double="Double Quoted" --single=\'Single Quoted\' --unquoted=no-quotes --empty=""',
       });
 
-      expect(intent.verb).toBe('command');
+      expect(intent.prefix).toBe('command');
       expect(intent.tokens).toEqual([]);
       expect(intent.options).toEqual({
         double: 'Double Quoted',

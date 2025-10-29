@@ -11,7 +11,7 @@ export const cleaveResolver: CommandResolver<CleaveCommand> = (
 ): CleaveCommand | undefined => {
   const { world } = context;
 
-  if (intent.verb !== CLEAVE_VERB) {
+  if (intent.prefix !== CLEAVE_VERB) {
     return undefined;
   }
 

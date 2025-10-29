@@ -16,7 +16,7 @@ export const debitResolver: CommandResolver<DebitCommand> = (
   intent: Intent,
 ): DebitCommand | undefined => {
   // Check if this is a debit command
-  if (intent.verb !== DEBIT_VERB) {
+  if (intent.prefix !== DEBIT_VERB) {
     return undefined;
   }
 

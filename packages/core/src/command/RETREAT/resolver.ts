@@ -14,7 +14,7 @@ export const retreatResolver: CommandResolver<RetreatCommand> = (
   const { world } = context;
 
   // Check if this is a retreat command
-  if (intent.verb !== RETREAT_VERB) {
+  if (intent.prefix !== RETREAT_VERB) {
     return undefined;
   }
 

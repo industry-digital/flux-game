@@ -9,7 +9,7 @@ export const unequipResolver: CommandResolver<UnequipCommand> = (
   intent: Intent,
 ): UnequipCommand | undefined => {
   // Check if this is a done command
-  if (intent.verb !== UNEQUIP_VERB) {
+  if (intent.prefix !== UNEQUIP_VERB) {
     return undefined;
   }
 

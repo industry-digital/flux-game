@@ -19,7 +19,7 @@ export const partyInspectResolver: CommandResolver<PartyInspectCommand> = (
   context: CommandResolverContext,
   intent: Intent,
 ): PartyInspectCommand | undefined => {
-  if (intent.verb !== PARTY_TOKEN) {
+  if (intent.prefix !== PARTY_TOKEN) {
     return undefined;
   }
 

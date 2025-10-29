@@ -10,7 +10,7 @@ export const listShellsResolver: CommandResolver<ListShellsCommand> = (
   context: CommandResolverContext,
   intent: Intent,
 ): ListShellsCommand | undefined => {
-  if (intent.verb !== SHELL_VERB) {
+  if (intent.prefix !== SHELL_VERB) {
     return undefined;
   }
 

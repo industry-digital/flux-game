@@ -8,7 +8,7 @@ export const lookResolver: CommandResolver<LookCommand> = (
   context: CommandResolverContext,
   intent: Intent,
 ): LookCommand | undefined => {
-  if (intent.verb !== LOOK_VERB) {
+  if (intent.prefix !== LOOK_VERB) {
     return undefined;
   }
 

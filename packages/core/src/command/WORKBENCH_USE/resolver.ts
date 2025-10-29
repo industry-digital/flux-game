@@ -10,7 +10,7 @@ export const activateWorkbenchResolver: CommandResolver<UseWorkbenchCommand> = (
   context: CommandResolverContext,
   intent: Intent,
 ): UseWorkbenchCommand | undefined => {
-  if (intent.verb !== USE_VERB) {
+  if (intent.prefix !== USE_VERB) {
     return undefined;
   }
 

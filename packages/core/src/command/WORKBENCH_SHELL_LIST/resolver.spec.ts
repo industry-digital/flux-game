@@ -16,7 +16,7 @@ const createTestIntent = (text: string, now = Date.now()): Intent => ({
   location: 'flux:place:test-workbench',
   text,
   normalized: text.toLowerCase().trim(),
-  verb: text.split(' ')[0].toLowerCase(),
+  prefix: text.split(' ')[0].toLowerCase(),
   tokens: text.toLowerCase().trim().split(' ').slice(1),
   uniques: new Set(text.toLowerCase().trim().split(' ').slice(1)),
   options: undefined,

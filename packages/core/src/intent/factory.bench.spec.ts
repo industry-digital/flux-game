@@ -72,7 +72,7 @@ describe('Intent Factory Benchmarks', () => {
 
         expect(testIntent.text).toBe(text);
         expect(testIntent.normalized).toBe(text.toLowerCase().trim());
-        expect(testIntent.verb).toBeTruthy();
+        expect(testIntent.prefix).toBeTruthy();
 
         // Performance expectations (these may need adjustment based on hardware)
         expect(throughput).toBeGreaterThan(10000); // At least 10k intents/sec
@@ -122,7 +122,7 @@ describe('Intent Factory Benchmarks', () => {
 
       // Verify intents are properly formed
       expect(intents).toHaveLength(iterations);
-      expect(intents[0].verb).toBe('@credit');
+      expect(intents[0].prefix).toBe('@credit');
       expect(intents[0].tokens).toEqual(['flux:actor:alice', 'gold', '100']);
       // @ts-expect-error - we are testing the options type
       expect(intents[0].options?.memo).toBe('Gift from the queen');
@@ -253,7 +253,7 @@ describe('Intent Factory Benchmarks', () => {
           location: DEFAULT_LOCATION,
           text,
         });
-        return { text, verb: intent.verb, tokens: intent.tokens.length };
+        return { text, verb: intent.prefix, tokens: intent.tokens.length };
       });
 
       console.log(`\nParsing verification:`);
@@ -287,7 +287,7 @@ describe('Intent Factory Benchmarks', () => {
           });
 
           // Quick validation
-          if (intent.verb === '@credit' && intent.tokens.length === 3) {
+          if (intent.prefix === '@credit' && intent.tokens.length === 3) {
             successCount++;
           }
         } catch (error) {

@@ -11,7 +11,7 @@ export const targetResolver: CommandResolver<TargetCommand> = (
   const { world } = context;
 
   // Check if this is a target command
-  if (intent.verb !== TARGET_VERB) {
+  if (intent.prefix !== TARGET_VERB) {
     return undefined;
   }
 

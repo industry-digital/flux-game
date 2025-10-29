@@ -184,7 +184,7 @@ export function createIntent<TOptions extends IntentOptions = undefined>(
     session: input.session,
     text: trimmed,
     normalized,
-    verb,
+    prefix: verb,
     tokens: args,
     uniques,
     options: options as TOptions

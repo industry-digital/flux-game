@@ -14,7 +14,7 @@ export const advanceResolver: CommandResolver<AdvanceCommand> = (
   const { world } = context;
 
   // Check if this is an advance command
-  if (intent.verb !== ADVANCE_VERB) {
+  if (intent.prefix !== ADVANCE_VERB) {
     return undefined;
   }
 

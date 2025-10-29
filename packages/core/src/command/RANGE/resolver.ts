@@ -11,7 +11,7 @@ export const rangeResolver: CommandResolver<RangeCommand> = (
   const { world } = context;
 
   // Check if this is a range command
-  if (intent.verb !== RANGE_VERB) {
+  if (intent.prefix !== RANGE_VERB) {
     return undefined;
   }
 

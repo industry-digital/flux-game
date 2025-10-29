@@ -16,7 +16,7 @@ export const defendResolver: CommandResolver<DefendCommand> = (
   const { world } = context;
 
   // Check if this is a defend command
-  if (intent.verb !== DEFEND_VERB) {
+  if (intent.prefix !== DEFEND_VERB) {
     return undefined;
   }
 

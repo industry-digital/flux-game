@@ -19,7 +19,7 @@ export const rejectPartyInvitationResolver: CommandResolver<RejectPartyInvitatio
   context: CommandResolverContext,
   intent: Intent,
 ): RejectPartyInvitationCommand | undefined => {
-  if (intent.verb !== PARTY_TOKEN) {
+  if (intent.prefix !== PARTY_TOKEN) {
     return undefined;
   }
 

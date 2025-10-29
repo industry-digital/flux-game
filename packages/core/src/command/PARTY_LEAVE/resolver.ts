@@ -20,11 +20,11 @@ export const partyLeaveResolver: CommandResolver<PartyLeaveCommand> = (
   intent: Intent,
 ): PartyLeaveCommand | undefined => {
   // Handle both "party leave" and just "leave"
-  const isPartyLeave = intent.verb === PARTY_TOKEN &&
+  const isPartyLeave = intent.prefix === PARTY_TOKEN &&
                        intent.tokens.length === 1 &&
                        intent.tokens[0] === LEAVE_TOKEN;
 
-  const isSimpleLeave = intent.verb === LEAVE_TOKEN && intent.tokens.length === 0;
+  const isSimpleLeave = intent.prefix === LEAVE_TOKEN && intent.tokens.length === 0;
 
   if (!isPartyLeave && !isSimpleLeave) {
     return undefined;

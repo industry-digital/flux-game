@@ -9,7 +9,7 @@ export const equipResolver: CommandResolver<EquipCommand> = (
   context: CommandResolverContext,
   intent: Intent,
 ): EquipCommand | undefined => {
-  if (intent.verb !== EQUIP_VERB) {
+  if (intent.prefix !== EQUIP_VERB) {
     return undefined;
   }
 

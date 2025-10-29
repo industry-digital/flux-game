@@ -18,7 +18,7 @@ const createTestIntent = (text: string, now = Date.now()): Intent => {
     ts: now,
     actor: ALICE_ID,
     location: 'flux:place:test-workbench' as any,
-    verb: normalizedParts[0],
+    prefix: normalizedParts[0],
     tokens: parts.slice(1), // Preserve original case
     uniques: new Set(normalizedParts.slice(1)),
     options: undefined,

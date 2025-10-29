@@ -20,7 +20,7 @@ export const partyDisbandResolver: CommandResolver<PartyDisbandCommand> = (
   intent: Intent,
 ): PartyDisbandCommand | undefined => {
   // Only handle "party disband" syntax
-  if (intent.verb !== PARTY_TOKEN || intent.tokens.length !== 1 || intent.tokens[0] !== DISBAND_TOKEN) {
+  if (intent.prefix !== PARTY_TOKEN || intent.tokens.length !== 1 || intent.tokens[0] !== DISBAND_TOKEN) {
     return undefined;
   }
 

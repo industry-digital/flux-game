@@ -10,7 +10,7 @@ export const doneResolver: CommandResolver<DoneCommand> = (
   intent: Intent,
 ): DoneCommand | undefined => {
   // Check if this is a done command
-  if (intent.verb !== DONE_VERB) {
+  if (intent.prefix !== DONE_VERB) {
     return undefined;
   }
 

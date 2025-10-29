@@ -12,7 +12,7 @@ export const attackResolver: CommandResolver<AttackCommand> = (
   const { world } = context;
 
   // Check if this is an attack command
-  if (intent.verb !== ATTACK_VERB) {
+  if (intent.prefix !== ATTACK_VERB) {
     return undefined;
   }
 

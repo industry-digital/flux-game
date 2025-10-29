@@ -9,7 +9,7 @@ export const swapShellResolver: CommandResolver<SwapShellCommand> = (
   context: CommandResolverContext,
   intent: Intent,
 ): SwapShellCommand | undefined => {
-  if (intent.verb !== SHELL_VERB) {
+  if (intent.prefix !== SHELL_VERB) {
     return undefined;
   }
 

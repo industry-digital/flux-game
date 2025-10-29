@@ -15,7 +15,7 @@ export const renameShellResolver: CommandResolver<RenameShellCommand> = (
   context: CommandResolverContext,
   intent: Intent,
 ): RenameShellCommand | undefined => {
-  if (intent.verb !== SHELL_VERB) {
+  if (intent.prefix !== SHELL_VERB) {
     return undefined;
   }
 

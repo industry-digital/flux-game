@@ -47,6 +47,7 @@ export enum CommandType {
   WORKBENCH_SHELL_SWAP = 'WORKBENCH_SHELL_SWAP',
   WORKBENCH_SHELL_LIST  = 'WORKBENCH_SHELL_LIST',
   WORKBENCH_SHELL_RENAME = 'WORKBENCH_SHELL_RENAME',
+  WORKBENCH_SHELL_STATUS = 'WORKBENCH_SHELL_STATUS',
 }
 
 /**
@@ -256,24 +257,24 @@ export type Intent<TOptions extends IntentOptions = undefined> = {
   normalized: string;
 
   /**
-   * The first token of the intent
+   * The first token of the intent, computed from `normalized`
    */
-  verb: string;
+  prefix: string;
 
   /**
    * Tokens created from `normalized`, unsorted
-   * Does not contain `verb`.
+   * Does not contain `prefix`.
    */
   tokens: string[];
 
   /**
    * Unique tokens created from `normalized`
-   * Does not contain `verb`.
+   * Does not contain `prefix`.
    */
   uniques: Set<string>;
 
   /**
-   * Key-value options that occur *after* the verb.
+   * Key-value options that occur *after* the prefix.
    * Parsed from `--key` or `--key=value` syntax.
    */
   options: TOptions;

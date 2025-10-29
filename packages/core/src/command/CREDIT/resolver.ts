@@ -17,7 +17,7 @@ export const creditResolver: CommandResolver<CreditCommand> = (
   intent: Intent,
 ): CreditCommand | undefined => {
   // Check if this is a done command
-  if (intent.verb !== CREDIT_VERB) {
+  if (intent.prefix !== CREDIT_VERB) {
     return undefined;
   }
 

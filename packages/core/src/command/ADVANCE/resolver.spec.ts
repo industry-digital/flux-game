@@ -355,7 +355,7 @@ describe('ADVANCE Command Parser', () => {
 
       // Verify tokens are pre-parsed
       expect(intent.tokens).toEqual(['ap', '2.5']);
-      expect(intent.verb).toBe('advance');
+      expect(intent.prefix).toBe('advance');
 
       const command = advanceResolver(parserContext, intent);
       assertApAdvanceCommand(command, 2.5);

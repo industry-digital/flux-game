@@ -12,7 +12,7 @@ export const strikeResolver: CommandResolver<StrikeCommand> = (
   const { world } = context;
 
   // Check if this is a strike command
-  if (intent.verb !== STRIKE_VERB) {
+  if (intent.prefix !== STRIKE_VERB) {
     return undefined;
   }
 

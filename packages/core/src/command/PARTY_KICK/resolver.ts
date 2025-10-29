@@ -21,7 +21,7 @@ export const partyKickResolver: CommandResolver<PartyKickCommand> = (
   intent: Intent,
 ): PartyKickCommand | undefined => {
   // Only handle "party kick <target>" syntax
-  if (intent.verb !== PARTY_TOKEN || intent.tokens.length !== 2 || intent.tokens[0] !== KICK_TOKEN) {
+  if (intent.prefix !== PARTY_TOKEN || intent.tokens.length !== 2 || intent.tokens[0] !== KICK_TOKEN) {
     return undefined;
   }
 
