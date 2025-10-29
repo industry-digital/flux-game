@@ -9,7 +9,7 @@ import { URNLike } from '~/types/taxonomy';
 import { calculateWeaponApCost } from '~/worldkit/combat/ap';
 import { getWeaponBaseDamage } from '~/worldkit/combat/damage/damage-type';
 import { applyModifierToRollResult, calculateAverageRollResult, rollDiceWithRng } from '~/worldkit/dice';
-import { getStatValue, MAX_STAT_VALUE } from '~/worldkit/entity';
+import { getStatValue, MAX_STAT_VALUE } from '~/worldkit/entity/actor/stats';
 
 export type CalculateWeaponDamageDependencies = {
   rollDice: (dice: RollSpecification) => RollResultWithoutModifiers;

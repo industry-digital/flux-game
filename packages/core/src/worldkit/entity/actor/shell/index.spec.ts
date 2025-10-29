@@ -198,6 +198,7 @@ describe('Shell Creation', () => {
         hashUnsafeString: () => 'deterministic-id',
         createInventory: () => ({
           mass: 100,
+          count: 1,
           items: {},
           ammo: {},
           ts: DEFAULT_TIMESTAMP,

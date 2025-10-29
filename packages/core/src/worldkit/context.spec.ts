@@ -25,7 +25,7 @@ import { createCombatMetricsApi } from '~/worldkit/combat/metrics';
 import { ActorURN, PlaceURN } from '~/types/taxonomy';
 import { WellKnownActor } from '~/types';
 import { createCombatSessionStartedEvent } from '~/testing/event/factory/combat';
-import { DEFAULT_LOCATION } from '~/testing/constants';
+import { DEFAULT_COMBAT_SESSION, DEFAULT_LOCATION } from '~/testing/constants';
 import { createRollApi } from '~/worldkit/dice';
 import { createActorWeaponApi } from '~/worldkit/entity/actor/weapon';
 import { ErrorCode } from '~/types/error';
@@ -308,7 +308,12 @@ describe('createTransformerContext', () => {
         type: EventType.COMBAT_SESSION_DID_START,
         actor: WellKnownActor.SYSTEM,
         location: DEFAULT_LOCATION,
-        payload: { sessionId: 'flux:session:test', initiative: [], combatants: [] }
+        payload: {
+          sessionId: DEFAULT_COMBAT_SESSION,
+          initiative: [],
+          combatants: [],
+          namesByTeam: {},
+        }
       })));
 
       const actorEvents = context.getDeclaredEvents(/^actor:/);
@@ -436,7 +441,12 @@ describe('createTransformerContext', () => {
         id: 'test-event-1',
         location: 'flux:place:arena' as PlaceURN,
         trace: 'combat-init',
-        payload: { sessionId: 'flux:session:1', initiative: [], combatants: [] }
+        payload: {
+          sessionId: DEFAULT_COMBAT_SESSION,
+          initiative: [],
+          combatants: [],
+          namesByTeam: {},
+        },
       })));
 
       context.declareEvent({

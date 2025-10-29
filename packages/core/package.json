@@ -28,7 +28,9 @@
     "type-check": "tsc --noEmit",
     "check-circular": "npx madge --circular --extensions ts,js src/",
     "test": "vitest run",
-    "cli": "tsx src/cli.ts"
+    "cli": "tsx src/repl/cli.ts",
+    "dev:repl": "vite --config vite.repl.config.ts",
+    "dev:repl:simple": "tsx src/repl/dev.ts"
   },
   "volta": {
     "node": "22.15.0",

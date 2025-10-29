@@ -17,7 +17,7 @@ describe('createShellDiff', () => {
         [Stat.FIN]: { nat: 8, eff: 8, mods: {} },
         [Stat.RES]: { nat: 12, eff: 12, mods: {} },
       },
-      inventory: { items: {}, mass: 0, ts: 123456790000, ammo: {} },
+      inventory: { items: {}, mass: 0, count: 0, ts: 123456790000, ammo: {} },
       equipment: {},
     };
 
@@ -73,6 +73,7 @@ describe('createShellDiff', () => {
       });
 
       // Test createPerformanceDiff
+      // @ts-expect-error - mockCurrentPerf and mockPreviewPerf are not typed as ShellPerformanceProfile
       const perfDiff = createPerformanceDiff(mockCurrentPerf, mockPreviewPerf);
       expect(perfDiff.weaponDps).toBe('15.2 -> 18.7');
       expect(perfDiff.weaponDamage).toBe('12 -> 15');
@@ -95,6 +96,7 @@ describe('createShellDiff', () => {
       const startTime = performance.now();
 
       for (let i = 0; i < iterations; i++) {
+        // @ts-expect-error - mockCurrentPerf and mockPreviewPerf are not typed as ShellPerformanceProfile
         createPerformanceDiff(mockCurrentPerf, mockPreviewPerf);
       }
 
@@ -144,6 +146,7 @@ describe('createShellDiff', () => {
 
   describe('createPerformanceDiff', () => {
     it('should create performance diff with only changed values', () => {
+      // @ts-expect-error - mockCurrentPerf and mockPreviewPerf are not typed as ShellPerformanceProfile
       const result = createPerformanceDiff(mockCurrentPerf, mockPreviewPerf);
 
       expect(result.weaponDps).toBe('15.2 -> 18.7');
