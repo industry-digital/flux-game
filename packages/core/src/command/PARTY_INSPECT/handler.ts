@@ -6,6 +6,7 @@ import { isCommandOfType } from '~/lib/intent';
 import { partyInspectResolver } from './resolver';
 
 export class PARTY_INSPECT implements PureHandlerInterface<TransformerContext, PartyInspectCommand> {
+  type = CommandType.PARTY_INSPECT;
   dependencies = [];
   reduce = partyInspectReducer;
   resolve = partyInspectResolver;

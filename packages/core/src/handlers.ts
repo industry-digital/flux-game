@@ -26,6 +26,7 @@ import { RANGE } from '~/command/RANGE';
 import { RETREAT } from '~/command/RETREAT';
 import { STRIKE } from '~/command/STRIKE';
 import { TARGET } from '~/command/TARGET';
+import { WORKBENCH_SHELL_ATTRIBUTE_ADD } from '~/command/WORKBENCH_SHELL_ATTRIBUTE_ADD';
 import { WORKBENCH_SHELL_LIST } from '~/command/WORKBENCH_SHELL_LIST';
 import { WORKBENCH_SHELL_RENAME } from '~/command/WORKBENCH_SHELL_RENAME';
 import { WORKBENCH_SHELL_SWAP } from '~/command/WORKBENCH_SHELL_SWAP';
@@ -58,6 +59,7 @@ export const PURE_GAME_LOGIC_HANDLERS: PureHandlerImplementation<TransformerCont
     RETREAT,
     STRIKE,
     TARGET,
+    WORKBENCH_SHELL_ATTRIBUTE_ADD,
     WORKBENCH_SHELL_LIST,
     WORKBENCH_SHELL_RENAME,
     WORKBENCH_SHELL_SWAP,

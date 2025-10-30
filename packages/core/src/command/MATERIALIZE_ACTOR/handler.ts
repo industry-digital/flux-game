@@ -6,6 +6,7 @@ import { isCommandOfType } from '~/lib/intent';
 import { ActorURN } from '~/types/taxonomy';
 
 export class MATERIALIZE_ACTOR implements PureHandlerInterface<TransformerContext, MaterializeActorCommand> {
+  type = CommandType.MATERIALIZE_ACTOR;
   reduce = materializeActorReducer;
   dependencies = [];
   handles = (command: SystemCommand): command is MaterializeActorCommand => {

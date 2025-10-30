@@ -6,6 +6,7 @@ import { Command, CommandType } from '~/types/intent';
 import { isCommandOfType } from '~/lib/intent';
 
 export class WORKBENCH_USE implements PureHandlerInterface<TransformerContext, UseWorkbenchCommand> {
+  type = CommandType.WORKBENCH_USE;
   resolve = activateWorkbenchResolver;
   reduce = activateWorkbenchReducer;
   dependencies = [];

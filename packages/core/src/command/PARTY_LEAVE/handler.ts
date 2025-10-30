@@ -6,6 +6,7 @@ import { isCommandOfType } from '~/lib/intent';
 import { partyLeaveResolver } from './resolver';
 
 export class PARTY_LEAVE implements PureHandlerInterface<TransformerContext, PartyLeaveCommand> {
+  type = CommandType.PARTY_LEAVE;
   dependencies = [];
   reduce = partyLeaveReducer;
   resolve = partyLeaveResolver;

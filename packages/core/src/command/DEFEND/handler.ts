@@ -6,6 +6,7 @@ import { Command, CommandType } from '~/types/intent';
 import { isCommandOfType } from '~/lib/intent';
 
 export class DEFEND implements PureHandlerInterface<TransformerContext, DefendCommand> {
+  type = CommandType.DEFEND;
   dependencies = [];
   reduce = defendReducer;
   resolve = defendResolver;

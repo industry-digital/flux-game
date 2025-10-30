@@ -37,7 +37,7 @@ function findHandler(
   command: Command
 ): InstanceType<typeof PURE_GAME_LOGIC_HANDLERS[number]> | null {
   for (const handler of extractHandlers()) {
-    if (handler.handles(command)) {
+    if (handler.type === command.type) {
       return handler;
     }
   }

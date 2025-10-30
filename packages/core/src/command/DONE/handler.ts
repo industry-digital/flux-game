@@ -6,6 +6,7 @@ import { Command, CommandType } from '~/types/intent';
 import { isCommandOfType } from '~/lib/intent';
 
 export class DONE implements PureHandlerInterface<TransformerContext, DoneCommand> {
+  type = CommandType.DONE;
   dependencies = [];
   reduce = doneReducer;
   resolve = doneResolver;

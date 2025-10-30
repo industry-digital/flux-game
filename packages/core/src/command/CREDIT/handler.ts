@@ -6,6 +6,7 @@ import { Command, CommandType } from '~/types/intent';
 import { isCommandOfType } from '~/lib/intent';
 
 export class CREDIT implements PureHandlerInterface<TransformerContext, CreditCommand> {
+  type = CommandType.CREDIT;
   dependencies = [];
   reduce = creditReducer;
   resolve = creditResolver;

@@ -7,8 +7,10 @@ import { isCommandOfType } from '~/lib/intent';
 /**
  * Handler for MOVE commands
  * Processes an actor's movement in the world
+ * TODO: Implement resolver
  */
 export class MOVE implements PureHandlerInterface<TransformerContext, MoveCommand> {
+  type = CommandType.MOVE;
   reduce = actorMovementReducer;
   dependencies = [];
   handles = (input: Command): input is MoveCommand => {

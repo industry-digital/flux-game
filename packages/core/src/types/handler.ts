@@ -157,7 +157,12 @@ export type PureHandlerInterface<
   C,
   I extends Command
 > = {
+  type: CommandType;
+  /**
+   * @deprecated See `type` property
+   */
   handles: (input: any) => input is I;
+
   dependencies: PureHandlerImplementation<C, I>[];
   reduce: PureReducer<C, I>;
 

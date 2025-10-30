@@ -5,6 +5,7 @@ import { Command, CommandType } from '~/types/intent';
 import { isCommandOfType } from '~/lib/intent';
 
 export class MUTATE_WEATHER implements PureHandlerInterface<TransformerContext, MutateWeatherCommand> {
+  type = CommandType.MUTATE_WEATHER;
   reduce = mutateWeatherReducer;
   dependencies = [];
   handles = (command: Command): command is MutateWeatherCommand => {

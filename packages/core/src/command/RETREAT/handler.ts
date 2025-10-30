@@ -6,6 +6,7 @@ import { Command, CommandType } from '~/types/intent';
 import { isCommandOfType } from '~/lib/intent';
 
 export class RETREAT implements PureHandlerInterface<TransformerContext, RetreatCommand> {
+  type = CommandType.RETREAT;
   dependencies = [];
   reduce = retreatReducer;
   resolve = retreatResolver;

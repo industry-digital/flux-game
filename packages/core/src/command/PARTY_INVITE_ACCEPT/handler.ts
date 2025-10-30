@@ -6,6 +6,7 @@ import { isCommandOfType } from '~/lib/intent';
 import { acceptPartyInvitationResolver } from '~/command/PARTY_INVITE_ACCEPT/resolver';
 
 export class PARTY_INVITE_ACCEPT implements PureHandlerInterface<TransformerContext, AcceptPartyInvitationCommand> {
+  type = CommandType.PARTY_INVITE_ACCEPT;
   dependencies = [];
   reduce = acceptPartyInvitationReducer;
   resolve = acceptPartyInvitationResolver;

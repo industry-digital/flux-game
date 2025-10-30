@@ -6,6 +6,7 @@ import { Command, CommandType } from '~/types/intent';
 import { isCommandOfType } from '~/lib/intent';
 
 export class WORKBENCH_SHELL_RENAME implements PureHandlerInterface<TransformerContext, RenameShellCommand> {
+  type = CommandType.WORKBENCH_SHELL_RENAME;
   resolve = renameShellResolver;
   reduce = renameShellReducer;
   dependencies = [];

@@ -5,6 +5,7 @@ import { Command, CommandType } from '~/types/intent';
 import { isCommandOfType } from '~/lib/intent';
 
 export class MUTATE_RESOURCES implements PureHandlerInterface<TransformerContext, MutateResourcesCommand> {
+  type = CommandType.MUTATE_RESOURCES;
   reduce = mutateResourcesReducer;
   dependencies = [];
   handles = (command: Command): command is MutateResourcesCommand => {

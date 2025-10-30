@@ -6,6 +6,7 @@ import { Command, CommandType } from '~/types/intent';
 import { isCommandOfType } from '~/lib/intent';
 
 export class RANGE implements PureHandlerInterface<TransformerContext, RangeCommand> {
+  type = CommandType.RANGE;
   dependencies = [];
   reduce = rangeReducer;
   resolve = rangeResolver;

@@ -6,6 +6,7 @@ import { isCommandOfType } from '~/lib/intent';
 import { ActorInput } from '~/types/entity/actor';
 
 export class CREATE_ACTOR implements PureHandlerInterface<TransformerContext, CreateActorCommand> {
+  type = CommandType.CREATE_ACTOR;
   reduce = createActorCommandReducer;
   dependencies = [];
   handles = (command: SystemCommand): command is CreateActorCommand => {

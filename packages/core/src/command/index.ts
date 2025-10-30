@@ -1,59 +1,14 @@
-import { createActorCommandReducer } from '~/command/CREATE_ACTOR';
-import { createPlaceCommandReducer } from '~/command/CREATE_PLACE';
-import { materializeActorReducer } from '~/command/MATERIALIZE_ACTOR';
-import { dematerializeActorReducer } from '~/command/DEMATERIALIZE_ACTOR';
-import { mutateWeatherReducer } from '~/command/MUTATE_WEATHER';
-import { mutateResourcesReducer } from '~/command/MUTATE_RESOURCES';
-import { lookReducer } from '~/command/LOOK';
-import { actorMovementReducer } from '~/command/MOVE';
-import { strikeReducer } from '~/command/STRIKE';
-import { cleaveReducer } from '~/command/CLEAVE';
-import { doneReducer } from '~/command/DONE';
-import { attackReducer } from '~/command/ATTACK';
-import { advanceReducer } from '~/command/ADVANCE';
-import { defendReducer } from '~/command/DEFEND';
-import { retreatReducer } from '~/command/RETREAT';
-import { targetReducer } from '~/command/TARGET';
-import { activateWorkbenchReducer } from '~/command/WORKBENCH_USE';
-import { equipReducer } from '~/command/EQUIP';
 import { PureReducer, TransformerContext } from '~/types/handler';
 import { CommandType } from '~/types/intent';
-import { partyInviteReducer } from '~/command/PARTY_INVITE/reducer';
-import { acceptPartyInvitationReducer } from '~/command/PARTY_INVITE_ACCEPT/reducer';
-import { rejectPartyInvitationReducer } from '~/command/PARTY_INVITE_REJECT/reducer';
-import { partyInspectReducer } from '~/command/PARTY_INSPECT/reducer';
-import { partyLeaveReducer } from '~/command/PARTY_LEAVE/reducer';
-import { partyDisbandReducer } from '~/command/PARTY_DISBAND/reducer';
-import { partyKickReducer } from '~/command/PARTY_KICK/reducer';
+import { PURE_GAME_LOGIC_HANDLERS } from '~/handlers';
 
 // Registry mapping CommandType to transformer (reducer) functions
-export const COMMAND_TRANSFORMERS: Partial<Record<CommandType, PureReducer<TransformerContext, any>>> = {
-  [CommandType.ATTACK]: attackReducer,
-  [CommandType.CREATE_ACTOR]: createActorCommandReducer,
-  [CommandType.CREATE_PLACE]: createPlaceCommandReducer,
-  [CommandType.MATERIALIZE_ACTOR]: materializeActorReducer,
-  [CommandType.DEMATERIALIZE_ACTOR]: dematerializeActorReducer,
-  [CommandType.MUTATE_WEATHER]: mutateWeatherReducer,
-  [CommandType.MUTATE_RESOURCES]: mutateResourcesReducer,
-  [CommandType.LOOK]: lookReducer,
-  [CommandType.MOVE]: actorMovementReducer,
-  [CommandType.STRIKE]: strikeReducer,
-  [CommandType.CLEAVE]: cleaveReducer,
-  [CommandType.DONE]: doneReducer,
-  [CommandType.ADVANCE]: advanceReducer,
-  [CommandType.DEFEND]: defendReducer,
-  [CommandType.RETREAT]: retreatReducer,
-  [CommandType.TARGET]: targetReducer,
-  [CommandType.WORKBENCH_USE]: activateWorkbenchReducer,
-  [CommandType.EQUIP]: equipReducer,
-  [CommandType.PARTY_INVITE]: partyInviteReducer,
-  [CommandType.PARTY_INVITE_ACCEPT]: acceptPartyInvitationReducer,
-  [CommandType.PARTY_INVITE_REJECT]: rejectPartyInvitationReducer,
-  [CommandType.PARTY_INSPECT]: partyInspectReducer,
-  [CommandType.PARTY_LEAVE]: partyLeaveReducer,
-  [CommandType.PARTY_DISBAND]: partyDisbandReducer,
-  [CommandType.PARTY_KICK]: partyKickReducer,
-};
+export const COMMAND_TRANSFORMERS: Partial<Record<CommandType, PureReducer<TransformerContext, any>>> =
+  PURE_GAME_LOGIC_HANDLERS.reduce((acc, HandlerClass) => {
+    const handler = new HandlerClass();
+    acc[handler.type] = handler.reduce;
+    return acc;
+  }, {} as Partial<Record<CommandType, PureReducer<TransformerContext, any>>>);
 
 /**
  * Given a command type, return the transformer (reducer) function for that command type.

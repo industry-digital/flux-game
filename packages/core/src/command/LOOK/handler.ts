@@ -6,6 +6,7 @@ import { Command, CommandType } from '~/types/intent';
 import { isCommandOfType } from '~/lib/intent';
 
 export class LOOK implements PureHandlerInterface<TransformerContext, LookCommand> {
+  type = CommandType.LOOK;
   reduce = lookReducer;
   resolve = lookResolver;
   dependencies = [];

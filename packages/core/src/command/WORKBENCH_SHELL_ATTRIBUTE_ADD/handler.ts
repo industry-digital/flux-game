@@ -6,6 +6,7 @@ import { Command, CommandType } from '~/types/intent';
 import { isCommandOfType } from '~/lib/intent';
 
 export class WORKBENCH_SHELL_ATTRIBUTE_ADD implements PureHandlerInterface<TransformerContext, AddShellAttributeCommand> {
+  type = CommandType.WORKBENCH_SHELL_ATTRIBUTE_ADD;
   resolve = addShellAttributeResolver;
   reduce = addShellAttributeReducer;
   dependencies = [];

@@ -6,6 +6,7 @@ import { Command, CommandType } from '~/types/intent';
 import { isCommandOfType } from '~/lib/intent';
 
 export class WORKBENCH_SHELL_STATUS implements PureHandlerInterface<TransformerContext, AssessShellStatusCommand> {
+  type = CommandType.WORKBENCH_SHELL_STATUS;
   resolve = shellStatusResolver;
   reduce = shellStatusReducer;
   dependencies = [];

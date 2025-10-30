@@ -6,6 +6,7 @@ import { isCommandOfType } from '~/lib/intent';
 import { partyKickResolver } from './resolver';
 
 export class PARTY_KICK implements PureHandlerInterface<TransformerContext, PartyKickCommand> {
+  type = CommandType.PARTY_KICK;
   dependencies = [];
   reduce = partyKickReducer;
   resolve = partyKickResolver;

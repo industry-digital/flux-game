@@ -6,6 +6,7 @@ import { Command, CommandType } from '~/types/intent';
 import { isCommandOfType } from '~/lib/intent';
 
 export class DEBIT implements PureHandlerInterface<TransformerContext, DebitCommand> {
+  type = CommandType.DEBIT;
   dependencies = [];
   reduce = debitReducer;
   resolve = debitResolver;

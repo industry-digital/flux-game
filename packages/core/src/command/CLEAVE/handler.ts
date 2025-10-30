@@ -6,6 +6,7 @@ import { Command, CommandType } from '~/types/intent';
 import { isCommandOfType } from '~/lib/intent';
 
 export class CLEAVE implements PureHandlerInterface<TransformerContext, CleaveCommand> {
+  type = CommandType.CLEAVE;
   dependencies = [];
   reduce = cleaveReducer;
   resolve = cleaveResolver;

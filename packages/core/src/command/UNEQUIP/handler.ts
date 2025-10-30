@@ -6,6 +6,7 @@ import { Command, CommandType } from '~/types/intent';
 import { isCommandOfType } from '~/lib/intent';
 
 export class UNEQUIP implements PureHandlerInterface<TransformerContext, UnequipCommand> {
+  type = CommandType.UNEQUIP;
   dependencies = [];
   reduce = unequipReducer;
   resolve = unequipResolver;

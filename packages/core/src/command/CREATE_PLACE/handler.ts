@@ -6,6 +6,7 @@ import { isCommandOfType } from '~/lib/intent';
 import { PlaceInput } from '~/types';
 
 export class CREATE_PLACE implements PureHandlerInterface<TransformerContext, CreatePlaceCommand> {
+  type = CommandType.CREATE_PLACE;
   reduce = createPlaceCommandReducer;
   dependencies = [];
   handles = (command: SystemCommand): command is CreatePlaceCommand => {

@@ -6,6 +6,7 @@ import { Command, CommandType } from '~/types/intent';
 import { isCommandOfType } from '~/lib/intent';
 
 export class STRIKE implements PureHandlerInterface<TransformerContext, StrikeCommand> {
+  type = CommandType.STRIKE;
   dependencies = [];
   reduce = strikeReducer;
   resolve = strikeResolver;

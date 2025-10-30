@@ -9,6 +9,7 @@ export class ADVANCE implements PureHandlerInterface<TransformerContext, Advance
   dependencies = [];
   reduce = advanceReducer;
   resolve = advanceResolver;
+  type = CommandType.ADVANCE;
   handles = (command: Command): command is AdvanceCommand => {
     return isCommandOfType<CommandType.ADVANCE, AdvanceCommandArgs>(command, CommandType.ADVANCE);
   };
