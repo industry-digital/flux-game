@@ -1,4 +1,3 @@
-import { CurrencyType } from '~/types/currency';
 import { Actor } from '~/types/entity/actor';
 import { Shell } from '~/types/entity/shell';
 import { ActorDidStageShellMutation, EventType, WorldEvent } from '~/types/event';
@@ -6,14 +5,14 @@ import { TransformerContext } from '~/types/handler';
 import { ComponentMutation, InventoryMutation, ShellMutation, ShellMutationType, StatMutation, StatMutationOperation, ValidationResult, WorkbenchSession } from '~/types/workbench';
 import { MAX_STAT_VALUE } from '~/worldkit/entity/actor/stats';
 import { createWorldEvent } from '~/worldkit/event';
-import { calculateMutationCost } from '~/worldkit/workbench/cost';
 import { getShellStatValue } from '~/worldkit/entity/actor/shell';
+import { ErrorCode } from '~/types/error';
+
 
 export const validateStatMutation = (
   shell: Shell,
   mutation: StatMutation,
-  // Consumers may opt into object re-use
-  result: ValidationResult = { ok: false, error: 'DEFAULT_ERROR_MESSAGE' },
+  result: ValidationResult,
 ): ValidationResult => {
   const currentValue = getShellStatValue(shell, mutation.stat);
   let targetValue: number;
@@ -42,7 +41,13 @@ export const validateStatMutation = (
   return result;
 }
 
-export type StageMutationAction = (actor: Actor, shellId: string, mutation: ShellMutation, trace?: string) => WorldEvent[];
+export type StageMutationAction = (
+  actor: Actor,
+  shellId: string,
+  mutation: ShellMutation,
+  trace?: string,
+  output?: WorldEvent[],
+) => WorldEvent[];
 
 export const createStageMutationAction = (
   context: TransformerContext,
@@ -50,26 +55,36 @@ export const createStageMutationAction = (
 ): StageMutationAction => {
   const { declareError } = context;
 
-  return function stageMutation(actor: Actor, shellId: string, mutation: ShellMutation, trace: string = context.uniqid()): WorldEvent[] {
+  return function stageMutation(
+    actor: Actor,
+    shellId: string,
+    mutation: ShellMutation,
+    trace: string = context.uniqid(),
+    output: WorldEvent[] = [], // Consumers may opt into zero-allocation
+  ): WorldEvent[] {
+    output.length = 0;
+
     const shell = actor.shells[shellId];
     if (!shell) {
-      declareError(`Shell not found in actor's arsenal`);
+      declareError(ErrorCode.NOT_FOUND, trace);
       return [];
     }
 
     switch (mutation.type) {
       case ShellMutationType.STAT:
-        return handleStatMutation(context, session, actor, shell, mutation as StatMutation, trace);
+        return handleStatMutation(context, session, actor, shell, mutation as StatMutation, trace, output);
       case ShellMutationType.COMPONENT:
-        return handleComponentMutation(context, session, actor, shell, mutation as ComponentMutation, trace);
+        return handleComponentMutation(context, session, actor, shell, mutation as ComponentMutation, trace, output);
       case ShellMutationType.INVENTORY:
-        return handleInventoryMutation(context, session, actor, shell, mutation as InventoryMutation, trace);
+        return handleInventoryMutation(context, session, actor, shell, mutation as InventoryMutation, trace, output);
       case ShellMutationType.METADATA:
       default:
         throw new Error('Not implmented');
     }
   }
 }
+
+const PREALLOCATED_VALIDATION_RESULT = {} as any;
 
 const handleStatMutation = (
   context: TransformerContext,
@@ -78,31 +93,31 @@ const handleStatMutation = (
   shell: Shell,
   mutation: StatMutation,
   trace: string,
+  output: WorldEvent[],
 ): WorldEvent[] => {
-  const validationResult = validateStatMutation(shell, mutation);
-  if (!validationResult.ok) {
-    context.declareError(validationResult.error);
-    return [];
+  const { ok, error } = validateStatMutation(shell, mutation, PREALLOCATED_VALIDATION_RESULT);
+  if (!ok) {
+    context.declareError(error);
+    return output;
   }
-
-  const cost = calculateMutationCost(shell, mutation);
-  const currency = CurrencyType.SCRAP;
 
   // Direct mutation
   session.data.pendingMutations.push(mutation);
 
-  return [
-    createWorldEvent<ActorDidStageShellMutation>({
-      type: EventType.WORKBENCH_SHELL_MUTATION_STAGED,
-      trace,
-      location: actor.location,
-      actor: actor.id,
-      payload: {
-        shellId: shell.id,
-        mutation,
-      },
-    }),
-  ];
+  const event = createWorldEvent<ActorDidStageShellMutation>({
+    type: EventType.ACTOR_DID_STAGE_SHELL_MUTATION,
+    trace,
+    location: actor.location,
+    actor: actor.id,
+    payload: {
+      shellId: shell.id,
+      mutation,
+    },
+  });
+
+  output.push(event);
+
+  return output;
 };
 
 const handleComponentMutation = (
@@ -112,21 +127,24 @@ const handleComponentMutation = (
   shell: Shell,
   mutation: ComponentMutation,
   trace: string,
+  output: WorldEvent[],
 ): WorldEvent[] => {
-  const schema = context.schemaManager.getSchemaOrFail(mutation.schema);
+  const componentSchema = context.schemaManager.getSchema(mutation.schema);
 
-  return [
-    createWorldEvent<ActorDidStageShellMutation>({
-      type: EventType.WORKBENCH_SHELL_MUTATION_STAGED,
-      trace,
-      location: actor.location,
-      actor: actor.id,
-      payload: {
-        shellId: shell.id,
-        mutation,
-      },
-    }),
-  ];
+  const event = createWorldEvent<ActorDidStageShellMutation>({
+    type: EventType.ACTOR_DID_STAGE_SHELL_MUTATION,
+    trace,
+    location: actor.location,
+    actor: actor.id,
+    payload: {
+      shellId: shell.id,
+      mutation,
+    },
+  });
+
+  output.push(event);
+
+  return output;
 };
 
 const handleInventoryMutation = (
@@ -136,6 +154,7 @@ const handleInventoryMutation = (
   shell: Shell,
   mutation: InventoryMutation,
   trace: string,
+  output: WorldEvent[],
 ): WorldEvent[] => {
   throw new Error('Not implmented');
 };

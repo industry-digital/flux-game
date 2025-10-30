@@ -122,7 +122,7 @@ export const en_US: LanguageTemplates = {
   // Workbench Events
   [EventType.WORKBENCH_SESSION_DID_START]: narrateWorkbenchSessionDidStart,
   [EventType.WORKBENCH_SESSION_DID_END]: narrateWorkbenchSessionDidEnd,
-  [EventType.WORKBENCH_SHELL_MUTATION_STAGED]: narrateActorDidStageShellMutation,
+  [EventType.ACTOR_DID_STAGE_SHELL_MUTATION]: narrateActorDidStageShellMutation,
   [EventType.WORKBENCH_SHELL_MUTATIONS_DIFFED]: narrateActorDidDiffShellMutations,
   [EventType.WORKBENCH_SHELL_MUTATIONS_UNDONE]: narrateActorDidUndoShellMutations,
   [EventType.WORKBENCH_SHELL_MUTATIONS_COMMITTED]: narrateActorDidCommitShellMutations,

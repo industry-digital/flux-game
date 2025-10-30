@@ -13,7 +13,7 @@ import { ShellMutation, ShellMutationType, StatMutation, StatMutationOperation }
 import { ShellStat, Stat } from '~/types/entity/actor';
 import { SessionURN } from '~/types/taxonomy';
 import { CombatEventFactoryDependencies, DEFAULT_COMBAT_EVENT_FACTORY_DEPS } from './deps';
-import { ALICE_ID, DEFAULT_LOCATION, DEFAULT_TRACE } from '~/testing/constants';
+import { ALICE_ID, DEFAULT_LOCATION, DEFAULT_TRACE, DEFAULT_SHELL_ID } from '~/testing/constants';
 
 // Generic transform function type
 export type EventTransform<T> = (event: T) => T;
@@ -83,12 +83,12 @@ export function createActorDidStageShellMutationEvent(
   };
 
   const baseEvent = createWorldEvent({
-    type: EventType.WORKBENCH_SHELL_MUTATION_STAGED,
+    type: EventType.ACTOR_DID_STAGE_SHELL_MUTATION,
     location: DEFAULT_LOCATION,
     actor: ALICE_ID,
     trace: DEFAULT_TRACE,
     payload: {
-      shellId: 'flux:shell:test',
+      shellId: DEFAULT_SHELL_ID,
       mutation: defaultMutation,
     },
   }) as ActorDidStageShellMutation;
@@ -111,7 +111,7 @@ export function createActorDidDiffShellMutationsEvent(
     actor: ALICE_ID,
     trace: DEFAULT_TRACE,
     payload: {
-      shellId: 'flux:shell:test',
+      shellId: DEFAULT_SHELL_ID,
       cost: 0,
       stats: {},
       perf: {
@@ -253,7 +253,7 @@ export function createActorDidAssessShellStatusEvent(
     trace: DEFAULT_TRACE,
     payload: {
       sessionId: DEFAULT_WORKBENCH_SESSION,
-      shellId: '1', // Default shell ID
+      shellId: DEFAULT_SHELL_ID,
     },
   }) as ActorDidAssessShellStatus;
 

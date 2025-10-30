@@ -16,15 +16,15 @@ import {
   ActorDidSwapShell,
   ActorDidAssessShellStatus,
 } from '~/types/event';
-import { ShellMutationType } from '~/types/workbench';
+import { ShellMutationType, StatMutation, StatMutationOperation } from '~/types/workbench';
 import { NarrativeSequence, TemplateFunction } from '~/types/narrative';
 import { ActorURN } from '~/types/taxonomy';
 import { Stat } from '~/types/entity/actor';
 import { SHELL_STAT_NAMES, getNaturalStatValue } from '~/worldkit/entity/actor/stats';
-import { getPossessivePronoun } from '~/narrative/locale/en_US/grammar/pronouns';
 import { calculateShellPerformance, ShellPerformanceDependencies } from '~/worldkit/entity/actor/shell/instrumentation';
 import { getSchemaTranslation } from '~/narrative/schema';
 import { Locale } from '~/types/i18n';
+import { getShellNaturalStatValue } from '~/worldkit/entity/actor/shell';
 
 const EMPTY_NARRATIVE_SEQUENCE: NarrativeSequence = [];
 
@@ -57,26 +57,31 @@ export const narrateWorkbenchSessionDidEnd: TemplateFunction<WorkbenchSessionDid
 };
 
 export const narrateActorDidStageShellMutation: TemplateFunction<ActorDidStageShellMutation, ActorURN> = (context, event, recipientId) => {
-  const { world } = context;
-  const actor = world.actors[event.actor!];
-  const { mutation } = event.payload;
+  if (recipientId !== event.actor) {
+    return '';
+  }
 
+  const actor = context.world.actors[event.actor!];
   if (!actor) {
     return '';
   }
 
-  if (recipientId === event.actor) {
-    switch (mutation.type) {
-      case ShellMutationType.STAT:
-        return `You stage a stat modification to the shell design.`;
-      case ShellMutationType.COMPONENT:
-        return `You stage a component change to the shell design.`;
-      default:
-        return `You stage a change to the shell design.`;
-    }
+  const shell = actor.shells[event.payload.shellId];
+  if (!shell) {
+    return '';
   }
 
-  return `${actor.name} makes adjustments to ${getPossessivePronoun(actor.gender)} shell.`;
+  const mutation = event.payload.mutation as StatMutation;
+  if (mutation.type !== ShellMutationType.STAT) {
+    return ''; // Never supposed to happen
+  }
+
+  const from = getShellNaturalStatValue(shell, mutation.stat);
+  const to = mutation.operation === StatMutationOperation.ADD
+    ? from + mutation.amount
+    : from - mutation.amount;
+
+  return `${mutation.stat.toUpperCase()} ${from}${RIGHT_ARROW}${to}`;
 };
 
 const RIGHT_ARROW = ' -> ';

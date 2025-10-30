@@ -128,12 +128,13 @@ describe('English Workbench Narratives - Snapshot Tests', () => {
         actor: ALICE_ID,
         payload: {
           ...e.payload,
+          shellId: alice.currentShell, // Use Alice's actual shell ID
           mutation: createStatMutation(Stat.POW, StatMutationOperation.ADD, 5),
         },
       }));
 
       const narrative = narrateActorDidStageShellMutation(context, event, ALICE_ID);
-      expect(narrative).toBe('You stage a stat modification to the shell design.');
+      expect(narrative).toBe('POW 40 -> 45');
     });
 
     it('should render exact component mutation staging from actor perspective', () => {
@@ -149,7 +150,7 @@ describe('English Workbench Narratives - Snapshot Tests', () => {
       }));
 
       const narrative = narrateActorDidStageShellMutation(context, event, ALICE_ID);
-      expect(narrative).toBe('You stage a component change to the shell design.');
+      expect(narrative).toBe('');
     });
 
     it('should render exact unknown mutation staging from actor perspective', () => {
@@ -165,7 +166,7 @@ describe('English Workbench Narratives - Snapshot Tests', () => {
       }));
 
       const narrative = narrateActorDidStageShellMutation(context, event, ALICE_ID);
-      expect(narrative).toBe('You stage a change to the shell design.');
+      expect(narrative).toBe('');
     });
 
     it('should render exact mutation staging from observer perspective', () => {
@@ -179,7 +180,7 @@ describe('English Workbench Narratives - Snapshot Tests', () => {
       }));
 
       const narrative = narrateActorDidStageShellMutation(context, event, BOB_ID);
-      expect(narrative).toBe('Alice makes adjustments to her shell.');
+      expect(narrative).toBe('');
     });
 
     it('should render exact mutation staging with different actor names', () => {
@@ -188,12 +189,13 @@ describe('English Workbench Narratives - Snapshot Tests', () => {
         actor: BOB_ID,
         payload: {
           ...e.payload,
+          shellId: bob.currentShell, // Use Bob's actual shell ID
           mutation: createStatMutation(Stat.RES, StatMutationOperation.REMOVE, 3),
         },
       }));
 
       const narrative = narrateActorDidStageShellMutation(context, event, BOB_ID);
-      expect(narrative).toBe('You stage a stat modification to the shell design.');
+      expect(narrative).toBe('RES 10 -> 7');
     });
   });
 
@@ -754,11 +756,18 @@ describe('English Workbench Narratives - Snapshot Tests', () => {
           actor: ALICE_ID,
           payload: {
             ...e.payload,
+            shellId: alice.currentShell, // Use Alice's actual shell ID
             mutation: createStatMutation(Stat.POW, StatMutationOperation.ADD, 5),
           },
         }));
 
-        withPerspectiveDifferentiation(narrateActorDidStageShellMutation, context, stageEvent, [ALICE_ID, BOB_ID])();
+        // Validate that actor has content and observer is empty (privacy-focused behavior)
+        const actorStageNarrative = narrateActorDidStageShellMutation(context, stageEvent, ALICE_ID);
+        const observerStageNarrative = narrateActorDidStageShellMutation(context, stageEvent, BOB_ID);
+
+        expect(actorStageNarrative, 'Actor should have stage narrative').toBeTruthy();
+        expect(observerStageNarrative, 'Observer should have empty stage narrative').toBe('');
+        expect(actorStageNarrative, 'Actor and observer narratives should be different').not.toBe(observerStageNarrative);
 
         // For actor-only functions, we expect actor to have content and observer to be empty
         const commitEvent = createActorDidCommitShellMutationsEvent((e) => ({

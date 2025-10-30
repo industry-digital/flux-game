@@ -113,7 +113,7 @@ export enum EventType {
   WORKBENCH_SHELL_MUTATIONS_COMMITTED = 'workbench:mutations:committed',
   WORKBENCH_SHELL_MUTATIONS_DIFFED = 'workbench:mutations:diffed',
   WORKBENCH_SHELL_MUTATIONS_UNDONE = 'workbench:mutations:undone',
-  WORKBENCH_SHELL_MUTATION_STAGED = 'workbench:mutation:staged',
+  ACTOR_DID_STAGE_SHELL_MUTATION = 'actor:shell:mutation:staged',
   ACTOR_DID_LIST_SHELLS = 'actor:shells:listed',
   ACTOR_DID_INSPECT_SHELL_STATUS = 'actor:shell:status:inspected',
   ACTOR_DID_REVIEW_SHELL_STATS = 'actor:shell:stats:reviewed',
@@ -371,7 +371,7 @@ export type WorkbenchSessionDidEndInput = AbstractWorldEventInput<
 
 export type ActorDidStageShellMutation = EventBase & ActorDidStageShellMutationInput;
 export type ActorDidStageShellMutationInput = AbstractWorldEventInput<
-  EventType.WORKBENCH_SHELL_MUTATION_STAGED,
+  EventType.ACTOR_DID_STAGE_SHELL_MUTATION,
   {
     shellId: string;
     mutation: ShellMutation;
