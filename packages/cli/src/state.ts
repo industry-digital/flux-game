@@ -1,35 +1,23 @@
-import { TransformerContext } from '@flux/core';
-import { createWorldScenario } from '@flux/core';
+import { TransformerContext, WorldScenarioHook } from '@flux/core';
 import { ActorURN } from '@flux/core';
-import { ReplMemo, ReplState, ReplStateDependencies } from './types';
+import { ReplState } from './types';
 // Dependencies will be injected via entrypoint
 
-export const DEFAULT_REPL_STATE_DEPENDENCIES: ReplStateDependencies = {
-  createWorldScenario,
-};
 
 export const createReplState = (
   context: TransformerContext,
-  deps: ReplStateDependencies = DEFAULT_REPL_STATE_DEPENDENCIES,
+  scenario: WorldScenarioHook,
 ): ReplState => {
-  const scenario = deps.createWorldScenario(context);
-  const { world } = context;
-
-  // Create memo structure
-  const memo: ReplMemo = {
-    actors: {
-      actorSessions: new Map(),
-      actorLocations: new Map(),
-    },
-  };
-
-  // Memo will be initialized by entrypoint with injected dependencies
-
   return {
     context,
     scenario,
     currentActor: undefined, // Start with no actor selected (infrastructure-first approach)
-    memo,
+    memo: {
+      actors: {
+        sessions: new Map(),
+        locations: new Map(),
+      },
+    },
     running: true,
   };
 };

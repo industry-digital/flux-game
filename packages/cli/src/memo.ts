@@ -12,49 +12,49 @@ import type { ReplMemo } from './types';
 
 // Actor session operations
 export const getActorSession = (memo: ReplMemo, actorId: ActorURN): SessionURN | undefined => {
-  return memo.actors.actorSessions.get(actorId);
+  return memo.actors.sessions.get(actorId);
 };
 
 export const setActorSession = (memo: ReplMemo, actorId: ActorURN, sessionId: SessionURN): void => {
-  memo.actors.actorSessions.set(actorId, sessionId);
+  memo.actors.sessions.set(actorId, sessionId);
 };
 
 export const removeActorSession = (memo: ReplMemo, actorId: ActorURN): void => {
-  memo.actors.actorSessions.delete(actorId);
+  memo.actors.sessions.delete(actorId);
 };
 
 export const hasActorSession = (memo: ReplMemo, actorId: ActorURN): boolean => {
-  return memo.actors.actorSessions.has(actorId);
+  return memo.actors.sessions.has(actorId);
 };
 
 // Actor location operations
 export const getActorLocation = (memo: ReplMemo, actorId: ActorURN): PlaceURN | undefined => {
-  return memo.actors.actorLocations.get(actorId);
+  return memo.actors.locations.get(actorId);
 };
 
 export const setActorLocation = (memo: ReplMemo, actorId: ActorURN, location: PlaceURN): void => {
-  memo.actors.actorLocations.set(actorId, location);
+  memo.actors.locations.set(actorId, location);
 };
 
 export const hasActorLocation = (memo: ReplMemo, actorId: ActorURN): boolean => {
-  return memo.actors.actorLocations.has(actorId);
+  return memo.actors.locations.has(actorId);
 };
 
 // Bulk operations for performance
 export const initializeActorLocations = (memo: ReplMemo, locations: Map<ActorURN, PlaceURN>): void => {
-  memo.actors.actorLocations.clear();
+  memo.actors.locations.clear();
   for (const [actorId, location] of locations) {
-    memo.actors.actorLocations.set(actorId, location);
+    memo.actors.locations.set(actorId, location);
   }
 };
 
 // Read-only inspection
 export const getSessionCount = (memo: ReplMemo): number => {
-  return memo.actors.actorSessions.size;
+  return memo.actors.sessions.size;
 };
 
 export const getLocationCount = (memo: ReplMemo): number => {
-  return memo.actors.actorLocations.size;
+  return memo.actors.locations.size;
 };
 
 // ===== HIGH-LEVEL OPERATIONS =====

@@ -9,8 +9,8 @@ export type ParsedInput = {
 };
 
 export type ActorMemo = {
-  actorSessions: Map<ActorURN, SessionURN>;
-  actorLocations: Map<ActorURN, PlaceURN>;
+  sessions: Map<ActorURN, SessionURN>;
+  locations: Map<ActorURN, PlaceURN>;
 };
 
 export type ReplMemo = {
@@ -21,7 +21,7 @@ export type ReplState = {
   context: TransformerContext;
   scenario: WorldScenarioHook;
   currentActor?: ActorURN;
-  memo: ReplMemo;  // Back to concrete type
+  memo: ReplMemo;
   running: boolean;
 };
 
@@ -97,9 +97,6 @@ export type ReplOutputInterface = {
   print: (text: string) => void;
 };
 
-export type ReplStateDependencies = {
-  createWorldScenario: (context: TransformerContext) => WorldScenarioHook;
-};
 
 // Command processing dependencies - flattened structure
 export type CommandDependencies = {

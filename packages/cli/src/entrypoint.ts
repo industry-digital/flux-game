@@ -75,14 +75,22 @@ enum ReadlineEvent {
 export const startRepl = (
   context = createTransformerContext(),
   scenarioId = resolveScenarioId(),
-  state = createReplState(context),
   runtime = createRuntime(),
   commandDeps = DEFAULT_COMMAND_DEPS,
 ): void => {
-  // Load scenario (keeping it injectable for testing)
-  loadScenario(context, scenarioId, (actorId: ActorURN) => {
-    state.currentActor = actorId;
+  // Load scenario first, with a callback to set current actor
+  let currentActor: ActorURN | undefined;
+  const scenario = loadScenario(context, scenarioId, (actorId: ActorURN) => {
+    currentActor = actorId;
   });
+
+  // Create state with the loaded scenario
+  const state = createReplState(context, scenario);
+
+  // Set the current actor from scenario loading
+  if (currentActor) {
+    state.currentActor = currentActor;
+  }
 
   // Create effect executor with runtime dependencies
   const runtimeDeps = createDefaultRuntimeDependencies(runtime.rl, runtime.output);
