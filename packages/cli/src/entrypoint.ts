@@ -69,7 +69,7 @@ const DEFAULT_COMMAND_DEPS: CommandDependencies = {
 };
 
 
-const SHOW_CONTEXT_COMMAND: ReplCommand = { type: ReplCommandType.SHOW_CONTEXT };
+const SHOW_CONTEXT_COMMAND: ReplCommand = { type: ReplCommandType.SHOW_CONTEXT, trace: 'initial-context' };
 
 // Main REPL loop (imperative shell)
 export const startRepl = (
@@ -107,7 +107,8 @@ export const startRepl = (
   runtime.output.print('Ready to accept commands!\n');
 
   runtime.rl.on('line', async (input: string) => {
-    const command = runPipeline(input, undefined, DEFAULT_PIPELINE);
+    const trace = context.uniqid();
+    const command = runPipeline(input, undefined, DEFAULT_PIPELINE, trace);
     const result = processCommand(state, command, commandDeps);
 
     // State is mutated in place by the command processor

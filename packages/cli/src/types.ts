@@ -38,7 +38,12 @@ export enum ReplCommandType {
   EXIT = 'EXIT',
 }
 
-export type ReplCommand =
+// Base command with trace information
+export type ReplCommandBase = {
+  readonly trace: string; // Thread trace through entire command lifecycle
+};
+
+export type ReplCommand = ReplCommandBase & (
   | { readonly type: ReplCommandType.GAME_COMMAND; readonly input: string }
   | { readonly type: ReplCommandType.SWITCH_ACTOR; readonly actorId: ActorURN }
   | { readonly type: ReplCommandType.SHOW_HELP; readonly command?: string }
@@ -48,7 +53,8 @@ export type ReplCommand =
   | { readonly type: ReplCommandType.SHOW_HANDLERS }
   | { readonly type: ReplCommandType.SHOW_SESSIONS }
   | { readonly type: ReplCommandType.CLEAR_SCREEN }
-  | { readonly type: ReplCommandType.EXIT };
+  | { readonly type: ReplCommandType.EXIT }
+);
 
 export enum ReplEffectType {
   PRINT = 'PRINT',
@@ -105,7 +111,7 @@ export type CommandDependencies = {
 
 export type ReplCommandResolver = (input: string) => ReplCommand;
 
-export type InputProcessor = (input: ParsedInput, output?: ParsedInput) => ParsedInput | ReplCommand;
+export type InputProcessor = (input: ParsedInput, trace: string, output?: ParsedInput) => ParsedInput | ReplCommand;
 export type InputPipeline = readonly InputProcessor[];
 
 export type ScenarioResolver = (

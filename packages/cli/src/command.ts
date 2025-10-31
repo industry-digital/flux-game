@@ -72,7 +72,7 @@ const generateNarrativeEffects = (
       const narrative = template(context, event, currentActor);
 
       if (typeof narrative === 'string' && narrative.trim()) {
-        effects.push({ type: ReplEffectType.PRINT, text: narrative + '\n' });
+        effects.push({ type: ReplEffectType.PRINT, text: `📖 ${narrative}\n` });
       } else if (Array.isArray(narrative)) {
         effects.push({ type: ReplEffectType.PRINT_SEQUENCE, sequence: narrative });
       }
@@ -114,6 +114,7 @@ const createResumeInputEffect = (deps: CommandDependencies) =>
 const processGameCommand = (
   state: ReplState,
   input: string,
+  trace: string,
   deps: CommandDependencies,
   output: ReplResult = { newState: state, effects: [] }
 ): ReplResult => {
@@ -132,6 +133,7 @@ const processGameCommand = (
 
   // Create intent and execute (pure operations)
   const intent = createIntent({
+    id: trace, // Use CLI-generated trace as intent ID
     actor: state.currentActor,
     location: getCurrentActorLocation(state, deps)!,
     session: getCurrentActorSession(state, deps),
@@ -139,31 +141,29 @@ const processGameCommand = (
   });
 
   // Clear previous events/errors and execute
-  const clearedContext = {
-    ...state.context,
-    getDeclaredEvents: () => [],
-    getDeclaredErrors: () => [],
-  };
+  state.context.resetEvents();
+  state.context.resetErrors();
 
-  const updatedContext = executeIntent(clearedContext, intent);
+  const updatedContext = executeIntent(state.context, intent);
   const events = updatedContext.getDeclaredEvents();
   const errors = updatedContext.getDeclaredErrors();
+
+  // Update state with new context (mutable update for performance)
+  state.context = updatedContext;
 
   // Update session tracking
   updateSessionTracking(state, events, deps);
 
   // Generate effects
-  const effects: ReplEffect[] = [];
-
   if (events.length > 0) {
-    effects.push(createPauseInputEffect(deps));
-    effects.push(...generateNarrativeEffects(updatedContext, events, state.currentActor));
-    effects.push(createFlushOutputEffect(deps));
-    effects.push(createResumeInputEffect(deps));
+    output.effects.push(createPauseInputEffect(deps));
+    output.effects.push(...generateNarrativeEffects(updatedContext, events, state.currentActor));
+    output.effects.push(createFlushOutputEffect(deps));
+    output.effects.push(createResumeInputEffect(deps));
   } else if (errors.length > 0) {
-    effects.push(createCommandFailedEffect(deps, errors.length));
+    output.effects.push(createCommandFailedEffect(deps, errors.length));
   } else {
-    effects.push(createCommandSuccessEffect(deps));
+    output.effects.push(createCommandSuccessEffect(deps));
   }
 
   return output;
@@ -221,6 +221,50 @@ World State:
   };
 };
 
+const showEvents = (state: ReplState, deps: CommandDependencies): ReplResult => {
+  const events = state.context.getDeclaredEvents();
+
+  if (events.length === 0) {
+    return {
+      newState: state,
+      effects: [deps.createPrintEffect('No events declared.\n')]
+    };
+  }
+
+  let eventsText = `\nDeclared Events (${events.length}):\n`;
+  for (const event of events) {
+    const location = event.location ? ` @ ${event.location}` : '';
+    const actor = event.actor ? ` [${event.actor}]` : '';
+    eventsText += `  ${event.type}${location}${actor} - ${event.trace || 'no trace'}\n`;
+  }
+
+  return {
+    newState: state,
+    effects: [deps.createPrintEffect(eventsText)]
+  };
+};
+
+const showErrors = (state: ReplState, deps: CommandDependencies): ReplResult => {
+  const errors = state.context.getDeclaredErrors();
+
+  if (errors.length === 0) {
+    return {
+      newState: state,
+      effects: [deps.createPrintEffect('No errors declared.\n')]
+    };
+  }
+
+  let errorsText = `\nDeclared Errors (${errors.length}):\n`;
+  for (const error of errors) {
+    errorsText += `\n  ${error.trace ?? 'no trace'}: ${error.code} + ${error.stack}\n`;
+  }
+
+  return {
+    newState: state,
+    effects: [deps.createPrintEffect(errorsText)]
+  };
+};
+
 const showHelp = (state: ReplState, command?: string): ReplResult => {
   const helpText = command
     ? `No specific help available for '${command}'. Type 'help' for all commands.\n`
@@ -255,7 +299,7 @@ Type any game command to execute it through the intent system.
 export const processCommand = (state: ReplState, command: ReplCommand, deps: CommandDependencies): ReplResult => {
   switch (command.type) {
     case ReplCommandType.GAME_COMMAND:
-      return processGameCommand(state, command.input, deps);
+      return processGameCommand(state, command.input, command.trace, deps);
 
     case ReplCommandType.SWITCH_ACTOR:
       return switchActor(state, command.actorId, deps);
@@ -282,7 +326,9 @@ export const processCommand = (state: ReplState, command: ReplCommand, deps: Com
 
     // TODO: Implement other command types
     case ReplCommandType.SHOW_EVENTS:
+      return showEvents(state, deps);
     case ReplCommandType.SHOW_ERRORS:
+      return showErrors(state, deps);
     case ReplCommandType.SHOW_HANDLERS:
     case ReplCommandType.SHOW_SESSIONS:
       return {

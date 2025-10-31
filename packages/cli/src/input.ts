@@ -66,6 +66,7 @@ export const runPipeline = (
   input: string,
   tokens: string[] = tokenizeWithPool(input),
   pipeline: InputPipeline,
+  trace: string,
 ): ReplCommand => {
   try {
     let current: ParsedInput | ReplCommand = parseRawInput(tokens, PREALLOCATED_OUTPUT);
@@ -81,7 +82,7 @@ export const runPipeline = (
       if ('type' in current) {
         return current;
       }
-      const result = processor(current, PREALLOCATED_OUTPUT);
+      const result = processor(current, trace, PREALLOCATED_OUTPUT);
       // Handle processors that return undefined (defensive programming)
       if (result !== undefined) {
         current = result;
@@ -90,10 +91,11 @@ export const runPipeline = (
 
     // If we still have ParsedInput at the end, convert to default game command
     if (!('type' in current)) {
-      return { type: ReplCommandType.GAME_COMMAND, input: current.command };
+      return { type: ReplCommandType.GAME_COMMAND, input: current.command, trace };
     }
 
-    return current;
+    // Ensure all commands have trace
+    return { ...current, trace };
   } finally {
     // Return token array to pool (only if we created it)
     if (!tokens) {

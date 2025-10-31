@@ -6,10 +6,9 @@
 
 import { ParsedInput, ReplCommand, ReplCommandType, type InputProcessor } from './types';
 import { ActorURN } from '@flux/core';
-import type { InputProcessor } from './input';
 
 // Security validation processor
-export const validateSecurity: InputProcessor = (input: ParsedInput): ParsedInput | ReplCommand => {
+export const validateSecurity: InputProcessor = (input: ParsedInput, trace: string): ParsedInput | ReplCommand => {
   if (!input.raw) {
     return input;
   }
@@ -27,7 +26,8 @@ export const validateSecurity: InputProcessor = (input: ParsedInput): ParsedInpu
     if (pattern.test(input.raw)) {
       return {
         type: ReplCommandType.SHOW_HELP,
-        command: 'security'
+        command: 'security',
+        trace
       };
     }
   }
@@ -36,7 +36,7 @@ export const validateSecurity: InputProcessor = (input: ParsedInput): ParsedInpu
 };
 
 // Command recognition processor
-export const parseCommand: InputProcessor = (input: ParsedInput): ParsedInput | ReplCommand => {
+export const parseCommand: InputProcessor = (input: ParsedInput, trace: string): ParsedInput | ReplCommand => {
   const command = input.command.toLowerCase();
   const args = input.args;
 
@@ -45,7 +45,8 @@ export const parseCommand: InputProcessor = (input: ParsedInput): ParsedInput | 
     case 'h':
       return {
         type: ReplCommandType.SHOW_HELP,
-        command: args[0]
+        command: args[0],
+        trace
       };
 
     case 'actor':
@@ -53,38 +54,40 @@ export const parseCommand: InputProcessor = (input: ParsedInput): ParsedInput | 
       if (!args[0]) {
         return {
           type: ReplCommandType.SHOW_HELP,
-          command: 'actor'
+          command: 'actor',
+          trace
         };
       }
       return {
         type: ReplCommandType.SWITCH_ACTOR,
-        actorId: args[0] as ActorURN
+        actorId: args[0] as ActorURN,
+        trace
       };
 
     case 'context':
     case 'ctx':
-      return { type: ReplCommandType.SHOW_CONTEXT };
+      return { type: ReplCommandType.SHOW_CONTEXT, trace };
 
     case 'events':
-      return { type: ReplCommandType.SHOW_EVENTS };
+      return { type: ReplCommandType.SHOW_EVENTS, trace };
 
     case 'errors':
-      return { type: ReplCommandType.SHOW_ERRORS };
+      return { type: ReplCommandType.SHOW_ERRORS, trace };
 
     case 'handlers':
-      return { type: ReplCommandType.SHOW_HANDLERS };
+      return { type: ReplCommandType.SHOW_HANDLERS, trace };
 
     case 'sessions':
-      return { type: ReplCommandType.SHOW_SESSIONS };
+      return { type: ReplCommandType.SHOW_SESSIONS, trace };
 
     case 'clear':
     case 'cls':
-      return { type: ReplCommandType.CLEAR_SCREEN };
+      return { type: ReplCommandType.CLEAR_SCREEN, trace };
 
     case 'exit':
     case 'quit':
     case 'q':
-      return { type: ReplCommandType.EXIT };
+      return { type: ReplCommandType.EXIT, trace };
 
     default:
       // Not a CLI command, pass through as game command
@@ -93,10 +96,11 @@ export const parseCommand: InputProcessor = (input: ParsedInput): ParsedInput | 
 };
 
 // Fallback processor - converts remaining ParsedInput to game command
-export const fallbackToGameCommand: InputProcessor = (input: ParsedInput): ReplCommand => {
+export const fallbackToGameCommand: InputProcessor = (input: ParsedInput, trace: string): ReplCommand => {
   return {
     type: ReplCommandType.GAME_COMMAND,
-    input: input.tokens.join(' ')
+    input: input.tokens.join(' '),
+    trace
   };
 };
 
