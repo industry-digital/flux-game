@@ -1,7 +1,5 @@
-import { ParsedInput, ReplCommand, ReplCommandType } from './types';
+import { ParsedInput, ReplCommand, ReplCommandType, type InputPipeline } from './types';
 
-type InputProcessor = (input: ParsedInput, output?: ParsedInput) => ParsedInput | ReplCommand;
-type InputPipeline = readonly InputProcessor[];
 
 export const parseRawInput = (
   raw: string[],  // ← Guaranteed to be normalized by caller

@@ -4,7 +4,7 @@
  * Defines processors that transform ParsedInput into ReplCommand
  */
 
-import { ParsedInput, ReplCommand, ReplCommandType } from './types';
+import { ParsedInput, ReplCommand, ReplCommandType, type InputProcessor } from './types';
 import { ActorURN } from '@flux/core';
 import type { InputProcessor } from './input';
 

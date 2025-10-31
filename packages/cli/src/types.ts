@@ -87,27 +87,23 @@ export type ReplStateDependencies = {
   createWorldScenario: (context: TransformerContext) => WorldScenarioHook;
 };
 
-// Memo operations interface
-export type MemoOperations = {
+// Command processing dependencies - flattened structure
+export type CommandDependencies = {
+  // Memo operations
   getActorSession: (memo: ReplMemo, actorId: ActorURN) => SessionURN | undefined;
   getActorLocation: (memo: ReplMemo, actorId: ActorURN) => PlaceURN | undefined;
   setActorSession: (memo: ReplMemo, actorId: ActorURN, sessionId: SessionURN) => void;
   removeActorSession: (memo: ReplMemo, actorId: ActorURN) => void;
   setActorLocation: (memo: ReplMemo, actorId: ActorURN, location: PlaceURN) => void;
-};
 
-// Effect creation interface
-export type EffectCreators = {
+  // Effect creators
   createPrintEffect: (text: string) => ReplEffect;
   createPauseInputEffect: () => ReplEffect;
   createResumeInputEffect: () => ReplEffect;
   createFlushOutputEffect: () => ReplEffect;
 };
 
-// Command processing dependencies
-export type CommandDependencies = {
-  memo: MemoOperations;
-  effects: EffectCreators;
-};
-
 export type ReplCommandResolver = (input: string) => ReplCommand;
+
+export type InputProcessor = (input: ParsedInput, output?: ParsedInput) => ParsedInput | ReplCommand;
+export type InputPipeline = readonly InputProcessor[];

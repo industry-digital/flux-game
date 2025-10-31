@@ -101,7 +101,8 @@ function benchmarkImmutability(): void {
   const result = runBenchmark('Immutable updates', 25000, () => {
     const newState = setCurrentActor(baseState, 'flux:actor:bob' as any);
     // Verify immutability (this should be fast)
-    if (newState === baseState) {
+    // @ts-expect-error - newState is void
+    if (newState !== baseState) {
       throw new Error('State was mutated!');
     }
   });

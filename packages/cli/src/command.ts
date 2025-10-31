@@ -23,11 +23,11 @@ import {
 // ===== PURE FUNCTIONS (FUNCTIONAL CORE) =====
 
 const getCurrentActorSession = (state: ReplState, deps: CommandDependencies): SessionURN | undefined => {
-  return state.currentActor ? deps.memo.getActorSession(state.memo, state.currentActor) : undefined;
+  return state.currentActor ? deps.getActorSession(state.memo, state.currentActor) : undefined;
 };
 
 const getCurrentActorLocation = (state: ReplState, deps: CommandDependencies): PlaceURN | undefined => {
-  return state.currentActor ? deps.memo.getActorLocation(state.memo, state.currentActor) : undefined;
+  return state.currentActor ? deps.getActorLocation(state.memo, state.currentActor) : undefined;
 };
 
 const SESSION_STARTED_REGEXP = /^(\w+):session:started$/;
@@ -47,12 +47,12 @@ const updateSessionTracking = (
     const sessionId = event.session || event.payload.sessionId;
 
     if (SESSION_STARTED_REGEXP.test(event.type)) {
-      deps.memo.setActorSession(state.memo, state.currentActor, sessionId);
+      deps.setActorSession(state.memo, state.currentActor, sessionId);
     }
 
     if (SESSION_ENDED_REGEXP.test(event.type)) {
-      if (deps.memo.getActorSession(state.memo, state.currentActor) === sessionId) {
-        deps.memo.removeActorSession(state.memo, state.currentActor);
+      if (deps.getActorSession(state.memo, state.currentActor) === sessionId) {
+        deps.removeActorSession(state.memo, state.currentActor);
       }
     }
   }
@@ -83,21 +83,33 @@ const generateNarrativeEffects = (
 };
 
 
-// Effect creation helpers using dependencies
-const createEffects = (deps: CommandDependencies) => ({
-  noActorContext: () => deps.effects.createPrintEffect('No actor context set. Use "actor <id>" first.\n'),
-  noInput: () => deps.effects.createPrintEffect('No input provided.\n'),
-  commandFailed: (errorCount: number) => deps.effects.createPrintEffect(`✗ Command failed. ${errorCount} error(s) declared.\n`),
-  commandSuccess: () => deps.effects.createPrintEffect('✓ Command executed successfully.\n'),
-  unknownCommand: () => deps.effects.createPrintEffect('Unknown command.\n'),
-  notImplemented: () => deps.effects.createPrintEffect('Command not yet implemented.\n'),
-  clearScreen: () => deps.effects.createPrintEffect('Clearing screen...\n'),
-  exitRepl: () => deps.effects.createPrintEffect('Exiting REPL...\n'),
-  goodbye: () => deps.effects.createPrintEffect('Goodbye. See you next time!\n'),
-  pauseInput: () => deps.effects.createPauseInputEffect(),
-  flushOutput: () => deps.effects.createFlushOutputEffect(),
-  resumeInput: () => deps.effects.createResumeInputEffect(),
-});
+// Direct effect creation functions - zero allocation
+const createNoActorContextEffect = (deps: CommandDependencies) =>
+  deps.createPrintEffect('No actor context set. Use "actor <id>" first.\n');
+
+const createNoInputEffect = (deps: CommandDependencies) =>
+  deps.createPrintEffect('No input provided.\n');
+
+const createCommandFailedEffect = (deps: CommandDependencies, errorCount: number) =>
+  deps.createPrintEffect(`✗ Command failed. ${errorCount} error(s) declared.\n`);
+
+const createCommandSuccessEffect = (deps: CommandDependencies) =>
+  deps.createPrintEffect('✓ Command executed successfully.\n');
+
+const createUnknownCommandEffect = (deps: CommandDependencies) =>
+  deps.createPrintEffect('Unknown command.\n');
+
+const createNotImplementedEffect = (deps: CommandDependencies) =>
+  deps.createPrintEffect('Command not yet implemented.\n');
+
+const createPauseInputEffect = (deps: CommandDependencies) =>
+  deps.createPauseInputEffect();
+
+const createFlushOutputEffect = (deps: CommandDependencies) =>
+  deps.createFlushOutputEffect();
+
+const createResumeInputEffect = (deps: CommandDependencies) =>
+  deps.createResumeInputEffect();
 
 const processGameCommand = (
   state: ReplState,
@@ -105,17 +117,16 @@ const processGameCommand = (
   deps: CommandDependencies,
   output: ReplResult = { newState: state, effects: [] }
 ): ReplResult => {
-  const fx = createEffects(deps);
   output.newState = state;
   output.effects.length = 0;
 
   if (!input.trim()) {
-    output.effects.push(fx.noInput());
+    output.effects.push(createNoInputEffect(deps));
     return output;
   }
 
   if (!state.currentActor || !getCurrentActorLocation(state, deps)) {
-    output.effects.push(fx.noActorContext());
+    output.effects.push(createNoActorContextEffect(deps));
     return output;
   }
 
@@ -145,14 +156,14 @@ const processGameCommand = (
   const effects: ReplEffect[] = [];
 
   if (events.length > 0) {
-    effects.push(fx.pauseInput());
+    effects.push(createPauseInputEffect(deps));
     effects.push(...generateNarrativeEffects(updatedContext, events, state.currentActor));
-    effects.push(fx.flushOutput());
-    effects.push(fx.resumeInput());
+    effects.push(createFlushOutputEffect(deps));
+    effects.push(createResumeInputEffect(deps));
   } else if (errors.length > 0) {
-    effects.push(fx.commandFailed(errors.length));
+    effects.push(createCommandFailedEffect(deps, errors.length));
   } else {
-    effects.push(fx.commandSuccess());
+    effects.push(createCommandSuccessEffect(deps));
   }
 
   return output;
@@ -169,7 +180,7 @@ const switchActor = (state: ReplState, actorId: ActorURN, deps: CommandDependenc
 
   // Mutable update for performance
   state.currentActor = actorId;
-  deps.memo.setActorLocation(state.memo, actorId, actor.location);
+  deps.setActorLocation(state.memo, actorId, actor.location);
 
   const currentSession = getCurrentActorSession(state, deps);
   const sessionInfo = currentSession
@@ -276,13 +287,13 @@ export const processCommand = (state: ReplState, command: ReplCommand, deps: Com
     case ReplCommandType.SHOW_SESSIONS:
       return {
         newState: state,
-        effects: [{ type: ReplEffectType.PRINT, text: 'Command not yet implemented.\n' }]
+        effects: [createNotImplementedEffect(deps)]
       };
 
     default:
       return {
         newState: state,
-        effects: [{ type: ReplEffectType.PRINT, text: 'Unknown command.\n' }]
+        effects: [createUnknownCommandEffect(deps)]
       };
   }
 };
@@ -291,4 +302,4 @@ export const processCommand = (state: ReplState, command: ReplCommand, deps: Com
 export const getCurrentActor = (state: ReplState): ActorURN | undefined => state.currentActor;
 
 export const getActorSession = (state: ReplState, actorId: ActorURN, deps: CommandDependencies): SessionURN | undefined =>
-  deps.memo.getActorSession(state.memo, actorId);
+  deps.getActorSession(state.memo, actorId);

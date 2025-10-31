@@ -16,6 +16,7 @@ import { executeEffects, createEffectExecutor, createDefaultRuntimeDependencies 
 import { ReplEffectType, ReplCommandType, ReplOutputInterface, CommandDependencies, ReplCommand } from './types';
 import * as memo from './memo';
 import * as effects from './effect';
+import { loadScenario, resolveScenarioId, getScenario } from '~/scenario/registry';
 
 // ===== SIDE EFFECTS (IMPERATIVE SHELL) =====
 
@@ -53,19 +54,18 @@ const showWelcome = (runtime: EnhancedReplRuntime): void => {
 
 // Create command dependencies (wiring modules together)
 const DEFAULT_COMMAND_DEPS: CommandDependencies = {
-  memo: {
-    getActorSession: memo.getActorSession,
-    getActorLocation: memo.getActorLocation,
-    setActorSession: memo.setActorSession,
-    removeActorSession: memo.removeActorSession,
-    setActorLocation: memo.setActorLocation,
-  },
-  effects: {
-    createPrintEffect: effects.createPrintEffect,
-    createPauseInputEffect: effects.createPauseInputEffect,
-    createResumeInputEffect: effects.createResumeInputEffect,
-    createFlushOutputEffect: effects.createFlushOutputEffect,
-  },
+  // Memo operations
+  getActorSession: memo.getActorSession,
+  getActorLocation: memo.getActorLocation,
+  setActorSession: memo.setActorSession,
+  removeActorSession: memo.removeActorSession,
+  setActorLocation: memo.setActorLocation,
+
+  // Effect creators
+  createPrintEffect: effects.createPrintEffect,
+  createPauseInputEffect: effects.createPauseInputEffect,
+  createResumeInputEffect: effects.createResumeInputEffect,
+  createFlushOutputEffect: effects.createFlushOutputEffect,
 };
 
 
@@ -74,10 +74,13 @@ const SHOW_CONTEXT_COMMAND: ReplCommand = { type: ReplCommandType.SHOW_CONTEXT }
 // Main REPL loop (imperative shell)
 export const startRepl = (
   context = createTransformerContext(),
+  scenarioId = resolveScenarioId(),
   state = createReplState(context),
   runtime = createRuntime(),
   commandDeps = DEFAULT_COMMAND_DEPS,
 ): void => {
+  // Load scenario (keeping it injectable for testing)
+  loadScenario(context, scenarioId);
 
   // Create effect executor with runtime dependencies
   const runtimeDeps = createDefaultRuntimeDependencies(runtime.rl, runtime.output);
@@ -87,7 +90,13 @@ export const startRepl = (
   memo.initializeMemoFromWorld(state.memo, state.context.world.actors);
 
   showWelcome(runtime);
-  runtime.output.print('Default scenario loaded with Alice and Bob.');
+
+  // Show loaded scenario info
+  const scenarioInfo = getScenario(scenarioId);
+  if (scenarioInfo) {
+    runtime.output.print(`Scenario: ${scenarioInfo.name}`);
+    runtime.output.print(`${scenarioInfo.description}`);
+  }
 
   // Show initial context
   const contextResult = processCommand(state, SHOW_CONTEXT_COMMAND, commandDeps);
@@ -99,7 +108,7 @@ export const startRepl = (
     const command = runPipeline(input, undefined, DEFAULT_PIPELINE);
     const result = processCommand(state, command, commandDeps);
 
-    state = result.newState;
+    // State is mutated in place by the command processor
     await executeEffects(executor, result.effects);
 
     if (state.running) {
