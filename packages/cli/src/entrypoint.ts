@@ -6,17 +6,29 @@
  */
 
 import * as readline from 'readline';
-import { createTransformerContext, ActorURN } from '@flux/core';
+import { createTransformerContext, ActorURN, createIntent, executeIntent, IntentInput } from '@flux/core';
 import { createReplState } from './state';
 import { runPipeline } from './input/pipeline';
 import { processCommand } from './command';
 import { DEFAULT_PIPELINE } from './input/processors';
 import { BatchSchedulingOutput } from './output';
-import { executeEffects, createEffectExecutor, createDefaultRuntimeDependencies } from './execution';
-import { ReplEffectType, ReplCommandType, ReplOutputInterface, CommandDependencies, ReplCommand, ReplEffect } from './types';
+import {
+  executeEffects,
+  createEffectExecutor,
+  createDefaultRuntimeDependencies,
+  type EffectExecutor,
+} from './execution';
+import { ReplCommandType, ReplOutputInterface, ReplCommand, ReplEffect, ReplState } from './types';
+import { ProcessGameCommandDependencies } from './command';
 import * as memo from './memo';
-import * as effects from './effect';
 import { loadScenario, resolveScenarioId, getScenario } from '~/scenario/registry';
+import {
+  createInputQueueProcessor,
+  createInputQueueState,
+  isPriorityCommand,
+  type InputProcessor
+} from './input/queue';
+
 
 type ExtendedReplOutputInterface = ReplOutputInterface & {
   flush(): void;
@@ -48,19 +60,46 @@ const showWelcome = (runtime: EnhancedReplRuntime): void => {
 `);
 };
 
-const DEFAULT_COMMAND_DEPS: CommandDependencies = {
-  // Memo operations
-  getActorSession: memo.getActorSession,
-  getActorLocation: memo.getActorLocation,
-  setActorSession: memo.setActorSession,
-  removeActorSession: memo.removeActorSession,
-  setActorLocation: memo.setActorLocation,
+const createCommandDependencies = (): ProcessGameCommandDependencies => {
+  return {
+    // Memo operations
+    getActorSession: memo.getActorSession,
+    getActorLocation: memo.getActorLocation,
+    setActorSession: memo.setActorSession,
+    removeActorSession: memo.removeActorSession,
+    setActorLocation: memo.setActorLocation,
 
-  // Effect creators
-  createPrintEffect: effects.createPrintEffect,
-  createPauseInputEffect: effects.createPauseInputEffect,
-  createResumeInputEffect: effects.createResumeInputEffect,
-  createFlushOutputEffect: effects.createFlushOutputEffect,
+    // Core operations
+    executeIntent: executeIntent,
+    createIntent: (input: IntentInput) => createIntent(input),
+  };
+};
+
+const createReplInputProcessor = (
+  effectsBuffer: ReplEffect[],
+  executor: EffectExecutor,
+  runtime: EnhancedReplRuntime,
+  deps: ProcessGameCommandDependencies,
+): InputProcessor<ReplState> => {
+
+  // Algebraic state transformation. May not perform any side effects except controlled state mutation.
+  // In a single-threaded execution space, direct state mutation is a mathematically pure operation.
+  const processInput = (state: ReplState, input: string, trace: string): ReplState => {
+    const command = runPipeline(input, undefined, DEFAULT_PIPELINE, trace);
+    processCommand(state, command, effectsBuffer, deps);
+    return state;
+  };
+
+  return async (input: string, trace: string, state: ReplState): Promise<ReplState> => {
+    state = processInput(state, input, trace);
+    await executeEffects(executor, effectsBuffer);
+
+    if (state.running) {
+      runtime.rl.prompt();
+    }
+
+    return state;
+  };
 };
 
 const SHOW_CONTEXT_COMMAND: ReplCommand = { type: ReplCommandType.SHOW_CONTEXT, trace: 'initial-context' };
@@ -76,7 +115,6 @@ export const startRepl = (
   context = createTransformerContext(),
   scenarioId = resolveScenarioId(),
   runtime = createRuntime(),
-  commandDeps = DEFAULT_COMMAND_DEPS,
 ): void => {
   // Load scenario first, with a callback to set current actor
   let currentActor: ActorURN | undefined;
@@ -111,32 +149,52 @@ export const startRepl = (
   // Pre-allocated effects buffer for zero-allocation command processing
   const effectsBuffer: ReplEffect[] = [];
 
+  // Create command dependencies
+  const commandDeps = createCommandDependencies();
+
   // Show initial context
-  processCommand(state, SHOW_CONTEXT_COMMAND, commandDeps, effectsBuffer);
+  processCommand(state, SHOW_CONTEXT_COMMAND, effectsBuffer, commandDeps);
   executeEffects(executor, effectsBuffer);
 
   runtime.output.print(READY_MESSAGE);
 
-  // This *must* be synchronous.
-  const processInput = (input: string, trace = context.uniqid()): ReplEffect[] => {
-    const command = runPipeline(input, undefined, DEFAULT_PIPELINE, trace);
-    processCommand(state, command, commandDeps, effectsBuffer);
-    return effectsBuffer;
-  };
+  // Create the input processor that wraps existing logic
+  const inputProcessor = createReplInputProcessor(
+    effectsBuffer,
+    executor,
+    runtime,
+    commandDeps
+  );
 
-  const onReadLineInput = async (input: string) => {
-    const effects = processInput(input);
-    // State is mutated in place by the command processor
-    await executeEffects(executor, effects);
-    if (state.running) {
-      runtime.rl.prompt();
+  // Create the queue with application state
+  const queueProcessor = createInputQueueProcessor(
+    state,           // Initial application state
+    inputProcessor,  // How to process each queued input
+    createInputQueueState(100) // Queue capacity
+  );
+
+  // Replace direct input handler with queue-based handling
+  const onReadLineInput = (input: string) => {
+    const trace = context.uniqid();
+    const timestamp = Date.now();
+
+    // Route to appropriate queue based on command priority
+    if (isPriorityCommand(input)) {
+      queueProcessor.enqueuePriority(input, trace, timestamp);
+    } else {
+      queueProcessor.enqueue(input, trace, timestamp);
     }
   };
 
   runtime.rl.on(ReadlineEvent.LINE, onReadLineInput);
 
   runtime.rl.on(ReadlineEvent.CLOSE, () => {
-    executeEffects(executor, [{ type: ReplEffectType.EXIT_REPL }]);
+    // Exit already handled by EXIT command or external close
+    // Just ensure clean shutdown without duplicate goodbye message
+    if (state.running) {
+      state.running = false;
+      runtime.output.stop();
+    }
   });
 
   runtime.rl.prompt();

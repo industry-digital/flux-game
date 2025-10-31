@@ -16,7 +16,9 @@ import {
   ReplEffect,
   ReplEffectType,
   CommandDependencies,
+  AddEffectCallback,
 } from './types';
+import { createPrintEffect } from '~/effect';
 
 const getCurrentActorSession = (state: ReplState, deps: CommandDependencies): SessionURN | undefined => {
   return state.currentActor ? deps.getActorSession(state.memo, state.currentActor) : undefined;
@@ -85,17 +87,18 @@ export type ProcessGameCommandDependencies = CommandDependencies & {
 const PREALLOCATED_RESUME_INPUT_EFFECT: ReplEffect = { type: ReplEffectType.RESUME_INPUT };
 const PREALLOCATED_FLUSH_OUTPUT_EFFECT: ReplEffect = { type: ReplEffectType.FLUSH_OUTPUT };
 const PREALLOCATED_PAUSE_INPUT_EFFECT: ReplEffect = { type: ReplEffectType.PAUSE_INPUT };
+const PREALLOCATED_PRINT_NO_INPUT_PROVIDED_EFFECT: ReplEffect = { type: ReplEffectType.PRINT, text: 'No input provided.\n' };
 
 const processGameCommand = (
   state: ReplState,
   input: string,
   trace: string,
+  addEffect: AddEffectCallback,
   deps: ProcessGameCommandDependencies,
 ): void => {
-  const { addEffect } = deps;
 
   if (!input.trim()) {
-    addEffect({ type: ReplEffectType.PRINT, text: 'No input provided.\n' });
+    addEffect(PREALLOCATED_PRINT_NO_INPUT_PROVIDED_EFFECT);
     return;
   }
 
@@ -147,7 +150,7 @@ const processGameCommand = (
   }
 };
 
-const switchActor = (state: ReplState, actorId: ActorURN, deps: CommandDependencies, addEffect: (effect: ReplEffect) => void): void => {
+const switchActor = (state: ReplState, actorId: ActorURN, addEffect: (effect: ReplEffect) => void, deps: CommandDependencies): void => {
   const actor = state.context.world.actors[actorId];
   if (!actor) {
     addEffect({ type: ReplEffectType.PRINT, text: `Actor not found: ${actorId}\n` });
@@ -169,7 +172,7 @@ const switchActor = (state: ReplState, actorId: ActorURN, deps: CommandDependenc
   });
 };
 
-const showContext = (state: ReplState, deps: CommandDependencies, addEffect: (effect: ReplEffect) => void): void => {
+const showContext = (state: ReplState, addEffect: AddEffectCallback, deps: CommandDependencies): void => {
   const { world } = state.context;
   const currentSession = getCurrentActorSession(state, deps);
   const sessionDisplay = currentSession
@@ -191,7 +194,7 @@ World State:
   addEffect({ type: ReplEffectType.PRINT, text: contextText });
 };
 
-const showEvents = (state: ReplState, deps: CommandDependencies, addEffect: (effect: ReplEffect) => void): void => {
+const showEvents = (state: ReplState, addEffect: AddEffectCallback, deps: CommandDependencies): void => {
   const events = state.context.getDeclaredEvents();
 
   if (events.length === 0) {
@@ -206,10 +209,10 @@ const showEvents = (state: ReplState, deps: CommandDependencies, addEffect: (eff
     eventsText += `  ${event.type}${location}${actor} - ${event.trace || 'no trace'}\n`;
   }
 
-  addEffect({ type: ReplEffectType.PRINT, text: eventsText });
+  addEffect(createPrintEffect(eventsText));
 };
 
-const showErrors = (state: ReplState, deps: CommandDependencies, addEffect: (effect: ReplEffect) => void): void => {
+const showErrors = (state: ReplState, addEffect: (effect: ReplEffect) => void, deps: CommandDependencies): void => {
   const errors = state.context.getDeclaredErrors();
 
   if (errors.length === 0) {
@@ -225,10 +228,7 @@ const showErrors = (state: ReplState, deps: CommandDependencies, addEffect: (eff
   addEffect({ type: ReplEffectType.PRINT, text: errorsText });
 };
 
-const showHelp = (state: ReplState, command: string | undefined, addEffect: (effect: ReplEffect) => void): void => {
-  const helpText = command
-    ? `No specific help available for '${command}'. Type 'help' for all commands.\n`
-    : `
+const AVAILABLE_COMMANDS_TEXT = `
 Available Commands:
 
 CLI COMMANDS:
@@ -245,22 +245,30 @@ CLI COMMANDS:
 GAME COMMANDS (via Intent System):
   Any valid game command will be processed through the intent execution pipeline.
   Examples: attack <target>, look, defend, party invite <actor>, etc.
-
-Type any game command to execute it through the intent system.
+  Type any game command to execute it through the intent system.
 `;
 
-  addEffect({ type: ReplEffectType.PRINT, text: helpText });
+const PREALLOCATED_PRINT_AVAILABLE_COMMANDS_EFFECT: ReplEffect = { type: ReplEffectType.PRINT, text: AVAILABLE_COMMANDS_TEXT + '\n' };
+
+const showHelp = (state: ReplState, command: string | undefined, addEffect: AddEffectCallback): void => {
+  if (command) {
+    addEffect(createPrintEffect(`No specific help available for '${command}'. Type 'help' for all commands.\n`));
+  } else {
+    addEffect(PREALLOCATED_PRINT_AVAILABLE_COMMANDS_EFFECT);
+  }
 };
 
 const PREALLOCATED_CLEAR_SCREEN_EFFECT: ReplEffect = { type: ReplEffectType.CLEAR_SCREEN };
 const PREALLOCATED_EXIT_REPL_EFFECT: ReplEffect = { type: ReplEffectType.EXIT_REPL };
+const PREALLOCATED_PRINT_COMMAND_NOT_IMPLEMENTED_EFFECT: ReplEffect = { type: ReplEffectType.PRINT, text: 'Command not yet implemented.\n' };
+const PREALLOCATED_PRINT_UNKNOWN_COMMAND_EFFECT: ReplEffect = { type: ReplEffectType.PRINT, text: 'Unknown command.\n' };
 
 // Main command processor - mutation-based for zero allocations
 export const processCommand = (
   state: ReplState,
   command: ReplCommand,
-  deps: ProcessGameCommandDependencies,
   effects: ReplEffect[],
+  deps: ProcessGameCommandDependencies,
 ): void => {
   effects.length = 0;
 
@@ -272,11 +280,11 @@ export const processCommand = (
 
   switch (command.type) {
     case ReplCommandType.GAME_COMMAND:
-      processGameCommand(state, command.input, command.trace, deps);
+      processGameCommand(state, command.input, command.trace, addEffect, deps);
       break;
 
     case ReplCommandType.SWITCH_ACTOR:
-      switchActor(state, command.actorId, deps, addEffect);
+      switchActor(state, command.actorId, addEffect, deps);
       break;
 
     case ReplCommandType.SHOW_HELP:
@@ -284,7 +292,7 @@ export const processCommand = (
       break;
 
     case ReplCommandType.SHOW_CONTEXT:
-      showContext(state, deps, addEffect);
+      showContext(state, addEffect, deps);
       break;
 
     case ReplCommandType.CLEAR_SCREEN:
@@ -298,20 +306,20 @@ export const processCommand = (
       break;
 
     case ReplCommandType.SHOW_EVENTS:
-      showEvents(state, deps, addEffect);
+      showEvents(state, addEffect, deps);
       break;
 
     case ReplCommandType.SHOW_ERRORS:
-      showErrors(state, deps, addEffect);
+      showErrors(state, addEffect, deps);
       break;
 
     case ReplCommandType.SHOW_HANDLERS:
     case ReplCommandType.SHOW_SESSIONS:
-      addEffect({ type: ReplEffectType.PRINT, text: 'Command not yet implemented.\n' });
+      addEffect(PREALLOCATED_PRINT_COMMAND_NOT_IMPLEMENTED_EFFECT);
       break;
 
     default:
-      addEffect({ type: ReplEffectType.PRINT, text: 'Unknown command.\n' });
+      addEffect(PREALLOCATED_PRINT_UNKNOWN_COMMAND_EFFECT);
       break;
   }
 };

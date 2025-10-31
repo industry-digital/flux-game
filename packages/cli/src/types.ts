@@ -109,9 +109,6 @@ export type CommandDependencies = {
 
   // Core operations
   executeIntent: (context: TransformerContext, intent: Intent) => TransformerContext;
-
-  // Effect management
-  addEffect: (effect: ReplEffect) => void;
 };
 
 export type ReplCommandResolver = (input: string) => ReplCommand;
@@ -123,3 +120,5 @@ export type ScenarioResolver = (
   context: TransformerContext,
   setCurrentActor: (actorId: ActorURN) => void,
 ) => WorldScenarioHook;
+
+export type AddEffectCallback = (effect: ReplEffect) => void;

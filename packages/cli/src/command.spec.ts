@@ -129,7 +129,6 @@ describe('processCommand', () => {
       setActorSession: vi.fn(),
       removeActorSession: vi.fn(),
       setActorLocation: vi.fn(),
-      addEffect: mockAddEffect,
     };
 
     vi.clearAllMocks();
@@ -143,7 +142,7 @@ describe('processCommand', () => {
         trace: DEFAULT_TRACE,
       };
 
-      processCommand(state, command, deps, effects);
+      processCommand(state, command, effects, deps);
 
       expect(effects).toHaveLength(1);
       expectPrintEffect(effects, 'No input provided.\n');
@@ -156,7 +155,7 @@ describe('processCommand', () => {
         trace: DEFAULT_TRACE,
       };
 
-      processCommand(state, command, deps, effects);
+      processCommand(state, command, effects, deps);
 
       expect(effects).toHaveLength(1);
       expect(effects[0]).toEqual({
@@ -172,7 +171,7 @@ describe('processCommand', () => {
         trace: DEFAULT_TRACE,
       };
 
-      processCommand(state, command, deps, effects);
+      processCommand(state, command, effects, deps);
 
       expect(effects).toHaveLength(1);
       expect(effects[0]).toEqual({
@@ -191,7 +190,7 @@ describe('processCommand', () => {
         trace: DEFAULT_TRACE,
       };
 
-      processCommand(state, command, deps, effects);
+      processCommand(state, command, effects, deps);
 
       expect(effects).toHaveLength(1);
       expect(effects[0]).toEqual({
@@ -211,7 +210,7 @@ describe('processCommand', () => {
         trace: DEFAULT_TRACE,
       };
 
-      processCommand(state, command, deps, effects);
+      processCommand(state, command, effects, deps);
 
       expect(state.context.resetEvents).toHaveBeenCalled();
       expect(state.context.resetErrors).toHaveBeenCalled();
@@ -245,7 +244,7 @@ describe('processCommand', () => {
         trace: DEFAULT_TRACE,
       };
 
-      processCommand(state, command, deps, effects);
+      processCommand(state, command, effects, deps);
 
       // Should follow standard game command event flow
       expectGameCommandEventFlow(effects);
@@ -267,7 +266,7 @@ describe('processCommand', () => {
         trace: DEFAULT_TRACE,
       };
 
-      processCommand(state, command, deps, effects);
+      processCommand(state, command, effects, deps);
 
       expect(effects).toHaveLength(1);
       expect(effects[0]).toEqual({
@@ -285,7 +284,7 @@ describe('processCommand', () => {
         trace: DEFAULT_TRACE,
       };
 
-      processCommand(state, command, deps, effects);
+      processCommand(state, command, effects, deps);
 
       expect(state.currentActor).toBe(ALICE_ID);
       expect(deps.setActorLocation).toHaveBeenCalledWith(
@@ -308,7 +307,7 @@ describe('processCommand', () => {
         trace: DEFAULT_TRACE,
       };
 
-      processCommand(state, command, deps, effects);
+      processCommand(state, command, effects, deps);
 
       expect(state.currentActor).toBeUndefined();
       expect(effects).toHaveLength(1);
@@ -327,7 +326,7 @@ describe('processCommand', () => {
         trace: DEFAULT_TRACE,
       };
 
-      processCommand(state, command, deps, effects);
+      processCommand(state, command, effects, deps);
 
       expectPrintEffect(effects, /\(in\s+session\)/);
     });
@@ -340,7 +339,7 @@ describe('processCommand', () => {
         trace: DEFAULT_TRACE,
       };
 
-      processCommand(state, command, deps, effects);
+      processCommand(state, command, effects, deps);
 
       expect(effects).toHaveLength(1);
       const printEffect = expectEffectOfType(effects, ReplEffectType.PRINT);
@@ -356,7 +355,7 @@ describe('processCommand', () => {
         trace: DEFAULT_TRACE,
       };
 
-      processCommand(state, command, deps, effects);
+      processCommand(state, command, effects, deps);
 
       expect(effects).toHaveLength(1);
       expectPrintEffect(effects, "No specific help available for 'unknown'");
@@ -370,7 +369,7 @@ describe('processCommand', () => {
         trace: DEFAULT_TRACE,
       };
 
-      processCommand(state, command, deps, effects);
+      processCommand(state, command, effects, deps);
 
       expect(effects).toHaveLength(1);
       const printEffect = expectEffectOfType(effects, ReplEffectType.PRINT);
@@ -389,7 +388,7 @@ describe('processCommand', () => {
         trace: DEFAULT_TRACE,
       };
 
-      processCommand(state, command, deps, effects);
+      processCommand(state, command, effects, deps);
 
       expect(effects).toHaveLength(1);
       const printEffect = expectEffectOfType(effects, ReplEffectType.PRINT);
@@ -404,7 +403,7 @@ describe('processCommand', () => {
         trace: DEFAULT_TRACE,
       };
 
-      processCommand(state, command, deps, effects);
+      processCommand(state, command, effects, deps);
 
       const printEffect = expectEffectOfType(effects, ReplEffectType.PRINT);
       expect(printEffect.text).toContain('Actors: 2');
@@ -420,7 +419,7 @@ describe('processCommand', () => {
         trace: DEFAULT_TRACE,
       };
 
-      processCommand(state, command, deps, effects);
+      processCommand(state, command, effects, deps);
 
       expect(effects).toHaveLength(1);
       expect(effects[0]).toEqual({
@@ -450,7 +449,7 @@ describe('processCommand', () => {
         trace: DEFAULT_TRACE,
       };
 
-      processCommand(state, command, deps, effects);
+      processCommand(state, command, effects, deps);
 
       expect(effects).toHaveLength(1);
       const printEffect = expectEffectOfType(effects, ReplEffectType.PRINT);
@@ -467,7 +466,7 @@ describe('processCommand', () => {
         trace: DEFAULT_TRACE,
       };
 
-      processCommand(state, command, deps, effects);
+      processCommand(state, command, effects, deps);
 
       expect(effects).toHaveLength(1);
       expect(effects[0]).toEqual({
@@ -496,7 +495,7 @@ describe('processCommand', () => {
         trace: DEFAULT_TRACE,
       };
 
-      processCommand(state, command, deps, effects);
+      processCommand(state, command, effects, deps);
 
       expect(effects).toHaveLength(1);
       const printEffect = expectEffectOfType(effects, ReplEffectType.PRINT);
@@ -513,7 +512,7 @@ describe('processCommand', () => {
         trace: DEFAULT_TRACE,
       };
 
-      processCommand(state, command, deps, effects);
+      processCommand(state, command, effects, deps);
 
       expect(effects).toHaveLength(1);
       expect(effects[0]).toEqual({ type: ReplEffectType.CLEAR_SCREEN });
@@ -529,7 +528,7 @@ describe('processCommand', () => {
         trace: DEFAULT_TRACE,
       };
 
-      processCommand(state, command, deps, effects);
+      processCommand(state, command, effects, deps);
 
       expect(state.running).toBe(false);
       expect(effects).toHaveLength(1);
@@ -544,7 +543,7 @@ describe('processCommand', () => {
         trace: DEFAULT_TRACE,
       };
 
-      processCommand(state, command, deps, effects);
+      processCommand(state, command, effects, deps);
 
       expect(effects).toHaveLength(1);
       expect(effects[0]).toEqual({
@@ -559,7 +558,7 @@ describe('processCommand', () => {
         trace: DEFAULT_TRACE,
       };
 
-      processCommand(state, command, deps, effects);
+      processCommand(state, command, effects, deps);
 
       expect(effects).toHaveLength(1);
       expect(effects[0]).toEqual({
@@ -576,7 +575,7 @@ describe('processCommand', () => {
         trace: DEFAULT_TRACE,
       } as ReplCommand;
 
-      processCommand(state, command, deps, effects);
+      processCommand(state, command, effects, deps);
 
       expect(effects).toHaveLength(1);
       expect(effects[0]).toEqual({
@@ -595,7 +594,7 @@ describe('processCommand', () => {
         trace: DEFAULT_TRACE,
       };
 
-      processCommand(state, command, deps, effects);
+      processCommand(state, command, effects, deps);
 
       expect(effects).toHaveLength(1);
       expect(effects[0]).toEqual({ type: ReplEffectType.CLEAR_SCREEN });
