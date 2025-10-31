@@ -98,12 +98,6 @@ export function runAllBenchmarks(): void {
 
   benchmarkStateCreation();
   benchmarkStateUpdates();
-
-  console.log('✅ State benchmarks completed!');
-  console.log('\n📊 STATE PERFORMANCE SUMMARY:');
-  console.log('- State creation: Fast ✅');
-  console.log('- Immutable updates: Fast ✅');
-  console.log('- Memory efficiency: Good ✅');
 }
 
 // Run benchmarks if called directly
