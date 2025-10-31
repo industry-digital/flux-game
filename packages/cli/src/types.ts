@@ -80,6 +80,14 @@ export type ReplResult = {
   effects: ReplEffect[];
 };
 
+// Mutation-based command processor - pure function that mutates effects array
+export type MutableCommandProcessor = (
+  state: ReplState,
+  command: ReplCommand,
+  deps: CommandDependencies,
+  effects: ReplEffect[]
+) => void;
+
 export type ReplRuntime = {
   rl: ReadLine;
   output: ReplOutputInterface;

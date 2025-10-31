@@ -14,13 +14,10 @@ import {
   ReplState,
   ReplCommand,
   ReplCommandType,
-  ReplResult,
   ReplEffect,
   ReplEffectType,
   CommandDependencies,
 } from './types';
-
-// ===== PURE FUNCTIONS (FUNCTIONAL CORE) =====
 
 const getCurrentActorSession = (state: ReplState, deps: CommandDependencies): SessionURN | undefined => {
   return state.currentActor ? deps.getActorSession(state.memo, state.currentActor) : undefined;
@@ -83,52 +80,21 @@ const generateNarrativeEffects = (
 };
 
 
-// Direct effect creation functions - zero allocation
-const createNoActorContextEffect = (deps: CommandDependencies) =>
-  deps.createPrintEffect('No actor context set. Use "actor <id>" first.\n');
-
-const createNoInputEffect = (deps: CommandDependencies) =>
-  deps.createPrintEffect('No input provided.\n');
-
-const createCommandFailedEffect = (deps: CommandDependencies, errorCount: number) =>
-  deps.createPrintEffect(`✗ Command failed. ${errorCount} error(s) declared.\n`);
-
-const createCommandSuccessEffect = (deps: CommandDependencies) =>
-  deps.createPrintEffect('✓ Command executed successfully.\n');
-
-const createUnknownCommandEffect = (deps: CommandDependencies) =>
-  deps.createPrintEffect('Unknown command.\n');
-
-const createNotImplementedEffect = (deps: CommandDependencies) =>
-  deps.createPrintEffect('Command not yet implemented.\n');
-
-const createPauseInputEffect = (deps: CommandDependencies) =>
-  deps.createPauseInputEffect();
-
-const createFlushOutputEffect = (deps: CommandDependencies) =>
-  deps.createFlushOutputEffect();
-
-const createResumeInputEffect = (deps: CommandDependencies) =>
-  deps.createResumeInputEffect();
-
 const processGameCommand = (
   state: ReplState,
   input: string,
   trace: string,
   deps: CommandDependencies,
-  output: ReplResult = { newState: state, effects: [] }
-): ReplResult => {
-  output.newState = state;
-  output.effects.length = 0;
-
+  addEffect: (effect: ReplEffect) => void
+): void => {
   if (!input.trim()) {
-    output.effects.push(createNoInputEffect(deps));
-    return output;
+    addEffect(deps.createPrintEffect('No input provided.\n'));
+    return;
   }
 
   if (!state.currentActor || !getCurrentActorLocation(state, deps)) {
-    output.effects.push(createNoActorContextEffect(deps));
-    return output;
+    addEffect(deps.createPrintEffect('No actor context set. Use "actor <id>" first.\n'));
+    return;
   }
 
   // Create intent and execute (pure operations)
@@ -156,26 +122,25 @@ const processGameCommand = (
 
   // Generate effects
   if (events.length > 0) {
-    output.effects.push(createPauseInputEffect(deps));
-    output.effects.push(...generateNarrativeEffects(updatedContext, events, state.currentActor));
-    output.effects.push(createFlushOutputEffect(deps));
-    output.effects.push(createResumeInputEffect(deps));
+    addEffect(deps.createPauseInputEffect());
+    const narrativeEffects = generateNarrativeEffects(updatedContext, events, state.currentActor);
+    for (const effect of narrativeEffects) {
+      addEffect(effect);
+    }
+    addEffect(deps.createFlushOutputEffect());
+    addEffect(deps.createResumeInputEffect());
   } else if (errors.length > 0) {
-    output.effects.push(createCommandFailedEffect(deps, errors.length));
+    addEffect(deps.createPrintEffect(`✗ Command failed. ${errors.length} error(s) declared.\n`));
   } else {
-    output.effects.push(createCommandSuccessEffect(deps));
+    addEffect(deps.createPrintEffect('✓ Command executed successfully.\n'));
   }
-
-  return output;
 };
 
-const switchActor = (state: ReplState, actorId: ActorURN, deps: CommandDependencies): ReplResult => {
+const switchActor = (state: ReplState, actorId: ActorURN, deps: CommandDependencies, addEffect: (effect: ReplEffect) => void): void => {
   const actor = state.context.world.actors[actorId];
   if (!actor) {
-    return {
-      newState: state,
-      effects: [{ type: ReplEffectType.PRINT, text: `Actor not found: ${actorId}\n` }]
-    };
+    addEffect({ type: ReplEffectType.PRINT, text: `Actor not found: ${actorId}\n` });
+    return;
   }
 
   // Mutable update for performance
@@ -187,16 +152,13 @@ const switchActor = (state: ReplState, actorId: ActorURN, deps: CommandDependenc
     ? ` (in ${parseSessionStrategyFromUrn(currentSession)} session)`
     : '';
 
-  return {
-    newState: state,
-    effects: [{
-      type: ReplEffectType.PRINT,
-      text: `✓ Switched to actor: ${actor.name} (${actorId})${sessionInfo}\n`
-    }]
-  };
+  addEffect({
+    type: ReplEffectType.PRINT,
+    text: `✓ Switched to actor: ${actor.name} (${actorId})${sessionInfo}\n`
+  });
 };
 
-const showContext = (state: ReplState, deps: CommandDependencies): ReplResult => {
+const showContext = (state: ReplState, deps: CommandDependencies, addEffect: (effect: ReplEffect) => void): void => {
   const { world } = state.context;
   const currentSession = getCurrentActorSession(state, deps);
   const sessionDisplay = currentSession
@@ -215,20 +177,15 @@ World State:
   Sessions: ${Object.keys(world.sessions).length}
 `;
 
-  return {
-    newState: state,
-    effects: [{ type: ReplEffectType.PRINT, text: contextText }]
-  };
+  addEffect({ type: ReplEffectType.PRINT, text: contextText });
 };
 
-const showEvents = (state: ReplState, deps: CommandDependencies): ReplResult => {
+const showEvents = (state: ReplState, deps: CommandDependencies, addEffect: (effect: ReplEffect) => void): void => {
   const events = state.context.getDeclaredEvents();
 
   if (events.length === 0) {
-    return {
-      newState: state,
-      effects: [deps.createPrintEffect('No events declared.\n')]
-    };
+    addEffect(deps.createPrintEffect('No events declared.\n'));
+    return;
   }
 
   let eventsText = `\nDeclared Events (${events.length}):\n`;
@@ -238,20 +195,15 @@ const showEvents = (state: ReplState, deps: CommandDependencies): ReplResult => 
     eventsText += `  ${event.type}${location}${actor} - ${event.trace || 'no trace'}\n`;
   }
 
-  return {
-    newState: state,
-    effects: [deps.createPrintEffect(eventsText)]
-  };
+  addEffect(deps.createPrintEffect(eventsText));
 };
 
-const showErrors = (state: ReplState, deps: CommandDependencies): ReplResult => {
+const showErrors = (state: ReplState, deps: CommandDependencies, addEffect: (effect: ReplEffect) => void): void => {
   const errors = state.context.getDeclaredErrors();
 
   if (errors.length === 0) {
-    return {
-      newState: state,
-      effects: [deps.createPrintEffect('No errors declared.\n')]
-    };
+    addEffect(deps.createPrintEffect('No errors declared.\n'));
+    return;
   }
 
   let errorsText = `\nDeclared Errors (${errors.length}):\n`;
@@ -259,13 +211,10 @@ const showErrors = (state: ReplState, deps: CommandDependencies): ReplResult => 
     errorsText += `\n  ${error.trace ?? 'no trace'}: ${error.code} + ${error.stack}\n`;
   }
 
-  return {
-    newState: state,
-    effects: [deps.createPrintEffect(errorsText)]
-  };
+  addEffect(deps.createPrintEffect(errorsText));
 };
 
-const showHelp = (state: ReplState, command?: string): ReplResult => {
+const showHelp = (state: ReplState, command: string | undefined, addEffect: (effect: ReplEffect) => void): void => {
   const helpText = command
     ? `No specific help available for '${command}'. Type 'help' for all commands.\n`
     : `
@@ -289,58 +238,70 @@ GAME COMMANDS (via Intent System):
 Type any game command to execute it through the intent system.
 `;
 
-  return {
-    newState: state,
-    effects: [{ type: ReplEffectType.PRINT, text: helpText }]
-  };
+  addEffect({ type: ReplEffectType.PRINT, text: helpText });
 };
 
-// Main command processor (pure function)
-export const processCommand = (state: ReplState, command: ReplCommand, deps: CommandDependencies): ReplResult => {
+const PREALLOCATED_CLEAR_SCREEN_EFFECT: ReplEffect = { type: ReplEffectType.CLEAR_SCREEN };
+const PREALLOCATED_EXIT_REPL_EFFECT: ReplEffect = { type: ReplEffectType.EXIT_REPL };
+
+// Main command processor - mutation-based for zero allocations
+export const processCommand = (
+  state: ReplState,
+  command: ReplCommand,
+  deps: CommandDependencies,
+  effects: ReplEffect[],
+): void => {
+  effects.length = 0;
+
+  let effectIndex = 0;
+
+  const addEffect = (effect: ReplEffect): void => {
+    effects[effectIndex++] = effect;
+  };
+
   switch (command.type) {
     case ReplCommandType.GAME_COMMAND:
-      return processGameCommand(state, command.input, command.trace, deps);
+      processGameCommand(state, command.input, command.trace, deps, addEffect);
+      break;
 
     case ReplCommandType.SWITCH_ACTOR:
-      return switchActor(state, command.actorId, deps);
+      switchActor(state, command.actorId, deps, addEffect);
+      break;
 
     case ReplCommandType.SHOW_HELP:
-      return showHelp(state, command.command);
+      showHelp(state, command.command, addEffect);
+      break;
 
     case ReplCommandType.SHOW_CONTEXT:
-      return showContext(state, deps);
+      showContext(state, deps, addEffect);
+      break;
 
     case ReplCommandType.CLEAR_SCREEN:
-      return {
-        newState: state,
-        effects: [{ type: ReplEffectType.CLEAR_SCREEN }]
-      };
+      addEffect(PREALLOCATED_CLEAR_SCREEN_EFFECT);
+      break;
 
     case ReplCommandType.EXIT:
-      // Mutable update for performance
+      // Direct state mutation for performance
       state.running = false;
-      return {
-        newState: state,
-        effects: [{ type: ReplEffectType.EXIT_REPL }]
-      };
+      addEffect(PREALLOCATED_EXIT_REPL_EFFECT);
+      break;
 
-    // TODO: Implement other command types
     case ReplCommandType.SHOW_EVENTS:
-      return showEvents(state, deps);
+      showEvents(state, deps, addEffect);
+      break;
+
     case ReplCommandType.SHOW_ERRORS:
-      return showErrors(state, deps);
+      showErrors(state, deps, addEffect);
+      break;
+
     case ReplCommandType.SHOW_HANDLERS:
     case ReplCommandType.SHOW_SESSIONS:
-      return {
-        newState: state,
-        effects: [createNotImplementedEffect(deps)]
-      };
+      addEffect(deps.createPrintEffect('Command not yet implemented.\n'));
+      break;
 
     default:
-      return {
-        newState: state,
-        effects: [createUnknownCommandEffect(deps)]
-      };
+      addEffect(deps.createPrintEffect('Unknown command.\n'));
+      break;
   }
 };
 
@@ -349,3 +310,12 @@ export const getCurrentActor = (state: ReplState): ActorURN | undefined => state
 
 export const getActorSession = (state: ReplState, actorId: ActorURN, deps: CommandDependencies): SessionURN | undefined =>
   deps.getActorSession(state.memo, actorId);
+
+/*
+
+effects.push(...);
+
+// versus
+effects[i] = ...;
+
+*/
