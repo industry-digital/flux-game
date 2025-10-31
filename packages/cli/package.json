@@ -1,0 +1,23 @@
+{
+  "name": "@flux/cli",
+  "type": "module",
+  "version": "0.0.1",
+  "scripts": {
+    "dev": "tsx src/entrypoint.ts",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "bench": "tsx scripts/run-benchmarks.ts",
+    "bench:vitest": "vitest bench",
+    "bench:watch": "vitest bench --watch"
+  },
+  "dependencies": {
+    "@flux/core": "file:../core"
+  },
+  "devDependencies": {
+    "tsx": "^4.19.2",
+    "typescript": "~5.8.3",
+    "vite": "^6.3.5",
+    "vite-tsconfig-paths": "^5.1.4",
+    "vitest": "^3.1.3"
+  }
+}
