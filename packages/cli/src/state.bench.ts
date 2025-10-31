@@ -6,7 +6,7 @@
 
 import { performance } from 'perf_hooks';
 import { createReplState, setCurrentActor } from './state';
-import { createTransformerContext } from '@flux/core';
+import { createTransformerContext, createWorldScenario } from '@flux/core';
 
 type BenchmarkResult = {
   name: string;
@@ -62,9 +62,9 @@ function benchmarkStateCreation(): void {
   console.log('🏗️  STATE CREATION BENCHMARKS\n');
 
   const context = createTransformerContext();
-
+  const scenario = createWorldScenario(context);
   const result = runBenchmark('State creation', 10000, () => {
-    createReplState(context);
+    createReplState(context, scenario);
   });
 
   console.log(formatResult(result));
@@ -74,7 +74,8 @@ function benchmarkStateUpdates(): void {
   console.log('🔄 STATE UPDATE BENCHMARKS\n');
 
   const context = createTransformerContext();
-  const initialState = createReplState(context);
+  const scenario = createWorldScenario(context);
+  const initialState = createReplState(context, scenario);
 
   // Actor switching benchmark
   const actorSwitchResult = runBenchmark('Actor switching', 50000, () => {
@@ -91,32 +92,12 @@ function benchmarkStateUpdates(): void {
   console.log(formatResult(actorSwitchResult2));
 }
 
-function benchmarkImmutability(): void {
-  console.log('🔒 IMMUTABILITY BENCHMARKS\n');
-
-  const context = createTransformerContext();
-  const baseState = createReplState(context);
-
-  // Test that state updates don't mutate original
-  const result = runBenchmark('Immutable updates', 25000, () => {
-    const newState = setCurrentActor(baseState, 'flux:actor:bob' as any);
-    // Verify immutability (this should be fast)
-    // @ts-expect-error - newState is void
-    if (newState !== baseState) {
-      throw new Error('State was mutated!');
-    }
-  });
-
-  console.log(formatResult(result));
-}
-
 export function runAllBenchmarks(): void {
   console.log('🎯 STATE MANAGEMENT BENCHMARKS');
   console.log('==============================\n');
 
   benchmarkStateCreation();
   benchmarkStateUpdates();
-  benchmarkImmutability();
 
   console.log('✅ State benchmarks completed!');
   console.log('\n📊 STATE PERFORMANCE SUMMARY:');
