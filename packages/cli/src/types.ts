@@ -107,3 +107,8 @@ export type ReplCommandResolver = (input: string) => ReplCommand;
 
 export type InputProcessor = (input: ParsedInput, output?: ParsedInput) => ParsedInput | ReplCommand;
 export type InputPipeline = readonly InputProcessor[];
+
+export type ScenarioResolver = (
+  context: TransformerContext,
+  setCurrentActor: (actorId: ActorURN) => void,
+) => WorldScenarioHook;

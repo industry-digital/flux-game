@@ -27,8 +27,7 @@
     "build:types": "tsc --project tsconfig.types.json && tsc-alias -p tsconfig.types.json",
     "type-check": "tsc --noEmit",
     "check-circular": "npx madge --circular --extensions ts,js src/",
-    "test": "vitest run",
-    "cli": "tsx src/repl/dev.ts"
+    "test": "vitest run"
   },
   "volta": {
     "node": "22.15.0",

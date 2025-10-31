@@ -5,17 +5,16 @@
  * Provides type-safe scenario loading and discovery.
  */
 
-import { TransformerContext, WorldScenarioHook } from '@flux/core';
+import { ActorURN, TransformerContext, WorldScenarioHook } from '@flux/core';
 import { createDefaultWorldScenario } from './default';
+import { ScenarioResolver } from '~/types';
 
 // ===== SCENARIO TYPES =====
-
-export type ScenarioFactory = (context: TransformerContext) => WorldScenarioHook;
 
 export type ScenarioMetadata = {
   readonly name: string;
   readonly description: string;
-  readonly factory: ScenarioFactory;
+  readonly factory: ScenarioResolver;
 };
 
 export type ScenarioId = string;
@@ -37,19 +36,25 @@ export const getScenario = (id: ScenarioId): ScenarioMetadata | undefined => {
   return SCENARIOS.get(id);
 };
 
-export const loadScenario = (context: TransformerContext, id: ScenarioId): WorldScenarioHook => {
+export const loadScenario = (
+  context: TransformerContext,
+  id: ScenarioId,
+  setCurrentActor: (actorId: ActorURN) => void
+): WorldScenarioHook => {
   const scenario = SCENARIOS.get(id);
   if (!scenario) {
     throw new Error(`Unknown scenario: ${id}. Available scenarios: ${getAvailableScenarios().join(', ')}`);
   }
-  return scenario.factory(context);
+  return scenario.factory(context, setCurrentActor);
 };
 
 export const getAvailableScenarios = (): readonly ScenarioId[] => {
+  // Not in the hot path, so we can allocate freely
   return Array.from(SCENARIOS.keys());
 };
 
 export const getAllScenarios = (): readonly ScenarioMetadata[] => {
+  // Not in the hot path, so we can allocate freely
   return Array.from(SCENARIOS.values());
 };
 
@@ -73,16 +78,25 @@ export const registerScenario = (
 
 export const DEFAULT_SCENARIO_ID = 'default' as const;
 
-export const loadDefaultScenario = (context: TransformerContext): WorldScenarioHook => {
-  return loadScenario(context, DEFAULT_SCENARIO_ID);
+export const loadDefaultScenario = (
+  context: TransformerContext,
+  setCurrentActor: (actorId: ActorURN) => void
+): WorldScenarioHook => {
+  return loadScenario(context, DEFAULT_SCENARIO_ID, setCurrentActor);
 };
 
 // ===== SCENARIO SELECTION HELPERS =====
 
-export const getScenarioFromEnvironment = (): ScenarioId => {
-  const envScenario = process.env.FLUX_SCENARIO;
-  if (envScenario && hasScenario(envScenario)) {
-    return envScenario;
+export const getScenarioFromEnvironment = (
+  env = process.env,
+  console = global.console,
+): ScenarioId => {
+  const envScenario = env.FLUX_SCENARIO;
+  if (envScenario) {
+    if (hasScenario(envScenario)) {
+      return envScenario;
+    }
+    console.warn(`Unknown scenario: ${envScenario}. Using default.`);
   }
   return DEFAULT_SCENARIO_ID;
 };
@@ -97,7 +111,7 @@ export const getScenarioFromArgs = (
     if (hasScenario(scenarioId)) {
       return scenarioId;
     }
-    console.warn(`Unknown scenario: ${scenarioId}. Using default.`);
+    console.warn(`Unknown scenario: ${scenarioId}. Using \`default\`.`);
   }
   return DEFAULT_SCENARIO_ID;
 };

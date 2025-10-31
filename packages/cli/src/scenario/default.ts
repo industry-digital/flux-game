@@ -1,8 +1,12 @@
-import { createPlace, createWorldScenario, CurrencyType, WorldScenarioHook } from '@flux/core';
+import { ActorURN, createPlace, createWorldScenario, CurrencyType, WorldScenarioHook } from '@flux/core';
 import { TransformerContext } from '@flux/core';
 import { createDefaultActors } from '~/scenario/actors';
+import { ScenarioResolver } from '~/types';
 
-export const createDefaultWorldScenario = (context: TransformerContext): WorldScenarioHook => {
+export const createDefaultWorldScenario: ScenarioResolver = (
+  context: TransformerContext,
+  setCurrentActor: (actorId: ActorURN) => void,
+): WorldScenarioHook => {
   const scenario  = createWorldScenario(context);
 
   const place = createPlace({
@@ -24,6 +28,8 @@ export const createDefaultWorldScenario = (context: TransformerContext): WorldSc
 
   scenario.assignCurrency(alice, CurrencyType.SCRAP, 10_000);
   scenario.assignCurrency(bob, CurrencyType.SCRAP, 10_000);
+
+  setCurrentActor(alice.id);
 
   return scenario;
 };

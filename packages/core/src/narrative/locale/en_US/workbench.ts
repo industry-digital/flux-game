@@ -26,12 +26,26 @@ import { getSchemaTranslation } from '~/narrative/schema';
 import { Locale } from '~/types/i18n';
 import { getShellNaturalStatValue } from '~/worldkit/entity/actor/shell';
 
+const STAT_DISPLAY_NAMES: Readonly<Record<Stat, string>> = Object.freeze({
+  [Stat.POW]: 'POW',
+  [Stat.FIN]: 'FIN',
+  [Stat.RES]: 'RES',
+  [Stat.INT]: 'INT',
+  [Stat.PER]: 'PER',
+  [Stat.MEM]: 'MEM',
+});
+const RIGHT_ARROW = ' -> ';
 const EMPTY_NARRATIVE_SEQUENCE: NarrativeSequence = [];
+const HELP_PROMPT = '> Enter \`help workbench\` for available commands.';
+
+const WORKBENCH_PROMPTS = `> Enter \`shell commit\` to commit your changes.
+> Enter \`shell undo\` to revert modifications.
+${HELP_PROMPT}`;
 
 const WORKBENCH_SESSION_DID_START_SEQUENCE: NarrativeSequence = [
   { text: 'Connecting to workbench interface...', delay: 0 },
   { text: 'ShellOS v2.7.4-pre-collapse | Build 20847 | Neural Protocol Stack: ACTIVE', delay: 1_000 },
-  { text: 'Connection established.', delay: 1_000 },
+  { text: `Connection established.\n${HELP_PROMPT}`, delay: 1_000 },
 ];
 
 export const narrateWorkbenchSessionDidStart: TemplateFunction<WorkbenchSessionDidStart, ActorURN, NarrativeSequence> = (context, event, recipientId): NarrativeSequence => {
@@ -83,8 +97,6 @@ export const narrateActorDidStageShellMutation: TemplateFunction<ActorDidStageSh
 
   return `${mutation.stat.toUpperCase()} ${from}${RIGHT_ARROW}${to}`;
 };
-
-const RIGHT_ARROW = ' -> ';
 
 /**
  * Helper function to format a DiffValue for display (zero-allocation)
@@ -167,14 +179,6 @@ const hasStatChanges = (stats: any): boolean => {
   return false;
 };
 
-const STAT_DISPLAY_NAMES: Readonly<Record<Stat, string>> = Object.freeze({
-  [Stat.POW]: 'POW',
-  [Stat.FIN]: 'FIN',
-  [Stat.RES]: 'RES',
-  [Stat.INT]: 'INT',
-  [Stat.PER]: 'PER',
-  [Stat.MEM]: 'MEM',
-});
 
 /**
  * Higher-order function that composes narrative functions with workbench prompts
@@ -276,9 +280,6 @@ const baseNarrateActorDidDiffShellMutations: TemplateFunction<ActorDidDiffShellM
   return '';
 };
 
-const WORKBENCH_PROMPTS = `> Enter \`shell commit\` to commit your changes.
-> Enter \`shell undo\` to revert modifications.
-> Enter \`help workbench\` for available commands.`;
 
 // Composed function with workbench prompts
 export const narrateActorDidDiffShellMutations = withWorkbenchPrompts(
@@ -389,7 +390,10 @@ export const narrateActorDidListShells: TemplateFunction<ActorDidListShells, Act
               `Shell ${shellCounter}: "${shellName}" (${shellMassKg.toFixed(1)}kg, ${powStat} POW, ${finStat} FIN, ${resStat} RES)\n`;
   }
 
-  result += '\n' + ACTIVE_SHELL_INDICATOR + ' Currently active shell';
+  const currentShell = actor.shells[actor.currentShell];
+
+
+  result += '\n' + ACTIVE_SHELL_INDICATOR + ` ${currentShell.name} is your current shell.`;
 
   return result;
 };

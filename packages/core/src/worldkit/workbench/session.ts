@@ -6,7 +6,7 @@ import { uniqid as uniqidImpl, BASE62_CHARSET } from '~/lib/random';
 import { TransformerContext } from '~/types/handler';
 import { WorldProjection } from '~/types/world';
 import { createSessionId } from '~/worldkit/session';
-import { EventType, WorkbenchSessionDidStart } from '~/types/event';
+import { ActorDidListShells, EventType, WorkbenchSessionDidStart } from '~/types/event';
 import { createWorldEvent } from '~/worldkit/event';
 
 const uniqid = () => uniqidImpl(16, BASE62_CHARSET);
@@ -141,7 +141,19 @@ export const createWorkbenchSessionApi = (
       },
     });
 
+
+    const actorDidListShells: ActorDidListShells = createWorldEvent({
+      type: EventType.ACTOR_DID_LIST_SHELLS,
+      trace,
+      location: actor.location,
+      actor: actor.id,
+      payload: {
+        sessionId: sessionId,
+      },
+    });
+
     context.declareEvent(workbenchSessionDidStart);
+    context.declareEvent(actorDidListShells);
 
     // Store the new session in the world context so it can be retrieved later
     world.sessions[sessionId] = session;

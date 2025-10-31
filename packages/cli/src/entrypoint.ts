@@ -6,7 +6,7 @@
  */
 
 import * as readline from 'readline';
-import { createTransformerContext } from '@flux/core';
+import { createTransformerContext, ActorURN } from '@flux/core';
 import { createReplState } from './state';
 import { runPipeline } from './input';
 import { processCommand } from './command';
@@ -80,7 +80,9 @@ export const startRepl = (
   commandDeps = DEFAULT_COMMAND_DEPS,
 ): void => {
   // Load scenario (keeping it injectable for testing)
-  loadScenario(context, scenarioId);
+  loadScenario(context, scenarioId, (actorId: ActorURN) => {
+    state.currentActor = actorId;
+  });
 
   // Create effect executor with runtime dependencies
   const runtimeDeps = createDefaultRuntimeDependencies(runtime.rl, runtime.output);
