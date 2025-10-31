@@ -1,16 +1,16 @@
-import { ParsedInput, ReplCommand, ReplCommandType, type InputPipeline } from './types';
-
+import { ParsedInput, ReplCommand, ReplCommandType, type InputPipeline } from '../types';
 
 export const parseRawInput = (
-  raw: string[],  // ← Guaranteed to be normalized by caller
-  output: ParsedInput = { tokens: [], command: '', args: [] }
+  raw: string, // The raw string input from the user
+  tokens: string[], // Tokens computed from `raw`
+  output: ParsedInput = { raw, tokens: [], command: '', args: [] }
 ): ParsedInput => {
   output.command = '';
   output.tokens.length = 0;
   output.args.length = 0;
 
-  for (let i = 0; i < raw.length; i++) {
-    const token = raw[i];
+  for (let i = 0; i < tokens.length; i++) {
+    const token = tokens[i];
     if (token) {  // ← No trimming needed, caller already did it
       output.tokens[i] = token;
       if (i > 0) {
@@ -69,7 +69,7 @@ export const runPipeline = (
   trace: string,
 ): ReplCommand => {
   try {
-    let current: ParsedInput | ReplCommand = parseRawInput(tokens, PREALLOCATED_OUTPUT);
+    let current: ParsedInput | ReplCommand = parseRawInput(input, tokens, PREALLOCATED_OUTPUT);
 
     // Set raw input for validation
     if (!('type' in current)) {

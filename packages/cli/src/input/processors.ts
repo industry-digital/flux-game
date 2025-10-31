@@ -4,8 +4,16 @@
  * Defines processors that transform ParsedInput into ReplCommand
  */
 
-import { ParsedInput, ReplCommand, ReplCommandType, type InputProcessor } from './types';
+import { ParsedInput, ReplCommand, ReplCommandType, type InputProcessor } from '../types';
 import { ActorURN } from '@flux/core';
+
+const DANGEROUS_PATTERNS: RegExp[] = [
+  /\.\./,           // Directory traversal
+  /[<>|&;`$]/,      // Shell injection characters
+  /eval\s*\(/,      // Code evaluation
+  /require\s*\(/,   // Module loading
+  /import\s+/,      // ES6 imports
+];
 
 // Security validation processor
 export const validateSecurity: InputProcessor = (input: ParsedInput, trace: string): ParsedInput | ReplCommand => {
@@ -13,16 +21,7 @@ export const validateSecurity: InputProcessor = (input: ParsedInput, trace: stri
     return input;
   }
 
-  // Block potentially dangerous patterns
-  const dangerousPatterns = [
-    /\.\./,           // Directory traversal
-    /[<>|&;`$]/,      // Shell injection characters
-    /eval\s*\(/,      // Code evaluation
-    /require\s*\(/,   // Module loading
-    /import\s+/,      // ES6 imports
-  ];
-
-  for (const pattern of dangerousPatterns) {
+  for (const pattern of DANGEROUS_PATTERNS) {
     if (pattern.test(input.raw)) {
       return {
         type: ReplCommandType.SHOW_HELP,
@@ -36,7 +35,10 @@ export const validateSecurity: InputProcessor = (input: ParsedInput, trace: stri
 };
 
 // Command recognition processor
-export const parseCommand: InputProcessor = (input: ParsedInput, trace: string): ParsedInput | ReplCommand => {
+export const parseCommand: InputProcessor = (
+  input: ParsedInput,
+  trace: string,
+): ParsedInput | ReplCommand => {
   const command = input.command.toLowerCase();
   const args = input.args;
 
@@ -110,11 +112,8 @@ export const BASIC_PIPELINE = [
   fallbackToGameCommand,
 ] as const;
 
-export const SECURE_PIPELINE = [
-  validateSecurity,
-  parseCommand,
-  fallbackToGameCommand,
-] as const;
-
 // Default pipeline (secure by default)
-export const DEFAULT_PIPELINE = SECURE_PIPELINE;
+export const DEFAULT_PIPELINE = [
+  validateSecurity,
+  ...BASIC_PIPELINE,
+] as const;

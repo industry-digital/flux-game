@@ -9,8 +9,8 @@
  */
 
 import { performance } from 'perf_hooks';
-import { runPipeline, tokenizeWithPool, parseRawInput } from './input';
-import { ParsedInput, ReplCommand, ReplCommandType } from './types';
+import { runPipeline, tokenizeWithPool, parseRawInput } from './pipeline';
+import { ParsedInput, ReplCommand, ReplCommandType } from '../types';
 
 // Mock processors for benchmarking
 const validateProcessor = (input: ParsedInput): ParsedInput | ReplCommand => {

@@ -148,6 +148,7 @@ export {
   ActorCommand,
   CommandResolver,
   CommandResolverContext,
+  Intent,
 } from './intent';
 
 export {

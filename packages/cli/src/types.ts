@@ -1,11 +1,11 @@
-import { TransformerContext, ActorURN, PlaceURN, SessionURN, NarrativeSequence, WorldScenarioHook } from '@flux/core';
+import { TransformerContext, ActorURN, PlaceURN, SessionURN, NarrativeSequence, WorldScenarioHook, Intent } from '@flux/core';
 import type { ReadLine } from 'readline';
 
 export type ParsedInput = {
+  raw: string;
   tokens: string[];
   command: string;
   args: string[];
-  raw?: string;  // Optional: original input for validation
 };
 
 export type ActorMemo = {
@@ -107,11 +107,11 @@ export type CommandDependencies = {
   removeActorSession: (memo: ReplMemo, actorId: ActorURN) => void;
   setActorLocation: (memo: ReplMemo, actorId: ActorURN, location: PlaceURN) => void;
 
-  // Effect creators
-  createPrintEffect: (text: string) => ReplEffect;
-  createPauseInputEffect: () => ReplEffect;
-  createResumeInputEffect: () => ReplEffect;
-  createFlushOutputEffect: () => ReplEffect;
+  // Core operations
+  executeIntent: (context: TransformerContext, intent: Intent) => TransformerContext;
+
+  // Effect management
+  addEffect: (effect: ReplEffect) => void;
 };
 
 export type ReplCommandResolver = (input: string) => ReplCommand;

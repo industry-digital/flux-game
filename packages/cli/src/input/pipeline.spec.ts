@@ -1,26 +1,28 @@
 import { describe, it, expect, beforeEach } from 'vitest';
-import { runPipeline, tokenizeWithPool, parseRawInput } from './input';
-import { ParsedInput, ReplCommand, ReplCommandType } from './types';
+import { runPipeline, tokenizeWithPool, parseRawInput } from './pipeline';
+import { ParsedInput, ReplCommand, ReplCommandType } from '~/types';
+
+const DEFAULT_TRACE = 'test1234';
 
 describe('Input Parsing Engine', () => {
   // Mock processors for testing
-  const mockValidateProcessor = (input: ParsedInput): ParsedInput | ReplCommand => {
+  const mockValidateProcessor = (input: ParsedInput, trace = DEFAULT_TRACE): ParsedInput | ReplCommand => {
     if (input.command === 'invalid') {
-      return { type: ReplCommandType.SHOW_HELP, command: 'Invalid command' };
+      return { trace, type: ReplCommandType.SHOW_HELP, command: 'Invalid command' };
     }
     return input;
   };
 
-  const mockParseProcessor = (input: ParsedInput): ReplCommand => {
+  const mockParseProcessor = (input: ParsedInput, trace = DEFAULT_TRACE): ReplCommand => {
     switch (input.command) {
       case 'help':
-        return { type: ReplCommandType.SHOW_HELP, command: input.args[0] };
+        return { trace, type: ReplCommandType.SHOW_HELP, command: input.args[0] };
       case 'exit':
-        return { type: ReplCommandType.EXIT };
+        return { trace, type: ReplCommandType.EXIT };
       case 'clear':
-        return { type: ReplCommandType.CLEAR_SCREEN };
+        return { trace, type: ReplCommandType.CLEAR_SCREEN };
       default:
-        return { type: ReplCommandType.GAME_COMMAND, input: input.command };
+        return { trace, type: ReplCommandType.GAME_COMMAND, input: input.command };
     }
   };
 
@@ -69,7 +71,7 @@ describe('Input Parsing Engine', () => {
     });
 
     it('should parse tokens into structured format', () => {
-      const result = parseRawInput(['help', 'workbench'], output);
+      const result = parseRawInput('help workbench', ['help', 'workbench'], output);
 
       expect(result).toBe(output); // Should reuse output object
       expect(result.tokens).toEqual(['help', 'workbench']);
@@ -78,29 +80,27 @@ describe('Input Parsing Engine', () => {
     });
 
     it('should handle single token', () => {
-      const result = parseRawInput(['exit'], output);
+      const result = parseRawInput('exit', ['exit'], output);
 
       expect(result.command).toBe('exit');
       expect(result.args).toEqual([]);
     });
 
     it('should handle empty tokens', () => {
-      const result = parseRawInput([], output);
-
+      const result = parseRawInput('', [], output);
       expect(result.command).toBe('');
       expect(result.args).toEqual([]);
     });
 
     it('should handle multiple arguments', () => {
-      const result = parseRawInput(['actor', 'alice', 'location', 'forest'], output);
-
+      const result = parseRawInput('actor alice location forest', ['actor', 'alice', 'location', 'forest'], output);
       expect(result.command).toBe('actor');
       expect(result.args).toEqual(['alice', 'location', 'forest']);
     });
 
     it('should reuse output buffer', () => {
-      const result1 = parseRawInput(['test', 'one'], output);
-      const result2 = parseRawInput(['test', 'two'], output);
+      const result1 = parseRawInput('test one', ['test', 'one'], output);
+      const result2 = parseRawInput('test two', ['test', 'two'], output);
 
       expect(result1).toBe(output);
       expect(result2).toBe(output);
@@ -112,9 +112,10 @@ describe('Input Parsing Engine', () => {
   describe('runPipeline', () => {
     it('should process input through pipeline', () => {
       const pipeline = [mockParseProcessor];
-      const result = runPipeline('help workbench', undefined, pipeline);
+      const result = runPipeline('help workbench', undefined, pipeline, DEFAULT_TRACE);
 
       expect(result).toEqual({
+        trace: DEFAULT_TRACE,
         type: ReplCommandType.SHOW_HELP,
         command: 'workbench'
       });
@@ -122,9 +123,10 @@ describe('Input Parsing Engine', () => {
 
     it('should handle early exit from validation', () => {
       const pipeline = [mockValidateProcessor, mockParseProcessor];
-      const result = runPipeline('invalid command', undefined, pipeline);
+      const result = runPipeline('invalid command', undefined, pipeline, DEFAULT_TRACE);
 
       expect(result).toEqual({
+        trace: DEFAULT_TRACE,
         type: ReplCommandType.SHOW_HELP,
         command: 'Invalid command'
       });
@@ -132,9 +134,10 @@ describe('Input Parsing Engine', () => {
 
     it('should process through multiple processors', () => {
       const pipeline = [mockValidateProcessor, mockParseProcessor];
-      const result = runPipeline('help advanced', undefined, pipeline);
+      const result = runPipeline('help advanced', undefined, pipeline, DEFAULT_TRACE);
 
       expect(result).toEqual({
+        trace: DEFAULT_TRACE,
         type: ReplCommandType.SHOW_HELP,
         command: 'advanced'
       });
@@ -143,18 +146,20 @@ describe('Input Parsing Engine', () => {
     it('should handle pre-tokenized input', () => {
       const tokens = ['exit'];
       const pipeline = [mockParseProcessor];
-      const result = runPipeline('', tokens, pipeline);
+      const result = runPipeline('', tokens, pipeline, DEFAULT_TRACE);
 
       expect(result).toEqual({
+        trace: DEFAULT_TRACE,
         type: ReplCommandType.EXIT
       });
     });
 
     it('should fallback to game command for unrecognized input', () => {
       const pipeline = [mockParseProcessor];
-      const result = runPipeline('unknown command', undefined, pipeline);
+      const result = runPipeline('unknown command', undefined, pipeline, DEFAULT_TRACE);
 
       expect(result).toEqual({
+        trace: DEFAULT_TRACE,
         type: ReplCommandType.GAME_COMMAND,
         input: 'unknown'
       });
@@ -169,16 +174,17 @@ describe('Input Parsing Engine', () => {
       };
 
       const pipeline = [captureProcessor, mockParseProcessor];
-      runPipeline('test input', undefined, pipeline);
+      runPipeline('test input', undefined, pipeline, DEFAULT_TRACE);
 
       expect(capturedInput).not.toBeNull();
       expect(capturedInput!.raw).toBe('test input');
     });
 
     it('should handle empty pipeline', () => {
-      const result = runPipeline('test', undefined, []);
+      const result = runPipeline('test', undefined, [], DEFAULT_TRACE);
 
       expect(result).toEqual({
+        trace: DEFAULT_TRACE,
         type: ReplCommandType.GAME_COMMAND,
         input: 'test'
       });
@@ -191,7 +197,7 @@ describe('Input Parsing Engine', () => {
 
       // Run multiple times to trigger pool usage
       for (let i = 0; i < 20; i++) {
-        runPipeline(`test ${i}`, undefined, pipeline);
+        runPipeline(`test ${i}`, undefined, pipeline, DEFAULT_TRACE);
       }
 
       // Should not throw or leak memory
@@ -203,7 +209,7 @@ describe('Input Parsing Engine', () => {
       const pipeline = [mockParseProcessor];
 
       const start = performance.now();
-      const result = runPipeline(largeInput, undefined, pipeline);
+      const result = runPipeline(largeInput, undefined, pipeline, DEFAULT_TRACE);
       const duration = performance.now() - start;
 
       expect(result.type).toBe(ReplCommandType.GAME_COMMAND);
@@ -216,7 +222,7 @@ describe('Input Parsing Engine', () => {
 
       const start = performance.now();
       for (let i = 0; i < iterations; i++) {
-        runPipeline(`test ${i % 10}`, undefined, pipeline);
+        runPipeline(`test ${i % 10}`, undefined, pipeline, DEFAULT_TRACE);
       }
       const duration = performance.now() - start;
 
@@ -231,7 +237,7 @@ describe('Input Parsing Engine', () => {
       const pipeline = [badProcessor, mockParseProcessor];
 
       expect(() => {
-        runPipeline('test', undefined, pipeline);
+        runPipeline('test', undefined, pipeline, DEFAULT_TRACE);
       }).not.toThrow();
     });
 
@@ -242,7 +248,7 @@ describe('Input Parsing Engine', () => {
       const pipeline = [throwingProcessor];
 
       expect(() => {
-        runPipeline('test', undefined, pipeline);
+        runPipeline('test', undefined, pipeline, DEFAULT_TRACE);
       }).toThrow('Test error');
     });
 
@@ -250,7 +256,7 @@ describe('Input Parsing Engine', () => {
       const longCommand = 'a'.repeat(1000);
       const pipeline = [mockParseProcessor];
 
-      const result = runPipeline(longCommand, undefined, pipeline);
+      const result = runPipeline(longCommand, undefined, pipeline, DEFAULT_TRACE);
       expect(result.type).toBe(ReplCommandType.GAME_COMMAND);
     });
 
@@ -258,7 +264,7 @@ describe('Input Parsing Engine', () => {
       const tokens = ['test', 'with-dashes', 'with_underscores', 'with.dots'];
       const pipeline = [mockParseProcessor];
 
-      const result = runPipeline('', tokens, pipeline);
+      const result = runPipeline('', tokens, pipeline, DEFAULT_TRACE);
       expect(result.type).toBe(ReplCommandType.GAME_COMMAND);
     });
   });

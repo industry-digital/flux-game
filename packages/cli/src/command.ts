@@ -1,6 +1,4 @@
 import {
-  createIntent,
-  executeIntent,
   getTemplatesForLocale,
   parseSessionStrategyFromUrn,
   TransformerContext,
@@ -8,7 +6,8 @@ import {
   PlaceURN,
   SessionURN,
   Locale,
-  TemplateFunction
+  TemplateFunction,
+  Intent,
 } from '@flux/core';
 import {
   ReplState,
@@ -79,30 +78,42 @@ const generateNarrativeEffects = (
   return effects;
 };
 
+export type ProcessGameCommandDependencies = CommandDependencies & {
+  createIntent: (input: any) => Intent;
+};
+
+const PREALLOCATED_RESUME_INPUT_EFFECT: ReplEffect = { type: ReplEffectType.RESUME_INPUT };
+const PREALLOCATED_FLUSH_OUTPUT_EFFECT: ReplEffect = { type: ReplEffectType.FLUSH_OUTPUT };
+const PREALLOCATED_PAUSE_INPUT_EFFECT: ReplEffect = { type: ReplEffectType.PAUSE_INPUT };
 
 const processGameCommand = (
   state: ReplState,
   input: string,
   trace: string,
-  deps: CommandDependencies,
-  addEffect: (effect: ReplEffect) => void
+  deps: ProcessGameCommandDependencies,
 ): void => {
+  const { addEffect } = deps;
+
   if (!input.trim()) {
-    addEffect(deps.createPrintEffect('No input provided.\n'));
+    addEffect({ type: ReplEffectType.PRINT, text: 'No input provided.\n' });
     return;
   }
 
-  if (!state.currentActor || !getCurrentActorLocation(state, deps)) {
-    addEffect(deps.createPrintEffect('No actor context set. Use "actor <id>" first.\n'));
+  const actorLocation = getCurrentActorLocation(state, deps);
+
+  if (!state.currentActor || !actorLocation) {
+    addEffect({ type: ReplEffectType.PRINT, text: 'No actor context set. Use "actor <id>" first.\n' });
     return;
   }
+
+  const actorSession = getCurrentActorSession(state, deps);
 
   // Create intent and execute (pure operations)
-  const intent = createIntent({
+  const intent = deps.createIntent({
     id: trace, // Use CLI-generated trace as intent ID
     actor: state.currentActor,
-    location: getCurrentActorLocation(state, deps)!,
-    session: getCurrentActorSession(state, deps),
+    location: actorLocation,
+    session: actorSession,
     text: input,
   });
 
@@ -110,7 +121,7 @@ const processGameCommand = (
   state.context.resetEvents();
   state.context.resetErrors();
 
-  const updatedContext = executeIntent(state.context, intent);
+  const updatedContext = deps.executeIntent(state.context, intent);
   const events = updatedContext.getDeclaredEvents();
   const errors = updatedContext.getDeclaredErrors();
 
@@ -122,17 +133,17 @@ const processGameCommand = (
 
   // Generate effects
   if (events.length > 0) {
-    addEffect(deps.createPauseInputEffect());
+    addEffect(PREALLOCATED_PAUSE_INPUT_EFFECT);
     const narrativeEffects = generateNarrativeEffects(updatedContext, events, state.currentActor);
     for (const effect of narrativeEffects) {
       addEffect(effect);
     }
-    addEffect(deps.createFlushOutputEffect());
-    addEffect(deps.createResumeInputEffect());
+    addEffect(PREALLOCATED_FLUSH_OUTPUT_EFFECT);
+    addEffect(PREALLOCATED_RESUME_INPUT_EFFECT);
   } else if (errors.length > 0) {
-    addEffect(deps.createPrintEffect(`✗ Command failed. ${errors.length} error(s) declared.\n`));
+    addEffect({ type: ReplEffectType.PRINT, text: `✗ Command failed. ${errors.length} error(s) declared.\n` });
   } else {
-    addEffect(deps.createPrintEffect('✓ Command executed successfully.\n'));
+    addEffect({ type: ReplEffectType.PRINT, text: '✓ Command executed successfully.\n' });
   }
 };
 
@@ -184,7 +195,7 @@ const showEvents = (state: ReplState, deps: CommandDependencies, addEffect: (eff
   const events = state.context.getDeclaredEvents();
 
   if (events.length === 0) {
-    addEffect(deps.createPrintEffect('No events declared.\n'));
+    addEffect({ type: ReplEffectType.PRINT, text: 'No events declared.\n' });
     return;
   }
 
@@ -195,14 +206,14 @@ const showEvents = (state: ReplState, deps: CommandDependencies, addEffect: (eff
     eventsText += `  ${event.type}${location}${actor} - ${event.trace || 'no trace'}\n`;
   }
 
-  addEffect(deps.createPrintEffect(eventsText));
+  addEffect({ type: ReplEffectType.PRINT, text: eventsText });
 };
 
 const showErrors = (state: ReplState, deps: CommandDependencies, addEffect: (effect: ReplEffect) => void): void => {
   const errors = state.context.getDeclaredErrors();
 
   if (errors.length === 0) {
-    addEffect(deps.createPrintEffect('No errors declared.\n'));
+    addEffect({ type: ReplEffectType.PRINT, text: 'No errors declared.\n' });
     return;
   }
 
@@ -211,7 +222,7 @@ const showErrors = (state: ReplState, deps: CommandDependencies, addEffect: (eff
     errorsText += `\n  ${error.trace ?? 'no trace'}: ${error.code} + ${error.stack}\n`;
   }
 
-  addEffect(deps.createPrintEffect(errorsText));
+  addEffect({ type: ReplEffectType.PRINT, text: errorsText });
 };
 
 const showHelp = (state: ReplState, command: string | undefined, addEffect: (effect: ReplEffect) => void): void => {
@@ -248,7 +259,7 @@ const PREALLOCATED_EXIT_REPL_EFFECT: ReplEffect = { type: ReplEffectType.EXIT_RE
 export const processCommand = (
   state: ReplState,
   command: ReplCommand,
-  deps: CommandDependencies,
+  deps: ProcessGameCommandDependencies,
   effects: ReplEffect[],
 ): void => {
   effects.length = 0;
@@ -261,7 +272,7 @@ export const processCommand = (
 
   switch (command.type) {
     case ReplCommandType.GAME_COMMAND:
-      processGameCommand(state, command.input, command.trace, deps, addEffect);
+      processGameCommand(state, command.input, command.trace, deps);
       break;
 
     case ReplCommandType.SWITCH_ACTOR:
@@ -296,26 +307,11 @@ export const processCommand = (
 
     case ReplCommandType.SHOW_HANDLERS:
     case ReplCommandType.SHOW_SESSIONS:
-      addEffect(deps.createPrintEffect('Command not yet implemented.\n'));
+      addEffect({ type: ReplEffectType.PRINT, text: 'Command not yet implemented.\n' });
       break;
 
     default:
-      addEffect(deps.createPrintEffect('Unknown command.\n'));
+      addEffect({ type: ReplEffectType.PRINT, text: 'Unknown command.\n' });
       break;
   }
 };
-
-// State utility functions (using mutable updates for performance)
-export const getCurrentActor = (state: ReplState): ActorURN | undefined => state.currentActor;
-
-export const getActorSession = (state: ReplState, actorId: ActorURN, deps: CommandDependencies): SessionURN | undefined =>
-  deps.getActorSession(state.memo, actorId);
-
-/*
-
-effects.push(...);
-
-// versus
-effects[i] = ...;
-
-*/

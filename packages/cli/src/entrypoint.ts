@@ -8,9 +8,9 @@
 import * as readline from 'readline';
 import { createTransformerContext, ActorURN } from '@flux/core';
 import { createReplState } from './state';
-import { runPipeline } from './input';
+import { runPipeline } from './input/pipeline';
 import { processCommand } from './command';
-import { DEFAULT_PIPELINE } from './processors';
+import { DEFAULT_PIPELINE } from './input/processors';
 import { BatchSchedulingOutput } from './output';
 import { executeEffects, createEffectExecutor, createDefaultRuntimeDependencies } from './execution';
 import { ReplEffectType, ReplCommandType, ReplOutputInterface, CommandDependencies, ReplCommand, ReplEffect } from './types';
