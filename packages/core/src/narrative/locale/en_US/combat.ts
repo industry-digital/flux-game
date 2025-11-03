@@ -32,7 +32,7 @@ import { Locale, SchemaTranslation } from '~/types/i18n';
 import { TransformerContext } from '~/types/handler';
 import { WeaponSchema } from '~/types/schema/weapon';
 import { Perspective } from '~/types/narrative';
-import { getPossessivePronoun } from './grammar/pronouns';
+import { getPossessivePronoun } from './util/grammar';
 
 
 /**

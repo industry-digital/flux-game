@@ -25,6 +25,7 @@ import { calculateShellPerformance, ShellPerformanceDependencies } from '~/world
 import { getSchemaTranslation } from '~/narrative/schema';
 import { Locale } from '~/types/i18n';
 import { getShellNaturalStatValue } from '~/worldkit/entity/actor/shell';
+import { CHECK_MARK } from '~/narrative/glyphs';
 
 const STAT_DISPLAY_NAMES: Readonly<Record<Stat, string>> = Object.freeze({
   [Stat.POW]: 'POW',
@@ -332,7 +333,6 @@ export const narrateActorDidUnmountComponent: TemplateFunction<ActorDidUnmountCo
   return '';
 };
 
-const ACTIVE_SHELL_INDICATOR = '✓';
 
 /**
  * Narrative for when an actor lists their available shells
@@ -383,7 +383,7 @@ export const narrateActorDidListShells: TemplateFunction<ActorDidListShells, Act
     const shellMassKg = massApi.computeShellMass(shell) / 1000;
 
     // Add active shell indicator
-    const activeIndicator = isActive ? ACTIVE_SHELL_INDICATOR + '  ' : '   ';
+    const activeIndicator = isActive ? CHECK_MARK + '  ' : '   ';
 
     // Format as accessible list item: Shell N: "Name" (mass, POW POW, FIN FIN, RES RES)
     result += activeIndicator +
@@ -393,7 +393,7 @@ export const narrateActorDidListShells: TemplateFunction<ActorDidListShells, Act
   const currentShell = actor.shells[actor.currentShell];
 
 
-  result += '\n' + ACTIVE_SHELL_INDICATOR + ` ${currentShell.name} is your current shell.`;
+  result += '\n' + CHECK_MARK + ` ${currentShell.name} is your current shell.`;
 
   return result;
 };

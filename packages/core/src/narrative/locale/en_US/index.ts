@@ -72,8 +72,7 @@ import {
   narrateActorDidRejectPartyInvitation,
   narrateActorDidJoinParty,
   narrateActorDidLeaveParty,
-  narrateActorDidInspectParty,
-  narrateActorDidListPartyInvitations,
+  narrateActorDidInspectParty
 } from './party';
 
 export const en_US: LanguageTemplates = {
@@ -148,5 +147,5 @@ export const en_US: LanguageTemplates = {
   [EventType.ACTOR_DID_JOIN_PARTY]: narrateActorDidJoinParty,
   [EventType.ACTOR_DID_LEAVE_PARTY]: narrateActorDidLeaveParty,
   [EventType.ACTOR_DID_INSPECT_PARTY]: narrateActorDidInspectParty,
-  [EventType.ACTOR_DID_LIST_PARTY_INVITATIONS]: narrateActorDidListPartyInvitations,
+  [EventType.ACTOR_DID_LIST_PARTY_INVITATIONS]: narrateActorDidInspectParty,
 };
