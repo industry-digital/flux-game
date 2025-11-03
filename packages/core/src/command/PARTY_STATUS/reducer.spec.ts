@@ -1,6 +1,6 @@
 import { describe, beforeEach, it, expect } from 'vitest';
 import { partyInspectReducer } from './reducer';
-import { PartyInspectCommand } from './types';
+import { PartyStatusCommand } from './types';
 import { TransformerContext } from '~/types/handler';
 import { createTransformerContext } from '~/worldkit/context';
 import { createActor } from '~/worldkit/entity/actor';
@@ -56,10 +56,10 @@ describe('PARTY_INSPECT Reducer', () => {
   });
 
   it('should inspect party as owner and include invitations', () => {
-    const command: PartyInspectCommand = createActorCommand({
+    const command: PartyStatusCommand = createActorCommand({
       id: 'abcd1234',
       ts: NOW,
-      type: CommandType.PARTY_INSPECT,
+      type: CommandType.PARTY_STATUS,
       actor: ALICE_ID, // Alice is the owner
       location: DEFAULT_LOCATION,
       args: {},
@@ -90,10 +90,10 @@ describe('PARTY_INSPECT Reducer', () => {
   });
 
   it('should inspect party as member and exclude invitations', () => {
-    const command: PartyInspectCommand = createActorCommand({
+    const command: PartyStatusCommand = createActorCommand({
       id: 'abcd1234',
       ts: NOW,
-      type: CommandType.PARTY_INSPECT,
+      type: CommandType.PARTY_STATUS,
       actor: BOB_ID, // Bob is a member, not owner
       location: DEFAULT_LOCATION,
       args: {},
@@ -122,10 +122,10 @@ describe('PARTY_INSPECT Reducer', () => {
   });
 
   it('should handle actor not in party gracefully', () => {
-    const command: PartyInspectCommand = createActorCommand({
+    const command: PartyStatusCommand = createActorCommand({
       id: 'abcd1234',
       ts: NOW,
-      type: CommandType.PARTY_INSPECT,
+      type: CommandType.PARTY_STATUS,
       actor: CHARLIE_ID, // Charlie is not in any party
       location: DEFAULT_LOCATION,
       args: {},
@@ -147,10 +147,10 @@ describe('PARTY_INSPECT Reducer', () => {
     const bob = context.world.actors[BOB_ID];
     bob.party = 'flux:group:party:nonexistent' as any;
 
-    const command: PartyInspectCommand = createActorCommand({
+    const command: PartyStatusCommand = createActorCommand({
       id: 'abcd1234',
       ts: NOW,
-      type: CommandType.PARTY_INSPECT,
+      type: CommandType.PARTY_STATUS,
       actor: BOB_ID,
       location: DEFAULT_LOCATION,
       args: {},
@@ -172,10 +172,10 @@ describe('PARTY_INSPECT Reducer', () => {
     const soloParty = context.partyApi.createParty();
     context.partyApi.addPartyMember(soloParty, CHARLIE_ID);
 
-    const command: PartyInspectCommand = createActorCommand({
+    const command: PartyStatusCommand = createActorCommand({
       id: 'abcd1234',
       ts: NOW,
-      type: CommandType.PARTY_INSPECT,
+      type: CommandType.PARTY_STATUS,
       actor: CHARLIE_ID, // Charlie is now the solo party owner
       location: DEFAULT_LOCATION,
       args: {},

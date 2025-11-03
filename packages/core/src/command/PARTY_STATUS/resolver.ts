@@ -1,6 +1,6 @@
 import { CommandResolver, CommandResolverContext, CommandType, Intent } from '~/types/intent';
 import { createActorCommand } from '~/lib/intent';
-import { PartyInspectCommand } from './types';
+import { PartyStatusCommand } from './types';
 
 const PARTY_TOKEN = 'party';
 const STATUS_TOKEN = 'status';
@@ -15,10 +15,10 @@ const STATUS_TOKEN = 'status';
  *   `party`
  *   `party status`
  */
-export const partyInspectResolver: CommandResolver<PartyInspectCommand> = (
+export const partyInspectResolver: CommandResolver<PartyStatusCommand> = (
   context: CommandResolverContext,
   intent: Intent,
-): PartyInspectCommand | undefined => {
+): PartyStatusCommand | undefined => {
   if (intent.prefix !== PARTY_TOKEN) {
     return undefined;
   }
@@ -27,9 +27,9 @@ export const partyInspectResolver: CommandResolver<PartyInspectCommand> = (
   if (intent.tokens.length === 0 ||
       (intent.tokens.length === 1 && intent.tokens[0] === STATUS_TOKEN)) {
 
-    const command: PartyInspectCommand = createActorCommand({
+    const command: PartyStatusCommand = createActorCommand({
       id: intent.id,
-      type: CommandType.PARTY_INSPECT,
+      type: CommandType.PARTY_STATUS,
       actor: intent.actor,
       location: intent.location,
       session: intent.session,

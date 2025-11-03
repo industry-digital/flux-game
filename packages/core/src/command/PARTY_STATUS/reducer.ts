@@ -1,5 +1,5 @@
 import { Transformer } from '~/types/handler';
-import { PartyInspectCommand } from './types';
+import { PartyStatusCommand } from './types';
 import { withBasicWorldStateValidation } from '../validation';
 import { withOwnParty } from '../party';
 import { ActorDidInspectParty, ActorDidInspectPartyInput, EventType } from '~/types/event';
@@ -8,7 +8,7 @@ import { createWorldEvent } from '~/worldkit/event';
 /**
  * Party inspect command reducer
  */
-export const partyInspectReducer: Transformer<PartyInspectCommand> = withBasicWorldStateValidation(
+export const partyInspectReducer: Transformer<PartyStatusCommand> = withBasicWorldStateValidation(
   withOwnParty(
     (context, command, party) => {
       const inspector = context.world.actors[command.actor];
