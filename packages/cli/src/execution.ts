@@ -1,13 +1,4 @@
-/**
- * Effect Execution Engine
- *
- * Pure functional interface for executing REPL effects.
- * Separates effect interpretation from runtime concerns.
- */
-
 import { ReplEffect, ReplEffectType } from './types';
-
-// ===== EFFECT EXECUTION INTERFACE =====
 
 export type EffectExecutor = {
   print: (text: string) => void;
@@ -18,8 +9,6 @@ export type EffectExecutor = {
   clearScreen: () => void;
   exitRepl: () => void;
 };
-
-// ===== PURE EFFECT EXECUTION =====
 
 export const executeEffect = async (executor: EffectExecutor, effect: ReplEffect): Promise<void> => {
   switch (effect.type) {
@@ -67,9 +56,7 @@ export const executeEffects = async (
   }
 };
 
-// ===== EFFECT EXECUTOR FACTORIES =====
-
-export type RuntimeDependencies = {
+export type EffectExecutionDependencides = {
   rl: {
     pause: () => void;
     resume: () => void;
@@ -88,9 +75,11 @@ export type RuntimeDependencies = {
   };
 };
 
-export const createEffectExecutor = (deps: RuntimeDependencies): EffectExecutor => ({
+export const createEffectExecutor = (
+  { output, rl, console, process }: EffectExecutionDependencides,
+): EffectExecutor => ({
   print: (text: string) => {
-    deps.output.print(text);
+    output.print(text);
   },
 
   printSequence: async (sequence) => {
@@ -99,45 +88,45 @@ export const createEffectExecutor = (deps: RuntimeDependencies): EffectExecutor 
         await new Promise(resolve => setTimeout(resolve, item.delay));
       }
       if (item.text.trim()) {
-        deps.output.print(item.text);
+        output.print(item.text);
       }
     }
-    deps.output.print(''); // Final newline
+    output.print(''); // Final newline
   },
 
   pauseInput: () => {
-    deps.rl.pause();
+    rl.pause();
   },
 
   resumeInput: () => {
-    deps.rl.resume();
+    rl.resume();
   },
 
   flushOutput: () => {
-    deps.output.flush();
+    output.flush();
   },
 
   clearScreen: () => {
-    deps.console.clear();
+    console.clear();
   },
 
   exitRepl: () => {
-    deps.output.print('Goodbye. See you next time!');
-    deps.output.flush();
-    deps.output.stop();
-    deps.rl.close();
-    deps.process.exit(0);
+    output.print('Goodbye. See you next time!');
+    output.flush();
+    output.stop();
+    rl.close();
+    process.exit(0);
   },
 });
 
-// ===== DEFAULT RUNTIME DEPENDENCIES =====
-
-export const createDefaultRuntimeDependencies = (
-  rl: RuntimeDependencies['rl'],
-  output: RuntimeDependencies['output']
-): RuntimeDependencies => ({
+export const createDefaultExecutionDependencies = (
+  rl: EffectExecutionDependencides['rl'],
+  output: EffectExecutionDependencides['output'],
+  console: EffectExecutionDependencides['console'] = global.console,
+  process: EffectExecutionDependencides['process'] = global.process,
+): EffectExecutionDependencides => ({
   rl,
   output,
-  console: global.console,
-  process: global.process,
+  console,
+  process,
 });

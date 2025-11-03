@@ -1,0 +1,19 @@
+#!/usr/bin/env bash
+
+# Find all .ts files in ./src directory and its subdirectories
+find ./src -type f -name "*.ts" | sort | while read -r file; do
+  # Exclude .spec.ts and .bench.ts files
+  if [[ "$file" == *.spec.ts ]] || [[ "$file" == *.bench.ts ]]; then
+    continue
+  fi
+
+  # Extract the basename
+  basename=$(basename "$file")
+
+  # Print the file path and basename as a header
+
+  echo -e "\n//--- $file ($basename) ---\n"
+
+  # Print the file contents
+  cat "$file"
+done
