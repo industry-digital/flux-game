@@ -7,6 +7,10 @@ export { Self, WellKnownActor } from './actor';
 export { ROOT_NAMESPACE } from './constants';
 
 export {
+  ErrorCode,
+} from './error';
+
+export {
   DamageType,
   DamageSpecification,
 } from './damage';
