@@ -111,8 +111,8 @@ describe('Target Method', () => {
         actor: targeter.id,
         location: targeter.location,
         trace: customTrace,
+        session: scenario.session.id,
         payload: {
-          sessionId: scenario.session.id,
           target: ENEMY_ID
         }
       });

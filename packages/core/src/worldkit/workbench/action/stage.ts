@@ -105,10 +105,11 @@ const handleStatMutation = (
   session.data.pendingMutations.push(mutation);
 
   const event = createWorldEvent<ActorDidStageShellMutation>({
-    type: EventType.ACTOR_DID_STAGE_SHELL_MUTATION,
     trace,
-    location: actor.location,
+    type: EventType.ACTOR_DID_STAGE_SHELL_MUTATION,
     actor: actor.id,
+    location: actor.location,
+    session: session.id,
     payload: {
       shellId: shell.id,
       mutation,
@@ -132,10 +133,11 @@ const handleComponentMutation = (
   const componentSchema = context.schemaManager.getSchema(mutation.schema);
 
   const event = createWorldEvent<ActorDidStageShellMutation>({
-    type: EventType.ACTOR_DID_STAGE_SHELL_MUTATION,
     trace,
-    location: actor.location,
+    type: EventType.ACTOR_DID_STAGE_SHELL_MUTATION,
     actor: actor.id,
+    location: actor.location,
+    session: session.id,
     payload: {
       shellId: shell.id,
       mutation,

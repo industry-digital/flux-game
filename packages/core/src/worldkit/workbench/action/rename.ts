@@ -53,12 +53,12 @@ export const createRenameShellAction = (
 
     // Create rename event
     const shellRenameEvent = deps.createWorldEvent<ActorDidRenameShell>({
-      type: EventType.ACTOR_DID_RENAME_SHELL,
       trace,
-      location: actor.location,
+      type: EventType.ACTOR_DID_RENAME_SHELL,
       actor: actor.id,
+      location: actor.location,
+      session: session.id,
       payload: {
-        sessionId: session.id,
         shellId: targetShell.id,
         oldName,
         newName,

@@ -26,8 +26,9 @@ describe('SwapShellAction', () => {
       type: EventType.WORKBENCH_SHELL_MUTATIONS_UNDONE,
       trace: 'test-trace',
       location: 'flux:place:test-workbench',
+      session: 'test-session',
       actor: 'flux:actor:test-actor',
-      payload: { sessionId: 'test-session' }
+      payload: {}
     }]);
   });
 
@@ -314,10 +315,10 @@ describe('SwapShellAction', () => {
       expect(swapEvent.type).toBe(EventType.ACTOR_DID_SWAP_SHELL);
       expect(swapEvent.trace).toBe('custom-trace');
       expect(swapEvent.location).toBe(actor.location);
+      expect(swapEvent.session).toBe(session.id);
       expect(swapEvent.actor).toBe(actor.id);
       expect(swapEvent.payload.fromShellId).toBe(originalShellId);
       expect(swapEvent.payload.toShellId).toBe(secondShellId);
-      expect(swapEvent.payload.sessionId).toBe(session.id);
     });
 
     it('should use shell ID as name when shell has no name', () => {

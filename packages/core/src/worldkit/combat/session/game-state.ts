@@ -195,12 +195,12 @@ export function createCombatGameStateApi(
 
     // Emit single comprehensive turn end event with resource summaries
     const turnEndEvent = createWorldEvent({
+      trace: eventTrace,
       type: EventType.COMBAT_TURN_DID_END,
       actor: WellKnownActor.SYSTEM,
       location,
-      trace: eventTrace,
+      session: session.id,
       payload: {
-        sessionId: session.id,
         turnActor: actorId,
         round: session.data.currentTurn.round,
         turn: session.data.currentTurn.number,

@@ -11,15 +11,12 @@ import {
 } from '~/types/event';
 import { ShellMutation, ShellMutationType, StatMutation, StatMutationOperation } from '~/types/workbench';
 import { ShellStat, Stat } from '~/types/entity/actor';
-import { SessionURN } from '~/types/taxonomy';
 import { CombatEventFactoryDependencies, DEFAULT_COMBAT_EVENT_FACTORY_DEPS } from './deps';
-import { ALICE_ID, DEFAULT_LOCATION, DEFAULT_TRACE, DEFAULT_SHELL_ID } from '~/testing/constants';
+import { ALICE_ID, DEFAULT_LOCATION, DEFAULT_TRACE, DEFAULT_SHELL_ID, DEFAULT_WORKBENCH_SESSION } from '~/testing/constants';
 
 // Generic transform function type
 export type EventTransform<T> = (event: T) => T;
 
-// Default values
-const DEFAULT_WORKBENCH_SESSION: SessionURN = 'flux:session:workbench:test';
 const identity = <T>(x: T): T => x;
 
 /**
@@ -32,10 +29,11 @@ export function createWorkbenchSessionDidStartEvent(
   const { createWorldEvent } = deps;
 
   const baseEvent = createWorldEvent({
-    type: EventType.WORKBENCH_SESSION_DID_START,
-    location: DEFAULT_LOCATION,
-    actor: ALICE_ID,
     trace: DEFAULT_TRACE,
+    type: EventType.WORKBENCH_SESSION_DID_START,
+    actor: ALICE_ID,
+    location: DEFAULT_LOCATION,
+    session: DEFAULT_WORKBENCH_SESSION,
     payload: {
       sessionId: DEFAULT_WORKBENCH_SESSION,
     },
@@ -54,13 +52,12 @@ export function createWorkbenchSessionDidEndEvent(
   const { createWorldEvent } = deps;
 
   const baseEvent = createWorldEvent({
-    type: EventType.WORKBENCH_SESSION_DID_END,
-    location: DEFAULT_LOCATION,
-    actor: ALICE_ID,
     trace: DEFAULT_TRACE,
-    payload: {
-      sessionId: DEFAULT_WORKBENCH_SESSION,
-    },
+    type: EventType.WORKBENCH_SESSION_DID_END,
+    actor: ALICE_ID,
+    location: DEFAULT_LOCATION,
+    session: DEFAULT_WORKBENCH_SESSION,
+    payload: {},
   }) as WorkbenchSessionDidEnd;
 
   return transform(baseEvent);
@@ -83,10 +80,11 @@ export function createActorDidStageShellMutationEvent(
   };
 
   const baseEvent = createWorldEvent({
-    type: EventType.ACTOR_DID_STAGE_SHELL_MUTATION,
-    location: DEFAULT_LOCATION,
-    actor: ALICE_ID,
     trace: DEFAULT_TRACE,
+    type: EventType.ACTOR_DID_STAGE_SHELL_MUTATION,
+    actor: ALICE_ID,
+    location: DEFAULT_LOCATION,
+    session: DEFAULT_WORKBENCH_SESSION,
     payload: {
       shellId: DEFAULT_SHELL_ID,
       mutation: defaultMutation,
@@ -106,10 +104,11 @@ export function createActorDidDiffShellMutationsEvent(
   const { createWorldEvent } = deps;
 
   const baseEvent = createWorldEvent({
-    type: EventType.WORKBENCH_SHELL_MUTATIONS_DIFFED,
-    location: DEFAULT_LOCATION,
-    actor: ALICE_ID,
     trace: DEFAULT_TRACE,
+    type: EventType.WORKBENCH_SHELL_MUTATIONS_DIFFED,
+    actor: ALICE_ID,
+    location: DEFAULT_LOCATION,
+    session: DEFAULT_WORKBENCH_SESSION,
     payload: {
       shellId: DEFAULT_SHELL_ID,
       cost: 0,
@@ -149,13 +148,12 @@ export function createActorDidUndoShellMutationsEvent(
   const { createWorldEvent } = deps;
 
   const baseEvent = createWorldEvent({
-    type: EventType.WORKBENCH_SHELL_MUTATIONS_UNDONE,
-    location: DEFAULT_LOCATION,
-    actor: ALICE_ID,
     trace: DEFAULT_TRACE,
-    payload: {
-      sessionId: DEFAULT_WORKBENCH_SESSION,
-    },
+    type: EventType.WORKBENCH_SHELL_MUTATIONS_UNDONE,
+    actor: ALICE_ID,
+    location: DEFAULT_LOCATION,
+    session: DEFAULT_WORKBENCH_SESSION,
+    payload: {},
   }) as ActorDidUndoShellMutations;
 
   return transform(baseEvent);
@@ -180,12 +178,12 @@ export function createActorDidCommitShellMutationsEvent(
   ];
 
   const baseEvent = createWorldEvent({
-    type: EventType.WORKBENCH_SHELL_MUTATIONS_COMMITTED,
-    location: DEFAULT_LOCATION,
-    actor: ALICE_ID,
     trace: DEFAULT_TRACE,
+    type: EventType.WORKBENCH_SHELL_MUTATIONS_COMMITTED,
+    actor: ALICE_ID,
+    location: DEFAULT_LOCATION,
+    session: DEFAULT_WORKBENCH_SESSION,
     payload: {
-      sessionId: DEFAULT_WORKBENCH_SESSION,
       cost: 100,
       mutations: defaultMutations,
     },
@@ -227,10 +225,11 @@ export function createActorDidListShellsEvent(
   const { createWorldEvent } = deps;
 
   const baseEvent = createWorldEvent({
-    type: EventType.ACTOR_DID_LIST_SHELLS,
-    location: DEFAULT_LOCATION,
-    actor: ALICE_ID,
     trace: DEFAULT_TRACE,
+    type: EventType.ACTOR_DID_LIST_SHELLS,
+    actor: ALICE_ID,
+    location: DEFAULT_LOCATION,
+    session: DEFAULT_WORKBENCH_SESSION,
     payload: {},
   }) as ActorDidListShells;
 
@@ -247,12 +246,12 @@ export function createActorDidAssessShellStatusEvent(
   const { createWorldEvent } = deps;
 
   const baseEvent = createWorldEvent({
-    type: EventType.ACTOR_DID_ASSESS_SHELL_STATUS,
-    location: DEFAULT_LOCATION,
-    actor: ALICE_ID,
     trace: DEFAULT_TRACE,
+    type: EventType.ACTOR_DID_ASSESS_SHELL_STATUS,
+    actor: ALICE_ID,
+    location: DEFAULT_LOCATION,
+    session: DEFAULT_WORKBENCH_SESSION,
     payload: {
-      sessionId: DEFAULT_WORKBENCH_SESSION,
       shellId: DEFAULT_SHELL_ID,
     },
   }) as ActorDidAssessShellStatus;

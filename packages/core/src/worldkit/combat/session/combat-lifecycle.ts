@@ -60,12 +60,12 @@ const createCombatStartEvents = (
   return [
 
     createWorldEvent({
-      type: EventType.COMBAT_SESSION_DID_START,
       trace,
+      type: EventType.COMBAT_SESSION_DID_START,
       actor: WellKnownActor.SYSTEM,
       location,
+      session: sessionId,
       payload: {
-        sessionId,
         namesByTeam: getActorNamesByTeam(actors, combatants),
         initiative: [...initiativeRolls.entries()],
         combatants: [...combatants.entries()].map(([actorId, combatant]) => {
@@ -79,8 +79,8 @@ const createCombatStartEvents = (
       type: EventType.COMBAT_SESSION_STATUS_DID_CHANGE,
       actor: WellKnownActor.SYSTEM,
       location,
+      session: sessionId,
       payload: {
-        sessionId,
         previousStatus: SessionStatus.PENDING,
         currentStatus: SessionStatus.RUNNING,
       },
@@ -91,8 +91,8 @@ const createCombatStartEvents = (
       type: EventType.COMBAT_TURN_DID_START,
       actor: WellKnownActor.SYSTEM,
       location,
+      session: sessionId,
       payload: {
-        sessionId,
         round: 1,
         turn: 1,
         turnActor: firstActorId,
@@ -120,11 +120,12 @@ function createCombatSessionStatusDidChangeEvent(
   sessionId: SessionURN,
 ): WorldEvent {
   return createWorldEvent({
+    trace,
     type: EventType.COMBAT_SESSION_STATUS_DID_CHANGE,
     actor: WellKnownActor.SYSTEM,
     location,
-    trace,
-    payload: { sessionId, previousStatus, currentStatus },
+    session: sessionId,
+    payload: { previousStatus, currentStatus },
   });
 }
 
@@ -250,8 +251,8 @@ export function createCombatLifecycle(
       type: EventType.COMBAT_SESSION_STATUS_DID_CHANGE,
       actor: WellKnownActor.SYSTEM,
       location,
+      session: sessionId,
       payload: {
-        sessionId,
         previousStatus: session.status,
         currentStatus: SessionStatus.TERMINATED,
       },
@@ -261,12 +262,12 @@ export function createCombatLifecycle(
     events.push(combatSessionStatusDidChangeEvent);
 
     const combatEndEvent = createWorldEvent({
+      trace,
       type: EventType.COMBAT_SESSION_DID_END,
       actor: WellKnownActor.SYSTEM,
       location,
-      trace,
+      session: sessionId,
       payload: {
-        sessionId,
         winningTeam, // null for mutual destruction, Team for victory
         finalRound: session.data.currentTurn.round,
         finalTurn: session.data.currentTurn.number,

@@ -31,12 +31,12 @@ export const createGetShellStatusAction = (
     }
 
     const shellStatusEvent = createWorldEvent<ActorDidAssessShellStatus>({
-      type: EventType.ACTOR_DID_ASSESS_SHELL_STATUS,
       trace,
-      location: actor.location,
+      type: EventType.ACTOR_DID_ASSESS_SHELL_STATUS,
       actor: actor.id,
+      location: actor.location,
+      session: session.id,
       payload: {
-        sessionId: session.id,
         shellId: currentShell.id,
       },
     });

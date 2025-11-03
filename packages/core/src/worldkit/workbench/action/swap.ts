@@ -20,6 +20,8 @@ export type SwapShellActionDependencies = {
 
 export const DEFAULT_SWAP_DEPS: Readonly<SwapShellActionDependencies> = Object.freeze({});
 
+const NO_PAYLOAD: Readonly<{}> = Object.freeze({});
+
 export const createSwapShellAction = (
   context: TransformerContext,
   session: WorkbenchSession,
@@ -74,14 +76,14 @@ export const createSwapShellAction = (
 
     // Create swap event
     const shellSwapEvent = createWorldEvent<ActorDidSwapShell>({
-      type: EventType.ACTOR_DID_SWAP_SHELL,
       trace,
-      location: actor.location,
+      type: EventType.ACTOR_DID_SWAP_SHELL,
       actor: actor.id,
+      location: actor.location,
+      session: session.id,
       payload: {
         fromShellId: currentShell.id,
         toShellId: targetShell.id,
-        sessionId: session.id,
       },
     });
 
@@ -89,13 +91,12 @@ export const createSwapShellAction = (
     output.push(shellSwapEvent);
 
     const shellListEvent = createWorldEvent<ActorDidListShells>({
-      type: EventType.ACTOR_DID_LIST_SHELLS,
       trace,
-      location: actor.location,
+      type: EventType.ACTOR_DID_LIST_SHELLS,
       actor: actor.id,
-      payload: {
-        sessionId: session.id,
-      },
+      location: actor.location,
+      session: session.id,
+      payload: NO_PAYLOAD,
     });
 
     declareEvent(shellListEvent);

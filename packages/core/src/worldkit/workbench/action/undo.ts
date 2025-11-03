@@ -6,6 +6,8 @@ import { createWorldEvent } from '~/worldkit/event';
 
 export type UndoStagedMutationsAction = (actor: Actor, trace?: string) => WorldEvent[];
 
+const NO_PAYLOAD: Readonly<{}> = Object.freeze({});
+
 export const createUndoStagedMutationsAction = (
   context: TransformerContext,
   session: WorkbenchSession,
@@ -23,13 +25,12 @@ export const createUndoStagedMutationsAction = (
     session.data.pendingMutations.length = 0;
 
     const shellMutationsUndoneEvent = createWorldEvent<ActorDidUndoShellMutations>({
-      type: EventType.WORKBENCH_SHELL_MUTATIONS_UNDONE,
       trace,
-      location: actor.location,
+      type: EventType.WORKBENCH_SHELL_MUTATIONS_UNDONE,
       actor: actor.id,
-      payload: {
-        sessionId: session.id,
-      },
+      location: actor.location,
+      session: session.id,
+      payload: NO_PAYLOAD,
     });
 
     return [shellMutationsUndoneEvent];

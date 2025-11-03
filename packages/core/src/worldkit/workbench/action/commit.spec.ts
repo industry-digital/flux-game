@@ -62,7 +62,7 @@ describe('CommitShellMutationsAction', () => {
       expect(commitEvent.trace).toBe('test-trace');
       expect(commitEvent.location).toBe(actor.location);
       expect(commitEvent.actor).toBe(actor.id);
-      expect(commitEvent.payload.sessionId).toBe(session.id);
+      expect(commitEvent.session).toBe(session.id);
       expect(commitEvent.payload.cost).toBe(spendEvent.payload.transaction.amount);
       expect(commitEvent.payload.mutations).toHaveLength(2);
 
@@ -352,7 +352,7 @@ describe('CommitShellMutationsAction', () => {
       expect(commitEvent.trace).toBe('commit-trace');
       expect(commitEvent.location).toBe(actor.location);
       expect(commitEvent.actor).toBe(actor.id);
-      expect(commitEvent.payload.sessionId).toBe(session.id);
+      expect(commitEvent.session).toBe(session.id);
       expect(commitEvent.payload.cost).toBeGreaterThan(0);
       expect(commitEvent.payload.mutations).toHaveLength(1);
       const mutation = commitEvent.payload.mutations[0];

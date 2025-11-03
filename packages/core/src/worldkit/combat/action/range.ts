@@ -57,10 +57,11 @@ export const createRangeMethod = (
 
     // Create the range acquisition event
     const rangeEvent: ActorDidAssessRange = createWorldEvent({
-      type: EventType.ACTOR_DID_ASSESS_RANGE,
-      location: actor.location,
       trace: trace,
+      type: EventType.ACTOR_DID_ASSESS_RANGE,
       actor: actor.id,
+      location: actor.location,
+      session: session.id,
       payload: {
         target: target,
         range: range,

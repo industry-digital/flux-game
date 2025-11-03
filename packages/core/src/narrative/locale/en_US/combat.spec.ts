@@ -15,7 +15,7 @@ import {
 } from '~/testing/event';
 import { AttackOutcome, AttackType, Team, MovementDirection } from '~/types/combat';
 import { ActorURN } from '~/types/taxonomy';
-import { ALICE_ID, BOB_ID, CHARLIE_ID } from '~/testing/constants';
+import { ALICE_ID, BOB_ID, CHARLIE_ID, DEFAULT_TIMESTAMP, DEFAULT_WORKBENCH_SESSION } from '~/testing/constants';
 import {
   withObjectSerializationValidation,
   withDebuggingArtifactValidation,
@@ -647,9 +647,10 @@ describe('English Combat Narratives - Snapshot Tests', () => {
         id: 'test-event',
         type: 'ACTOR_DID_ASSESS_RANGE' as any,
         location: 'flux:place:test' as any,
+        session: DEFAULT_WORKBENCH_SESSION,
         actor: ALICE_ID,
         trace: 'test-trace',
-        ts: Date.now(),
+        ts: DEFAULT_TIMESTAMP,
         payload: {
           target: BOB_ID,
           range: 3,
@@ -666,9 +667,10 @@ describe('English Combat Narratives - Snapshot Tests', () => {
         id: 'test-event',
         type: 'ACTOR_DID_ASSESS_RANGE' as any,
         location: 'flux:place:test' as any,
+        session: DEFAULT_WORKBENCH_SESSION,
         actor: ALICE_ID,
         trace: 'test-trace',
-        ts: Date.now(),
+        ts: DEFAULT_TIMESTAMP,
         payload: {
           target: BOB_ID,
           range: 2,
@@ -686,8 +688,9 @@ describe('English Combat Narratives - Snapshot Tests', () => {
         type: 'ACTOR_DID_ASSESS_RANGE' as any,
         location: 'flux:place:test' as any,
         actor: ALICE_ID,
+        session: DEFAULT_WORKBENCH_SESSION,
         trace: 'test-trace',
-        ts: Date.now(),
+        ts: DEFAULT_TIMESTAMP,
         payload: {
           target: BOB_ID,
           range: 4,
@@ -973,9 +976,10 @@ describe('English Combat Narratives - Snapshot Tests', () => {
           id: 'test-event',
           type: 'ACTOR_DID_ASSESS_RANGE' as any,
           location: 'flux:place:test' as any,
+          session: DEFAULT_WORKBENCH_SESSION,
           actor: ALICE_ID,
           trace: 'test-trace',
-          ts: Date.now(),
+          ts: DEFAULT_TIMESTAMP,
           payload: {
             target: BOB_ID,
             range: 3,

@@ -149,10 +149,11 @@ export function createCleaveMethod(
 
     // Create single COMBATANT_DID_ATTACK event for the cleave action
     const cleaveAttackEvent: ActorDidAttack = createWorldEventImpl({
-      type: EventType.ACTOR_DID_ATTACK,
-      location: actor.location,
       trace: trace,
+      type: EventType.ACTOR_DID_ATTACK,
       actor: actor.id,
+      location: actor.location,
+      session: session.id,
       payload: {
         targets,
         attackType: AttackType.CLEAVE,
@@ -200,10 +201,11 @@ export function createCleaveMethod(
 
       // Generate COMBATANT_WAS_ATTACKED event for this target
       const wasAttackedEvent: ActorWasAttacked = createWorldEventImpl({
-        type: EventType.ACTOR_WAS_ATTACKED,
-        location: targetActor.location,
         trace: trace,
+        type: EventType.ACTOR_WAS_ATTACKED,
         actor: targetId,
+        location: targetActor.location,
+        session: session.id,
         payload: {
           source: actor.id,
           type: AttackType.CLEAVE,
@@ -220,10 +222,11 @@ export function createCleaveMethod(
       // Generate death event if target died
       if (damage > 0 && targetActor.hp.eff.cur <= 0) {
         const deathEvent = createWorldEventImpl({
-          type: EventType.ACTOR_DID_DIE,
-          location: actor.location,
-          actor: targetId,
           trace: trace,
+          type: EventType.ACTOR_DID_DIE,
+          actor: targetId,
+          location: actor.location,
+          session: session.id,
           payload: {
             killer: actor.id,
           },

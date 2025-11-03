@@ -39,12 +39,12 @@ export function createTurnManager(
     const events: WorldEvent[] = [];
 
     const turnStartEvent = createWorldEvent({
+      trace,
       type: EventType.COMBAT_TURN_DID_START,
       actor: WellKnownActor.SYSTEM,
       location: session.data.location,
-      trace,
+      session: session.id,
       payload: {
-        sessionId: session.id,
         turnActor: actorId,
         round: roundNumber,
         turn: turnNumber,

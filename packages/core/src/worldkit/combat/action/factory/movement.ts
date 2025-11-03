@@ -429,10 +429,11 @@ export function createMovementMethod(
     const actualDistance = Math.abs(movementResult.tactical.position - originalPosition);
 
     const event: ActorDidMoveInCombat = createWorldEventImpl({
+      trace: trace,
       type: EventType.ACTOR_DID_MOVE_IN_COMBAT,
       actor: actor.id,
       location: actor.location,
-      trace: trace,
+      session: session.id,
       payload: {
         from,
         to,

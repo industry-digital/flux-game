@@ -35,10 +35,11 @@ export const createListShellsAction = (
     output.length = 0;
 
     const shellEvent = deps.createWorldEvent({
-      type: EventType.ACTOR_DID_LIST_SHELLS,
       trace,
+      type: EventType.ACTOR_DID_LIST_SHELLS,
       actor: actor.id,
       location: actor.location,
+      session: session.id,
       payload: NO_PAYLOAD,
     });
 

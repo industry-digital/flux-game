@@ -23,6 +23,7 @@ export const createWorldEvent = <TWorldEvent extends WorldEvent = WorldEvent>(
     narrative: input.narrative,
     actor: input.actor,
     location: input.location,
+    session: input.session,
     payload: input.payload,
   } as unknown as TWorldEvent;
 };

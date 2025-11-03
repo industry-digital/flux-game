@@ -53,10 +53,11 @@ export function createActorDidDieEvent(
   const { createWorldEvent } = deps;
 
   const baseEvent = createWorldEvent({
-    type: EventType.ACTOR_DID_DIE,
-    location: DEFAULT_LOCATION,
-    actor: BOB_ID,
     trace: DEFAULT_TRACE,
+    type: EventType.ACTOR_DID_DIE,
+    actor: BOB_ID,
+    location: DEFAULT_LOCATION,
+    session: DEFAULT_COMBAT_SESSION,
     payload: {
       killer: ALICE_ID,
     },
@@ -79,6 +80,7 @@ export function createActorDidAttackEvent(
     location: DEFAULT_LOCATION,
     actor: ALICE_ID,
     trace: DEFAULT_TRACE,
+    session: DEFAULT_COMBAT_SESSION,
     payload: {
       target: 'flux:actor:test:target' as ActorURN,
       attackType: AttackType.STRIKE,
@@ -101,10 +103,11 @@ export function createActorWasAttackedEvent(
   const { createWorldEvent } = deps;
 
   const baseEvent = createWorldEvent({
-    type: EventType.ACTOR_WAS_ATTACKED,
-    location: DEFAULT_LOCATION,
-    actor: 'flux:actor:test:target' as ActorURN,
     trace: DEFAULT_TRACE,
+    type: EventType.ACTOR_WAS_ATTACKED,
+    actor: 'flux:actor:test:target' as ActorURN,
+    location: DEFAULT_LOCATION,
+    session: DEFAULT_COMBAT_SESSION,
     payload: {
       source: ALICE_ID,
       type: AttackType.STRIKE,
@@ -128,10 +131,11 @@ export function createActorDidDefendEvent(
   const { createWorldEvent } = deps;
 
   const baseEvent = createWorldEvent({
-    type: EventType.ACTOR_DID_DEFEND,
-    location: DEFAULT_LOCATION,
-    actor: ALICE_ID,
     trace: DEFAULT_TRACE,
+    type: EventType.ACTOR_DID_DEFEND,
+    actor: ALICE_ID,
+    location: DEFAULT_LOCATION,
+    session: DEFAULT_COMBAT_SESSION,
     payload: {
       cost: DEFAULT_COST,
     },
@@ -150,10 +154,11 @@ export function createActorDidAcquireTargetEvent(
   const { createWorldEvent } = deps;
 
   const baseEvent = createWorldEvent({
-    type: EventType.ACTOR_DID_ACQUIRE_TARGET,
-    location: DEFAULT_LOCATION,
-    actor: ALICE_ID,
     trace: DEFAULT_TRACE,
+    type: EventType.ACTOR_DID_ACQUIRE_TARGET,
+    actor: ALICE_ID,
+    location: DEFAULT_LOCATION,
+    session: DEFAULT_COMBAT_SESSION,
     payload: {
       sessionId: DEFAULT_SESSION_ID,
       target: BOB_ID,
@@ -177,10 +182,11 @@ export function createActorDidMoveInCombatEvent(
   const distance = Math.abs(toPosition.coordinate - fromPosition.coordinate);
 
   const baseEvent = createWorldEvent({
-    type: EventType.ACTOR_DID_MOVE_IN_COMBAT,
-    location: DEFAULT_LOCATION,
-    actor: ALICE_ID,
     trace: DEFAULT_TRACE,
+    type: EventType.ACTOR_DID_MOVE_IN_COMBAT,
+    actor: ALICE_ID,
+    location: DEFAULT_LOCATION,
+    session: DEFAULT_COMBAT_SESSION,
     payload: {
       from: fromPosition,
       to: toPosition,
@@ -203,10 +209,11 @@ export function createCombatTurnDidStartEvent(
   const { createWorldEvent } = deps;
 
   const baseEvent = createWorldEvent({
-    type: EventType.COMBAT_TURN_DID_START,
-    location: DEFAULT_LOCATION,
-    actor: WellKnownActor.SYSTEM,
     trace: DEFAULT_TRACE,
+    type: EventType.COMBAT_TURN_DID_START,
+    actor: WellKnownActor.SYSTEM,
+    location: DEFAULT_LOCATION,
+    session: DEFAULT_COMBAT_SESSION,
     payload: {
       sessionId: DEFAULT_SESSION_ID,
       turnActor: ALICE_ID,
@@ -228,10 +235,11 @@ export function createCombatTurnDidEndEvent(
   const { createWorldEvent } = deps;
 
   const baseEvent = createWorldEvent({
-    type: EventType.COMBAT_TURN_DID_END,
-    location: DEFAULT_LOCATION,
-    actor: WellKnownActor.SYSTEM,
     trace: DEFAULT_TRACE,
+    type: EventType.COMBAT_TURN_DID_END,
+    actor: WellKnownActor.SYSTEM,
+    location: DEFAULT_LOCATION,
+    session: DEFAULT_COMBAT_SESSION,
     payload: {
       sessionId: DEFAULT_SESSION_ID,
       turnActor: ALICE_ID,
@@ -250,10 +258,11 @@ export function createCombatSessionStartedEvent(
   const { createWorldEvent } = deps;
 
   const baseEvent: CombatSessionStarted = createWorldEvent({
-    type: EventType.COMBAT_SESSION_DID_START,
-    location: DEFAULT_LOCATION,
-    actor: WellKnownActor.SYSTEM,
     trace: DEFAULT_TRACE,
+    type: EventType.COMBAT_SESSION_DID_START,
+    actor: WellKnownActor.SYSTEM,
+    location: DEFAULT_LOCATION,
+    session: DEFAULT_COMBAT_SESSION,
     payload: {
       sessionId: DEFAULT_SESSION_ID,
       initiative: [],

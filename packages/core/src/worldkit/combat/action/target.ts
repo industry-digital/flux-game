@@ -27,12 +27,12 @@ export function createTargetMethod (
     combatant.target = target;
 
     const event = createWorldEvent({
+      trace,
       type: EventType.ACTOR_DID_ACQUIRE_TARGET,
       actor: actor.id,
       location: actor.location,
-      trace: trace,
+      session: session.id,
       payload: {
-        sessionId: session.id,
         target,
       },
     });

@@ -64,7 +64,7 @@ describe('WORKBENCH_SHELL_STATUS Command Reducer', () => {
       )!;
 
       expect(statusEvent).toBeDefined();
-      expect(statusEvent.payload.sessionId).toBe(session.id);
+      expect(statusEvent.session).toBe(session.id);
       expect(statusEvent.payload.shellId).toBe(alice.currentShell);
       expect(statusEvent.actor).toBe(ALICE_ID);
       expect(statusEvent.location).toBe(DEFAULT_LOCATION);

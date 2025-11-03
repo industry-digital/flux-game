@@ -54,10 +54,11 @@ export function createDefendMethod (
     // Only declare event if AP investment is appreciable (>= 0.1 AP)
     if (isEventWorthy) {
       const defendEvent = createWorldEvent({
-        type: EventType.ACTOR_DID_DEFEND,
-        location: actor.location,
         trace: trace,
+        type: EventType.ACTOR_DID_DEFEND,
         actor: actor.id,
+        location: actor.location,
+        session: session.id,
         payload: { cost },
       });
 

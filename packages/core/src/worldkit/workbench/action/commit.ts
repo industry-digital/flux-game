@@ -80,12 +80,12 @@ export const createCommitShellMutationsAction = (
 
     // 8. Create Event
     const commitEvent = deps.createWorldEvent<ActorDidCommitShellMutations>({
-      type: EventType.WORKBENCH_SHELL_MUTATIONS_COMMITTED,
       trace,
-      location: actor.location,
+      type: EventType.WORKBENCH_SHELL_MUTATIONS_COMMITTED,
       actor: actor.id,
+      location: actor.location,
+      session: session.id,
       payload: {
-        sessionId: session.id,
         cost,
         mutations: committedMutations,
       },

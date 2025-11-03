@@ -32,10 +32,11 @@ export const createDiffStagedMutationsAction = (
 
     // Create event
     const shellMutationsDiffedEvent = createWorldEvent<ActorDidDiffShellMutations>({
-      type: EventType.WORKBENCH_SHELL_MUTATIONS_DIFFED,
       trace,
-      location: actor.location,
+      type: EventType.WORKBENCH_SHELL_MUTATIONS_DIFFED,
       actor: actor.id,
+      location: actor.location,
+      session: session.id,
       payload: shellDiff,
     });
 

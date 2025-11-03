@@ -724,12 +724,11 @@ describe('Attack Method with AI Integration', () => {
       // Mock the executeCombatPlan to return a simple event with the trace passed to it
       const mockExecuteCombatPlan = vi.fn().mockImplementation((plan, context, session, actor, combatant, trace) => [
         createWorldEvent({
-          id: 'test-id',
-          ts: DEFAULT_TIMESTAMP,
+          trace: trace,
           type: EventType.ACTOR_DID_ATTACK,
           actor: actor.id,
           location: actor.location,
-          trace: trace, // Use the trace parameter passed to the function
+          session: session.id,
           payload: {
             cost: { ap: 2.0, energy: 1000 },
             target: 'flux:actor:bob',
@@ -797,12 +796,11 @@ describe('Attack Method with AI Integration', () => {
 
       const mockExecuteCombatPlan = vi.fn().mockReturnValue([
         createWorldEvent({
-          id: 'test-id',
-          ts: DEFAULT_TIMESTAMP,
+          trace: generatedTrace,
           type: EventType.ACTOR_DID_ATTACK,
           actor: actor.id,
           location: actor.location,
-          trace: generatedTrace,
+          session: session.id,
           payload: {
             cost: { ap: 2.0, energy: 1000 },
             target: 'flux:actor:bob',

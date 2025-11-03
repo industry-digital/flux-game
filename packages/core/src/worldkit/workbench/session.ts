@@ -95,6 +95,8 @@ export type WorkbenchSessionApi = {
   isNew: boolean;
 };
 
+const NO_PAYLOAD: Readonly<{}> = Object.freeze({});
+
 /**
  * Hook-style utility for managing workbench session lifecycle
  */
@@ -132,24 +134,22 @@ export const createWorkbenchSessionApi = (
     });
 
     const workbenchSessionDidStart: WorkbenchSessionDidStart = createWorldEvent({
-      actor: actor.id,
-      type: EventType.WORKBENCH_SESSION_DID_START,
-      location: actor.location,
       trace,
-      payload: {
-        sessionId: sessionId,
-      },
+      type: EventType.WORKBENCH_SESSION_DID_START,
+      actor: actor.id,
+      location: actor.location,
+      session: session.id,
+      payload: NO_PAYLOAD,
     });
 
 
     const actorDidListShells: ActorDidListShells = createWorldEvent({
-      type: EventType.ACTOR_DID_LIST_SHELLS,
       trace,
-      location: actor.location,
+      type: EventType.ACTOR_DID_LIST_SHELLS,
       actor: actor.id,
-      payload: {
-        sessionId: sessionId,
-      },
+      location: actor.location,
+      session: session.id,
+      payload: NO_PAYLOAD,
     });
 
     context.declareEvent(workbenchSessionDidStart);

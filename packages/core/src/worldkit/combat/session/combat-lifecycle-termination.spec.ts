@@ -262,7 +262,7 @@ describe('Combat Lifecycle - Termination', () => {
 
       const event = events[1] as CombatSessionEnded;
 
-      expect(event.payload.sessionId).toBe(sessionId);
+      expect(event.session).toBe(sessionId);
       expect(event.payload.winningTeam).toBe(Team.ALPHA); // Only Alice remains viable
       expect(event.payload.finalRound).toBe(3);
       expect(event.payload.finalTurn).toBe(2);

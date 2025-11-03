@@ -76,7 +76,7 @@ describe('English Workbench Narratives - Snapshot Tests', () => {
       expect(narrative).toEqual([
         { text: 'Connecting to workbench interface...', delay: 0 },
         { text: 'ShellOS v2.7.4-pre-collapse | Build 20847 | Neural Protocol Stack: ACTIVE', delay: 1_000 },
-        { text: 'Connection established.', delay: 1_000 },
+        { text: 'Connection established.\n> Enter `help workbench` for available commands.', delay: 1_000 },
       ]);
     });
 
@@ -92,7 +92,7 @@ describe('English Workbench Narratives - Snapshot Tests', () => {
       expect(narrative).toEqual([
         { text: 'Connecting to workbench interface...', delay: 0 },
         { text: 'ShellOS v2.7.4-pre-collapse | Build 20847 | Neural Protocol Stack: ACTIVE', delay: 1_000 },
-        { text: 'Connection established.', delay: 1_000 },
+        { text: 'Connection established.\n> Enter `help workbench` for available commands.', delay: 1_000 },
       ]);
     });
   });
@@ -410,7 +410,7 @@ describe('English Workbench Narratives - Snapshot Tests', () => {
     it('should render exact shell listing from actor perspective with multiple shells', () => {
       const event = createActorDidListShellsEvent((e) => ({ ...e, actor: ALICE_ID }));
       const narrative = narrateActorDidListShells(context, event, ALICE_ID);
-      expect(narrative).toContain('✓ Currently active shell');
+      expect(narrative).toMatch(/✓ .* is your current shell\./);
       // Should show Alice's shell with accessible format
       expect(narrative).toMatch(/✓\s+Shell 1: ".*" \(\d+\.\d+kg, 40 POW, 40 FIN, 40 RES\)/);
     });
@@ -418,7 +418,7 @@ describe('English Workbench Narratives - Snapshot Tests', () => {
     it('should render exact shell listing from actor perspective with single shell', () => {
       const event = createActorDidListShellsEvent((e) => ({ ...e, actor: BOB_ID }));
       const narrative = narrateActorDidListShells(context, event, BOB_ID);
-      expect(narrative).toContain('✓ Currently active shell');
+      expect(narrative).toMatch(/✓ .* is your current shell\./);
       // Should show Bob's shell with accessible format
       expect(narrative).toMatch(/✓\s+Shell 1: ".*" \(\d+\.\d+kg, \d+ POW, \d+ FIN, \d+ RES\)/);
     });
@@ -434,7 +434,7 @@ describe('English Workbench Narratives - Snapshot Tests', () => {
       const lines = narrative.split('\n');
       const dataRows = lines.filter(line =>
         line.startsWith('✓ ') &&
-        !line.includes('Currently active shell') // Exclude footer
+        line.includes('Shell 1:') // Count actual shell data rows
       );
       expect(dataRows).toHaveLength(1);
     });
@@ -514,8 +514,10 @@ describe('English Workbench Narratives - Snapshot Tests', () => {
       console.log(narrative);
       console.log('=== END SHELL LISTING ===\n');
 
+      const actor = context.world.actors[ALICE_ID];
+      const shell = actor.shells[actor.currentShell];
       // Basic validation to ensure test passes
-      expect(narrative).toContain('✓ Currently active shell');
+      expect(narrative).toContain(`✓ ${shell.name} is your current shell.`);
     });
   });
 

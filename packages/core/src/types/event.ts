@@ -48,14 +48,19 @@ export type AbstractWorldEventInput<
   type: T;
 
   /**
+   * The actor that triggered the event.
+   */
+  actor: A;
+
+  /**
    * Where did it happen?
    */
   location: PlaceURN;
 
   /**
-   * The actor that triggered the event.
+   * Session-related events will always advertise a session URN
    */
-  actor: A;
+  session?: SessionURN;
 
   /**
    * The payload of the event.
@@ -149,6 +154,10 @@ export type EventBase = {
   trace: string;
 };
 
+type SessionRelated = {
+  session: SessionURN;
+};
+
 export type ActorWasCreated = EventBase & ActorWasCreatedInput;
 export type ActorWasCreatedInput = AbstractWorldEventInput<
   EventType.ACTOR_WAS_CREATED,
@@ -211,10 +220,13 @@ export type ResourcesDidChangeInput = AbstractWorldEventInput<
   }>;
 
 export type CombatSessionStatusDidChange = EventBase & CombatSessionStatusDidChangeInput;
-export type CombatSessionStatusDidChangeInput = AbstractWorldEventInput<
+export type CombatSessionStatusDidChangeInput = SessionRelated & AbstractWorldEventInput<
   EventType.COMBAT_SESSION_STATUS_DID_CHANGE,
   {
-    sessionId: SessionURN;
+    /**
+     * @deprecated
+     */
+    sessionId?: SessionURN;
     previousStatus: SessionStatus;
     currentStatus: SessionStatus;
   },
@@ -222,10 +234,13 @@ export type CombatSessionStatusDidChangeInput = AbstractWorldEventInput<
 >;
 
 export type CombatSessionStarted = EventBase & CombatSessionStartedInput;
-export type CombatSessionStartedInput = AbstractWorldEventInput<
+export type CombatSessionStartedInput = SessionRelated & AbstractWorldEventInput<
   EventType.COMBAT_SESSION_DID_START,
   {
-    sessionId: SessionURN;
+    /**
+     * @deprecated
+     */
+    sessionId?: SessionURN;
     initiative: [ActorURN, RollResultWithoutModifiers][];
     combatants: [ActorURN, CombatantSummary][];
     namesByTeam: Record<string, string[]>;
@@ -234,10 +249,13 @@ export type CombatSessionStartedInput = AbstractWorldEventInput<
 >;
 
 export type CombatSessionEnded = EventBase & CombatSessionEndedInput;
-export type CombatSessionEndedInput = AbstractWorldEventInput<
+export type CombatSessionEndedInput = SessionRelated & AbstractWorldEventInput<
   EventType.COMBAT_SESSION_DID_END,
   {
-    sessionId: SessionURN;
+    /**
+     * @deprecated
+     */
+    sessionId?: SessionURN;
     winningTeam: string | null;
     finalRound: number;
     finalTurn: number;
@@ -246,16 +264,19 @@ export type CombatSessionEndedInput = AbstractWorldEventInput<
 >;
 
 export type ActorDidAcquireTarget = EventBase & ActorDidAcquireTargetInput;
-export type ActorDidAcquireTargetInput = AbstractWorldEventInput<
+export type ActorDidAcquireTargetInput = SessionRelated & AbstractWorldEventInput<
   EventType.ACTOR_DID_ACQUIRE_TARGET,
   {
-    sessionId: SessionURN;
+    /**
+     * @deprecated
+     */
+    sessionId?: SessionURN;
     target: ActorURN;
   }
 >;
 
 export type ActorDidDefend = EventBase & ActorDidDefendInput;
-export type ActorDidDefendInput = AbstractWorldEventInput<
+export type ActorDidDefendInput = SessionRelated & AbstractWorldEventInput<
   EventType.ACTOR_DID_DEFEND,
   {
     cost: ActionCost;
@@ -263,7 +284,7 @@ export type ActorDidDefendInput = AbstractWorldEventInput<
 >;
 
 export type ActorDidMoveInCombat = EventBase & ActorDidMoveInCombatInput;
-export type ActorDidMoveInCombatInput = AbstractWorldEventInput<
+export type ActorDidMoveInCombatInput = SessionRelated & AbstractWorldEventInput<
   EventType.ACTOR_DID_MOVE_IN_COMBAT,
   {
     cost: ActionCost;
@@ -281,13 +302,13 @@ type ActorDidAttackPayloadBase = {
 };
 
 export type ActorDidCleave = EventBase & ActorDidCleaveInput
-type ActorDidCleaveInput = AbstractWorldEventInput<
+type ActorDidCleaveInput = SessionRelated & AbstractWorldEventInput<
   EventType.ACTOR_DID_ATTACK,
   ActorDidAttackPayloadBase & { attackType: AttackType.CLEAVE; targets: ActorURN[]; }
 >;
 
 export type ActorDidStrike = EventBase & ActorDidStrikeInput;
-type ActorDidStrikeInput = AbstractWorldEventInput<
+type ActorDidStrikeInput = SessionRelated & AbstractWorldEventInput<
   EventType.ACTOR_DID_ATTACK,
   ActorDidAttackPayloadBase & { attackType: AttackType.STRIKE; target: ActorURN; }
 >;
@@ -296,7 +317,7 @@ export type ActorDidAttackInput = ActorDidCleaveInput | ActorDidStrikeInput;
 export type ActorDidAttack = ActorDidCleave | ActorDidStrike;
 
 export type ActorWasAttacked = EventBase & ActorWasAttackedInput;
-export type ActorWasAttackedInput = AbstractWorldEventInput<
+export type ActorWasAttackedInput = SessionRelated & AbstractWorldEventInput<
   EventType.ACTOR_WAS_ATTACKED,
   {
     source: ActorURN;
@@ -309,10 +330,13 @@ export type ActorWasAttackedInput = AbstractWorldEventInput<
 >;
 
 export type CombatTurnDidStart = EventBase & CombatTurnDidStartInput;
-export type CombatTurnDidStartInput = AbstractWorldEventInput<
+export type CombatTurnDidStartInput = SessionRelated & AbstractWorldEventInput<
   EventType.COMBAT_TURN_DID_START,
   {
-    sessionId: SessionURN;
+    /**
+     * @deprecated
+     */
+    sessionId?: SessionURN;
     round: number;
     turn: number;
     turnActor: ActorURN;
@@ -323,10 +347,13 @@ export type CombatTurnDidStartInput = AbstractWorldEventInput<
 type CombatantResourceChange = { before: number; after: number; change: number };
 
 export type CombatTurnDidEnd = EventBase & CombatTurnDidEndInput;
-export type CombatTurnDidEndInput = AbstractWorldEventInput<
+export type CombatTurnDidEndInput = SessionRelated & AbstractWorldEventInput<
   EventType.COMBAT_TURN_DID_END,
   {
-    sessionId: SessionURN;
+    /**
+     * @deprecated
+     */
+    sessionId?: SessionURN;
     round: number;
     turn: number;
     turnActor: ActorURN;
@@ -336,7 +363,7 @@ export type CombatTurnDidEndInput = AbstractWorldEventInput<
 >;
 
 export type ActorDidDie = EventBase & ActorDidDieInput;
-export type ActorDidDieInput = AbstractWorldEventInput<
+export type ActorDidDieInput = SessionRelated & AbstractWorldEventInput<
   EventType.ACTOR_DID_DIE,
   {
     killer: ActorURN;
@@ -344,7 +371,7 @@ export type ActorDidDieInput = AbstractWorldEventInput<
 >;
 
 export type ActorDidAssessRange = EventBase & ActorDidAssessRangeInput;
-export type ActorDidAssessRangeInput = AbstractWorldEventInput<
+export type ActorDidAssessRangeInput = SessionRelated & AbstractWorldEventInput<
   EventType.ACTOR_DID_ASSESS_RANGE,
   {
     target: ActorURN;
@@ -354,23 +381,29 @@ export type ActorDidAssessRangeInput = AbstractWorldEventInput<
 >;
 
 export type WorkbenchSessionDidStart = EventBase & WorkbenchSessionDidStartInput;
-export type WorkbenchSessionDidStartInput = AbstractWorldEventInput<
+export type WorkbenchSessionDidStartInput = SessionRelated & AbstractWorldEventInput<
   EventType.WORKBENCH_SESSION_DID_START,
   {
-    sessionId: SessionURN;
+    /**
+     * @deprecated
+     */
+    sessionId?: SessionURN;
   }
 >;
 
 export type WorkbenchSessionDidEnd = EventBase & WorkbenchSessionDidEndInput;
-export type WorkbenchSessionDidEndInput = AbstractWorldEventInput<
+export type WorkbenchSessionDidEndInput = SessionRelated & AbstractWorldEventInput<
   EventType.WORKBENCH_SESSION_DID_END,
   {
-    sessionId: SessionURN;
+    /**
+     * @deprecated
+     */
+    sessionId?: SessionURN;
   }
 >;
 
 export type ActorDidStageShellMutation = EventBase & ActorDidStageShellMutationInput;
-export type ActorDidStageShellMutationInput = AbstractWorldEventInput<
+export type ActorDidStageShellMutationInput = SessionRelated & AbstractWorldEventInput<
   EventType.ACTOR_DID_STAGE_SHELL_MUTATION,
   {
     shellId: string;
@@ -379,34 +412,43 @@ export type ActorDidStageShellMutationInput = AbstractWorldEventInput<
 >;
 
 export type ActorDidDiffShellMutations = EventBase & ActorDidDiffShellMutationsInput;
-export type ActorDidDiffShellMutationsInput = AbstractWorldEventInput<
+export type ActorDidDiffShellMutationsInput = SessionRelated & AbstractWorldEventInput<
   EventType.WORKBENCH_SHELL_MUTATIONS_DIFFED,
   ShellDiff
 >;
 
 export type ActorDidUndoShellMutations = EventBase & ActorDidUndoShellMutationsInput;
-export type ActorDidUndoShellMutationsInput = AbstractWorldEventInput<
+export type ActorDidUndoShellMutationsInput = SessionRelated & AbstractWorldEventInput<
   EventType.WORKBENCH_SHELL_MUTATIONS_UNDONE,
   {
-    sessionId: SessionURN;
+    /**
+     * @deprecated
+     */
+    sessionId?: SessionURN;
   }
 >;
 
 export type ActorDidCommitShellMutations = EventBase & ActorDidCommitShellMutationsInput;
-export type ActorDidCommitShellMutationsInput = AbstractWorldEventInput<
+export type ActorDidCommitShellMutationsInput = SessionRelated & AbstractWorldEventInput<
   EventType.WORKBENCH_SHELL_MUTATIONS_COMMITTED,
   {
-    sessionId: SessionURN;
+    /**
+     * @deprecated
+     */
+    sessionId?: SessionURN;
     cost: number;
     mutations: ShellMutation[];
   }
 >;
 
 export type ActorDidSwapShell = EventBase & ActorDidSwapShellInput;
-export type ActorDidSwapShellInput = AbstractWorldEventInput<
+export type ActorDidSwapShellInput = SessionRelated & AbstractWorldEventInput<
   EventType.ACTOR_DID_SWAP_SHELL,
   {
-    sessionId: SessionURN;
+    /**
+     * @deprecated
+     */
+    sessionId?: SessionURN;
     fromShellId: string;
     toShellId: string;
   }
@@ -416,28 +458,34 @@ export type ActorDidOpenHelpFile = EventBase & ActorDidOpenHelpFileInput;
 export type ActorDidOpenHelpFileInput = AbstractWorldEventInput<
   EventType.ACTOR_DID_OPEN_HELPFILE,
   {
+    /**
+     * @deprecated
+     */
     sessionId?: SessionURN;
     helpFile: string;
   }
 >;
 
 export type ActorDidAssessShellStatus = EventBase & ActorDidAssessShellStatusInput;
-export type ActorDidAssessShellStatusInput = AbstractWorldEventInput<
+export type ActorDidAssessShellStatusInput = SessionRelated & AbstractWorldEventInput<
   EventType.ACTOR_DID_ASSESS_SHELL_STATUS,
   {
-    sessionId: SessionURN;
+    /**
+     * @deprecated
+     */
+    sessionId?: SessionURN;
     shellId: string;
   }
 >;
 
 // New workbench events
 export type ActorDidListShells = EventBase & ActorDidListShellsInput;
-export type ActorDidListShellsInput = AbstractWorldEventInput<
+export type ActorDidListShellsInput = SessionRelated & AbstractWorldEventInput<
   EventType.ACTOR_DID_LIST_SHELLS
 >;
 
 export type ActorDidInspectShellStatus = EventBase & ActorDidInspectShellStatusInput;
-export type ActorDidInspectShellStatusInput = AbstractWorldEventInput<
+export type ActorDidInspectShellStatusInput = SessionRelated & AbstractWorldEventInput<
   EventType.ACTOR_DID_INSPECT_SHELL_STATUS,
   {
     shellId: string;
@@ -446,7 +494,7 @@ export type ActorDidInspectShellStatusInput = AbstractWorldEventInput<
 >;
 
 export type ActorDidReviewShellStats = EventBase & ActorDidReviewShellStatsInput;
-export type ActorDidReviewShellStatsInput = AbstractWorldEventInput<
+export type ActorDidReviewShellStatsInput = SessionRelated & AbstractWorldEventInput<
   EventType.ACTOR_DID_REVIEW_SHELL_STATS,
   {
     shellId: string;
@@ -457,10 +505,13 @@ export type ActorDidReviewShellStatsInput = AbstractWorldEventInput<
 >;
 
 export type ActorDidRenameShell = EventBase & ActorDidRenameShellInput;
-export type ActorDidRenameShellInput = AbstractWorldEventInput<
+export type ActorDidRenameShellInput = SessionRelated & AbstractWorldEventInput<
   EventType.ACTOR_DID_RENAME_SHELL,
   {
-    sessionId: SessionURN;
+    /**
+     * @deprecated
+     */
+    sessionId?: SessionURN;
     shellId: string;
     oldName: string;
     newName: string;
@@ -468,7 +519,7 @@ export type ActorDidRenameShellInput = AbstractWorldEventInput<
 >;
 
 export type ActorDidListShellComponents = EventBase & ActorDidListShellComponentsInput;
-export type ActorDidListShellComponentsInput = AbstractWorldEventInput<
+export type ActorDidListShellComponentsInput = SessionRelated & AbstractWorldEventInput<
   EventType.ACTOR_DID_LIST_SHELL_COMPONENTS,
   {
     shellId: string;
@@ -477,7 +528,7 @@ export type ActorDidListShellComponentsInput = AbstractWorldEventInput<
 >;
 
 export type ActorDidExamineComponent = EventBase & ActorDidExamineComponentInput;
-export type ActorDidExamineComponentInput = AbstractWorldEventInput<
+export type ActorDidExamineComponentInput = SessionRelated & AbstractWorldEventInput<
   EventType.ACTOR_DID_EXAMINE_COMPONENT,
   {
     componentId: ItemURN;
@@ -486,7 +537,7 @@ export type ActorDidExamineComponentInput = AbstractWorldEventInput<
 >;
 
 export type ActorDidMountComponent = EventBase & ActorDidMountComponentInput;
-export type ActorDidMountComponentInput = AbstractWorldEventInput<
+export type ActorDidMountComponentInput = SessionRelated & AbstractWorldEventInput<
   EventType.ACTOR_DID_MOUNT_COMPONENT,
   {
     shellId: string;
@@ -495,7 +546,7 @@ export type ActorDidMountComponentInput = AbstractWorldEventInput<
 >;
 
 export type ActorDidUnmountComponent = EventBase & ActorDidUnmountComponentInput;
-export type ActorDidUnmountComponentInput = AbstractWorldEventInput<
+export type ActorDidUnmountComponentInput = SessionRelated & AbstractWorldEventInput<
   EventType.ACTOR_DID_UNMOUNT_COMPONENT,
   {
     shellId: string;
