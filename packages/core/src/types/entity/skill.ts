@@ -1,4 +1,4 @@
-import { SkillURN, Taxonomy, } from '~/types/taxonomy';
+import { SkillSchemaURN, SkillURN, Taxonomy, } from '~/types/taxonomy';
 import { GOLDEN_RATIO } from '~/types/world/constants';
 import { createSkillUrn } from '~/lib/taxonomy';
 import { AppliedModifiers } from '~/types/modifier';
@@ -191,7 +191,7 @@ export const SKILL_DOMAINS = {
 export type SkillDomain = keyof typeof SKILL_DOMAINS;
 export type SkillsInDomain<D extends SkillDomain> = typeof SKILL_DOMAINS[D][number];
 
-export type SpecializationGroup = Partial<Record<Taxonomy.Skills, number>>;
+export type SpecializationGroup = Partial<Record<SkillSchemaURN, number>>;
 
 export type Specializations = {
   primary: SpecializationGroup;

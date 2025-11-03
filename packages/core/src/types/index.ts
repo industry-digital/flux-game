@@ -254,6 +254,7 @@ export {
   Intrinsic,
   ItemURN,
   ModifierURN,
+  PartyURN,
   PlaceURN,
   ResourceURN,
   RootNamespace,
