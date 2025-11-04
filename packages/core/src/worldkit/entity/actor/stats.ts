@@ -39,7 +39,7 @@ export function getStat(actor: Actor, stat: Stat): number {
   }
 
   const attr = currentShell.stats[stat];
-  if (!attr) {
+  if (attr === undefined) {
     throw new Error(`Actor's current shell does not have shell stat ${stat}`);
   }
   return attr;
