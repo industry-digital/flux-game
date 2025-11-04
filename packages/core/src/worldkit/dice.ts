@@ -165,7 +165,7 @@ export const calculateAverageRollResult = (
   dice: RollSpecification,
 ): number => {
   const { numDice, dieSize, flatBonus } = parseRollSpecification(dice, ZERO_ALLOCATION_PARSED_ROLL);
-  return (numDice * dieSize / 2) + flatBonus;
+  return (numDice * (1 + dieSize) / 2) + flatBonus;
 };
 
 export const DEFAULT_ROLL_API_DEPS: RollApiDependencies = Object.freeze({
