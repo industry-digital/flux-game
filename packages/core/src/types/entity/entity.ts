@@ -24,12 +24,12 @@ export type AbstractEntity<T extends EntityType> = {
   /**
    * The canonical URN of the entity
    */
-  readonly id: `${RootNamespace}:${T}:${string}`;
+  id: `${RootNamespace}:${T}:${string}`;
 
   /**
    * The type of entity being referenced
    */
-  readonly type: T;
+  type: T;
 };
 
 export type Nameable = {
