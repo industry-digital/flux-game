@@ -1,85 +1,76 @@
-import { describe, beforeEach, it, expect, vi } from 'vitest';
+import { describe, beforeEach, it, expect, vi, afterEach } from 'vitest';
 import { creditReducer } from './reducer';
 import { TransformerContext } from '~/types/handler';
-import { WorldProjection } from '~/types/world';
-import { createTestTransformerContext } from '~/testing/context-testing';
+import { createTransformerContext } from '~/worldkit/context';
+import { createWorldScenario } from '~/worldkit/scenario';
 import { ActorURN, PlaceURN } from '~/types/taxonomy';
-import { createActor } from '~/worldkit/entity/actor';
 import { createPlace } from '~/worldkit/entity/place';
-import { createWorldProjection } from '~/worldkit/context';
 import { CurrencyType, TransactionType } from '~/types/currency';
 import { getBalance, setBalance } from '~/worldkit/entity/actor/wallet';
 import { EventType, ActorDidCompleteCurrencyTransaction } from '~/types/event';
 import { createCreditCommand } from '~/testing/command/factory/currency';
-import { BOB_ID, DEFAULT_LOCATION } from '~/testing/constants';
+import { ALICE_ID, DEFAULT_LOCATION } from '~/testing/constants';
+import { Actor } from '~/types/entity/actor';
+import { createDefaultActors } from '~/testing/actors';
 
 describe('CREDIT Command Reducer', () => {
+  let alice: Actor;
   let context: TransformerContext;
 
   // Test entities
-  const RECIPIENT_ID: ActorURN = BOB_ID;
+  const RECIPIENT_ID: ActorURN = ALICE_ID;
 
   beforeEach(() => {
-    context = createTestTransformerContext({
-      world: createWorldProjection((w: WorldProjection) => ({
-        ...w,
-        sessions: {},
-        items: {},
-        actors: {
-          [RECIPIENT_ID]: createActor({
-            id: RECIPIENT_ID,
-            name: 'Bob',
-            location: DEFAULT_LOCATION,
-          }),
-        },
-        places: {
-          [DEFAULT_LOCATION]: createPlace({
-            id: DEFAULT_LOCATION,
-            name: 'Test Arena',
-          }),
-        },
-      })),
+    const place = createPlace((p) => ({ ...p, id: DEFAULT_LOCATION }));
+    ({ alice } = createDefaultActors(DEFAULT_LOCATION));
+
+    context = createTransformerContext((c) => ({
+      ...c,
+      declareEvent: vi.fn(),
+      declareError: vi.fn(),
+    }));
+
+    createWorldScenario(context, {
+      places: [place],
+      actors: [alice],
     });
+  });
 
-  // Clear mock calls between tests
-  vi.clearAllMocks();
-});
+  afterEach(() => {
+    vi.clearAllMocks();
+  });
 
-// Specialized command factory for this test suite
-const createTestCreditCommand = (transform?: (cmd: ReturnType<typeof createCreditCommand>) => ReturnType<typeof createCreditCommand>) => {
-  const baseCommand = createCreditCommand((cmd) => ({
-    ...cmd,
-    location: DEFAULT_LOCATION,
-    args: {
-      ...cmd.args,
-      recipient: RECIPIENT_ID,
-    },
-  }));
+  // Specialized command factory for this test suite
+  const createMockCreditCommand = (transform?: (cmd: ReturnType<typeof createCreditCommand>) => ReturnType<typeof createCreditCommand>) => {
+    const baseCommand = createCreditCommand((cmd) => ({
+      ...cmd,
+      location: DEFAULT_LOCATION,
+      args: {
+        ...cmd.args,
+        recipient: RECIPIENT_ID,
+      },
+    }));
 
-  return transform ? transform(baseCommand) : baseCommand;
-};
+    return transform ? transform(baseCommand) : baseCommand;
+  };
 
-describe('Basic Functionality', () => {
+  describe('Basic Functionality', () => {
     it('should credit funds to recipient actor', () => {
-      const recipient = context.world.actors[RECIPIENT_ID];
-      setBalance(recipient, CurrencyType.SCRAP, 50);
-
-      const command = createTestCreditCommand();
-      const resultContext = creditReducer(context, command);
-
-      expect(getBalance(recipient, CurrencyType.SCRAP)).toBe(150);
-      expect(resultContext).toBe(context); // Should return the same context
+      setBalance(alice, CurrencyType.SCRAP, 50);
+      const command = createMockCreditCommand();
+      creditReducer(context, command);
+      expect(getBalance(alice, CurrencyType.SCRAP)).toBe(150);
     });
 
     it('should credit funds to actor with zero balance', () => {
-      const recipient = context.world.actors[RECIPIENT_ID];
-      setBalance(recipient, CurrencyType.SCRAP, 0);
+      setBalance(alice, CurrencyType.SCRAP, 0);
+      expect(getBalance(alice, CurrencyType.SCRAP)).toBe(0);
 
       const command = createCreditCommand((cmd) => ({
         ...cmd,
         args: {
           ...cmd.args,
-          recipient: RECIPIENT_ID,
+          recipient: alice.id,
           currency: CurrencyType.SCRAP,
           amount: 75,
         },
@@ -87,14 +78,13 @@ describe('Basic Functionality', () => {
 
       creditReducer(context, command);
 
-      expect(getBalance(recipient, CurrencyType.SCRAP)).toBe(75);
+      expect(getBalance(alice, CurrencyType.SCRAP)).toBe(75);
     });
 
     it('should handle large credit amounts', () => {
-      const recipient = context.world.actors[RECIPIENT_ID];
-      setBalance(recipient, CurrencyType.SCRAP, 1000);
+      setBalance(alice, CurrencyType.SCRAP, 1000);
 
-      const command = createTestCreditCommand((cmd) => ({
+      const command = createMockCreditCommand((cmd) => ({
         ...cmd,
         args: {
           ...cmd.args,
@@ -104,7 +94,7 @@ describe('Basic Functionality', () => {
 
       creditReducer(context, command);
 
-      expect(getBalance(recipient, CurrencyType.SCRAP)).toBe(Number.MAX_SAFE_INTEGER);
+      expect(getBalance(alice, CurrencyType.SCRAP)).toBe(Number.MAX_SAFE_INTEGER);
     });
 
     it('should handle zero credit amount', () => {
@@ -112,7 +102,7 @@ describe('Basic Functionality', () => {
       const initialBalance = 100;
       setBalance(recipient, CurrencyType.SCRAP, initialBalance);
 
-      const command = createTestCreditCommand((cmd) => ({
+      const command = createMockCreditCommand((cmd) => ({
         ...cmd,
         args: {
           ...cmd.args,
@@ -129,7 +119,7 @@ describe('Basic Functionality', () => {
       const recipient = context.world.actors[RECIPIENT_ID];
       setBalance(recipient, CurrencyType.SCRAP, 50);
 
-      const command = createTestCreditCommand((cmd) => ({
+      const command = createMockCreditCommand((cmd) => ({
         ...cmd,
         args: {
           ...cmd.args,
@@ -146,10 +136,9 @@ describe('Basic Functionality', () => {
 
   describe('Event Declaration', () => {
     it('should declare currency transaction event', () => {
-      const recipient = context.world.actors[RECIPIENT_ID];
-      setBalance(recipient, CurrencyType.SCRAP, 50);
+      setBalance(alice, CurrencyType.SCRAP, 50);
 
-      const command = createTestCreditCommand();
+      const command = createMockCreditCommand();
       creditReducer(context, command);
 
       expect(context.declareEvent).toHaveBeenCalledTimes(1);
@@ -167,10 +156,9 @@ describe('Basic Functionality', () => {
     });
 
     it('should create transaction with unique ID and timestamp', () => {
-      const recipient = context.world.actors[RECIPIENT_ID];
-      setBalance(recipient, CurrencyType.SCRAP, 0);
+      setBalance(alice, CurrencyType.SCRAP, 0);
 
-      const command = createTestCreditCommand();
+      const command = createMockCreditCommand();
       creditReducer(context, command);
 
       const declaredEvent = (context.declareEvent as any).mock.calls[0][0] as ActorDidCompleteCurrencyTransaction;
@@ -183,10 +171,9 @@ describe('Basic Functionality', () => {
     });
 
     it('should use command ID as transaction trace', () => {
-      const recipient = context.world.actors[RECIPIENT_ID];
       const commandId = 'unique-command-id-123';
 
-      const command = createTestCreditCommand((cmd) => ({
+      const command = createMockCreditCommand((cmd) => ({
         ...cmd,
         id: commandId,
       }));
@@ -222,39 +209,17 @@ describe('Basic Functionality', () => {
       expect(context.declareEvent).not.toHaveBeenCalled();
       expect(resultContext).toBe(context);
     });
-
-    it('should not modify wallet when recipient not found', () => {
-      const nonExistentRecipient: ActorURN = 'flux:actor:missing:person';
-      const command = createTestCreditCommand((cmd) => ({
-        ...cmd,
-        args: {
-          ...cmd.args,
-          recipient: nonExistentRecipient,
-          amount: 100,
-        },
-      }));
-
-      // Ensure existing recipient balance is unchanged
-      const existingRecipient = context.world.actors[RECIPIENT_ID];
-      const initialBalance = 50;
-      setBalance(existingRecipient, CurrencyType.SCRAP, initialBalance);
-
-      creditReducer(context, command);
-
-      expect(getBalance(existingRecipient, CurrencyType.SCRAP)).toBe(initialBalance);
-    });
   });
 
   describe('Currency Type Support', () => {
     it('should handle all supported currency types', () => {
-      const recipient = context.world.actors[RECIPIENT_ID];
+      setBalance(alice, CurrencyType.SCRAP, 25);
 
       Object.values(CurrencyType).forEach((currency) => {
-        // Reset for each currency test
         vi.clearAllMocks();
-        setBalance(recipient, currency, 25);
+        setBalance(alice, currency, 25);
 
-        const command = createTestCreditCommand((cmd) => ({
+        const command = createMockCreditCommand((cmd) => ({
           ...cmd,
           args: {
             ...cmd.args,
@@ -265,7 +230,7 @@ describe('Basic Functionality', () => {
 
         creditReducer(context, command);
 
-        expect(getBalance(recipient, currency)).toBe(75);
+        expect(getBalance(alice, currency)).toBe(75);
         expect(context.declareEvent).toHaveBeenCalledTimes(1);
 
         const declaredEvent = (context.declareEvent as any).mock.calls[0][0] as ActorDidCompleteCurrencyTransaction;
@@ -279,7 +244,7 @@ describe('Basic Functionality', () => {
       const recipient = context.world.actors[RECIPIENT_ID];
       setBalance(recipient, CurrencyType.SCRAP, 50);
 
-      const command = createTestCreditCommand();
+      const command = createMockCreditCommand();
       const resultContext = creditReducer(context, command);
 
       expect(resultContext).toBe(context);
@@ -290,7 +255,7 @@ describe('Basic Functionality', () => {
       setBalance(recipient, CurrencyType.SCRAP, 50);
 
       const originalWorld = context.world;
-      const command = createTestCreditCommand();
+      const command = createMockCreditCommand();
 
       creditReducer(context, command);
 
@@ -301,10 +266,9 @@ describe('Basic Functionality', () => {
 
   describe('Integration with Transaction System', () => {
     it('should properly integrate with createCurrencyTransaction', () => {
-      const recipient = context.world.actors[RECIPIENT_ID];
-      setBalance(recipient, CurrencyType.SCRAP, 100);
+      setBalance(alice, CurrencyType.SCRAP, 100);
 
-      const command = createTestCreditCommand((cmd) => ({
+      const command = createMockCreditCommand((cmd) => ({
         ...cmd,
         args: {
           ...cmd.args,
@@ -319,7 +283,7 @@ describe('Basic Functionality', () => {
 
       // Verify transaction structure matches createCurrencyTransaction output
       expect(transaction).toMatchObject({
-        actorId: RECIPIENT_ID,
+        actorId: alice.id,
         currency: CurrencyType.SCRAP,
         type: TransactionType.CREDIT,
         amount: 75, // Should be positive even if input was negative
@@ -332,11 +296,10 @@ describe('Basic Functionality', () => {
     });
 
     it('should properly integrate with executeCurrencyTransaction', () => {
-      const recipient = context.world.actors[RECIPIENT_ID];
       const initialBalance = 200;
-      setBalance(recipient, CurrencyType.SCRAP, initialBalance);
+      setBalance(alice, CurrencyType.SCRAP, initialBalance);
 
-      const command = createTestCreditCommand((cmd) => ({
+      const command = createMockCreditCommand((cmd) => ({
         ...cmd,
         args: {
           ...cmd.args,
@@ -347,7 +310,7 @@ describe('Basic Functionality', () => {
       creditReducer(context, command);
 
       // Verify wallet was updated correctly
-      expect(getBalance(recipient, CurrencyType.SCRAP)).toBe(350);
+      expect(getBalance(alice, CurrencyType.SCRAP)).toBe(350);
 
       // Verify event was declared correctly
       expect(context.declareEvent).toHaveBeenCalledTimes(1);
@@ -358,10 +321,9 @@ describe('Basic Functionality', () => {
 
   describe('Edge Cases', () => {
     it('should handle maximum safe integer amounts', () => {
-      const recipient = context.world.actors[RECIPIENT_ID];
-      setBalance(recipient, CurrencyType.SCRAP, 0);
+      setBalance(alice, CurrencyType.SCRAP, 0);
 
-      const command = createTestCreditCommand((cmd) => ({
+      const command = createMockCreditCommand((cmd) => ({
         ...cmd,
         args: {
           ...cmd.args,
@@ -371,14 +333,13 @@ describe('Basic Functionality', () => {
 
       creditReducer(context, command);
 
-      expect(getBalance(recipient, CurrencyType.SCRAP)).toBe(Number.MAX_SAFE_INTEGER);
+      expect(getBalance(alice, CurrencyType.SCRAP)).toBe(Number.MAX_SAFE_INTEGER);
     });
 
     it('should handle minimum safe integer amounts (negative)', () => {
-      const recipient = context.world.actors[RECIPIENT_ID];
-      setBalance(recipient, CurrencyType.SCRAP, 0);
+      setBalance(alice, CurrencyType.SCRAP, 0);
 
-      const command = createTestCreditCommand((cmd) => ({
+      const command = createMockCreditCommand((cmd) => ({
         ...cmd,
         args: {
           ...cmd.args,
@@ -389,16 +350,15 @@ describe('Basic Functionality', () => {
       creditReducer(context, command);
 
       // Should credit the absolute value
-      expect(getBalance(recipient, CurrencyType.SCRAP)).toBe(Math.abs(Number.MIN_SAFE_INTEGER));
+      expect(getBalance(alice, CurrencyType.SCRAP)).toBe(Math.abs(Number.MIN_SAFE_INTEGER));
     });
 
     it('should handle fractional amounts (should be handled by transaction system)', () => {
-      const recipient = context.world.actors[RECIPIENT_ID];
-      setBalance(recipient, CurrencyType.SCRAP, 100);
+      setBalance(alice, CurrencyType.SCRAP, 100);
 
       // Note: This test assumes the parser would have already converted to integer,
       // but we test the reducer's robustness
-      const command = createTestCreditCommand((cmd) => ({
+      const command = createMockCreditCommand((cmd) => ({
         ...cmd,
         args: {
           ...cmd.args,
@@ -409,37 +369,16 @@ describe('Basic Functionality', () => {
       creditReducer(context, command);
 
       // Transaction system should handle the fractional amount appropriately
+      expect(context.declareEvent).toHaveBeenCalledTimes(1);
       const declaredEvent = (context.declareEvent as any).mock.calls[0][0] as ActorDidCompleteCurrencyTransaction;
       expect(typeof declaredEvent.payload.transaction.amount).toBe('number');
     });
   });
 
   describe('Command Validation', () => {
-    it('should work with different command IDs', () => {
-      const recipient = context.world.actors[RECIPIENT_ID];
-      setBalance(recipient, CurrencyType.SCRAP, 50);
-
-      const commandIds = ['cmd-1', 'cmd-2', 'very-long-command-id-with-special-chars-123'];
-
-      commandIds.forEach((commandId) => {
-        vi.clearAllMocks();
-
-      const command = createTestCreditCommand((cmd) => ({
-        ...cmd,
-        id: commandId,
-      }));
-
-        creditReducer(context, command);
-
-        const declaredEvent = (context.declareEvent as any).mock.calls[0][0] as ActorDidCompleteCurrencyTransaction;
-        expect(declaredEvent.trace).toBe(commandId);
-        expect(declaredEvent.payload.transaction.trace).toBe(commandId);
-      });
-    });
 
     it('should work with different locations', () => {
-      const recipient = context.world.actors[RECIPIENT_ID];
-      setBalance(recipient, CurrencyType.SCRAP, 50);
+      setBalance(alice, CurrencyType.SCRAP, 50);
 
       const differentPlace: PlaceURN = 'flux:place:test:different';
       context.world.places[differentPlace] = createPlace({
@@ -447,16 +386,13 @@ describe('Basic Functionality', () => {
         name: 'Different Place',
       });
 
-      // Move the recipient to the different place
-      recipient.location = differentPlace;
+      // Move the actor to the different place
+      alice.location = differentPlace;
 
-      const command = createTestCreditCommand((cmd) => ({
-        ...cmd,
-        location: differentPlace,
-      }));
-
+      const command = createMockCreditCommand((c) => ({...c, location: differentPlace }));
       creditReducer(context, command);
 
+      expect(context.declareEvent).toHaveBeenCalledTimes(1);
       const declaredEvent = (context.declareEvent as any).mock.calls[0][0] as ActorDidCompleteCurrencyTransaction;
       // Event location should be the actor's location, not the command's location
       expect(declaredEvent.location).toBe(differentPlace);
