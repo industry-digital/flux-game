@@ -11,6 +11,7 @@ import { SkillState } from '~/types/entity/skill';
 import { SchemaManager } from '~/worldkit/schema/manager';
 import { createDefaultSkillState } from '~/worldkit/entity/actor/skill';
 import { setEnergy, setCapacitorPosition } from '~/worldkit/entity/actor/capacitor';
+import { setAp } from '~/worldkit/combat/ap';
 import { createActor } from '~/worldkit/entity/actor';
 
 export type CombatScenarioDependencies = {
@@ -271,31 +272,25 @@ export function useCombatScenario(
 
     const { ap, energy, equipment } = participant;
 
-    // Helper function to process combatant attributes
-    const processCombatantAttribute = (
-      attributeSetup: number | Partial<Combatant['ap']> | undefined,
-      currentAttribute: Combatant['ap'],
-    ) => {
-      if (typeof attributeSetup === 'number') {
-        return {
-          ...currentAttribute,
-          nat: { cur: attributeSetup, max: attributeSetup },
-          eff: { cur: attributeSetup, max: attributeSetup },
-        };
-      } else if (attributeSetup) {
-        return { ...currentAttribute, ...attributeSetup };
-      }
-      return currentAttribute;
-    };
-
     // Process combatant attributes (AP, balance)
     const combatant = sessionHook.session.data.combatants.get(actor.id);
     if (!combatant) {
       throw new Error(`Combatant not found for actor ${actor.id}`);
     }
 
+    // Process AP setup using the dedicated setAp function
     if (ap !== undefined) {
-      combatant.ap = processCombatantAttribute(ap, combatant.ap);
+      if (typeof ap === 'number') {
+        setAp(combatant, ap, ap);
+      } else {
+        // Handle partial AP object setup
+        if (ap.current !== undefined) {
+          combatant.ap.current = ap.current;
+        }
+        if (ap.max !== undefined) {
+          combatant.ap.max = ap.max;
+        }
+      }
     }
 
     // Process energy setup using capacitor API (internal - not exposed in public API)

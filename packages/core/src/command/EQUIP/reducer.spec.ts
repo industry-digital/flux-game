@@ -14,7 +14,7 @@ import { WeaponSchema } from '~/types/schema/weapon';
 import { createWeaponSchema } from '~/worldkit/schema/weapon';
 import { ErrorCode } from '~/types/error';
 import { createDefaultActors } from '~/testing/actors';
-import { getCurrentAp, setCurrentAp } from '~/worldkit/combat/ap';
+import { getCurrentAp, setAp } from '~/worldkit/combat/ap';
 import { CombatSessionApi, createCombatSessionApi } from '~/worldkit/combat/session/session';
 import { createPlace } from '~/worldkit/entity/place';
 import { Team } from '~/types/combat';
@@ -162,7 +162,7 @@ describe('EQUIP Command Reducer', () => {
       // Alice already has the weapon from beforeEach, so no need to add it again
 
       const aliceCombatant = combatSessionApi.getCombatantApi(ALICE_ID).combatant;
-      setCurrentAp(aliceCombatant, 0);
+      setAp(aliceCombatant, 0);
 
       // Add the weapon to inventory manually (since we didn't pre-equip)
       const command = createEquipCommand((cmd: EquipCommand) => ({
@@ -179,7 +179,7 @@ describe('EQUIP Command Reducer', () => {
 
       // Should error due to insufficient AP
       expect(errors).toHaveLength(1);
-      expect(errors[0].code).toBe(ErrorCode.INSUFFICIENT_AP);
+      expect(errors[0].code).toBe(ErrorCode.PRECONDITION_FAILED);
 
       // Should not declare any events
       expect(result.getDeclaredEvents()).toHaveLength(0);

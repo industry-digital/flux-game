@@ -6,7 +6,7 @@ import { createSwordSchema } from '~/worldkit/schema/weapon/sword';
 import { registerWeapons } from '../testing/schema';
 import { ActorURN } from '~/types/taxonomy';
 import { ActorDidDefend, EventType } from '~/types/event';
-import { extractApCost, getCurrentAp, setCurrentAp } from '~/worldkit/combat/ap';
+import { extractApCost, getCurrentAp, setAp } from '~/worldkit/combat/ap';
 import { Team } from '~/types/combat';
 import { DoneMethod } from '~/worldkit/combat/action/done';
 import { extractFirstEventOfType } from '~/testing/event';
@@ -113,7 +113,7 @@ describe('Defend Method', () => {
 
     it('should handle zero AP gracefully', () => {
       const defenderCombatant = scenario.session.data.combatants.get(DEFENDER_ID)!;
-      setCurrentAp(defenderCombatant, 0);
+      setAp(defenderCombatant, 0);
 
       const result = defend();
 

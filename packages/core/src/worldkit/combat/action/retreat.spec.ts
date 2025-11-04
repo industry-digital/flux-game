@@ -4,7 +4,7 @@ import { ActorDidMoveInCombat, EventType } from '~/types/event';
 import { CombatFacing, MovementDirection } from '~/types/combat';
 import { MOVE_BY_AP, MOVE_BY_DISTANCE, MOVE_BY_MAX } from '~/worldkit/combat/combatant';
 import { createCombatTurnDidEndEvent, extractFirstEventOfType } from '~/testing/event';
-import { getCurrentAp, setCurrentAp } from '~/worldkit/combat/ap';
+import { getCurrentAp, setAp } from '~/worldkit/combat/ap';
 import { DEFAULT_LOCATION } from '~/testing/constants';
 
 describe('Retreat Method', () => {
@@ -104,7 +104,7 @@ describe('Retreat Method', () => {
 
     it('should reject movement with insufficient AP', () => {
       const { retreat, attacker, context } = defaultScenario;
-      setCurrentAp(attacker, 0.5); // Very low AP
+      setAp(attacker, 0.5); // Very low AP
 
       const result = retreat(MOVE_BY_DISTANCE, 50); // Would cost significant AP
 
@@ -114,7 +114,7 @@ describe('Retreat Method', () => {
 
     it('should reject AP exceeding current AP', () => {
       const { retreat, attacker, context } = defaultScenario;
-      setCurrentAp(attacker, 3.0);
+      setAp(attacker, 3.0);
 
       const result = retreat(MOVE_BY_AP, 5.0);
 

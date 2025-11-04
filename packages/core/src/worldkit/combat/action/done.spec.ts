@@ -8,7 +8,7 @@ import { EventType } from '~/types/event';
 import { ActorURN } from '~/types/taxonomy';
 import { Team } from '~/types/combat';
 import { EVASION_SKILL } from '~/worldkit/combat/testing/constants';
-import { getCurrentAp, setCurrentAp } from '~/worldkit/combat/ap';
+import { getCurrentAp, setAp } from '~/worldkit/combat/ap';
 
 describe('Done Method (New Architecture)', () => {
   let scenario: ReturnType<typeof useCombatScenario>;
@@ -98,7 +98,7 @@ describe('Done Method (New Architecture)', () => {
       const combatant = scenario.session.data.combatants.get(ACTOR_ID)!;
 
       // Set initial AP state (depleted)
-      setCurrentAp(combatant, 1.5);
+      setAp(combatant, 1.5);
       const initialAP = getCurrentAp(combatant);
 
       const done = createTestDoneMethod();
@@ -215,7 +215,7 @@ describe('Done Method (New Architecture)', () => {
       const combatant = scenario.session.data.combatants.get(ACTOR_ID)!;
 
       // Set up initial state with depleted AP
-      setCurrentAp(combatant, 2.0);
+      setAp(combatant, 2.0);
       const initialAP = getCurrentAp(combatant);
 
       const mockAdvancementEvents = [

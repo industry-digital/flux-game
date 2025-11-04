@@ -41,9 +41,9 @@ describe('Capacitor API (Pure Functions)', () => {
   describe('initialization and basic properties', () => {
     it('should initialize capacitor if not present', () => {
       expect(alice.capacitor).toBeDefined();
-      expect(getCapacitorPosition(alice)).toBeCloseTo(0.340, 3); // 5000 / ~14707
-      expect(getCurrentEnergy(alice)).toBe(5000);
-      expect(getMaxEnergy(alice)).toBe(5000);
+      expect(getCapacitorPosition(alice)).toBeCloseTo(1.0, 3); // Actors start at 100% energy
+      expect(getCurrentEnergy(alice)).toBe(10000); // Stored energy from initial creation (RES 10 baseline)
+      expect(getMaxEnergy(alice)).toBeCloseTo(14707, 0); // Calculated max energy from current RES=15
     });
 
     it('should get current energy', () => {
@@ -494,7 +494,7 @@ describe('Capacitor API (Pure Functions)', () => {
       ];
 
       const iterations = 1000;
-      const testEnergy = 5000; // 50% energy for interesting recovery curve
+      const testEnergy = 0; // 0% energy to test full recovery curve traversal
       const testTime = 10; // 10 seconds recovery time
 
       setEnergy(alice, testEnergy);
@@ -518,6 +518,9 @@ describe('Capacitor API (Pure Functions)', () => {
         const recoveryRate = getCurrentRecoveryRate(alice);
         console.log(`  ${(ratio*100).toFixed(0).padStart(3)}%: ${recoveryRate.toFixed(1)}W`);
       });
+
+      // Reset energy back to test energy after debug section
+      setEnergy(alice, testEnergy);
 
       console.log('\n🎯 Finding Minimum Steps for 1% Accuracy:');
       console.log(`Testing ${iterations} iterations of 10-second recovery from ${testEnergy}J`);

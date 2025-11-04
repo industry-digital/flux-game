@@ -15,7 +15,7 @@ import { getCurrentEnergy, setEnergy } from '~/worldkit/entity/actor/capacitor';
 import { createWeaponSchema } from '~/worldkit/schema/weapon';
 import { EVASION_SKILL } from '~/worldkit/combat/testing/constants';
 import { setCurrentHp, setMaxHp } from '~/worldkit/entity/actor';
-import { getCurrentAp, setCurrentAp } from '~/worldkit/combat/ap';
+import { getCurrentAp, setAp } from '~/worldkit/combat/ap';
 
 // Type guard to help TypeScript understand CLEAVE attack events
 function isCleaveAttack(event: ActorDidAttack): event is ActorDidCleave {
@@ -317,7 +317,7 @@ describe('Cleave Method', () => {
       const attackerCombatant = scenario.session.data.combatants.get(ATTACKER_ID)!;
 
       // Reduce AP to insufficient amount
-      setCurrentAp(attackerCombatant, 0);
+      setAp(attackerCombatant, 0);
 
       const result = cleave();
 

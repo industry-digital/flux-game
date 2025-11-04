@@ -9,7 +9,7 @@ import { ActorURN } from '~/types/taxonomy';
 import { ActorDidAttack, ActorDidDie, ActorDidStrike, ActorWasAttacked, EventType } from '~/types/event';
 import { Team } from '~/types/combat';
 import { createStrikeCost } from '~/worldkit/combat/tactical-cost';
-import { calculateWeaponApCost, getCurrentAp, setCurrentAp } from '~/worldkit/combat/ap';
+import { calculateWeaponApCost, getCurrentAp, setAp } from '~/worldkit/combat/ap';
 import { WeaponTimer } from '~/types/schema/weapon';
 import { createDefaultSkillState } from '~/worldkit/entity/actor/skill';
 import { isAlive, isDead, setCurrentHp, setMaxHp } from '~/worldkit/entity/actor';
@@ -235,7 +235,7 @@ describe('Strike Method', () => {
         const attackerCombatant = scenario.session.data.combatants.get(ATTACKER_ID)!;
 
         // Reset AP for each test case
-        setCurrentAp(attackerCombatant, 10.0);
+        setAp(attackerCombatant, 10.0);
 
         // Calculate what the precise cost would be
         const preciseApCost = calculateWeaponApCost(attacker.actor, swordSchema, WeaponTimer.ATTACK);

@@ -7,7 +7,7 @@ import { distanceToAp, apToDistance } from '~/worldkit/physics/movement';
 import { useCombatMovementTestScenario } from '../testing/movement';
 import { MOVE_BY_AP, MOVE_BY_DISTANCE, MOVE_BY_MAX } from '~/worldkit/combat/combatant';
 import { createCombatTurnDidEndEvent } from '~/testing/event/factory';
-import { getCurrentAp, setCurrentAp } from '~/worldkit/combat/ap';
+import { getCurrentAp, setAp } from '~/worldkit/combat/ap';
 
 describe('createAdvanceMethod', () => {
   // Standard test scenario - most tests can use this
@@ -124,7 +124,7 @@ describe('createAdvanceMethod', () => {
 
     it('should reject movement with insufficient AP', () => {
       const { advance, attacker, context } = defaultScenario;
-      setCurrentAp(attacker, 0.5); // Very low AP
+      setAp(attacker, 0.5); // Very low AP
 
       const result = advance(MOVE_BY_DISTANCE, 50);
 
@@ -161,7 +161,7 @@ describe('createAdvanceMethod', () => {
 
     it('should reject AP exceeding current AP', () => {
       const { advance, attacker, context } = defaultScenario;
-      setCurrentAp(attacker, 3.0);
+      setAp(attacker, 3.0);
 
       const result = advance(MOVE_BY_AP, 5.0);
 
@@ -195,7 +195,7 @@ describe('createAdvanceMethod', () => {
       const collisionScenario = useCombatMovementTestScenario({
         attackerPosition: 100,
         enemyPosition: 150, // Enemy 50m away
-        attackerAP: 20.0, // Plenty of AP to reach enemy
+        attackerAP: 1000.0, // Plenty of AP to reach enemy
       });
       const { advance, attacker } = collisionScenario;
 
@@ -360,7 +360,7 @@ describe('createAdvanceMethod', () => {
 
       // Reset position and AP
       attacker.position.coordinate = initialPosition;
-      setCurrentAp(attacker, initialAP);
+      setAp(attacker, initialAP);
 
       const result2 = advance(MOVE_BY_MAX, -50);
       const position2 = attacker.position.coordinate;

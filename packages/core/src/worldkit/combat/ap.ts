@@ -64,8 +64,11 @@ export function getMaxAp(combatant: Combatant): number {
   return combatant.ap.max;
 }
 
-export function setCurrentAp(combatant: Combatant, ap: number): void {
-  combatant.ap.current = ap;
+export function setAp(combatant: Combatant, current: number, max?: number): void {
+  combatant.ap.current = current;
+  if (max !== undefined) {
+    combatant.ap.max = max;
+  }
 }
 
 /**
