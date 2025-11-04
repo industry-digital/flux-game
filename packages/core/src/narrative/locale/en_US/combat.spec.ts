@@ -2,9 +2,9 @@ import { describe, it, expect, beforeEach } from 'vitest';
 import { createTransformerContext } from '~/worldkit/context';
 import { createSwordSchema } from '~/worldkit/schema/weapon/sword';
 import { createDaggerSchema } from '~/worldkit/schema/weapon/dagger';
-import { createWarhammerSchema } from '~/worldkit/schema/weapon/warhammer';
-import { registerWeapons } from '~/worldkit/combat/testing/schema';
-import { useCombatScenario } from '~/worldkit/combat/testing/scenario';
+import { createWarhammerSchema, warhammerSchema } from '~/worldkit/schema/weapon/warhammer';
+import { createCombatSession } from '~/worldkit/combat/session/session';
+import { createWorldScenario, WorldScenarioHook } from '~/worldkit/scenario';
 import {
   createActorDidAttackEvent,
   createActorWasAttackedEvent,
@@ -13,9 +13,9 @@ import {
   createActorDidMoveInCombatEvent,
   createActorDidDieEvent,
 } from '~/testing/event';
-import { AttackOutcome, AttackType, Team, MovementDirection } from '~/types/combat';
+import { AttackOutcome, AttackType, Team, MovementDirection, CombatFacing, CombatSession } from '~/types/combat';
 import { ActorURN } from '~/types/taxonomy';
-import { ALICE_ID, BOB_ID, CHARLIE_ID, DEFAULT_TIMESTAMP, DEFAULT_WORKBENCH_SESSION } from '~/testing/constants';
+import { ALICE_ID, BOB_ID, CHARLIE_ID, DAVID_ID, DEFAULT_LOCATION, DEFAULT_TIMESTAMP, DEFAULT_WORKBENCH_SESSION } from '~/testing/constants';
 import {
   withObjectSerializationValidation,
   withDebuggingArtifactValidation,
@@ -35,18 +35,36 @@ import {
   narrateActorDidDie,
   narrateActorDidAssessRange,
 } from './combat';
-import { Gender } from '~/types/entity/actor';
+import { Actor } from '~/types/entity/actor';
 import { ActorDidAttack } from '~/types/event';
+import { TransformerContext } from '~/types/handler';
+import { createPlace } from '~/worldkit/entity/place';
+import { createDefaultActors } from '~/testing/actors';
+import { createCombatant } from '~/worldkit/combat/combatant';
+import { setStatValue } from '~/worldkit/entity/actor/stats';
+import { Stat } from '~/types/entity/actor';
 
-const OBSERVER_ID: ActorURN = 'flux:actor:test:observer';
-const DAVID_ID: ActorURN = 'flux:actor:test:david';
+const OBSERVER_ID: ActorURN = DAVID_ID;
 
 describe('English Combat Narratives - Snapshot Tests', () => {
-  let context: ReturnType<typeof createTransformerContext>;
-  let scenario: ReturnType<typeof useCombatScenario>;
+  let context: TransformerContext;
+  let scenario: WorldScenarioHook;
+  let alice: Actor;
+  let bob: Actor;
+  let charlie: Actor;
+  let david: Actor;
+
+  let session: CombatSession;
 
   beforeEach(() => {
+    const place = createPlace((p) => ({ ...p, id: DEFAULT_LOCATION }));
+    ({ alice, bob, charlie, david } = createDefaultActors(place.id));
+
     context = createTransformerContext();
+    scenario = createWorldScenario(context, {
+      places: [place],
+      actors: [alice, bob, charlie, david],
+    });
 
     const swordSchema = createSwordSchema({
       urn: 'flux:schema:weapon:test:sword',
@@ -63,50 +81,31 @@ describe('English Combat Narratives - Snapshot Tests', () => {
       name: 'Test Warhammer',
     });
 
-    const { schemaManager } = context;
-    registerWeapons(schemaManager, [swordSchema, daggerSchema, warhammerSchema]);
+    scenario.assignWeapon(alice, swordSchema);
+    scenario.assignWeapon(bob, daggerSchema);
+    scenario.assignWeapon(charlie, warhammerSchema);
+    scenario.assignWeapon(david, warhammerSchema);
 
-    scenario = useCombatScenario(context, {
-      weapons: [swordSchema, daggerSchema, warhammerSchema],
-      schemaManager,
-      participants: {
-        [ALICE_ID]: {
-          team: Team.ALPHA,
-          name: 'Alice',
-          gender: Gender.FEMALE,
-          stats: { pow: 50, fin: 50, res: 50 },
-          equipment: { weapon: swordSchema.urn },
-          position: { coordinate: 100, facing: 1, speed: 0 },
-        },
-        [BOB_ID]: {
-          team: Team.BRAVO,
-          name: 'Bob',
-          stats: { pow: 30, fin: 30, res: 30 },
-          equipment: { weapon: daggerSchema.urn },
-          position: { coordinate: 102, facing: -1, speed: 0 },
-        },
-        [CHARLIE_ID]: {
-          team: Team.BRAVO,
-          name: 'Charlie',
-          stats: { pow: 40, fin: 40, res: 40 },
-          equipment: { weapon: warhammerSchema.urn },
-          position: { coordinate: 105, facing: -1, speed: 0 },
-        },
-        [OBSERVER_ID]: {
-          team: Team.ALPHA,
-          name: 'Observer',
-          stats: { pow: 20, fin: 20, res: 20 },
-          position: { coordinate: 95, facing: 1, speed: 0 },
-        },
-        [DAVID_ID]: {
-          team: Team.ALPHA,
-          name: 'David',
-          stats: { pow: 70, fin: 20, res: 50 },
-          equipment: { weapon: warhammerSchema.urn },
-          position: { coordinate: 98, facing: 1, speed: 0 },
-        },
-      },
+    const combatSession = createCombatSession(context, {
+      location: place.id,
+      combatants: [
+        createCombatant(alice, Team.ALPHA, (c) => ({
+          ...c,
+          position: { coordinate: 100, facing: CombatFacing.RIGHT, speed: 0 },
+        })),
+        createCombatant(bob, Team.BRAVO, (c) => ({
+          ...c,
+          position: { coordinate: 102, facing: CombatFacing.LEFT, speed: 0 },
+        })),
+        createCombatant(charlie, Team.BRAVO, (c) => ({
+          ...c,
+          position: { coordinate: 105, facing: CombatFacing.LEFT, speed: 0 },
+        })),
+        // David is an outside observer and should not be included in the combat session.
+      ],
     });
+
+    session = combatSession;
   });
 
   describe('narrateActorDidAttack - STRIKE attacks', () => {
@@ -191,9 +190,15 @@ describe('English Combat Narratives - Snapshot Tests', () => {
     });
 
     it('should render exact power-focused attack narrative', () => {
+      scenario.assignWeapon(alice, warhammerSchema);
+
+      // Set Alice to have high power, low finesse for power-focused attacks
+      setStatValue(alice, Stat.POW, 15);
+      setStatValue(alice, Stat.FIN, 8);
+
       const event = createActorDidAttackEvent((e) => ({
         ...e,
-        actor: DAVID_ID, // High power, low finesse
+        actor: ALICE_ID, // High power, low finesse
         payload: {
           ...e.payload,
           target: BOB_ID,
@@ -203,13 +208,17 @@ describe('English Combat Narratives - Snapshot Tests', () => {
       }));
 
       const narrative = narrateActorDidAttack(context, event, OBSERVER_ID);
-      expect(narrative).toBe('David crushes Bob with his warhammer.');
+      expect(narrative).toBe('Alice crushes Bob with her warhammer.');
     });
 
     it('should render exact finesse-focused attack narrative', () => {
+      // Set Bob to have high finesse, low power for finesse-focused attacks
+      setStatValue(bob, Stat.FIN, 15);
+      setStatValue(bob, Stat.POW, 8);
+
       const event = createActorDidAttackEvent((e) => ({
         ...e,
-        actor: BOB_ID, // Lower power, balanced finesse
+        actor: BOB_ID, // Lower power, higher finesse
         payload: {
           ...e.payload,
           target: ALICE_ID,
@@ -290,28 +299,28 @@ describe('English Combat Narratives - Snapshot Tests', () => {
         actor: ALICE_ID,
         payload: {
           ...e.payload,
-          targets: [BOB_ID, CHARLIE_ID, DAVID_ID],
-          attackType: AttackType.CLEAVE,
-        }
-      }));
-
-      const narrative = narrateActorDidAttack(context, event, OBSERVER_ID);
-      expect(narrative).toBe('Alice sweeps her sword at Bob, Charlie, and David.');
-    });
-
-    it('should render exact warhammer cleave attack', () => {
-      const event = createActorDidAttackEvent((e) => ({
-        ...e,
-        actor: DAVID_ID, // Has warhammer (IMPACT damage)
-        payload: {
-          ...e.payload,
           targets: [BOB_ID, CHARLIE_ID],
           attackType: AttackType.CLEAVE,
         }
       }));
 
       const narrative = narrateActorDidAttack(context, event, OBSERVER_ID);
-      expect(narrative).toBe('David swings his warhammer at Bob and Charlie.');
+      expect(narrative).toBe('Alice sweeps her sword at Bob and Charlie.');
+    });
+
+    it('should render exact warhammer cleave attack', () => {
+      const event = createActorDidAttackEvent((e) => ({
+        ...e,
+        actor: CHARLIE_ID, // Has warhammer (IMPACT damage)
+        payload: {
+          ...e.payload,
+          targets: [ALICE_ID, BOB_ID],
+          attackType: AttackType.CLEAVE,
+        }
+      }));
+
+      const narrative = narrateActorDidAttack(context, event, OBSERVER_ID);
+      expect(narrative).toBe('Charlie swings his warhammer at Alice and Bob.');
     });
 
     it('should render exact dagger cleave attack', () => {
@@ -551,7 +560,7 @@ describe('English Combat Narratives - Snapshot Tests', () => {
       }));
 
       const narrative = narrateActorDidMoveInCombat(context, event, ALICE_ID);
-      expect(narrative).toBe('You sprint forward 5m to close distance.');
+      expect(narrative).toBe('You charge forward 5m to close distance.');
     });
 
     it('should render exact short distance movement', () => {
@@ -585,7 +594,7 @@ describe('English Combat Narratives - Snapshot Tests', () => {
       }));
 
       const narrative = narrateActorDidMoveInCombat(context, event, OBSERVER_ID);
-      expect(narrative).toBe('Alice sprints forward 3m to close distance.');
+      expect(narrative).toBe('Alice charges forward 3m to close distance.');
     });
   });
 

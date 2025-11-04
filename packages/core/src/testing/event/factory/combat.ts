@@ -1,4 +1,4 @@
-import { AttackOutcome, AttackType, MovementDirection } from '~/types/combat';
+import { AttackOutcome, AttackType, MovementDirection, Team } from '~/types/combat';
 import {
   ActorDidAttack,
   ActorWasAttacked,
@@ -9,7 +9,9 @@ import {
   CombatTurnDidStart,
   CombatTurnDidEnd,
   EventType,
-  CombatSessionStarted
+  CombatSessionStarted,
+  CombatSessionEnded,
+  CombatSessionStatusDidChange
 } from '~/types/event';
 import { ActorURN, SessionURN } from '~/types/taxonomy';
 import { ActionCost } from '~/types/combat';
@@ -18,6 +20,7 @@ import { BattlefieldPosition } from '~/types/combat';
 import { CombatEventFactoryDependencies, DEFAULT_COMBAT_EVENT_FACTORY_DEPS } from './deps';
 import { ALICE_ID, BOB_ID, DEFAULT_LOCATION, DEFAULT_TRACE, DEFAULT_COMBAT_SESSION } from '~/testing/constants';
 import { WellKnownActor } from '~/types/actor';
+import { SessionStatus } from '~/types/session';
 
 // Generic transform function type
 export type EventTransform<T> = (event: T) => T;
@@ -268,6 +271,49 @@ export function createCombatSessionStartedEvent(
       initiative: [],
       combatants: [],
       namesByTeam: {},
+    },
+  });
+
+  return transform(baseEvent);
+}
+
+export function createCombatSessionEndedEvent(
+  transform: EventTransform<CombatSessionEnded> = identity,
+  deps: CombatEventFactoryDependencies = DEFAULT_COMBAT_EVENT_FACTORY_DEPS
+): CombatSessionEnded {
+  const { createWorldEvent } = deps;
+
+  const baseEvent: CombatSessionEnded = createWorldEvent({
+    trace: DEFAULT_TRACE,
+    type: EventType.COMBAT_SESSION_DID_END,
+    actor: WellKnownActor.SYSTEM,
+    location: DEFAULT_LOCATION,
+    session: DEFAULT_COMBAT_SESSION,
+    payload: {
+      winningTeam: Team.ALPHA,
+      finalRound: 1,
+      finalTurn: 1,
+    },
+  });
+
+  return transform(baseEvent);
+}
+
+export function createCombatSessionStatusDidChangeEvent(
+  transform: EventTransform<CombatSessionStatusDidChange> = identity,
+  deps: CombatEventFactoryDependencies = DEFAULT_COMBAT_EVENT_FACTORY_DEPS
+): CombatSessionStatusDidChange {
+  const { createWorldEvent } = deps;
+
+  const baseEvent: CombatSessionStatusDidChange = createWorldEvent({
+    trace: DEFAULT_TRACE,
+    type: EventType.COMBAT_SESSION_STATUS_DID_CHANGE,
+    actor: WellKnownActor.SYSTEM,
+    location: DEFAULT_LOCATION,
+    session: DEFAULT_COMBAT_SESSION,
+    payload: {
+      previousStatus: SessionStatus.PENDING,
+      currentStatus: SessionStatus.RUNNING,
     },
   });
 
