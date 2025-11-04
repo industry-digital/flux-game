@@ -95,7 +95,7 @@ describe('EQUIP Command Reducer', () => {
       urn: DEFAULT_WEAPON_SCHEMA,
       timers: {
         ...w.timers,
-        setup: 500, // 500ms = 0.5 AP
+        setup: 100, // 100ms = 0.1 AP
       },
     }));
 
