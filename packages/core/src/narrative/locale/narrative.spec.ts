@@ -1,8 +1,8 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import { createTransformerContext } from '~/worldkit/context';
+import { createCombatSessionApi } from '~/worldkit/combat/session/session';
 import { createSwordSchema } from '~/worldkit/schema/weapon/sword';
-import { registerWeapons } from '~/worldkit/combat/testing/schema';
-import { useCombatScenario } from '~/worldkit/combat/testing/scenario';
+import { createWorldScenario, WorldScenarioHook } from '~/worldkit/scenario';
 import {
   createActorDidAttackEvent,
   createActorWasAttackedEvent,
@@ -11,20 +11,34 @@ import {
   createActorDidAcquireTargetEvent,
   createCombatTurnDidStartEvent,
   createCombatTurnDidEndEvent,
+  createCombatSessionStartedEvent,
+  createCombatSessionEndedEvent,
+  createCombatSessionStatusDidChangeEvent,
 } from '~/testing/event';
-import { EventType, WorldEvent } from '~/types/event';
-import { AttackOutcome, AttackType, Team } from '~/types/combat';
+import {
+  CombatSessionEnded,
+  CombatSessionStarted,
+  ActorDidAttack,
+  WorldEvent,
+  CombatSessionStatusDidChange,
+} from '~/types/event';
+import { AttackOutcome, AttackType, Combatant, CombatSession, Team } from '~/types/combat';
+import { CombatSessionApi } from '~/worldkit/combat/session/session';
 import { ActorURN } from '~/types/taxonomy';
 import { SessionStatus } from '~/types/session';
-import { ALICE_ID, BOB_ID, CHARLIE_ID } from '~/testing/constants';
-
-// Import all locale implementations
+import { ALICE_ID, BOB_ID, CHARLIE_ID, DEFAULT_LOCATION } from '~/testing/constants';
+import { createPlace } from '~/worldkit/entity/place';
 import { en_US } from './en_US';
 import { LanguageTemplates, TemplateFunction } from '~/types/narrative';
+import { TransformerContext } from '~/types/handler';
+import { Actor } from '~/types/entity/actor';
+import { createDefaultActors } from '~/testing/actors';
 
 // Test data setup
 const OBSERVER_ID: ActorURN = 'flux:actor:test:observer';
 
+type Transform<T> = (input: T) => T;
+const identity = <T = any>(x: T): T => x;
 
 describe.each([
   { locale: 'en_US', templates: en_US },
@@ -32,8 +46,11 @@ describe.each([
   // { locale: 'es_ES', templates: es_ES },
   // { locale: 'fr_FR', templates: fr_FR },
 ])('Narrative Templates - $locale', ({ locale, templates }) => {
-  let context: ReturnType<typeof createTransformerContext>;
-  let scenario: ReturnType<typeof useCombatScenario>;
+  let context: TransformerContext;
+  let scenario: WorldScenarioHook;
+  let alice: Actor;
+  let bob: Actor;
+  let charlie: Actor;
 
   // Helper function to properly type template calls
   function callTemplate<T extends WorldEvent>(
@@ -45,81 +62,73 @@ describe.each([
     return template(context, event, actorId);
   }
 
+  const createMockCleaveEvent = (
+    transform: Transform<ActorDidAttack> = identity,
+  ): ActorDidAttack => {
+    return createActorDidAttackEvent((e) => ({
+      ...e,
+      actor: ALICE_ID,
+      payload: {
+        ...e.payload,
+        attackType: AttackType.CLEAVE,
+        targets: [BOB_ID, CHARLIE_ID],
+      },
+    }));
+  };
+
+  const createMockStrikeEvent = (
+    transform: Transform<ActorDidAttack> = identity,
+  ): ActorDidAttack => {
+    return createActorDidAttackEvent((e) => ({
+      ...e,
+      actor: ALICE_ID,
+      payload: {
+        ...e.payload,
+        attackType: AttackType.STRIKE,
+        target: BOB_ID,
+      },
+    }));
+  };
+
   beforeEach(() => {
+    const place = createPlace((p) => ({ ...p, id: DEFAULT_LOCATION }));
+    ({ alice, bob, charlie } = createDefaultActors(place.id));
     context = createTransformerContext();
+
+    const scenario = createWorldScenario(context, {
+      places: [place],
+      actors: [alice, bob, charlie],
+    });
 
     const swordSchema = createSwordSchema({
       urn: 'flux:schema:weapon:test:sword',
       name: 'Test Sword',
     });
 
-    const { schemaManager } = context;
-    registerWeapons(schemaManager, [swordSchema]);
-
-    scenario = useCombatScenario(context, {
-      weapons: [swordSchema],
-      schemaManager,
-      participants: {
-        [ALICE_ID]: {
-          team: Team.ALPHA,
-          stats: { pow: 50, fin: 50, res: 50 },
-          equipment: { weapon: swordSchema.urn },
-          position: { coordinate: 100, facing: 1, speed: 0 },
-        },
-        [BOB_ID]: {
-          team: Team.BRAVO,
-          stats: { pow: 30, fin: 30, res: 30 },
-          position: { coordinate: 102, facing: -1, speed: 0 },
-        },
-        [OBSERVER_ID]: {
-          team: Team.ALPHA,
-          stats: { pow: 20, fin: 20, res: 20 },
-          position: { coordinate: 95, facing: 1, speed: 0 },
-        },
-      },
-    });
+    scenario.registerSchema(swordSchema);
   });
 
   describe('Combat Events', () => {
     describe('COMBATANT_DID_ATTACK', () => {
       it('should render attack narrative from attacker perspective', () => {
-        const event = createActorDidAttackEvent((e) => ({
-          ...e,
-          payload: { ...e.payload, targets: [BOB_ID], attackType: AttackType.CLEAVE }
-        }));
-
+        const event = createMockCleaveEvent();
         const narrative = callTemplate(context, event, ALICE_ID);
-
         expect(narrative).toBeTruthy();
         expect(typeof narrative).toBe('string');
         expect(narrative.length).toBeGreaterThan(0);
       });
 
       it('should render attack narrative from observer perspective', () => {
-        const event = createActorDidAttackEvent((e) => ({
-          ...e,
-          payload: { ...e.payload, targets: [BOB_ID, CHARLIE_ID], attackType: AttackType.CLEAVE }
-        }));
-
+        const event = createMockCleaveEvent();
         const narrative = callTemplate(context, event, OBSERVER_ID);
-
         expect(narrative).toBeTruthy();
         expect(typeof narrative).toBe('string');
         expect(narrative.length).toBeGreaterThan(0);
       });
 
       it('should render cleave attack narrative differently', () => {
-        const event = createActorDidAttackEvent((e) => ({
-          ...e,
-          payload: {
-            ...e.payload,
-            targets: [BOB_ID, CHARLIE_ID], // CLEAVE attacks have multiple targets
-            attackType: AttackType.CLEAVE
-          }
-        }));
-
+        const event = createMockCleaveEvent();
         const narrative = callTemplate(context, event, ALICE_ID);
-
         expect(narrative).toBeTruthy();
         expect(typeof narrative).toBe('string');
         expect(narrative.length).toBeGreaterThan(0);
@@ -265,49 +274,52 @@ describe.each([
   });
 
   describe('Combat Session Events', () => {
+    let combatSessionApi: CombatSessionApi;
+    let session: CombatSession;
+    let aliceCombatant: Combatant;
+    let bobCombatant: Combatant;
+
+    beforeEach(() => {
+      combatSessionApi = createCombatSessionApi(context, DEFAULT_LOCATION);
+      session = combatSessionApi.session;
+
+      combatSessionApi.addCombatant(alice.id, Team.ALPHA);
+      combatSessionApi.addCombatant(bob.id, Team.BRAVO);
+
+      ({ combatant: aliceCombatant } = combatSessionApi.getCombatantApi(alice.id)!);
+      ({ combatant: bobCombatant } = combatSessionApi.getCombatantApi(bob.id)!);
+    });
+
     it('should render combat session start narrative', () => {
-      const event: WorldEvent = {
-        id: 'test-event',
-        type: EventType.COMBAT_SESSION_DID_START,
-        location: 'flux:place:test',
-        actor: 'flux:actor:system',
-        trace: 'test-trace',
-        ts: Date.now(),
+      const event: CombatSessionStarted = createCombatSessionStartedEvent((e) => ({
+        ...e,
         payload: {
-          sessionId: scenario.session.id,
           initiative: [],
           combatants: [
-            [ALICE_ID, { team: Team.ALPHA }],
-            [BOB_ID, { team: Team.BRAVO }],
+            [ALICE_ID, aliceCombatant],
+            [BOB_ID, bobCombatant],
           ],
           namesByTeam: {
             [Team.ALPHA]: ['Alice'],
             [Team.BRAVO]: ['Bob'],
           },
         },
-      };
-
+      }));
       const narrative = callTemplate(context, event, ALICE_ID);
-
       expect(narrative).toBeTruthy();
       expect(typeof narrative).toBe('string');
       expect(narrative.length).toBeGreaterThan(0);
     });
 
     it('should render combat session end narrative', () => {
-      const event: WorldEvent = {
-        id: 'test-event',
-        type: EventType.COMBAT_SESSION_DID_END,
-        location: 'flux:place:test',
-        actor: 'flux:actor:system',
-        trace: 'test-trace',
-        ts: Date.now(),
+      const event: CombatSessionEnded = createCombatSessionEndedEvent((e) => ({
+        ...e,
         payload: {
-          session: scenario.session.id,
-          winningTeam: Team.ALPHA,
+          winningTeam: Team.BRAVO,
           finalRound: 3,
+          finalTurn: 1,
         },
-      };
+      }));
 
       const narrative = callTemplate(context, event, ALICE_ID);
 
@@ -317,22 +329,15 @@ describe.each([
     });
 
     it('should render combat status change narrative', () => {
-      const event: WorldEvent = {
-        id: 'test-event',
-        type: EventType.COMBAT_SESSION_STATUS_DID_CHANGE,
-        location: 'flux:place:test',
-        actor: 'flux:actor:system',
-        trace: 'test-trace',
-        ts: Date.now(),
+      const event: CombatSessionStatusDidChange = createCombatSessionStatusDidChangeEvent((e) => ({
+        ...e,
         payload: {
-          session: scenario.session.id,
           previousStatus: SessionStatus.PENDING,
           currentStatus: SessionStatus.RUNNING,
         },
-      };
+      }));
 
       const narrative = callTemplate(context, event, ALICE_ID);
-
       expect(narrative).toBeTruthy();
       expect(typeof narrative).toBe('string');
       expect(narrative.length).toBeGreaterThan(0);
