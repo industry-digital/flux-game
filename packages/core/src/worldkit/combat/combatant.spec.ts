@@ -238,7 +238,7 @@ describe('combatant', () => {
           actorId,
           combatantOverrides: {
             ap: {
-              current: 6,
+              current: 1.6653345369377348e-16, // Floating-point precision artifact
               max: 6,
             },
           }
@@ -272,7 +272,7 @@ describe('combatant', () => {
           actorId,
           combatantOverrides: {
             ap: {
-              current: 6,
+              current: 0, // Exactly zero AP
               max: 6,
             },
           }

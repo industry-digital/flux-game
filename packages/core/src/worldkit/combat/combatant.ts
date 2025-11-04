@@ -94,7 +94,7 @@ export function createCombatantApiFactory(actionDeps: ActionDependencies = DEFAU
       target, strike, defend, advance, retreat, done,
     });
 
-    const canAct = (): boolean => cleanApPrecision(getCurrentAp(combatant) || 0) > 0;
+    const canAct = (): boolean => cleanApPrecision(getCurrentAp(combatant)) > 0;
 
     const deductCost = (ap: number, energy: number): void => {
       if (ap > 0) {
