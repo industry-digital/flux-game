@@ -7,20 +7,20 @@
 
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { createAttackMethod, CombatPlanExecutor } from './attack';
-import { useCombatScenario } from '~/worldkit/combat/testing/scenario';
+import { createWorldScenario, WorldScenarioHook } from '~/worldkit/scenario';
+import { createDefaultActors } from '~/testing/actors';
 import { generateCombatPlan } from '~/worldkit/combat/ai';
 import { Actor } from '~/types/entity/actor';
-import { CombatSession, Combatant, CombatCommand, CombatFacing, Team } from '~/types/combat';
+import { Place } from '~/types/entity/place';
+import { CombatSession, Combatant, CombatCommand, CombatFacing, Team, AttackType } from '~/types/combat';
 import { CommandType } from '~/types/intent';
 import { WorldEvent, EventType } from '~/types/event';
 import { ActorURN } from '~/types/taxonomy';
 import { WeaponSchema } from '~/types/schema/weapon';
-import { createWorldEvent } from '~/worldkit/event';
 import { TransformerContext } from '~/types/handler';
 import { assessWeaponCapabilities } from '~/worldkit/combat/ai/analysis';
 import { createTransformerContext } from '~/worldkit/context';
 import { createSwordSchema } from '~/worldkit/schema/weapon/sword';
-import { registerWeapons } from '~/worldkit/combat/testing/schema';
 import { DEFAULT_COMBAT_PLANNING_DEPS } from '~/worldkit/combat/ai/deps';
 import { createActorCommand } from '~/lib/intent';
 import {
@@ -31,109 +31,68 @@ import {
   createCombatTurnDidEndEvent
 } from '~/testing/event/factory';
 import { WellKnownActor } from '~/types/actor';
+import { getCurrentAp } from '~/worldkit/combat/ap';
+import { createPlace } from '~/worldkit/entity/place';
+import { CHARLIE_ID, DEFAULT_LOCATION } from '~/testing/constants';
+import { createCombatant } from '~/worldkit/combat/combatant';
+import { createCombatSession } from '~/worldkit/combat/session/session';
+import { createDiceRollResult } from '~/worldkit/combat/testing/dice';
 
 describe('Attack Method with AI Integration', () => {
   const DEFAULT_TIMESTAMP = 1234567890000;
 
+  let place: Place;
   let context: TransformerContext;
+  let scenario: WorldScenarioHook;
   let session: CombatSession;
-  let actor: Actor;
-  let combatant: Combatant;
-
-  // Additional scenarios for specialized tests
-  let shortRangeWeapon: WeaponSchema;
-  let meleeWeapon: WeaponSchema;
-  let shortRangeScenario: ReturnType<typeof useCombatScenario>;
-  let meleeScenario: ReturnType<typeof useCombatScenario>;
+  let alice: Actor;
+  let bob: Actor;
+  let testWeapon: WeaponSchema;
+  let combatants: Record<ActorURN, Combatant>;
 
   beforeEach(() => {
-    const testContext = createTransformerContext();
+
+    (place = createPlace((p) => ({ ...p, id: DEFAULT_LOCATION })));
+    (context = createTransformerContext());
+    ({ alice, bob } = createDefaultActors(place.id));
+
+    scenario = createWorldScenario(context, {
+      places: [place],
+      actors: [alice, bob],
+    });
 
     // Create multiple weapon schemas for different test scenarios
-    const testWeapon = createSwordSchema({ name: 'Test Sword', urn: 'flux:schema:weapon:test-sword' });
-    shortRangeWeapon = createSwordSchema({
-      name: 'Short Sword',
-      urn: 'flux:schema:weapon:short-sword',
-      range: { optimal: 1, max: 1 } // 1m melee weapon
-    });
-    meleeWeapon = createSwordSchema({
-      name: 'Melee Weapon',
-      urn: 'flux:schema:weapon:melee',
+    testWeapon = createSwordSchema({
+      urn: 'flux:schema:weapon:test-sword',
+      name: 'Test Sword',
+      range: { optimal: 1, max: 1 },
     });
 
-    // Create and configure schema manager with all weapons
-    const { schemaManager } = testContext;
-    registerWeapons(schemaManager, [testWeapon, shortRangeWeapon, meleeWeapon]);
+    scenario.registerSchema(testWeapon);
+    scenario.assignWeapon(alice, testWeapon);
+    scenario.assignWeapon(bob, testWeapon);
 
-    // Main scenario for most tests
-    const scenario = useCombatScenario(testContext, {
-      weapons: [testWeapon],
-      schemaManager, // Share the schema manager
-      participants: {
-        'flux:actor:alice': {
-          team: Team.ALPHA,
-          name: 'Alice',
-          target: 'flux:actor:bob' as ActorURN,
-          position: { coordinate: 100, facing: CombatFacing.RIGHT, speed: 0 },
-          ap: 6,
-          energy: { position: 1.0 },
-          balance: 1,
-          equipment: { weapon: testWeapon.urn },
-        },
-        'flux:actor:bob': {
-          team: Team.BRAVO,
-          name: 'Bob',
-          position: { coordinate: 110, facing: CombatFacing.LEFT, speed: 0 },
-        },
-      },
+    combatants = {
+      [alice.id]: createCombatant(alice, Team.ALPHA, (c) => ({
+        ...c,
+        target: bob.id,
+        position: { coordinate: 100, facing: CombatFacing.RIGHT, speed: 0 },
+      })),
+      [bob.id]: createCombatant(bob, Team.BRAVO, (c) => ({
+        ...c,
+        target: alice.id,
+        position: { coordinate: 101, facing: CombatFacing.LEFT, speed: 0 },
+      })),
+    };
+
+    session = createCombatSession(context, {
+      location: place.id,
+      combatants: Object.values(combatants),
     });
 
-    // Short range scenario for range testing - no weapons array since schemas are already loaded
-    shortRangeScenario = useCombatScenario(testContext, {
-      weapons: [shortRangeWeapon],
-      schemaManager, // Share the schema manager
-      participants: {
-        'flux:actor:test:attacker': {
-          team: Team.ALPHA,
-          name: 'Attacker',
-          target: 'flux:actor:test:defender' as ActorURN,
-          position: { coordinate: 100, facing: CombatFacing.RIGHT, speed: 0 },
-          ap: 6,
-          equipment: { weapon: shortRangeWeapon.urn },
-        },
-        'flux:actor:test:defender': {
-          team: Team.BRAVO,
-          name: 'Defender',
-          position: { coordinate: 200, facing: CombatFacing.LEFT, speed: 0 }, // 100m away
-        },
-      },
-    });
+    scenario.addSession(session);
 
-    // Melee scenario for AI debugging - no weapons array since schemas are already loaded
-    meleeScenario = useCombatScenario(testContext, {
-      weapons: [meleeWeapon],
-      schemaManager, // Share the schema manager
-      participants: {
-        'flux:actor:test:attacker': {
-          team: Team.ALPHA,
-          name: 'Attacker',
-          target: 'flux:actor:test:defender' as ActorURN,
-          position: { coordinate: 100, facing: CombatFacing.RIGHT, speed: 0 },
-          ap: 10, // More AP to test multiple strikes
-          equipment: { weapon: meleeWeapon.urn },
-        },
-        'flux:actor:test:defender': {
-          team: Team.BRAVO,
-          name: 'Defender',
-          position: { coordinate: 102, facing: CombatFacing.LEFT, speed: 0 }, // 2m away - close range
-        },
-      },
-    });
-
-    context = testContext;
-    session = scenario.session;
-    actor = scenario.actors['flux:actor:alice'].actor;
-    combatant = scenario.actors['flux:actor:alice'].hooks.combatant.combatant;
+    context = context;
   });
 
   describe('ExecuteCombatPlan Injection', () => {
@@ -141,8 +100,8 @@ describe('Attack Method with AI Integration', () => {
       // Create mock dependencies
       const mockGenerateCombatPlan = vi.fn().mockReturnValue([
         createActorCommand({
-          actor: actor.id,
-          location: actor.location,
+          actor: alice.id,
+          location: alice.location,
           type: CommandType.ATTACK,
           args: {
             target: 'flux:actor:bob',
@@ -150,16 +109,16 @@ describe('Attack Method with AI Integration', () => {
           },
         }),
         createActorCommand({
-          actor: actor.id,
-          location: actor.location,
+          actor: alice.id,
+          location: alice.location,
           type: CommandType.ATTACK,
-          args: { target: 'flux:actor:bob', cost: { ap: 2.0, energy: 1000 } },
+          args: { target: bob.id, cost: { ap: 2.0, energy: 1000 } },
         }),
       ]);
 
       const mockExecuteCombatPlan: CombatPlanExecutor = vi.fn().mockReturnValue(
         [
-          createActorDidAttackEvent((event) => ({ ...event, actor: actor.id }))
+          createActorDidAttackEvent((event) => ({ ...event, actor: alice.id }))
         ]
       );
 
@@ -173,8 +132,8 @@ describe('Attack Method with AI Integration', () => {
       const attack = createAttackMethod(
         context,
         session,
-        actor,
-        combatant,
+        alice,
+        combatants[alice.id],
         {
           generateCombatPlan: mockGenerateCombatPlan,
           executeCombatPlan: mockExecuteCombatPlan,
@@ -193,12 +152,12 @@ describe('Attack Method with AI Integration', () => {
       expect(mockExecuteCombatPlan).toHaveBeenCalledWith(
         context,
         session,
-        actor,
-        combatant,
+        alice,
+        combatants[alice.id],
         expect.arrayContaining([
           expect.objectContaining({
             __type: 'command',
-            actor: actor.id,
+            actor: alice.id,
             type: CommandType.ATTACK,
             args: expect.objectContaining({
               target: 'flux:actor:bob',
@@ -225,23 +184,26 @@ describe('Attack Method with AI Integration', () => {
     it('should use default executeCombatPlan when not injected', () => {
       const mockGenerateCombatPlan = vi.fn().mockReturnValue([
         createActorCommand({
-          actor: actor.id,
-          location: actor.location,
+          actor: alice.id,
+          location: alice.location,
           type: CommandType.ATTACK,
-          args: { target: 'flux:actor:bob', cost: { ap: 2.0, energy: 1000 } },
+          args: {
+            target: bob.id,
+            cost: { ap: 2.0, energy: 1000 },
+          },
         }),
       ]);
 
       const mockStrike = vi.fn().mockReturnValue([
-        createActorDidAttackEvent((event) => ({ ...event, actor: actor.id }))
+        createActorDidAttackEvent((event) => ({ ...event, actor: alice.id }))
       ]);
 
       // Create attack method without executeCombatPlan injection
       const attack = createAttackMethod(
         context,
         session,
-        actor,
-        combatant,
+        alice,
+        combatants[alice.id],
         {
           generateCombatPlan: mockGenerateCombatPlan,
           strike: mockStrike,
@@ -262,7 +224,7 @@ describe('Attack Method with AI Integration', () => {
   describe('Target Management', () => {
     it('should update target when provided and include target events', () => {
       const mockTarget = vi.fn().mockReturnValue([
-        createActorDidAcquireTargetEvent((event) => ({ ...event, actor: actor.id }))
+        createActorDidAcquireTargetEvent((event) => ({ ...event, actor: alice.id }))
       ]);
 
       const mockGenerateCombatPlan = vi.fn().mockReturnValue([]);
@@ -270,8 +232,8 @@ describe('Attack Method with AI Integration', () => {
       const attack = createAttackMethod(
         context,
         session,
-        actor,
-        combatant,
+        alice,
+        combatants[alice.id],
         {
           generateCombatPlan: mockGenerateCombatPlan,
           target: mockTarget,
@@ -290,13 +252,14 @@ describe('Attack Method with AI Integration', () => {
     });
 
     it('should require existing target when none provided', () => {
+      const combatant = combatants[alice.id];
       const combatantWithoutTarget = { ...combatant, target: null };
       const mockDeclareError = vi.spyOn(context, 'declareError');
 
       const attack = createAttackMethod(
         context,
         session,
-        actor,
+        alice,
         combatantWithoutTarget,
       );
 
@@ -313,13 +276,13 @@ describe('Attack Method with AI Integration', () => {
   describe('Movement Actions in Combat Plans', () => {
     it('should execute ADVANCE actions through combat plan', () => {
       const mockAdvance = vi.fn().mockReturnValue([
-        createActorDidMoveInCombatEvent((event) => ({ ...event, actor: actor.id }))
+        createActorDidMoveInCombatEvent((event) => ({ ...event, actor: alice.id }))
       ]);
 
       const mockGenerateCombatPlan = vi.fn().mockReturnValue([
         createActorCommand({
-          actor: actor.id,
-          location: actor.location,
+          actor: alice.id,
+          location: alice.location,
           type: CommandType.ADVANCE,
           args: { distance: 10, cost: { ap: 1.0 } },
         }),
@@ -328,8 +291,8 @@ describe('Attack Method with AI Integration', () => {
       const attack = createAttackMethod(
         context,
         session,
-        actor,
-        combatant,
+        alice,
+        combatants[alice.id],
         {
           generateCombatPlan: mockGenerateCombatPlan,
           advance: mockAdvance,
@@ -347,13 +310,13 @@ describe('Attack Method with AI Integration', () => {
 
     it('should execute RETREAT actions through combat plan', () => {
       const mockRetreat = vi.fn().mockReturnValue([
-        createActorDidMoveInCombatEvent((event) => ({ ...event, actor: actor.id }))
+        createActorDidMoveInCombatEvent((event) => ({ ...event, actor: alice.id }))
       ]);
 
       const mockGenerateCombatPlan = vi.fn().mockReturnValue([
         createActorCommand({
-          actor: actor.id,
-          location: actor.location,
+          actor: alice.id,
+          location: alice.location,
           type: CommandType.RETREAT,
           args: { distance: 5, cost: { ap: 1.0 } },
         }),
@@ -362,8 +325,8 @@ describe('Attack Method with AI Integration', () => {
       const attack = createAttackMethod(
         context,
         session,
-        actor,
-        combatant,
+        alice,
+        combatants[alice.id],
         {
           generateCombatPlan: mockGenerateCombatPlan,
           retreat: mockRetreat,
@@ -381,22 +344,22 @@ describe('Attack Method with AI Integration', () => {
 
     it('should handle mixed action plans with movement and combat', () => {
       const mockAdvance = vi.fn().mockReturnValue([
-        createActorDidMoveInCombatEvent((event) => ({ ...event, actor: actor.id }))
+        createActorDidMoveInCombatEvent((event) => ({ ...event, actor: alice.id }))
       ]);
       const mockStrike = vi.fn().mockReturnValue([
-        createActorDidAttackEvent((event) => ({ ...event, actor: actor.id }))
+        createActorDidAttackEvent((event) => ({ ...event, actor: alice.id }))
       ]);
 
       const mockGenerateCombatPlan = vi.fn().mockReturnValue([
         createActorCommand( {
-          actor: actor.id,
-          location: actor.location,
+          actor: alice.id,
+          location: alice.location,
           type: CommandType.ADVANCE,
           args: { distance: 5, cost: { ap: 1.0 } },
         }),
         createActorCommand({
-          actor: actor.id,
-          location: actor.location,
+          actor: alice.id,
+          location: alice.location,
           type: CommandType.STRIKE,
           args: { target: 'flux:actor:bob', cost: { ap: 2.0 } },
         }),
@@ -405,8 +368,8 @@ describe('Attack Method with AI Integration', () => {
       const attack = createAttackMethod(
         context,
         session,
-        actor,
-        combatant,
+        alice,
+        combatants[alice.id],
         {
           generateCombatPlan: mockGenerateCombatPlan,
           advance: mockAdvance,
@@ -430,22 +393,22 @@ describe('Attack Method with AI Integration', () => {
     it('should call generateCombatPlan with correct parameters', () => {
       const mockGenerateCombatPlan = vi.fn().mockReturnValue([
         createActorCommand({
-          actor: actor.id,
-          location: actor.location,
+          actor: alice.id,
+          location: alice.location,
           type: CommandType.STRIKE,
           args: { target: 'flux:actor:bob', cost: { ap: 2.0 } },
         }),
       ]);
 
       const mockStrike = vi.fn().mockReturnValue([
-        createActorDidAttackEvent((event) => ({ ...event, actor: actor.id }))
+        createActorDidAttackEvent((event) => ({ ...event, actor: alice.id }))
       ]);
 
       const attack = createAttackMethod(
         context,
         session,
-        actor,
-        combatant,
+        alice,
+        combatants[alice.id],
         {
           generateCombatPlan: mockGenerateCombatPlan,
           strike: mockStrike,
@@ -459,7 +422,7 @@ describe('Attack Method with AI Integration', () => {
       expect(mockGenerateCombatPlan).toHaveBeenCalledWith(
         context,
         session,
-        combatant,
+        combatants[alice.id],
         customTrace
       );
       expect(mockGenerateCombatPlan).toHaveBeenCalledTimes(1);
@@ -470,10 +433,10 @@ describe('Attack Method with AI Integration', () => {
       // that the attack method attempts to generate a plan by checking that
       // it doesn't immediately error out due to missing plan generation
       const mockStrike = vi.fn().mockReturnValue([
-        createActorDidAttackEvent((event) => ({ ...event, actor: actor.id }))
+        createActorDidAttackEvent((event) => ({ ...event, actor: alice.id }))
       ]);
       const mockDefend = vi.fn().mockReturnValue([
-        createActorDidDefendEvent((event) => ({ ...event, actor: actor.id }))
+        createActorDidDefendEvent((event) => ({ ...event, actor: alice.id }))
       ]);
       const mockDone = vi.fn().mockReturnValue([
         createCombatTurnDidEndEvent((event) => ({ ...event, actor: WellKnownActor.SYSTEM }))
@@ -482,8 +445,8 @@ describe('Attack Method with AI Integration', () => {
       const attack = createAttackMethod(
         context,
         session,
-        actor,
-        combatant,
+        alice,
+        combatants[alice.id],
         {
           strike: mockStrike,
           defend: mockDefend,
@@ -507,8 +470,8 @@ describe('Attack Method with AI Integration', () => {
       const attack = createAttackMethod(
         context,
         session,
-        actor,
-        combatant,
+        alice,
+        combatants[alice.id],
         {
           generateCombatPlan: mockGenerateCombatPlan,
         }
@@ -527,26 +490,26 @@ describe('Attack Method with AI Integration', () => {
   describe('Target Assignment in Strike Actions', () => {
     it('should call target method when STRIKE action has explicit target', () => {
       const mockTarget = vi.fn().mockReturnValue([
-        createActorDidAcquireTargetEvent((event) => ({ ...event, actor: actor.id }))
+        createActorDidAcquireTargetEvent((event) => ({ ...event, actor: alice.id }))
       ]);
       const mockStrike = vi.fn().mockReturnValue([
-        createActorDidAttackEvent((event) => ({ ...event, actor: actor.id }))
+        createActorDidAttackEvent((event) => ({ ...event, actor: alice.id }))
       ]);
 
       const mockGenerateCombatPlan = vi.fn().mockReturnValue([
         createActorCommand({
-          actor: actor.id,
-          location: actor.location,
+          actor: alice.id,
+          location: alice.location,
           type: CommandType.STRIKE,
-          args: { target: 'flux:actor:charlie', cost: { ap: 2.0 } }, // Explicit target different from combatant's current target
+          args: { target: CHARLIE_ID, cost: { ap: 2.0 } }, // Explicit target different from combatant's current target
         }),
       ]);
 
       const attack = createAttackMethod(
         context,
         session,
-        actor,
-        combatant, // combatant.target is 'flux:actor:bob'
+        alice,
+        combatants[alice.id],
         {
           generateCombatPlan: mockGenerateCombatPlan,
           target: mockTarget,
@@ -570,16 +533,16 @@ describe('Attack Method with AI Integration', () => {
 
     it('should call target method when ATTACK action has explicit target', () => {
       const mockTarget = vi.fn().mockReturnValue([
-        createActorDidAcquireTargetEvent((event) => ({ ...event, actor: actor.id }))
+        createActorDidAcquireTargetEvent((event) => ({ ...event, actor: alice.id }))
       ]);
       const mockStrike = vi.fn().mockReturnValue([
-        createActorDidAttackEvent((event) => ({ ...event, actor: actor.id }))
+        createActorDidAttackEvent((event) => ({ ...event, actor: alice.id }))
       ]);
 
       const mockGenerateCombatPlan = vi.fn().mockReturnValue([
         createActorCommand({
-          actor: actor.id,
-          location: actor.location,
+          actor: alice.id,
+          location: alice.location,
           type: CommandType.ATTACK, // Using ATTACK instead of STRIKE
           args: { target: 'flux:actor:dave', cost: { ap: 2.0 } },
         }),
@@ -588,8 +551,8 @@ describe('Attack Method with AI Integration', () => {
       const attack = createAttackMethod(
         context,
         session,
-        actor,
-        combatant,
+        alice,
+        combatants[alice.id],
         {
           generateCombatPlan: mockGenerateCombatPlan,
           target: mockTarget,
@@ -608,13 +571,13 @@ describe('Attack Method with AI Integration', () => {
     it('should not call target method when STRIKE action has no explicit target', () => {
       const mockTarget = vi.fn().mockReturnValue([]);
       const mockStrike = vi.fn().mockReturnValue([
-        createActorDidAttackEvent((event) => ({ ...event, actor: actor.id }))
+        createActorDidAttackEvent((event) => ({ ...event, actor: alice.id }))
       ]);
 
       const mockGenerateCombatPlan = vi.fn().mockReturnValue([
         createActorCommand({
-          actor: actor.id,
-          location: actor.location,
+          actor: alice.id,
+          location: alice.location,
           type: CommandType.STRIKE,
           args: { cost: { ap: 2.0 } }, // No target specified
         }),
@@ -623,8 +586,8 @@ describe('Attack Method with AI Integration', () => {
       const attack = createAttackMethod(
         context,
         session,
-        actor,
-        combatant, // combatant.target is 'flux:actor:bob'
+        alice,
+        combatants[alice.id], // combatant.target is 'flux:actor:bob'
         {
           generateCombatPlan: mockGenerateCombatPlan,
           target: mockTarget,
@@ -646,13 +609,13 @@ describe('Attack Method with AI Integration', () => {
     it('should handle STRIKE action with null target args gracefully', () => {
       const mockTarget = vi.fn().mockReturnValue([]);
       const mockStrike = vi.fn().mockReturnValue([
-        createActorDidAttackEvent((event) => ({ ...event, actor: actor.id }))
+        createActorDidAttackEvent((event) => ({ ...event, actor: alice.id }))
       ]);
 
       const mockGenerateCombatPlan = vi.fn().mockReturnValue([
         createActorCommand({
-          actor: actor.id,
-          location: actor.location,
+          actor: alice.id,
+          location: alice.location,
           type: CommandType.STRIKE,
           args: { target: null, cost: { ap: 2.0 } }, // Explicit null target
         }),
@@ -661,8 +624,8 @@ describe('Attack Method with AI Integration', () => {
       const attack = createAttackMethod(
         context,
         session,
-        actor,
-        combatant,
+        alice,
+        combatants[alice.id],
         {
           generateCombatPlan: mockGenerateCombatPlan,
           target: mockTarget,
@@ -690,8 +653,8 @@ describe('Attack Method with AI Integration', () => {
       // Mock generateCombatPlan to return what it SHOULD return
       const expectedPlan: CombatCommand[] = [
         createActorCommand({
-          actor: shortRangeScenario.actors['flux:actor:test:attacker'].actor.id,
-          location: shortRangeScenario.actors['flux:actor:test:attacker'].actor.location,
+          actor: alice.id,
+          location: alice.location,
           type: CommandType.ADVANCE,
           args: { distance: 42, cost: { ap: 6, energy: 0 } }, // Move as far as possible with 6 AP
         }),
@@ -701,9 +664,9 @@ describe('Attack Method with AI Integration', () => {
 
       const attack = createAttackMethod(
         context,
-        shortRangeScenario.session,
-        shortRangeScenario.actors['flux:actor:test:attacker'].actor,
-        shortRangeScenario.actors['flux:actor:test:attacker'].hooks.combatant.combatant,
+        session,
+        alice,
+        combatants[alice.id],
         {
           generateCombatPlan: mockGenerateCombatPlan,
         }
@@ -723,30 +686,30 @@ describe('Attack Method with AI Integration', () => {
 
       // Mock the executeCombatPlan to return a simple event with the trace passed to it
       const mockExecuteCombatPlan = vi.fn().mockImplementation((plan, context, session, actor, combatant, trace) => [
-        createWorldEvent({
-          trace: trace,
-          type: EventType.ACTOR_DID_ATTACK,
+        createActorDidAttackEvent((e) => ({
+          ...e,
+          trace,
           actor: actor.id,
           location: actor.location,
           session: session.id,
           payload: {
             cost: { ap: 2.0, energy: 1000 },
-            target: 'flux:actor:bob',
+            target: bob.id,
             roll: { result: 15, dice: '1d20' },
             outcome: 'hit',
             damage: { amount: 8, type: 'slashing' }
           } as any,
-        })
+        })),
       ]);
 
       // Mock generateCombatPlan to return a simple attack plan
       const mockGenerateCombatPlan = vi.fn().mockReturnValue([
         createActorCommand({
-          actor: actor.id,
-          location: actor.location,
+          actor: alice.id,
+          location: alice.location,
           type: CommandType.ATTACK,
           args: {
-            target: 'flux:actor:bob',
+            target: bob.id,
             cost: { ap: 2.0, energy: 1000 }
           },
         })
@@ -755,15 +718,15 @@ describe('Attack Method with AI Integration', () => {
       const attackMethod = createAttackMethod(
         context,
         session,
-        actor,
-        combatant,
+        alice,
+        combatants[alice.id],
         {
           generateCombatPlan: mockGenerateCombatPlan,
           executeCombatPlan: mockExecuteCombatPlan
         }
       );
 
-      const events: WorldEvent[] = attackMethod('flux:actor:bob', customTrace);
+      const events: WorldEvent[] = attackMethod(bob.id, customTrace);
 
       expect(events).toHaveLength(1);
       // Only event should be the combat plan execution event (no target acquisition since combatant already targets 'flux:actor:bob')
@@ -787,35 +750,35 @@ describe('Attack Method with AI Integration', () => {
       // Mock generateCombatPlan to return a simple plan
       const mockGenerateCombatPlan = vi.fn().mockReturnValue([
         createActorCommand({
-          actor: actor.id,
-          location: actor.location,
+          actor: alice.id,
+          location: alice.location,
           type: CommandType.ATTACK,
-          args: { target: 'flux:actor:bob', cost: { ap: 2.0, energy: 1000 } },
+          args: { target: bob.id, cost: { ap: 2.0, energy: 1000 } },
         }),
       ]);
 
       const mockExecuteCombatPlan = vi.fn().mockReturnValue([
-        createWorldEvent({
+        createActorDidAttackEvent((e) => ({
+          ...e,
           trace: generatedTrace,
-          type: EventType.ACTOR_DID_ATTACK,
-          actor: actor.id,
-          location: actor.location,
+          actor: alice.id,
+          location: alice.location,
           session: session.id,
           payload: {
+            attackRating: 75,
+            attackType: AttackType.STRIKE,
             cost: { ap: 2.0, energy: 1000 },
-            target: 'flux:actor:bob',
-            roll: { result: 15, dice: '1d20' },
-            outcome: 'hit',
-            damage: { amount: 8, type: 'slashing' }
-          } as any,
-        })
+            target: bob.id,
+            roll: createDiceRollResult('1d20', [15]),
+          },
+        })),
       ]);
 
       const attackMethod = createAttackMethod(
         context,
         session,
-        actor,
-        combatant,
+        alice,
+        combatants[alice.id],
         {
           generateCombatPlan: mockGenerateCombatPlan,
           executeCombatPlan: mockExecuteCombatPlan,
@@ -839,19 +802,19 @@ describe('Attack Method with AI Integration', () => {
 
   describe('AI Planning Analysis', () => {
     it('should generate combat plans for close-range scenarios', () => {
-      const attacker = meleeScenario.actors['flux:actor:test:attacker'];
-      const defender = meleeScenario.actors['flux:actor:test:defender'];
+      const attacker = alice;
+      const defender = bob;
 
       // Verify scenario setup
-      expect(attacker.hooks.combatant.combatant.ap.eff.cur).toBeGreaterThan(0);
-      expect(attacker.hooks.combatant.combatant.target).toBeTruthy();
+      expect(getCurrentAp(combatants[alice.id])).toBeGreaterThan(0);
+      expect(combatants[alice.id].target).toBeTruthy();
 
-      const weaponSchema = context.equipmentApi.getEquippedWeaponSchema(attacker.actor);
+      const weaponSchema = context.equipmentApi.getEquippedWeaponSchema(alice);
       expect(weaponSchema).toBeDefined();
 
       const distance = Math.abs(
-        defender.hooks.combatant.combatant.position.coordinate -
-        attacker.hooks.combatant.combatant.position.coordinate
+        combatants[defender.id].position.coordinate -
+        combatants[attacker.id].position.coordinate
       );
 
       const weaponAssessment = assessWeaponCapabilities(context, weaponSchema!, distance);
@@ -868,8 +831,8 @@ describe('Attack Method with AI Integration', () => {
       // Test AI planning
       const plan = generateCombatPlan(
         context,
-        meleeScenario.session,
-        attacker.hooks.combatant.combatant,
+        session,
+        combatants[alice.id],
         'test-trace',
         testDeps
       );
