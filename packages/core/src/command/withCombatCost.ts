@@ -11,6 +11,7 @@ import { ActionCost } from '~/types/combat';
 import { createCombatSessionApi } from '~/worldkit/combat/session/session';
 import { roundApCostUp } from '~/worldkit/combat/tactical-rounding';
 import { ErrorCode } from '~/types/error';
+import { getCurrentAp } from '~/worldkit/combat/ap';
 
 /**
  * Cost calculation function type
@@ -54,8 +55,8 @@ export function withCombatCost<TCommand extends Command>(
     const energyCost = cost.energy ?? 0;
 
     // Validate affordability
-    if (apCost > combatantApi.combatant.ap.eff.cur) {
-      context.declareError(ErrorCode.INSUFFICIENT_AP, command.id);
+    if (apCost > getCurrentAp(combatantApi.combatant)) {
+      context.declareError(ErrorCode.PRECONDITION_FAILED, command.id);
       return context;
     }
 

@@ -16,8 +16,10 @@ import { ActorURN } from '~/types/taxonomy';
 import { deductAp } from '~/worldkit/combat/combatant';
 import { TransformerContext } from '~/types/handler';
 import { createStrikeCost } from '~/worldkit/combat/tactical-cost';
-import { decrementHp } from '~/worldkit/entity/actor/health';
+import { decrementHp, isDead } from '~/worldkit/entity/actor/health';
 import { WeaponTimer } from '~/types/schema/weapon';
+import { getCurrentAp } from '~/worldkit/combat/ap';
+import { getCapacitorPosition } from '~/worldkit/entity/actor/capacitor';
 
 export type StrikeDependencies = {
   createWorldEvent?: typeof createWorldEvent;
@@ -92,7 +94,7 @@ export function createStrikeMethod(
     }
 
     const cost: ActionCost = createStrikeCostImpl(actor, weapon, WeaponTimer.ATTACK);
-    if (cost.ap! > combatant.ap.eff.cur) {
+    if (cost.ap! > getCurrentAp(combatant)) {
       declareError(`You don't have enough AP to strike.`, trace);
       return [];
     }
@@ -107,11 +109,13 @@ export function createStrikeMethod(
       computeCombatMass,
     );
 
+    const targetCapacitorPosition = getCapacitorPosition(targetActor);
+
     const hitResolution = resolveHitAttemptImpl(
       defenderEvasionRating,
       attackRating,
-      targetCombatant.energy.position,
-      context, //--> ASSUMPTION: context contains necessary dependencies
+      targetCapacitorPosition,
+      context, //--> `context` contains necessary dependencies
     );
 
     let damage = 0;
@@ -171,7 +175,7 @@ export function createStrikeMethod(
     context.declareEvent(combatantDidAttackEvent);
     context.declareEvent(combatantWasAttackedEvent);
 
-    if (damage > 0 && targetActor.hp.eff.cur <= 0) {
+    if (damage > 0 && isDead(targetActor)) {
       const deathEvent = createWorldEventImpl({
         trace: trace,
         type: EventType.ACTOR_DID_DIE,

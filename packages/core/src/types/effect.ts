@@ -41,11 +41,6 @@ export type AppliedEffect<
   origin: EffectOrigin;
 
   /**
-   * Optional human-friendly description for display purposes.
-   */
-  summary?: string;
-
-  /**
    * For tracking the state of the effect over time
    */
   state?: State;

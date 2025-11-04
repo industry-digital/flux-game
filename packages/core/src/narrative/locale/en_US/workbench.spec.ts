@@ -41,6 +41,7 @@ import { TransformerContext } from '~/types/handler';
 import { createDefaultActors } from '~/testing/actors';
 import { CurrencyType } from '~/types/currency';
 import { WorkbenchSessionDidStart } from '~/types/event';
+import { setShellNaturalStatValue } from '~/worldkit/entity/actor';
 
 describe('English Workbench Narratives - Snapshot Tests', () => {
   let context: TransformerContext;
@@ -56,12 +57,9 @@ describe('English Workbench Narratives - Snapshot Tests', () => {
     // Set Alice's shell stats to the expected values for the tests
     const aliceShell = alice.shells[alice.currentShell];
     if (aliceShell) {
-      aliceShell.stats[Stat.POW].nat = 40;
-      aliceShell.stats[Stat.POW].eff = 40;
-      aliceShell.stats[Stat.FIN].nat = 40;
-      aliceShell.stats[Stat.FIN].eff = 40;
-      aliceShell.stats[Stat.RES].nat = 40;
-      aliceShell.stats[Stat.RES].eff = 40;
+      setShellNaturalStatValue(aliceShell, Stat.POW, 40);
+      setShellNaturalStatValue(aliceShell, Stat.FIN, 40);
+      setShellNaturalStatValue(aliceShell, Stat.RES, 40);
     }
 
     // Only Alice is going to be working at the workbench

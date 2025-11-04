@@ -5,7 +5,6 @@ import { SearchCache } from '~/types/combat-ai';
 import { MassApi } from '~/worldkit/physics/mass';
 import { ActorEquipmentApi } from '~/worldkit/entity/actor/equipment';
 import { ActorInventoryApi } from '~/worldkit/entity/actor/inventory';
-import { ActorSkillApi } from '~/worldkit/entity/actor/skill';
 import { rollDiceWithRng } from '~/worldkit/dice';
 import { WorldProjection } from '~/types/world';
 import { CommandResolver } from '~/types/intent';
@@ -117,7 +116,6 @@ export type TransformerContext<W extends WorldProjection = WorldProjection> =
 
     inventoryApi: ActorInventoryApi;
     equipmentApi: ActorEquipmentApi;
-    skillApi: ActorSkillApi;
     weaponApi: ActorWeaponApi;
     rollApi: RollApi;
     partyApi: PartyApi;

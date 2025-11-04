@@ -30,7 +30,6 @@ describe('Combat Lifecycle - Termination', () => {
       name: 'Alice',
       kind: ActorType.PC,
       location,
-      hp: { nat: { cur: 100, max: 100 }, eff: { cur: 100, max: 100 }, mods: {} },
     });
 
     context.world.actors[BOB_ID] = createActor({
@@ -38,7 +37,6 @@ describe('Combat Lifecycle - Termination', () => {
       name: 'Bob',
       kind: ActorType.PC,
       location,
-      hp: { nat: { cur: 100, max: 100 }, eff: { cur: 100, max: 100 }, mods: {} },
     });
 
     context.world.actors[CHARLIE_ID] = createActor({
@@ -46,7 +44,6 @@ describe('Combat Lifecycle - Termination', () => {
       name: 'Charlie',
       kind: ActorType.PC,
       location,
-      hp: { nat: { cur: 100, max: 100 }, eff: { cur: 100, max: 100 }, mods: {} },
     });
   });
 
@@ -74,10 +71,7 @@ describe('Combat Lifecycle - Termination', () => {
             team: Team.ALPHA,
             position: { coordinate: 100, facing: CombatFacing.RIGHT, speed: 0 },
             initiative: { values: [15], result: 15, dice: '1d20', bonus: 0, natural: 15 },
-            mass: 70,
-            ap: { nat: { cur: 6, max: 6 }, eff: { cur: 6, max: 6 }, mods: {} },
-            energy: { position: 1, nat: { cur: 1000, max: 1000 }, eff: { cur: 1000, max: 1000 }, mods: {} },
-            balance: { nat: { cur: 1, max: 1 }, eff: { cur: 1, max: 1 }, mods: {} },
+            ap: { current: 6, max: 6 },
             target: null,
           },
           {
@@ -85,10 +79,7 @@ describe('Combat Lifecycle - Termination', () => {
             team: Team.BRAVO,
             position: { coordinate: 200, facing: CombatFacing.LEFT, speed: 0 },
             initiative: { values: [12], result: 12, dice: '1d20', bonus: 0, natural: 12 },
-            mass: 75,
-            ap: { nat: { cur: 6, max: 6 }, eff: { cur: 6, max: 6 }, mods: {} },
-            energy: { position: 1, nat: { cur: 1000, max: 1000 }, eff: { cur: 1000, max: 1000 }, mods: {} },
-            balance: { nat: { cur: 1, max: 1 }, eff: { cur: 1, max: 1 }, mods: {} },
+            ap: { current: 6, max: 6 },
             target: null,
           },
         ],
@@ -109,10 +100,7 @@ describe('Combat Lifecycle - Termination', () => {
             team: Team.ALPHA,
             position: { coordinate: 100, facing: CombatFacing.RIGHT, speed: 0 },
             initiative: { values: [15], result: 15, dice: '1d20', bonus: 0, natural: 15 },
-            mass: 70,
-            ap: { nat: { cur: 6, max: 6 }, eff: { cur: 6, max: 6 }, mods: {} },
-            energy: { position: 1, nat: { cur: 1000, max: 1000 }, eff: { cur: 1000, max: 1000 }, mods: {} },
-            balance: { nat: { cur: 1, max: 1 }, eff: { cur: 1, max: 1 }, mods: {} },
+            ap: { current: 6, max: 6 },
             target: null,
           },
           {
@@ -120,17 +108,14 @@ describe('Combat Lifecycle - Termination', () => {
             team: Team.BRAVO,
             position: { coordinate: 200, facing: CombatFacing.LEFT, speed: 0 },
             initiative: { values: [12], result: 12, dice: '1d20', bonus: 0, natural: 12 },
-            mass: 75,
-            ap: { nat: { cur: 6, max: 6 }, eff: { cur: 6, max: 6 }, mods: {} },
-            energy: { position: 1, nat: { cur: 1000, max: 1000 }, eff: { cur: 1000, max: 1000 }, mods: {} },
-            balance: { nat: { cur: 1, max: 1 }, eff: { cur: 1, max: 1 }, mods: {} },
+            ap: { current: 6, max: 6 },
             target: null,
           },
         ],
       });
 
       // Kill Bob (Team Bravo)
-      context.world.actors[BOB_ID].hp.eff.cur = 0;
+      context.world.actors[BOB_ID].hp.current = 0;
 
       const gameState = createCombatGameStateApi(context, session, location);
 
@@ -147,10 +132,7 @@ describe('Combat Lifecycle - Termination', () => {
             team: Team.ALPHA,
             position: { coordinate: 100, facing: CombatFacing.RIGHT, speed: 0 },
             initiative: { values: [15], result: 15, dice: '1d20', bonus: 0, natural: 15 },
-            mass: 70,
-            ap: { nat: { cur: 6, max: 6 }, eff: { cur: 6, max: 6 }, mods: {} },
-            energy: { position: 1, nat: { cur: 1000, max: 1000 }, eff: { cur: 1000, max: 1000 }, mods: {} },
-            balance: { nat: { cur: 1, max: 1 }, eff: { cur: 1, max: 1 }, mods: {} },
+            ap: { current: 6, max: 6 },
             target: null,
           },
           {
@@ -158,18 +140,15 @@ describe('Combat Lifecycle - Termination', () => {
             team: Team.BRAVO,
             position: { coordinate: 200, facing: CombatFacing.LEFT, speed: 0 },
             initiative: { values: [12], result: 12, dice: '1d20', bonus: 0, natural: 12 },
-            mass: 75,
-            ap: { nat: { cur: 6, max: 6 }, eff: { cur: 6, max: 6 }, mods: {} },
-            energy: { position: 1, nat: { cur: 1000, max: 1000 }, eff: { cur: 1000, max: 1000 }, mods: {} },
-            balance: { nat: { cur: 1, max: 1 }, eff: { cur: 1, max: 1 }, mods: {} },
+            ap: { current: 6, max: 6 },
             target: null,
           },
         ],
       });
 
       // Kill both combatants
-      context.world.actors[ALICE_ID].hp.eff.cur = 0;
-      context.world.actors[BOB_ID].hp.eff.cur = 0;
+      context.world.actors[ALICE_ID].hp.current = 0;
+      context.world.actors[BOB_ID].hp.current = 0;
 
       const gameState = createCombatGameStateApi(context, session, location);
 
@@ -186,10 +165,7 @@ describe('Combat Lifecycle - Termination', () => {
             team: Team.ALPHA,
             position: { coordinate: 100, facing: CombatFacing.RIGHT, speed: 0 },
             initiative: { values: [15], result: 15, dice: '1d20', bonus: 0, natural: 15 },
-            mass: 70,
-            ap: { nat: { cur: 6, max: 6 }, eff: { cur: 6, max: 6 }, mods: {} },
-            energy: { position: 1, nat: { cur: 1000, max: 1000 }, eff: { cur: 1000, max: 1000 }, mods: {} },
-            balance: { nat: { cur: 1, max: 1 }, eff: { cur: 1, max: 1 }, mods: {} },
+            ap: { current: 6, max: 6 },
             target: null,
           },
           {
@@ -197,10 +173,7 @@ describe('Combat Lifecycle - Termination', () => {
             team: Team.BRAVO,
             position: { coordinate: 200, facing: CombatFacing.LEFT, speed: 0 },
             initiative: { values: [12], result: 12, dice: '1d20', bonus: 0, natural: 12 },
-            mass: 75,
-            ap: { nat: { cur: 6, max: 6 }, eff: { cur: 6, max: 6 }, mods: {} },
-            energy: { position: 1, nat: { cur: 1000, max: 1000 }, eff: { cur: 1000, max: 1000 }, mods: {} },
-            balance: { nat: { cur: 1, max: 1 }, eff: { cur: 1, max: 1 }, mods: {} },
+            ap: { current: 6, max: 6 },
             target: null,
           },
         ],
@@ -239,10 +212,7 @@ describe('Combat Lifecycle - Termination', () => {
             team: Team.ALPHA,
             position: { coordinate: 100, facing: CombatFacing.RIGHT, speed: 0 },
             initiative: { values: [15], result: 15, dice: '1d20', bonus: 0, natural: 15 },
-            mass: 70,
-            ap: { nat: { cur: 6, max: 6 }, eff: { cur: 6, max: 6 }, mods: {} },
-            energy: { position: 1, nat: { cur: 1000, max: 1000 }, eff: { cur: 1000, max: 1000 }, mods: {} },
-            balance: { nat: { cur: 1, max: 1 }, eff: { cur: 1, max: 1 }, mods: {} },
+            ap: { current: 6, max: 6 },
             target: null,
           },
         ],
@@ -278,10 +248,7 @@ describe('Combat Lifecycle - Termination', () => {
             team: Team.ALPHA,
             position: { coordinate: 100, facing: CombatFacing.RIGHT, speed: 0 },
             initiative: { values: [15], result: 15, dice: '1d20', bonus: 0, natural: 15 },
-            mass: 70,
-            ap: { nat: { cur: 6, max: 6 }, eff: { cur: 6, max: 6 }, mods: {} },
-            energy: { position: 1, nat: { cur: 1000, max: 1000 }, eff: { cur: 1000, max: 1000 }, mods: {} },
-            balance: { nat: { cur: 1, max: 1 }, eff: { cur: 1, max: 1 }, mods: {} },
+            ap: { current: 6, max: 6 },
             target: null,
           },
           {
@@ -289,18 +256,15 @@ describe('Combat Lifecycle - Termination', () => {
             team: Team.BRAVO,
             position: { coordinate: 200, facing: CombatFacing.LEFT, speed: 0 },
             initiative: { values: [12], result: 12, dice: '1d20', bonus: 0, natural: 12 },
-            mass: 75,
-            ap: { nat: { cur: 6, max: 6 }, eff: { cur: 6, max: 6 }, mods: {} },
-            energy: { position: 1, nat: { cur: 1000, max: 1000 }, eff: { cur: 1000, max: 1000 }, mods: {} },
-            balance: { nat: { cur: 1, max: 1 }, eff: { cur: 1, max: 1 }, mods: {} },
+            ap: { current: 6, max: 6 },
             target: null,
           },
         ],
       });
 
       // Kill both combatants
-      context.world.actors[ALICE_ID].hp.eff.cur = 0;
-      context.world.actors[BOB_ID].hp.eff.cur = 0;
+      context.world.actors[ALICE_ID].hp.current = 0;
+      context.world.actors[BOB_ID].hp.current = 0;
 
       session.status = SessionStatus.RUNNING;
       const gameState = createCombatGameStateApi(context, session, location);

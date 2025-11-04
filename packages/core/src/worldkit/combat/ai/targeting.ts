@@ -5,7 +5,7 @@ import { WeaponSchema } from '~/types/schema/weapon';
 import { ActorURN } from '~/types/taxonomy';
 import { computeDistanceBetweenCombatants } from '~/worldkit/combat/range';
 import { canWeaponHitFromDistance } from '~/worldkit/combat/weapon';
-import { isActorAlive } from '~/worldkit/entity/actor';
+import { getHealthPercentage, isActorAlive } from '~/worldkit/entity/actor';
 import { CombatPlanningDependencies, DEFAULT_COMBAT_PLANNING_DEPS } from '~/worldkit/combat/ai/deps';
 
 export type TargetingApi = {
@@ -171,7 +171,7 @@ export function chooseTarget(
 
     if (isOptimalRange) {
       // Prioritize lowest HP at optimal range
-      const hp = candidate.actor.hp.eff.cur;
+      const hp = getHealthPercentage(candidate.actor);
       if (hp < bestOptimalHp) {
         bestOptimalHp = hp;
         bestOptimal = candidate;
@@ -181,7 +181,7 @@ export function chooseTarget(
       let score: number;
       if (hasFalloff) {
         // Ranged weapons: HP/distance ratio (lower is better)
-        score = candidate.actor.hp.eff.cur / candidate.distance;
+        score = getHealthPercentage(candidate.actor) / candidate.distance;
       } else {
         // Melee/reach weapons: distance only (closer is better)
         score = candidate.distance;

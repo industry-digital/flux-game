@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import { createCombatSessionApi } from './session';
 import { createTransformerContext } from '~/worldkit/context';
-import { createActor } from '~/worldkit/entity/actor';
+import { createActor, setCurrentHp } from '~/worldkit/entity/actor';
 import { ActorType } from '~/types/entity/actor';
 import { Team } from '~/types/combat';
 import { SessionStatus } from '~/types/session';
@@ -35,7 +35,6 @@ describe('Large Scale Combat Integration', () => {
           name: `Combatant ${i}`,
           kind: ActorType.PC,
           location,
-          hp: { nat: { cur: 100, max: 100 }, eff: { cur: 100, max: 100 }, mods: {} },
         });
 
         sessionHook.addCombatant(actorId, team);
@@ -76,7 +75,6 @@ describe('Large Scale Combat Integration', () => {
           name: `RapidDeath ${i}`,
           kind: ActorType.PC,
           location,
-          hp: { nat: { cur: 100, max: 100 }, eff: { cur: 100, max: 100 }, mods: {} },
         });
 
         sessionHook.addCombatant(actorId, team);
@@ -88,7 +86,7 @@ describe('Large Scale Combat Integration', () => {
       // Kill all Team BRAVO members simultaneously
       const teamBravoIds = combatantIds.slice(25);
       teamBravoIds.forEach(actorId => {
-        context.world.actors[actorId].hp.eff.cur = 0;
+        setCurrentHp(context.world.actors[actorId], 0);
       });
 
       // Advance turn should detect all deaths and end combat
@@ -120,7 +118,6 @@ describe('Large Scale Combat Integration', () => {
           name: `MutualDestruction ${i}`,
           kind: ActorType.PC,
           location,
-          hp: { nat: { cur: 100, max: 100 }, eff: { cur: 100, max: 100 }, mods: {} },
         });
 
         sessionHook.addCombatant(actorId, team);
@@ -131,7 +128,7 @@ describe('Large Scale Combat Integration', () => {
 
       // Kill all combatants simultaneously (mutual destruction)
       combatantIds.forEach(actorId => {
-        context.world.actors[actorId].hp.eff.cur = 0;
+        setCurrentHp(context.world.actors[actorId], 0);
       });
 
       // Advance turn should detect all deaths and end combat
@@ -164,7 +161,6 @@ describe('Large Scale Combat Integration', () => {
           name: `MemoryTest ${i}`,
           kind: ActorType.PC,
           location,
-          hp: { nat: { cur: 1000, max: 1000 }, eff: { cur: 1000, max: 1000 }, mods: {} },
         });
 
         sessionHook.addCombatant(actorId, team);
@@ -207,7 +203,6 @@ describe('Large Scale Combat Integration', () => {
             name: `PerfTest ${i}`,
             kind: ActorType.PC,
             location,
-            hp: { nat: { cur: 100, max: 100 }, eff: { cur: 100, max: 100 }, mods: {} },
           });
 
           sessionHook.addCombatant(actorId, team);
@@ -235,7 +230,6 @@ describe('Large Scale Combat Integration', () => {
           name: `CacheTest ${i}`,
           kind: ActorType.PC,
           location,
-          hp: { nat: { cur: 100, max: 100 }, eff: { cur: 100, max: 100 }, mods: {} },
         });
 
         sessionHook.addCombatant(actorId, team);
@@ -275,7 +269,6 @@ describe('Large Scale Combat Integration', () => {
           name: `SingleTeam ${i}`,
           kind: ActorType.PC,
           location,
-          hp: { nat: { cur: 100, max: 100 }, eff: { cur: 100, max: 100 }, mods: {} },
         });
 
         sessionHook.addCombatant(actorId, Team.ALPHA);
@@ -299,7 +292,6 @@ describe('Large Scale Combat Integration', () => {
         name: 'Valid 1',
         kind: ActorType.PC,
         location,
-        hp: { nat: { cur: 100, max: 100 }, eff: { cur: 100, max: 100 }, mods: {} },
       });
 
       context.world.actors[actorId2] = createActor({
@@ -307,7 +299,6 @@ describe('Large Scale Combat Integration', () => {
         name: 'Valid 2',
         kind: ActorType.PC,
         location,
-        hp: { nat: { cur: 100, max: 100 }, eff: { cur: 100, max: 100 }, mods: {} },
       });
 
       sessionHook.addCombatant(actorId1, Team.ALPHA);

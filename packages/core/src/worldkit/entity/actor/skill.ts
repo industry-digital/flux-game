@@ -8,6 +8,8 @@ import { isActiveModifier } from '~/worldkit/entity/modifier';
 export const MIN_SKILL_RANK = 0;
 export const MAX_SKILL_RANK = 100;
 
+const NO_MODIFIERS: AppliedModifiers = Object.freeze({}) as unknown as AppliedModifiers;
+
 export const createDefaultSkillState = (rank: number = 0): SkillState => ({
   xp: 0,
   pxp: 0,
@@ -34,11 +36,8 @@ export function getActorSkillModifiers(
   actor: Actor,
   skill: SkillSchemaURN,
 ): AppliedModifiers {
-  if (!actor.skills) {
-    return {};
-  }
-  const skillState = actor.skills[skill];
-  return skillState?.mods ?? {};
+  // TODO: Implement me
+  return NO_MODIFIERS;
 }
 
 type SkillComputationDependencies = {

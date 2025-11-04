@@ -375,9 +375,9 @@ export const narrateActorDidListShells: TemplateFunction<ActorDidListShells, Act
     const shell = actor.shells[shellId];
     const isActive = shell.id === actor.currentShell;
     const shellName = shell.name || 'Unnamed Shell';
-    const powStat = shell.stats[Stat.POW]?.nat || 0;
-    const finStat = shell.stats[Stat.FIN]?.nat || 0;
-    const resStat = shell.stats[Stat.RES]?.nat || 0;
+    const powStat = getShellNaturalStatValue(shell, Stat.POW);
+    const finStat = getShellNaturalStatValue(shell, Stat.FIN);
+    const resStat = getShellNaturalStatValue(shell, Stat.RES);
 
     // Calculate shell mass (equipment + base shell mass) and convert to kg
     const shellMassKg = massApi.computeShellMass(shell) / 1000;

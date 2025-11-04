@@ -32,7 +32,7 @@ export type EnergyComputationOptions = {
  * Get current energy value in Joules
  */
 export function getCurrentEnergy(actor: Actor): number {
-  return actor.capacitor?.energy.eff.cur ?? 0;
+  return actor.capacitor?.energy.current ?? 0;
 }
 
 /**
@@ -46,24 +46,22 @@ export function getMaxEnergy(actor: Actor): number {
 /**
  * Get current position on recovery curve (0-1)
  */
-export function getPosition(actor: Actor): NormalizedValueBetweenZeroAndOne {
+export function getCapacitorPosition(actor: Actor): NormalizedValueBetweenZeroAndOne {
   return actor.capacitor?.position ?? 1.0;
 }
 
 /**
  * Set position on recovery curve (0-1) and update energy accordingly
  */
-export function setPosition(actor: Actor, position: NormalizedValueBetweenZeroAndOne): void {
+export function setCapacitorPosition(actor: Actor, position: NormalizedValueBetweenZeroAndOne): void {
   initializeCapacitorIfNeeded(actor);
   const maxEnergy = getMaxEnergy(actor);
   const clampedPosition = Math.max(0, Math.min(1, position));
   const energy = positionToEnergy(clampedPosition, maxEnergy);
 
   actor.capacitor!.position = clampedPosition;
-  actor.capacitor!.energy.eff.cur = energy;
-  actor.capacitor!.energy.nat.cur = energy;
-  actor.capacitor!.energy.eff.max = maxEnergy;
-  actor.capacitor!.energy.nat.max = maxEnergy;
+  actor.capacitor!.energy.current = energy;
+  actor.capacitor!.energy.max = maxEnergy;
 }
 
 /**
@@ -76,10 +74,8 @@ export function setEnergy(actor: Actor, energy: number): void {
   const clampedEnergy = Math.max(0, Math.min(maxEnergy, energy));
   const position = energyToPosition(clampedEnergy, maxEnergy);
 
-  actor.capacitor!.energy.eff.cur = clampedEnergy;
-  actor.capacitor!.energy.nat.cur = clampedEnergy;
-  actor.capacitor!.energy.eff.max = maxEnergy;
-  actor.capacitor!.energy.nat.max = maxEnergy;
+  actor.capacitor!.energy.current = clampedEnergy;
+  actor.capacitor!.energy.max = maxEnergy;
   actor.capacitor!.position = position;
 }
 
@@ -163,9 +159,8 @@ function initializeCapacitorIfNeeded(actor: Actor): void {
     actor.capacitor = {
       position: 1.0,
       energy: {
-        nat: { cur: 0, max: 0 },
-        eff: { cur: 0, max: 0 },
-        mods: {}
+        current: 0,
+        max: 0,
       }
     };
   }
@@ -318,7 +313,7 @@ function positionToEnergy(position: NormalizedValueBetweenZeroAndOne, maxEnergy:
 
 export function refreshCapacitorEnergy(
   actor: Actor,
-  position = getPosition(actor),
+  position = getCapacitorPosition(actor),
   maxEnergy = getMaxEnergy(actor),
 ): void {
   setEnergy(actor, positionToEnergy(position, maxEnergy));
@@ -330,8 +325,8 @@ export function refreshCapacitorEnergy(
 export type ActorCapacitorApi = {
   getCurrentEnergy: typeof getCurrentEnergy;
   getMaxEnergy: typeof getMaxEnergy;
-  getPosition: typeof getPosition;
-  setPosition: typeof setPosition;
+  getPosition: typeof getCapacitorPosition;
+  setPosition: typeof setCapacitorPosition;
   setEnergy: typeof setEnergy;
   getCurrentRecoveryRate: typeof getCurrentRecoveryRate;
   getMaxRecoveryRate: typeof getMaxRecoveryRate;
@@ -346,8 +341,8 @@ export type ActorCapacitorApi = {
 export const DEFAULT_CAPACITOR_API_WITH_RECOVERY: Readonly<ActorCapacitorApi> = {
   getCurrentEnergy,
   getMaxEnergy,
-  getPosition,
-  setPosition,
+  getPosition: getCapacitorPosition,
+  setPosition: setCapacitorPosition,
   setEnergy,
   getCurrentRecoveryRate,
   getMaxRecoveryRate,

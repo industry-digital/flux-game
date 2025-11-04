@@ -3,7 +3,7 @@
  */
 import { DamageModel } from '~/types/damage';
 import { RollResult, RollResultWithoutModifiers, RollSpecification } from '~/types/dice';
-import { Actor } from '~/types/entity/actor';
+import { Actor, Stat } from '~/types/entity/actor';
 import { WeaponSchema, WeaponTimer } from '~/types/schema/weapon';
 import { URNLike } from '~/types/taxonomy';
 import { calculateWeaponApCost } from '~/worldkit/combat/ap';
@@ -11,14 +11,18 @@ import { getWeaponBaseDamage } from '~/worldkit/combat/damage/damage-type';
 import { applyModifierToRollResult, calculateAverageRollResult, rollDiceWithRng } from '~/worldkit/dice';
 import { getStatValue, MAX_STAT_VALUE } from '~/worldkit/entity/actor/stats';
 
-export type CalculateWeaponDamageDependencies = {
+export type WeaponDamagePerHitDependencies = {
   rollDice: (dice: RollSpecification) => RollResultWithoutModifiers;
-  timestamp: () => number;
+  getStatValue: (actor: Actor, stat: Stat) => number;
+  getWeaponBaseDamage: (weapon: WeaponSchema) => RollSpecification;
+  calculateAverageRollResult: (dice: RollSpecification) => number;
 };
 
-export const DEFAULT_CALCULATE_WEAPON_DAMAGE_DEPS: CalculateWeaponDamageDependencies = {
+const DEFAULT_WEAPON_DAMAGE_PER_HIT_DEPS: WeaponDamagePerHitDependencies = {
   rollDice: (dice) => rollDiceWithRng(dice, () => Math.random()),
-  timestamp: () => Date.now(),
+  getStatValue: getStatValue,
+  getWeaponBaseDamage: getWeaponBaseDamage,
+  calculateAverageRollResult,
 };
 
 /**
@@ -27,18 +31,29 @@ export const DEFAULT_CALCULATE_WEAPON_DAMAGE_DEPS: CalculateWeaponDamageDependen
 export const calculateAverageWeaponDamagePerHit = (
   actor: Actor,
   weapon: WeaponSchema,
+  deps: WeaponDamagePerHitDependencies = DEFAULT_WEAPON_DAMAGE_PER_HIT_DEPS,
 ): number => {
-  const baseDamage = getWeaponBaseDamage(weapon);
-  const averageBaseDamage = calculateAverageRollResult(baseDamage);
+  const baseDamage = deps.getWeaponBaseDamage(weapon);
+  const averageBaseDamage = deps.calculateAverageRollResult(baseDamage);
 
   if (weapon.damage?.model !== DamageModel.STAT_SCALING) {
     return averageBaseDamage;
   }
 
   // Fell through, so the weapon scales with a stat
-  const scalingStatValue = getStatValue(actor, weapon.damage.stat);
+  const scalingStatValue = deps.getStatValue(actor, weapon.damage.stat);
   const damageBonus = (scalingStatValue / MAX_STAT_VALUE) * weapon.damage.efficiency;
   return averageBaseDamage + damageBonus;
+};
+
+export type RollWeaponDamageDependencies = {
+  rollDice: (dice: RollSpecification) => RollResultWithoutModifiers;
+  timestamp: () => number;
+};
+
+export const ROLL_WEAPON_DAMAGE_DEPS: RollWeaponDamageDependencies = {
+  rollDice: (dice) => rollDiceWithRng(dice, () => Math.random()),
+  timestamp: () => Date.now(),
 };
 
 /**
@@ -48,7 +63,7 @@ export const calculateAverageWeaponDamagePerHit = (
 export function rollWeaponDamage(
   actor: Actor,
   weapon: WeaponSchema,
-  deps: CalculateWeaponDamageDependencies = DEFAULT_CALCULATE_WEAPON_DAMAGE_DEPS,
+  deps: RollWeaponDamageDependencies = ROLL_WEAPON_DAMAGE_DEPS,
 ): RollResult {
   const baseDamageRoll = deps.rollDice(getWeaponBaseDamage(weapon));
 

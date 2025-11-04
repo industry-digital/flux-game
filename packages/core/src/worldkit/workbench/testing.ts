@@ -7,6 +7,7 @@ import { createTestActor } from '~/testing/world-testing';
 import { createWorkbenchSessionApi } from './session';
 import { WorkbenchSessionApi } from './session';
 import { DEFAULT_WORKBENCH_SESSION } from '~/testing/constants';
+import { BASELINE_STAT_VALUE } from '~/worldkit/entity/actor/stats';
 
 export type WorkbenchScenarioDependencies = {
   useWorkbenchSession: typeof createWorkbenchSessionApi;
@@ -81,14 +82,11 @@ export function useWorkbenchScenario(
   };
 
   // Helper function to process a single stat setup
-  const processSingleStat = (statSetup: ActorSingleStatSetup | undefined, defaultValue: number = 10) => {
+  const processSingleStat = (statSetup: ActorSingleStatSetup | undefined, defaultValue: number = BASELINE_STAT_VALUE): number => {
     if (typeof statSetup === 'number') {
-      return { nat: statSetup, eff: statSetup, mods: {} };
-    } else if (statSetup) {
-      return { nat: defaultValue, eff: defaultValue, mods: {}, ...statSetup };
-    } else {
-      return { nat: defaultValue, eff: defaultValue, mods: {} };
+      return statSetup;
     }
+    return defaultValue;
   };
 
   // Create actors, shells, and workbench sessions
@@ -255,7 +253,6 @@ export function createMockWorkbenchContext(overrides: Partial<TransformerContext
     // Stub APIs (not used by workbench)
     inventoryApi: {} as any,
     capacitorApi: {} as any,
-    skillApi: {} as any,
     metrics: {} as any,
 
     // Apply any overrides

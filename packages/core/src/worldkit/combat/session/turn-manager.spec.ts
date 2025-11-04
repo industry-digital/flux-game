@@ -12,6 +12,7 @@ import { TransformerContext } from '~/types/handler';
 import { EventType, WorldEvent } from '~/types/event';
 import { RollResult } from '~/types/dice';
 import { WellKnownActor } from '~/types/actor';
+import { setCurrentHp } from '~/worldkit/entity/actor/health';
 
 const TEST_PLACE_ID: PlaceURN = 'flux:place:test-place';
 const TEST_SESSION_ID: SessionURN = 'flux:session:combat:test-session';
@@ -225,7 +226,7 @@ describe('createTurnManager', () => {
     expect(session.data.currentTurn.actor).toBe(ALICE_ID);
 
     // Kill Bob during Alice's turn (simulate Alice killing Bob)
-    context.world.actors[BOB_ID].hp.eff.cur = 0;
+    setCurrentHp(context.world.actors[BOB_ID], 0);
 
     const turnManager = createTurnManager(context, session);
 
@@ -279,8 +280,8 @@ describe('createTurnManager', () => {
     expect(session.data.currentTurn.round).toBe(1);
 
     // Kill both Bob and Charlie during Alice's turn
-    context.world.actors[BOB_ID].hp.eff.cur = 0;
-    context.world.actors[CHARLIE_ID].hp.eff.cur = 0;
+    setCurrentHp(context.world.actors[BOB_ID], 0);
+    setCurrentHp(context.world.actors[CHARLIE_ID], 0);
 
     const turnManager = createTurnManager(context, session);
 
@@ -351,14 +352,14 @@ describe('createTurnManager', () => {
     expect(session.data.currentTurn.actor).toBe(ALICE_ID);
 
     // 3. During Alice's turn, Franz dies (simulate Alice killing Franz)
-    context.world.actors[FRANZ_ID].hp.eff.cur = 0;
+    setCurrentHp(context.world.actors[FRANZ_ID], 0);
 
     // 4. Alice's turn completes
     events = turnManager.advanceTurn('alice-turn');
     expect(session.data.currentTurn.actor).toBe(BOB_ID);
 
     // 5. Now Bob dies (simulate death from damage over time or other effect)
-    context.world.actors[BOB_ID].hp.eff.cur = 0;
+    setCurrentHp(context.world.actors[BOB_ID], 0);
 
     // 6. Bob's turn should be skipped, advance to next round with Dave
     events = turnManager.advanceTurn('bob-turn-skip');
@@ -369,7 +370,7 @@ describe('createTurnManager', () => {
     expect(session.data.currentTurn.number).toBe(1);
 
     // 7. Now Dave dies too (simulate Alice killing Dave in previous round)
-    context.world.actors[DAVE_ID].hp.eff.cur = 0;
+    setCurrentHp(context.world.actors[DAVE_ID], 0);
 
     // 8. Dave's turn should be skipped, only Alice remains
     events = turnManager.advanceTurn('dave-turn-skip');

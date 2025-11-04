@@ -14,6 +14,8 @@ import { HumanAnatomy } from '~/types/taxonomy/anatomy';
 import { getCurrentEnergy, setEnergy } from '~/worldkit/entity/actor/capacitor';
 import { createWeaponSchema } from '~/worldkit/schema/weapon';
 import { EVASION_SKILL } from '~/worldkit/combat/testing/constants';
+import { setCurrentHp, setMaxHp } from '~/worldkit/entity/actor';
+import { getCurrentAp, setCurrentAp } from '~/worldkit/combat/ap';
 
 // Type guard to help TypeScript understand CLEAVE attack events
 function isCleaveAttack(event: ActorDidAttack): event is ActorDidCleave {
@@ -136,7 +138,7 @@ describe('Cleave Method', () => {
   describe('Basic Functionality', () => {
     it('should perform cleave attack on multiple targets at optimal range', () => {
       const attackerCombatant = scenario.session.data.combatants.get(ATTACKER_ID)!;
-      const initialAP = attackerCombatant.ap.eff.cur;
+      const initialAP = getCurrentAp(attackerCombatant);
       const attacker = scenario.actors[ATTACKER_ID].actor;
       const initialEnergy = getCurrentEnergy(attacker);
 
@@ -166,7 +168,7 @@ describe('Cleave Method', () => {
       expect(damageEvents).toHaveLength(3); // Hit 3 targets
 
       // Verify AP was consumed
-      expect(attackerCombatant.ap.eff.cur).toBeLessThan(initialAP);
+      expect(getCurrentAp(attackerCombatant)).toBeLessThan(initialAP);
 
       // Verify energy was consumed
       expect(getCurrentEnergy(attacker)).toBeLessThan(initialEnergy);
@@ -315,7 +317,7 @@ describe('Cleave Method', () => {
       const attackerCombatant = scenario.session.data.combatants.get(ATTACKER_ID)!;
 
       // Reduce AP to insufficient amount
-      attackerCombatant.ap.eff.cur = 0;
+      setCurrentAp(attackerCombatant, 0);
 
       const result = cleave();
 
@@ -353,13 +355,13 @@ describe('Cleave Method', () => {
       const expectedCost = createCleaveCost(attacker, weapon);
 
       const attackerCombatant = scenario.session.data.combatants.get(ATTACKER_ID)!;
-      const initialAP = attackerCombatant.ap.eff.cur;
+      const initialAP = getCurrentAp(attackerCombatant);
       const initialEnergy = getCurrentEnergy(attacker);
 
       const result = cleave();
 
       // Verify AP cost matches expected
-      const finalAP = attackerCombatant.ap.eff.cur;
+      const finalAP = getCurrentAp(attackerCombatant);
       const actualApCost = initialAP - finalAP;
       expect(actualApCost).toBeCloseTo(expectedCost.ap!, 10);
 
@@ -456,8 +458,10 @@ describe('Cleave Method', () => {
       const target1Actor = context.world.actors[TARGET1_ID];
       const target2Actor = context.world.actors[TARGET2_ID];
 
-      target1Actor.hp.eff.cur = 1;
-      target2Actor.hp.eff.cur = 1;
+      setMaxHp(target1Actor, 1);
+      setCurrentHp(target1Actor, 1);
+      setMaxHp(target2Actor, 1);
+      setCurrentHp(target2Actor, 1);
 
       // Mock high damage to ensure kills
       const mockCalculateWeaponDamage = vi.fn().mockReturnValue(50);
@@ -501,9 +505,12 @@ describe('Cleave Method', () => {
       const target2Actor = context.world.actors[TARGET2_ID];
       const target3Actor = context.world.actors[TARGET3_ID];
 
-      target1Actor.hp.eff.cur = 100;
-      target2Actor.hp.eff.cur = 100;
-      target3Actor.hp.eff.cur = 100;
+      setMaxHp(target1Actor, 100);
+      setCurrentHp(target1Actor, 100);
+      setMaxHp(target2Actor, 100);
+      setCurrentHp(target2Actor, 100);
+      setMaxHp(target3Actor, 100);
+      setCurrentHp(target3Actor, 100);
 
       const result = cleave();
 
@@ -545,7 +552,8 @@ describe('Cleave Method', () => {
     it('should handle dead targets gracefully', () => {
       // Kill one target before cleave
       const target1Actor = context.world.actors[TARGET1_ID];
-      target1Actor.hp.eff.cur = 0;
+      setMaxHp(target1Actor, 1);
+      setCurrentHp(target1Actor, 0);
 
       const result = cleave();
       const damageEvents = extractEventsByType<ActorWasAttacked>(result, EventType.ACTOR_WAS_ATTACKED);

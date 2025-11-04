@@ -7,6 +7,7 @@ import { deductAp } from '~/worldkit/combat/combatant';
 import { createDoneMethod, DoneMethod } from '~/worldkit/combat/action/done';
 import { createDefendCost } from '~/worldkit/combat/tactical-cost';
 import { MIN_AP_INCREMENT } from '~/worldkit/combat/tactical-rounding';
+import { getCurrentAp } from '~/worldkit/combat/ap';
 
 type DefendOptions = {
   autoDone?: boolean;
@@ -42,7 +43,7 @@ export function createDefendMethod (
     const events: WorldEvent[] = [];
 
     // Use tactical cost factory for defend action (uses all remaining AP)
-    const cost: ActionCost = createDefendCostImpl(combatant.ap.eff.cur);
+    const cost: ActionCost = createDefendCostImpl(getCurrentAp(combatant));
 
     // Check if AP investment meets minimum threshold for meaningful defense
     const apInvested = cost.ap!;

@@ -43,17 +43,12 @@ describe('SwapShellAction', () => {
 
       // Add a second shell to the actor
       const secondShellId = 'shell-2';
-      actor.shells[secondShellId] = {
+      actor.shells[secondShellId] = createShell((shell) => ({
+        ...shell,
         id: secondShellId,
         name: 'Combat Shell',
-        stats: {
-          [Stat.POW]: { nat: 15, eff: 15, mods: {} },
-          [Stat.FIN]: { nat: 10, eff: 10, mods: {} },
-          [Stat.RES]: { nat: 12, eff: 12, mods: {} },
-        },
-        inventory: createInventory(),
-        equipment: {},
-      };
+        stats: { [Stat.POW]: 15, [Stat.FIN]: 10, [Stat.RES]: 12 },
+      }));
 
       const swapAction = createSwapShellAction(context, session);
       const events = swapAction(actor, secondShellId);
@@ -73,17 +68,11 @@ describe('SwapShellAction', () => {
       const session = scenario.actors['flux:actor:test-actor'].hooks.session.session;
 
       const secondShellId = 'shell-2';
-      actor.shells[secondShellId] = {
+      actor.shells[secondShellId] = createShell((shell) => ({
+        ...shell,
         id: secondShellId,
         name: 'Combat Shell',
-        stats: {
-          [Stat.POW]: { nat: 15, eff: 15, mods: {} },
-          [Stat.FIN]: { nat: 10, eff: 10, mods: {} },
-          [Stat.RES]: { nat: 12, eff: 12, mods: {} },
-        },
-        inventory: createInventory(),
-        equipment: {},
-      };
+      }));
 
       const swapAction = createSwapShellAction(context, session);
       const events = swapAction(actor, secondShellId);
@@ -132,9 +121,9 @@ describe('SwapShellAction', () => {
         id: 'shell-2',
         name: 'Combat Shell',
         stats: {
-          [Stat.POW]: { nat: 15, eff: 15, mods: {} },
-          [Stat.FIN]: { nat: 10, eff: 10, mods: {} },
-          [Stat.RES]: { nat: 12, eff: 12, mods: {} },
+          [Stat.POW]: 15,
+          [Stat.FIN]: 10,
+          [Stat.RES]: 12,
         },
         inventory: createInventory(),
         equipment: {},
@@ -166,9 +155,9 @@ describe('SwapShellAction', () => {
         id: secondShellId,
         name: 'Combat Shell',
         stats: {
-          [Stat.POW]: { nat: 15, eff: 15, mods: {} },
-          [Stat.FIN]: { nat: 10, eff: 10, mods: {} },
-          [Stat.RES]: { nat: 12, eff: 12, mods: {} },
+          [Stat.POW]: 15,
+          [Stat.FIN]: 10,
+          [Stat.RES]: 12,
         },
       }));
 
@@ -193,17 +182,11 @@ describe('SwapShellAction', () => {
 
       // Add second shell
       const secondShellId = 'shell-2';
-      actor.shells[secondShellId] = {
+      actor.shells[secondShellId] = createShell((shell) => ({
+        ...shell,
         id: secondShellId,
         name: 'Combat Shell',
-        stats: {
-          [Stat.POW]: { nat: 15, eff: 15, mods: {} },
-          [Stat.FIN]: { nat: 10, eff: 10, mods: {} },
-          [Stat.RES]: { nat: 12, eff: 12, mods: {} },
-        },
-        inventory: createInventory(),
-        equipment: {},
-      };
+      }));
 
       const swapAction = createSwapShellAction(context, session, {
         undoStagedMutations: mockUndoAction
@@ -250,17 +233,11 @@ describe('SwapShellAction', () => {
       const session = scenario.actors['flux:actor:test-actor'].hooks.session.session;
 
       // Add second shell
-      actor.shells['shell-2'] = {
+      actor.shells['shell-2'] = createShell((shell) => ({
+        ...shell,
         id: 'shell-2',
         name: 'Combat Shell',
-        stats: {
-          [Stat.POW]: { nat: 15, eff: 15, mods: {} },
-          [Stat.FIN]: { nat: 10, eff: 10, mods: {} },
-          [Stat.RES]: { nat: 12, eff: 12, mods: {} },
-        },
-        inventory: createInventory(),
-        equipment: {},
-      };
+      }));
 
       const swapAction = createSwapShellAction(context, session, {
         undoStagedMutations: mockUndoAction
@@ -299,11 +276,6 @@ describe('SwapShellAction', () => {
         ...shell,
         id: secondShellId,
         name: 'Combat Shell',
-        stats: {
-          [Stat.POW]: { nat: 15, eff: 15, mods: {} },
-          [Stat.FIN]: { nat: 10, eff: 10, mods: {} },
-          [Stat.RES]: { nat: 12, eff: 12, mods: {} },
-        },
       }));
 
       const swapAction = createSwapShellAction(context, session);
@@ -332,11 +304,6 @@ describe('SwapShellAction', () => {
         ...shell,
         id: secondShellId,
         name: '', // Empty name
-        stats: {
-          [Stat.POW]: { nat: 15, eff: 15, mods: {} },
-          [Stat.FIN]: { nat: 10, eff: 10, mods: {} },
-          [Stat.RES]: { nat: 12, eff: 12, mods: {} },
-        },
       }));
 
       const swapAction = createSwapShellAction(context, session);

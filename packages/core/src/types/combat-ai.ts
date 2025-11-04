@@ -1,4 +1,5 @@
 import { CombatCommand, Combatant, CombatSession } from '~/types/combat';
+import { Actor } from '~/types/entity/actor';
 import { WeaponSchema } from '~/types/schema/weapon';
 import { ActorURN } from '~/types/taxonomy';
 import { CHANCE_ACTIONS, PLAN_ENDING_ACTIONS } from '~/worldkit/combat/action/constants';
@@ -13,6 +14,7 @@ export type SearchCache = Map<string, { plans: ScoredPlan[]; ts: number }>;
  * Pre-computed battlefield state analysis with cached values for efficient plan generation
  */
 export type TacticalSituation = {
+  actor: Actor;
   /**
    * The combatant making tactical decisions
    */

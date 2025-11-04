@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import { createCombatSessionApi } from './session';
 import { createTransformerContext } from '~/worldkit/context';
-import { createActor } from '~/worldkit/entity/actor';
+import { createActor, setCurrentHp } from '~/worldkit/entity/actor';
 import { ActorType } from '~/types/entity/actor';
 import { Team } from '~/types/combat';
 import { SessionStatus } from '~/types/session';
@@ -37,7 +37,6 @@ describe('Combat Session - Termination Integration', () => {
       name: 'Alice',
       kind: ActorType.PC,
       location,
-      hp: { nat: { cur: 100, max: 100 }, eff: { cur: 100, max: 100 }, mods: {} },
     });
 
     context.world.actors[BOB_ID] = createActor({
@@ -45,7 +44,6 @@ describe('Combat Session - Termination Integration', () => {
       name: 'Bob',
       kind: ActorType.PC,
       location,
-      hp: { nat: { cur: 100, max: 100 }, eff: { cur: 100, max: 100 }, mods: {} },
     });
 
     context.world.actors[CHARLIE_ID] = createActor({
@@ -53,7 +51,6 @@ describe('Combat Session - Termination Integration', () => {
       name: 'Charlie',
       kind: ActorType.PC,
       location,
-      hp: { nat: { cur: 100, max: 100 }, eff: { cur: 100, max: 100 }, mods: {} },
     });
 
     context.world.actors[DAVE_ID] = createActor({
@@ -61,7 +58,6 @@ describe('Combat Session - Termination Integration', () => {
       name: 'Dave',
       kind: ActorType.PC,
       location,
-      hp: { nat: { cur: 100, max: 100 }, eff: { cur: 100, max: 100 }, mods: {} },
     });
   });
 
@@ -93,7 +89,7 @@ describe('Combat Session - Termination Integration', () => {
       sessionHook.startCombat();
 
       // Kill Bob during the turn (simulating damage)
-      context.world.actors[BOB_ID].hp.eff.cur = 0;
+      setCurrentHp(context.world.actors[BOB_ID], 0);
 
       const events = sessionHook.advanceTurn();
 
@@ -121,7 +117,7 @@ describe('Combat Session - Termination Integration', () => {
       sessionHook.startCombat();
 
       // Kill Bob manually (simulating external damage, not from STRIKE)
-      context.world.actors[BOB_ID].hp.eff.cur = 0;
+      setCurrentHp(context.world.actors[BOB_ID], 0);
 
       const events = sessionHook.advanceTurn();
 
@@ -144,8 +140,8 @@ describe('Combat Session - Termination Integration', () => {
       sessionHook.startCombat();
 
       // Kill both combatants (mutual destruction)
-      context.world.actors[ALICE_ID].hp.eff.cur = 0;
-      context.world.actors[BOB_ID].hp.eff.cur = 0;
+      setCurrentHp(context.world.actors[ALICE_ID], 0);
+      setCurrentHp(context.world.actors[BOB_ID], 0);
 
       const events = sessionHook.advanceTurn();
 
@@ -189,7 +185,7 @@ describe('Combat Session - Termination Integration', () => {
       sessionHook.startCombat();
 
       // Kill only one combatant
-      context.world.actors[BOB_ID].hp.eff.cur = 0;
+      setCurrentHp(context.world.actors[BOB_ID], 0);
 
       const events = sessionHook.advanceTurn();
 
@@ -210,7 +206,7 @@ describe('Combat Session - Termination Integration', () => {
       sessionHook.startCombat();
 
       // Kill Bob manually but leave Dave alive on Team Bravo (combat should continue)
-      context.world.actors[BOB_ID].hp.eff.cur = 0;
+      setCurrentHp(context.world.actors[BOB_ID], 0);
 
       const events = sessionHook.advanceTurn();
 
@@ -246,7 +242,7 @@ describe('Combat Session - Termination Integration', () => {
       }));
 
       // Kill Bob and declare the death event (simulating what a combat action would do)
-      context.world.actors[BOB_ID].hp.eff.cur = 0;
+      setCurrentHp(context.world.actors[BOB_ID], 0);
       context.declareEvent(externalDeathEvent);
 
       // Advance turn to trigger victory condition check
@@ -348,7 +344,7 @@ describe('Combat Session - Termination Integration', () => {
       sessionHook.startCombat();
 
       // Kill one member of Team Alpha
-      context.world.actors[ALICE_ID].hp.eff.cur = 0;
+      setCurrentHp(context.world.actors[ALICE_ID], 0);
 
       const events = sessionHook.advanceTurn();
 
@@ -357,7 +353,7 @@ describe('Combat Session - Termination Integration', () => {
       expect(sessionHook.session.status).toBe(SessionStatus.RUNNING);
 
       // Kill remaining Team Alpha member
-      context.world.actors[CHARLIE_ID].hp.eff.cur = 0;
+      setCurrentHp(context.world.actors[CHARLIE_ID], 0);
 
       const events2 = sessionHook.advanceTurn();
       const terminationEvent2 = extractTerminationEvent(events2);

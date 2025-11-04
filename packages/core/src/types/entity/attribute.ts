@@ -3,6 +3,9 @@ import { AppliedModifiers } from '~/types/modifier';
 type UnmodifiedScalarAttribute = {
 };
 
+/**
+ * @deprecated Modifier tracking is not done here
+ */
 type ModifiedScalarAttribute = UnmodifiedScalarAttribute & {
   /**
    * Natural/base value before any modifications
@@ -32,6 +35,9 @@ export type BoundedValue = {
   max: number;
 };
 
+/**
+ * @deprecated Modifier tracking is not done here
+ */
 type ModifiedBoundedAttribute = {
   /**
    * Natural/base bounded value before modifications
@@ -57,19 +63,7 @@ type UnmodifiedStatefulValueWithFloor = {
   /**
    * Current value, constrained by min
    */
-  cur: number;
-};
-
-type UnmodifiedStatefulValueWithCeiling = {
-  /**
-   * Maximum allowed value
-   */
-  max: number;
-
-  /**
-   * Current value, constrained by max
-   */
-  cur: number;
+  current: number;
 };
 
 /**
@@ -82,6 +76,23 @@ export type NormalizedValueBetweenZeroAndOne = number;
  */
 export type NormalizedBipolarValue = number;
 
+/**
+ * @deprecated Modifier tracking is not done here
+ */
 export type ModifiableScalarAttribute = ModifiedScalarAttribute;
+/**
+ * @deprecated Modifier tracking is not done here
+ */
 export type ModifiableBoundedAttribute = ModifiedBoundedAttribute;
-export type StatefulBoundedValue = UnmodifiedStatefulValueWithFloor | UnmodifiedStatefulValueWithCeiling;
+
+export type StatefulBoundedValue = {
+  /**
+   * Maximum allowed value
+   */
+  max: number;
+
+  /**
+   * Current value, constrained by max
+   */
+  current: number;
+}

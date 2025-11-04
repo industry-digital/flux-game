@@ -1,5 +1,5 @@
 import { CurrencyType, TransactionType } from '~/types/currency';
-import { Actor } from '~/types/entity/actor';
+import { Actor, InventoryItem } from '~/types/entity/actor';
 import { Place } from '~/types/entity/place';
 import { Party } from '~/types/entity/group';
 import { TransformerContext } from '~/types/handler';
@@ -7,11 +7,15 @@ import { AmmoSchema } from '~/types/schema/ammo';
 import { WeaponSchema } from '~/types/schema/weapon';
 import { createCurrencyTransaction, executeCurrencyTransaction } from '~/worldkit/entity';
 import { Session } from '~/types/session';
+import { Schema } from '~/types/schema/schema';
+import { InventoryItemInput } from '~/worldkit/entity/actor/inventory';
 
 export type WorldScenarioHook = {
+  registerSchema: <T extends Schema<any>>(schema: T) => void,
   addPlace: (place: Place) => void,
   addActor: (actor: Actor) => void,
   addSession: (session: Session) => void,
+  assignItem: (actor: Actor, input: InventoryItemInput) => InventoryItem,
   assignWeapon: (actor: Actor, weapon: WeaponSchema) => void,
   assignAmmo: (actor: Actor, ammo: AmmoSchema, quantity: number) => void,
   assignCurrency: (actor: Actor, currency: CurrencyType, amount: number) => void,
@@ -36,6 +40,12 @@ export const createWorldScenario = (
 ): WorldScenarioHook => {
   const { world, schemaManager, inventoryApi, equipmentApi, weaponApi, partyApi } = context;
 
+  const registerSchema = <T extends Schema<any>>(schema: T) => {
+    if (!schemaManager.hasSchema(schema.urn)) {
+      schemaManager.addSchema(schema as any);
+    }
+  };
+
   const addPlace = (place: Place) => {
     world.places[place.id] = place;
   };
@@ -48,13 +58,22 @@ export const createWorldScenario = (
     world.sessions[session.id] = session;
   };
 
-  const assignWeapon = (actor: Actor, weapon: WeaponSchema) => {
-    if (!context.schemaManager.hasSchema(weapon.urn)) {
-      schemaManager.addSchema(weapon);
-    }
-    const weaponItem = inventoryApi.addItem(actor, { schema: weapon.urn });
+  const assignItem = (actor: Actor, input: InventoryItemInput): InventoryItem => {
+    const item = inventoryApi.addItem(actor, input);
     inventoryApi.refreshInventory(actor);
-    equipmentApi.equip(actor, weaponItem.id);
+    return item;
+  };
+
+  const assignWeapon = (actor: Actor, weapon: WeaponSchema) => {
+    registerSchema(weapon);
+    const item = assignItem(actor, { schema: weapon.urn });
+
+    const equippedWeapon = equipmentApi.getEquippedWeapon(actor);
+    if (equippedWeapon) {
+      equipmentApi.unequip(actor, equippedWeapon);
+    }
+
+    equipmentApi.equip(actor, item.id);
   };
 
   const assignAmmo = (actor: Actor, ammo: AmmoSchema, quantity: number) => {
@@ -118,9 +137,11 @@ export const createWorldScenario = (
   }
 
   return {
+    registerSchema,
     addPlace,
     addActor,
     addSession,
+    assignItem: assignItem,
     assignWeapon,
     assignAmmo,
     assignCurrency,

@@ -2,6 +2,7 @@ import { describe, expect, it, beforeEach } from 'vitest';
 import { createPerformanceDiff, createStatDiff } from './diff';
 import { Shell, ShellPerformanceProfile } from '~/types/entity/shell';
 import { Stat } from '~/types/entity/actor';
+import { createShell } from '~/worldkit/entity/actor/shell';
 
 describe('createShellDiff', () => {
   let mockShell: Shell;
@@ -9,17 +10,12 @@ describe('createShellDiff', () => {
   let mockPreviewPerf: ShellPerformanceProfile;
 
   beforeEach(() => {
-    mockShell = {
+    mockShell = createShell((shell) => ({
+      ...shell,
       id: 'test-shell-001',
       name: 'Test Combat Shell',
-      stats: {
-        [Stat.POW]: { nat: 10, eff: 10, mods: {} },
-        [Stat.FIN]: { nat: 8, eff: 8, mods: {} },
-        [Stat.RES]: { nat: 12, eff: 12, mods: {} },
-      },
-      inventory: { items: {}, mass: 0, count: 0, ts: 123456790000, ammo: {} },
-      equipment: {},
-    };
+      stats: { [Stat.POW]: 10, [Stat.FIN]: 8, [Stat.RES]: 12 },
+    }));
 
     mockCurrentPerf = {
       gapClosing10: 2.5,
@@ -56,14 +52,14 @@ describe('createShellDiff', () => {
   describe('happy path', () => {
     it('should create complete shell diff with stat and performance changes', () => {
       // Test the helper functions directly since they're pure functions
-      const previewShell = {
-        ...mockShell,
+      const previewShell = createShell((shell) => ({
+        ...shell,
         stats: {
-          [Stat.POW]: { nat: 12, eff: 12, mods: {} },
-          [Stat.FIN]: { nat: 10, eff: 10, mods: {} },
-          [Stat.RES]: { nat: 12, eff: 12, mods: {} },
+          [Stat.POW]: 12,
+          [Stat.FIN]: 10,
+          [Stat.RES]: 12,
         },
-      };
+      }));
 
       // Test createStatDiff
       const statDiff = createStatDiff(mockShell, previewShell);
@@ -114,14 +110,10 @@ describe('createShellDiff', () => {
     });
 
     it('should create stat diffs efficiently', () => {
-      const previewShell = {
+      const previewShell = createShell((shell) => ({
         ...mockShell,
-        stats: {
-          [Stat.POW]: { nat: 12, eff: 12, mods: {} },
-          [Stat.FIN]: { nat: 10, eff: 10, mods: {} },
-          [Stat.RES]: { nat: 12, eff: 12, mods: {} },
-        },
-      };
+        stats: { [Stat.POW]: 12, [Stat.FIN]: 10, [Stat.RES]: 12 },
+      }));
 
       const iterations = 10000;
       const startTime = performance.now();
@@ -169,9 +161,9 @@ describe('createShellDiff', () => {
       const previewShell = {
         ...mockShell,
         stats: {
-          [Stat.POW]: { nat: 12, eff: 12, mods: {} },
-          [Stat.FIN]: { nat: 10, eff: 10, mods: {} },
-          [Stat.RES]: { nat: 12, eff: 12, mods: {} }, // unchanged
+          [Stat.POW]: 12,
+          [Stat.FIN]: 10,
+          [Stat.RES]: 12, // unchanged
         },
       };
 

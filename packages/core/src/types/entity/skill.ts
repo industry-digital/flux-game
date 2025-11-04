@@ -1,7 +1,6 @@
 import { SkillSchemaURN, SkillURN, Taxonomy, } from '~/types/taxonomy';
 import { GOLDEN_RATIO } from '~/types/world/constants';
 import { createSkillUrn } from '~/lib/taxonomy';
-import { AppliedModifiers } from '~/types/modifier';
 
 /**
  * Represents the current state of a character's skill
@@ -12,11 +11,6 @@ export type SkillState = {
    * Sometimes gaining a rank means gaining new abilities
    */
   rank: number;
-
-  /**
-   * The modifiers affecting this skill
-   */
-  mods?: AppliedModifiers;
 
   /**
    * Permanently acquired experience in this skill

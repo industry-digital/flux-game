@@ -16,7 +16,7 @@ import { AttackType, MovementDirection } from '~/types/combat';
 import { SessionStatus } from '~/types/session';
 import { TemplateFunction } from '~/types/narrative';
 import { ActorURN, SchemaURN } from '~/types/taxonomy';
-import { Actor } from '~/types/entity/actor';
+import { Actor, Stat } from '~/types/entity/actor';
 import {
   withUserEventValidation,
   withInteractionValidation,
@@ -275,8 +275,8 @@ export const narrateActorDidAttack: TemplateFunction<ActorDidAttack, ActorURN> =
   const weaponName = getLocalizedSchemaTranslation(context, weapon.urn).name.singular;
   const actorStats = getAllStats(actor);
   const primaryDamageType = getPrimaryDamageType(weapon) ?? DamageType.SLASH;
-  const actorPower = actorStats.pow?.eff || 0;
-  const actorFinesse = actorStats.fin?.eff || 0;
+  const actorPower = actorStats[Stat.POW];
+  const actorFinesse = actorStats[Stat.FIN];
   const isPowerBiased = actorPower > actorFinesse;
   const perspective = actorId === event.actor ? Perspective.SELF : Perspective.TARGET;
   const attackVerbs = isPowerBiased ? ATTACK_VERBS_POWER_BIAS[primaryDamageType] : ATTACK_VERBS_FINESS_BIAS[primaryDamageType];
@@ -298,10 +298,10 @@ export const narrateActorDidAttack: TemplateFunction<ActorDidAttack, ActorURN> =
 };
 
 export const narrateActorWasAttacked: TemplateFunction<ActorWasAttacked, ActorURN> = (context, event, actorId) => {
-  const { world, equipmentApi, skillApi: actorSkillApi } = context;
+  const { world, equipmentApi } = context;
   const attacker = world.actors[event.payload.source];
   const target = world.actors[event.actor];
-  const { damage, outcome, attackRating, evasionRating } = event.payload;
+  const { damage, attackRating, evasionRating } = event.payload;
 
   if (!attacker || !target) {
     return '';
@@ -342,7 +342,7 @@ export const narrateActorDidMoveInCombat: TemplateFunction<ActorDidMoveInCombat>
 
   // Enhanced movement descriptions based on distance and actor stats
   const actorStats = getAllStats(actor);
-  const finesse = actorStats.fin?.eff || 0;
+  const finesse = actorStats[Stat.FIN];
   const weapon = equipmentApi.getEquippedWeaponSchema(actor);
 
   const getMovementDescription = (isFirstPerson: boolean) => {

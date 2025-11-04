@@ -108,7 +108,7 @@ describe('Combat Validation Decorators', () => {
       ...dave,
       id: DAVE_ID,
       name: 'Dave',
-      sessions: {}, // No combat sessions
+      session: scenario.session.id,
     };
 
     // Mock reducer - now expects three arguments: context, command, session

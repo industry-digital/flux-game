@@ -57,7 +57,15 @@ export function cleanApPrecision(ap: number): number {
 }
 
 export function getCurrentAp(combatant: Combatant): number {
-  return combatant.ap.eff.cur;
+  return combatant.ap.current;
+}
+
+export function getMaxAp(combatant: Combatant): number {
+  return combatant.ap.max;
+}
+
+export function setCurrentAp(combatant: Combatant, ap: number): void {
+  combatant.ap.current = ap;
 }
 
 /**
@@ -76,15 +84,14 @@ export function deductAp(combatant: Combatant, ap: number): void {
 
   // Clean up precision artifacts in both values to prevent floating-point comparison issues
   const cleanAp = cleanApPrecision(ap);
-  const cleanCurrentAp = cleanApPrecision(combatant.ap.eff.cur);
+  const cleanCurrentAp = cleanApPrecision(combatant.ap.current);
 
   if (cleanAp > cleanCurrentAp) {
     throw new Error(`Cannot deduct ${cleanAp} AP from combatant ${combatant.actorId} - not enough AP (has ${cleanCurrentAp})`);
   }
 
   const newAp = cleanCurrentAp - cleanAp;
-  combatant.ap.eff.cur = newAp;
-  combatant.ap.nat.cur = newAp;
+  combatant.ap.current = newAp;
 }
 
 /**
@@ -92,9 +99,7 @@ export function deductAp(combatant: Combatant, ap: number): void {
  * Directly mutates combatant state
  */
 export function restoreApToFull(combatant: Combatant): void {
-  const newAp = combatant.ap.eff.max;
-  combatant.ap.eff.cur = newAp;
-  combatant.ap.nat.cur = newAp;
+  combatant.ap.current = combatant.ap.max;
 }
 
 const MAX_AP_REDUCTION_FACTOR = 0.5;

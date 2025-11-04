@@ -13,7 +13,7 @@ import {
 } from '~/types/combat-ai';
 import { evaluateNode, createScoredPlan } from '~/worldkit/combat/ai/heuristics';
 import { apToDistance, distanceToAp } from '~/worldkit/physics/movement';
-import { extractApCost } from '~/worldkit/combat/ap';
+import { extractApCost, getCurrentAp } from '~/worldkit/combat/ap';
 import { roundApCostUp, calculateTacticalApCost, calculateTacticalDistance, roundDistanceDown } from '~/worldkit/combat/tactical-rounding';
 import { calculateWeaponApCost } from '~/worldkit/combat/ap';
 import { TransformerContext } from '~/types/handler';
@@ -25,6 +25,7 @@ import { CombatPlanningDependencies, DEFAULT_COMBAT_PLANNING_DEPS } from './deps
 import { Stat } from '~/types/entity/actor';
 import { getStatValue } from '~/worldkit/entity/actor/stats';
 import { WeaponTimer } from '~/types/schema/weapon';
+import { getCurrentEnergy } from '~/worldkit/entity/actor/capacitor';
 
 /**
  * Zero-allocation action sequence builder
@@ -288,7 +289,7 @@ function ensurePlanTermination(
  * Create initial search node from tactical situation
  */
 export function createInitialNode(situation: TacticalSituation): PlanNode {
-  const { combatant } = situation;
+  const { actor, combatant } = situation;
 
   return {
     id: 'root',
@@ -296,8 +297,8 @@ export function createInitialNode(situation: TacticalSituation): PlanNode {
     depth: 0,
     actions: [],
     combatantState: {
-      ap: combatant.ap.eff.cur,
-      energy: combatant.energy.eff.cur,
+      ap: getCurrentAp(combatant),
+      energy: getCurrentEnergy(actor),
       position: combatant.position.coordinate,
       facing: combatant.position.facing,
     },
@@ -523,7 +524,7 @@ export function* getValidActions(
           // For melee weapons, we want to get within optimal range, not to exact target position
           const weaponOptimalRange = weaponSchema.range?.optimal || 1;
           const desiredDistance = Math.max(0, distanceToTarget - weaponOptimalRange);  // Where we want to go
-          const availableAP = combatant.ap.eff.cur;
+          const availableAP = getCurrentAp(combatant);
 
           // Binary search to find maximum distance we can afford this turn
           // Apply tactical rounding: round distances down, AP costs up
@@ -639,7 +640,7 @@ export function* getValidActions(
     // Move away from target (kiting for ranged weapons)
     if (assessments.primaryTarget && situation.weapon.range.falloff) {
       // Generate single optimal kiting movement
-      const availableAP = combatant.ap.eff.cur;
+      const availableAP = getCurrentAp(combatant);
       const preferredKitingDistance = 8; // Tactical kiting distance
 
       // Find maximum affordable kiting distance using tactical rounding

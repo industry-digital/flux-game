@@ -60,7 +60,6 @@ describe('createTransformerContext', () => {
       expect(context.mass).toBeDefined();
       expect(context.inventoryApi).toBeDefined();
       expect(context.equipmentApi).toBeDefined();
-      expect(context.skillApi).toBeDefined();
       expect(context.metrics).toBeDefined();
     });
 
@@ -155,14 +154,13 @@ describe('createTransformerContext', () => {
         customInventoryApi,
         customEquipmentApi,
         customWeaponApi,
-        customActorSkillApi,
+        undefined,
         customRollApi,
         customMetrics
       );
 
       expect(context.inventoryApi).toBe(customInventoryApi);
       expect(context.equipmentApi).toBe(customEquipmentApi);
-      expect(context.skillApi).toBe(customActorSkillApi);
       expect(context.metrics).toBe(customMetrics);
     });
   });

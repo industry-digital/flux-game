@@ -1,5 +1,5 @@
 import { Actor } from '~/types/entity/actor';
-import { Combatant, CombatantSummary, CombatFacing, CombatSession, Team } from '~/types/combat';
+import { BattlefieldPosition, Combatant, CombatantSummary, CombatFacing, CombatSession, Team } from '~/types/combat';
 import { TransformerContext } from '~/types/handler';
 import { ActorURN } from '~/types/taxonomy';
 import { WorldEvent } from '~/types/event';
@@ -11,12 +11,15 @@ import { createTargetMethod } from './action/target';
 import { createStrikeMethod, StrikeDependencies } from './action/strike';
 import { createCleaveMethod, CleaveDependencies } from '~/worldkit/combat/action/cleave';
 import { createRangeMethod, RangeMethod } from '~/worldkit/combat/action/range';
-import { calculateMaxAp, deductAp } from '~/worldkit/combat/ap';
-import { getMaxEnergy, consumeEnergy } from '~/worldkit/entity/actor/capacitor';
+import { calculateMaxAp, deductAp, getCurrentAp } from '~/worldkit/combat/ap';
+import { consumeEnergy } from '~/worldkit/entity/actor/capacitor';
 import { createDoneMethod } from '~/worldkit/combat/action/done';
 import { cleanApPrecision } from '~/worldkit/combat/ap';
 import { computeInitiativeRoll } from '~/worldkit/combat/initiative';
 export { deductAp } from '~/worldkit/combat/ap';
+
+type Transform<T> = (input: T) => T;
+const identity = <T>(x: T): T => x;
 
 export const MOVE_BY_AP = 'ap' as const;
 export const MOVE_BY_DISTANCE = 'distance' as const;
@@ -25,8 +28,6 @@ export type MovementType = typeof MOVE_BY_AP | typeof MOVE_BY_DISTANCE | typeof 
 
 export type CombatantAttributes = {
   ap: Combatant['ap'];
-  energy: Combatant['energy'];
-  balance: Combatant['balance'];
 }
 
 export interface CombatantApi {
@@ -93,7 +94,7 @@ export function createCombatantApiFactory(actionDeps: ActionDependencies = DEFAU
       target, strike, defend, advance, retreat, done,
     });
 
-    const canAct = (): boolean => cleanApPrecision(combatant.ap.eff.cur || 0) > 0;
+    const canAct = (): boolean => cleanApPrecision(getCurrentAp(combatant) || 0) > 0;
 
     const deductCost = (ap: number, energy: number): void => {
       if (ap > 0) {
@@ -134,25 +135,11 @@ export const createCombatantApi = createCombatantApiFactory();
  */
 export function initializeCombatantAttributes(actor: Actor): CombatantAttributes {
   const maxAp = calculateMaxAp(actor);
-  const maxEnergy = getMaxEnergy(actor);
-  const balance = 1;
 
   return {
     ap: {
-      nat: { cur: maxAp, max: maxAp },
-      eff: { cur: maxAp, max: maxAp },
-      mods: {},
-    },
-    energy: {
-      position: actor.capacitor?.position ?? 1,
-      nat: { cur: maxEnergy, max: maxEnergy },
-      eff: { cur: maxEnergy, max: maxEnergy },
-      mods: {},
-    },
-    balance: {
-      nat: { cur: balance, max: balance },
-      eff: { cur: balance, max: balance },
-      mods: {},
+      current: maxAp,
+      max: maxAp,
     },
   };
 }
@@ -175,9 +162,6 @@ export type CreateCombatantDependencies = {
   timestamp: () => number;
 }
 
-type Transformer = <T>(input: T) => T;
-const identity: Transformer = (input) => input;
-
 export const DEFAULT_CREATE_COMBATANT_DEPS: Readonly<CreateCombatantDependencies> = {
   computeInitiative: computeInitiativeRoll,
   initializeCombatantAttributes: initializeCombatantAttributes,
@@ -193,17 +177,14 @@ export const createCombatant = (
   transform: (c: Combatant) => Combatant = identity,
   deps: CreateCombatantDependencies = DEFAULT_CREATE_COMBATANT_DEPS,
 ): Combatant => {
-  const { ap, energy, balance } = deps.initializeCombatantAttributes(actor);
+  const { ap } = deps.initializeCombatantAttributes(actor);
   const initiative = deps.computeInitiative(actor);
 
   return transform({
     actorId: actor.id,
     team,
     initiative,
-    mass: 0,
     ap,
-    energy,
-    balance,
     target: null,
     position: {
       coordinate: 0,
@@ -211,4 +192,12 @@ export const createCombatant = (
       speed: 0,
     },
   });
+};
+
+export const setCombatantPosition = (
+  combatant: Combatant,
+  transform: Transform<BattlefieldPosition>,
+): void => {
+  const newPosition = transform(combatant.position);
+  combatant.position = newPosition;
 };

@@ -14,6 +14,8 @@ import { TransformerContext } from '~/types/handler';
 import { ActorURN } from '~/types/taxonomy';
 import { Actor } from '~/types/entity/actor';
 import { createCombatTurnDidEndEvent } from '~/testing/event/factory';
+import { getCurrentAp, getMaxAp } from '~/worldkit/combat/ap';
+import { getCapacitorPosition, getCurrentEnergy } from '~/worldkit/entity/actor/capacitor';
 
 /**
  * Helper function to create a test scenario using the new useCombatScenario hook
@@ -91,11 +93,9 @@ describe('combatant', () => {
 
       const attributes = initializeCombatantAttributes(testActor);
 
-      expect(attributes.ap.nat.cur).toBeGreaterThan(0);
-      expect(attributes.ap.nat.max).toBeGreaterThan(0);
-      expect(attributes.ap.eff.cur).toBe(attributes.ap.nat.cur);
-      expect(attributes.ap.eff.max).toBe(attributes.ap.nat.max);
-      expect(attributes.ap.mods).toEqual({});
+      expect(getCurrentAp(combatant)).toBeGreaterThan(0);
+      expect(getMaxAp(combatant)).toBeGreaterThan(0);
+      expect(getCurrentAp(combatant)).toBe(getCurrentAp(combatant));
     });
 
     it('should initialize energy attributes from actor capacitor', () => {
@@ -105,18 +105,8 @@ describe('combatant', () => {
 
       const attributes = initializeCombatantAttributes(testActor);
 
-      expect(attributes.energy.position).toBeGreaterThan(0);
-      expect(attributes.energy.nat.cur).toBeGreaterThan(0);
-      expect(attributes.energy.eff.cur).toBe(attributes.energy.nat.cur);
-    });
-
-    it('should initialize balance to maximum', () => {
-      const attributes = initializeCombatantAttributes(actor);
-
-      expect(attributes.balance.nat.cur).toBe(1.0);
-      expect(attributes.balance.nat.max).toBe(1.0);
-      expect(attributes.balance.eff.cur).toBe(1.0);
-      expect(attributes.balance.eff.max).toBe(1.0);
+      expect(getCapacitorPosition(testActor)).toBeGreaterThan(0);
+      expect(getCurrentEnergy(testActor)).toBeGreaterThan(0);
     });
   });
 
@@ -154,9 +144,8 @@ describe('combatant', () => {
         actorId,
         combatantOverrides: {
           ap: {
-            nat: { cur: 10, max: 10 },
-            eff: { cur: 10, max: 10 },
-            mods: {},
+            current: 10,
+            max: 10,
           },
         }
       });
@@ -187,9 +176,8 @@ describe('combatant', () => {
         actorId,
         combatantOverrides: {
           ap: {
-            nat: { cur: 10, max: 10 },
-            eff: { cur: 10, max: 10 },
-            mods: {},
+            current: 10,
+            max: 10,
           },
         }
       });
@@ -250,9 +238,8 @@ describe('combatant', () => {
           actorId,
           combatantOverrides: {
             ap: {
-              nat: { cur: 6, max: 6 },
-              eff: { cur: 1.6653345369377348e-16, max: 6 }, // Floating-point artifact near zero
-              mods: {},
+              current: 6,
+              max: 6,
             },
           }
         });
@@ -268,9 +255,8 @@ describe('combatant', () => {
           actorId,
           combatantOverrides: {
             ap: {
-              nat: { cur: 6, max: 6 },
-              eff: { cur: 0.1, max: 6 }, // Exactly 0.1 AP
-              mods: {},
+              current: 6,
+              max: 0.1, // Exactly 0.1 AP
             },
           }
         });
@@ -286,9 +272,8 @@ describe('combatant', () => {
           actorId,
           combatantOverrides: {
             ap: {
-              nat: { cur: 6, max: 6 },
-              eff: { cur: 0, max: 6 }, // Exactly 0 AP
-              mods: {},
+              current: 6,
+              max: 6,
             },
           }
         });

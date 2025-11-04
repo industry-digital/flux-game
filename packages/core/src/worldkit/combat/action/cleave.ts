@@ -14,12 +14,13 @@ import { createWorldEvent } from '~/worldkit/event';
 import { ActorURN } from '~/types/taxonomy';
 import { deductAp } from '~/worldkit/combat/combatant';
 import { TransformerContext } from '~/types/handler';
-import { decrementHp } from '~/worldkit/entity/actor/health';
+import { decrementHp, isDead } from '~/worldkit/entity/actor/health';
 import { isTwoHandedWeapon } from '~/worldkit/schema/weapon/util';
 import { isActorAlive } from '~/worldkit/entity/actor';
 import { canWeaponHitFromDistance } from '~/worldkit/combat/weapon';
 import { createCleaveCost } from '~/worldkit/combat/tactical-cost';
-import { canAfford, consumeEnergy } from '~/worldkit/entity/actor/capacitor';
+import { canAfford, consumeEnergy, getCapacitorPosition } from '~/worldkit/entity/actor/capacitor';
+import { getCurrentAp } from '~/worldkit/combat/ap';
 
 export type CleaveDependencies = {
   createWorldEvent?: typeof createWorldEvent;
@@ -124,8 +125,8 @@ export function createCleaveMethod(
     const cost: ActionCost = createCleaveCost(actor, weapon);
 
     // Check AP affordability
-    if (cost.ap! > combatant.ap.eff.cur) {
-      declareError(`CLEAVE would cost ${cost.ap} AP (you have ${combatant.ap.eff.cur} AP).`, trace);
+    if (cost.ap! > getCurrentAp(combatant)) {
+      declareError(`CLEAVE would cost ${cost.ap} AP (you have ${getCurrentAp(combatant)} AP).`, trace);
       return [];
     }
 
@@ -180,11 +181,13 @@ export function createCleaveMethod(
         computeCombatMass,
       );
 
+      const targetCapacitorPosition = getCapacitorPosition(targetActor);
+
       // All targets defend against the same attack rating from the single cleave roll
       const hitResolution = resolveHitAttemptImpl(
         defenderEvasionRating,
         attackRating,
-        targetCombatant.energy.position,
+        targetCapacitorPosition,
         context,
       );
 
@@ -220,7 +223,7 @@ export function createCleaveMethod(
       allEvents.push(wasAttackedEvent);
 
       // Generate death event if target died
-      if (damage > 0 && targetActor.hp.eff.cur <= 0) {
+      if (damage > 0 && isDead(targetActor)) {
         const deathEvent = createWorldEventImpl({
           trace: trace,
           type: EventType.ACTOR_DID_DIE,

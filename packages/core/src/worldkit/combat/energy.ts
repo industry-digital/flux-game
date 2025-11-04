@@ -1,10 +1,8 @@
 import { Actor, Stat } from '~/types/entity/actor';
 import { PotentiallyImpureOperations } from '~/types/handler';
-import { Combatant, ActionCost } from '~/types/combat';
 import { areaUnderCurve } from '~/lib/calculus';
 import { BASELINE_STAT_VALUE, MAX_STAT_VALUE } from '~/worldkit/entity/actor/stats';
 import { getStatValue } from '~/worldkit/entity/actor/stats';
-import { extractApCost, extractEnergyCost } from '~/worldkit/combat/ap';
 
 export const DEFAULT_CAPACITOR_ENERGY_PER_RES = 1000; // Base energy scaling factor
 export const ENERGY_BASE_AT_MIN_RES = 10000; // Base energy at RES 10
@@ -186,26 +184,4 @@ export function calculateEnergyRecoveryOverTime(
   const energyRecovered = averageRecoveryRate * timeInterval;
 
   return Math.min(energyRecovered, maxEnergy - initialEnergy); // Can't exceed max capacity
-}
-
-/**
- * Check if combatant can afford an action cost
- */
-export function canAffordCost(
-  combatant: Combatant,
-  cost: ActionCost,
-): boolean {
-  return canAffordActionCost(combatant, cost);
-}
-
-/**
- * Check if a combatant can afford an action cost
- */
-export function canAffordActionCost(
-  combatant: Combatant,
-  cost: ActionCost,
-): boolean {
-  const sufficientAp = cost.ap ? combatant.ap.eff.cur >= extractApCost(cost) : true;
-  const sufficientEnergy = cost.energy ? combatant.energy.eff.cur >= extractEnergyCost(cost) : true;
-  return sufficientAp && sufficientEnergy;
 }

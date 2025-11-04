@@ -1,6 +1,5 @@
 import { bench, describe } from 'vitest';
 import { Stat } from '~/types/entity/actor';
-import { createModifiableScalarAttribute } from '~/worldkit/entity';
 import {
   createShell,
   mutateShellStats,
@@ -11,9 +10,9 @@ import {
 
 // Test data setup
 const createBenchmarkStats = () => ({
-  [Stat.POW]: createModifiableScalarAttribute((attr) => ({ ...attr, nat: 15, eff: 15 })),
-  [Stat.FIN]: createModifiableScalarAttribute((attr) => ({ ...attr, nat: 12, eff: 12 })),
-  [Stat.RES]: createModifiableScalarAttribute((attr) => ({ ...attr, nat: 18, eff: 18 })),
+  [Stat.POW]: 15,
+  [Stat.FIN]: 12,
+  [Stat.RES]: 18,
 });
 
 const benchmarkInput: ShellStatsInput = {
@@ -185,8 +184,8 @@ describe('Real-World Gaming Scenarios', () => {
       const shell = createShell();
       // Simulate temporary buff that needs to be fast
       mutateShellStats(shell.stats, {
-        [Stat.POW]: shell.stats[Stat.POW].nat + 5,
-        [Stat.FIN]: shell.stats[Stat.FIN].nat + 3,
+        [Stat.POW]: shell.stats[Stat.POW] + 5,
+        [Stat.FIN]: shell.stats[Stat.FIN] + 3,
       });
     });
 

@@ -2,8 +2,8 @@ import { describe, it, expect, beforeEach } from 'vitest';
 import {
   getCurrentEnergy,
   getMaxEnergy,
-  getPosition,
-  setPosition,
+  getCapacitorPosition,
+  setCapacitorPosition,
   setEnergy,
   getCurrentRecoveryRate,
   getMaxRecoveryRate,
@@ -14,301 +14,282 @@ import {
   getEnergyPercentage,
   calculateEnergyRecoveryOverTime,
 } from './capacitor';
-import { createTestActor } from '~/testing/world-testing';
 import { Actor, Stat } from '~/types/entity/actor';
 import { NormalizedValueBetweenZeroAndOne } from '~/types/entity/attribute';
+import { WorldScenarioHook, createWorldScenario } from '~/worldkit/scenario';
+import { TransformerContext } from '~/types/handler';
+import { createDefaultActors } from '~/testing/actors';
+import { createTransformerContext } from '~/worldkit/context';
+import { setStatValue } from '~/worldkit/entity/actor/stats';
+import { getCurrentShell, setShellStatValue } from '~/worldkit/entity/actor/shell';
 
 describe('Capacitor API (Pure Functions)', () => {
-  let actor: Actor;
+  let context: TransformerContext;
+  let scenario: WorldScenarioHook;
+  let alice: Actor;
 
   beforeEach(() => {
-    actor = createTestActor(undefined, (a) => {
-      const currentShell = a.shells[a.currentShell];
-      return {
-        ...a,
-        shells: {
-          ...a.shells,
-          [a.currentShell]: {
-            ...currentShell,
-            stats: {
-              ...currentShell.stats,
-              [Stat.RES]: {
-                ...currentShell.stats[Stat.RES],
-                nat: 15,
-                eff: 15,
-                mods: {},
-              },
-            },
-          },
-        },
-      };
-    });
+    context = createTransformerContext();
+    scenario = createWorldScenario(context);
+    ({ alice } = createDefaultActors());
+
+    scenario.addActor(alice);
+
+    setStatValue(alice, Stat.RES, 15);
   });
 
   describe('initialization and basic properties', () => {
     it('should initialize capacitor if not present', () => {
-      actor.capacitor = undefined as any;
-
-      setEnergy(actor, 5000);
-
-      expect(actor.capacitor).toBeDefined();
-      expect(actor.capacitor.position).toBeCloseTo(0.340, 3); // 5000 / ~14707
-      expect(actor.capacitor.energy.eff.cur).toBe(5000);
-      expect(actor.capacitor.energy.nat.cur).toBe(5000);
+      expect(alice.capacitor).toBeDefined();
+      expect(getCapacitorPosition(alice)).toBeCloseTo(0.340, 3); // 5000 / ~14707
+      expect(getCurrentEnergy(alice)).toBe(5000);
+      expect(getMaxEnergy(alice)).toBe(5000);
     });
 
     it('should get current energy', () => {
-      actor.capacitor = {
-        position: 0.5,
-        energy: { nat: { cur: 8500, max: 15000 }, eff: { cur: 8500, max: 15000 }, mods: {} }
-      };
-
-      expect(getCurrentEnergy(actor)).toBe(8500);
+      setEnergy(alice, 8500);
+      expect(getCurrentEnergy(alice)).toBe(8500);
     });
 
     it('should return 0 for missing capacitor', () => {
-      actor.capacitor = undefined as any;
-
-      expect(getCurrentEnergy(actor)).toBe(0);
+      // @ts-expect-error: Cannot delete a required property, but this is a test
+      delete alice.capacitor;
+      expect(getCurrentEnergy(alice)).toBe(0);
     });
 
     it('should get maximum energy based on resilience', () => {
-      expect(getMaxEnergy(actor)).toBeCloseTo(14707, 0); // Power curve: RES 15 → ~14,707 J
+      expect(getMaxEnergy(alice)).toBeCloseTo(14707, 0); // Power curve: RES 15 → ~14,707 J
     });
 
     it('should handle zero resilience gracefully', () => {
-      const currentShell = actor.shells[actor.currentShell];
-      currentShell.stats[Stat.RES].eff = 0;
+      const currentShell = getCurrentShell(alice);
+      setShellStatValue(currentShell, Stat.RES, 0);
 
-      expect(getMaxEnergy(actor)).toBe(10000); // Base energy at RES 0 (clamped to RES 10)
-      expect(getMaxRecoveryRate(actor)).toBe(150); // Base recovery at RES 0 (clamped to RES 10)
+      expect(getMaxEnergy(alice)).toBe(10000); // Base energy at RES 0 (clamped to RES 10)
+      expect(getMaxRecoveryRate(alice)).toBe(150); // Base recovery at RES 0 (clamped to RES 10)
     });
 
     it('should handle very high resilience values', () => {
-      const currentShell = actor.shells[actor.currentShell];
-      currentShell.stats[Stat.RES].eff = 100;
+      const currentShell = getCurrentShell(alice);
+      setShellStatValue(currentShell, Stat.RES, 100);
 
-      expect(getMaxEnergy(actor)).toBe(45600); // Power curve: RES 100 → 45,600 J (matches UI!)
-      expect(getMaxRecoveryRate(actor)).toBe(500); // Power curve: RES 100 → 500W
+      expect(getMaxEnergy(alice)).toBe(45600); // Power curve: RES 100 → 45,600 J (matches UI!)
+      expect(getMaxRecoveryRate(alice)).toBe(500); // Power curve: RES 100 → 500W
     });
   });
 
   describe('position management', () => {
     it('should get current position', () => {
-      actor.capacitor = {
-        position: 0.618,
-        energy: { nat: { cur: 0, max: 0 }, eff: { cur: 0, max: 0 }, mods: {} }
-      };
-
-      expect(getPosition(actor)).toBe(0.618);
+      setCapacitorPosition(alice, 0.618);
+      expect(getCapacitorPosition(alice)).toBe(0.618);
     });
 
     it('should return 1.0 for missing capacitor', () => {
-      actor.capacitor = undefined as any;
-
-      expect(getPosition(actor)).toBe(1.0);
+      // @ts-expect-error: Cannot delete a required property, but this is a test
+      delete alice.capacitor;
+      expect(getCapacitorPosition(alice)).toBe(1.0);
     });
 
     it('should set position and update energy accordingly', () => {
-      setPosition(actor, 0.75 as NormalizedValueBetweenZeroAndOne);
+      setCapacitorPosition(alice, 0.75);
 
-      expect(getPosition(actor)).toBe(0.75);
-      expect(getCurrentEnergy(actor)).toBeCloseTo(11030, 0); // 0.75 * ~14707
-      expect(actor.capacitor.energy.eff.max).toBeCloseTo(14707, 0);
-      expect(actor.capacitor.energy.nat.max).toBeCloseTo(14707, 0);
+      expect(getCapacitorPosition(alice)).toBe(0.75);
+      expect(getCurrentEnergy(alice)).toBeCloseTo(11030, 0); // 0.75 * ~14707
+      expect(getMaxEnergy(alice)).toBeCloseTo(14707, 0);
+      expect(getCurrentEnergy(alice)).toBeCloseTo(11030, 0); // 0.75 * ~14707
     });
 
     it('should clamp position to valid range', () => {
       // Test negative position
-      setPosition(actor, -0.5 as NormalizedValueBetweenZeroAndOne);
-      expect(getPosition(actor)).toBe(0);
-      expect(getCurrentEnergy(actor)).toBe(0);
+      setCapacitorPosition(alice, -0.5 as NormalizedValueBetweenZeroAndOne);
+      expect(getCapacitorPosition(alice)).toBe(0);
+      expect(getCurrentEnergy(alice)).toBe(0);
 
       // Test position above 1
-      setPosition(actor, 1.5 as NormalizedValueBetweenZeroAndOne);
-      expect(getPosition(actor)).toBe(1);
-      expect(getCurrentEnergy(actor)).toBeCloseTo(14707, 0);
+      setCapacitorPosition(alice, 1.5 as NormalizedValueBetweenZeroAndOne);
+      expect(getCapacitorPosition(alice)).toBe(1);
+      expect(getCurrentEnergy(alice)).toBeCloseTo(14707, 0);
     });
   });
 
   describe('energy management', () => {
     it('should set energy directly and update position', () => {
-      setEnergy(actor, 10000);
+      setEnergy(alice, 10000);
 
-      expect(getCurrentEnergy(actor)).toBe(10000);
-      expect(getPosition(actor)).toBeCloseTo(0.680, 3); // 10000 / ~14707
-      expect(actor.capacitor.energy.eff.max).toBeCloseTo(14707, 0);
-      expect(actor.capacitor.energy.nat.cur).toBe(10000);
+      expect(getCurrentEnergy(alice)).toBe(10000);
+      expect(getCapacitorPosition(alice)).toBeCloseTo(0.680, 3); // 10000 / ~14707
+      expect(getMaxEnergy(alice)).toBeCloseTo(14707, 0);
+      expect(getCurrentEnergy(alice)).toBe(10000);
     });
 
     it('should clamp energy to valid range', () => {
       // Test negative energy
-      setEnergy(actor, -1000);
-      expect(getCurrentEnergy(actor)).toBe(0);
-      expect(getPosition(actor)).toBe(0);
+      setEnergy(alice, -1000);
+      expect(getCurrentEnergy(alice)).toBe(0);
+      expect(getCapacitorPosition(alice)).toBe(0);
 
       // Test energy above maximum
-      setEnergy(actor, 20000);
-      expect(getCurrentEnergy(actor)).toBeCloseTo(14707, 0); // Clamped to max
-      expect(getPosition(actor)).toBe(1);
+      setEnergy(alice, 20000);
+      expect(getCurrentEnergy(alice)).toBeCloseTo(14707, 0); // Clamped to max
+      expect(getCapacitorPosition(alice)).toBe(1);
     });
 
     it('should consume energy correctly', () => {
-      setEnergy(actor, 10000);
+      setEnergy(alice, 10000);
 
-      consumeEnergy(actor, 2500);
+      consumeEnergy(alice, 2500);
 
-      expect(getCurrentEnergy(actor)).toBe(7500);
-      expect(getPosition(actor)).toBeCloseTo(0.510, 3); // 7500 / ~14707
+      expect(getCurrentEnergy(alice)).toBe(7500);
+      expect(getCapacitorPosition(alice)).toBeCloseTo(0.510, 3); // 7500 / ~14707
     });
 
     it('should not consume energy below zero', () => {
-      setEnergy(actor, 1000);
+      setEnergy(alice, 1000);
 
-      consumeEnergy(actor, 2000);
+      consumeEnergy(alice, 2000);
 
-      expect(getCurrentEnergy(actor)).toBe(0);
-      expect(getPosition(actor)).toBe(0);
+      expect(getCurrentEnergy(alice)).toBe(0);
+      expect(getCapacitorPosition(alice)).toBe(0);
     });
 
     it('should check if can afford cost', () => {
-      setEnergy(actor, 5000);
+      setEnergy(alice, 5000);
 
-      expect(canAfford(actor, 3000)).toBe(true);
-      expect(canAfford(actor, 5000)).toBe(true);
-      expect(canAfford(actor, 6000)).toBe(false);
+      expect(canAfford(alice, 3000)).toBe(true);
+      expect(canAfford(alice, 5000)).toBe(true);
+      expect(canAfford(alice, 6000)).toBe(false);
     });
 
     it('should get energy percentage', () => {
-      setEnergy(actor, 7500);
+      setEnergy(alice, 7500);
 
-      expect(getEnergyPercentage(actor)).toBeCloseTo(0.510, 3); // 7500 / ~14707
+      expect(getEnergyPercentage(alice)).toBeCloseTo(0.510, 3); // 7500 / ~14707
     });
 
     it('should handle zero max energy in percentage calculation', () => {
-      const currentShell = actor.shells[actor.currentShell];
-      currentShell.stats[Stat.RES].eff = 0;
-      setEnergy(actor, 0);
+      const currentShell = alice.shells[alice.currentShell];
+      setShellStatValue(currentShell, Stat.RES, 0);
+      setEnergy(alice, 0);
 
-      expect(getEnergyPercentage(actor)).toBe(0);
+      expect(getEnergyPercentage(alice)).toBe(0);
     });
   });
 
   describe('recovery system', () => {
     it('should get maximum recovery rate based on resilience', () => {
-      expect(getMaxRecoveryRate(actor)).toBe(196); // Power curve: RES 15 → 196W
+      expect(getMaxRecoveryRate(alice)).toBe(196); // Power curve: RES 15 → 196W
     });
 
     it('should get current recovery rate based on energy level', () => {
-      setEnergy(actor, 7500); // ~51% energy
+      setEnergy(alice, 7500); // ~51% energy
 
-      const recoveryRate = getCurrentRecoveryRate(actor);
+      const recoveryRate = getCurrentRecoveryRate(alice);
 
       expect(recoveryRate).toBeCloseTo(105, 0); // Gaussian curve: ~105W at 51% energy
     });
 
     it('should have zero recovery rate at full energy', () => {
-      const maxEnergy = getMaxEnergy(actor);
-      setEnergy(actor, maxEnergy); // 100% energy
+      const maxEnergy = getMaxEnergy(alice);
+      setEnergy(alice, maxEnergy); // 100% energy
 
-      expect(getCurrentRecoveryRate(actor)).toBeCloseTo(10, 0); // Gaussian curve: ~10W at 100% (not zero)
+      expect(getCurrentRecoveryRate(alice)).toBeCloseTo(10, 0); // Gaussian curve: ~10W at 100% (not zero)
     });
 
     it('should have maximum recovery rate at zero energy', () => {
-      setEnergy(actor, 0); // 0% energy
+      setEnergy(alice, 0); // 0% energy
 
-      expect(getCurrentRecoveryRate(actor)).toBeCloseTo(75, 0); // Gaussian curve: ~75W at 0% energy
+      expect(getCurrentRecoveryRate(alice)).toBeCloseTo(75, 0); // Gaussian curve: ~75W at 0% energy
     });
 
     it('should compute recovery energy without mutation', () => {
-      setEnergy(actor, 8000);
-      const initialEnergy = getCurrentEnergy(actor);
+      setEnergy(alice, 8000);
+      const initialEnergy = getCurrentEnergy(alice);
 
-      const recoveryEnergy = computeRecoveryEnergy(actor, 6000); // 6 seconds
+      const recoveryEnergy = computeRecoveryEnergy(alice, 6000); // 6 seconds
 
       // Integration-based recovery with gaussian curve
       expect(recoveryEnergy).toBeCloseTo(496, 0); // ~496 J over 6 seconds (updated for correct integration)
-      expect(getCurrentEnergy(actor)).toBe(initialEnergy); // Should not change
+      expect(getCurrentEnergy(alice)).toBe(initialEnergy); // Should not change
     });
 
     it('should recover energy over time', () => {
-      setEnergy(actor, 8000);
+      setEnergy(alice, 8000);
 
-      const recoveredAmount = recoverEnergy(actor, 6000); // 6 seconds
+      const recoveredAmount = recoverEnergy(alice, 6000); // 6 seconds
 
       expect(recoveredAmount).toBeCloseTo(496, 0); // Integration-based recovery (updated)
-      expect(getCurrentEnergy(actor)).toBeCloseTo(8496, 0); // 8000 + 496
+      expect(getCurrentEnergy(alice)).toBeCloseTo(8496, 0); // 8000 + 496
     });
 
     it('should not recover energy above maximum', () => {
-      const maxEnergy = getMaxEnergy(actor);
-      setEnergy(actor, maxEnergy - 100); // Near maximum
+      const maxEnergy = getMaxEnergy(alice);
+      setEnergy(alice, maxEnergy - 100); // Near maximum
 
-      const recoveredAmount = recoverEnergy(actor, 10000); // 10 seconds
+      const recoveredAmount = recoverEnergy(alice, 10000); // 10 seconds
 
       // Should recover some energy but not exceed maximum
-      expect(getCurrentEnergy(actor)).toBeLessThanOrEqual(maxEnergy);
+      expect(getCurrentEnergy(alice)).toBeLessThanOrEqual(maxEnergy);
       expect(recoveredAmount).toBeGreaterThan(0);
       expect(recoveredAmount).toBeLessThanOrEqual(100); // Can't recover more than the gap
     });
 
     it('should handle zero recovery time', () => {
-      setEnergy(actor, 5000);
+      setEnergy(alice, 5000);
 
-      const recovered = recoverEnergy(actor, 0);
+      const recovered = recoverEnergy(alice, 0);
 
       expect(recovered).toBe(0);
-      expect(getCurrentEnergy(actor)).toBe(5000); // Should not change
+      expect(getCurrentEnergy(alice)).toBe(5000); // Should not change
     });
 
     it('should handle negative recovery time gracefully', () => {
-      setEnergy(actor, 5000);
+      setEnergy(alice, 5000);
 
-      const recovered = recoverEnergy(actor, -1000);
+      const recovered = recoverEnergy(alice, -1000);
 
       expect(recovered).toBeLessThanOrEqual(0);
       // Energy should not increase with negative time
-      expect(getCurrentEnergy(actor)).toBeLessThanOrEqual(5000);
+      expect(getCurrentEnergy(alice)).toBeLessThanOrEqual(5000);
     });
 
     it('should eventually recover to full capacity given enough time', () => {
-      const maxEnergy = getMaxEnergy(actor);
+      const maxEnergy = getMaxEnergy(alice);
 
       // Start completely depleted
-      setEnergy(actor, 0);
-      expect(getCurrentEnergy(actor)).toBe(0);
-      expect(getEnergyPercentage(actor)).toBe(0);
+      setEnergy(alice, 0);
+      expect(getCurrentEnergy(alice)).toBe(0);
+      expect(getEnergyPercentage(alice)).toBe(0);
 
       // Recovery should work even from zero
-      expect(getCurrentRecoveryRate(actor)).toBeGreaterThan(0);
+      expect(getCurrentRecoveryRate(alice)).toBeGreaterThan(0);
 
       // Simulate a very long recovery period (10 minutes = 600 seconds)
       // This should be more than enough time to reach full capacity
       const longRecoveryTime = 600000; // 10 minutes in milliseconds
-      const totalRecovered = recoverEnergy(actor, longRecoveryTime);
+      const totalRecovered = recoverEnergy(alice, longRecoveryTime);
 
       // Should reach maximum capacity
-      expect(getCurrentEnergy(actor)).toBeCloseTo(maxEnergy, 1); // Within 1J of max
-      expect(getEnergyPercentage(actor)).toBeCloseTo(1.0, 3); // Within 0.1% of full
+      expect(getCurrentEnergy(alice)).toBeCloseTo(maxEnergy, 1); // Within 1J of max
+      expect(getEnergyPercentage(alice)).toBeCloseTo(1.0, 3); // Within 0.1% of full
       expect(totalRecovered).toBeCloseTo(maxEnergy, 1); // Should have recovered the full amount
 
       console.log(`\n🔋 Full Recovery Test:`);
       console.log(`Max Energy: ${maxEnergy.toFixed(1)}J`);
-      console.log(`Final Energy: ${getCurrentEnergy(actor).toFixed(1)}J`);
+      console.log(`Final Energy: ${getCurrentEnergy(alice).toFixed(1)}J`);
       console.log(`Total Recovered: ${totalRecovered.toFixed(1)}J`);
-      console.log(`Recovery Percentage: ${(getEnergyPercentage(actor) * 100).toFixed(2)}%`);
+      console.log(`Recovery Percentage: ${(getEnergyPercentage(alice) * 100).toFixed(2)}%`);
       console.log(`Time to full recovery: ${(longRecoveryTime / 1000).toFixed(0)} seconds`);
     });
 
     it('should converge to maximum energy asymptotically', () => {
-      const maxEnergy = getMaxEnergy(actor);
+      const maxEnergy = getMaxEnergy(alice);
 
       // Start at 90% capacity to test the final approach to maximum
       const startEnergy = maxEnergy * 0.9;
-      setEnergy(actor, startEnergy);
+      setEnergy(alice, startEnergy);
 
       // Recovery rate should be very low near maximum (gaussian curve tail)
-      const initialRate = getCurrentRecoveryRate(actor);
+      const initialRate = getCurrentRecoveryRate(alice);
       expect(initialRate).toBeLessThan(50); // Should be much lower than max rate
 
       // Multiple recovery steps should gradually approach maximum
@@ -316,8 +297,8 @@ describe('Capacitor API (Pure Functions)', () => {
       let previousEnergy = startEnergy;
 
       recoverySteps.forEach(stepTime => {
-        const recovered = recoverEnergy(actor, stepTime * 1000);
-        const currentEnergy = getCurrentEnergy(actor);
+        const recovered = recoverEnergy(alice, stepTime * 1000);
+        const currentEnergy = getCurrentEnergy(alice);
 
         // Should make progress unless already at maximum
         if (previousEnergy < maxEnergy) {
@@ -333,89 +314,89 @@ describe('Capacitor API (Pure Functions)', () => {
       });
 
       // After all steps, should be very close to maximum
-      expect(getCurrentEnergy(actor)).toBeCloseTo(maxEnergy, 0.1);
+      expect(getCurrentEnergy(alice)).toBeCloseTo(maxEnergy, 0.1);
     });
   });
 
   describe('real-world scenarios', () => {
     it('should handle typical combat energy usage', () => {
       // Start at full energy
-      const maxEnergy = getMaxEnergy(actor);
-      setPosition(actor, 1.0 as NormalizedValueBetweenZeroAndOne);
-      expect(getCurrentEnergy(actor)).toBeCloseTo(maxEnergy, 0);
+      const maxEnergy = getMaxEnergy(alice);
+      setCapacitorPosition(alice, 1.0 as NormalizedValueBetweenZeroAndOne);
+      expect(getCurrentEnergy(alice)).toBeCloseTo(maxEnergy, 0);
 
       // Cast a spell (high energy cost)
-      expect(canAfford(actor, 3000)).toBe(true);
-      consumeEnergy(actor, 3000);
-      expect(getCurrentEnergy(actor)).toBeCloseTo(maxEnergy - 3000, 0);
+      expect(canAfford(alice, 3000)).toBe(true);
+      consumeEnergy(alice, 3000);
+      expect(getCurrentEnergy(alice)).toBeCloseTo(maxEnergy - 3000, 0);
 
       // Perform basic attacks (lower energy cost)
       for (let i = 0; i < 5; i++) {
-        consumeEnergy(actor, 500);
+        consumeEnergy(alice, 500);
       }
-      const energyAfterAttacks = getCurrentEnergy(actor);
+      const energyAfterAttacks = getCurrentEnergy(alice);
       expect(energyAfterAttacks).toBeCloseTo(maxEnergy - 3000 - 2500, 0);
 
       // Rest and recover - use integration-based recovery
-      const recovered = recoverEnergy(actor, 10000); // 10 seconds
+      const recovered = recoverEnergy(alice, 10000); // 10 seconds
       expect(recovered).toBeGreaterThan(0);
-      expect(getCurrentEnergy(actor)).toBeCloseTo(energyAfterAttacks + recovered, 0);
+      expect(getCurrentEnergy(alice)).toBeCloseTo(energyAfterAttacks + recovered, 0);
     });
 
     it('should handle energy depletion and recovery cycle', () => {
       // Start with some energy
-      setEnergy(actor, 5000);
+      setEnergy(alice, 5000);
 
       // Deplete energy completely
-      consumeEnergy(actor, 6000); // More than available
-      expect(getCurrentEnergy(actor)).toBe(0);
-      expect(canAfford(actor, 1)).toBe(false);
+      consumeEnergy(alice, 6000); // More than available
+      expect(getCurrentEnergy(alice)).toBe(0);
+      expect(canAfford(alice, 1)).toBe(false);
 
       // Recovery from zero should work with integration-based recovery
-      const recovered = recoverEnergy(actor, 20000); // 20 seconds
+      const recovered = recoverEnergy(alice, 20000); // 20 seconds
       expect(recovered).toBeCloseTo(1552, 0); // Integration-based recovery from 0 (updated)
-      expect(getCurrentEnergy(actor)).toBeCloseTo(1552, 0);
-      expect(canAfford(actor, 1000)).toBe(true);
+      expect(getCurrentEnergy(alice)).toBeCloseTo(1552, 0);
+      expect(canAfford(alice, 1000)).toBe(true);
     });
 
     it('should handle position-based energy management', () => {
       // Set to golden ratio position (optimal for some algorithms)
       const goldenRatio = 0.618 as NormalizedValueBetweenZeroAndOne;
-      setPosition(actor, goldenRatio);
+      setCapacitorPosition(alice, goldenRatio);
 
-      expect(getPosition(actor)).toBe(goldenRatio);
+      expect(getCapacitorPosition(alice)).toBe(goldenRatio);
 
       // Energy should match position
-      const maxEnergy = getMaxEnergy(actor);
+      const maxEnergy = getMaxEnergy(alice);
       const expectedEnergy = goldenRatio * maxEnergy;
-      expect(getCurrentEnergy(actor)).toBeCloseTo(expectedEnergy, 0);
-      expect(getEnergyPercentage(actor)).toBeCloseTo(goldenRatio, 3);
+      expect(getCurrentEnergy(alice)).toBeCloseTo(expectedEnergy, 0);
+      expect(getEnergyPercentage(alice)).toBeCloseTo(goldenRatio, 3);
     });
 
     it('should handle stat changes during gameplay', () => {
       // Initial state with RES 15 - set energy to 10000
-      setEnergy(actor, 10000);
-      const initialMaxEnergy = getMaxEnergy(actor);
+      setEnergy(alice, 10000);
+      const initialMaxEnergy = getMaxEnergy(alice);
       expect(initialMaxEnergy).toBeCloseTo(14707, 0);
-      expect(getEnergyPercentage(actor)).toBeCloseTo(10000 / initialMaxEnergy, 3);
+      expect(getEnergyPercentage(alice)).toBeCloseTo(10000 / initialMaxEnergy, 3);
 
       // Buff increases RES
-      const currentShell = actor.shells[actor.currentShell];
-      currentShell.stats[Stat.RES].eff = 20;
-      const buffedMaxEnergy = getMaxEnergy(actor);
+      const currentShell = alice.shells[alice.currentShell];
+      setShellStatValue(currentShell, Stat.RES, 20);
+      const buffedMaxEnergy = getMaxEnergy(alice);
       expect(buffedMaxEnergy).toBeGreaterThan(initialMaxEnergy);
       // Energy stays the same, but percentage changes
-      expect(getCurrentEnergy(actor)).toBe(10000);
-      expect(getEnergyPercentage(actor)).toBeCloseTo(10000 / buffedMaxEnergy, 3);
+      expect(getCurrentEnergy(alice)).toBe(10000);
+      expect(getEnergyPercentage(alice)).toBeCloseTo(10000 / buffedMaxEnergy, 3);
 
       // Debuff reduces RES below current energy level
-      currentShell.stats[Stat.RES].eff = 8;
-      const debuffedMaxEnergy = getMaxEnergy(actor);
+      setShellStatValue(currentShell, Stat.RES, 8);
+      const debuffedMaxEnergy = getMaxEnergy(alice);
       expect(debuffedMaxEnergy).toBeLessThan(initialMaxEnergy);
       // Energy should be clamped when setting
-      setEnergy(actor, getCurrentEnergy(actor)); // Re-clamp to new max
-      expect(getCurrentEnergy(actor)).toBe(debuffedMaxEnergy); // Clamped to new max
-      expect(getEnergyPercentage(actor)).toBe(1.0); // At new maximum
+      setEnergy(alice, getCurrentEnergy(alice)); // Re-clamp to new max
+      expect(getCurrentEnergy(alice)).toBe(debuffedMaxEnergy); // Clamped to new max
+      expect(getEnergyPercentage(alice)).toBe(1.0); // At new maximum
     });
   });
 
@@ -425,10 +406,10 @@ describe('Capacitor API (Pure Functions)', () => {
       const startTime = performance.now();
 
       for (let i = 0; i < operations; i++) {
-        setEnergy(actor, Math.random() * 15000);
-        getCurrentEnergy(actor);
-        canAfford(actor, 1000);
-        getEnergyPercentage(actor);
+        setEnergy(alice, Math.random() * 15000);
+        getCurrentEnergy(alice);
+        canAfford(alice, 1000);
+        getEnergyPercentage(alice);
       }
 
       const totalTime = performance.now() - startTime;
@@ -447,8 +428,8 @@ describe('Capacitor API (Pure Functions)', () => {
       const startTime = performance.now();
 
       for (let i = 0; i < recoveryOperations; i++) {
-        computeRecoveryEnergy(actor, 6000); // 6 seconds
-        getCurrentRecoveryRate(actor);
+        computeRecoveryEnergy(alice, 6000); // 6 seconds
+        getCurrentRecoveryRate(alice);
       }
 
       const totalTime = performance.now() - startTime;
@@ -471,11 +452,11 @@ describe('Capacitor API (Pure Functions)', () => {
         const start = performance.now();
 
         // Mixed operations
-        setEnergy(actor, Math.random() * 15000);
-        consumeEnergy(actor, Math.random() * 1000);
-        recoverEnergy(actor, 1000); // 1 second
-        canAfford(actor, 500);
-        getEnergyPercentage(actor);
+        setEnergy(alice, Math.random() * 15000);
+        consumeEnergy(alice, Math.random() * 1000);
+        recoverEnergy(alice, 1000); // 1 second
+        canAfford(alice, 500);
+        getEnergyPercentage(alice);
 
         const time = performance.now() - start;
         times.push(time);
@@ -516,12 +497,12 @@ describe('Capacitor API (Pure Functions)', () => {
       const testEnergy = 5000; // 50% energy for interesting recovery curve
       const testTime = 10; // 10 seconds recovery time
 
-      setEnergy(actor, testEnergy);
+      setEnergy(alice, testEnergy);
 
       // Debug: Check if recovery rate actually varies
-      const currentEnergy = getCurrentEnergy(actor);
-      const maxEnergy = getMaxEnergy(actor);
-      const maxRecoveryRate = getMaxRecoveryRate(actor);
+      const currentEnergy = getCurrentEnergy(alice);
+      const maxEnergy = getMaxEnergy(alice);
+      const maxRecoveryRate = getMaxRecoveryRate(alice);
 
       console.log(`\n🔍 Debug Info:`);
       console.log(`Current Energy: ${currentEnergy}J (${(currentEnergy/maxEnergy*100).toFixed(1)}%)`);
@@ -533,7 +514,8 @@ describe('Capacitor API (Pure Functions)', () => {
       console.log(`Recovery rates at different energy levels:`);
       testPoints.forEach(ratio => {
         const testEnergyLevel = ratio * maxEnergy;
-        const recoveryRate = getCurrentRecoveryRate({ ...actor, capacitor: { ...actor.capacitor, energy: { ...actor.capacitor.energy, eff: { cur: testEnergyLevel, max: maxEnergy } } } });
+        setEnergy(alice, testEnergyLevel);
+        const recoveryRate = getCurrentRecoveryRate(alice);
         console.log(`  ${(ratio*100).toFixed(0).padStart(3)}%: ${recoveryRate.toFixed(1)}W`);
       });
 
@@ -548,9 +530,9 @@ describe('Capacitor API (Pure Functions)', () => {
         const times: number[] = [];
         let lastResult = 0;
 
-        const currentEnergy = getCurrentEnergy(actor);
-        const maxEnergy = getMaxEnergy(actor);
-        const maxRecoveryRate = getMaxRecoveryRate(actor);
+        const currentEnergy = getCurrentEnergy(alice);
+        const maxEnergy = getMaxEnergy(alice);
+        const maxRecoveryRate = getMaxRecoveryRate(alice);
 
         // Warm up
         for (let i = 0; i < 10; i++) {
@@ -564,7 +546,7 @@ describe('Capacitor API (Pure Functions)', () => {
           console.log(`  Input: ${currentEnergy}J → Output: ${debugResult.toFixed(3)}J`);
 
           // Manual calculation check
-          const instantRate = getCurrentRecoveryRate(actor);
+          const instantRate = getCurrentRecoveryRate(alice);
           const simpleEstimate = instantRate * testTime;
           console.log(`  Instantaneous rate: ${instantRate.toFixed(1)}W`);
           console.log(`  Simple estimate (rate × time): ${simpleEstimate.toFixed(1)}J`);
@@ -646,10 +628,10 @@ describe('Capacitor API (Pure Functions)', () => {
       const testTime = 10;
       const integrationSteps = 16;
 
-      setEnergy(actor, testEnergy);
-      const currentEnergy = getCurrentEnergy(actor);
-      const maxEnergy = getMaxEnergy(actor);
-      const maxRecoveryRate = getMaxRecoveryRate(actor);
+      setEnergy(alice, testEnergy);
+      const currentEnergy = getCurrentEnergy(alice);
+      const maxEnergy = getMaxEnergy(alice);
+      const maxRecoveryRate = getMaxRecoveryRate(alice);
 
       // Warm up
       for (let i = 0; i < 100; i++) {
@@ -694,36 +676,36 @@ describe('Capacitor API (Pure Functions)', () => {
 
   describe('edge cases and error handling', () => {
     it('should throw when actor stats are missing', () => {
-      const currentShell = actor.shells[actor.currentShell];
+      const currentShell = alice.shells[alice.currentShell];
       // @ts-expect-error: Cannot delete a required property, but this is a test
       delete currentShell.stats[Stat.RES]
 
       // Should throw when stats are missing - this is correct behavior
-      expect(() => getMaxEnergy(actor)).toThrow();
-      expect(() => getMaxRecoveryRate(actor)).toThrow();
+      expect(() => getMaxEnergy(alice)).toThrow();
+      expect(() => getMaxRecoveryRate(alice)).toThrow();
     });
 
     it('should handle corrupted capacitor state', () => {
-      actor.capacitor = {
+      alice.capacitor = {
         position: NaN,
-        energy: { nat: { cur: NaN, max: NaN }, eff: { cur: NaN, max: NaN }, mods: {} }
+        energy: { current: NaN, max: NaN }
       };
 
       // Should handle NaN gracefully
-      expect(() => getCurrentEnergy(actor)).not.toThrow();
-      expect(() => setEnergy(actor, 5000)).not.toThrow();
-      expect(getCurrentEnergy(actor)).toBe(5000); // Should be corrected
+      expect(() => getCurrentEnergy(alice)).not.toThrow();
+      expect(() => setEnergy(alice, 5000)).not.toThrow();
+      expect(getCurrentEnergy(alice)).toBe(5000); // Should be corrected
     });
 
     it('should handle extreme energy values', () => {
       // Test very large energy values
-      const maxEnergy = getMaxEnergy(actor);
-      setEnergy(actor, Number.MAX_SAFE_INTEGER);
-      expect(getCurrentEnergy(actor)).toBeCloseTo(maxEnergy, 0); // Clamped to max
+      const maxEnergy = getMaxEnergy(alice);
+      setEnergy(alice, Number.MAX_SAFE_INTEGER);
+      expect(getCurrentEnergy(alice)).toBeCloseTo(maxEnergy, 0); // Clamped to max
 
       // Test very small energy values
-      setEnergy(actor, Number.MIN_SAFE_INTEGER);
-      expect(getCurrentEnergy(actor)).toBe(0); // Clamped to min
+      setEnergy(alice, Number.MIN_SAFE_INTEGER);
+      expect(getCurrentEnergy(alice)).toBe(0); // Clamped to min
     });
   });
 });

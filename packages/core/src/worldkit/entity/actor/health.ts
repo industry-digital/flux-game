@@ -16,37 +16,37 @@ export const HP_PER_RES_BONUS = 5;
  * Get current HP value
  */
 export const getCurrentHp = (actor: Actor): number => {
-  return actor.hp.eff.cur;
+  return actor.hp.current;
 };
 
 /**
  * Get maximum HP value
  */
 export const getMaxHp = (actor: Actor): number => {
-  return actor.hp.eff.max;
+  return actor.hp.max;
 };
 
 /**
  * Check if actor is alive (HP > 0)
  */
 export const isAlive = (actor: Actor): boolean => {
-  return actor.hp.eff.cur > 0;
+  return actor.hp.current > 0;
 };
 
 /**
  * Check if actor is dead (HP <= 0)
  */
 export const isDead = (actor: Actor): boolean => {
-  return actor.hp.eff.cur <= 0;
+  return actor.hp.current <= 0;
 };
 
 /**
  * Get health as percentage (0-1)
  */
 export const getHealthPercentage = (actor: Actor): NormalizedValueBetweenZeroAndOne => {
-  const maxHp = actor.hp.eff.max;
+  const maxHp = actor.hp.max;
   if (maxHp === 0) return 0;
-  return actor.hp.eff.cur / maxHp;
+  return actor.hp.current / maxHp;
 };
 
 /**
@@ -54,8 +54,7 @@ export const getHealthPercentage = (actor: Actor): NormalizedValueBetweenZeroAnd
  */
 export const setCurrentHp = (actor: Actor, value: number): void => {
   const clampedValue = Math.max(0, Math.min(value, getMaxHp(actor)));
-  actor.hp.nat.cur = clampedValue;
-  actor.hp.eff.cur = clampedValue;
+  actor.hp.current = clampedValue;
 };
 
 /**
@@ -63,8 +62,7 @@ export const setCurrentHp = (actor: Actor, value: number): void => {
  */
 export const setMaxHp = (actor: Actor, value: number): void => {
   const newMax = Math.max(0, value);
-  actor.hp.nat.max = newMax;
-  actor.hp.eff.max = newMax;
+  actor.hp.max = newMax;
   // Ensure current doesn't exceed new max
   if (getCurrentHp(actor) > newMax) {
     setCurrentHp(actor, newMax);

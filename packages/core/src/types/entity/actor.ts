@@ -11,12 +11,7 @@ import {
 import { AppliedEffects } from '~/types/taxonomy/effect';
 import { EntityType, AbstractEntity, Describable } from '~/types/entity/entity';
 import { SkillState, Specializations } from '~/types/entity/skill';
-import {
-  NormalizedValueBetweenZeroAndOne,
-  ModifiableBoundedAttribute,
-  ModifiableScalarAttribute,
-  NormalizedBipolarValue,
-} from '~/types/entity/attribute';
+import { NormalizedValueBetweenZeroAndOne, NormalizedBipolarValue, StatefulBoundedValue } from '~/types/entity/attribute';
 import { CurvePosition } from '~/types/easing';
 import { Shell } from '~/types/entity/shell';
 import { CurrencyType } from '~/types/currency';
@@ -90,15 +85,15 @@ export type CoreStat = keyof CoreStats;
 export type ShellStat = keyof ShellStats;
 
 export type CoreStats = {
-  [Stat.INT]: ModifiableScalarAttribute;
-  [Stat.PER]: ModifiableScalarAttribute;
-  [Stat.MEM]: ModifiableScalarAttribute;
+  [Stat.INT]: number;
+  [Stat.PER]: number;
+  [Stat.MEM]: number;
 };
 
 export type ShellStats = {
-  [Stat.POW]: ModifiableScalarAttribute;
-  [Stat.FIN]: ModifiableScalarAttribute;
-  [Stat.RES]: ModifiableScalarAttribute;
+  [Stat.POW]: number;
+  [Stat.FIN]: number;
+  [Stat.RES]: number;
 };
 
 export type ActorStats = CoreStats & ShellStats;
@@ -166,7 +161,7 @@ export type AppliedAnatomicalDamage = {
 };
 
 export type CapacitorState = CurvePosition & {
-  energy: ModifiableBoundedAttribute;
+  energy: StatefulBoundedValue;
 };
 
 export enum Gender {
@@ -209,7 +204,7 @@ export type Actor =
   /**
    * Character level. e.g., "You are a 5th level barbarian."
    */
-  level: ModifiableScalarAttribute;
+  level: number;
 
   /**
    * The actor's gender
@@ -219,7 +214,7 @@ export type Actor =
   /**
    * Hit points. When this reaches 0, the actor is usually considered dead.
    */
-  hp: ModifiableBoundedAttribute;
+  hp: StatefulBoundedValue;
 
   /**
    * Traits that may affect the actor's rolls
@@ -284,16 +279,17 @@ export type Actor =
 
   /**
    * The subset of skills that the actor has specialized
+   * @deprecated
    */
-  specializations: Specializations;
+  specializations?: Specializations;
 
   currentShell: string;
   shells: Record<string, Shell>;
 
   /**
-   * Currently active sessions with join timestamps
+   * The actor's current session, if any
    */
-  sessions: Record<SessionURN, number>;
+  session?: SessionURN;
 };
 
 export type Autonomous = {

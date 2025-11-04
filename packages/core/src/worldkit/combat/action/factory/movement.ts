@@ -15,7 +15,7 @@ import { Combatant, CombatSession } from '~/types/combat';
 import { TransformerContext } from '~/types/handler';
 import { ActorDidMoveInCombat, EventType, WorldEvent } from '~/types/event';
 import { createWorldEvent } from '~/worldkit/event';
-import { calculateTacticalMovement, roundApCostUp } from '~/worldkit/combat/tactical-rounding';
+import { calculateTacticalMovement, MIN_AP_INCREMENT, roundApCostUp } from '~/worldkit/combat/tactical-rounding';
 import { distanceToAp, apToDistance } from '~/worldkit/physics/movement';
 import { checkMovementCollision } from '~/worldkit/combat/movement';
 import { deductAp, MOVE_BY_DISTANCE, MOVE_BY_MAX, MOVE_BY_AP, MovementType } from '~/worldkit/combat/combatant';
@@ -25,7 +25,7 @@ import { createMovementCostFromAp, createMovementCostFromDistance, createMaxMove
 import { ActorURN } from '~/types/taxonomy';
 import { MovementDirection } from '~/types/combat';
 import { DoneMethod } from '../done';
-import { cleanApPrecision } from '~/worldkit/combat/ap';
+import { cleanApPrecision, getCurrentAp } from '~/worldkit/combat/ap';
 
 export type MovementEfficiencyProfile = {
   forward: number;   // Efficiency coefficient for forward movement (1.0 = 100%)
@@ -51,7 +51,7 @@ export type MovementFactoryDependencies = MovementActionDependencies & {
 /**
  * Calculate movement efficiency based on direction and actor stats
  */
-function calculateMovementEfficiency(
+export function calculateMovementEfficiency(
   movementDirection: MovementDirection,
   actor: Actor,
   efficiencyProfile: MovementEfficiencyProfile = DEFAULT_EFFICIENCY_PROFILE,
@@ -112,12 +112,13 @@ function calculateApMovement(
   declareError: (message: string, trace: string) => void,
   trace: string
 ): MovementParameters | null {
-  const ap = roundApCostUp(value);
+  const apCost = roundApCostUp(value);
+  const currentAp = getCurrentAp(combatant);
 
   // Check AP availability first
-  if (ap > combatant.ap.eff.cur) {
+  if (apCost > currentAp) {
     declareError(
-      `${ap} AP would exceed your remaining AP (${combatant.ap.eff.cur} AP)`,
+      `${apCost} AP would exceed your remaining AP (${currentAp} AP)`,
       trace
     );
     return null;
@@ -125,10 +126,10 @@ function calculateApMovement(
 
   // Efficiency affects how much distance you get for the same AP
   // Lower efficiency coefficient = less distance for same AP (less efficient)
-  const baseDistance = apToDistanceImpl(power, finesse, ap, actorMassKg);
+  const baseDistance = apToDistanceImpl(power, finesse, apCost, actorMassKg);
   const distance = baseDistance * efficiencyMultiplier;
 
-  return { distance, ap };
+  return { distance, ap: apCost };
 }
 
 /**
@@ -154,10 +155,11 @@ function calculateMovementParameters(
   declareError: (message: string, trace: string) => void,
   trace: string
 ): MovementParameters | null {
+
   switch (by) {
     case MOVE_BY_MAX:
       // For max movement: compute max possible distance, clamp by collisions, then calculate cost
-      const availableAp = combatant.ap.eff.cur;
+      const availableAp = getCurrentAp(combatant);
 
       // Check for zero AP upfront
       if (availableAp <= 0) {
@@ -243,6 +245,8 @@ function calculateMovementParameters(
   }
 }
 
+const NO_EVENTS: WorldEvent[] = Object.freeze([]) as unknown as WorldEvent[];
+
 /**
  * Unified movement method factory
  *
@@ -291,12 +295,12 @@ export function createMovementMethod(
     // Input validation
     if (by !== MOVE_BY_MAX && value <= 0) {
       declareError(`${by === MOVE_BY_DISTANCE ? 'Distance' : 'AP'} must be positive`, trace);
-      return [];
+      return NO_EVENTS;
     }
 
     if (!combatants.has(actor.id)) {
       declareError('Actor not in combat', trace);
-      return [];
+      return NO_EVENTS;
     }
 
     // Calculate actor's actual mass (body + equipment + inventory)
@@ -305,6 +309,7 @@ export function createMovementMethod(
     const power = getStatValue(actor, Stat.POW);
     const finesse = getStatValue(actor, Stat.FIN);
     const currentPosition = combatant.position.coordinate;
+    const currentAp = getCurrentAp(combatant);
 
     // Calculate movement direction: movementDirection * facing
     // Examples:
@@ -337,7 +342,7 @@ export function createMovementMethod(
     );
 
     if (!movementParams) {
-      return []; // Error already declared in calculateMovementParameters
+      return NO_EVENTS; // Error already declared in calculateMovementParameters
     }
 
     const { distance, ap } = movementParams;
@@ -355,7 +360,7 @@ export function createMovementMethod(
         `Movement would exceed battlefield boundary. Maximum ${actionName.toLowerCase()}: ${maxDistance}m`,
         trace
       );
-      return [];
+      return NO_EVENTS;
     }
 
     // Check collisions (skip for max movement since we already handled it)
@@ -363,7 +368,7 @@ export function createMovementMethod(
       const collisionResult = checkMovementCollision(combatants, actor.id, currentPosition, precisePosition);
       if (!collisionResult.success) {
         declareError(collisionResult.error || 'Movement blocked by collision', trace);
-        return [];
+        return NO_EVENTS;
       }
     }
 
@@ -388,7 +393,7 @@ export function createMovementMethod(
 
     // Calculate cost using tactical cost factories (following established pattern)
     const baseCost = by === MOVE_BY_MAX
-      ? createMaxMovementCost(combatant.ap.eff.cur, power, finesse, distance, actorMassKg)
+      ? createMaxMovementCost(currentAp, power, finesse, distance, actorMassKg)
       : by === MOVE_BY_DISTANCE
         ? createMovementCostFromDistanceImpl(power, finesse, distance, actorMassKg)
         : createMovementCostFromApImpl(ap, power, finesse, actorMassKg);
@@ -403,14 +408,14 @@ export function createMovementMethod(
 
     // For max movement, we should have already ensured this is affordable
     // For other movements, check affordability against the final cost
-    if (by !== MOVE_BY_MAX && finalCost.ap > combatant.ap.eff.cur) {
-      const baseMaxDistance = apToDistanceImpl(power, finesse, combatant.ap.eff.cur, actorMassKg);
+    if (by !== MOVE_BY_MAX && finalCost.ap > currentAp) {
+      const baseMaxDistance = apToDistanceImpl(power, finesse, currentAp, actorMassKg);
       const maxDistance = baseMaxDistance * efficiencyMultiplier;
       declareError(
-        `Movement would cost ${finalCost.ap} AP (you have ${combatant.ap.eff.cur} AP). Try: ${actionName.toLowerCase()} distance ${Math.floor(maxDistance)}m`,
+        `Movement would cost ${finalCost.ap} AP (you have ${currentAp} AP). Try: ${actionName.toLowerCase()} distance ${Math.floor(maxDistance)}m`,
         trace
       );
-      return [];
+      return NO_EVENTS;
     }
 
     // Execute movement using tactical values
@@ -444,20 +449,20 @@ export function createMovementMethod(
     });
 
     context.declareEvent(event);
-    const events: WorldEvent[] = [event];
+    const out: WorldEvent[] = [event];
 
     // Check for auto-done after AP deduction
     // Only auto-advance turn if actor cannot perform any meaningful actions
     // Use same threshold as AI system: 0.1 AP is the minimum for meaningful actions
-    const remainingAp = cleanApPrecision(combatant.ap.eff.cur);
-    const canStillAct = remainingAp > 0.1;
+    const remainingAp = cleanApPrecision(getCurrentAp(combatant));
+    const canStillAct = remainingAp > MIN_AP_INCREMENT;
 
     if (!canStillAct && autoDone && done) {
       const doneEvents = done(trace);
-      events.push(...doneEvents);
+      out.push(...doneEvents);
     }
 
-    return events;
+    return out;
   };
 }
 

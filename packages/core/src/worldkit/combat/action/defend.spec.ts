@@ -6,7 +6,7 @@ import { createSwordSchema } from '~/worldkit/schema/weapon/sword';
 import { registerWeapons } from '../testing/schema';
 import { ActorURN } from '~/types/taxonomy';
 import { ActorDidDefend, EventType } from '~/types/event';
-import { extractApCost } from '~/worldkit/combat/ap';
+import { extractApCost, getCurrentAp, setCurrentAp } from '~/worldkit/combat/ap';
 import { Team } from '~/types/combat';
 import { DoneMethod } from '~/worldkit/combat/action/done';
 import { extractFirstEventOfType } from '~/testing/event';
@@ -62,7 +62,7 @@ describe('Defend Method', () => {
     it('should create properly structured COMBATANT_DID_DEFEND event', () => {
       const defender = scenario.actors[DEFENDER_ID].actor;
       const defenderCombatant = scenario.session.data.combatants.get(DEFENDER_ID)!;
-      const initialAP = defenderCombatant.ap.eff.cur;
+      const initialAP = getCurrentAp(defenderCombatant);
 
       const result = defend();
 
@@ -87,11 +87,11 @@ describe('Defend Method', () => {
   describe('Basic Functionality', () => {
     it('should spend all remaining AP', () => {
       const defenderCombatant = scenario.session.data.combatants.get(DEFENDER_ID)!;
-      const initialAP = defenderCombatant.ap.eff.cur;
+      const initialAP = getCurrentAp(defenderCombatant);
 
       const result = defend();
 
-      expect(defenderCombatant.ap.eff.cur).toBe(0);
+      expect(getCurrentAp(defenderCombatant)).toBe(0);
       expect(result).toHaveLength(1);
       const defendEvent = extractFirstEventOfType<ActorDidDefend>(result, EventType.ACTOR_DID_DEFEND)!;
       expect(defendEvent.type).toBe(EventType.ACTOR_DID_DEFEND);
@@ -113,11 +113,11 @@ describe('Defend Method', () => {
 
     it('should handle zero AP gracefully', () => {
       const defenderCombatant = scenario.session.data.combatants.get(DEFENDER_ID)!;
-      defenderCombatant.ap.eff.cur = 0;
+      setCurrentAp(defenderCombatant, 0);
 
       const result = defend();
 
-      expect(defenderCombatant.ap.eff.cur).toBe(0);
+      expect(getCurrentAp(defenderCombatant)).toBe(0);
       expect(result).toHaveLength(0); // No event declared when AP investment is below minimum threshold
     });
   });

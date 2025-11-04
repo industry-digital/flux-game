@@ -1,5 +1,4 @@
-import { Actor, Stat, CoreStats, ActorStats } from '~/types/entity/actor';
-import { ModifiableScalarAttribute } from '~/types/entity/attribute';
+import { Actor, Stat, ActorStats } from '~/types/entity/actor';
 import { AppliedModifiers } from '~/types/modifier';
 import { isActiveModifier } from '~/worldkit/entity/modifier';
 
@@ -23,7 +22,7 @@ export function calculateStatBonus(statValue: number): number {
  * Get a specific stat from an actor, automatically routing to core or shell stats
  * This is the primary interface - consumers don't need to know about routing
  */
-export function getStat(actor: Actor, stat: Stat): ModifiableScalarAttribute {
+export function getStat(actor: Actor, stat: Stat): number {
   if (stat === Stat.INT || stat === Stat.PER || stat === Stat.MEM) {
     // Core stats are stored directly on the actor
     const attr = actor.stats[stat];
@@ -51,22 +50,24 @@ export function getStat(actor: Actor, stat: Stat): ModifiableScalarAttribute {
  * This is what most consumers want - the final computed value
  */
 export function getStatValue(actor: Actor, stat: Stat): number {
-  return getStat(actor, stat).eff;
+  return getStat(actor, stat);
 }
 
 /**
  * Get the natural (base) value of a specific stat from an actor
+ * @deprecated `getStatValue` returns the natural stat value
  */
 export function getNaturalStatValue(actor: Actor, stat: Stat): number {
-  return getStat(actor, stat).nat;
+  return getStat(actor, stat);
 }
+
+const NO_MODIFIERS: Readonly<AppliedModifiers> = Object.freeze({});
 
 /**
  * Get the stat modifiers for a specific stat
  */
 export function getStatModifiers(actor: Actor, stat: Stat): AppliedModifiers {
-  const statAttr = getStat(actor, stat);
-  return statAttr.mods ?? {};
+  throw new Error('getStatModifiers is not implemented');
 }
 
 /**
@@ -96,20 +97,7 @@ export function hasActiveStatModifiers(actor: Actor, stat: Stat, now: number): b
  * This recalculates from scratch - useful for validation or when modifiers change
  */
 export function computeStatValue(actor: Actor, stat: Stat, now: number): number {
-  const statAttr = getStat(actor, stat);
-  const modifiers = statAttr.mods ?? {};
-
-  // Single-pass optimization: filter and aggregate in one loop
-  let totalBonus = 0;
-  for (let modifierId in modifiers) {
-    const modifier = modifiers[modifierId];
-    if (isActiveModifier(modifier, now)) {
-      totalBonus += modifier.value;
-    }
-  }
-
-  // Clamp to valid stat range
-  return Math.max(BASELINE_STAT_VALUE, Math.min(MAX_STAT_VALUE, statAttr.nat + totalBonus));
+  return getStat(actor, stat); // TODO: Implement modifiers
 }
 
 /**
@@ -117,7 +105,7 @@ export function computeStatValue(actor: Actor, stat: Stat, now: number): number 
  * Useful for displaying complete stat sheets
  */
 export function getAllStats(actor: Actor): ActorStats {
-  const coreStats: CoreStats = {
+  const stats: Partial<ActorStats> = {
     [Stat.INT]: actor.stats[Stat.INT],
     [Stat.PER]: actor.stats[Stat.PER],
     [Stat.MEM]: actor.stats[Stat.MEM],
@@ -128,47 +116,32 @@ export function getAllStats(actor: Actor): ActorStats {
     throw new Error(`Actor has no current shell`);
   }
 
-  return {
-    ...coreStats,
-    ...currentShell.stats,
-  };
-}
+  stats[Stat.POW] = currentShell.stats[Stat.POW];
+  stats[Stat.FIN] = currentShell.stats[Stat.FIN];
+  stats[Stat.RES] = currentShell.stats[Stat.RES];
 
-/**
- * Set the natural value of a stat (useful for test setup and mutations)
- */
-export function setNaturalStatValue(actor: Actor, stat: Stat, value: number): void {
-  const statAttr = getStat(actor, stat);
-  statAttr.nat = value;
+  return stats as ActorStats;
 }
 
 /**
  * Set the effective value of a stat (useful for test setup)
  */
 export function setStatValue(actor: Actor, stat: Stat, value: number): void {
-  const statAttr = getStat(actor, stat);
-  statAttr.eff = value;
+  if (stat === Stat.INT || stat === Stat.PER || stat === Stat.MEM) {
+    actor.stats[stat] = value;
+    return;
+  }
+
+  const currentShell = actor.shells[actor.currentShell];
+  if (!currentShell) {
+    throw new Error(`Actor has no current shell`);
+  }
+  currentShell.stats[stat] = value;
 }
 
 /**
  * Set stat modifiers
  */
 export function setStatModifiers(actor: Actor, stat: Stat, modifiers: AppliedModifiers): void {
-  const statAttr = getStat(actor, stat);
-  statAttr.mods = modifiers;
-}
-
-/**
- * Refresh the stats for an actor, recalculating effective values from natural + modifiers
- * This operation directly mutates the supplied actor
- */
-export function refreshStats(actor: Actor, statNames?: readonly Stat[], timestamp = () => Date.now()): void {
-  const now = timestamp();
-  const statsToRefresh = statNames || ALL_STAT_NAMES;
-
-  for (const stat of statsToRefresh) {
-    const statAttr = getStat(actor, stat);
-    const effectiveValue = computeStatValue(actor, stat, now);
-    statAttr.eff = effectiveValue;
-  }
+  throw new Error('setStatModifiers is not implemented');
 }

@@ -1,245 +1,351 @@
-import { describe, it, expect, vi } from 'vitest';
-import { Stat } from '~/types';
-import { DamageModel, StatScalingDamageSpecification } from '~/types/damage';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { Stat } from '~/types/entity/actor';
+import { TransformerContext } from '~/types/handler';
+import { DamageModel } from '~/types/damage';
 import { Actor } from '~/types/entity/actor';
 import {
   calculateAverageWeaponDamagePerHit,
   rollWeaponDamage,
   calculateWeaponDps,
   analyzeWeapon,
-  CalculateWeaponDamageDependencies,
+  RollWeaponDamageDependencies,
   WeaponAnalysis
 } from './resolution';
-import { createTestWeapon } from '../testing/weapon';
-import { createActor } from '~/worldkit/entity/actor';
-import { MAX_STAT_VALUE } from '~/worldkit/entity/actor/stats';
+import { MAX_STAT_VALUE, setStatValue } from '~/worldkit/entity/actor/stats';
+import { createWorldScenario, WorldScenarioHook } from '~/worldkit/scenario';
+import { createTransformerContext } from '~/worldkit/context';
+import { createDefaultActors } from '~/testing/actors';
+import { WeaponSchema, WeaponTimer, WeaponTimers } from '~/types/schema/weapon';
+import { createWeaponSchema } from '~/worldkit/schema/weapon/factory';
+import { RollSpecification } from '~/types/dice';
+import { calculateWeaponApCost } from '~/worldkit/combat/ap';
 
-describe('damage resolution utilities', () => {
-  const createTestActor = (powValue: number = 10): Actor => {
-    return createActor((actor: Actor) => ({
-      ...actor,
-      id: 'flux:actor:test',
-      name: 'Test Actor',
-      shells: {
-        ...actor.shells,
-        [actor.currentShell]: {
-          ...actor.shells[actor.currentShell],
-          stats: {
-            ...actor.shells[actor.currentShell].stats,
-            [Stat.POW]: { nat: powValue, eff: powValue, mods: {} },
-          },
-        },
+describe('Damage Resolution', () => {
+  let context: TransformerContext;
+  let scenario: WorldScenarioHook;
+  let weapon: WeaponSchema;
+  let alice: Actor;
+  let bob: Actor;
+
+  beforeEach(() => {
+    context = createTransformerContext();
+    scenario = createWorldScenario(context);
+
+    ({ alice, bob } = createDefaultActors());
+
+    // Ensure actors have POW stat initialized for tests
+    setStatValue(alice, Stat.POW, 10);
+    setStatValue(bob, Stat.POW, 10);
+
+    weapon = createWeaponSchema({
+      urn: 'flux:schema:weapon:test',
+      name: 'Test Weapon',
+      damage: {
+        model: DamageModel.FIXED,
+        base: '2d6',
       },
-    }));
-  };
-
-  describe('calculateAverageWeaponDamagePerHit', () => {
-    it('calculates average damage for fixed damage model', () => {
-      const weapon = createTestWeapon((schema) => ({
-        ...schema,
-        damage: {
-          ...schema.damage,
-          model: DamageModel.FIXED,
-          base: '2d6', // Library calculates as (2 * 6 / 2) = 6
-        },
-      }));
-      const actor = createTestActor(15);
-
-      const avgDamage = calculateAverageWeaponDamagePerHit(actor, weapon);
-
-      expect(avgDamage).toBe(6); // Library's calculation: 2 * 6 / 2 = 6
     });
 
-    it('calculates average damage for stat-scaling model with low stat', () => {
-      const weapon = createTestWeapon((schema) => ({
-        ...schema,
+    scenario.assignWeapon(alice, weapon);
+    scenario.assignWeapon(bob, weapon);
+  });
+
+  describe('calculateAverageWeaponDamagePerHit', () => {
+    it('uses base damage calculation for fixed damage model', () => {
+      const mockDeps = {
+        rollDice: vi.fn(),
+        getStatValue: vi.fn().mockReturnValue(15),
+        getWeaponBaseDamage: vi.fn().mockReturnValue('2d6'),
+        calculateAverageRollResult: vi.fn().mockReturnValue(7.5),
+      };
+
+      const avgDamage = calculateAverageWeaponDamagePerHit(alice, weapon, mockDeps);
+
+      expect(mockDeps.getWeaponBaseDamage).toHaveBeenCalledWith(weapon);
+      expect(mockDeps.calculateAverageRollResult).toHaveBeenCalledWith('2d6');
+      expect(avgDamage).toBe(7.5);
+    });
+
+    it('applies stat scaling bonus for stat-scaling model', () => {
+      const scalingWeapon = createWeaponSchema({
+        urn: 'flux:schema:weapon:test',
+        name: 'Test Weapon',
         damage: {
           model: DamageModel.STAT_SCALING,
           stat: Stat.POW,
           efficiency: 0.5,
-          base: '1d6', // Library calculates as (1 * 6 / 2) = 3
-          types: (schema.damage as StatScalingDamageSpecification).types,
+          base: '1d6',
         },
-      }));
-      const actor = createTestActor(10); // 10/100 * 0.5 = 0.05 bonus
+      });
 
-      const avgDamage = calculateAverageWeaponDamagePerHit(actor, weapon);
+      const mockDeps = {
+        rollDice: vi.fn(),
+        getStatValue: vi.fn().mockReturnValue(20), // 20/100 * 0.5 = 0.1 bonus
+        getWeaponBaseDamage: vi.fn().mockReturnValue('1d6'),
+        calculateAverageRollResult: vi.fn().mockReturnValue(3.5),
+      };
 
-      expect(avgDamage).toBe(3.05); // 3 + 0.05
+      const avgDamage = calculateAverageWeaponDamagePerHit(alice, scalingWeapon, mockDeps);
+
+      expect(mockDeps.getStatValue).toHaveBeenCalledWith(alice, Stat.POW);
+      expect(avgDamage).toBe(3.6); // 3.5 + 0.1
     });
 
-    it('calculates average damage for stat-scaling model with high stat', () => {
-      const weapon = createTestWeapon((schema) => ({
-        ...schema,
+    it('returns only base damage when stat scaling efficiency is zero', () => {
+      const scalingWeapon = createWeaponSchema({
+        urn: 'flux:schema:weapon:test',
+        name: 'Test Weapon',
+        damage: {
+          model: DamageModel.STAT_SCALING,
+          stat: Stat.POW,
+          efficiency: 0,
+          base: '1d6',
+        },
+      });
+
+      const mockDeps = {
+        rollDice: vi.fn(),
+        getStatValue: vi.fn().mockReturnValue(50),
+        getWeaponBaseDamage: vi.fn().mockReturnValue('1d6'),
+        calculateAverageRollResult: vi.fn().mockReturnValue(3.5),
+      };
+
+      const avgDamage = calculateAverageWeaponDamagePerHit(alice, scalingWeapon, mockDeps);
+
+      expect(avgDamage).toBe(3.5); // No bonus applied
+    });
+
+    it('scales linearly with stat value', () => {
+      const scalingWeapon = createWeaponSchema({
+        urn: 'flux:schema:weapon:test',
+        name: 'Test Weapon',
         damage: {
           model: DamageModel.STAT_SCALING,
           stat: Stat.POW,
           efficiency: 1.0,
-          base: '1d6', // Library calculates as (1 * 6 / 2) = 3
-          types: (schema.damage as StatScalingDamageSpecification).types,
+          base: '1d6',
         },
-      }));
-      const actor = createTestActor(MAX_STAT_VALUE); // 100/100 * 1.0 = 1.0 bonus
+      });
 
-      const avgDamage = calculateAverageWeaponDamagePerHit(actor, weapon);
+      const mockDeps = {
+        rollDice: vi.fn(),
+        getStatValue: vi.fn(),
+        getWeaponBaseDamage: vi.fn().mockReturnValue('1d6'),
+        calculateAverageRollResult: vi.fn().mockReturnValue(3.5),
+      };
 
-      expect(avgDamage).toBe(4); // 3 + 1.0
-    });
+      // Test with different stat values
+      mockDeps.getStatValue.mockReturnValue(0);
+      const lowStatDamage = calculateAverageWeaponDamagePerHit(alice, scalingWeapon, mockDeps);
 
-    it('handles zero stat values', () => {
-      const weapon = createTestWeapon((schema) => ({
-        ...schema,
-        damage: {
-          model: DamageModel.STAT_SCALING,
-          stat: Stat.POW,
-          efficiency: 0.5,
-          base: '1d6', // Library calculates as (1 * 6 / 2) = 3
-          types: (schema.damage as StatScalingDamageSpecification).types,
-        },
-      }));
-      const actor = createTestActor(0); // 0/100 * 0.5 = 0 bonus
+      mockDeps.getStatValue.mockReturnValue(MAX_STAT_VALUE);
+      const maxStatDamage = calculateAverageWeaponDamagePerHit(alice, scalingWeapon, mockDeps);
 
-      const avgDamage = calculateAverageWeaponDamagePerHit(actor, weapon);
-
-      expect(avgDamage).toBe(3); // 3 + 0
+      expect(lowStatDamage).toBe(3.5); // Base damage only
+      expect(maxStatDamage).toBe(4.5); // Base + full efficiency bonus
+      expect(maxStatDamage).toBeGreaterThan(lowStatDamage);
     });
   });
 
   describe('rollWeaponDamage', () => {
     it('returns base damage roll for fixed damage model', () => {
-      const weapon = createTestWeapon((schema) => ({
-        ...schema,
-        damage: {
-          ...schema.damage,
-          model: DamageModel.FIXED,
-          base: '1d6',
-        },
-      }));
-      const actor = createTestActor(15);
+      const mockBaseDamageRoll = {
+        values: [4, 2],
+        dice: '2d6' as RollSpecification,
+        natural: 6,
+        bonus: 0,
+        result: 6
+      };
 
-      const mockDeps: CalculateWeaponDamageDependencies = {
-        rollDice: vi.fn().mockReturnValue({
-          values: [4],
-          dice: '1d6',
-          natural: 4,
-          bonus: 0,
-          result: 4
-        }),
+      const mockDeps: RollWeaponDamageDependencies = {
+        rollDice: vi.fn().mockReturnValue(mockBaseDamageRoll),
         timestamp: vi.fn().mockReturnValue(1000),
       };
 
-      const result = rollWeaponDamage(actor, weapon, mockDeps);
+      const result = rollWeaponDamage(alice, weapon, mockDeps);
 
-      expect(result.result).toBe(4);
-      expect(mockDeps.rollDice).toHaveBeenCalledWith('1d6');
-      expect(result.mods).toBeUndefined(); // No modifiers for fixed damage
+      expect(result).toBe(mockBaseDamageRoll); // Should return the exact same object for fixed damage
+      expect(mockDeps.rollDice).toHaveBeenCalledWith('2d6');
     });
 
     it('applies stat scaling modifier for stat-scaling damage model', () => {
-      const weapon = createTestWeapon((schema) => ({
-        ...schema,
+      const scalingWeapon = createWeaponSchema({
+        urn: 'flux:schema:weapon:test',
+        name: 'Test Weapon',
         damage: {
           model: DamageModel.STAT_SCALING,
           stat: Stat.POW,
           efficiency: 0.5,
           base: '1d6',
-          types: (schema.damage as StatScalingDamageSpecification).types,
         },
-      }));
-      const actor = createTestActor(20); // 20/100 * 0.5 = 0.1 bonus
+      });
 
-      const mockDeps: CalculateWeaponDamageDependencies = {
-        rollDice: vi.fn().mockReturnValue({
-          values: [4],
-          dice: '1d6',
-          natural: 4,
-          bonus: 0,
-          result: 4
-        }),
+      setStatValue(alice, Stat.POW, 20); // 20/100 * 0.5 = 0.1 bonus
+
+      const mockBaseDamageRoll = {
+        values: [4],
+        dice: '1d6' as RollSpecification,
+        natural: 4,
+        bonus: 0,
+        result: 4
+      };
+
+      const mockDeps: RollWeaponDamageDependencies = {
+        rollDice: vi.fn().mockReturnValue(mockBaseDamageRoll),
         timestamp: vi.fn().mockReturnValue(1000),
       };
 
-      const result = rollWeaponDamage(actor, weapon, mockDeps);
+      const result = rollWeaponDamage(alice, scalingWeapon, mockDeps);
 
       expect(result.result).toBe(4.1); // 4 + 0.1
       expect(result.mods).toBeDefined();
       expect(result.mods!['stat:pow']).toBeDefined();
       expect(result.mods!['stat:pow'].value).toBe(0.1);
       expect(result.mods!['stat:pow'].origin).toBe('stat:pow');
+      expect(result.mods!['stat:pow'].ts).toBe(1000);
     });
 
-    it('uses default dependencies when none provided', () => {
-      const weapon = createTestWeapon();
-      const actor = createTestActor();
+    it('applies minimal bonus when stat value is very low', () => {
+      const scalingWeapon = createWeaponSchema({
+        urn: 'flux:schema:weapon:test',
+        name: 'Test Weapon',
+        damage: {
+          model: DamageModel.STAT_SCALING,
+          stat: Stat.POW,
+          efficiency: 1.0,
+          base: '1d6',
+        },
+      });
 
-      const result = rollWeaponDamage(actor, weapon);
+      setStatValue(alice, Stat.POW, 1); // Very low stat value
+
+      const mockBaseDamageRoll = {
+        values: [3],
+        dice: '1d6' as RollSpecification,
+        natural: 3,
+        bonus: 0,
+        result: 3
+      };
+
+      const mockDeps: RollWeaponDamageDependencies = {
+        rollDice: vi.fn().mockReturnValue(mockBaseDamageRoll),
+        timestamp: vi.fn().mockReturnValue(1000),
+      };
+
+      const result = rollWeaponDamage(alice, scalingWeapon, mockDeps);
+
+      expect(result.result).toBe(3.01); // 3 + (1/100 * 1.0) = 3.01
+      expect(result.mods!['stat:pow'].value).toBe(0.01);
+    });
+
+    it('integrates with real dependencies when none provided', () => {
+      setStatValue(alice, Stat.POW, 15);
+
+      const result = rollWeaponDamage(alice, weapon);
 
       expect(typeof result.result).toBe('number');
       expect(result.result).toBeGreaterThan(0);
+      expect(result.dice).toBe('2d6');
+      expect(Array.isArray(result.values)).toBe(true);
     });
   });
 
   describe('calculateWeaponDps', () => {
-    it('calculates DPS correctly', () => {
-      const weapon = createTestWeapon((schema) => ({
-        ...schema,
-        damage: {
-          model: DamageModel.FIXED,
-          base: '2d6', // Average: 7
-          types: (schema.damage as StatScalingDamageSpecification).types,
-        },
-      }));
-      const actor = createTestActor();
+    it('calculates DPS as damage divided by AP cost', () => {
+      setStatValue(alice, Stat.POW, 15);
 
-      const dps = calculateWeaponDps(actor, weapon);
+      const dps = calculateWeaponDps(alice, weapon);
+      const avgDamage = calculateAverageWeaponDamagePerHit(alice, weapon);
+      const apCost = calculateWeaponApCost(alice, weapon, WeaponTimer.ATTACK);
 
-      // DPS = damage / AP cost
-      // We need to verify this matches the actual calculation
+      expect(dps).toBe(avgDamage / apCost);
       expect(typeof dps).toBe('number');
       expect(dps).toBeGreaterThan(0);
     });
 
-    it('higher damage weapons have higher DPS', () => {
-      const lowDamageWeapon = createTestWeapon((schema) => ({
-        ...schema,
+    it('higher damage weapons have higher DPS when AP costs are equal', () => {
+      // Create two weapons with the same AP cost but different damage
+      const lowDamageWeapon = createWeaponSchema({
+        urn: 'flux:schema:weapon:low-damage',
+        name: 'Low Damage Weapon',
         damage: {
           model: DamageModel.FIXED,
-          base: '1d4', // Average: 2.5
-          types: (schema.damage as StatScalingDamageSpecification).types,
+          base: '1d4',
         },
-      }));
+        // Same weight/timing as the high damage weapon to ensure equal AP costs
+        baseMass: 1_000,
+        timers: <WeaponTimers>{
+          attack: 100,
+          reload: 0,
+        },
+      });
 
-      const highDamageWeapon = createTestWeapon((schema) => ({
-        ...schema,
+      const highDamageWeapon = createWeaponSchema({
+        urn: 'flux:schema:weapon:high-damage',
+        name: 'High Damage Weapon',
         damage: {
           model: DamageModel.FIXED,
-          base: '2d8', // Average: 9
-          types: (schema.damage as StatScalingDamageSpecification).types,
+          base: '2d8',
         },
-      }));
+        // Same weight/timing as the low damage weapon to ensure equal AP costs
+        baseMass: 1_000,
+        timers: <WeaponTimers>{
+          attack: 100,
+          reload: 0,
+        },
+      });
 
-      const actor = createTestActor();
+      setStatValue(alice, Stat.POW, 15);
 
-      const lowDps = calculateWeaponDps(actor, lowDamageWeapon);
-      const highDps = calculateWeaponDps(actor, highDamageWeapon);
+      const lowDps = calculateWeaponDps(alice, lowDamageWeapon);
+      const highDps = calculateWeaponDps(alice, highDamageWeapon);
 
       expect(highDps).toBeGreaterThan(lowDps);
+    });
+
+    it('DPS decreases as AP cost increases', () => {
+      const fastWeapon = createWeaponSchema({
+        urn: 'flux:schema:weapon:fast',
+        name: 'Fast Weapon',
+        damage: {
+          model: DamageModel.FIXED,
+          base: '1d6',
+        },
+        baseMass: 1_000,
+        timers: <WeaponTimers>{
+          attack: 50, // Low AP cost
+          reload: 0,
+        },
+      });
+
+      const slowWeapon = createWeaponSchema({
+        urn: 'flux:schema:weapon:slow',
+        name: 'Slow Weapon',
+        damage: {
+          model: DamageModel.FIXED,
+          base: '1d6',
+        },
+        baseMass: 1_000,
+        timers: <WeaponTimers>{
+          attack: 200, // High AP cost
+          reload: 0,
+        },
+      });
+
+      setStatValue(alice, Stat.POW, 15);
+
+      const fastDps = calculateWeaponDps(alice, fastWeapon);
+      const slowDps = calculateWeaponDps(alice, slowWeapon);
+
+      expect(fastDps).toBeGreaterThan(slowDps);
     });
   });
 
   describe('analyzeWeapon', () => {
-    it('provides complete weapon analysis', () => {
-      const weapon = createTestWeapon((schema) => ({
-        ...schema,
-        damage: {
-          model: DamageModel.FIXED,
-          base: '2d6', // Average: 7
-          types: (schema.damage as StatScalingDamageSpecification).types,
-        },
-      }));
-      const actor = createTestActor();
+    it('provides complete weapon analysis with all required properties', () => {
+      setStatValue(alice, Stat.POW, 15);
 
-      const analysis = analyzeWeapon(actor, weapon);
+      const analysis = analyzeWeapon(alice, weapon);
 
       expect(analysis).toHaveProperty('damage');
       expect(analysis).toHaveProperty('apCost');
@@ -252,12 +358,11 @@ describe('damage resolution utilities', () => {
       expect(analysis.dps).toBeGreaterThan(0);
     });
 
-    it('reuses provided output object', () => {
-      const weapon = createTestWeapon();
-      const actor = createTestActor();
+    it('reuses provided output object for performance', () => {
+      setStatValue(alice, Stat.POW, 15);
       const outputObject: WeaponAnalysis = { damage: 0, apCost: 0, dps: 0 };
 
-      const result = analyzeWeapon(actor, weapon, outputObject);
+      const result = analyzeWeapon(alice, weapon, outputObject);
 
       expect(result).toBe(outputObject); // Same reference
       expect(result.damage).toBeGreaterThan(0);
@@ -266,66 +371,115 @@ describe('damage resolution utilities', () => {
     });
 
     it('analysis is consistent with individual calculations', () => {
-      const weapon = createTestWeapon();
-      const actor = createTestActor();
+      setStatValue(alice, Stat.POW, 15);
 
-      const analysis = analyzeWeapon(actor, weapon);
-      const avgDamage = calculateAverageWeaponDamagePerHit(actor, weapon);
-      const dps = calculateWeaponDps(actor, weapon);
+      const analysis = analyzeWeapon(alice, weapon);
+      const avgDamage = calculateAverageWeaponDamagePerHit(alice, weapon);
+      const apCost = calculateWeaponApCost(alice, weapon, WeaponTimer.ATTACK);
+      const dps = calculateWeaponDps(alice, weapon);
 
       expect(analysis.damage).toBe(avgDamage);
+      expect(analysis.apCost).toBe(apCost);
       expect(analysis.dps).toBe(dps);
+    });
+
+    it('DPS calculation matches manual calculation', () => {
+      setStatValue(alice, Stat.POW, 15);
+
+      const analysis = analyzeWeapon(alice, weapon);
+
+      expect(analysis.dps).toBe(analysis.damage / analysis.apCost);
     });
   });
 
   describe('edge cases and integration', () => {
-    it('handles maximum stat values correctly', () => {
-      const weapon = createTestWeapon((schema) => ({
-        ...schema,
-        damage: <StatScalingDamageSpecification>{
+    it('stat scaling reaches maximum bonus at MAX_STAT_VALUE', () => {
+      const scalingWeapon = createWeaponSchema({
+        urn: 'flux:schema:weapon:test',
+        name: 'Test Weapon',
+        damage: {
           model: DamageModel.STAT_SCALING,
           stat: Stat.POW,
           efficiency: 1.0,
           base: '1d6',
-          types: (schema.damage as StatScalingDamageSpecification).types,
         },
-      }));
-      const actor = createTestActor(MAX_STAT_VALUE);
+      });
 
-      const avgDamage = calculateAverageWeaponDamagePerHit(actor, weapon);
-      const analysis = analyzeWeapon(actor, weapon);
+      const mockDeps = {
+        rollDice: vi.fn(),
+        getStatValue: vi.fn().mockReturnValue(MAX_STAT_VALUE),
+        getWeaponBaseDamage: vi.fn().mockReturnValue('1d6'),
+        calculateAverageRollResult: vi.fn().mockReturnValue(3.5),
+      };
 
-      expect(avgDamage).toBe(4); // 3 + 1.0
+      const avgDamage = calculateAverageWeaponDamagePerHit(alice, scalingWeapon, mockDeps);
+
+      // Set the stat for the real analysis call
+      setStatValue(alice, Stat.POW, MAX_STAT_VALUE);
+      const analysis = analyzeWeapon(alice, scalingWeapon);
+
+      expect(avgDamage).toBe(4.5); // 3.5 + (100/100 * 1.0) = 3.5 + 1.0
       expect(analysis.damage).toBe(avgDamage);
     });
 
-    it('different damage models produce different results', () => {
-      const fixedWeapon = createTestWeapon((schema) => ({
-        ...schema,
+    it('stat scaling produces higher damage than fixed model with sufficient stats', () => {
+      const fixedWeapon = createWeaponSchema({
+        urn: 'flux:schema:weapon:fixed',
+        name: 'Fixed Weapon',
         damage: {
           model: DamageModel.FIXED,
           base: '1d6',
-          types: (schema.damage as StatScalingDamageSpecification).types,
         },
-      }));
+      });
 
-      const scalingWeapon = createTestWeapon((schema) => ({
-        ...schema,
+      const scalingWeapon = createWeaponSchema({
+        urn: 'flux:schema:weapon:scaling',
+        name: 'Scaling Weapon',
         damage: {
           model: DamageModel.STAT_SCALING,
           stat: Stat.POW,
           efficiency: 0.5,
           base: '1d6',
-          types: (schema.damage as StatScalingDamageSpecification).types,
         },
-      }));
+      });
 
-      const highStatActor = createTestActor(50);
+      setStatValue(alice, Stat.POW, 50); // 50/100 * 0.5 = 0.25 bonus
 
-      const fixedDamage = calculateAverageWeaponDamagePerHit(highStatActor, fixedWeapon);
-      const scalingDamage = calculateAverageWeaponDamagePerHit(highStatActor, scalingWeapon);
+      const fixedDamage = calculateAverageWeaponDamagePerHit(alice, fixedWeapon);
+      const scalingDamage = calculateAverageWeaponDamagePerHit(alice, scalingWeapon);
 
       expect(scalingDamage).toBeGreaterThan(fixedDamage);
+      expect(scalingDamage - fixedDamage).toBe(0.25); // Exact bonus amount
+    });
+
+    it('stat scaling produces minimal bonus with very low stats', () => {
+      const fixedWeapon = createWeaponSchema({
+        urn: 'flux:schema:weapon:fixed',
+        name: 'Fixed Weapon',
+        damage: {
+          model: DamageModel.FIXED,
+          base: '1d6',
+        },
+      });
+
+      const scalingWeapon = createWeaponSchema({
+        urn: 'flux:schema:weapon:scaling',
+        name: 'Scaling Weapon',
+        damage: {
+          model: DamageModel.STAT_SCALING,
+          stat: Stat.POW,
+          efficiency: 1.0,
+          base: '1d6',
+        },
+      });
+
+      setStatValue(alice, Stat.POW, 1); // Very low stat value
+
+      const fixedDamage = calculateAverageWeaponDamagePerHit(alice, fixedWeapon);
+      const scalingDamage = calculateAverageWeaponDamagePerHit(alice, scalingWeapon);
+
+      expect(scalingDamage).toBeGreaterThan(fixedDamage); // Minimal bonus applied
+      expect(scalingDamage - fixedDamage).toBeCloseTo(0.01, 5); // 1/100 * 1.0 = 0.01
     });
   });
 });

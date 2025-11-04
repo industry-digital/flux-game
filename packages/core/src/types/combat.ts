@@ -2,8 +2,7 @@ import { AbstractSession, SessionStrategy } from '~/types/session';
 import { ActorURN, PlaceURN, SkillURN } from '~/types/taxonomy';
 import { CommandType, ActorCommand } from '~/types/intent';
 import { RollResultWithoutModifiers } from '~/types/dice';
-import { CurvePosition } from '~/types/easing';
-import { ModifiableBoundedAttribute } from '~/types/entity/attribute';
+import { StatefulBoundedValue } from '~/types/entity/attribute';
 import { Actor } from '~/types/entity/actor';
 import { WeaponSchema } from '~/types/schema/weapon';
 import { DamageSummary } from '~/types/damage';
@@ -252,7 +251,7 @@ export type CombatantSummary = {
   /**
    * The combatant's AP ceiling and instantaneous value, with modifiers
    */
-  ap: ModifiableBoundedAttribute;
+  ap: StatefulBoundedValue;
 };
 
 /**
@@ -268,38 +267,10 @@ export type FullyQualifiedCombatant = Omit<Combatant, 'initiative'> & {
  * It is a snapshot of the actor's state that is continuously changing as the combat session progresses.
  */
 export type Combatant = CombatantSummary & {
-
   /**
    * Actor's initiative roll. which determines *when* the actor may act within a combat round.
    */
   initiative?: RollResultWithoutModifiers;
-
-  /**
-   * The total mass of the actor, in grams
-   */
-  mass: number;
-
-  /**
-   * The combatant's AP ceiling and current value, with modifiers
-   */
-  ap: ModifiableBoundedAttribute;
-
-  /**
-   * The combatant's capacitor, with its current value and position on the capacitor recovery curve
-   */
-  energy: ModifiableBoundedAttribute & CurvePosition;
-
-  /**
-   * A well-balanced actor is more effective at combat maneuvers than a poorly-balanced actor.
-   * This is a normalized value between 0 and 1, where 1 means perfect balance and 0 means completely off balance.
-   */
-  balance: ModifiableBoundedAttribute;
-
-  /**
-   * The combatant's position and movement on the linear battlefield
-   * Contains coordinate (0-300m), velocity, and facing direction
-   */
-  position: BattlefieldPosition;
 
   /**
    * The actor's current target

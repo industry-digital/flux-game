@@ -3,7 +3,9 @@ import { useCombatMovementTestScenario } from '../testing/movement';
 import { ActorDidMoveInCombat, EventType } from '~/types/event';
 import { CombatFacing, MovementDirection } from '~/types/combat';
 import { MOVE_BY_AP, MOVE_BY_DISTANCE, MOVE_BY_MAX } from '~/worldkit/combat/combatant';
-import { extractFirstEventOfType } from '~/testing/event';
+import { createCombatTurnDidEndEvent, extractFirstEventOfType } from '~/testing/event';
+import { getCurrentAp, setCurrentAp } from '~/worldkit/combat/ap';
+import { DEFAULT_LOCATION } from '~/testing/constants';
 
 describe('Retreat Method', () => {
   // Standard test scenario - most tests can use this
@@ -54,13 +56,13 @@ describe('Retreat Method', () => {
 
     it('should handle AP-based movement', () => {
       const { retreat, attacker } = defaultScenario;
-      const initialAP = attacker.ap.eff.cur;
+      const initialAP = getCurrentAp(attacker);
 
       const result = retreat(MOVE_BY_AP, 2.0);
 
       expect(result).toHaveLength(1);
       expect(result[0].type).toBe(EventType.ACTOR_DID_MOVE_IN_COMBAT);
-      expect(attacker.ap.eff.cur).toBeLessThan(initialAP); // AP consumed
+      expect(getCurrentAp(attacker)).toBeLessThan(initialAP); // AP consumed
     });
 
     it('should call declareEvent on context', () => {
@@ -102,7 +104,7 @@ describe('Retreat Method', () => {
 
     it('should reject movement with insufficient AP', () => {
       const { retreat, attacker, context } = defaultScenario;
-      attacker.ap.eff.cur = 0.5; // Very low AP
+      setCurrentAp(attacker, 0.5); // Very low AP
 
       const result = retreat(MOVE_BY_DISTANCE, 50); // Would cost significant AP
 
@@ -112,7 +114,7 @@ describe('Retreat Method', () => {
 
     it('should reject AP exceeding current AP', () => {
       const { retreat, attacker, context } = defaultScenario;
-      attacker.ap.eff.cur = 3.0;
+      setCurrentAp(attacker, 3.0);
 
       const result = retreat(MOVE_BY_AP, 5.0);
 
@@ -398,7 +400,7 @@ describe('Retreat Method', () => {
       expect(mockDone).toHaveBeenCalledOnce();
 
       // Verify AP is depleted (MOVE_BY_MAX always uses all available AP)
-      expect(efficiencyScenario.attacker.ap.eff.cur).toBe(0);
+      expect(getCurrentAp(efficiencyScenario.attacker)).toBe(0);
     });
 
     it('should not auto-advance turn when autoDone is true but AP is not depleted', () => {
@@ -417,7 +419,7 @@ describe('Retreat Method', () => {
       expect(mockDone).not.toHaveBeenCalled();
 
       // Verify AP is not depleted
-      expect(partialApScenario.attacker.ap.eff.cur).toBeGreaterThan(0.1);
+      expect(getCurrentAp(partialApScenario.attacker)).toBeGreaterThan(0.1);
     });
 
     it('should not call done when autoDone is false even if AP is depleted', () => {
@@ -438,14 +440,13 @@ describe('Retreat Method', () => {
     it('should propagate trace to done events', () => {
       const customTrace = 'custom-retreat-trace-123';
       const mockDone = vi.fn((trace) => [
-        {
-          type: EventType.COMBAT_TURN_DID_END,
-          actor: 'flux:actor:test-actor' as const,
+        createCombatTurnDidEndEvent((e) => ({
+          ...e,
           trace,
-          location: 'flux:place:test-battlefield' as const,
-          payload: {}
-        }
-      ]) as any;
+          location: DEFAULT_LOCATION,
+          payload: {} as any,
+        }))
+      ]);
 
       const traceScenario = useCombatMovementTestScenario({
         retreatDeps: { done: mockDone }
@@ -492,7 +493,7 @@ describe('Retreat Method', () => {
 
     it('should require more AP to cover same distance as advance', () => {
       const { retreat, attacker } = defaultScenario;
-      const initialAP = attacker.ap.eff.cur;
+      const initialAP = getCurrentAp(attacker);
       const testDistance = 10; // Fixed distance
 
       const result = retreat(MOVE_BY_DISTANCE, testDistance);
@@ -506,12 +507,12 @@ describe('Retreat Method', () => {
       expect(event.payload.direction).toBe(MovementDirection.BACKWARD);
 
       // Should have consumed more AP than the base movement cost
-      expect(attacker.ap.eff.cur).toBeLessThan(initialAP);
+      expect(getCurrentAp(attacker)).toBeLessThan(initialAP);
     });
 
     it('should use all available AP for max movement but cover less distance than advance', () => {
       const { retreat, attacker } = defaultScenario;
-      const initialAP = attacker.ap.eff.cur;
+      const initialAP = getCurrentAp(attacker);
 
       const result = retreat(MOVE_BY_MAX, 0);
 
@@ -520,7 +521,7 @@ describe('Retreat Method', () => {
 
       // Should use all available AP (same as advance)
       expect(event.payload.cost.ap).toBe(initialAP);
-      expect(attacker.ap.eff.cur).toBe(0);
+      expect(getCurrentAp(attacker)).toBe(0);
 
       // Should move some distance backward, but less than advance would
       expect(event.payload.distance).toBeGreaterThan(0);

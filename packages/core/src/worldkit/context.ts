@@ -10,7 +10,6 @@ import { rollDiceWithRng } from '~/worldkit/dice';
 import { createActorInventoryApi } from '~/worldkit/entity/actor/inventory';
 import { createActorEquipmentApi } from '~/worldkit/entity/actor/equipment';
 import { createCombatMetricsApi } from '~/worldkit/combat/metrics';
-import { createActorSkillApi } from '~/worldkit/entity/actor/skill';
 import { createRollApi } from '~/worldkit/dice';
 import { createActorWeaponApi } from '~/worldkit/entity/actor/weapon';
 import { getSchemaTranslation } from '~/narrative/schema';
@@ -60,7 +59,7 @@ export const createTransformerContext = (
   inventoryApi = createActorInventoryApi(mass),
   equipmentApi = createActorEquipmentApi(schemaManager, inventoryApi),
   weaponApi = createActorWeaponApi(schemaManager, inventoryApi, equipmentApi),
-  skillApi = createActorSkillApi(),
+  _removedSkillApi = null, // TODO: Replace with another argument
   rollApi = createRollApi(),
   metrics = createCombatMetricsApi(),
 ): TransformerContext => {
@@ -172,7 +171,6 @@ export const createTransformerContext = (
 
     inventoryApi,
     equipmentApi,
-    skillApi,
     weaponApi,
     rollApi,
     metrics,

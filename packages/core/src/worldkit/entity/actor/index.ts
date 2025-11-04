@@ -2,6 +2,7 @@ import { createEntityUrn, isUrnOfVocabulary } from '~/lib/taxonomy';
 import { AbstractEntity, EntityType } from '~/types/entity/entity';
 import { Actor } from '~/types/entity/actor';
 import { ActorURN } from '~/types/taxonomy';
+import { getCurrentHp } from '~/worldkit/entity/actor/health';
 
 export type ActorTransformer = (actor: Actor) => Actor;
 
@@ -18,7 +19,7 @@ export const createActorUrn = (...terms: string[]): ActorURN => {
   return createEntityUrn(EntityType.ACTOR, ...terms) as ActorURN;
 };
 
-export const isActorAlive = (actor: Actor) => actor.hp.eff.cur > 0;
+export const isActorAlive = (actor: Actor) => getCurrentHp(actor) > 0;
 
 export { createActorCapacitorApi } from './capacitor';
 export { createActorInventoryApi, type ActorInventoryApi } from './inventory';

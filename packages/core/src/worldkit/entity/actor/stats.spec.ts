@@ -4,22 +4,11 @@ import { Actor, Stat } from '~/types/entity/actor';
 import {
   getStat,
   getStatValue,
-  getNaturalStatValue,
-  getStatModifiers,
-  getStatBonus,
-  hasActiveStatModifiers,
-  computeStatValue,
   getAllStats,
-  setNaturalStatValue,
   setStatValue,
-  setStatModifiers,
-  refreshStats,
-  calculateStatBonus,
   BASELINE_STAT_VALUE,
   MAX_STAT_VALUE,
 } from './stats';
-import { AppliedModifiers } from '~/types/modifier';
-import { createModifier } from '~/worldkit/entity/modifier';
 import { DEFAULT_TIMESTAMP } from '~/testing/constants';
 
 const NOW = DEFAULT_TIMESTAMP;
@@ -40,8 +29,7 @@ describe('Actor Stats Module', () => {
     it('should get core stats from actor.stats', () => {
       const intStat = getStat(actor, Stat.INT);
       expect(intStat).toBe(actor.stats[Stat.INT]);
-      expect(intStat.nat).toBe(10);
-      expect(intStat.eff).toBe(10);
+      expect(intStat).toBe(10);
     });
 
     it('should get effective values for core stats', () => {
@@ -51,9 +39,9 @@ describe('Actor Stats Module', () => {
     });
 
     it('should get natural values for core stats', () => {
-      expect(getNaturalStatValue(actor, Stat.INT)).toBe(10);
-      expect(getNaturalStatValue(actor, Stat.PER)).toBe(10);
-      expect(getNaturalStatValue(actor, Stat.MEM)).toBe(10);
+      expect(getStatValue(actor, Stat.INT)).toBe(10);
+      expect(getStatValue(actor, Stat.PER)).toBe(10);
+      expect(getStatValue(actor, Stat.MEM)).toBe(10);
     });
   });
 
@@ -62,8 +50,7 @@ describe('Actor Stats Module', () => {
       const powStat = getStat(actor, Stat.POW);
       const currentShell = actor.shells[actor.currentShell];
       expect(powStat).toBe(currentShell.stats[Stat.POW]);
-      expect(powStat.nat).toBe(10);
-      expect(powStat.eff).toBe(10);
+      expect(getStatValue(actor, Stat.POW)).toBe(10);
     });
 
     it('should get effective values for shell stats', () => {
@@ -73,23 +60,23 @@ describe('Actor Stats Module', () => {
     });
 
     it('should get natural values for shell stats', () => {
-      expect(getNaturalStatValue(actor, Stat.POW)).toBe(10);
-      expect(getNaturalStatValue(actor, Stat.FIN)).toBe(10);
-      expect(getNaturalStatValue(actor, Stat.RES)).toBe(10);
+      expect(getStatValue(actor, Stat.POW)).toBe(10);
+      expect(getStatValue(actor, Stat.FIN)).toBe(10);
+      expect(getStatValue(actor, Stat.RES)).toBe(10);
     });
   });
 
   describe('Stat Routing', () => {
     it('should route core stats to actor.stats', () => {
       // Modify core stat directly
-      actor.stats[Stat.INT].eff = 15;
+      setStatValue(actor, Stat.INT, 15);
       expect(getStatValue(actor, Stat.INT)).toBe(15);
     });
 
     it('should route shell stats to current shell', () => {
       // Modify shell stat directly
       const currentShell = actor.shells[actor.currentShell];
-      currentShell.stats[Stat.POW].eff = 20;
+      setStatValue(actor, Stat.POW, 20);
       expect(getStatValue(actor, Stat.POW)).toBe(20);
     });
 
@@ -99,75 +86,13 @@ describe('Actor Stats Module', () => {
     });
   });
 
-  describe('Stat Modifiers', () => {
-    it('should get stat modifiers', () => {
-      const modifiers: AppliedModifiers = { 'flux:mod:test-mod': createModifier({ origin: 'test:test-mod', value: 5, duration: -1, ts: NOW }) };
-      actor.stats[Stat.INT].mods = modifiers;
-
-      expect(getStatModifiers(actor, Stat.INT)).toEqual(modifiers);
-    });
-
-    it('should detect active modifiers', () => {
-      // No modifiers initially
-      expect(hasActiveStatModifiers(actor, Stat.INT, NOW)).toBe(false);
-
-      // Add active modifier
-      actor.stats[Stat.INT].mods = { 'flux:mod:test-mod': createModifier({ origin: 'test:test-mod', value: 5, duration: -1, ts: NOW }) };
-      expect(hasActiveStatModifiers(actor, Stat.INT, NOW)).toBe(true);
-
-      // Add inactive modifier (expired)
-      actor.stats[Stat.INT].mods = { 'flux:mod:test-mod': createModifier({ origin: 'test:test-mod', value: 5, duration: 1000, ts: NOW - 2000 }) };
-      expect(hasActiveStatModifiers(actor, Stat.INT, NOW)).toBe(false);
-    });
-  });
-
-  describe('Stat Calculations', () => {
-    it('should calculate stat bonuses correctly', () => {
-      expect(calculateStatBonus(10)).toBe(0);  // Baseline
-      expect(calculateStatBonus(12)).toBe(1);  // +2 = +1 bonus
-      expect(calculateStatBonus(14)).toBe(2);  // +4 = +2 bonus
-      expect(calculateStatBonus(8)).toBe(-1);  // -2 = -1 bonus
-    });
-
-    it('should get effective stat bonus', () => {
-      actor.stats[Stat.INT].eff = 14;
-      expect(getStatBonus(actor, Stat.INT)).toBe(2);
-    });
-
-    it('should compute effective stat values with modifiers', () => {
-      actor.stats[Stat.INT].nat = 12;
-      actor.stats[Stat.INT].mods = {
-        'buff': createModifier({ origin: 'test:buff', value: 3, duration: -1, ts: NOW }),
-        'debuff': createModifier({ origin: 'test:debuff', value: -1, duration: -1, ts: NOW }),
-        'inactive': createModifier({ origin: 'test:inactive', value: 10, duration: 1000, ts: NOW - 2000 }), // Should be ignored (expired)
-      };
-
-      // 12 + 3 - 1 = 14 (inactive modifier ignored)
-      expect(computeStatValue(actor, Stat.INT, NOW)).toBe(14);
-    });
-
-    it('should clamp computed values to valid range', () => {
-      actor.stats[Stat.INT].nat = 5;
-      actor.stats[Stat.INT].mods = { 'debuff': createModifier({ origin: 'test:debuff', value: -10, duration: -1, ts: NOW }) };
-
-      // Should clamp to BASELINE_STAT_VALUE
-      expect(computeStatValue(actor, Stat.INT, NOW)).toBe(BASELINE_STAT_VALUE);
-
-      actor.stats[Stat.INT].nat = 90;
-      actor.stats[Stat.INT].mods = { 'buff': createModifier({ origin: 'test:buff', value: 20, duration: -1, ts: NOW }) };
-
-      // Should clamp to MAX_STAT_VALUE
-      expect(computeStatValue(actor, Stat.INT, NOW)).toBe(MAX_STAT_VALUE);
-    });
-  });
-
   describe('Stat Manipulation', () => {
     it('should set natural stat values', () => {
-      setNaturalStatValue(actor, Stat.INT, 15);
-      expect(getNaturalStatValue(actor, Stat.INT)).toBe(15);
+      setStatValue(actor, Stat.INT, 15);
+      expect(getStatValue(actor, Stat.INT)).toBe(15);
 
-      setNaturalStatValue(actor, Stat.POW, 20);
-      expect(getNaturalStatValue(actor, Stat.POW)).toBe(20);
+      setStatValue(actor, Stat.POW, 20);
+      expect(getStatValue(actor, Stat.POW)).toBe(20);
     });
 
     it('should set effective stat values', () => {
@@ -176,51 +101,6 @@ describe('Actor Stats Module', () => {
 
       setStatValue(actor, Stat.POW, 25);
       expect(getStatValue(actor, Stat.POW)).toBe(25);
-    });
-
-    it('should set stat modifiers', () => {
-      const modifiers: AppliedModifiers = { 'flux:mod:test-mod': createModifier({ origin: 'test:test-mod', value: 5, duration: -1, ts: NOW }) };
-      setStatModifiers(actor, Stat.INT, modifiers);
-      expect(getStatModifiers(actor, Stat.INT)).toEqual(modifiers);
-    });
-  });
-
-  describe('Stat Refresh', () => {
-    it('should refresh all stats by default', () => {
-      // Set up some natural values and modifiers
-      setNaturalStatValue(actor, Stat.INT, 12);
-      setStatModifiers(actor, Stat.INT, { 'buff': createModifier({ origin: 'test:buff', value: 3, duration: -1, ts: NOW }) });
-
-      setNaturalStatValue(actor, Stat.POW, 15);
-      setStatModifiers(actor, Stat.POW, { 'debuff': createModifier({ origin: 'test:debuff', value: -2, duration: -1, ts: NOW }) });
-
-      // Manually set incorrect effective values
-      setStatValue(actor, Stat.INT, 999);
-      setStatValue(actor, Stat.POW, 999);
-
-      // Refresh should recalculate correct effective values
-      refreshStats(actor);
-
-      expect(getStatValue(actor, Stat.INT)).toBe(15); // 12 + 3
-      expect(getStatValue(actor, Stat.POW)).toBe(13); // 15 - 2
-    });
-
-    it('should refresh specific stats when requested', () => {
-      setNaturalStatValue(actor, Stat.INT, 12);
-      setStatModifiers(actor, Stat.INT, { 'buff': createModifier({ origin: 'test:buff', value: 3, duration: -1, ts: NOW }) });
-
-      setNaturalStatValue(actor, Stat.POW, 15);
-      setStatModifiers(actor, Stat.POW, { 'debuff': createModifier({ origin: 'test:debuff', value: -2, duration: -1, ts: NOW }) });
-
-      // Set incorrect effective values
-      setStatValue(actor, Stat.INT, 999);
-      setStatValue(actor, Stat.POW, 999);
-
-      // Refresh only INT
-      refreshStats(actor, [Stat.INT]);
-
-      expect(getStatValue(actor, Stat.INT)).toBe(15); // Refreshed
-      expect(getStatValue(actor, Stat.POW)).toBe(999); // Not refreshed
     });
   });
 
@@ -236,12 +116,12 @@ describe('Actor Stats Module', () => {
 
       const allStats = getAllStats(actor);
 
-      expect(allStats[Stat.INT].eff).toBe(12);
-      expect(allStats[Stat.PER].eff).toBe(14);
-      expect(allStats[Stat.MEM].eff).toBe(16);
-      expect(allStats[Stat.POW].eff).toBe(18);
-      expect(allStats[Stat.FIN].eff).toBe(20);
-      expect(allStats[Stat.RES].eff).toBe(22);
+      expect(allStats[Stat.INT]).toBe(12);
+      expect(allStats[Stat.PER]).toBe(14);
+      expect(allStats[Stat.MEM]).toBe(16);
+      expect(allStats[Stat.POW]).toBe(18);
+      expect(allStats[Stat.FIN]).toBe(20);
+      expect(allStats[Stat.RES]).toBe(22);
     });
 
     it('should handle missing current shell', () => {

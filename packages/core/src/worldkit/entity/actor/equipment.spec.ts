@@ -6,21 +6,28 @@ import {
 } from './equipment';
 import { createActorInventoryApi, ActorInventoryApiDependencies } from './inventory';
 import { createActor } from '.';
-import { createTestTransformerContext } from '~/testing';
 import { Actor } from '~/types/entity/actor';
 import { TransformerContext } from '~/types/handler';
-import { WeaponItemURN, ItemURN } from '~/types/taxonomy';
+import { ItemURN, WeaponSchemaURN } from '~/types/taxonomy';
 import { HumanAnatomy } from '~/types/taxonomy/anatomy';
 import { WeaponSchema } from '~/types/schema/weapon';
 import { SchemaManager } from '~/worldkit/schema/manager';
 import { MassApi } from '~/worldkit/physics/mass';
 import { registerWeapons } from '~/worldkit/combat/testing/schema';
 import { createTestWeapon } from '~/worldkit/combat/testing/weapon';
-import { DEFAULT_TIMESTAMP } from '~/testing/constants';
+import { DEFAULT_LOCATION, DEFAULT_TIMESTAMP } from '~/testing/constants';
 import { ErrorCode } from '~/types/error';
+import { createTransformerContext } from '~/worldkit/context';
+import { WorldScenarioHook, createWorldScenario } from '~/worldkit/scenario';
+import { createWeaponSchema } from '~/worldkit/schema/weapon/factory';
+import { createPlace } from '~/worldkit/entity/place';
+
+const DEFAULT_WEAPON_SCHEMA: WeaponSchemaURN = 'flux:schema:weapon:sword';
 
 describe('createActorEquipmentApi', () => {
   let context: TransformerContext;
+  let scenario: WorldScenarioHook;
+
   let actor: Actor;
   let inventoryApi: ReturnType<typeof createActorInventoryApi>;
   let equipmentApi: ReturnType<typeof createActorEquipmentApi>;
@@ -32,9 +39,13 @@ describe('createActorEquipmentApi', () => {
   let mockMassApi: MassApi;
 
   beforeEach(() => {
-    context = createTestTransformerContext();
+    const place = createPlace((p) => ({ ...p, id: DEFAULT_LOCATION }));
+    context = createTransformerContext();
     actor = createActor({});
-
+    scenario = createWorldScenario(context, {
+      places: [place],
+      actors: [actor],
+    });
 
     mockMassApi = {
       computeInventoryMass: vi.fn().mockReturnValue(0),
@@ -58,29 +69,18 @@ describe('createActorEquipmentApi', () => {
     };
 
     // Mock weapon schema
-    mockWeaponSchema = {
-      urn: 'flux:schema:item:weapon:sword' as const,
-      name: 'Iron Sword',
-      description: 'A basic iron sword',
-      kind: 'weapon' as const,
-      baseMass: 1500, // 1.5kg in grams
-      skill: 'flux:skill:melee:sword' as any,
-      attack: { base: 5 },
-      damage: { min: 5, max: 10 },
-      range: { optimal: 1 },
-      timers: { fire: 1000 },
-      efficiency: 1.0,
-      fit: {
-        [HumanAnatomy.RIGHT_HAND]: 1,
-      },
-    } as unknown as WeaponSchema;
+    mockWeaponSchema = createWeaponSchema((w: WeaponSchema) => ({
+      ...w,
+      urn: 'flux:schema:weapon:sword',
+    }));
+
+    scenario.registerSchema(mockWeaponSchema);
 
     // Mock schema manager
     mockSchemaManager = {
       getSchemaOrFail: vi.fn().mockReturnValue(mockWeaponSchema),
       getSchema: vi.fn().mockReturnValue(mockWeaponSchema),
     };
-
 
     inventoryApi = createActorInventoryApi(mockMassApi, mockInventoryDependencies);
     context.schemaManager = mockSchemaManager as unknown as SchemaManager;
@@ -93,7 +93,7 @@ describe('createActorEquipmentApi', () => {
     it('should equip weapon to correct anatomical location', () => {
       // Add weapon to inventory first
       const weapon = inventoryApi.addItem(actor, { schema: 'flux:schema:weapon:sword' });
-      const weaponId = weapon.id as WeaponItemURN;
+      const weaponId = weapon.id;
 
       equipmentApi.equip(actor, weaponId);
 
@@ -105,7 +105,7 @@ describe('createActorEquipmentApi', () => {
     it('should unequip weapon from anatomical location', () => {
       // Add and equip weapon
       const weapon = inventoryApi.addItem(actor, { schema: 'flux:schema:weapon:sword' });
-      const weaponId = weapon.id as WeaponItemURN;
+      const weaponId = weapon.id;
       equipmentApi.equip(actor, weaponId);
 
       // Verify it's equipped

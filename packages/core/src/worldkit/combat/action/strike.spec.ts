@@ -9,9 +9,10 @@ import { ActorURN } from '~/types/taxonomy';
 import { ActorDidAttack, ActorDidDie, ActorDidStrike, ActorWasAttacked, EventType } from '~/types/event';
 import { Team } from '~/types/combat';
 import { createStrikeCost } from '~/worldkit/combat/tactical-cost';
-import { calculateWeaponApCost } from '~/worldkit/combat/ap';
+import { calculateWeaponApCost, getCurrentAp, setCurrentAp } from '~/worldkit/combat/ap';
 import { WeaponTimer } from '~/types/schema/weapon';
 import { createDefaultSkillState } from '~/worldkit/entity/actor/skill';
+import { isAlive, isDead, setCurrentHp, setMaxHp } from '~/worldkit/entity/actor';
 
 describe('Strike Method', () => {
   let scenario: ReturnType<typeof useCombatScenario>;
@@ -86,7 +87,7 @@ describe('Strike Method', () => {
   describe('Basic Functionality', () => {
     it('should perform strike attack on target', () => {
       const attackerCombatant = scenario.session.data.combatants.get(ATTACKER_ID)!;
-      const initialAP = attackerCombatant.ap.eff.cur;
+      const initialAP = getCurrentAp(attackerCombatant);
 
       const result = strike();
 
@@ -96,7 +97,7 @@ describe('Strike Method', () => {
 
       expect(attackEvents).toHaveLength(1);
       expect(damageEvents).toHaveLength(1);
-      expect(attackerCombatant.ap.eff.cur).toBeLessThan(initialAP); // AP should be consumed
+      expect(getCurrentAp(attackerCombatant)).toBeLessThan(initialAP); // AP should be consumed
     });
 
     it('should emit correct event types with proper structure and separation of concerns', () => {
@@ -197,7 +198,7 @@ describe('Strike Method', () => {
         }
       );
 
-      const initialAP = attackerCombatant.ap.eff.cur;
+      const initialAP = getCurrentAp(attackerCombatant);
       const result = strikeWithMocks();
 
       // Verify tactical cost factory was called with actor and weapon
@@ -208,7 +209,7 @@ describe('Strike Method', () => {
       expect(weapon.baseMass).toBeGreaterThan(0);
 
       // Verify the tactical AP cost was used
-      const finalAP = attackerCombatant.ap.eff.cur;
+      const finalAP = getCurrentAp(attackerCombatant);
       const actualApCost = initialAP - finalAP;
       expect(actualApCost).toBeCloseTo(tacticalApCost, 10);
 
@@ -234,7 +235,7 @@ describe('Strike Method', () => {
         const attackerCombatant = scenario.session.data.combatants.get(ATTACKER_ID)!;
 
         // Reset AP for each test case
-        attackerCombatant.ap.eff.cur = 10.0;
+        setCurrentAp(attackerCombatant, 10.0);
 
         // Calculate what the precise cost would be
         const preciseApCost = calculateWeaponApCost(attacker.actor, swordSchema, WeaponTimer.ATTACK);
@@ -252,10 +253,10 @@ describe('Strike Method', () => {
           }
         );
 
-        const initialAP = attackerCombatant.ap.eff.cur;
+        const initialAP = getCurrentAp(attackerCombatant);
         const result = strikeWithRealCost();
 
-        const finalAP = attackerCombatant.ap.eff.cur;
+        const finalAP = getCurrentAp(attackerCombatant);
         const actualApCost = initialAP - finalAP;
 
         // Verify tactical cost was used
@@ -352,12 +353,13 @@ describe('Strike Method', () => {
   describe('Death Event Integration', () => {
     it('should emit death event immediately when strike kills target', () => {
       // Set up a scenario where the target will die from the strike
-      const targetActor = scenario.session.data.combatants.get(TARGET_ID)!;
-      const targetActorData = context.world.actors[TARGET_ID];
+      const targetCombatant = scenario.session.data.combatants.get(TARGET_ID)!;
+      const targetActor = context.world.actors[TARGET_ID];
 
 
       // Set target to very low HP so the strike will kill them
-      targetActorData.hp.eff.cur = 1;
+      setMaxHp(targetActor, 1);
+      setCurrentHp(targetActor, 1);
 
       // Set up the strike to target the low-HP actor
       const attackerCombatant = scenario.session.data.combatants.get(ATTACKER_ID)!;
@@ -408,15 +410,16 @@ describe('Strike Method', () => {
       expect(deathEvent?.payload.killer).toBe(ATTACKER_ID);
 
       // Verify target is actually dead
-      expect(targetActorData.hp.eff.cur).toBe(0);
+      expect(isDead(targetActor)).toBe(true);
     });
 
     it('should not emit death event when strike does not kill target', () => {
       // Set up a scenario where the target survives the strike
-      const targetActorData = context.world.actors[TARGET_ID];
+      const targetActor = context.world.actors[TARGET_ID];
 
       // Set target to high HP so they survive
-      targetActorData.hp.eff.cur = 100;
+      setMaxHp(targetActor, 100);
+      setCurrentHp(targetActor, 100);
 
       // Set up the strike
       const attackerCombatant = scenario.session.data.combatants.get(ATTACKER_ID)!;
@@ -436,7 +439,7 @@ describe('Strike Method', () => {
       expect(deathEvent).toBeUndefined();
 
       // Verify target is still alive
-      expect(targetActorData.hp.eff.cur).toBeGreaterThan(0);
+      expect(isAlive(targetActor)).toBe(true);
     });
   });
 });

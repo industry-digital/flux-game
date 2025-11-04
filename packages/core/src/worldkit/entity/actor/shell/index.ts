@@ -1,11 +1,11 @@
 import { Shell } from '~/types/entity/shell';
 import { Actor } from '~/types/entity/actor';
 import { Stat, ShellStats } from '~/types/entity/actor';
-import { createModifiableScalarAttribute } from '~/worldkit/entity';
 import { createInventory } from '~/worldkit/entity/actor/inventory';
 import { hashUnsafeString } from '~/worldkit/hash';
 import { PotentiallyImpureOperations } from '~/types';
 import { generateRandomShellName } from './name';
+import { MAX_STAT_VALUE } from '~/worldkit/entity/actor/stats';
 
 // Re-export for testing
 export { generateRandomShellName };
@@ -67,8 +67,12 @@ export const removeShellFromActor = (actor: Actor, shellId: string) => {
   delete actor.shells[shellId];
 };
 
-export const getShellFromActor = (actor: Actor, shellId: string) => {
+export const getShell = (actor: Actor, shellId: string) => {
   return actor.shells[shellId];
+};
+
+export const getCurrentShell = (actor: Actor) => {
+  return actor.shells[actor.currentShell];
 };
 
 export const getShellsFromActor = (actor: Actor) => {
@@ -119,9 +123,9 @@ export function createShell(
   const name = input?.name ?? deps.generateRandomShellName();
 
   const defaultStats = {
-    [Stat.POW]: createModifiableScalarAttribute((defaults) => ({ ...defaults, nat: 10 })),
-    [Stat.FIN]: createModifiableScalarAttribute((defaults) => ({ ...defaults, nat: 10 })),
-    [Stat.RES]: createModifiableScalarAttribute((defaults) => ({ ...defaults, nat: 10 })),
+    [Stat.POW]: 10,
+    [Stat.FIN]: 10,
+    [Stat.RES]: 10,
   };
 
   const defaults: Shell = {
@@ -133,7 +137,7 @@ export function createShell(
   };
 
   return transform(defaults) as Shell;
-};
+}
 
 export type ShellStatsInput = Partial<{
   [Stat.POW]: number;
@@ -146,21 +150,15 @@ export type ShellStatsInput = Partial<{
  */
 export const mutateShellStats = (stats: ShellStats, input: ShellStatsInput): void => {
   if (input[Stat.POW] !== undefined) {
-    stats[Stat.POW].nat = input[Stat.POW]!;
-    stats[Stat.POW].eff = input[Stat.POW]!;
-    delete stats[Stat.POW].mods;
+    stats[Stat.POW] = input[Stat.POW]!;
   }
 
   if (input[Stat.FIN] !== undefined) {
-    stats[Stat.FIN].nat = input[Stat.FIN]!;
-    stats[Stat.FIN].eff = input[Stat.FIN]!;
-    delete stats[Stat.FIN].mods;
+    stats[Stat.FIN] = input[Stat.FIN]!;
   }
 
   if (input[Stat.RES] !== undefined) {
-    stats[Stat.RES].nat = input[Stat.RES]!;
-    stats[Stat.RES].eff = input[Stat.RES]!;
-    delete stats[Stat.RES].mods;
+    stats[Stat.RES] = input[Stat.RES]!;
   }
 };
 
@@ -194,10 +192,10 @@ type ShellStatKey = Stat.POW | Stat.FIN | Stat.RES;
  */
 export const getShellStatValue = (shell: Shell, stat: ShellStatKey): number => {
   const attr = shell.stats[stat];
-  if (!attr) {
+  if (attr === undefined) {
     throw new Error(`Shell does not have stat ${stat}`);
   }
-  return attr.eff;
+  return attr;
 };
 
 /**
@@ -205,10 +203,10 @@ export const getShellStatValue = (shell: Shell, stat: ShellStatKey): number => {
  */
 export const getShellNaturalStatValue = (shell: Shell, stat: ShellStatKey): number => {
   const attr = shell.stats[stat];
-  if (!attr) {
+  if (attr === undefined) {
     throw new Error(`Shell does not have stat ${stat}`);
   }
-  return attr.nat;
+  return attr;
 };
 
 /**
@@ -216,38 +214,20 @@ export const getShellNaturalStatValue = (shell: Shell, stat: ShellStatKey): numb
  * Useful for mutations and test setup
  */
 export const setShellStatValue = (shell: Shell, stat: ShellStatKey, value: number): void => {
-  const attr = shell.stats[stat];
-  if (!attr) {
-    throw new Error(`Shell does not have stat ${stat}`);
+  if (value < 0) {
+    value = 0;
+  } else if (value > MAX_STAT_VALUE) {
+    value = MAX_STAT_VALUE;
   }
-  attr.eff = value;
+
+  shell.stats[stat] = value;
 };
 
 /**
  * Helper function to set natural stat value on a shell
  * Useful for mutations and test setup
+ * @deprecated Use setShellStatValue instead
  */
 export const setShellNaturalStatValue = (shell: Shell, stat: ShellStatKey, value: number): void => {
-  const attr = shell.stats[stat];
-  if (!attr) {
-    throw new Error(`Shell does not have stat ${stat}`);
-  }
-  attr.nat = value;
-};
-
-/**
- * Refresh shell stats by recalculating effective values from natural + modifiers
- * This is a simplified version for shells only
- */
-export const refreshShellStats = (shell: Shell, statNames?: readonly ShellStatKey[]): void => {
-  const statsToRefresh = statNames || [Stat.POW, Stat.FIN, Stat.RES];
-
-  for (const stat of statsToRefresh) {
-    const attr = shell.stats[stat];
-    if (attr) {
-      // Simple refresh: for shells, we typically just copy nat to eff
-      // In a more complex system, this would apply modifiers
-      attr.eff = attr.nat;
-    }
-  }
+  setShellStatValue(shell, stat, value);
 };

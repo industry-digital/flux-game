@@ -10,9 +10,9 @@ import {
 } from '~/types/combat-ai';
 import { classifyWeapon, RangeClassification, canWeaponHitFromDistance } from '~/worldkit/combat/weapon';
 import { computeDistanceBetweenCombatants } from '~/worldkit/combat/range';
-import { isActorAlive } from '~/worldkit/entity/actor';
+import { getHealthPercentage, isActorAlive } from '~/worldkit/entity/actor';
 import { getStatValue } from '~/worldkit/entity/actor';
-import { DEFAULT_ATTACK_AP_COST } from '~/worldkit/combat/ap';
+import { DEFAULT_ATTACK_AP_COST, getCurrentAp } from '~/worldkit/combat/ap';
 import { apToDistance, distanceToAp } from '~/worldkit/physics/movement';
 import { areEnemies } from '~/worldkit/combat/team';
 import { targetingApi } from './targeting';
@@ -92,7 +92,7 @@ function computeValidTargets(
       isInRange,
       isOptimalRange,
       // Add tactical scoring data for enhanced target selection
-      healthRatio: targetActor.hp.eff.cur / targetActor.hp.eff.max,
+      healthRatio: getHealthPercentage(targetActor),
       tacticalScore: 0, // Will be computed in selectOptimalTarget
     });
   }
@@ -124,6 +124,8 @@ export function analyzeBattlefield(
 ): TacticalSituation {
   const targetingHook = targetingApi(context, session, deps);
   const { chooseTargetForActor } = targetingHook;
+  const actor = context.world.actors[combatant.actorId];
+
   // Find all valid targets (for backward compatibility with TacticalSituation interface)
   const validTargets = computeValidTargets(context, session, combatant, weapon);
 
@@ -139,28 +141,22 @@ export function analyzeBattlefield(
   const canAttack = primaryTarget !== null &&
     primaryTargetDistance !== null &&
     canWeaponHitFromDistance(weapon, primaryTargetDistance) &&
-    combatant.ap.eff.cur >= DEFAULT_ATTACK_AP_COST;
+    getCurrentAp(combatant) >= DEFAULT_ATTACK_AP_COST;
 
   const optimalDistance = weapon.range.optimal;
   const needsRepositioning = primaryTarget !== null &&
     primaryTargetDistance !== null &&
     shouldRepositionForWeapon(weapon, primaryTargetDistance, optimalDistance);
 
-
   return {
+    actor,
     combatant,
     session,
     weapon,
     validTargets,
     resources: {
-      ap: {
-        current: combatant.ap.eff.cur,
-        max: combatant.ap.eff.max,
-      },
-      energy: {
-        current: combatant.energy.eff.cur,
-        max: combatant.energy.eff.max,
-      },
+      ap: combatant.ap,
+      energy: actor.capacitor.energy,
     },
     assessments: {
       primaryTarget,
@@ -300,7 +296,7 @@ export function evaluatePositioning(
   }
 
   // Calculate physics-based movement capability
-  const availableAP = combatant.ap.eff.cur; // AP as time budget
+  const availableAP = getCurrentAp(combatant); // AP as time budget
 
   const power = getStatValue(actor, Stat.POW);
   const finesse = getStatValue(actor, Stat.FIN);

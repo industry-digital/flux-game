@@ -43,8 +43,7 @@ export const createCombatSession = (
   context: TransformerContext,
   input: CombatSessionInput,
 ): CombatSession => {
-  const { uniqid } = context;
-  const { world } = context;
+  const { world, uniqid } = context;
 
   const getActorOrFail = (actorId: ActorURN): Actor => {
     const actor = world.actors[actorId];

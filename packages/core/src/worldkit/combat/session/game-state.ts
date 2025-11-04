@@ -5,7 +5,7 @@ import { createWorldEvent } from '~/worldkit/event';
 import { TransformerContext } from '~/types/handler';
 import { SessionStatus } from '~/types/session';
 import { isAlive, isDead } from '~/worldkit/entity/actor/health';
-import { restoreApToFull, TURN_DURATION_SECONDS } from '~/worldkit/combat/ap';
+import { getCurrentAp, getMaxAp, restoreApToFull, TURN_DURATION_SECONDS } from '~/worldkit/combat/ap';
 import { getCurrentEnergy, recoverEnergy } from '~/worldkit/entity/actor/capacitor';
 import { WellKnownActor } from '~/types/actor';
 
@@ -37,7 +37,7 @@ export function createCombatGameStateApi(
     for (const [actorId] of session.data.combatants) {
       const actor = context.world.actors[actorId];
       if (actor) {
-        lastKnownAliveState.set(actorId, actor.hp.eff.cur > 0);
+        lastKnownAliveState.set(actorId, isAlive(actor));
       }
     }
   };
@@ -55,7 +55,7 @@ export function createCombatGameStateApi(
         continue; // Skip if actor not found
       }
 
-      const isCurrentlyAlive = actor.hp.eff.cur > 0;
+      const isCurrentlyAlive = isAlive(actor);
       const wasAlive = lastKnownAliveState.get(actorId) ?? true;
 
       // Detect death transition: was alive, now dead
@@ -188,9 +188,9 @@ export function createCombatGameStateApi(
     const energyAfterRecovery = getCurrentEnergy(actor);
     const energyBefore = energyAfterRecovery - energyRecovered;
 
-    const previousAp = combatant.ap.eff.cur;
+    const previousAp = getCurrentAp(combatant);
     restoreApToFull(combatant);
-    const maxAp = combatant.ap.eff.cur; // Get the restored value
+    const maxAp = getMaxAp(combatant); // Get the restored value
     const apRecovered = maxAp - previousAp;
 
     // Emit single comprehensive turn end event with resource summaries

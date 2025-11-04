@@ -91,7 +91,9 @@ export function createCombatantManager(
       throw new Error(`Actor ${actorId} not found`);
     }
 
-    actor.sessions[session.id] = deps.timestamp();
+    // Destructively set the session ID on the actor
+    // Invariant: Actor is never in more than one session
+    actor.session = session.id;
 
     const combatant = createCombatant(actor, team, (c: Combatant) => {
       return {
@@ -102,10 +104,6 @@ export function createCombatantManager(
           session.data.combatants,
           session.data.battlefield
         ),
-        balance: {
-          ...c.balance,
-          nat: { cur: 1, max: 1 },
-        },
         didInitiateCombat: didInitiateCombat ? true : undefined,
       };
     }, deps);
@@ -122,8 +120,8 @@ export function createCombatantManager(
     }
 
     const actor = world.actors[actorId];
-    if (actor) {
-      delete actor.sessions[session.id];
+    if (actor && actor.session === session.id) {
+      delete actor.session;
     }
 
     session.data.combatants.delete(actorId);

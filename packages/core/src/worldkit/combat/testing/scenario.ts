@@ -10,7 +10,7 @@ import { DEFAULT_BATTLEFIELD } from '~/worldkit/combat/battlefield';
 import { SkillState } from '~/types/entity/skill';
 import { SchemaManager } from '~/worldkit/schema/manager';
 import { createDefaultSkillState } from '~/worldkit/entity/actor/skill';
-import { setEnergy, setPosition } from '~/worldkit/entity/actor/capacitor';
+import { setEnergy, setCapacitorPosition } from '~/worldkit/entity/actor/capacitor';
 import { createActor } from '~/worldkit/entity/actor';
 
 export type CombatScenarioDependencies = {
@@ -40,7 +40,6 @@ export type ActorStatsSetup = { int?: ActorSingleStatSetup; per?: ActorSingleSta
 export type ActorSkillSetup = number | Partial<SkillState>;
 export type ActorApSetup = number | Partial<Combatant['ap']>;
 export type ActorEnergySetup = number | { position?: number; energy?: number };
-export type ActorBalanceSetup = number | Partial<Combatant['balance']>;
 export type ActorHpSetup = number | Partial<Actor['hp']>;
 
 export type CombatScenarioActorInput = {
@@ -50,7 +49,6 @@ export type CombatScenarioActorInput = {
   skills?: Record<SkillSchemaURN, ActorSkillSetup>;
   ap?: ActorApSetup;
   energy?: ActorEnergySetup;
-  balance?: ActorBalanceSetup;
   position?: Partial<BattlefieldPosition>;
   equipment?: ActorEquipmentSetup;
   target?: ActorURN;
@@ -166,28 +164,19 @@ export function useCombatScenario(
     const stats = participant.stats;
 
     // Helper function to process a single stat setup
-    const processSingleStat = (statSetup: ActorSingleStatSetup | undefined, defaultValue: number = 10) => {
+    const processSingleStat = (statSetup: ActorSingleStatSetup | undefined, defaultValue: number = 10): ActorStats[keyof ActorStats] => {
       if (typeof statSetup === 'number') {
-        return { nat: statSetup, eff: statSetup, mods: {} };
-      } else if (statSetup) {
-        return { nat: defaultValue, eff: defaultValue, mods: {}, ...statSetup };
-      } else {
-        return { nat: defaultValue, eff: defaultValue, mods: {} };
+        return statSetup;
       }
+      return defaultValue;
     };
 
     // Helper function to process HP setup
-    const processHpSetup = (hpSetup: ActorHpSetup | undefined, defaultHp: Actor['hp']) => {
+    const processHpSetup = (hpSetup: ActorHpSetup | undefined, defaultHp: Actor['hp']): Actor['hp'] => {
       if (typeof hpSetup === 'number') {
-        return {
-          nat: { cur: hpSetup, max: hpSetup },
-          eff: { cur: hpSetup, max: hpSetup },
-          mods: {},
-        };
-      } else if (hpSetup) {
-        return { ...defaultHp, ...hpSetup };
+        return { max: hpSetup, current: hpSetup };
       }
-      return defaultHp;
+      return { max: defaultHp.max, current: defaultHp.current };
     };
 
     // Create the actor with stats, skills, HP, and location
@@ -280,7 +269,7 @@ export function useCombatScenario(
     const equipmentApi = testContext.equipmentApi;
     const weaponApi = testContext.weaponApi;
 
-    const { ap, energy, balance, equipment } = participant;
+    const { ap, energy, equipment } = participant;
 
     // Helper function to process combatant attributes
     const processCombatantAttribute = (
@@ -308,9 +297,6 @@ export function useCombatScenario(
     if (ap !== undefined) {
       combatant.ap = processCombatantAttribute(ap, combatant.ap);
     }
-    if (balance !== undefined) {
-      combatant.balance = processCombatantAttribute(balance, combatant.balance);
-    }
 
     // Process energy setup using capacitor API (internal - not exposed in public API)
     if (energy !== undefined) {
@@ -321,7 +307,7 @@ export function useCombatScenario(
         // Complex object: can specify position or energy
         if (energy.position !== undefined) {
           // Position is authoritative - preferred method
-          setPosition(actor, energy.position);
+          setCapacitorPosition(actor, energy.position);
         } else if (energy.energy !== undefined) {
           // Set energy directly in Joules
           setEnergy(actor, energy.energy);

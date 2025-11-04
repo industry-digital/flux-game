@@ -22,9 +22,8 @@ export const activateWorkbenchReducer: PureReducer<TransformerContext, UseWorkbe
     command.args.sessionId
   );
 
-  // If this is a new session, add it to the actor's active sessions
   if (isNew) {
-    actor.sessions[session.id] = context.timestamp();
+    actor.session = session.id;
     // Note: Event declaration is handled by createWorkbenchSessionApi
   }
 

@@ -12,6 +12,7 @@ import {
 } from '../testing';
 import { setBalance, getBalance } from '~/worldkit/entity/actor/wallet';
 import { extractFirstEventOfType } from '~/testing/event';
+import { getShellStatValue } from '~/worldkit/entity/actor/shell';
 
 describe('CommitShellMutationsAction', () => {
   let context: TransformerContext;
@@ -39,8 +40,8 @@ describe('CommitShellMutationsAction', () => {
 
       // Capture initial shell stats
       const shell = actor.shells[actor.currentShell];
-      const initialPow = shell.stats[Stat.POW].eff;
-      const initialFin = shell.stats[Stat.FIN].eff;
+      const initialPow = getShellStatValue(shell, Stat.POW);
+      const initialFin = getShellStatValue(shell, Stat.FIN);
 
       const commitAction = createCommitShellMutationsAction(context, session);
       const events = commitAction(actor, 'test-trace');
@@ -67,8 +68,8 @@ describe('CommitShellMutationsAction', () => {
       expect(commitEvent.payload.mutations).toHaveLength(2);
 
       // Verify mutations were applied to shell
-      expect(shell.stats[Stat.POW].eff).toBe(initialPow + 2);
-      expect(shell.stats[Stat.FIN].eff).toBe(initialFin + 1);
+      expect(getShellStatValue(shell, Stat.POW)).toBe(initialPow + 2);
+      expect(getShellStatValue(shell, Stat.FIN)).toBe(initialFin + 1);
 
       // Verify wallet was debited
       expect(getBalance(actor, CurrencyType.SCRAP)).toBe(initialBalance - spendEvent.payload.transaction.amount);
@@ -88,13 +89,13 @@ describe('CommitShellMutationsAction', () => {
 
       setBalance(actor, CurrencyType.SCRAP, 500);
       const shell = actor.shells[actor.currentShell];
-      const initialRes = shell.stats[Stat.RES].eff;
+      const initialRes = getShellStatValue(shell, Stat.RES);
 
       const commitAction = createCommitShellMutationsAction(context, session);
       const events = commitAction(actor);
 
       expect(events).toHaveLength(2);
-      expect(shell.stats[Stat.RES].eff).toBe(initialRes + 3);
+      expect(getShellStatValue(shell, Stat.RES)).toBe(initialRes + 3);
       expect(session.data.pendingMutations).toHaveLength(0);
     });
 
@@ -291,7 +292,7 @@ describe('CommitShellMutationsAction', () => {
 
       setBalance(actor, CurrencyType.SCRAP, 1); // Insufficient funds
       const shell = actor.shells[actor.currentShell];
-      const initialPow = shell.stats[Stat.POW].eff;
+      const initialPow = getShellStatValue(shell, Stat.POW);
 
       const commitAction = createCommitShellMutationsAction(context, session);
       const events = commitAction(actor);
@@ -299,7 +300,7 @@ describe('CommitShellMutationsAction', () => {
       expect(events).toHaveLength(0);
 
       // Shell should remain unchanged
-      expect(shell.stats[Stat.POW].eff).toBe(initialPow);
+      expect(getShellStatValue(shell, Stat.POW)).toBe(initialPow);
 
       // Mutations should still be pending
       expect(session.data.pendingMutations).toHaveLength(1);

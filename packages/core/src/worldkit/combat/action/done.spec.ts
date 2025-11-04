@@ -8,6 +8,7 @@ import { EventType } from '~/types/event';
 import { ActorURN } from '~/types/taxonomy';
 import { Team } from '~/types/combat';
 import { EVASION_SKILL } from '~/worldkit/combat/testing/constants';
+import { getCurrentAp, setCurrentAp } from '~/worldkit/combat/ap';
 
 describe('Done Method (New Architecture)', () => {
   let scenario: ReturnType<typeof useCombatScenario>;
@@ -97,17 +98,15 @@ describe('Done Method (New Architecture)', () => {
       const combatant = scenario.session.data.combatants.get(ACTOR_ID)!;
 
       // Set initial AP state (depleted)
-      combatant.ap.eff.cur = 1.5;
-      combatant.ap.nat.cur = 1.5;
-      const initialAP = combatant.ap.eff.cur;
+      setCurrentAp(combatant, 1.5);
+      const initialAP = getCurrentAp(combatant);
 
       const done = createTestDoneMethod();
 
       done('test-trace');
 
       // DONE action should NOT modify AP (that's now handled by game state layer)
-      expect(combatant.ap.eff.cur).toBe(initialAP);
-      expect(combatant.ap.nat.cur).toBe(initialAP);
+      expect(getCurrentAp(combatant)).toBe(initialAP);
 
       // Should still call advanceTurn (which handles resource recovery)
       expect(mockAdvanceTurn).toHaveBeenCalledOnce();
@@ -116,16 +115,14 @@ describe('Done Method (New Architecture)', () => {
     it('should focus on turn ending without side effects', () => {
       const combatant = scenario.session.data.combatants.get(ACTOR_ID)!;
       // Store initial state
-      const initialAPEff = combatant.ap.eff.cur;
-      const initialAPNat = combatant.ap.nat.cur;
+      const initialAP = getCurrentAp(combatant);
 
       const done = createTestDoneMethod();
 
       done('test-trace');
 
       // No state should be modified by DONE action itself
-      expect(combatant.ap.eff.cur).toBe(initialAPEff);
-      expect(combatant.ap.nat.cur).toBe(initialAPNat);
+      expect(getCurrentAp(combatant)).toBe(initialAP);
     });
   });
 
@@ -218,8 +215,8 @@ describe('Done Method (New Architecture)', () => {
       const combatant = scenario.session.data.combatants.get(ACTOR_ID)!;
 
       // Set up initial state with depleted AP
-      combatant.ap.eff.cur = 2.0;
-      const initialAP = combatant.ap.eff.cur;
+      setCurrentAp(combatant, 2.0);
+      const initialAP = getCurrentAp(combatant);
 
       const mockAdvancementEvents = [
         {
@@ -244,7 +241,7 @@ describe('Done Method (New Architecture)', () => {
       const events = done('integration-test-trace');
 
       // Verify clean separation: DONE doesn't modify state
-      expect(combatant.ap.eff.cur).toBe(initialAP); // AP unchanged by DONE
+      expect(getCurrentAp(combatant)).toBe(initialAP); // AP unchanged by DONE
       expect(mockAdvanceTurn).toHaveBeenCalledOnce(); // Turn advancement delegated
 
       // Verify events: advanceTurn events are returned as-is

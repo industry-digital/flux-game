@@ -18,7 +18,7 @@ import {
   BASE_HP,
   HP_PER_RES_BONUS,
 } from './health';
-import { createActor } from './index';
+import { createActor, setShellStatValue } from './index';
 import { Actor, ActorType, Stat } from '~/types/entity/actor';
 import { ActorURN } from '~/types/taxonomy';
 
@@ -32,9 +32,8 @@ describe('Actor Health Pure Functions', () => {
       name: 'Test Actor',
       kind: ActorType.PC,
       hp: {
-        nat: { cur: 100, max: 100 },
-        eff: { cur: 100, max: 100 },
-        mods: {},
+        current: 100,
+        max: 100,
       },
     });
   });
@@ -45,7 +44,7 @@ describe('Actor Health Pure Functions', () => {
     });
 
     it('should reflect changes to effective HP', () => {
-      actor.hp.eff.cur = 75;
+      setCurrentHp(actor, 75);
       expect(getCurrentHp(actor)).toBe(75);
     });
   });
@@ -56,7 +55,7 @@ describe('Actor Health Pure Functions', () => {
     });
 
     it('should reflect changes to effective max HP', () => {
-      actor.hp.eff.max = 120;
+      setMaxHp(actor, 120);
       expect(getMaxHp(actor)).toBe(120);
     });
   });
@@ -67,12 +66,12 @@ describe('Actor Health Pure Functions', () => {
     });
 
     it('should return false when HP = 0', () => {
-      actor.hp.eff.cur = 0;
+      setCurrentHp(actor, 0);
       expect(isAlive(actor)).toBe(false);
     });
 
     it('should return false when HP < 0', () => {
-      actor.hp.eff.cur = -10;
+      setCurrentHp(actor, -10);
       expect(isAlive(actor)).toBe(false);
     });
   });
@@ -83,12 +82,12 @@ describe('Actor Health Pure Functions', () => {
     });
 
     it('should return true when HP = 0', () => {
-      actor.hp.eff.cur = 0;
+      setCurrentHp(actor, 0);
       expect(isDead(actor)).toBe(true);
     });
 
     it('should return true when HP < 0', () => {
-      actor.hp.eff.cur = -10;
+      setCurrentHp(actor, -10);
       expect(isDead(actor)).toBe(true);
     });
   });
@@ -99,18 +98,18 @@ describe('Actor Health Pure Functions', () => {
     });
 
     it('should return 0.5 when at half health', () => {
-      actor.hp.eff.cur = 50;
+      setCurrentHp(actor, 50);
       expect(getHealthPercentage(actor)).toBe(0.5);
     });
 
     it('should return 0 when at zero health', () => {
-      actor.hp.eff.cur = 0;
+      setCurrentHp(actor, 0);
       expect(getHealthPercentage(actor)).toBe(0);
     });
 
     it('should return 0 when max HP is 0', () => {
-      actor.hp.eff.max = 0;
-      actor.hp.eff.cur = 0;
+      setMaxHp(actor, 0);
+      setCurrentHp(actor, 0);
       expect(getHealthPercentage(actor)).toBe(0);
     });
   });
@@ -119,8 +118,6 @@ describe('Actor Health Pure Functions', () => {
     it('should set current HP to specified value', () => {
       setCurrentHp(actor, 75);
 
-      expect(actor.hp.nat.cur).toBe(75);
-      expect(actor.hp.eff.cur).toBe(75);
       expect(getCurrentHp(actor)).toBe(75);
     });
 
@@ -139,8 +136,6 @@ describe('Actor Health Pure Functions', () => {
     it('should set maximum HP to specified value', () => {
       setMaxHp(actor, 120);
 
-      expect(actor.hp.nat.max).toBe(120);
-      expect(actor.hp.eff.max).toBe(120);
       expect(getMaxHp(actor)).toBe(120);
     });
 
@@ -175,19 +170,19 @@ describe('Actor Health Pure Functions', () => {
 
   describe('incrementHp', () => {
     it('should increase HP by specified amount', () => {
-      actor.hp.eff.cur = 50;
+      setCurrentHp(actor, 50);
       incrementHp(actor, 25);
       expect(getCurrentHp(actor)).toBe(75);
     });
 
     it('should handle negative amounts as positive', () => {
-      actor.hp.eff.cur = 50;
+      setCurrentHp(actor, 50);
       incrementHp(actor, -25);
       expect(getCurrentHp(actor)).toBe(75);
     });
 
     it('should not increase HP above maximum', () => {
-      actor.hp.eff.cur = 90;
+      setCurrentHp(actor, 90);
       incrementHp(actor, 25);
       expect(getCurrentHp(actor)).toBe(100);
     });
@@ -216,7 +211,7 @@ describe('Actor Health Pure Functions', () => {
 
   describe('restoreHpToMax', () => {
     it('should set current HP to maximum', () => {
-      actor.hp.eff.cur = 25;
+      setCurrentHp(actor, 25);
       restoreHpToMax(actor);
       expect(getCurrentHp(actor)).toBe(100);
     });
@@ -233,8 +228,7 @@ describe('Actor Health Pure Functions', () => {
     beforeEach(() => {
       // Set up actor with specific RES values for testing
       const currentShell = actor.shells[actor.currentShell];
-      currentShell.stats[Stat.RES].nat = 14; // +2 bonus
-      currentShell.stats[Stat.RES].eff = 14;
+      setShellStatValue(currentShell, Stat.RES, 14); // +2 bonus
     });
 
     describe('getResBonus', () => {
@@ -244,19 +238,19 @@ describe('Actor Health Pure Functions', () => {
 
       it('should handle baseline RES (10)', () => {
         const currentShell = actor.shells[actor.currentShell];
-        currentShell.stats[Stat.RES].eff = 10;
+        setShellStatValue(currentShell, Stat.RES, 10);
         expect(getResBonus(actor)).toBe(0);
       });
 
       it('should handle low RES values', () => {
         const currentShell = actor.shells[actor.currentShell];
-        currentShell.stats[Stat.RES].eff = 8;
+        setShellStatValue(currentShell, Stat.RES, 8);
         expect(getResBonus(actor)).toBe(-1); // (8 - 10) / 2 = -1
       });
 
       it('should handle high RES values', () => {
         const currentShell = actor.shells[actor.currentShell];
-        currentShell.stats[Stat.RES].eff = 20;
+        setShellStatValue(currentShell, Stat.RES, 20);
         expect(getResBonus(actor)).toBe(5); // (20 - 10) / 2 = 5
       });
     });
@@ -269,13 +263,13 @@ describe('Actor Health Pure Functions', () => {
 
       it('should handle baseline RES', () => {
         const currentShell = actor.shells[actor.currentShell];
-        currentShell.stats[Stat.RES].eff = 10;
+        setShellStatValue(currentShell, Stat.RES, 10);
         expect(calculateMaxHpFromRes(actor)).toBe(BASE_HP); // 50 + (0 * 5) = 50
       });
 
       it('should handle negative RES bonus', () => {
         const currentShell = actor.shells[actor.currentShell];
-        currentShell.stats[Stat.RES].eff = 8;
+        setShellStatValue(currentShell, Stat.RES, 8);
         const expectedHp = BASE_HP + (-1 * HP_PER_RES_BONUS); // 50 + (-1 * 5) = 45
         expect(calculateMaxHpFromRes(actor)).toBe(expectedHp);
       });
@@ -297,7 +291,7 @@ describe('Actor Health Pure Functions', () => {
 
       it('should reduce current HP if it exceeds new max', () => {
         const currentShell = actor.shells[actor.currentShell];
-        currentShell.stats[Stat.RES].eff = 8; // Low RES = 45 max HP
+        setShellStatValue(currentShell, Stat.RES, 8); // Low RES = 45 max HP
         setCurrentHp(actor, 50);
         updateMaxHpFromRes(actor);
         expect(getCurrentHp(actor)).toBe(45);
@@ -315,7 +309,7 @@ describe('Actor Health Pure Functions', () => {
 
       it('should work with different RES values', () => {
         const currentShell = actor.shells[actor.currentShell];
-        currentShell.stats[Stat.RES].eff = 16; // +3 bonus
+        setShellStatValue(currentShell, Stat.RES, 16); // +3 bonus
         initializeHpFromRes(actor);
         const expectedHp = BASE_HP + (3 * HP_PER_RES_BONUS); // 65
         expect(getMaxHp(actor)).toBe(expectedHp);
@@ -358,7 +352,7 @@ describe('Actor Health Pure Functions', () => {
     it('should handle RES stat changes during gameplay', () => {
       // Initialize with RES-based HP
       const currentShell = actor.shells[actor.currentShell];
-      currentShell.stats[Stat.RES].eff = 16; // +3 bonus
+      setShellStatValue(currentShell, Stat.RES, 16); // +3 bonus
       initializeHpFromRes(actor);
       expect(getMaxHp(actor)).toBe(65);
       expect(getCurrentHp(actor)).toBe(65);
@@ -368,13 +362,13 @@ describe('Actor Health Pure Functions', () => {
       expect(getCurrentHp(actor)).toBe(45);
 
       // RES gets buffed
-      currentShell.stats[Stat.RES].eff = 20; // +5 bonus
+      setShellStatValue(currentShell, Stat.RES, 20); // +5 bonus
       updateMaxHpFromRes(actor);
       expect(getMaxHp(actor)).toBe(75); // 50 + (5 * 5)
       expect(getCurrentHp(actor)).toBe(45); // Current HP preserved
 
       // RES gets debuffed below current HP
-      currentShell.stats[Stat.RES].eff = 8; // -1 bonus
+      setShellStatValue(currentShell, Stat.RES, 8); // -1 bonus
       updateMaxHpFromRes(actor);
       expect(getMaxHp(actor)).toBe(45); // 50 + (-1 * 5)
       expect(getCurrentHp(actor)).toBe(45); // Current HP clamped to new max
