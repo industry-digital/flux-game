@@ -10,7 +10,7 @@ import {
 } from '~/types/taxonomy';
 import { AppliedEffects } from '~/types/taxonomy/effect';
 import { EntityType, AbstractEntity, Describable } from '~/types/entity/entity';
-import { SkillState, Specializations } from '~/types/entity/skill';
+import { SkillState } from '~/types/entity/skill';
 import { NormalizedValueBetweenZeroAndOne, NormalizedBipolarValue, StatefulBoundedValue } from '~/types/entity/attribute';
 import { CurvePosition } from '~/types/easing';
 import { Shell } from '~/types/entity/shell';
@@ -276,12 +276,6 @@ export type Actor =
    * Skills completely determine the set of abilities available to an actor
    */
   skills: Skills;
-
-  /**
-   * The subset of skills that the actor has specialized
-   * @deprecated
-   */
-  specializations?: Specializations;
 
   currentShell: string;
   shells: Record<string, Shell>;

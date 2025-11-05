@@ -89,10 +89,6 @@ const createDefaultActor = (deps: ActorFactoryDependencies): Actor => {
     memberships: {},
     skills: {},
     standing: 0,
-    specializations: {
-      primary: {},
-      secondary: {},
-    },
     currentShell: '', // Will be set after shell creation
     shells: {}, // Start empty
     session: undefined,
