@@ -47,6 +47,8 @@ export const createWorldProjection = (map: MapFunction<WorldProjection> = identi
   });
 };
 
+const PREALLOCATED_EMPTY_ARRAY: Readonly<any[]> = Object.freeze([]);
+
 /**
  * Returns a fully-formed TransformerContext
  */
@@ -64,7 +66,6 @@ export const createTransformerContext = (
   metrics = createCombatMetricsApi(),
 ): TransformerContext => {
   const declaredEvents: WorldEvent[] = [];
-  const declaredEventsByType: Map<EventType, WorldEvent[]> = new Map();
   const declaredEventsByCommand: Map<string, WorldEvent[]> = new Map();
   const declaredErrors: ExecutionError[] = [];
   const declaredEventIds: Set<string> = new Set();
@@ -120,16 +121,19 @@ export const createTransformerContext = (
 
   const getDeclaredErrors = () => declaredErrors;
 
+  const declaredEventsByType: Map<EventType, WorldEvent[]> = new Map();
+
   const getDeclaredEvents = (pattern?: RegExp | EventType): WorldEvent[] => {
     if (!pattern) return declaredEvents;
     if (pattern instanceof RegExp) {
       return declaredEvents.filter(event => pattern.test(event.type));
     }
-    return declaredEvents.filter(event => event.type === pattern);
+    // Fell through, so we are dealing with an EventType.
+    return declaredEventsByType.get(pattern) || PREALLOCATED_EMPTY_ARRAY as WorldEvent[];
   };
 
   const getDeclaredEventsByCommand = <TEventType extends WorldEvent = WorldEvent>(trace: string): TEventType[] => {
-    return (declaredEventsByCommand.get(trace) || []) as TEventType[];
+    return (declaredEventsByCommand.get(trace) || PREALLOCATED_EMPTY_ARRAY) as TEventType[];
   };
 
   const resetErrors = () => {
@@ -142,7 +146,6 @@ export const createTransformerContext = (
     declaredEventsByCommand.clear();
     declaredEventIds.clear();
   };
-
 
   // @ts-expect-error - partyApi is not yet defined
   const context: TransformerContext = {

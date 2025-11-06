@@ -321,6 +321,80 @@ describe('createTransformerContext', () => {
       expect(combatEvents).toHaveLength(1);
     });
 
+    it('should handle non-existent event types gracefully', () => {
+      // Test retrieving events by type when no events of that type exist
+      const nonExistentEvents = context.getDeclaredEvents(EventType.ACTOR_WAS_CREATED);
+      expect(nonExistentEvents).toEqual([]);
+    });
+
+    it('should return empty array for regex that matches no events', () => {
+      context.declareEvent({
+        id: 'test-event-0',
+        type: EventType.ACTOR_WAS_CREATED,
+        location: 'flux:place:test' as PlaceURN,
+        trace: 'create-command',
+        payload: {}
+      } as any);
+
+      const noMatchEvents = context.getDeclaredEvents(/^nonexistent:/);
+      expect(noMatchEvents).toEqual([]);
+    });
+
+    it('should maintain consistency between EventType and RegExp filtering', () => {
+      // Add multiple events of the same type
+      context.declareEvent({
+        id: 'test-event-0',
+        type: EventType.ACTOR_WAS_CREATED,
+        location: 'flux:place:test' as PlaceURN,
+        trace: 'create-command-1',
+        payload: {}
+      } as any);
+
+      context.declareEvent({
+        id: 'test-event-1',
+        type: EventType.ACTOR_WAS_CREATED,
+        location: 'flux:place:test2' as PlaceURN,
+        trace: 'create-command-2',
+        payload: {}
+      } as any);
+
+      context.declareEvent({
+        id: 'test-event-2',
+        type: EventType.ACTOR_DID_MOVE,
+        location: 'flux:place:test' as PlaceURN,
+        trace: 'move-command',
+        payload: { destination: 'flux:place:dest' as PlaceURN }
+      } as any);
+
+      // Both methods should return the same events for ACTOR_WAS_CREATED
+      const eventsByType = context.getDeclaredEvents(EventType.ACTOR_WAS_CREATED);
+      const eventsByRegex = context.getDeclaredEvents(new RegExp(`^${EventType.ACTOR_WAS_CREATED}$`));
+
+      expect(eventsByType).toHaveLength(2);
+      expect(eventsByRegex).toHaveLength(2);
+      expect(eventsByType.map(e => e.id).sort()).toEqual(eventsByRegex.map(e => e.id).sort());
+      expect(eventsByType.every(e => e.type === EventType.ACTOR_WAS_CREATED)).toBe(true);
+      expect(eventsByRegex.every(e => e.type === EventType.ACTOR_WAS_CREATED)).toBe(true);
+    });
+
+    it('should return the same empty array reference for multiple calls to non-existent types', () => {
+      // Test that the preallocated empty array optimization works correctly
+      const emptyResult1 = context.getDeclaredEvents(EventType.ACTOR_WAS_CREATED);
+      const emptyResult2 = context.getDeclaredEvents(EventType.ACTOR_DID_MOVE);
+      const emptyResult3 = context.getDeclaredEventsByCommand('non-existent-command');
+
+      expect(emptyResult1).toEqual([]);
+      expect(emptyResult2).toEqual([]);
+      expect(emptyResult3).toEqual([]);
+
+      // Verify they're the same reference (optimization check)
+      expect(emptyResult1).toBe(emptyResult2);
+      expect(emptyResult2).toBe(emptyResult3);
+
+      // Verify the array is frozen (immutable)
+      expect(Object.isFrozen(emptyResult1)).toBe(true);
+    });
+
     it('should retrieve events by command trace', () => {
       context.declareEvent({
         id: 'test-event-0',

@@ -1,6 +1,6 @@
 # Priorities
 
-1. [Party Mechanics](./packages/guide/src/party/mechanics.md)
+1. [Party Mechanics E2E With Networking](./packages/guide/src/party/mechanics.md)
 1. [Combat: Damage and Injury Mechanics](./docs/gameplay/overview.md)
 1. GET
 1. DROP
