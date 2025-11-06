@@ -62,6 +62,7 @@ export {
 } from './entity/shell';
 
 export {
+  Group,
   Party,
   Faction,
   GroupType,
@@ -251,6 +252,7 @@ export {
   EcosystemURN,
   EffectURN,
   EntityURN,
+  GroupURN,
   Intrinsic,
   ItemURN,
   ModifierURN,

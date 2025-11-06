@@ -28,3 +28,5 @@ export type { EntityCreator, FactoryDependencies as FactoryOptions } from './uti
 export {
   parseEntityTypeFromURN,
 } from './urn';
+
+export * from './group';
