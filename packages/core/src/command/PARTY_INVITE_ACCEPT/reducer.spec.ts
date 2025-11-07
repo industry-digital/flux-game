@@ -9,7 +9,7 @@ import { ALICE_ID, BOB_ID, DEFAULT_LOCATION, DEFAULT_TIMESTAMP } from '~/testing
 import { CommandType } from '~/types/intent';
 import { createActorCommand } from '~/lib/intent';
 import { Party } from '~/types/entity/group';
-import { ActorDidAcceptPartyInvitation, EventType } from '~/types/event';
+import { ActorDidAcceptPartyInvitation, ActorDidJoinParty, EventType } from '~/types/event';
 import { extractFirstEventOfType } from '~/testing/event';
 
 const NOW = DEFAULT_TIMESTAMP;
@@ -67,14 +67,20 @@ describe('PARTY_INVITE_ACCEPT Reducer', () => {
     const errors = result.getDeclaredErrors();
     expect(errors).toHaveLength(0);
 
-    // Should emit acceptance event
+    // Should emit both acceptance and join events
     const events = result.getDeclaredEvents();
-    expect(events).toHaveLength(1);
+    expect(events).toHaveLength(2);
+
     const acceptanceEvent = extractFirstEventOfType<ActorDidAcceptPartyInvitation>(events, EventType.ACTOR_DID_ACCEPT_PARTY_INVITATION)!;
     expect(acceptanceEvent).toBeDefined();
     expect(acceptanceEvent.actor).toBe(BOB_ID);
     expect(acceptanceEvent.payload.partyId).toBe(party.id);
     expect(acceptanceEvent.payload.inviteeId).toBe(BOB_ID);
+
+    const joinEvent = extractFirstEventOfType<ActorDidJoinParty>(events, EventType.ACTOR_DID_JOIN_PARTY)!;
+    expect(joinEvent).toBeDefined();
+    expect(joinEvent.actor).toBe(BOB_ID);
+    expect(joinEvent.payload.partyId).toBe(party.id);
 
     // Bob should now be a party member
     const updatedParty = result.world.groups[party.id] as Party;
