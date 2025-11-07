@@ -8,7 +8,7 @@ import { createActorInventoryApi, ActorInventoryApiDependencies } from './invent
 import { createActor } from '.';
 import { Actor } from '~/types/entity/actor';
 import { TransformerContext } from '~/types/handler';
-import { ItemURN, WeaponSchemaURN } from '~/types/taxonomy';
+import { ItemURN, WeaponItemURN, WeaponSchemaURN } from '~/types/taxonomy';
 import { HumanAnatomy } from '~/types/taxonomy/anatomy';
 import { WeaponSchema } from '~/types/schema/weapon';
 import { SchemaManager } from '~/worldkit/schema/manager';

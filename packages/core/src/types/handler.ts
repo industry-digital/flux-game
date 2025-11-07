@@ -53,10 +53,10 @@ export type ErrorDeclarationConsumer = {
 
 export type EventDeclarationConsumer = {
   getDeclaredEvents(): WorldEvent[];
-  getDeclaredEvents(type: EventType): WorldEvent[];
-  getDeclaredEvents(regex: RegExp): WorldEvent[];
+  getDeclaredEvents<TEvent extends WorldEvent = WorldEvent>(type: EventType): TEvent[];
+  getDeclaredEvents<TEvent extends WorldEvent = WorldEvent>(regex: RegExp): TEvent[];
   /** Get events declared by a specific command */
-  getDeclaredEventsByCommand<TEventType extends WorldEvent = WorldEvent>(commandId: string): TEventType[];
+  getDeclaredEventsByCommand<TEvent extends WorldEvent = WorldEvent>(commandId: string): TEvent[];
   resetEvents(): void;
 };
 

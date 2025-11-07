@@ -6,7 +6,6 @@
  */
 
 import { PureHandlerImplementation, TransformerContext } from '~/types/handler';
-import { safeTopologicalSort } from '~/lib/dag';
 
 import { ADVANCE } from '~/command/ADVANCE';
 import { ATTACK } from '~/command/ATTACK';
@@ -42,43 +41,39 @@ import { WORKBENCH_USE } from '~/command/WORKBENCH_USE';
 
 /**
  * The Flux World Server literally spreads this array into the Transformation stage.
- * We perform a topological sort right here to ensure handler dependencies aren't problematic; if there is a cycle,
- * this line will throw an error. Please preserve this behavior so that we catch dependency issues immediately.
+ * Handlers execute in the exact order specified here - no topological sorting is performed.
+ * This allows for explicit control over execution order without requiring dependency declarations.
  */
-export const PURE_GAME_LOGIC_HANDLERS: PureHandlerImplementation<TransformerContext, any>[]
-= safeTopologicalSort(
-  [
-    ADVANCE,
-    ATTACK,
-    CLEAVE,
-    CREATE_ACTOR,
-    CREATE_PLACE,
-    CREDIT,
-    DEBIT,
-    DEFEND,
-    DEMATERIALIZE_ACTOR,
-    DONE,
-    LOOK,
-    MATERIALIZE_ACTOR,
-    MUTATE_RESOURCES,
-    MUTATE_WEATHER,
-    PARTY_DISBAND,
-    PARTY_STATUS,
-    PARTY_INVITE,
-    PARTY_INVITE_ACCEPT,
-    PARTY_INVITE_REJECT,
-    PARTY_KICK,
-    PARTY_LEAVE,
-    RANGE,
-    RETREAT,
-    STRIKE,
-    TARGET,
-    WORKBENCH_SHELL_ATTRIBUTE_ADD,
-    WORKBENCH_SHELL_LIST,
-    WORKBENCH_SHELL_RENAME,
-    WORKBENCH_SHELL_STATUS,
-    WORKBENCH_SHELL_SWAP,
-    WORKBENCH_USE,
-  ],
-  (Handler) => Handler.prototype.dependencies ?? [],
-);
+export const PURE_GAME_LOGIC_HANDLERS: PureHandlerImplementation<TransformerContext, any>[] = [
+  ADVANCE,
+  ATTACK,
+  CLEAVE,
+  CREATE_ACTOR,
+  CREATE_PLACE,
+  CREDIT,
+  DEBIT,
+  DEFEND,
+  DEMATERIALIZE_ACTOR,
+  DONE,
+  LOOK,
+  MATERIALIZE_ACTOR,
+  MUTATE_RESOURCES,
+  MUTATE_WEATHER,
+  PARTY_DISBAND,
+  PARTY_STATUS,
+  PARTY_INVITE,
+  PARTY_INVITE_ACCEPT,
+  PARTY_INVITE_REJECT,
+  PARTY_KICK,
+  PARTY_LEAVE,
+  RANGE,
+  RETREAT,
+  STRIKE,
+  TARGET,
+  WORKBENCH_SHELL_ATTRIBUTE_ADD,
+  WORKBENCH_SHELL_LIST,
+  WORKBENCH_SHELL_RENAME,
+  WORKBENCH_SHELL_STATUS,
+  WORKBENCH_SHELL_SWAP,
+  WORKBENCH_USE,
+];

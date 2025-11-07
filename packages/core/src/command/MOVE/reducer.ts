@@ -62,6 +62,7 @@ export const actorMovementReducer: PureReducer<TransformerContext, MoveCommand> 
     actor: actor.id,
     location: origin.id,
     payload: {
+      origin: origin.id,
       destination: destination.id,
     },
   });

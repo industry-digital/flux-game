@@ -182,20 +182,28 @@ export type ActorDidDematerializeInput = AbstractWorldEventInput<
   EventType.ACTOR_DID_DEMATERIALIZE
 >;
 
+type ActorMovementEventPayload = {
+  origin: PlaceURN;
+  destination: PlaceURN;
+};
+
 export type ActorDidMove = EventBase & ActorDidMoveInput;
 export type ActorDidMoveInput = AbstractWorldEventInput<
   EventType.ACTOR_DID_MOVE,
-  { destination: PlaceURN }
+  ActorMovementEventPayload
 >;
 
 export type ActorDidDepart = EventBase & ActorDidDepartInput;
 export type ActorDidDepartInput = AbstractWorldEventInput<
   EventType.ACTOR_DID_DEPART,
-  { destination: PlaceURN }
+  ActorMovementEventPayload
 >;
 
 export type ActorDidArrive = EventBase & ActorDidArriveInput;
-export type ActorDidArriveInput = AbstractWorldEventInput<EventType.ACTOR_DID_ARRIVE, { origin: PlaceURN }>;
+export type ActorDidArriveInput = AbstractWorldEventInput<
+  EventType.ACTOR_DID_ARRIVE,
+  ActorMovementEventPayload
+>;
 
 export type ActorDidLook = EventBase & ActorDidLookInput;
 export type ActorDidLookInput = AbstractWorldEventInput<
