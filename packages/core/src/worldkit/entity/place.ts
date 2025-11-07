@@ -5,7 +5,6 @@ import { Actor } from '~/types/entity/actor';
 import { SpecialVisibility } from '~/types/world/visibility';
 import { Direction } from '~/types/world/space';
 import { DEFAULT_FACTORY_DEPS, FactoryDependencies } from './util';
-import { isUrnOfVocabulary } from '~/lib/taxonomy';
 import { ExitInput, Exits, PlaceInput } from '~/types/entity/place';
 import { WellKnownPlace } from '~/types/world/space';
 
@@ -17,8 +16,6 @@ const identity = <T>(x: T): T => x;
 export const isPlace = (place: AbstractEntity<EntityType>): place is Place => {
   return place.type === EntityType.PLACE;
 };
-
-export const isPlaceUrn = (urn: string): urn is PlaceURN => isUrnOfVocabulary(urn, 'place');
 
 export type PlaceTransformer = (place: Place) => Place;
 

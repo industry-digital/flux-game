@@ -1,8 +1,7 @@
 import { Requirements } from '~/types/requirement';
 import { Taxonomy } from '~/types/taxonomy';
-import { AppliedEffect } from '~/types/taxonomy/effect';
 
-export type IntrinsicEffects = Record<string, AppliedEffect>;
+export type IntrinsicEffects = Record<string, any>;
 
 /**
  * Mixin for items that can be equipped

@@ -1,5 +1,4 @@
 import { Duration } from '~/types/world/time';
-import { createEffectUrn } from '~/lib/taxonomy';
 import { Intrinsic, EntityURN, Taxonomy, EffectURN } from '~/types';
 
 export type AppliedEffect = {
@@ -83,20 +82,6 @@ export enum EffectCategory {
 }
 
 /**
- * Core effect constants
- */
-export const EFFECTS = {
-  // Category root URNs
-  PHYSICAL: createEffectUrn('physical'),
-  MENTAL: createEffectUrn('mental'),
-  RESOURCE: createEffectUrn('resource'),
-  ENHANCEMENT: createEffectUrn('enhancement'),
-  ENVIRONMENTAL: createEffectUrn('environmental'),
-  SOCIAL: createEffectUrn('social'),
-  SYSTEM: createEffectUrn('system'),
-} as const;
-
-/**
  * Gets the category of an effect
  */
 export function getEffectCategory(effectUrn: Taxonomy.Effects): EffectCategory | null {
@@ -106,17 +91,3 @@ export function getEffectCategory(effectUrn: Taxonomy.Effects): EffectCategory |
   }
   return null;
 }
-
-/**
- * Union type of all possible effect URNs
- * Allows any string that starts with one of our effect category prefixes
- */
-export type StatusEffect =
-  | `${typeof EFFECTS.PHYSICAL}:${string}`
-  | `${typeof EFFECTS.MENTAL}:${string}`
-  | `${typeof EFFECTS.RESOURCE}:${string}`
-  | `${typeof EFFECTS.ENHANCEMENT}:${string}`
-  | `${typeof EFFECTS.ENVIRONMENTAL}:${string}`
-  | `${typeof EFFECTS.SOCIAL}:${string}`
-  | `${typeof EFFECTS.SYSTEM}:${string}`
-  | typeof EFFECTS[keyof typeof EFFECTS];

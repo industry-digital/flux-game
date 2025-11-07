@@ -1,9 +1,6 @@
 import { Duration } from '~/types/world/time';
-import { Taxonomy, EffectURN, SkillURN } from '~/types/taxonomy';
+import { Taxonomy, SkillURN } from '~/types/taxonomy';
 import { Requirements } from '~/types/requirement';
-import { AppliedEffect } from '~/types/taxonomy/effect';
-
-export type AbilityEffects = Partial<Record<EffectURN, AppliedEffect>>;
 
 export enum AbilityType {
   /**
@@ -49,8 +46,9 @@ export type AbilityInContainment = {
 
   /**
    * Effects that are applied to the target when the ability is used
+   * @deprecated Do not use
    */
-  effects: AppliedEffect[];
+  effects?: any[];
 
   /**
    * Translation key for the ability name

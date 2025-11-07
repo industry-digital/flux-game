@@ -1,4 +1,4 @@
-import { createEntityUrn, isUrnOfVocabulary } from '~/lib/taxonomy';
+import { createEntityUrn } from '~/lib/taxonomy';
 import { AbstractEntity, EntityType } from '~/types/entity/entity';
 import { Actor } from '~/types/entity/actor';
 import { ActorURN } from '~/types/taxonomy';
@@ -12,8 +12,6 @@ export type ActorTransformer = (actor: Actor) => Actor;
 export const isActor = (character: AbstractEntity<EntityType>): character is Actor => {
   return character.type === EntityType.ACTOR;
 };
-
-export const isActorUrn = (urn: string): urn is ActorURN => isUrnOfVocabulary(urn, 'actor');
 
 export const createActorUrn = (...terms: string[]): ActorURN => {
   return createEntityUrn(EntityType.ACTOR, ...terms) as ActorURN;
