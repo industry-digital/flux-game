@@ -1,7 +1,8 @@
 import { AbstractGroup, AbstractGroupApi, Group, GroupType } from '~/types/entity/group';
-import { GroupURN, URNLike } from '~/types/taxonomy';
+import { ActorURN, GroupURN } from '~/types/taxonomy';
 import { WorldProjectionConsumer } from '~/types/handler';
 import { Transform, GroupFactoryDependencies, DEFAULT_GROUP_FACTORY_DEPS, createGroup } from '../factory';
+import { EpochMilliseconds } from '~/types/time';
 
 export type GroupApiDependencies<TGroupType extends GroupType> = GroupFactoryDependencies<TGroupType>;
 
@@ -20,32 +21,42 @@ export const DEFAULT_GROUP_POLICY: GroupPolicy = {
   invitationTimeout: 1_000 * 60, // One minute
 };
 
-export const createGroupApi = <TGroupType extends GroupType, TGroupMemberKey extends URNLike>(
+export type MemberRemovedCallback = (memberId: ActorURN) => void;
+
+export const createGroupApi = <TGroupType extends GroupType>(
   groupType: TGroupType,
   context: GroupApiContext,
   policy: GroupPolicy = DEFAULT_GROUP_POLICY,
   deps: GroupFactoryDependencies<TGroupType> = DEFAULT_GROUP_FACTORY_DEPS,
-): AbstractGroupApi<TGroupType, TGroupMemberKey> => {
+): AbstractGroupApi<TGroupType> => {
+  const { world } = context;
 
-  const createGroupMethod = (transform?: Transform<AbstractGroup<TGroupType, TGroupMemberKey>>): AbstractGroup<TGroupType, TGroupMemberKey> => {
-    const group: AbstractGroup<TGroupType, TGroupMemberKey> = createGroup<TGroupType, TGroupMemberKey>(groupType, transform, deps) as AbstractGroup<TGroupType, TGroupMemberKey>;
-    context.world.groups[group.id] = group as Group;
+  const createGroupMethod = (owner: ActorURN, transform?: Transform<AbstractGroup<TGroupType>>): AbstractGroup<TGroupType> => {
+    const group = createGroup<TGroupType>(
+      groupType,
+      owner,
+      transform,
+      deps,
+    );
+
+    world.groups[group.id] = group as Group;
+
     return group;
   };
 
-  const getGroup = (groupId: GroupURN<TGroupType>): AbstractGroup<TGroupType, TGroupMemberKey> => {
-    const group = context.world.groups[groupId] as AbstractGroup<TGroupType, TGroupMemberKey> | undefined;
+  const getGroup = (groupId: GroupURN<TGroupType>): AbstractGroup<TGroupType> => {
+    const group = context.world.groups[groupId] as AbstractGroup<TGroupType> | undefined;
     if (!group) {
       throw new Error(`Group not found: ${groupId}`);
     }
     return group;
   };
 
-  const isGroupMember = (group: AbstractGroup<TGroupType, TGroupMemberKey>, memberId: TGroupMemberKey): boolean => {
+  const isGroupMember = (group: AbstractGroup<TGroupType>, memberId: ActorURN): boolean => {
     return memberId in group.members;
   };
 
-  const addGroupMember = (group: AbstractGroup<TGroupType, TGroupMemberKey>, memberId: TGroupMemberKey): void => {
+  const addGroupMember = (group: AbstractGroup<TGroupType>, memberId: ActorURN): void => {
     if (memberId in group.members) {
       return; // Already a member
     }
@@ -53,7 +64,7 @@ export const createGroupApi = <TGroupType extends GroupType, TGroupMemberKey ext
     refreshGroup(group);
   };
 
-  const removeGroupMember = (group: AbstractGroup<TGroupType, TGroupMemberKey>, memberId: TGroupMemberKey): void => {
+  const removeGroupMember = (group: AbstractGroup<TGroupType>, memberId: ActorURN): void => {
     if (group.owner === memberId) {
       throw new Error(`Cannot remove owner from group ${group.id}`);
     }
@@ -65,7 +76,7 @@ export const createGroupApi = <TGroupType extends GroupType, TGroupMemberKey ext
     refreshGroup(group);
   };
 
-  const refreshGroup = (group: AbstractGroup<TGroupType, TGroupMemberKey>): void => {
+  const refreshGroup = (group: AbstractGroup<TGroupType>): void => {
     // Refresh group size
     group.size = 0;
     for (const _ in group.members) {
@@ -75,13 +86,13 @@ export const createGroupApi = <TGroupType extends GroupType, TGroupMemberKey ext
     // Set a default owner if one is not set
     if (!group.owner) {
       for (const memberId in group.members) {
-        group.owner = memberId;
+        group.owner = memberId as ActorURN;
         break;
       }
     }
   };
 
-  const setGroupLeader = (group: AbstractGroup<TGroupType, TGroupMemberKey>, memberId: TGroupMemberKey): void => {
+  const setGroupLeader = (group: AbstractGroup<TGroupType>, memberId: ActorURN): void => {
     const inGroup = isGroupMember(group, memberId);
     if (!inGroup) {
       throw new Error(`Member ${memberId} is not a member of group ${group.id}`);
@@ -93,11 +104,11 @@ export const createGroupApi = <TGroupType extends GroupType, TGroupMemberKey ext
     refreshGroup(group);
   };
 
-  const areInSameGroup = (groupA: AbstractGroup<TGroupType, TGroupMemberKey>, groupB: AbstractGroup<TGroupType, TGroupMemberKey>): boolean => {
+  const areInSameGroup = (groupA: AbstractGroup<TGroupType>, groupB: AbstractGroup<TGroupType>): boolean => {
     return groupA.id === groupB.id;
   };
 
-  const inviteToGroup = (group: AbstractGroup<TGroupType, TGroupMemberKey>, inviteeId: TGroupMemberKey): void => {
+  const inviteToGroup = (group: AbstractGroup<TGroupType>, inviteeId: ActorURN): void => {
     // Can't invite someone who is already a member
     if (isGroupMember(group, inviteeId)) {
       throw new Error(`${inviteeId} is already a member of group ${group.id}`);
@@ -107,7 +118,7 @@ export const createGroupApi = <TGroupType extends GroupType, TGroupMemberKey ext
     group.invitations[inviteeId] = deps.timestamp();
   };
 
-  const acceptInvitation = (group: AbstractGroup<TGroupType, TGroupMemberKey>, inviteeId: TGroupMemberKey): void => {
+  const acceptInvitation = (group: AbstractGroup<TGroupType>, inviteeId: ActorURN): void => {
     // Clean up expired invitations first
     cleanupExpiredInvitations(group);
 
@@ -121,7 +132,7 @@ export const createGroupApi = <TGroupType extends GroupType, TGroupMemberKey ext
     addGroupMember(group, inviteeId);
   };
 
-  const rejectInvitation = (group: AbstractGroup<TGroupType, TGroupMemberKey>, inviteeId: TGroupMemberKey): void => {
+  const rejectInvitation = (group: AbstractGroup<TGroupType>, inviteeId: ActorURN): void => {
     cleanupExpiredInvitations(group);
 
     // Must have a pending invitation
@@ -132,27 +143,50 @@ export const createGroupApi = <TGroupType extends GroupType, TGroupMemberKey ext
     delete group.invitations[inviteeId];
   };
 
-  const isInvitationExpired = (invitationTimestamp: number, now = deps.timestamp()): boolean => {
+  const isInvitationExpired = (
+    invitationTimestamp: EpochMilliseconds,
+    now: EpochMilliseconds = deps.timestamp(),
+  ): boolean => {
     return (now - invitationTimestamp) > policy.invitationTimeout;
   };
 
-  const cleanupExpiredInvitations = (group: AbstractGroup<TGroupType, TGroupMemberKey>): void => {
+  const cleanupExpiredInvitations = (group: AbstractGroup<TGroupType>): void => {
     for (const inviteeId in group.invitations) {
-      const timestamp = group.invitations[inviteeId as TGroupMemberKey];
-      if (isInvitationExpired(timestamp)) {
-        delete group.invitations[inviteeId as TGroupMemberKey];
+      const timestamp = group.invitations[inviteeId as ActorURN];
+      if (timestamp && isInvitationExpired(timestamp)) {
+        delete group.invitations[inviteeId as ActorURN];
       }
     }
   };
 
-  const isInvited = (group: AbstractGroup<TGroupType, TGroupMemberKey>, inviteeId: TGroupMemberKey): boolean => {
+  const isInvited = (group: AbstractGroup<TGroupType>, inviteeId: ActorURN): boolean => {
     cleanupExpiredInvitations(group);
     return inviteeId in group.invitations;
   };
 
-  const getInvitations = (group: AbstractGroup<TGroupType, TGroupMemberKey>): Readonly<Record<TGroupMemberKey, number>> => {
+  const getInvitations = (group: AbstractGroup<TGroupType>): Readonly<Record<ActorURN, EpochMilliseconds>> => {
     cleanupExpiredInvitations(group);
     return group.invitations; // Zero-copy
+  };
+
+  const disbandGroup = (group: AbstractGroup<TGroupType>, onMemberRemoved?: MemberRemovedCallback): void => {
+    if (onMemberRemoved) {
+      for (const memberId in group.members) {
+        onMemberRemoved(memberId as ActorURN);
+      }
+    }
+
+    // Clear group state
+    group.members = {};
+    group.invitations = {};
+    group.size = 0;
+
+    // @ts-expect-error: We can break the "group must have an owner" invariant in this case because we
+    // are disbanding it.
+    group.owner = undefined;
+
+    // Remove from world
+    delete context.world.groups[group.id];
   };
 
   return {
@@ -170,5 +204,6 @@ export const createGroupApi = <TGroupType extends GroupType, TGroupMemberKey ext
     isInvited: isInvited,
     getInvitations: getInvitations,
     cleanupExpiredInvitations: cleanupExpiredInvitations,
+    disbandGroup: disbandGroup,
   };
 };

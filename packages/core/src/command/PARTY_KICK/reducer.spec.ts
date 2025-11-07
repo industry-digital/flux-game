@@ -3,7 +3,6 @@ import { partyKickReducer } from './reducer';
 import { PartyKickCommand } from './types';
 import { TransformerContext } from '~/types/handler';
 import { createTransformerContext } from '~/worldkit/context';
-import { createActor } from '~/worldkit/entity/actor';
 import { createPlace } from '~/worldkit/entity/place';
 import { ALICE_ID, BOB_ID, DEFAULT_LOCATION, DEFAULT_TIMESTAMP } from '~/testing/constants';
 import { CommandType } from '~/types/intent';
@@ -12,6 +11,10 @@ import { Party } from '~/types/entity/group';
 import { ActorDidLeaveParty, EventType } from '~/types/event';
 import { extractFirstEventOfType } from '~/testing/event';
 import { PartyLeaveReason } from '~/types/party';
+import { Actor } from '~/types/entity/actor';
+import { Place } from '~/types/entity/place';
+import { createWorldScenario } from '~/worldkit/scenario';
+import { createDefaultActors } from '~/testing/actors';
 
 const NOW = DEFAULT_TIMESTAMP;
 const CHARLIE_ID = 'flux:actor:charlie' as const;
@@ -19,38 +22,25 @@ const CHARLIE_ID = 'flux:actor:charlie' as const;
 describe('PARTY_KICK Reducer', () => {
   let context: TransformerContext;
   let party: Party;
+  let alice: Actor;
+  let bob: Actor;
+  let charlie: Actor;
+  let place: Place;
 
   beforeEach(() => {
     context = createTransformerContext();
+    place = createPlace((p: Place) => ({ ...p, id: DEFAULT_LOCATION }));
+    ({ alice, bob, charlie } = createDefaultActors(place.id));
 
-    // Direct property mutation to ensure PartyApi sees the same world reference
-    context.world.actors[ALICE_ID] = createActor({
-      id: ALICE_ID,
-      name: 'Alice',
-      location: DEFAULT_LOCATION,
-    });
-
-    context.world.actors[BOB_ID] = createActor({
-      id: BOB_ID,
-      name: 'Bob',
-      location: DEFAULT_LOCATION,
-    });
-
-    context.world.actors[CHARLIE_ID] = createActor({
-      id: CHARLIE_ID,
-      name: 'Charlie',
-      location: DEFAULT_LOCATION,
-    });
-
-    context.world.places[DEFAULT_LOCATION] = createPlace({
-      id: DEFAULT_LOCATION,
-      name: 'Test Arena',
+    createWorldScenario(context, {
+      places: [place],
+      actors: [alice, bob, charlie],
     });
 
     // Create party with Alice as owner and Bob as member
-    party = context.partyApi.createParty();
-    context.partyApi.addPartyMember(party, ALICE_ID);
-    context.partyApi.addPartyMember(party, BOB_ID);
+    party = context.partyApi.createParty(alice.id);
+    context.partyApi.addPartyMember(party, bob.id);
+    // Charlie is NOT added to the party initially
   });
 
   it('should kick member when owner requests it', () => {
@@ -101,7 +91,7 @@ describe('PARTY_KICK Reducer', () => {
 
   it('should handle three-member party kick', () => {
     // Add Charlie to make it a 3-member party
-    context.partyApi.addPartyMember(party, CHARLIE_ID);
+    context.partyApi.addPartyMember(party, charlie.id);
     expect(party.size).toBe(3);
 
     const command: PartyKickCommand = createActorCommand({
@@ -120,6 +110,7 @@ describe('PARTY_KICK Reducer', () => {
 
     // Should not have errors
     const errors = result.getDeclaredErrors();
+    console.log(errors);
     expect(errors).toHaveLength(0);
 
     // Should emit leave event

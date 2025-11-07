@@ -63,7 +63,7 @@ describe('English Party Narratives - Snapshot Tests', () => {
     context.world.actors[OBSERVER_ID] = observer;
     context.world.actors[DAVID_ID] = david;
 
-    const testParty = context.partyApi.createParty((party) => ({
+    const testParty = context.partyApi.createParty(ALICE_ID, (party) => ({
       ...party,
       id: DEFAULT_PARTY_ID,
       owner: ALICE_ID,
@@ -496,10 +496,9 @@ describe('English Party Narratives - Snapshot Tests', () => {
 
     it('should handle party with single member', () => {
       // Create a party with only Alice
-      const singleMemberParty = context.partyApi.createParty((party) => ({
+      const singleMemberParty = context.partyApi.createParty(ALICE_ID, (party) => ({
         ...party,
         id: 'flux:group:party:test:single' as any,
-        owner: ALICE_ID,
         members: { [ALICE_ID]: 1 },
       }));
       context.world.groups[singleMemberParty.id] = singleMemberParty;
@@ -518,7 +517,7 @@ describe('English Party Narratives - Snapshot Tests', () => {
 
     it('should handle missing members gracefully', () => {
       // Create a party with a non-existent member
-      const testParty = context.partyApi.createParty((party) => ({
+      const testParty = context.partyApi.createParty(ALICE_ID, (party) => ({
         ...party,
         id: 'flux:group:party:test:missing' as any,
         owner: ALICE_ID,
@@ -527,6 +526,7 @@ describe('English Party Narratives - Snapshot Tests', () => {
           ['flux:actor:nonexistent' as ActorURN]: 1
         },
       }));
+
       context.world.groups[testParty.id] = testParty;
 
       const event = createActorDidInspectPartyEvent((e) => ({
@@ -893,10 +893,9 @@ describe('English Party Narratives - Snapshot Tests', () => {
       console.log('\n👤 SOLO PARTY SCENARIOS');
       console.log('-'.repeat(40));
 
-      const soloParty = context.partyApi.createParty((party) => ({
+      const soloParty = context.partyApi.createParty(CHARLIE_ID, (party) => ({
         ...party,
         id: 'flux:group:party:test:solo' as any,
-        owner: CHARLIE_ID,
         members: { [CHARLIE_ID]: 1 },
         invitations: {},
       }));

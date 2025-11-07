@@ -88,7 +88,7 @@ describe('PARTY_INVITE Reducer', () => {
     expect(party).toBeDefined();
     expect(party.owner).toBe(ALICE_ID);
     expect(party.size).toBe(1);
-    expect(party.members[ALICE_ID]).toBe(1);
+    expect(party.members[ALICE_ID]).toBeDefined();
 
     // Bob should have a pending invitation
     expect(party.invitations[BOB_ID]).toBeDefined();
@@ -98,9 +98,8 @@ describe('PARTY_INVITE Reducer', () => {
   });
 
   it('should send invitation when actor already has a party', () => {
-    // Pre-create a party for Alice
-    const party = context.partyApi.createParty();
-    context.partyApi.addPartyMember(party, ALICE_ID);
+    // Pre-create a party for Alice (Alice is automatically a member as owner)
+    const party = context.partyApi.createParty(ALICE_ID);
 
     const result = partyInviteReducer(context, command);
 
@@ -167,9 +166,8 @@ describe('PARTY_INVITE Reducer', () => {
   });
 
   it('should handle already invited actor gracefully', () => {
-    // Pre-create party and send invitation
-    const party = context.partyApi.createParty();
-    context.partyApi.addPartyMember(party, ALICE_ID);
+    // Pre-create party and send invitation (Alice is automatically a member as owner)
+    const party = context.partyApi.createParty(ALICE_ID);
     context.partyApi.inviteToParty(party, BOB_ID);
 
     const result = partyInviteReducer(context, command);

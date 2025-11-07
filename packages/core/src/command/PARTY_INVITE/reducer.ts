@@ -17,10 +17,8 @@ export const partyInviteReducer: Transformer<PartyInviteCommand> = withBasicWorl
     let party: Party | undefined = actor.party ? world.groups[actor.party] as Party : undefined;
 
     if (!party) {
-      // Create the party and add the inviting actor as the first member
-      party = context.partyApi.createParty();
-
-      context.partyApi.addPartyMember(party, actor.id);
+      // Create the party with the inviting actor as the owner
+      party = context.partyApi.createParty(actor.id);
 
       const partyCreatedEvent: ActorDidCreateParty = createWorldEvent({
         type: EventType.ACTOR_DID_CREATE_PARTY,
@@ -42,13 +40,7 @@ export const partyInviteReducer: Transformer<PartyInviteCommand> = withBasicWorl
     }
 
     // Actually send the invitation using the Party API
-    try {
-      context.partyApi.inviteToParty(party, invitee.id);
-    } catch (error) {
-      // Handle cases like: already a member, already invited, etc.
-      context.declareError(ErrorCode.INVALID_TARGET, command.id);
-      return context;
-    }
+    context.partyApi.inviteToParty(party, invitee.id);
 
     // Emit event that the invitee received an invitation
     const didReceivePartyInvitationEvent: ActorDidReceivePartyInvitation = createWorldEvent({

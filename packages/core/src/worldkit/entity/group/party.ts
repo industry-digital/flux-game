@@ -15,7 +15,7 @@ export type PartyRemovalResult = {
 };
 
 export type PartyApi = {
-  createParty: (transform?: Transform<Party>) => Party;
+  createParty: (owner: ActorURN, transform?: Transform<Party>) => Party;
   getParty: (partyId: PartyURN) => Party;
   isPartyMember: (party: Party, memberId: ActorURN) => boolean;
   addPartyMember: (party: Party, memberId: ActorURN) => void;
@@ -60,7 +60,8 @@ export const createPartyApi = (
     isInvited,
     getInvitations,
     cleanupExpiredInvitations,
-  } = createGroupApi<GroupType.PARTY, ActorURN>(GroupType.PARTY, context, policy, deps);
+    disbandGroup,
+  } = createGroupApi<GroupType.PARTY>(GroupType.PARTY, context, policy, deps);
 
   const addPartyMember = (party: Party, memberId: ActorURN): void => {
     const actor = context.world.actors[memberId];
@@ -103,9 +104,13 @@ export const createPartyApi = (
 
     // Check if this is the last member (auto-disband case)
     if (party.size === 1) {
-      // Last member leaving - disband the party directly
-      actor.party = undefined;
-      delete context.world.groups[party.id];
+      // Last member leaving - disband the party using the generic group API
+      disbandGroup(party, (memberId) => {
+        const memberActor = context.world.actors[memberId];
+        if (memberActor) {
+          memberActor.party = undefined;
+        }
+      });
 
       result.wasPartyDisbanded = true;
       return result;
@@ -154,8 +159,14 @@ export const createPartyApi = (
     addPartyMember(party, inviteeId);
   };
 
+  const createParty = (owner: ActorURN, transform?: Transform<Party>): Party => {
+    const group = createGroup(owner, transform);
+    context.world.actors[owner].party = group.id;
+    return group;
+  };
+
   return {
-    createParty: createGroup,
+    createParty,
     getParty: getGroup,
     isPartyMember: isGroupMember,
     addPartyMember,

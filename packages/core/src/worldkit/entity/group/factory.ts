@@ -1,5 +1,5 @@
 import { GroupType, AbstractGroup } from '~/types/entity/group';
-import { GroupURN, URNLike } from '~/types/taxonomy';
+import { ActorURN, GroupURN } from '~/types/taxonomy';
 import { BASE36_CHARSET, uniqid } from '~/lib/random';
 import { EntityType } from '~/types/entity/entity';
 
@@ -29,21 +29,25 @@ export const DEFAULT_GROUP_FACTORY_DEPS: GroupFactoryDependencies<any> = {
 
 const identity = <T>(x: T): T => x;
 
-export const createGroup = <TGroupType extends GroupType, TGroupMemberKey extends URNLike>(
+export const createGroup = <TGroupType extends GroupType>(
   groupType: TGroupType,
-  transform: Transform<AbstractGroup<TGroupType, TGroupMemberKey>> = identity,
+  owner: ActorURN,
+  transform: Transform<AbstractGroup<TGroupType>> = identity,
   deps: GroupFactoryDependencies<TGroupType> = DEFAULT_GROUP_FACTORY_DEPS,
-): AbstractGroup<TGroupType, TGroupMemberKey> => {
-  const defaults: AbstractGroup<TGroupType, TGroupMemberKey> = {
+): AbstractGroup<TGroupType> => {
+
+  const defaults: AbstractGroup<TGroupType> = {
     id: deps.generateGroupId(groupType),
     ts: deps.timestamp(),
     type: EntityType.GROUP,
-    name: '',  //--> Assigned by the player, if they want to name the group
+    name: '',  //--> Assigned by the owner, if they want to name the group
     kind: groupType,
-    owner: undefined,
-    members: {} as Record<TGroupMemberKey, 1>,
-    invitations: {} as Record<TGroupMemberKey, number>,
-    size: 0,
+    owner,
+    size: 1, // Owner is automatically a member
+    members: {
+      [owner]: deps.timestamp(),
+    },
+    invitations: {},
   };
 
   return transform(defaults);

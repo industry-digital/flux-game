@@ -1,5 +1,6 @@
+import { EpochMilliseconds } from '~/types/time';
 import { EntityType, AbstractEntity, Nameable } from './entity';
-import { ActorURN, GroupURN, URNLike } from '~/types/taxonomy';
+import { ActorURN, GroupURN } from '~/types/taxonomy';
 
 /**
  * Known group types in the game
@@ -28,7 +29,6 @@ export type GroupSymbolicLink<G extends GroupType> =
  */
 export type AbstractGroup<
   G extends GroupType = GroupType,
-  TGroupMemberKey extends URNLike = URNLike,
 > =
   & Omit<AbstractEntity<EntityType.GROUP>, 'id'>
   & { readonly id: GroupURN<G> }
@@ -38,12 +38,12 @@ export type AbstractGroup<
     /**
      * The owner of the group
      */
-    owner?: TGroupMemberKey;
+    owner: ActorURN;
 
     /**
      * The members of the group
      */
-    members: Record<TGroupMemberKey, 1>;
+    members: Record<ActorURN, EpochMilliseconds>;
 
     /**
      * The number of members in the group
@@ -53,7 +53,7 @@ export type AbstractGroup<
     /**
      * The invitations to the group
      */
-    invitations: Record<TGroupMemberKey, number>;
+    invitations: Record<ActorURN, EpochMilliseconds>;
 
     /**
      * The moment the group was created
@@ -63,27 +63,28 @@ export type AbstractGroup<
 
 type Transform<T> = (input: T) => T;
 
-export type AbstractGroupApi<TGroupType extends GroupType, TGroupMemberKey extends URNLike> = {
-  createGroup: (transform?: Transform<AbstractGroup<TGroupType, TGroupMemberKey>>) => AbstractGroup<TGroupType, TGroupMemberKey>;
-  getGroup: (groupId: GroupURN<TGroupType>) => AbstractGroup<TGroupType, TGroupMemberKey>;
-  isGroupMember: (group: AbstractGroup<TGroupType, TGroupMemberKey>, groupMemberId: TGroupMemberKey) => boolean;
-  addGroupMember: (group: AbstractGroup<TGroupType, TGroupMemberKey>, groupMemberId: TGroupMemberKey) => void;
-  removeGroupMember: (group: AbstractGroup<TGroupType, TGroupMemberKey>, groupMemberId: TGroupMemberKey) => void;
-  setGroupLeader: (group: AbstractGroup<TGroupType, TGroupMemberKey>, groupLeaderId: TGroupMemberKey) => void;
-  areInSameGroup: (groupA: AbstractGroup<TGroupType, TGroupMemberKey>, groupB: AbstractGroup<TGroupType, TGroupMemberKey>) => boolean;
-  refreshGroup: (group: AbstractGroup<TGroupType, TGroupMemberKey>) => void;
-  inviteToGroup: (group: AbstractGroup<TGroupType, TGroupMemberKey>, inviteeId: TGroupMemberKey) => void;
-  acceptInvitation: (group: AbstractGroup<TGroupType, TGroupMemberKey>, inviteeId: TGroupMemberKey) => void;
-  rejectInvitation: (group: AbstractGroup<TGroupType, TGroupMemberKey>, inviteeId: TGroupMemberKey) => void;
-  isInvited: (group: AbstractGroup<TGroupType, TGroupMemberKey>, inviteeId: TGroupMemberKey) => boolean;
-  getInvitations: (group: AbstractGroup<TGroupType, TGroupMemberKey>) => Record<TGroupMemberKey, number>;
-  cleanupExpiredInvitations: (group: AbstractGroup<TGroupType, TGroupMemberKey>) => void;
+export type AbstractGroupApi<TGroupType extends GroupType> = {
+  createGroup: (owner: ActorURN, transform?: Transform<AbstractGroup<TGroupType>>) => AbstractGroup<TGroupType>;
+  getGroup: (groupId: GroupURN<TGroupType>) => AbstractGroup<TGroupType>;
+  isGroupMember: (group: AbstractGroup<TGroupType>, groupMemberId: ActorURN) => boolean;
+  addGroupMember: (group: AbstractGroup<TGroupType>, groupMemberId: ActorURN) => void;
+  removeGroupMember: (group: AbstractGroup<TGroupType>, groupMemberId: ActorURN) => void;
+  setGroupLeader: (group: AbstractGroup<TGroupType>, groupLeaderId: ActorURN) => void;
+  areInSameGroup: (groupA: AbstractGroup<TGroupType>, groupB: AbstractGroup<TGroupType>) => boolean;
+  refreshGroup: (group: AbstractGroup<TGroupType>) => void;
+  inviteToGroup: (group: AbstractGroup<TGroupType>, inviteeId: ActorURN) => void;
+  acceptInvitation: (group: AbstractGroup<TGroupType>, inviteeId: ActorURN) => void;
+  rejectInvitation: (group: AbstractGroup<TGroupType>, inviteeId: ActorURN) => void;
+  isInvited: (group: AbstractGroup<TGroupType>, inviteeId: ActorURN) => boolean;
+  getInvitations: (group: AbstractGroup<TGroupType>) => Record<ActorURN, EpochMilliseconds>;
+  cleanupExpiredInvitations: (group: AbstractGroup<TGroupType>) => void;
+  disbandGroup: (group: AbstractGroup<TGroupType>, onMemberRemoved?: (memberId: ActorURN) => void) => void;
 };
 
 /**
  * A Party is a group of Characters that can travel as a single unit through the game world.
  */
-export type Party = AbstractGroup<GroupType.PARTY, ActorURN>;
+export type Party = AbstractGroup<GroupType.PARTY>;
 
 /**
  * A Faction is a group of characters that share allegiance or ideology.
@@ -91,7 +92,7 @@ export type Party = AbstractGroup<GroupType.PARTY, ActorURN>;
  * - Military organization
  * - Guild or alliance
  */
-export type Faction = AbstractGroup<GroupType.FACTION, ActorURN>;
+export type Faction = AbstractGroup<GroupType.FACTION>;
 
 /**
  * Union of all concrete group types.

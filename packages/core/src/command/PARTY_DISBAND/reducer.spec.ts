@@ -47,8 +47,7 @@ describe('PARTY_DISBAND Reducer', () => {
     });
 
     // Create party with Alice as owner and Bob as member
-    party = context.partyApi.createParty();
-    context.partyApi.addPartyMember(party, ALICE_ID);
+    party = context.partyApi.createParty(ALICE_ID);
     context.partyApi.addPartyMember(party, BOB_ID);
 
     // Add some invitations

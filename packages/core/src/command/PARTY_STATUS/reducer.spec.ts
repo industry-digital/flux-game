@@ -3,7 +3,6 @@ import { partyInspectReducer } from './reducer';
 import { PartyStatusCommand } from './types';
 import { TransformerContext } from '~/types/handler';
 import { createTransformerContext } from '~/worldkit/context';
-import { createActor } from '~/worldkit/entity/actor';
 import { createPlace } from '~/worldkit/entity/place';
 import { ALICE_ID, BOB_ID, DEFAULT_LOCATION, DEFAULT_TIMESTAMP } from '~/testing/constants';
 import { CommandType } from '~/types/intent';
@@ -11,47 +10,34 @@ import { createActorCommand } from '~/lib/intent';
 import { Party } from '~/types/entity/group';
 import { ActorDidInspectParty, EventType } from '~/types/event';
 import { extractFirstEventOfType } from '~/testing/event';
-
+import { createWorldScenario, WorldScenarioHook } from '~/worldkit/scenario';
+import { Actor } from '~/types/entity/actor';
+import { createDefaultActors } from '~/testing/actors';
+import { Place } from '~/types/entity/place';
 const NOW = DEFAULT_TIMESTAMP;
 const CHARLIE_ID = 'flux:actor:charlie' as const;
 
 describe('PARTY_INSPECT Reducer', () => {
   let context: TransformerContext;
+  let scenario: WorldScenarioHook;
+  let place: Place;
   let party: Party;
+  let alice: Actor;
+  let bob: Actor;
+  let charlie: Actor;
 
   beforeEach(() => {
     context = createTransformerContext();
-
-    // Direct property mutation to ensure PartyApi sees the same world reference
-    context.world.actors[ALICE_ID] = createActor({
-      id: ALICE_ID,
-      name: 'Alice',
-      location: DEFAULT_LOCATION,
-    });
-
-    context.world.actors[BOB_ID] = createActor({
-      id: BOB_ID,
-      name: 'Bob',
-      location: DEFAULT_LOCATION,
-    });
-
-    context.world.actors[CHARLIE_ID] = createActor({
-      id: CHARLIE_ID,
-      name: 'Charlie',
-      location: DEFAULT_LOCATION,
-    });
-
-    context.world.places[DEFAULT_LOCATION] = createPlace({
-      id: DEFAULT_LOCATION,
-      name: 'Test Arena',
+    place = createPlace((p) => ({ ...p, id: DEFAULT_LOCATION }));
+    ({ alice, bob, charlie } = createDefaultActors());
+    scenario = createWorldScenario(context as TransformerContext, {
+      places: [place],
+      actors: [alice, bob, charlie],
     });
 
     // Create party with Alice as owner and Bob as member
-    party = context.partyApi.createParty();
-    context.partyApi.addPartyMember(party, ALICE_ID);
+    party = context.partyApi.createParty(ALICE_ID);
     context.partyApi.addPartyMember(party, BOB_ID);
-
-    // Add some invitations
     context.partyApi.inviteToParty(party, CHARLIE_ID);
   });
 
@@ -169,8 +155,7 @@ describe('PARTY_INSPECT Reducer', () => {
 
   it('should handle single-member party correctly', () => {
     // Create a new party with only Charlie (who isn't in any party yet)
-    const soloParty = context.partyApi.createParty();
-    context.partyApi.addPartyMember(soloParty, CHARLIE_ID);
+    const soloParty = context.partyApi.createParty(CHARLIE_ID);
 
     const command: PartyStatusCommand = createActorCommand({
       id: 'abcd1234',

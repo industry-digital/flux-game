@@ -15,7 +15,6 @@ import { createWeaponSchema } from '~/worldkit/schema/weapon/factory';
 import { createAmmoSchema } from '~/worldkit/schema/ammo/factory';
 import { createGroup } from '~/worldkit/entity/group/factory';
 import { GroupType } from '~/types/entity/group';
-import { ActorURN } from '~/types/taxonomy';
 
 describe('createWorldScenario', () => {
   let context: TransformerContext;
@@ -268,24 +267,20 @@ describe('createWorldScenario', () => {
     it('should create party with leader', () => {
       const createPartySpy = vi.spyOn(context.partyApi, 'createParty');
       const addPartyMemberSpy = vi.spyOn(context.partyApi, 'addPartyMember');
-      const mockParty = createGroup(GroupType.PARTY, (party) => ({
-        ...party,
-        owner: alice.id,
-      }));
+      const mockParty = createGroup(GroupType.PARTY, ALICE_ID);
+
       createPartySpy.mockReturnValue(mockParty as Party);
 
       const party = scenario.createParty(alice);
 
-      expect(createPartySpy).toHaveBeenCalled();
-      expect(addPartyMemberSpy).toHaveBeenCalledWith(mockParty, alice.id);
+      expect(createPartySpy).toHaveBeenCalledWith(alice.id);
+      // Alice is automatically a member when party is created, so addPartyMember is not called for her
+      expect(addPartyMemberSpy).not.toHaveBeenCalledWith(mockParty, alice.id);
       expect(party).toEqual(mockParty);
     });
 
     it('should return the created party', () => {
-      const mockParty = createGroup(GroupType.PARTY, (party) => ({
-        ...party,
-        owner: alice.id,
-      }));
+      const mockParty = createGroup(GroupType.PARTY, ALICE_ID);
       vi.spyOn(context.partyApi, 'createParty').mockReturnValue(mockParty as Party);
       vi.spyOn(context.partyApi, 'addPartyMember').mockImplementation(() => {});
 
@@ -305,12 +300,7 @@ describe('createWorldScenario', () => {
       scenario.addActor(bob);
       scenario.addActor(charlie);
 
-      party = createGroup(GroupType.PARTY, (party) => ({
-        ...party,
-        owner: alice.id,
-        members: { [alice.id]: 1 } as Record<ActorURN, 1>,
-        size: 1,
-      })) as Party;
+      party = createGroup(GroupType.PARTY, ALICE_ID);
     });
 
     it('should add actors to party using partyApi', () => {
@@ -381,11 +371,7 @@ describe('createWorldScenario', () => {
     it('should handle party-based scenario setup', () => {
       const createPartySpy = vi.spyOn(context.partyApi, 'createParty');
       const addPartyMemberSpy = vi.spyOn(context.partyApi, 'addPartyMember');
-      const mockParty = createGroup(GroupType.PARTY, (party) => ({
-        ...party,
-        name: 'Adventure Party',
-        owner: alice.id,
-      }));
+      const mockParty = createGroup(GroupType.PARTY, ALICE_ID);
       createPartySpy.mockReturnValue(mockParty as Party);
 
       const scenario = createWorldScenario(context, { actors: [alice, bob, charlie], places: [testPlace] });
@@ -403,7 +389,8 @@ describe('createWorldScenario', () => {
 
       // Verify party creation and membership
       expect(createPartySpy).toHaveBeenCalled();
-      expect(addPartyMemberSpy).toHaveBeenCalledWith(party, alice.id);
+      // Alice is automatically a member when party is created, so addPartyMember is not called for her
+      expect(addPartyMemberSpy).not.toHaveBeenCalledWith(party, alice.id);
       expect(addPartyMemberSpy).toHaveBeenCalledWith(party, bob.id);
       expect(addPartyMemberSpy).toHaveBeenCalledWith(party, charlie.id);
       expect(party).toBe(mockParty);

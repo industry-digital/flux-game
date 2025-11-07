@@ -97,12 +97,7 @@ export const createWorldScenario = (
 
   const createParty = (leader: Actor): Party => {
     // Use the existing partyApi to create the party
-    const party = partyApi.createParty();
-
-    // Add the leader as the first member
-    partyApi.addPartyMember(party, leader.id);
-
-    return party;
+    return partyApi.createParty(leader.id);
   };
 
   const assignToParty = (party: Party, actors: Actor[]) => {

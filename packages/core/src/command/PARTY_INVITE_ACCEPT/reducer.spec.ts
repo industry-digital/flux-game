@@ -41,8 +41,7 @@ describe('PARTY_INVITE_ACCEPT Reducer', () => {
       name: 'Test Arena',
     });
 
-    party = context.partyApi.createParty();
-    context.partyApi.addPartyMember(party, ALICE_ID);
+    party = context.partyApi.createParty(ALICE_ID);
 
     command = createActorCommand({
       id: 'abcd1234',
