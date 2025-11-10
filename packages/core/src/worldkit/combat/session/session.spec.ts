@@ -12,7 +12,7 @@ import { createTestActor } from '~/testing/world-testing';
 import { Actor, Stat } from '~/types/entity/actor';
 import { ActorURN, PlaceURN, SessionURN } from '~/types/taxonomy';
 import { CombatFacing, Team } from '~/types/combat';
-import { SessionStatus, SessionStrategy } from '~/types/session';
+import { SessionStatus, SessionStrategy } from '~/types/entity/session';
 import { EntityType } from '~/types/entity/entity';
 import { CombatTurnDidEnd, CombatTurnDidStart, EventType } from '~/types/event';
 import { type RollResultWithoutModifiers } from '~/types/dice';

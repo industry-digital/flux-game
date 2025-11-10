@@ -24,7 +24,7 @@ export enum SessionStatus {
   PAUSED = 'paused',
 
   /**
-   * The session is not running, and may not be started again
+   * The session has permanently ended
    */
   TERMINATED = 'terminated',
 }
@@ -38,4 +38,12 @@ export type AbstractSession<
   data: TSessionData;
 };
 
+/**
+ * A session is a temporary data structure that records the state of complex, multi-entity scenarios over time.
+ * A session persists across any number of actor commands until some condition is met.
+ *
+ * Examples
+ * - Combat session persists until the combat is over. It tracks combatants, their positions, rounds, initiative, etc.
+ * - Workbench session persists until the actor exits the workbench. It tracks the mutations to be applied to a shell.
+ */
 export type Session = CombatSession | WorkbenchSession;

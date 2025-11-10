@@ -1,5 +1,5 @@
 import { uniqid, BASE62_CHARSET } from '~/lib/random';
-import { SessionStrategy } from '~/types/session';
+import { SessionStrategy } from '~/types/entity/session';
 import { ROOT_NAMESPACE, SessionURN } from '~/types/taxonomy';
 
 /**

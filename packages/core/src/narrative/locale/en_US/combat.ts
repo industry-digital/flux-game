@@ -13,7 +13,7 @@ import {
   ActorDidAcquireTarget,
 } from '~/types/event';
 import { AttackType, MovementDirection } from '~/types/combat';
-import { SessionStatus } from '~/types/session';
+import { SessionStatus } from '~/types/entity/session';
 import { TemplateFunction } from '~/types/narrative';
 import { ActorURN, SchemaURN } from '~/types/taxonomy';
 import { Actor, Stat } from '~/types/entity/actor';

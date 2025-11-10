@@ -8,7 +8,7 @@ import {
   CombatFacing
 } from '~/types/combat';
 import { TransformerContext } from '~/types/handler';
-import { SessionStatus } from '~/types/session';
+import { SessionStatus } from '~/types/entity/session';
 import { createCombatant, CreateCombatantDependencies, DEFAULT_CREATE_COMBATANT_DEPS } from '../combatant';
 
 /**

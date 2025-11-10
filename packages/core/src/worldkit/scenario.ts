@@ -6,7 +6,7 @@ import { TransformerContext } from '~/types/handler';
 import { AmmoSchema } from '~/types/schema/ammo';
 import { WeaponSchema } from '~/types/schema/weapon';
 import { createCurrencyTransaction, executeCurrencyTransaction } from '~/worldkit/entity';
-import { Session } from '~/types/session';
+import { Session } from '~/types/entity/session';
 import { Schema } from '~/types/schema/schema';
 import { InventoryItemInput } from '~/worldkit/entity/actor/inventory';
 

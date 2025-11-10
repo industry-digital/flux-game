@@ -25,7 +25,7 @@ import {
 import { AttackOutcome, AttackType, Combatant, CombatSession, Team } from '~/types/combat';
 import { CombatSessionApi } from '~/worldkit/combat/session/session';
 import { ActorURN } from '~/types/taxonomy';
-import { SessionStatus } from '~/types/session';
+import { SessionStatus } from '~/types/entity/session';
 import { ALICE_ID, BOB_ID, CHARLIE_ID, DEFAULT_LOCATION } from '~/testing/constants';
 import { createPlace } from '~/worldkit/entity/place';
 import { en_US } from './en_US';

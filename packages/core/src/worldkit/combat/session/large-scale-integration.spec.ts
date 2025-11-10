@@ -4,7 +4,7 @@ import { createTransformerContext } from '~/worldkit/context';
 import { createActor, setCurrentHp } from '~/worldkit/entity/actor';
 import { ActorType } from '~/types/entity/actor';
 import { Team } from '~/types/combat';
-import { SessionStatus } from '~/types/session';
+import { SessionStatus } from '~/types/entity/session';
 import { EventType } from '~/types/event';
 import { ActorURN, PlaceURN } from '~/types/taxonomy';
 

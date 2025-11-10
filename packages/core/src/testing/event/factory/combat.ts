@@ -20,7 +20,7 @@ import { BattlefieldPosition } from '~/types/combat';
 import { CombatEventFactoryDependencies, DEFAULT_COMBAT_EVENT_FACTORY_DEPS } from './deps';
 import { ALICE_ID, BOB_ID, DEFAULT_LOCATION, DEFAULT_TRACE, DEFAULT_COMBAT_SESSION } from '~/testing/constants';
 import { WellKnownActor } from '~/types/actor';
-import { SessionStatus } from '~/types/session';
+import { SessionStatus } from '~/types/entity/session';
 
 // Generic transform function type
 export type EventTransform<T> = (event: T) => T;

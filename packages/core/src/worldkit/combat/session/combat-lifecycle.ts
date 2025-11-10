@@ -1,7 +1,7 @@
 import { ActorURN, PlaceURN, SessionURN } from '~/types/taxonomy';
 import { CombatSession, Combatant } from '~/types/combat';
 import { RollResult, RollResultWithoutModifiers } from '~/types/dice';
-import { SessionStatus } from '~/types/session';
+import { SessionStatus } from '~/types/entity/session';
 import { WorldEvent, EventType } from '~/types/event';
 import { computeInitiativeRolls, sortInitiativeOrder } from '~/worldkit/combat/initiative';
 import { createWorldEvent } from '~/worldkit/event';

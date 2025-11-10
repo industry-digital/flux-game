@@ -17,7 +17,7 @@ import { Locale } from '~/types/i18n';
 import { NarrativeSequence, TemplateFunction } from '~/types';
 import { WorldScenarioHook } from '~/worldkit/scenario';
 import { ALICE_ID } from '~/testing/constants';
-import { parseSessionStrategyFromUrn } from '~/worldkit/session';
+import { parseSessionStrategyFromUrn } from '~/worldkit/session/util';
 import { BatchSchedulingOutput } from '~/repl/output';
 
 

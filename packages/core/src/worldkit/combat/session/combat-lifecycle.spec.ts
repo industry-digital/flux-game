@@ -7,7 +7,7 @@ import { createCombatSession } from './session';
 import { createCombatantManager } from './combatant-manager';
 import { ActorURN, PlaceURN, SessionURN } from '~/types/taxonomy';
 import { Team } from '~/types/combat';
-import { SessionStatus } from '~/types/session';
+import { SessionStatus } from '~/types/entity/session';
 import { RollResult, RollResultWithoutModifiers } from '~/types/dice';
 import { CombatSessionStarted, EventType } from '~/types/event';
 

@@ -5,7 +5,7 @@ import { createCombatSession } from './session';
 import { createActor } from '~/worldkit/entity/actor';
 import { ActorType } from '~/types/entity/actor';
 import { Team, CombatFacing } from '~/types/combat';
-import { SessionStatus } from '~/types/session';
+import { SessionStatus } from '~/types/entity/session';
 import { CombatSessionEnded, EventType } from '~/types/event';
 import { ActorURN, PlaceURN, SessionURN } from '~/types/taxonomy';
 import { createCombatGameStateApi } from '~/worldkit/combat/session/game-state';

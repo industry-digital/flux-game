@@ -1,7 +1,7 @@
 import { Actor } from '~/types/entity/actor';
 import { Group } from '~/types/entity/group';
 import { Place } from '~/types/entity/place';
-import { Session } from '~/types/session';
+import { Session } from '~/types/entity/session';
 import { RootNamespace } from '~/types/taxonomy';
 
 export type LocallyUniqueId = string;

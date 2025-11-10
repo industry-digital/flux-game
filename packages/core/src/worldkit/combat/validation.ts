@@ -1,7 +1,7 @@
 import { PureReducer, TransformerContext } from '~/types/handler';
 import { Command } from '~/types/intent';
 import { ActorURN } from '~/types/taxonomy';
-import { SessionStrategy } from '~/types/session';
+import { SessionStrategy } from '~/types/entity/session';
 import { CombatSession } from '~/types/combat';
 import { ErrorCode } from '~/types/error';
 

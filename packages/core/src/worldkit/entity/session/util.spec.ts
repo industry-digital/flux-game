@@ -1,7 +1,8 @@
 import { describe, it, expect } from 'vitest';
-import { createSessionId, parseSessionStrategyFromUrn } from './index';
-import { SessionStrategy } from '~/types/session';
+import { parseSessionStrategyFromUrn } from './util';
+import { SessionStrategy } from '~/types/entity/session';
 import { SessionURN } from '~/types/taxonomy';
+import { createSessionId } from './factory';
 
 describe('Session ID utilities', () => {
   describe('createSessionId', () => {

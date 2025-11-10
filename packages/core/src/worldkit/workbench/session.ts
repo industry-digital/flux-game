@@ -1,11 +1,11 @@
 import { ActorURN, SessionURN } from '~/types/taxonomy';
 import { WorkbenchSession, WorkbenchSessionData } from '~/types/workbench';
-import { SessionStatus, SessionStrategy } from '~/types/session';
+import { SessionStatus, SessionStrategy } from '~/types/entity/session';
 import { EntityType } from '~/types/entity/entity';
 import { uniqid as uniqidImpl, BASE62_CHARSET } from '~/lib/random';
 import { TransformerContext } from '~/types/handler';
 import { WorldProjection } from '~/types/world';
-import { createSessionId } from '~/worldkit/session';
+import { createSessionId } from '~/worldkit/session/util';
 import { ActorDidListShells, EventType, WorkbenchSessionDidStart } from '~/types/event';
 import { createWorldEvent } from '~/worldkit/event';
 

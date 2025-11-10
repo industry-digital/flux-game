@@ -1,6 +1,6 @@
 import { ActorURN, PlaceURN, SessionURN } from '~/types/taxonomy';
 import { CombatSession, CombatSessionData, Battlefield, Combatant } from '~/types/combat';
-import { SessionStatus, SessionStrategy } from '~/types/session';
+import { SessionStatus, SessionStrategy } from '~/types/entity/session';
 import { Actor } from '~/types/entity/actor';
 import { EntityType } from '~/types/entity/entity';
 import { Modifiers, RollResult, RollSpecification, WorldEvent } from '~/types';
@@ -8,7 +8,7 @@ import { uniqid as uniqidImpl, BASE62_CHARSET } from '~/lib/random';
 import { TransformerContext } from '~/types/handler';
 import { WorldProjection } from '~/types/world';
 import { computeInitiativeRolls } from '~/worldkit/combat/initiative';
-import { createSessionId } from '~/worldkit/session';
+import { createSessionId } from '~/worldkit/session/util';
 import { CombatantApi, createCombatantApiFactory } from '~/worldkit/combat/combatant';
 import { CombatantManager, createCombatantManager } from '~/worldkit/combat/session/combatant-manager';
 import { createCombatLifecycle } from '~/worldkit/combat/session/combat-lifecycle';

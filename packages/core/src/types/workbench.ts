@@ -1,4 +1,4 @@
-import { AbstractSession, SessionStrategy } from '~/types/session';
+import { AbstractSession, SessionStrategy } from '~/types/entity/session';
 import { ShellStat } from '~/types/entity/actor';
 import { ActorURN, ComponentSchemaURN, ItemURN } from '~/types/taxonomy';
 import { Shell } from '~/types/entity/shell';

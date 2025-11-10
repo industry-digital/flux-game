@@ -320,7 +320,7 @@ export {
   Template,
 } from './template';
 
-export * from './session';
+export * from './entity/session';
 
 export * from './narrative';
 

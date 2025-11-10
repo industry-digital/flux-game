@@ -10,7 +10,7 @@ import {
   MovementDirection,
 } from '~/types/combat';
 import { RollResultWithoutModifiers } from '~/types/dice';
-import { SessionStatus } from '~/types/session';
+import { SessionStatus } from '~/types/entity/session';
 import { ShellDiff, ShellMutation } from '~/types/workbench';
 import { Shell } from '~/types/entity/shell';
 import { ComponentSchemaURN } from '~/types/taxonomy';

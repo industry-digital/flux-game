@@ -5,7 +5,7 @@ import { createTestActor } from '~/testing/world-testing';
 import { createCombatSession } from './session';
 import { ActorURN, PlaceURN } from '~/types/taxonomy';
 import { Team, CombatFacing } from '~/types/combat';
-import { SessionStatus } from '~/types/session';
+import { SessionStatus } from '~/types/entity/session';
 import { EventType } from '~/types/event';
 
 const TEST_PLACE_ID: PlaceURN = 'flux:place:test-place';

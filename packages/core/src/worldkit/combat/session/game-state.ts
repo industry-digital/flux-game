@@ -3,7 +3,7 @@ import { CombatSession } from '~/types/combat';
 import { WorldEvent, EventType } from '~/types/event';
 import { createWorldEvent } from '~/worldkit/event';
 import { TransformerContext } from '~/types/handler';
-import { SessionStatus } from '~/types/session';
+import { SessionStatus } from '~/types/entity/session';
 import { isAlive, isDead } from '~/worldkit/entity/actor/health';
 import { getCurrentAp, getMaxAp, restoreApToFull, TURN_DURATION_SECONDS } from '~/worldkit/combat/ap';
 import { getCurrentEnergy, recoverEnergy } from '~/worldkit/entity/actor/capacitor';

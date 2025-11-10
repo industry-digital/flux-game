@@ -1,4 +1,4 @@
-import { AbstractSession, SessionStrategy } from '~/types/session';
+import { AbstractSession, SessionStrategy } from '~/types/entity/session';
 import { ActorURN, PlaceURN, SkillURN } from '~/types/taxonomy';
 import { CommandType, ActorCommand } from '~/types/intent';
 import { RollResultWithoutModifiers } from '~/types/dice';
@@ -14,20 +14,20 @@ export type CombatMemoization = {
   targetCache: Map<string, any[]>;
   /** Weapon assessment cache for repeated evaluations */
   weaponCache: Map<string, any>;
-}
+};
 
 export enum CoverEffectiveness {
   NONE = 0,
   PARTIAL = 0.5,
   FULL = 1,
-}
+};
 
 export enum KindsOfCover {
   TREE,
   ROCK,
   BUILDING,
   VEHICLE,
-}
+};
 
 export type CoverSkillChecks = Partial<Record<SkillURN, number>>;
 
@@ -195,12 +195,12 @@ export enum Team {
   ALPHA = 'alpha',
   BRAVO = 'bravo',
   CHARLIE = 'charlie',
-}
+};
 
 export enum CombatFacing {
   RIGHT = 1,
   LEFT = -1,
-}
+};
 
 /**
  * Position and movement state on the 300-meter linear battlefield
