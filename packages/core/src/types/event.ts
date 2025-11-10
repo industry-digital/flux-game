@@ -1,6 +1,6 @@
 import { Weather } from '~/types/entity/weather';
 import { ResourceNodes } from '~/types/entity/resource';
-import { ActorURN, AmmoSchemaURN, ItemURN, PartyURN, PlaceURN, SessionURN, WeaponSchemaURN } from '~/types/taxonomy';
+import { ActorURN, AmmoSchemaURN, GroupURN, ItemURN, PartyURN, PlaceURN, SessionURN, WeaponSchemaURN } from '~/types/taxonomy';
 import {
   ActionCost,
   AttackOutcome,
@@ -146,6 +146,7 @@ export enum EventType {
   ACTOR_DID_LEAVE_PARTY = 'actor:party:left',
   ACTOR_DID_INSPECT_PARTY = 'actor:party:members:listed',
   ACTOR_DID_LIST_PARTY_INVITATIONS = 'actor:party:invitations:listed',
+  ACTOR_DID_SAY = 'actor:said',
 }
 
 export type EventBase = {
@@ -713,6 +714,15 @@ export type ActorDidInspectPartyInput = AbstractWorldEventInput<
   }
 >;
 
+export type ActorDidSay = EventBase & ActorDidSayInput;
+export type ActorDidSayInput = AbstractWorldEventInput<
+  EventType.ACTOR_DID_SAY,
+  {
+    to: ActorURN | PlaceURN | GroupURN;
+    spokenText: string;
+  }
+>;
+
 /**
  * Union of all valid event inputs
  */
@@ -772,6 +782,7 @@ export type WorldEventInput =
   | ActorDidInspectPartyInput
   | ActorDidRenameShellInput
   | ActorDidAssessShellStatusInput
+  | ActorDidSay
   ;
 
 /**

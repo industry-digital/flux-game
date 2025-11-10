@@ -28,6 +28,7 @@ import {
   narrateActorDidDepart,
   narrateActorDidOpenHelpFile,
   narrateActorDidLook,
+  narrateActorDidSay,
 } from './actor';
 
 import {
@@ -90,6 +91,9 @@ export const en_US: LanguageTemplates = {
   [EventType.ACTOR_DID_EQUIP_WEAPON]: NOT_IMPLEMENTED,
   [EventType.ACTOR_DID_UNEQUIP_WEAPON]: NOT_IMPLEMENTED,
   [EventType.ACTOR_DID_ASSESS_SHELL_STATUS]: narrateActorDidAssessShellStatus,
+
+
+  [EventType.ACTOR_DID_SAY]: narrateActorDidSay,
 
   // Look Events
   [EventType.ACTOR_DID_LOOK]: narrateActorDidLook,

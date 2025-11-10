@@ -20,3 +20,26 @@ export const toPossessive = (name: string): string => {
   }
   return `${name}'s`;
 };
+
+export const getPunctuationMark = (text: string): string => {
+  const lastChar = text.charAt(text.length - 1);
+  if (lastChar === '!') {
+    return '!';
+  }
+  if (lastChar === '?') {
+    return '?';
+  }
+  return '.';
+};
+
+export const getSpeechVerb = (
+  punctuationMark: string,
+) => {
+  if (punctuationMark === '!') {
+    return 'exclaims';
+  }
+  if (punctuationMark === '?') {
+    return 'asks';
+  }
+  return 'says';
+};

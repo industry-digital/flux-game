@@ -5,7 +5,6 @@
 1. GET
 1. DROP
 1. Combat: Injury Mechanics + dropping weapon
-1. [Capacitory Juice]: Drink to recharge to 31.8% of max capacity
 1. [Workbench: Basic Mechanics](./docs/gameplay/workbench.md)
 1. [Combat: Capacitor Mechanics](./docs/gameplay/overview.md)
 1. [Combat: DASH](./docs/gameplay/combat/overview.md)
@@ -20,6 +19,7 @@
 1. [Resource Simulation Baseline Stability](./docs/simulation/resource.md)
 1. [Creature Simulation Server](./docs/simulation/monsters.md)
 1. [Loot Drops](./docs//loot.md)
+1. [Capacitor Juice]: Drink to recharge to 31.8% of max capacity
 1. Combat Simulator (arranged 3v3 matches, bring-your-own-Shell, consequence-free)
 1. LLM-powered monster behavior profiles that continuously update based on recent events and player actions.
 1. Player Guide -> Help Files (Vitepress tooling + server handling of helpfile-related events)
