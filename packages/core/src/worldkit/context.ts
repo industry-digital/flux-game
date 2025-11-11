@@ -102,8 +102,8 @@ export const createTransformerContext = (
     }
   };
 
-
   // Overloaded declareError function to match ErrorDeclarationProducer interface
+  // `string` support is deprecated, but we need to keep it for backwards compatibility
   function declareError(message: ErrorCode | string, trace: string = ''): void {
     const error = new Error(message as string);
     Error.captureStackTrace(error);

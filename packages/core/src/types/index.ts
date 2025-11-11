@@ -94,6 +94,8 @@ export {
   Describable,
 } from './entity/entity';
 
+export * from './entity/session';
+
 export type {
   ParsedURN
 } from '~/lib/urn';
@@ -113,6 +115,9 @@ export {
   PlaceEntityDescriptor,
   PlaceInput,
 } from './entity/place';
+
+export * from './entity/session';
+export * from './workbench';
 
 export {
   CharacterSkillRecord,
@@ -320,7 +325,6 @@ export {
   Template,
 } from './template';
 
-export * from './entity/session';
 
 export * from './narrative';
 

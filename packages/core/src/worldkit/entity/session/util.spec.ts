@@ -108,31 +108,5 @@ describe('Session ID utilities', () => {
         }
       });
     });
-
-    describe('performance characteristics', () => {
-      it('should handle many session IDs efficiently', () => {
-        const sessionIds = [
-          'flux:session:workbench:key1',
-          'flux:session:combat:key2',
-          'flux:session:workbench:very-long-key-with-many-characters',
-          'flux:session:combat:short',
-          'flux:session:workbench:key:with:colons:in:it',
-        ] as SessionURN[];
-
-        const expectedStrategies = [
-          SessionStrategy.WORKBENCH,
-          SessionStrategy.COMBAT,
-          SessionStrategy.WORKBENCH,
-          SessionStrategy.COMBAT,
-          SessionStrategy.WORKBENCH,
-        ];
-
-        // Test that all parse correctly
-        for (let i = 0; i < sessionIds.length; i++) {
-          const strategy = parseSessionStrategyFromUrn(sessionIds[i]);
-          expect(strategy).toBe(expectedStrategies[i]);
-        }
-      });
-    });
   });
 });

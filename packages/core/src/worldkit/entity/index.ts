@@ -30,3 +30,4 @@ export {
 } from './urn';
 
 export * from './group';
+export * from './session';
