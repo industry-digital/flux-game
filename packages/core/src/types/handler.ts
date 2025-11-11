@@ -44,6 +44,8 @@ export type ErrorDeclarationProducer = {
    * @deprecated
    */
   declareError(message: string, trace?: string): void;
+
+  failed(trace: string, code: ErrorCode): TransformerContext;
 };
 
 export type ErrorDeclarationConsumer = {

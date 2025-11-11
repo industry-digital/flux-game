@@ -6,6 +6,7 @@ import { createMassApi, createMassComputationState } from '~/worldkit/physics/ma
 import { createTransformerContext, createWorldProjection } from '~/worldkit/context';
 import { EventType } from '~/types/event';
 import { RollResultWithoutModifiers } from '~/types/dice';
+import { ErrorCode } from '~/types/error';
 
 /**
  * Factory function for creating mock TransformerContext with sensible defaults
@@ -22,26 +23,38 @@ export const createTestTransformerContext = (overrides?: Partial<TransformerCont
   const impureOps = createPotentiallyImpureOperations();
 
   const defaultContext: TransformerContext = createTransformerContext(
-    (c: TransformerContext) => ({
-      ...c,
-      world: createWorldProjection(),
-      declareEvent: vi.fn((event: any) => {
-        declaredEvents.push(event);
-      }),
-      declareError: vi.fn((error: any) => {
-        declaredErrors.push(error);
-      }),
-      getDeclaredEvents: vi.fn((pattern?: RegExp | EventType) => {
-        return declaredEvents.filter(event => pattern ? (pattern instanceof RegExp ? pattern.test(event.type) : pattern === event.type) : true);
-      }),
-      getDeclaredEventsByCommand: vi.fn((trace: string) => {
-        return declaredEvents.filter(event => event.trace === trace);
-      }),
-      searchCache: mockSearchCache,
-      rollDice: vi.fn(() => ({ values: [10], sum: 10, dice: '1d20', natural: 10, result: 10, bonus: 0 } as RollResultWithoutModifiers)),
-      executeRoll: vi.fn(() => ({ dice: '1d20' , natural: 10, result: 10, values: [10], mods: {} })),
-      ...impureOps,
-    }),
+    (c: TransformerContext) => {
+      const context = {
+        ...c,
+        world: createWorldProjection(),
+        declareEvent: vi.fn((event: any) => {
+          declaredEvents.push(event);
+        }),
+        declareError: vi.fn((code: ErrorCode, trace: string = '') => {
+          declaredErrors.push(code);
+        }),
+        getDeclaredEvents: vi.fn((pattern?: RegExp | EventType) => {
+          return declaredEvents.filter(event => pattern ? (pattern instanceof RegExp ? pattern.test(event.type) : pattern === event.type) : true);
+        }),
+        getDeclaredEventsByCommand: vi.fn((trace: string) => {
+          return declaredEvents.filter(event => event.trace === trace);
+        }),
+        failed: vi.fn((trace: string, code: ErrorCode) => {
+          declaredErrors.push({
+            code,
+            trace,
+            ts: Date.now(),
+            stack: new Error().stack ?? '',
+          });
+          return context as TransformerContext;
+        }),
+        searchCache: mockSearchCache,
+        rollDice: vi.fn(() => ({ values: [10], sum: 10, dice: '1d20', natural: 10, result: 10, bonus: 0 } as RollResultWithoutModifiers)),
+        executeRoll: vi.fn(() => ({ dice: '1d20' , natural: 10, result: 10, values: [10], mods: {} })),
+        ...impureOps,
+      };
+      return context;
+    },
     createWorldProjection(), // world
     schemaManager, // Pass the correct schema manager so all APIs use it
     impureOps, // deps

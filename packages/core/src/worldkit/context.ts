@@ -15,6 +15,8 @@ import { createActorWeaponApi } from '~/worldkit/entity/actor/weapon';
 import { getSchemaTranslation } from '~/narrative/schema';
 import { createPartyApi } from '~/worldkit/entity/group/party';
 import { ErrorCode } from '~/types/error';
+import { debug } from 'console';
+import { GroupApiContext } from '~/worldkit/entity/group/api';
 
 export type MapFunction<T> = (context: T) => T;
 const identity = <T extends any>(context: T): T => context;
@@ -147,8 +149,7 @@ export const createTransformerContext = (
     declaredEventIds.clear();
   };
 
-  // @ts-expect-error - partyApi is not yet defined
-  const context: TransformerContext = {
+  const context: Omit<TransformerContext, 'failed' | 'partyApi'> = {
     resetEvents,
     resetErrors,
     world,
@@ -181,7 +182,13 @@ export const createTransformerContext = (
     ...deps,
   };
 
-  context.partyApi = createPartyApi(context);
+  (context as TransformerContext).failed = (trace: string, code: ErrorCode): TransformerContext => {
+    declareError(code, trace);
+    debug(`Trace ${trace}: code=${code}`);
+    return context as TransformerContext;
+  };
+
+  (context as TransformerContext).partyApi = createPartyApi(context as GroupApiContext);
 
   return map(context as TransformerContext);
 };
