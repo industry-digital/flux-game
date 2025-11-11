@@ -153,13 +153,14 @@ describe('UNEQUIP Command Reducer', () => {
       expectError(result, ErrorCode.INVALID_SESSION);
     });
 
-    it('should error when actor not in combat session', () => {
+    it('should succeed when command.session provided but actor not in combat (command.session is non-authoritative)', () => {
       // Give Bob a weapon to unequip
       const weaponItem = scenario.assignItem(bob, { schema: defaultWeaponSchema.urn });
       context.equipmentApi.equip(bob, weaponItem.id);
 
       // Try to unequip Bob's weapon while referencing the combat session
-      // Bob is not in the combat session, so this should error
+      // Bob is not actually in combat (actor.session is undefined), so this should succeed without costs
+      // command.session is non-authoritative - we only check actor.session
       const command = createMockUnequipCommand((c) => ({
         ...c,
         session: combatSessionApi.session.id,
@@ -168,7 +169,11 @@ describe('UNEQUIP Command Reducer', () => {
       }));
 
       const result = unequipReducer(context, command);
-      expectError(result, ErrorCode.FORBIDDEN);
+
+      // Should succeed because Bob is not in combat (based on actor.session)
+      expect(result.getDeclaredErrors()).toHaveLength(0);
+      expect(result.getDeclaredEvents()).toHaveLength(1);
+      expect(result.equipmentApi.getEquippedWeapon(bob)).toBeNull();
     });
   });
 });

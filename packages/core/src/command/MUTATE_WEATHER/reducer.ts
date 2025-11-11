@@ -3,11 +3,10 @@ import { MutateWeatherCommand } from './types';
 import { Weather } from '~/types/entity/weather';
 import { EventType } from '~/types/event';
 import { WellKnownActor } from '~/types/actor';
+import { withCommandType } from '~/command/withCommandType';
+import { CommandType } from '~/types/intent';
 
-/**
- * Change the `weather` in specific Place
- */
-export const mutateWeatherReducer: PureReducer<TransformerContext, MutateWeatherCommand> = (context, command) => {
+const reducerCore: PureReducer<TransformerContext, MutateWeatherCommand> = (context, command) => {
   const { declareEvent, declareError } = context;
   const { places } = context.world;
   const { placeId } = command.args;
@@ -36,3 +35,11 @@ export const mutateWeatherReducer: PureReducer<TransformerContext, MutateWeather
 
   return context;
 };
+
+/**
+ * Change the `weather` in specific Place
+ */
+export const mutateWeatherReducer: PureReducer<TransformerContext, MutateWeatherCommand> =
+  withCommandType(CommandType.MUTATE_WEATHER,
+    reducerCore,
+  );

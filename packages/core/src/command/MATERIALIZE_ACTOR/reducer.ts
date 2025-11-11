@@ -2,30 +2,16 @@ import { PureReducer, TransformerContext } from '~/types/handler';
 import { MaterializeActorCommand } from './types';
 import { SpecialVisibility } from '~/types/world/visibility';
 import { EventType } from '~/types/event';
+import { withCommandType } from '~/command/withCommandType';
+import { CommandType } from '~/types/intent';
 
 const EMPTY_PAYLOAD: Readonly<Record<string, never>> = Object.freeze({});
 
-export const materializeActorReducer: PureReducer<TransformerContext, MaterializeActorCommand> = (
-  context,
-  command,
-) => {
-  const { declareError, declareEvent } = context;
-  const { actors, places } = context.world;
+const reducerCore: PureReducer<TransformerContext, MaterializeActorCommand> = (context, command) => {
+  const { declareEvent, world } = context;
+  const actor = world.actors[command.args.actorId];
+  const place = world.places[actor.location];
 
-  const actor = actors[command.args.actorId];
-  if (!actor) {
-    declareError('Actor not found in `actors` projection. Did you remember to load it?');
-    return context;
-  }
-
-  const place = places[actor.location];
-  if (!place) {
-    declareError('Place not found in `places` projection. Did you remember to load it?');
-    return context;
-  }
-
-  // This materializes the actor in its current location
-  // FIXME: How do we handle the case where the actor is in stealth? What should be the actor's visibility then?
   place.entities[actor.id] = { vis: SpecialVisibility.VISIBLE_TO_EVERYONE };
 
   declareEvent({
@@ -38,3 +24,8 @@ export const materializeActorReducer: PureReducer<TransformerContext, Materializ
 
   return context;
 };
+
+export const materializeActorReducer: PureReducer<TransformerContext, MaterializeActorCommand> =
+  withCommandType(CommandType.MATERIALIZE_ACTOR,
+    reducerCore,
+  );

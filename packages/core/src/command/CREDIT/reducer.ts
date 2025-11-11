@@ -2,13 +2,17 @@ import { PureReducer, TransformerContext } from '~/types/handler';
 import { CreditCommand } from './types';
 import { createCurrencyTransaction, executeCurrencyTransaction } from '~/worldkit/entity/actor/wallet';
 import { TransactionType } from '~/types/currency';
+import { withCommandType } from '~/command/withCommandType';
+import { CommandType } from '~/types/intent';
+import { ErrorCode } from '~/types/error';
+import { withBasicWorldStateValidation } from '~/command/validation';
 
-export const creditReducer: PureReducer<TransformerContext, CreditCommand> = (context, command) => {
-  const { actors } = context.world;
-  const recipient = actors[command.args.recipient];
+const reducerCore: PureReducer<TransformerContext, CreditCommand> = (context, command) => {
+  const { world, declareError } = context;
+  const recipient = world.actors[command.args.recipient];
 
   if (!recipient) {
-    context.declareError(`CREDIT recipient not found in world projection`, command.id);
+    declareError(ErrorCode.NOT_FOUND, command.id);
     return context;
   }
 
@@ -24,3 +28,10 @@ export const creditReducer: PureReducer<TransformerContext, CreditCommand> = (co
 
   return context;
 };
+
+export const creditReducer: PureReducer<TransformerContext, CreditCommand> =
+  withCommandType(CommandType.CREDIT,
+    withBasicWorldStateValidation(
+      reducerCore,
+    ),
+  );

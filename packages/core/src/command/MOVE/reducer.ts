@@ -3,26 +3,22 @@ import { MoveCommand } from './types';
 import { EventType } from '~/types/event';
 import { Place, Exit } from '~/types/entity/place';
 import { SpecialVisibility } from '~/types/world/visibility';
-import { Direction } from '~/types';
+import { CommandType } from '~/types/intent';
+import { Direction } from '~/types/world/space';
 import { withBasicWorldStateValidation } from '../validation';
+import { withCommandType } from '~/command/withCommandType';
+import { ErrorCode } from '~/types/error';
 
-/**
- * Reducer for MOVE commands
- * Handles actor movement between places using direct world state access
- */
+const reducerCore: PureReducer<TransformerContext, MoveCommand> = (context, command) => {
+  const { world, declareEvent, declareError } = context;
+  const { dest } = command.args;
+  const actor = world.actors[command.actor];
 
-export const actorMovementReducer: PureReducer<TransformerContext, MoveCommand> = withBasicWorldStateValidation(
-  (context, command) => {
-    const { world, declareEvent, declareError } = context;
-    const { dest } = command.args;
-    const { actors, places } = world;
-    const actor = actors[command.actor];
-
-    // Actor existence and location already validated by withBasicWorldStateValidation
-    const origin: Place = places[actor.location];
+  // Actor existence and location already validated by withBasicWorldStateValidation
+  const origin: Place = world.places[actor.location];
 
   // Ensure destination is a valid place
-  const destination: Place = places[dest];
+  const destination: Place = world.places[dest];
   if (!destination) {
     declareError('Movement destination not found in `places` projection');
     return context;
@@ -39,7 +35,7 @@ export const actorMovementReducer: PureReducer<TransformerContext, MoveCommand> 
   }
 
   if (!exit) {
-    declareError('There is no exit that connects the origin and destination.');
+    declareError(ErrorCode.PRECONDITION_FAILED, command.id);
     return context;
   }
 
@@ -67,6 +63,16 @@ export const actorMovementReducer: PureReducer<TransformerContext, MoveCommand> 
     },
   });
 
-    return context;
-  }
-);
+  return context;
+};
+
+/**
+ * Reducer for MOVE commands
+ * Handles actor movement between places using direct world state access
+ */
+export const actorMovementReducer: PureReducer<TransformerContext, MoveCommand> =
+  withCommandType(CommandType.MOVE,
+    withBasicWorldStateValidation(
+      reducerCore,
+    ),
+  );

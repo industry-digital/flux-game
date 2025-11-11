@@ -12,6 +12,7 @@ import { createCreditCommand } from '~/testing/command/factory/currency';
 import { ALICE_ID, DEFAULT_LOCATION } from '~/testing/constants';
 import { Actor } from '~/types/entity/actor';
 import { createDefaultActors } from '~/testing/actors';
+import { ErrorCode } from '~/types/error';
 
 describe('CREDIT Command Reducer', () => {
   let alice: Actor;
@@ -23,6 +24,8 @@ describe('CREDIT Command Reducer', () => {
   beforeEach(() => {
     const place = createPlace((p) => ({ ...p, id: DEFAULT_LOCATION }));
     ({ alice } = createDefaultActors(DEFAULT_LOCATION));
+
+    expect(alice.location).toBe(DEFAULT_LOCATION);
 
     context = createTransformerContext((c) => ({
       ...c,
@@ -202,10 +205,7 @@ describe('CREDIT Command Reducer', () => {
       const resultContext = creditReducer(context, command);
 
       expect(context.declareError).toHaveBeenCalledTimes(1);
-      expect(context.declareError).toHaveBeenCalledWith(
-        'CREDIT recipient not found in world projection',
-        command.id
-      );
+      expect(context.declareError).toHaveBeenCalledWith(ErrorCode.NOT_FOUND, command.id);
       expect(context.declareEvent).not.toHaveBeenCalled();
       expect(resultContext).toBe(context);
     });

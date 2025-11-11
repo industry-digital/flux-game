@@ -159,7 +159,7 @@ export type PureHandlerInterface<
   /**
    * @deprecated See `type` property
    */
-  handles: (input: any) => input is I;
+  handles?: (input: any) => input is I;
 
   dependencies: PureHandlerImplementation<C, I>[];
   reduce: PureReducer<C, I>;

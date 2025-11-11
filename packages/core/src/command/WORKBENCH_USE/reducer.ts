@@ -1,18 +1,14 @@
 import { PureReducer, TransformerContext } from '~/types/handler';
 import { UseWorkbenchCommand } from './types';
 import { createWorkbenchSessionApi } from '~/worldkit/workbench/session';
-import { ErrorCode } from '~/types/error';
+import { withCommandType } from '~/command/withCommandType';
+import { CommandType } from '~/types/intent';
+import { withBasicWorldStateValidation } from '~/command/validation';
 
-export const activateWorkbenchReducer: PureReducer<TransformerContext, UseWorkbenchCommand> = (context, command) => {
-  const { declareError } = context;
-  const { actors } = context.world;
+const reducerCore: PureReducer<TransformerContext, UseWorkbenchCommand> = (context, command) => {
+  const actor = context.world.actors[command.actor];
 
-  // Ensure actor exists
-  const actor = actors[command.actor!];
-  if (!actor) {
-    declareError(ErrorCode.PRECONDITION_FAILED, command.id);
-    return context;
-  }
+  // TODO: Check if there is a workbench entity at actor's `location`.
 
   // Create or retrieve workbench session using the session API
   const { session, isNew } = createWorkbenchSessionApi(
@@ -29,3 +25,10 @@ export const activateWorkbenchReducer: PureReducer<TransformerContext, UseWorkbe
 
   return context;
 };
+
+export const activateWorkbenchReducer: PureReducer<TransformerContext, UseWorkbenchCommand> =
+  withCommandType(CommandType.WORKBENCH_USE,
+    withBasicWorldStateValidation(
+      reducerCore,
+    ),
+  );

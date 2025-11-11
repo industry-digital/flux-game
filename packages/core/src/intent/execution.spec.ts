@@ -130,8 +130,14 @@ describe('Command Execution', () => {
       const handlers1 = getAvailableHandlers();
       const handlers2 = getAvailableHandlers();
 
-      // Should return the same cached instance
-      expect(handlers1).toBe(handlers2);
+      // Arrays are different instances (created from Map.values())
+      // but should contain the same handler instances
+      expect(handlers1).toHaveLength(handlers2.length);
+
+      // Verify handler instances are identical (same objects in memory)
+      for (let i = 0; i < handlers1.length; i++) {
+        expect(handlers1[i]).toBe(handlers2[i]);
+      }
     });
 
     it('should clear handler cache when requested', () => {

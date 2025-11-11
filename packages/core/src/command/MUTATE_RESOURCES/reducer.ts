@@ -1,28 +1,27 @@
 import { PureReducer, TransformerContext } from '~/types/handler';
 import { MutateResourcesCommand } from './types';
-import { EventType, ResourcesDidChangeInput } from '~/types/event';
+import { EventType } from '~/types/event';
 import { WellKnownActor } from '~/types/actor';
+import { withCommandType } from '~/command/withCommandType';
+import { CommandType } from '~/types/intent';
+import { ErrorCode } from '~/types/error';
 
-/**
- * Change the `resources` in specific Place
- */
-export const mutateResourcesReducer: PureReducer<TransformerContext, MutateResourcesCommand> = (context, command) => {
+const reducerCore: PureReducer<TransformerContext, MutateResourcesCommand> = (context, command) => {
   const { declareEvent, declareError } = context;
-  const { places } = context.world;
   const { placeId, resources } = command.args;
-
-  const place = places[placeId];
+  const place = context.world.places[placeId];
 
   if (!place) {
-    declareError(`Place ${placeId} not found`);
+    declareError(ErrorCode.FAILED, command.id);
     return context;
   }
 
   const previous = place.resources;
 
+  // Direct mutation of the place's resources
   place.resources = resources;
 
-  const event: ResourcesDidChangeInput = {
+  declareEvent({
     type: EventType.RESOURCES_DID_CHANGE,
     trace: command.id,
     actor: WellKnownActor.SYSTEM,
@@ -31,9 +30,15 @@ export const mutateResourcesReducer: PureReducer<TransformerContext, MutateResou
       from:  previous,
       to: resources,
     },
-  };
-
-  declareEvent(event);
+  });
 
   return context;
 };
+
+/**
+ * Change the `resources` in specific Place
+ */
+export const mutateResourcesReducer: PureReducer<TransformerContext, MutateResourcesCommand> =
+  withCommandType(CommandType.MUTATE_RESOURCES,
+    reducerCore,
+  );

@@ -2,6 +2,10 @@ import { PureReducer, TransformerContext } from '~/types/handler';
 import { CommandType } from '~/types/intent';
 import { PURE_GAME_LOGIC_HANDLERS } from '~/handlers';
 
+// Re-export utilities
+export { withCommandType } from './withCommandType';
+export { withCombatCost } from './withCombatCost';
+
 // Registry mapping CommandType to transformer (reducer) functions
 export const COMMAND_TRANSFORMERS: Partial<Record<CommandType, PureReducer<TransformerContext, any>>> =
   PURE_GAME_LOGIC_HANDLERS.reduce((acc, HandlerClass) => {

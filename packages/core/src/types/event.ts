@@ -162,14 +162,18 @@ type SessionRelated = {
 export type ActorWasCreated = EventBase & ActorWasCreatedInput;
 export type ActorWasCreatedInput = AbstractWorldEventInput<
   EventType.ACTOR_WAS_CREATED,
-  {},
+  {
+    newActorId: ActorURN;
+  },
   WellKnownActor.SYSTEM
 >;
 
 export type PlaceWasCreated = EventBase & PlaceWasCreatedInput;
 export type PlaceWasCreatedInput = AbstractWorldEventInput<
   EventType.PLACE_WAS_CREATED,
-  {},
+  {
+    newPlaceId: PlaceURN;
+  },
   WellKnownActor.SYSTEM
 >;
 

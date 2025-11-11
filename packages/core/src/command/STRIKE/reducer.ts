@@ -3,30 +3,37 @@ import { StrikeCommand } from './types';
 import { createCombatantApi } from '~/worldkit/combat/combatant';
 import { withBasicWorldStateValidation } from '../validation';
 import { withExistingCombatSession, withPreventCrossSessionTargeting } from '~/worldkit/combat/validation';
+import { withCommandType } from '~/command/withCommandType';
+import { CommandType } from '~/types/intent';
 
-export const strikeReducer: PureReducer<TransformerContext, StrikeCommand> = withBasicWorldStateValidation(
-  withExistingCombatSession(
-    withPreventCrossSessionTargeting(
-      (context, command, session) => {
-        const { actors } = context.world;
-        const actor = actors[command.actor];
+const reducerCore: PureReducer<TransformerContext, StrikeCommand> = (context, command, session) => {
+  const { actors } = context.world;
+  const actor = actors[command.actor];
 
-        const { combatant, ...combatantApi } = createCombatantApi(context, session, actor);
+  const { combatant, ...combatantApi } = createCombatantApi(context, session, actor);
 
-        // Use explicit target from command, or fall back to combatant's current target
-        const targetId = command.args.target || combatant.target;
+  // Use explicit target from command, or fall back to combatant's current target
+  const targetId = command.args.target || combatant.target;
 
-        if (!targetId) {
-          context.declareError('No target specified and no current target set. Use "target <name>" first or "strike <name>".', command.id);
-          return context;
-        }
+  if (!targetId) {
+    context.declareError('No target specified and no current target set. Use "target <name>" first or "strike <name>".', command.id);
+    return context;
+  }
 
-        // Use the combatant API's strike method (primitive action)
-        combatantApi.strike(targetId, command.id);
+  // Use the combatant API's strike method (primitive action)
+  combatantApi.strike(targetId, command.id);
 
-        return context;
-      },
-      true // Target is optional
-    )
-  )
-);
+  return context;
+};
+
+export const strikeReducer: PureReducer<TransformerContext, StrikeCommand> =
+  withCommandType(CommandType.STRIKE,
+    withBasicWorldStateValidation(
+      withExistingCombatSession(
+        withPreventCrossSessionTargeting(
+          reducerCore,
+          true // Target is optional
+        ),
+      ),
+    ),
+  );

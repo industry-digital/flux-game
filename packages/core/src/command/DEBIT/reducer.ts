@@ -2,19 +2,23 @@ import { PureReducer, TransformerContext } from '~/types/handler';
 import { DebitCommand } from './types';
 import { createCurrencyTransaction, executeCurrencyTransaction, hasEnoughFunds } from '~/worldkit/entity/actor/wallet';
 import { TransactionType } from '~/types/currency';
+import { withCommandType } from '~/command/withCommandType';
+import { CommandType } from '~/types/intent';
+import { withBasicWorldStateValidation } from '~/command/validation';
+import { ErrorCode } from '~/types/error';
 
-export const debitReducer: PureReducer<TransformerContext, DebitCommand> = (context, command) => {
-  const { actors } = context.world;
-  const recipient = actors[command.args.recipient];
+const reducerCore: PureReducer<TransformerContext, DebitCommand> = (context, command) => {
+  const { world, declareError } = context;
+  const recipient = world.actors[command.args.recipient];
 
   if (!recipient) {
-    context.declareError(`DEBIT recipient not found in world projection`, command.id);
+    declareError(ErrorCode.NOT_FOUND, command.id);
     return context;
   }
 
   // Check if the recipient has enough funds
   if (!hasEnoughFunds(recipient, command.args.currency, command.args.amount)) {
-    context.declareError(`DEBIT recipient has insufficient funds`, command.id);
+    declareError(ErrorCode.PRECONDITION_FAILED, command.id);
     return context;
   }
 
@@ -30,3 +34,10 @@ export const debitReducer: PureReducer<TransformerContext, DebitCommand> = (cont
 
   return context;
 };
+
+export const debitReducer: PureReducer<TransformerContext, DebitCommand> =
+  withCommandType(CommandType.DEBIT,
+    withBasicWorldStateValidation(
+      reducerCore,
+    ),
+  );

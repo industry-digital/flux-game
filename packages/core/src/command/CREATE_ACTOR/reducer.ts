@@ -1,37 +1,29 @@
 import { PureReducer, TransformerContext } from '~/types/handler';
-import { CreateActorCommand } from './types';
 import { createActor } from '~/worldkit/entity/actor';
+import { withCommandType } from '~/command/withCommandType';
+import { CommandType } from '~/types/intent';
+import { CreateActorCommand } from './types';
 import { EventType } from '~/types/event';
-import { WellKnownPlace } from '~/types/world/space';
 import { WellKnownActor } from '~/types/actor';
 
-export const createActorCommandReducer: PureReducer<TransformerContext, CreateActorCommand> = (
-  context,
-  command,
-) => {
-  const { declareEvent, declareError } = context;
-  const { actors } = context.world;
-
+const reducerCore: PureReducer<TransformerContext, CreateActorCommand> = (context, command) => {
   const actor = createActor(command.args);
+  context.world.actors[actor.id] = actor;
 
-  if (actors[actor.id]) {
-    declareError(`Actor ${actor.id} already exists in world projection`);
-    return context;
-  }
-
-  // All actors materialize at the world origin by default
-  actor.location ??= WellKnownPlace.ORIGIN;
-
-  // Add the actor to the world
-  actors[actor.id] = actor;
-
-  declareEvent({
+  context.declareEvent({
     trace: command.id,
     type: EventType.ACTOR_WAS_CREATED,
     actor: WellKnownActor.SYSTEM,
     location: actor.location,
-    payload: {},
+    payload: {
+      newActorId: actor.id,
+    },
   });
 
   return context;
 };
+
+export const createActorCommandReducer: PureReducer<TransformerContext, CreateActorCommand> =
+  withCommandType(CommandType.CREATE_ACTOR,
+    reducerCore,
+  );

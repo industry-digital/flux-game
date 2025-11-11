@@ -1,4 +1,4 @@
-import { Transformer, TransformerContext } from '~/types/handler';
+import { PureReducer, Transformer, TransformerContext } from '~/types/handler';
 import { UnequipCommand } from './types';
 import { withBasicWorldStateValidation } from '../validation';
 import { withExistingCombatSession } from '~/worldkit/combat/validation';
@@ -8,11 +8,15 @@ import { createWorldEvent } from '~/worldkit/event';
 import { ActorDidUnequipWeapon, EventType } from '~/types/event';
 import { ActionCost } from '~/types/combat';
 import { ErrorCode } from '~/types/error';
+import { withCommandType } from '~/command/withCommandType';
+import { CommandType } from '~/types/intent';
+import { parseSessionStrategyFromUrn } from '~/worldkit/session/util';
+import { SessionStrategy } from '~/types/entity/session';
 
 /**
  * Core UNEQUIP command logic (without combat costs)
  */
-const unequipReducerCore: Transformer<UnequipCommand> = (context, command) => {
+const unequipOutsideOfCombat: Transformer<UnequipCommand> = (context, command) => {
   const { actors } = context.world;
   const actor = actors[command.actor];
   const item = actor.inventory.items[command.args.item];
@@ -56,25 +60,40 @@ const unequipReducerCore: Transformer<UnequipCommand> = (context, command) => {
 const FREE_ACTION_COST: Readonly<ActionCost> = Object.freeze({ energy: 0, ap: 0 });
 
 /**
- * Calculate AP cost for equipping a weapon
+ * Calculate AP cost for unequipping a weapon
  */
 const calculateUnequipCost = (context: TransformerContext, command: UnequipCommand): ActionCost => {
   return FREE_ACTION_COST;
 };
 
-export const unequipReducer: Transformer<UnequipCommand> = withBasicWorldStateValidation(
-  (context, command) => {
-    // If no session provided, execute without combat costs (out of combat)
-    if (!command.session) {
-      return unequipReducerCore(context, command);
-    }
+const reducerCore: PureReducer<TransformerContext, UnequipCommand> = (context, command) => {
+  const actor = context.world.actors[command.actor];
+  let inCombat: boolean = false;
 
-    // If session provided, validate combat context and apply costs
-    return withExistingCombatSession(
-      withCombatCost(
-        unequipReducerCore,
-        calculateUnequipCost
-      )
-    )(context, command);
+  if (actor.session) {
+    inCombat = parseSessionStrategyFromUrn(actor.session) === SessionStrategy.COMBAT;
   }
-);
+
+  if (!inCombat) {
+    return unequipOutsideOfCombat(context, command);
+  }
+
+  // If session provided, validate combat context and apply costs
+  return withExistingCombatSession(
+    withCombatCost(
+      unequipOutsideOfCombat,
+      calculateUnequipCost
+    )
+  )(context, command);
+};
+
+/**
+ * UNEQUIP command reducer with conditional combat cost support
+ * Works both in and out of combat, but only applies AP costs when in combat
+ */
+export const unequipReducer: Transformer<UnequipCommand> =
+  withCommandType(CommandType.UNEQUIP,
+    withBasicWorldStateValidation(
+      reducerCore,
+    ),
+  );

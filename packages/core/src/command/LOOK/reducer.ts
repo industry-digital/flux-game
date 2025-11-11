@@ -4,6 +4,9 @@ import { LookCommand } from './types';
 import { ActorURN, ItemURN, PlaceURN } from '~/types/taxonomy';
 import { EntityType } from '~/types/entity/entity';
 import { parseEntityTypeFromURN } from '~/worldkit/entity/urn';
+import { withCommandType } from '~/command/withCommandType';
+import { CommandType } from '~/types/intent';
+import { withBasicWorldStateValidation } from '~/command/validation';
 
 const declareLookEvent = (context: TransformerContext, command: LookCommand, target: ActorURN | PlaceURN | ItemURN) => {
   context.declareEvent({
@@ -89,15 +92,7 @@ export const lookAtItemReducer: PureReducer<TransformerContext, LookCommand> = (
   return context;
 };
 
-/**
- * Rules for looking at an entity:
- * - Actor may look only at Actors in the same `location` as the actor
- * - Actor may look only at the Place that the actor is in
- * - Actor may look only at these items:
- *   - Items in the actor's inventory
- *   - Items in the same `location` as the actor
- */
-export const lookReducer: PureReducer<TransformerContext, LookCommand> = (context, command) => {
+const lookReducerCore: PureReducer<TransformerContext, LookCommand> = (context, command) => {
   const { declareError } = context;
   const { places, actors } = context.world;
   const place = places[command.location!];
@@ -130,3 +125,18 @@ export const lookReducer: PureReducer<TransformerContext, LookCommand> = (contex
       return context;
   }
 };
+
+/**
+ * Rules for looking at an entity:
+ * - Actor may look only at Actors in the same `location` as the actor
+ * - Actor may look only at the Place that the actor is in
+ * - Actor may look only at these items:
+ *   - Items in the actor's inventory
+ *   - Items in the same `location` as the actor
+ */
+export const lookReducer: PureReducer<TransformerContext, LookCommand> =
+  withCommandType(CommandType.LOOK,
+    withBasicWorldStateValidation(
+      lookReducerCore
+    )
+  );

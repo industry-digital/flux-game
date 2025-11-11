@@ -13,6 +13,7 @@ import { Actor } from '~/types/entity/actor';
 import { createDefaultActors } from '~/testing/actors';
 import { createWorldScenario } from '~/worldkit/scenario';
 import { DebitCommand } from '~/command/DEBIT/types';
+import { ErrorCode } from '~/types/error';
 
 type Transform<T> = (x: T) => T;
 const identity: Transform<any> = (x: any) => x;
@@ -143,10 +144,7 @@ describe('DEBIT Command Reducer', () => {
       const resultContext = debitReducer(context, command);
 
       expect(context.declareError).toHaveBeenCalledTimes(1);
-      expect(context.declareError).toHaveBeenCalledWith(
-        'DEBIT recipient has insufficient funds',
-        command.id
-      );
+      expect(context.declareError).toHaveBeenCalledWith(ErrorCode.PRECONDITION_FAILED, command.id);
       expect(context.declareEvent).not.toHaveBeenCalled();
       expect(resultContext).toBe(context);
     });
@@ -248,10 +246,7 @@ describe('DEBIT Command Reducer', () => {
       const resultContext = debitReducer(context, command);
 
       expect(context.declareError).toHaveBeenCalledTimes(1);
-      expect(context.declareError).toHaveBeenCalledWith(
-        'DEBIT recipient not found in world projection',
-        command.id
-      );
+      expect(context.declareError).toHaveBeenCalledWith(ErrorCode.NOT_FOUND, command.id);
       expect(context.declareEvent).not.toHaveBeenCalled();
       expect(resultContext).toBe(context);
     });
@@ -419,10 +414,7 @@ describe('DEBIT Command Reducer', () => {
       if ((context.declareError as any).mock?.calls?.length > 0) {
         // If insufficient funds, balance should remain unchanged
         expect(getBalance(alice, CurrencyType.SCRAP)).toBe(Number.MAX_SAFE_INTEGER);
-        expect(context.declareError).toHaveBeenCalledWith(
-          'DEBIT recipient has insufficient funds',
-          command.id
-        );
+        expect(context.declareError).toHaveBeenCalledWith(ErrorCode.PRECONDITION_FAILED, command.id);
       } else {
         // If successful, should debit the absolute value
         expect(getBalance(alice, CurrencyType.SCRAP)).toBe(Number.MAX_SAFE_INTEGER - Math.abs(Number.MIN_SAFE_INTEGER));

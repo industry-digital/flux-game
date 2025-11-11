@@ -208,8 +208,10 @@ describe('createTransformerContext', () => {
         location: 'flux:place:test' as PlaceURN,
         actor: WellKnownActor.SYSTEM,
         trace: 'test-command',
-        payload: {}
-      };
+        payload: {
+          newActorId: 'flux:actor:test' as ActorURN,
+        }
+      } as any;
 
       context.declareEvent(eventInput);
 

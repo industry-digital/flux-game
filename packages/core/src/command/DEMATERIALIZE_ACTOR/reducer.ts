@@ -1,32 +1,21 @@
 import { PureReducer, TransformerContext } from '~/types/handler';
 import { DematerializeActorCommand } from './types';
 import { EventType } from '~/types/event';
+import { CommandType } from '~/types/intent';
+import { withCommandType } from '~/command/withCommandType';
+import { withBasicWorldStateValidation } from '~/command/validation';
+
 
 export const EMPTY_PAYLOAD: Readonly<Record<string, never>> = Object.freeze({});
 
-export const dematerializeActorReducer: PureReducer<TransformerContext, DematerializeActorCommand> = (
-  context,
-  command,
-) => {
-  const { declareError, declareEvent } = context;
-  const { actors, places } = context.world;
-  const actor = actors[command.args.actorId];
-
-  if (!actor) {
-    declareError('Actor not found in world projection');
-    return context;
-  }
-
-  const place = places[actor.location];
-  if (!place) {
-    declareError('Place not found in `places` projection. Did you remember to load it?');
-    return context;
-  }
+const reducerCore: PureReducer<TransformerContext, DematerializeActorCommand> = (context, command) => {
+  const actor = context.world.actors[command.actor];
+  const place = context.world.places[actor.location];
 
   // Remove the actor from the place
   delete place.entities[actor.id];
 
-  declareEvent({
+  context.declareEvent({
     type: EventType.ACTOR_DID_DEMATERIALIZE,
     actor: actor.id,
     location: place.id,
@@ -36,3 +25,10 @@ export const dematerializeActorReducer: PureReducer<TransformerContext, Demateri
 
   return context;
 };
+
+export const dematerializeActorReducer: PureReducer<TransformerContext, DematerializeActorCommand> =
+  withCommandType(CommandType.DEMATERIALIZE_ACTOR,
+    withBasicWorldStateValidation(
+      reducerCore,
+    ),
+  );

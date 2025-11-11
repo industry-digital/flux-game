@@ -1,4 +1,4 @@
-import { Transformer, TransformerContext } from '~/types/handler';
+import { PureReducer, Transformer, TransformerContext } from '~/types/handler';
 import { EquipCommand } from './types';
 import { withBasicWorldStateValidation } from '../validation';
 import { withExistingCombatSession } from '~/worldkit/combat/validation';
@@ -9,11 +9,15 @@ import { ActorDidEquipWeapon, EventType } from '~/types/event';
 import { ActionCost } from '~/types/combat';
 import { WeaponSchema } from '~/types/schema/weapon';
 import { ErrorCode } from '~/types/error';
+import { withCommandType } from '~/command/withCommandType';
+import { CommandType } from '~/types/intent';
+import { parseSessionStrategyFromUrn } from '~/worldkit/session/util';
+import { SessionStrategy } from '~/types/entity/session';
 
 /**
  * Core EQUIP command logic (without combat costs)
  */
-const equipReducerCore: Transformer<EquipCommand> = (context, command) => {
+const equipOutsideOfCombat: Transformer<EquipCommand> = (context, command) => {
   const { actors } = context.world;
   const actor = actors[command.actor];
   const item = actor.inventory.items[command.args.item];
@@ -57,23 +61,34 @@ const calculateEquipCost = (context: TransformerContext, command: EquipCommand):
   return { energy: 0, ap: setupTimeSeconds };
 };
 
+const reducerCore: PureReducer<TransformerContext, EquipCommand> = (context, command) => {
+  const actor = context.world.actors[command.actor];
+  let inCombat: boolean = false;
+
+  if (actor.session) {
+    inCombat = parseSessionStrategyFromUrn(actor.session) === SessionStrategy.COMBAT;
+  }
+
+  if (!inCombat) {
+    return equipOutsideOfCombat(context, command);
+  }
+
+  // If session provided, validate combat context and apply costs
+  return withExistingCombatSession(
+    withCombatCost(
+      equipOutsideOfCombat,
+      calculateEquipCost
+    )
+  )(context, command);
+};
+
 /**
  * EQUIP command reducer with conditional combat cost support
  * Works both in and out of combat, but only applies AP costs when in combat
  */
-export const equipReducer: Transformer<EquipCommand> = withBasicWorldStateValidation(
-  (context, command) => {
-    // If no session provided, execute without combat costs (out of combat)
-    if (!command.session) {
-      return equipReducerCore(context, command);
-    }
-
-    // If session provided, validate combat context and apply costs
-    return withExistingCombatSession(
-      withCombatCost(
-        equipReducerCore,
-        calculateEquipCost
-      )
-    )(context, command);
-  }
-);
+export const equipReducer: Transformer<EquipCommand> =
+  withCommandType(CommandType.EQUIP,
+    withBasicWorldStateValidation(
+      reducerCore,
+    ),
+  );
