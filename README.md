@@ -2,10 +2,12 @@
 
 1. [Party Mechanics E2E With Networking](./packages/guide/src/party/mechanics.md)
 1. [Combat: Damage and Injury Mechanics](./docs/gameplay/overview.md)
+1. Items in Place modeling
 1. GET
 1. DROP
 1. Combat: Injury Mechanics + dropping weapon
-1. [Workbench: Basic Mechanics](./docs/gameplay/workbench.md)
+1. [Workbench: Inventory Management Mechanics](./docs/gameplay/workbench.md)
+1. [Workbench: Shell Configuration Mechanics](./docs/gameplay/workbench.md)
 1. [Combat: Capacitor Mechanics](./docs/gameplay/overview.md)
 1. [Combat: DASH](./docs/gameplay/combat/overview.md)
 1. [DASH](./docs/gameplay/overview.md)
