@@ -8,18 +8,16 @@ import { withBasicWorldStateValidation } from '~/command/validation';
 import { ErrorCode } from '~/types/error';
 
 const reducerCore: PureReducer<TransformerContext, DebitCommand> = (context, command) => {
-  const { world, declareError } = context;
+  const { world, failed } = context;
   const recipient = world.actors[command.args.recipient];
 
   if (!recipient) {
-    declareError(ErrorCode.NOT_FOUND, command.id);
-    return context;
+    return failed(command.id, ErrorCode.INVALID_RECIPIENT);
   }
 
   // Check if the recipient has enough funds
   if (!hasEnoughFunds(recipient, command.args.currency, command.args.amount)) {
-    declareError(ErrorCode.PRECONDITION_FAILED, command.id);
-    return context;
+    return failed(command.id, ErrorCode.INSUFFICIENT_FUNDS);
   }
 
   const transaction = createCurrencyTransaction({

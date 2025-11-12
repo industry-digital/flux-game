@@ -8,9 +8,9 @@ import { withCommandType } from '~/command/withCommandType';
 import { CommandType } from '~/types';
 
 const reducerCore: PureReducer<TransformerContext, AttackCommand> = (context, command, session) => {
-  const { actors } = context.world;
-  const actor = actors[command.actor];
-  const targetActor = actors[command.args.target];
+  const { world } = context;
+  const actor = world.actors[command.actor];
+  const targetActor = world.actors[command.args.target];
 
   // Get combat session API for the existing session
   const { getCombatantApi, addCombatant, startCombat } = createCombatSessionApi(context, actor.location, session.id);

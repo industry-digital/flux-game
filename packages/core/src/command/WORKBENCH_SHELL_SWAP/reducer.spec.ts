@@ -143,7 +143,7 @@ describe('WORKBENCH_SHELL_SWAP Command Reducer', () => {
       // Verify error was declared
       const errors = context.getDeclaredErrors();
       expect(errors.length).toBe(1);
-      expect(errors[0].code).toBe(ErrorCode.NOT_FOUND);
+      expect(errors[0].code).toBe(ErrorCode.SHELL_NOT_FOUND);
 
       // Verify no shell swap occurred
       expect(alice.currentShell).toBe('1');
@@ -211,7 +211,7 @@ describe('WORKBENCH_SHELL_SWAP Command Reducer', () => {
       // Should error since empty string won't match any shell
       const errors = context.getDeclaredErrors();
       expect(errors.length).toBe(1);
-      expect(errors[0].code).toBe(ErrorCode.NOT_FOUND);
+      expect(errors[0].code).toBe(ErrorCode.SHELL_NOT_FOUND);
     });
 
     it('should handle whitespace-only shell name', () => {
@@ -232,7 +232,7 @@ describe('WORKBENCH_SHELL_SWAP Command Reducer', () => {
       // Should error since whitespace won't match any shell
       const errors = context.getDeclaredErrors();
       expect(errors.length).toBe(1);
-      expect(errors[0].code).toBe(ErrorCode.NOT_FOUND);
+      expect(errors[0].code).toBe(ErrorCode.SHELL_NOT_FOUND);
     });
   });
 });

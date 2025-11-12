@@ -115,7 +115,7 @@ describe('EQUIP Command Reducer', () => {
       delete alice.inventory.items[DEFAULT_WEAPON];
       const command = createMockEquipCommand();
       const result = equipReducer(context, command);
-      expectError(result, ErrorCode.INVALID_TARGET);
+      expectError(result, ErrorCode.ITEM_NOT_FOUND);
     });
 
     // Only weapons are supported at the moment

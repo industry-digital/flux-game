@@ -7,13 +7,12 @@ import { CommandType } from '~/types/intent';
 import { ErrorCode } from '~/types/error';
 
 const reducerCore: PureReducer<TransformerContext, MutateResourcesCommand> = (context, command) => {
-  const { declareEvent, declareError } = context;
+  const { world, failed, declareEvent } = context;
   const { placeId, resources } = command.args;
-  const place = context.world.places[placeId];
+  const place = world.places[placeId];
 
   if (!place) {
-    declareError(ErrorCode.FAILED, command.id);
-    return context;
+    return failed(command.id, ErrorCode.PLACE_NOT_FOUND);
   }
 
   const previous = place.resources;

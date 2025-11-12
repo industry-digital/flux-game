@@ -3,13 +3,12 @@ import { AcceptPartyInvitationCommand } from './types';
 import { withBasicWorldStateValidation } from '../validation';
 import { withPartyInvitee } from '../party';
 import { ErrorCode } from '~/types/error';
-import { ActorDidAcceptPartyInvitation, ActorDidJoinParty, EventType } from '~/types/event';
-import { createWorldEvent } from '~/worldkit/event';
+import { EventType } from '~/types/event';
 import { withCommandType } from '~/command/withCommandType';
 import { CommandType } from '~/types/intent';
 
 const reducerCore: PureReducer<TransformerContext, AcceptPartyInvitationCommand> = (context, command, party) => {
-  const { world, partyApi, declareEvent, declareError } = context;
+  const { world, failed, partyApi, declareEvent } = context;
   const invitee = world.actors[command.actor];
 
   if (partyApi.isPartyMember(party, command.actor)) {
@@ -21,12 +20,12 @@ const reducerCore: PureReducer<TransformerContext, AcceptPartyInvitationCommand>
     partyApi.acceptInvitation(party, invitee.id);
   } catch (error) {
     // Handle cases like: no pending invitation, already a member, etc.
-    declareError(ErrorCode.INVALID_TARGET, command.id);
+    failed(command.id, ErrorCode.FORBIDDEN);
     return context;
   }
 
   // Emit event that the invitee accepted the invitation
-  const didAcceptPartyInvitationEvent: ActorDidAcceptPartyInvitation = createWorldEvent({
+  declareEvent({
     type: EventType.ACTOR_DID_ACCEPT_PARTY_INVITATION,
     trace: command.id,
     location: invitee.location,
@@ -39,7 +38,7 @@ const reducerCore: PureReducer<TransformerContext, AcceptPartyInvitationCommand>
   });
 
   // Emit event that the invitee joined the party
-  const didJoinPartyEvent: ActorDidJoinParty = createWorldEvent({
+  declareEvent({
     type: EventType.ACTOR_DID_JOIN_PARTY,
     trace: command.id,
     location: invitee.location,
@@ -48,9 +47,6 @@ const reducerCore: PureReducer<TransformerContext, AcceptPartyInvitationCommand>
       partyId: party.id,
     }
   });
-
-  declareEvent(didAcceptPartyInvitationEvent);
-  declareEvent(didJoinPartyEvent);
 
   return context;
 };

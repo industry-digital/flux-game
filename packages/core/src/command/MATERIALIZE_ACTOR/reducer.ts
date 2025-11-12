@@ -8,7 +8,7 @@ import { CommandType } from '~/types/intent';
 const EMPTY_PAYLOAD: Readonly<Record<string, never>> = Object.freeze({});
 
 const reducerCore: PureReducer<TransformerContext, MaterializeActorCommand> = (context, command) => {
-  const { declareEvent, world } = context;
+  const { world, declareEvent } = context;
   const actor = world.actors[command.args.actorId];
   const place = world.places[actor.location];
 

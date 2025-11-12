@@ -8,6 +8,7 @@ import { WellKnownActor } from '~/types/actor';
 
 const reducerCore: PureReducer<TransformerContext, CreateActorCommand> = (context, command) => {
   const actor = createActor(command.args);
+
   context.world.actors[actor.id] = actor;
 
   context.declareEvent({

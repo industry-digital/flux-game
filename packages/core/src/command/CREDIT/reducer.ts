@@ -8,12 +8,11 @@ import { ErrorCode } from '~/types/error';
 import { withBasicWorldStateValidation } from '~/command/validation';
 
 const reducerCore: PureReducer<TransformerContext, CreditCommand> = (context, command) => {
-  const { world, declareError } = context;
+  const { world, failed } = context;
   const recipient = world.actors[command.args.recipient];
 
   if (!recipient) {
-    declareError(ErrorCode.NOT_FOUND, command.id);
-    return context;
+    return failed(command.id, ErrorCode.INVALID_RECIPIENT);
   }
 
   const transaction = createCurrencyTransaction({

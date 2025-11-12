@@ -17,7 +17,7 @@ const DEFAULT_MOVEMENT_OPTIONS: MovementOptions = {
 };
 
 const reducerCore: PureReducer<TransformerContext, RetreatCommand> = (context, command, session) => {
-  const { world, declareError } = context;
+  const { world, failed } = context;
   const actor = world.actors[command.actor];
   const { getCombatantApi } = createCombatSessionApi(context, actor.location, session.id);
   const { retreat } = getCombatantApi(actor.id);
@@ -36,7 +36,7 @@ const reducerCore: PureReducer<TransformerContext, RetreatCommand> = (context, c
       break;
 
     default:
-      declareError(ErrorCode.INVALID_ACTION, command.id);
+      failed(command.id, ErrorCode.INVALID_SYNTAX);
       break;
   }
 

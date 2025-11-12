@@ -8,6 +8,7 @@ import { CommandType } from '~/types/intent';
 
 const reducerCore: PureReducer<TransformerContext, CreatePlaceCommand> = (context, command) => {
   const place = createPlace(command.args);
+
   context.world.places[place.id] = place;
 
   context.declareEvent({

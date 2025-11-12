@@ -7,8 +7,10 @@ import { withCommandType } from '~/command/withCommandType';
 import { CommandType } from '~/types/intent';
 
 const reducerCore: PureReducer<TransformerContext, TargetCommand> = (context, command, session) => {
-  const actor = context.world.actors[command.actor];
+  const { world } = context;
+  const actor = world.actors[command.actor];
   const combatantApi = createCombatantApi(context, session, actor);
+
   combatantApi.target(command.args.target, command.id);
 
   return context;

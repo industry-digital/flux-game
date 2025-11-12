@@ -110,7 +110,7 @@ describe('UNEQUIP Command Reducer', () => {
       delete alice.inventory.items[DEFAULT_WEAPON];
       const command = createMockUnequipCommand();
       const result = unequipReducer(context, command);
-      expectError(result, ErrorCode.INVALID_TARGET);
+      expectError(result, ErrorCode.ITEM_NOT_FOUND);
     });
 
     it('should error when item is not equipped', () => {
@@ -119,7 +119,7 @@ describe('UNEQUIP Command Reducer', () => {
 
       const command = createMockUnequipCommand((c) => ({ ...c, args: { item: unequippedWeapon } }));
       const result = unequipReducer(context, command);
-      expectError(result, ErrorCode.INVALID_TARGET);
+      expectError(result, ErrorCode.FORBIDDEN);
     });
   });
 

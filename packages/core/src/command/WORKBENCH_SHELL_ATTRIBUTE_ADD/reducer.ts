@@ -9,7 +9,8 @@ import { CommandType } from '~/types/intent';
 const PREALLOCATED_WORLD_EVENTS: any = [];
 
 const reducerCore: PureReducer<TransformerContext, AddShellAttributeCommand> = (context, command, session) => {
-  const actor = context.world.actors[command.actor];
+  const { world } = context;
+  const actor = world.actors[command.actor];
   const shell = actor.shells[actor.currentShell];
   const stageMutation = createStageMutationAction(context, session);
   stageMutation(actor, shell.id, command.args, command.id, PREALLOCATED_WORLD_EVENTS);

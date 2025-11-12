@@ -7,9 +7,14 @@ import { parseEntityTypeFromURN } from '~/worldkit/entity/urn';
 import { withCommandType } from '~/command/withCommandType';
 import { CommandType } from '~/types/intent';
 import { withBasicWorldStateValidation } from '~/command/validation';
+import { ErrorCode } from '~/types/error';
 
-const declareLookEvent = (context: TransformerContext, command: LookCommand, target: ActorURN | PlaceURN | ItemURN) => {
-  context.declareEvent({
+const declareLookEvent = (
+  { declareEvent }: TransformerContext,
+  command: LookCommand,
+  target: ActorURN | PlaceURN | ItemURN,
+) => {
+  declareEvent({
     trace: command.id,
     type: EventType.ACTOR_DID_LOOK,
     location: command.location!,
@@ -26,19 +31,18 @@ const declareLookEvent = (context: TransformerContext, command: LookCommand, tar
  * - Actor may look at another Actor in the same `location`
  */
 export const lookAtActorReducer: PureReducer<TransformerContext, LookCommand> = (context, command) => {
-  const { actors } = context.world;
+  const { world, failed } = context;
+  const { actors } = world;
   const actor = actors[command.actor!];
   const targetActorId = command.args.target as ActorURN;
   const targetActor = actors[targetActorId];
 
   if (!targetActor) {
-    context.declareError('Target actor not found in world projection', command.id);
-    return context;
+    return failed(command.id, ErrorCode.ACTOR_NOT_FOUND);
   }
 
   if (targetActor.location !== actor.location) {
-    context.declareError('Target actor not in the same location as the actor', command.id);
-    return context;
+    return failed(command.id, ErrorCode.INVALID_TARGET);
   }
 
   declareLookEvent(context, command, targetActor.id);
@@ -51,13 +55,12 @@ export const lookAtActorReducer: PureReducer<TransformerContext, LookCommand> = 
  * - Actor may look only at the Place that the actor is in
  */
 export const lookAtPlaceReducer: PureReducer<TransformerContext, LookCommand> = (context, command) => {
-  const { actors } = context.world;
-  const actor = actors[command.actor!];
+  const { world, failed } = context;
+  const actor = world.actors[command.actor!];
   const targetPlaceId = command.args.target as PlaceURN;
 
   if (targetPlaceId !== actor.location) {
-    context.declareError('Target place not in the same location as the actor', command.id);
-    return context;
+    return failed(command.id, ErrorCode.FORBIDDEN);
   }
 
   declareLookEvent(context, command, targetPlaceId);
@@ -71,20 +74,19 @@ export const lookAtPlaceReducer: PureReducer<TransformerContext, LookCommand> = 
  * - Actor may look at a loose item in the same `location` as the actor
  */
 export const lookAtItemReducer: PureReducer<TransformerContext, LookCommand> = (context, command) => {
-  const { actors, items } = context.world;
-  const actor = actors[command.actor!];
+  const { world, failed } = context;
+  const actor = world.actors[command.actor!];
   const targetItemId = command.args.target as ItemURN;
 
   let targetItem = actor.inventory.items[targetItemId];
 
   // Fell through, so we're looking at an item in the same place as the actor
   if (!targetItem) {
-    targetItem = items[targetItemId];
+    targetItem = world.items[targetItemId];
   }
 
   if (!targetItem) {
-    context.declareError('Could not find target item in world projection', command.id);
-    return context;
+    return failed(command.id, ErrorCode.ITEM_NOT_FOUND);
   }
 
   declareLookEvent(context, command, targetItem.id);
@@ -93,19 +95,10 @@ export const lookAtItemReducer: PureReducer<TransformerContext, LookCommand> = (
 };
 
 const lookReducerCore: PureReducer<TransformerContext, LookCommand> = (context, command) => {
-  const { declareError } = context;
-  const { places, actors } = context.world;
-  const place = places[command.location!];
+  const { failed } = context;
 
-  if (!place) {
-    declareError('Could not find place in world projection', command.id);
-    return context;
-  }
-
-  const actor = actors[command.actor!];
-  if (!actor) {
-    declareError('Could not find actor in world project', command.id);
-    return context;
+  if (!command.args.target) {
+    return failed(command.id, ErrorCode.INVALID_SYNTAX);
   }
 
   const entityType = parseEntityTypeFromURN(command.args.target);
@@ -121,8 +114,7 @@ const lookReducerCore: PureReducer<TransformerContext, LookCommand> = (context, 
       return lookAtItemReducer(context, command);
 
     default: // This is never supposed to happen
-      declareError('Invalid look command arguments', command.id);
-      return context;
+      return failed(command.id, ErrorCode.INVALID_TARGET);
   }
 };
 

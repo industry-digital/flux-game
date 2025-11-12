@@ -2,14 +2,14 @@ import { PureReducer, Transformer, TransformerContext } from '~/types/handler';
 import { PartyInviteCommand } from './types';
 import { withBasicWorldStateValidation } from '../validation';
 import { createWorldEvent } from '~/worldkit/event';
-import { ActorDidCreateParty, ActorDidReceivePartyInvitation, EventType } from '~/types/event';
+import { ActorDidCreateParty, EventType } from '~/types/event';
 import { ErrorCode } from '~/types/error';
 import { Party } from '~/types/entity/group';
 import { withCommandType } from '~/command/withCommandType';
 import { CommandType } from '~/types/intent';
 
 const reducerCore: PureReducer<TransformerContext, PartyInviteCommand> = (context, command) => {
-  const { world, partyApi, declareEvent, declareError } = context;
+  const { world, failed, partyApi, declareEvent } = context;
   const actor = world.actors[command.actor];
 
   let party: Party | undefined = actor.party ? world.groups[actor.party] as Party : undefined;
@@ -28,23 +28,27 @@ const reducerCore: PureReducer<TransformerContext, PartyInviteCommand> = (contex
     });
 
     declareEvent(partyCreatedEvent);
+  } else {
+    // If party already exists, only the owner can invite
+    if (party.owner !== actor.id) {
+      return failed(command.id, ErrorCode.FORBIDDEN);
+    }
   }
 
   const invitee = world.actors[command.args.invitee];
   if (!invitee) {
-    declareError(ErrorCode.INVALID_TARGET, command.id);
-    return context;
+    return failed(command.id, ErrorCode.ACTOR_NOT_FOUND);
   }
 
   // Actually send the invitation using the Party API
   partyApi.inviteToParty(party, invitee.id);
 
   // Emit event that the invitee received an invitation
-  const didReceivePartyInvitationEvent: ActorDidReceivePartyInvitation = createWorldEvent({
-    type: EventType.ACTOR_DID_RECEIVE_PARTY_INVITATION,
+  declareEvent({
     trace: command.id,
-    location: command.location!,
+    type: EventType.ACTOR_DID_RECEIVE_PARTY_INVITATION,
     actor: invitee.id, // The invitee is the one receiving the invitation
+    location: command.location!,
     payload: {
       partyId: party.id,
       inviterId: party.owner!,
@@ -52,13 +56,14 @@ const reducerCore: PureReducer<TransformerContext, PartyInviteCommand> = (contex
     },
   });
 
-  declareEvent(didReceivePartyInvitationEvent);
-
   return context;
 };
 
 /**
  * Party invite command reducer
+ *
+ * Note: We don't use withOwnParty here because the actor may not have a party yet.
+ * The reducer creates a party if needed.
  */
 export const partyInviteReducer: Transformer<PartyInviteCommand> =
   withCommandType(CommandType.PARTY_INVITE,

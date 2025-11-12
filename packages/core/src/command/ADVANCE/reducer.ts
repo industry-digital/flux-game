@@ -4,7 +4,7 @@ import { createCombatSessionApi } from '~/worldkit/combat/session/session';
 import { withBasicWorldStateValidation } from '~/command/validation';
 import { withExistingCombatSession } from '~/worldkit/combat/validation';
 import { MovementOptions } from '~/worldkit/combat/action/advance';
-import { CommandType } from '~/types';
+import { CommandType, ErrorCode } from '~/types';
 import { withCommandType } from '~/command/withCommandType';
 
 const DISTANCE = 'distance';
@@ -16,9 +16,9 @@ const DEFAULT_MOVEMENT_OPTIONS: MovementOptions = {
 };
 
 const reducerCore: PureReducer<TransformerContext, AdvanceCommand> = (context, command) => {
-  const { actors, sessions } = context.world;
-  const actor = actors[command.actor];
-  const session = sessions[command.session!];
+  const { world, failed } = context;
+  const actor = world.actors[command.actor];
+  const session = world.sessions[command.session!];
 
   // Get combatant API from existing combat session (no session creation)
   const { getCombatantApi } = createCombatSessionApi(context, actor.location, session.id);
@@ -38,7 +38,7 @@ const reducerCore: PureReducer<TransformerContext, AdvanceCommand> = (context, c
       break;
 
     default:
-      context.declareError('ADVANCE: Unknown command type', command.id);
+      failed(command.id, ErrorCode.INVALID_ACTION);
       break;
   }
 

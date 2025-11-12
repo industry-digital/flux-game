@@ -1,7 +1,7 @@
 import { PureReducer, TransformerContext } from '~/types/handler';
 import { MoveCommand } from './types';
 import { EventType } from '~/types/event';
-import { Place, Exit } from '~/types/entity/place';
+import { Place, Exit, PlaceEntityDescriptor } from '~/types/entity/place';
 import { SpecialVisibility } from '~/types/world/visibility';
 import { CommandType } from '~/types/intent';
 import { Direction } from '~/types/world/space';
@@ -9,8 +9,12 @@ import { withBasicWorldStateValidation } from '../validation';
 import { withCommandType } from '~/command/withCommandType';
 import { ErrorCode } from '~/types/error';
 
+const DEFAULT_VISIBILITY: Readonly<PlaceEntityDescriptor> = Object.freeze({
+  vis: SpecialVisibility.VISIBLE_TO_EVERYONE,
+});
+
 const reducerCore: PureReducer<TransformerContext, MoveCommand> = (context, command) => {
-  const { world, declareEvent, declareError } = context;
+  const { world, failed, declareEvent } = context;
   const { dest } = command.args;
   const actor = world.actors[command.actor];
 
@@ -20,8 +24,7 @@ const reducerCore: PureReducer<TransformerContext, MoveCommand> = (context, comm
   // Ensure destination is a valid place
   const destination: Place = world.places[dest];
   if (!destination) {
-    declareError('Movement destination not found in `places` projection');
-    return context;
+    return failed(command.id, ErrorCode.PLACE_NOT_FOUND);
   }
 
   let exit: Exit | null = null;
@@ -35,12 +38,11 @@ const reducerCore: PureReducer<TransformerContext, MoveCommand> = (context, comm
   }
 
   if (!exit) {
-    declareError(ErrorCode.PRECONDITION_FAILED, command.id);
-    return context;
+    return failed(command.id, ErrorCode.PRECONDITION_FAILED);
   }
 
   // Get the actor's descriptor from the origin place
-  const actorDescriptor = origin.entities[actor.id] ?? { vis: SpecialVisibility.VISIBLE_TO_EVERYONE };
+  const actorDescriptor = origin.entities[actor.id] ?? DEFAULT_VISIBILITY;
 
   // Ensure destination has an entities object
   destination.entities ??= {};

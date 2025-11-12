@@ -2,8 +2,7 @@ import { PureReducer, Transformer, TransformerContext } from '~/types/handler';
 import { PartyLeaveCommand } from './types';
 import { withBasicWorldStateValidation } from '../validation';
 import { withOwnParty } from '../party';
-import { ActorDidDisbandParty, ActorDidLeaveParty, ActorDidLeavePartyInput, EventType } from '~/types/event';
-import { createWorldEvent } from '~/worldkit/event';
+import { ActorDidLeavePartyInput, EventType } from '~/types/event';
 import { PartyLeaveReason } from '~/types/party';
 import { PartyRemovalResult } from '~/worldkit/entity/group/party';
 import { withCommandType } from '~/command/withCommandType';
@@ -15,11 +14,15 @@ const PREALLOCATED_LEAVE_PARTY_RESULT: PartyRemovalResult = {
 };
 
 const reducerCore: PureReducer<TransformerContext, PartyLeaveCommand> = (context, command, party) => {
-  const leaver = context.world.actors[command.actor];
-
+  const { world, declareEvent, partyApi } = context;
+  const actor = world.actors[command.actor];
 
   // Let the PartyApi handle all the mechanics (ownership transfer, disbandment, etc.)
-  const { wasPartyDisbanded, newOwner } = context.partyApi.removePartyMember(party, leaver.id, PREALLOCATED_LEAVE_PARTY_RESULT);
+  const { wasPartyDisbanded, newOwner } = partyApi.removePartyMember(
+    party,
+    actor.id,
+    PREALLOCATED_LEAVE_PARTY_RESULT,
+  );
 
   // Prepare event payload
   const payload: ActorDidLeavePartyInput['payload'] = {
@@ -33,31 +36,27 @@ const reducerCore: PureReducer<TransformerContext, PartyLeaveCommand> = (context
   }
 
   // Emit event that the actor left the party
-  const didLeavePartyEvent: ActorDidLeaveParty = createWorldEvent({
+  declareEvent({
     type: EventType.ACTOR_DID_LEAVE_PARTY,
     trace: command.id,
-    location: leaver.location,
-    actor: leaver.id,
+    location: actor.location,
+    actor: actor.id,
     payload,
   });
 
-  context.declareEvent(didLeavePartyEvent);
-
   // If the party was disbanded (last member left), emit disbandment event
   if (wasPartyDisbanded) {
-    const didDisbandPartyEvent: ActorDidDisbandParty = createWorldEvent({
+    declareEvent({
       type: EventType.ACTOR_DID_DISBAND_PARTY,
       trace: command.id,
-      location: leaver.location,
-      actor: leaver.id,
+      location: actor.location,
+      actor: actor.id,
       payload: {
         partyId: party.id,
         formerMembers: party.members,
         cancelledInvitations: party.invitations,
       },
     });
-
-    context.declareEvent(didDisbandPartyEvent);
   }
 
   return context;

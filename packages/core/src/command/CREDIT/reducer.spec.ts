@@ -204,10 +204,11 @@ describe('CREDIT Command Reducer', () => {
 
       const resultContext = creditReducer(context, command);
 
-      expect(context.declareError).toHaveBeenCalledTimes(1);
-      expect(context.declareError).toHaveBeenCalledWith(ErrorCode.NOT_FOUND, command.id);
+      const errors = resultContext.getDeclaredErrors();
+      expect(errors).toHaveLength(1);
+      expect(errors[0].code).toBe(ErrorCode.INVALID_RECIPIENT);
+      expect(errors[0].trace).toBe(command.id);
       expect(context.declareEvent).not.toHaveBeenCalled();
-      expect(resultContext).toBe(context);
     });
   });
 

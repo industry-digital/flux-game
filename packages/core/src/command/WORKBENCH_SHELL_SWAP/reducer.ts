@@ -11,11 +11,11 @@ import { CommandType } from '~/types/intent';
 const PREALLOCATED_EVENTS: WorldEvent[] = [];
 
 const reducerCore: PureReducer<TransformerContext, SwapShellCommand> = (context, command, session) => {
-  const actor = context.world.actors[command.actor];
+  const { world, failed } = context;
+  const actor = world.actors[command.actor];
   const shell = actor.shells[command.args.targetShellId];
   if (!shell) {
-    context.declareError(ErrorCode.NOT_FOUND, command.id);
-    return context;
+    return failed(command.id, ErrorCode.SHELL_NOT_FOUND);
   }
 
   const swapAction = createSwapShellAction(context, session);

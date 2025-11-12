@@ -4,8 +4,7 @@ import { withBasicWorldStateValidation } from '../validation';
 import { withExistingCombatSession } from '~/worldkit/combat/validation';
 import { withCombatCost } from '../withCombatCost';
 import { WeaponSchemaURN } from '~/types/taxonomy';
-import { createWorldEvent } from '~/worldkit/event';
-import { ActorDidUnequipWeapon, EventType } from '~/types/event';
+import { EventType } from '~/types/event';
 import { ActionCost } from '~/types/combat';
 import { ErrorCode } from '~/types/error';
 import { withCommandType } from '~/command/withCommandType';
@@ -17,26 +16,25 @@ import { SessionStrategy } from '~/types/entity/session';
  * Core UNEQUIP command logic (without combat costs)
  */
 const unequipOutsideOfCombat: Transformer<UnequipCommand> = (context, command) => {
-  const { actors } = context.world;
-  const actor = actors[command.actor];
+  const { world, failed, equipmentApi, declareEvent } = context;
+  const actor = world.actors[command.actor];
   const item = actor.inventory.items[command.args.item];
 
   if (!item) {
-    context.declareError(ErrorCode.INVALID_TARGET, command.id);
-    return context;
+    return failed(command.id, ErrorCode.ITEM_NOT_FOUND);
   }
 
   if (item.schema.startsWith('flux:schema:weapon:')) {
     // Check if the weapon is actually equipped
-    const equippedWeaponId = context.equipmentApi.getEquippedWeapon(actor);
+    const equippedWeaponId = equipmentApi.getEquippedWeapon(actor);
     if (equippedWeaponId !== item.id) {
-      context.declareError(ErrorCode.INVALID_TARGET, command.id);
-      return context;
+      // Forbidden to unequip a weapon that is not equipped
+      return failed(command.id, ErrorCode.FORBIDDEN);
     }
 
-    context.equipmentApi.unequip(actor, item.id);
+    equipmentApi.unequip(actor, item.id);
 
-    const unequipEvent: ActorDidUnequipWeapon = createWorldEvent({
+    declareEvent({
       type: EventType.ACTOR_DID_UNEQUIP_WEAPON,
       trace: command.id,
       location: command.location!,
@@ -46,8 +44,6 @@ const unequipOutsideOfCombat: Transformer<UnequipCommand> = (context, command) =
         schema: item.schema as WeaponSchemaURN,
       },
     });
-
-    context.declareEvent(unequipEvent);
 
     return context;
   }
@@ -67,7 +63,8 @@ const calculateUnequipCost = (context: TransformerContext, command: UnequipComma
 };
 
 const reducerCore: PureReducer<TransformerContext, UnequipCommand> = (context, command) => {
-  const actor = context.world.actors[command.actor];
+  const { world } = context;
+  const actor = world.actors[command.actor];
   let inCombat: boolean = false;
 
   if (actor.session) {

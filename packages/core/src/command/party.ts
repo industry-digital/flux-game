@@ -36,25 +36,22 @@ export const withPartyInvitee = <TCommand extends Command & { args: { partyOwner
   reducer: (context: TransformerContext, command: TCommand, party: Party) => TransformerContext
 ): PureReducer<TransformerContext, TCommand> => {
   return (context, command) => {
-    const { world } = context;
+    const { world, failed } = context;
 
     // Validate party owner exists
     const partyOwner = world.actors[command.args.partyOwnerId];
     if (!partyOwner) {
-      context.declareError(ErrorCode.INVALID_TARGET, command.id);
-      return context;
+      return failed(command.id, ErrorCode.ACTOR_NOT_FOUND);
     }
 
     // Resolve the party from the owner
     if (!partyOwner.party) {
-      context.declareError(ErrorCode.INVALID_TARGET, command.id);
-      return context;
+      return failed(command.id, ErrorCode.INVARIANT_VIOLATION);
     }
 
     const party = world.groups[partyOwner.party] as Party;
     if (!party) {
-      context.declareError(ErrorCode.INVALID_TARGET, command.id);
-      return context;
+      return failed(command.id, ErrorCode.GROUP_NOT_FOUND);
     }
 
     return reducer(context, command, party);
@@ -93,22 +90,20 @@ export const withOwnParty = <TCommand extends Command>(
   reducer: (context: TransformerContext, command: TCommand, party: Party) => TransformerContext
 ): PureReducer<TransformerContext, TCommand> => {
   return (context, command) => {
-    const { world } = context;
-    const actor = world.actors[command.actor];
+    const { world, failed } = context;
 
     // Not our job to validate the actor exists
+    const actor = world.actors[command.actor];
 
     // Ensure actor is in a party
     if (!actor.party) {
-      context.declareError(ErrorCode.INVALID_TARGET, command.id);
-      return context;
+      return failed(command.id, ErrorCode.INVARIANT_VIOLATION);
     }
 
     // Resolve the party from actor's membership
     const party = world.groups[actor.party] as Party;
     if (!party) {
-      context.declareError(ErrorCode.INVALID_TARGET, command.id);
-      return context;
+      return failed(command.id, ErrorCode.GROUP_NOT_FOUND);
     }
 
     return reducer(context, command, party);
@@ -146,3 +141,19 @@ export const findLongestStandingMember = (party: Party): ActorURN => {
   }
   throw new Error('No eligible member for ownership transfer');
 };
+
+export const withGroupOwnerValidation = <TCommand extends Command>(
+  reducer: (context: TransformerContext, command: TCommand, party: Party) => TransformerContext
+): PureReducer<TransformerContext, TCommand> => {
+  return (context: TransformerContext, command: TCommand, party: Party) => {
+    const { world, failed } = context;
+    const actor = world.actors[command.actor];
+
+    // Only the party owner can kick members
+    if (actor.id !== party.owner) {
+      return failed(command.id, ErrorCode.FORBIDDEN);
+    }
+
+    return reducer(context, command, party);
+  };
+}

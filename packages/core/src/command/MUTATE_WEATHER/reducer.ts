@@ -5,16 +5,15 @@ import { EventType } from '~/types/event';
 import { WellKnownActor } from '~/types/actor';
 import { withCommandType } from '~/command/withCommandType';
 import { CommandType } from '~/types/intent';
+import { ErrorCode } from '~/types/error';
 
 const reducerCore: PureReducer<TransformerContext, MutateWeatherCommand> = (context, command) => {
-  const { declareEvent, declareError } = context;
-  const { places } = context.world;
+  const { world, failed, declareEvent } = context;
   const { placeId } = command.args;
-  const place = places[placeId];
+  const place = world.places[placeId];
 
   if (!place) {
-    declareError(`Place ${placeId} not found`);
-    return context;
+    return failed(command.id, ErrorCode.PLACE_NOT_FOUND);
   }
 
   const currentWeather: Weather | null = place.weather ?? null;

@@ -13,7 +13,6 @@ import { ActorDidAcceptPartyInvitation, ActorDidJoinParty, EventType } from '~/t
 import { extractFirstEventOfType } from '~/testing/event';
 
 const NOW = DEFAULT_TIMESTAMP;
-const ONE_MINUTE = 60 * 1_000;
 
 describe('PARTY_INVITE_ACCEPT Reducer', () => {
   let context: TransformerContext;

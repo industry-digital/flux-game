@@ -5,22 +5,22 @@ import { CommandType } from '~/types/intent';
 import { withCommandType } from '~/command/withCommandType';
 import { withBasicWorldStateValidation } from '~/command/validation';
 
-
 export const EMPTY_PAYLOAD: Readonly<Record<string, never>> = Object.freeze({});
 
 const reducerCore: PureReducer<TransformerContext, DematerializeActorCommand> = (context, command) => {
-  const actor = context.world.actors[command.actor];
-  const place = context.world.places[actor.location];
+  const { world, declareEvent } = context;
+  const actor = world.actors[command.actor];
+  const place = world.places[actor.location];
 
   // Remove the actor from the place
   delete place.entities[actor.id];
 
-  context.declareEvent({
+  declareEvent({
+    trace: command.id,
     type: EventType.ACTOR_DID_DEMATERIALIZE,
     actor: actor.id,
     location: place.id,
     payload: EMPTY_PAYLOAD,
-    trace: command.id,
   });
 
   return context;

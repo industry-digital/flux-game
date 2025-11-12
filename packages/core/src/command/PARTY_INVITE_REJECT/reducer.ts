@@ -3,36 +3,32 @@ import { RejectPartyInvitationCommand } from './types';
 import { withBasicWorldStateValidation } from '../validation';
 import { withPartyInvitee } from '../party';
 import { ErrorCode } from '~/types/error';
-import { ActorDidRejectPartyInvitation, EventType } from '~/types/event';
-import { createWorldEvent } from '~/worldkit/event';
+import { EventType } from '~/types/event';
 import { withCommandType } from '~/command/withCommandType';
 import { CommandType } from '~/types/intent';
 
 const reducerCore: PureReducer<TransformerContext, RejectPartyInvitationCommand> = (context, command, party) => {
-  const rejecter = context.world.actors[command.actor];
+  const { world, failed, declareEvent } = context;
+  const actor = world.actors[command.actor];
 
   try {
-    context.partyApi.rejectInvitation(party, command.actor);
+    context.partyApi.rejectInvitation(party, actor.id);
   } catch (error) {
     // Handle cases like: no pending invitation, etc.
-    context.declareError(ErrorCode.INVALID_TARGET, command.id);
-    return context;
+    return failed(command.id, ErrorCode.FORBIDDEN);
   }
 
-  // Emit event that the actor rejected the invitation
-  const didRejectPartyInvitationEvent: ActorDidRejectPartyInvitation = createWorldEvent({
+  declareEvent({
     type: EventType.ACTOR_DID_REJECT_PARTY_INVITATION,
     trace: command.id,
-    location: rejecter.location,
-    actor: rejecter.id,
+    location: actor.location,
+    actor: actor.id,
     payload: {
       partyId: party.id,
       inviterId: party.owner!,
-      inviteeId: rejecter.id,
+      inviteeId: actor.id,
     }
   });
-
-  context.declareEvent(didRejectPartyInvitationEvent);
 
   return context;
 };
