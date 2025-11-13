@@ -222,9 +222,11 @@ export type Actor =
   traits: Traits;
 
   /**
-   * Intrinsic attributes of the actor, like strength, dexterity, etc.
+   * All actor stats (core + shell stats)
+   * For PCs: POW, FIN, RES are synced from shells[currentShell] (materialized view)
+   * For Creatures: All stats are source of truth (no shells)
    */
-  stats: CoreStats;
+  stats: ActorStats;
 
   /**
    * The actor's capacitor state:
@@ -277,8 +279,17 @@ export type Actor =
    */
   skills: Skills;
 
-  currentShell: string;
-  shells: Record<string, Shell>;
+  /**
+   * Current shell ID (PCs only)
+   * Undefined for creatures
+   */
+  currentShell?: string;
+
+  /**
+   * Shell arsenal (PCs only)
+   * Undefined for creatures
+   */
+  shells?: Record<string, Shell>;
 
   /**
    * The actor's current session, if any

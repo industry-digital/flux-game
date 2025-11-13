@@ -17,6 +17,7 @@ import { createActorCommand } from '~/lib/intent';
 import { createWorkbenchSessionApi } from '~/worldkit/workbench/session';
 import { WorkbenchSession } from '~/types/workbench';
 import { ActorURN } from '~/types/taxonomy';
+import { SessionStatus } from '~/types/entity/session';
 
 describe('WORKBENCH_SHELL_STATUS Command Reducer', () => {
   let context: TransformerContext;
@@ -37,6 +38,13 @@ describe('WORKBENCH_SHELL_STATUS Command Reducer', () => {
     });
 
     ({ session } = createWorkbenchSessionApi(context, ALICE_ID, DEFAULT_WORKBENCH_SESSION));
+
+    // Set session to RUNNING status for tests
+    session.status = SessionStatus.RUNNING;
+    context.world.sessions[session.id] = session;
+
+    // Link actor to session
+    alice.session = session.id;
 
     command = createActorCommand<CommandType.WORKBENCH_SHELL_STATUS, AssessShellStatusCommandArgs>({
       type: CommandType.WORKBENCH_SHELL_STATUS,
@@ -72,7 +80,7 @@ describe('WORKBENCH_SHELL_STATUS Command Reducer', () => {
 
     it('should work with multiple shells', () => {
       // Switch to a different shell if available
-      const shellIds = Object.keys(alice.shells);
+      const shellIds = Object.keys(alice.shells!);
       if (shellIds.length > 1) {
         alice.currentShell = shellIds[1]; // Use second shell
       }
@@ -93,6 +101,9 @@ describe('WORKBENCH_SHELL_STATUS Command Reducer', () => {
 
   describe('Error Cases', () => {
     it('should error when session is undefined', () => {
+      // Remove actor's session to simulate no active session
+      alice.session = undefined;
+
       // Command without session
       const testCommand = createActorCommand<CommandType.WORKBENCH_SHELL_STATUS, AssessShellStatusCommandArgs>({
         type: CommandType.WORKBENCH_SHELL_STATUS,
@@ -105,7 +116,7 @@ describe('WORKBENCH_SHELL_STATUS Command Reducer', () => {
 
       const errors = result.getDeclaredErrors();
       expect(errors).toHaveLength(1);
-      expect(errors[0].code).toBe(ErrorCode.INVALID_SESSION);
+      expect(errors[0].code).toBe(ErrorCode.PRECONDITION_FAILED);
       // Error cases may still generate session start events before failing
       // The important thing is that no ACTOR_DID_ASSESS_SHELL_STATUS event is generated
       const events = result.getDeclaredEvents();
@@ -148,7 +159,7 @@ describe('WORKBENCH_SHELL_STATUS Command Reducer', () => {
 
       const errors = result.getDeclaredErrors();
       expect(errors).toHaveLength(1);
-      expect(errors[0].code).toBe(ErrorCode.INVALID_TARGET);
+      expect(errors[0].code).toBe(ErrorCode.PRECONDITION_FAILED);
       // Error cases may still generate session start events before failing
       // The important thing is that no ACTOR_DID_ASSESS_SHELL_STATUS event is generated
       const events = result.getDeclaredEvents();
@@ -167,7 +178,7 @@ describe('WORKBENCH_SHELL_STATUS Command Reducer', () => {
 
       const errors = result.getDeclaredErrors();
       expect(errors).toHaveLength(1);
-      expect(errors[0].code).toBe(ErrorCode.INVALID_TARGET);
+      expect(errors[0].code).toBe(ErrorCode.SHELL_NOT_FOUND);
       // Error cases may still generate session start events before failing
       // The important thing is that no ACTOR_DID_ASSESS_SHELL_STATUS event is generated
       const events = result.getDeclaredEvents();

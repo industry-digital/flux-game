@@ -36,7 +36,11 @@ export const createWorkbenchSession = (
     throw new Error(`Actor not found in world projection`);
   }
 
-  // Invariant: Actor always has a currentShellId
+  // Invariant: Workbench only works with PCs that have shells
+  if (!actor.shells || !actor.currentShell) {
+    throw new Error(`Workbench requires actor with shells (PCs only)`);
+  }
+
   const currentShellId = input.initialShellId ?? actor.currentShell;
   if (!currentShellId) {
     throw new Error(`Actor has no current shell!`);

@@ -4,6 +4,7 @@ import { TransformerContext } from '~/types/handler';
 import { WorkbenchSession } from '~/types/workbench';
 import { createWorldEvent } from '~/worldkit/event';
 import { createUndoStagedMutationsAction, UndoStagedMutationsAction } from '~/worldkit/workbench/action/undo';
+import { syncShellStatsToActor } from '~/worldkit/entity/actor/shell';
 import { ErrorCode } from '~/types/error';
 
 export type SwapShellAction = (
@@ -40,6 +41,12 @@ export const createSwapShellAction = (
   ): WorldEvent[] {
     output.length = 0;
 
+    // Invariant: Shell swapping only works with PCs that have shells
+    if (!actor.shells || !actor.currentShell) {
+      declareError(ErrorCode.PRECONDITION_FAILED, trace);
+      return output;
+    }
+
     if (session.data.pendingMutations.length > 0) {
       if (!force) {
         declareError(ErrorCode.FORBIDDEN, trace);
@@ -73,6 +80,9 @@ export const createSwapShellAction = (
     // Literal shell pointer swap
     actor.currentShell = targetShell.id;
     session.data.currentShellId = targetShell.id;
+
+    // Sync shell stats to actor stats (materialized view pattern)
+    syncShellStatsToActor(actor);
 
     // Create swap event
     const shellSwapEvent = createWorldEvent<ActorDidSwapShell>({

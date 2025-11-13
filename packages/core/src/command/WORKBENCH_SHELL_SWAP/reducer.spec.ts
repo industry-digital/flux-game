@@ -16,6 +16,7 @@ import { WorkbenchSession } from '~/types/workbench';
 import { ActorDidSwapShell, EventType } from '~/types/event';
 import { ErrorCode } from '~/types/error';
 import { extractFirstEventOfType } from '~/testing/event';
+import { SessionStatus } from '~/types/entity/session';
 
 describe('WORKBENCH_SHELL_SWAP Command Reducer', () => {
   let context: TransformerContext;
@@ -36,6 +37,13 @@ describe('WORKBENCH_SHELL_SWAP Command Reducer', () => {
     });
 
     ({ session } = createWorkbenchSessionApi(context, ALICE_ID, DEFAULT_WORKBENCH_SESSION));
+
+    // Set session to RUNNING status for tests
+    session.status = SessionStatus.RUNNING;
+    context.world.sessions[session.id] = session;
+
+    // Link actor to session
+    alice.session = session.id;
 
     command = createActorCommand<CommandType.WORKBENCH_SHELL_SWAP, SwapShellCommandArgs>({
       type: CommandType.WORKBENCH_SHELL_SWAP,
@@ -171,6 +179,9 @@ describe('WORKBENCH_SHELL_SWAP Command Reducer', () => {
     });
 
     it('should error when session is undefined', () => {
+      // Remove actor's session to simulate no active session
+      alice.session = undefined;
+
       // Create command with undefined session
       const noSessionCommand = createActorCommand<CommandType.WORKBENCH_SHELL_SWAP, SwapShellCommandArgs>({
         type: CommandType.WORKBENCH_SHELL_SWAP,
@@ -188,7 +199,7 @@ describe('WORKBENCH_SHELL_SWAP Command Reducer', () => {
       // Verify error was declared
       const errors = context.getDeclaredErrors();
       expect(errors.length).toBe(1);
-      expect(errors[0].code).toBe(ErrorCode.INVALID_SESSION);
+      expect(errors[0].code).toBe(ErrorCode.PRECONDITION_FAILED);
     });
   });
 

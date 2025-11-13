@@ -136,7 +136,7 @@ export const createWorldScenario = (
     addPlace,
     addActor,
     addSession,
-    assignItem: assignItem,
+    assignItem,
     assignWeapon,
     assignAmmo,
     assignCurrency,

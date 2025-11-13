@@ -6,10 +6,15 @@ import { isActiveModifier } from '~/worldkit/entity/modifier';
 export const BASELINE_STAT_VALUE = 10;
 export const MAX_STAT_VALUE = 100;
 export const NORMAL_STAT_RANGE = MAX_STAT_VALUE - BASELINE_STAT_VALUE;
-
 export const ALL_STAT_NAMES = Object.values(Stat);
-export const CORE_STAT_NAMES = [Stat.INT, Stat.PER, Stat.MEM] as const;
-export const SHELL_STAT_NAMES = [Stat.POW, Stat.FIN, Stat.RES] as const;
+
+/**
+ * Any entity that has a stats record
+ * The generic parameter constrains which stats are available
+ */
+export type EntityWithStats<TStats extends Partial<Record<Stat, number>>> = {
+  stats: TStats;
+};
 
 /**
  * Calculate the bonus to a stat from a given value
@@ -19,38 +24,30 @@ export function calculateStatBonus(statValue: number): number {
 }
 
 /**
- * Get a specific stat from an actor, automatically routing to core or shell stats
- * This is the primary interface - consumers don't need to know about routing
+ * Get a specific stat from an entity
+ * Type-safe: only allows getting stats that exist on the entity
  */
-export function getStat(actor: Actor, stat: Stat): number {
-  if (stat === Stat.INT || stat === Stat.PER || stat === Stat.MEM) {
-    // Core stats are stored directly on the actor
-    const attr = actor.stats[stat];
-    if (!attr) {
-      throw new Error(`Actor does not have core stat ${stat}`);
-    }
-    return attr;
-  }
-
-  // Shell stats are stored on the current shell
-  const currentShell = actor.shells[actor.currentShell];
-  if (!currentShell) {
-    throw new Error(`Actor has no current shell or shell not found`);
-  }
-
-  const attr = currentShell.stats[stat];
+export function getStat<TStats extends Partial<Record<Stat, number>>, K extends keyof TStats & Stat>(
+  entity: EntityWithStats<TStats>,
+  stat: K
+): number {
+  const attr = entity.stats[stat];
   if (attr === undefined) {
-    throw new Error(`Actor's current shell does not have shell stat ${stat}`);
+    throw new Error(`Entity does not have stat ${stat}`);
   }
   return attr;
 }
 
 /**
- * Get the effective value of a specific stat from an actor
+ * Get the effective value of a specific stat from an entity
  * This is what most consumers want - the final computed value
+ * Type-safe: only allows getting stats that exist on the entity
  */
-export function getStatValue(actor: Actor, stat: Stat): number {
-  return getStat(actor, stat);
+export function getStatValue<TStats extends Partial<Record<Stat, number>>, K extends keyof TStats & Stat>(
+  entity: EntityWithStats<TStats>,
+  stat: K
+): number {
+  return getStat(entity, stat);
 }
 
 /**
@@ -60,8 +57,6 @@ export function getStatValue(actor: Actor, stat: Stat): number {
 export function getNaturalStatValue(actor: Actor, stat: Stat): number {
   return getStat(actor, stat);
 }
-
-const NO_MODIFIERS: Readonly<AppliedModifiers> = Object.freeze({});
 
 /**
  * Get the stat modifiers for a specific stat
@@ -101,42 +96,27 @@ export function computeStatValue(actor: Actor, stat: Stat, now: number): number 
 }
 
 /**
- * Get all effective actor stats (core + current shell) as a unified view
- * Useful for displaying complete stat sheets
+ * Get all actor stats
  */
 export function getAllStats(actor: Actor): ActorStats {
-  const stats: Partial<ActorStats> = {
-    [Stat.INT]: actor.stats[Stat.INT],
-    [Stat.PER]: actor.stats[Stat.PER],
-    [Stat.MEM]: actor.stats[Stat.MEM],
-  };
-
-  const currentShell = actor.shells[actor.currentShell];
-  if (!currentShell) {
-    throw new Error(`Actor has no current shell`);
-  }
-
-  stats[Stat.POW] = currentShell.stats[Stat.POW];
-  stats[Stat.FIN] = currentShell.stats[Stat.FIN];
-  stats[Stat.RES] = currentShell.stats[Stat.RES];
-
-  return stats as ActorStats;
+  return actor.stats;
 }
 
 /**
- * Set the effective value of a stat (useful for test setup)
+ * Set the value of a stat on an entity
+ * Type-safe: only allows setting stats that exist on the entity
+ *
+ * Examples:
+ * - setStatValue(actor, Stat.INT, 10) ✓ (Actor has INT)
+ * - setStatValue(shell, Stat.POW, 50) ✓ (Shell has POW)
+ * - setStatValue(shell, Stat.INT, 10) ✗ (Shell doesn't have INT - compile error)
  */
-export function setStatValue(actor: Actor, stat: Stat, value: number): void {
-  if (stat === Stat.INT || stat === Stat.PER || stat === Stat.MEM) {
-    actor.stats[stat] = value;
-    return;
-  }
-
-  const currentShell = actor.shells[actor.currentShell];
-  if (!currentShell) {
-    throw new Error(`Actor has no current shell`);
-  }
-  currentShell.stats[stat] = value;
+export function setStatValue<TStats extends Partial<Record<Stat, number>>, K extends keyof TStats & Stat>(
+  entity: EntityWithStats<TStats>,
+  stat: K,
+  value: number
+): void {
+  entity.stats[stat] = value;
 }
 
 /**

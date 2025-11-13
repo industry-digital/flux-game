@@ -39,7 +39,7 @@ describe('CommitShellMutationsAction', () => {
       const initialBalance = getBalance(actor, CurrencyType.SCRAP);
 
       // Capture initial shell stats
-      const shell = actor.shells[actor.currentShell];
+      const shell = actor.shells![actor.currentShell!];
       const initialPow = getShellStatValue(shell, Stat.POW);
       const initialFin = getShellStatValue(shell, Stat.FIN);
 
@@ -88,7 +88,7 @@ describe('CommitShellMutationsAction', () => {
       const session = scenario.actors['flux:actor:test-actor'].hooks.session.session;
 
       setBalance(actor, CurrencyType.SCRAP, 500);
-      const shell = actor.shells[actor.currentShell];
+      const shell = actor.shells![actor.currentShell!];
       const initialRes = getShellStatValue(shell, Stat.RES);
 
       const commitAction = createCommitShellMutationsAction(context, session);
@@ -142,7 +142,7 @@ describe('CommitShellMutationsAction', () => {
       const session = scenario.actors['flux:actor:test-actor'].hooks.session.session;
 
       // Remove current shell
-      delete actor.shells[actor.currentShell];
+      delete actor.shells![actor.currentShell!];
 
       const commitAction = createCommitShellMutationsAction(context, session);
       const events = commitAction(actor);
@@ -291,7 +291,7 @@ describe('CommitShellMutationsAction', () => {
       const session = scenario.actors['flux:actor:test-actor'].hooks.session.session;
 
       setBalance(actor, CurrencyType.SCRAP, 1); // Insufficient funds
-      const shell = actor.shells[actor.currentShell];
+      const shell = actor.shells![actor.currentShell!];
       const initialPow = getShellStatValue(shell, Stat.POW);
 
       const commitAction = createCommitShellMutationsAction(context, session);

@@ -46,10 +46,9 @@ describe('Actor Stats Module', () => {
   });
 
   describe('Shell Stat Access', () => {
-    it('should get shell stats from current shell', () => {
+    it('should get shell stats from actor.stats', () => {
       const powStat = getStat(actor, Stat.POW);
-      const currentShell = actor.shells[actor.currentShell];
-      expect(powStat).toBe(currentShell.stats[Stat.POW]);
+      expect(powStat).toBe(actor.stats[Stat.POW]);
       expect(getStatValue(actor, Stat.POW)).toBe(10);
     });
 
@@ -66,23 +65,20 @@ describe('Actor Stats Module', () => {
     });
   });
 
-  describe('Stat Routing', () => {
-    it('should route core stats to actor.stats', () => {
-      // Modify core stat directly
+  describe('Stat Access', () => {
+    it('should set and get core stats from actor.stats', () => {
       setStatValue(actor, Stat.INT, 15);
       expect(getStatValue(actor, Stat.INT)).toBe(15);
     });
 
-    it('should route shell stats to current shell', () => {
-      // Modify shell stat directly
-      const currentShell = actor.shells[actor.currentShell];
+    it('should set and get shell stats from actor.stats', () => {
       setStatValue(actor, Stat.POW, 20);
       expect(getStatValue(actor, Stat.POW)).toBe(20);
     });
 
-    it('should handle missing current shell gracefully', () => {
-      actor.currentShell = 'nonexistent';
-      expect(() => getStat(actor, Stat.POW)).toThrow('Actor has no current shell');
+    it('should access all stats directly from actor.stats', () => {
+      expect(actor.stats[Stat.INT]).toBe(10);
+      expect(actor.stats[Stat.POW]).toBe(10);
     });
   });
 
@@ -105,7 +101,7 @@ describe('Actor Stats Module', () => {
   });
 
   describe('Get All Stats', () => {
-    it('should return unified view of all stats', () => {
+    it('should return all stats from actor.stats', () => {
       // Modify some stats
       setStatValue(actor, Stat.INT, 12);
       setStatValue(actor, Stat.PER, 14);
@@ -124,9 +120,9 @@ describe('Actor Stats Module', () => {
       expect(allStats[Stat.RES]).toBe(22);
     });
 
-    it('should handle missing current shell', () => {
-      actor.currentShell = 'nonexistent';
-      expect(() => getAllStats(actor)).toThrow('Actor has no current shell');
+    it('should return reference to actor.stats', () => {
+      const allStats = getAllStats(actor);
+      expect(allStats).toBe(actor.stats);
     });
   });
 

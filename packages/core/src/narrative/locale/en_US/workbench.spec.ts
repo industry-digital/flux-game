@@ -41,7 +41,7 @@ import { TransformerContext } from '~/types/handler';
 import { createDefaultActors } from '~/testing/actors';
 import { CurrencyType } from '~/types/currency';
 import { WorkbenchSessionDidStart } from '~/types/event';
-import { setShellNaturalStatValue } from '~/worldkit/entity/actor';
+import { setStatValue } from '~/worldkit/entity/actor';
 
 describe('English Workbench Narratives - Snapshot Tests', () => {
   let context: TransformerContext;
@@ -54,12 +54,19 @@ describe('English Workbench Narratives - Snapshot Tests', () => {
     ({ alice, bob } = createDefaultActors());
     scenario = createWorldScenario(context, { actors: [alice, bob] });
 
-    // Set Alice's shell stats to the expected values for the tests
-    const aliceShell = alice.shells[alice.currentShell];
-    if (aliceShell) {
-      setShellNaturalStatValue(aliceShell, Stat.POW, 40);
-      setShellNaturalStatValue(aliceShell, Stat.FIN, 40);
-      setShellNaturalStatValue(aliceShell, Stat.RES, 40);
+    // Set shell stats and sync to actor's materialized view
+    if (alice.shells && alice.currentShell) {
+      const shell = alice.shells[alice.currentShell];
+
+      // Set stats on shell using type-safe utility
+      setStatValue(shell, Stat.POW, 40);
+      setStatValue(shell, Stat.FIN, 40);
+      setStatValue(shell, Stat.RES, 40);
+
+      // Sync to actor stats (materialized view)
+      setStatValue(alice, Stat.POW, 40);
+      setStatValue(alice, Stat.FIN, 40);
+      setStatValue(alice, Stat.RES, 40);
     }
 
     // Only Alice is going to be working at the workbench
@@ -126,7 +133,7 @@ describe('English Workbench Narratives - Snapshot Tests', () => {
         actor: ALICE_ID,
         payload: {
           ...e.payload,
-          shellId: alice.currentShell, // Use Alice's actual shell ID
+          shellId: alice.currentShell!, // Use Alice's actual shell ID
           mutation: createStatMutation(Stat.POW, StatMutationOperation.ADD, 5),
         },
       }));
@@ -187,7 +194,7 @@ describe('English Workbench Narratives - Snapshot Tests', () => {
         actor: BOB_ID,
         payload: {
           ...e.payload,
-          shellId: bob.currentShell, // Use Bob's actual shell ID
+          shellId: bob.currentShell!, // Use Bob's actual shell ID
           mutation: createStatMutation(Stat.RES, StatMutationOperation.REMOVE, 3),
         },
       }));
@@ -454,8 +461,8 @@ describe('English Workbench Narratives - Snapshot Tests', () => {
     it('should display long shell names correctly', () => {
       // Create a shell with a very long name
       const actor = context.world.actors[ALICE_ID];
-      const shellId = Object.keys(actor.shells)[0];
-      actor.shells[shellId].name = 'This is a very long shell name that should be displayed fully';
+      const shellId = Object.keys(actor.shells!)[0];
+      actor.shells![shellId].name = 'This is a very long shell name that should be displayed fully';
 
       const event = createActorDidListShellsEvent((e) => ({ ...e, actor: ALICE_ID }));
       const narrative = narrateActorDidListShells(context, event, ALICE_ID);
@@ -465,9 +472,9 @@ describe('English Workbench Narratives - Snapshot Tests', () => {
     it('should handle shells with no name (show "Unnamed Shell")', () => {
       // Remove the name from Alice's shell
       const actor = context.world.actors[ALICE_ID];
-      const shellId = Object.keys(actor.shells)[0];
+      const shellId = Object.keys(actor.shells!)[0];
       // @ts-expect-error - Force-deleting the name property
-      delete actor.shells[shellId].name;
+      delete actor.shells![shellId].name;
 
       const event = createActorDidListShellsEvent((e) => ({ ...e, actor: ALICE_ID }));
       const narrative = narrateActorDidListShells(context, event, ALICE_ID);
@@ -513,7 +520,7 @@ describe('English Workbench Narratives - Snapshot Tests', () => {
       console.log('=== END SHELL LISTING ===\n');
 
       const actor = context.world.actors[ALICE_ID];
-      const shell = actor.shells[actor.currentShell];
+      const shell = actor.shells![actor.currentShell!];
       // Basic validation to ensure test passes
       expect(narrative).toContain(`✓ ${shell.name} is your current shell.`);
     });
@@ -756,7 +763,7 @@ describe('English Workbench Narratives - Snapshot Tests', () => {
           actor: ALICE_ID,
           payload: {
             ...e.payload,
-            shellId: alice.currentShell, // Use Alice's actual shell ID
+            shellId: alice.currentShell!, // Use Alice's actual shell ID
             mutation: createStatMutation(Stat.POW, StatMutationOperation.ADD, 5),
           },
         }));
@@ -943,7 +950,7 @@ describe('English Workbench Narratives - Snapshot Tests', () => {
         actor: ALICE_ID,
         payload: {
           ...e.payload,
-          shellId: alice.currentShell, // Use Alice's current shell
+          shellId: alice.currentShell!, // Use Alice's current shell
         }
       }));
       const statusNarrative = narrateActorDidAssessShellStatus(context, statusEvent, ALICE_ID);

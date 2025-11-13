@@ -11,6 +11,7 @@ import {
 import { CurrencyType, TransactionType } from '~/types/currency';
 import { calculateTotalCost } from '~/worldkit/workbench/cost';
 import { applyShellMutations } from '~/worldkit/workbench/execution';
+import { syncShellStatsToActor } from '~/worldkit/entity/actor/shell';
 import { createWorldEvent } from '~/worldkit/event';
 
 export type CommitShellMutationsAction = (actor: Actor, trace?: string) => WorldEvent[];
@@ -22,6 +23,7 @@ export type CommitShellMutationsDependencies = {
   createCurrencyTransaction: typeof createCurrencyTransaction;
   executeCurrencyTransaction: typeof executeCurrencyTransaction;
   applyShellMutations: typeof applyShellMutations;
+  syncShellStatsToActor: typeof syncShellStatsToActor;
 };
 
 const DEFAULT_COMMIT_SHELL_MUTATIONS_DEPS: CommitShellMutationsDependencies = {
@@ -31,6 +33,7 @@ const DEFAULT_COMMIT_SHELL_MUTATIONS_DEPS: CommitShellMutationsDependencies = {
   createCurrencyTransaction,
   executeCurrencyTransaction,
   applyShellMutations,
+  syncShellStatsToActor,
 };
 
 export const createCommitShellMutationsAction = (
@@ -43,6 +46,12 @@ export const createCommitShellMutationsAction = (
     // 1. Validate Pending Mutations
     if (session.data.pendingMutations.length === 0) {
       context.declareError('No staged mutations to commit');
+      return [];
+    }
+
+    // Invariant: Shell mutations only work with PCs that have shells
+    if (!actor.shells || !actor.currentShell) {
+      context.declareError('Shell mutations require actor with shells (PCs only)');
       return [];
     }
 
@@ -73,6 +82,9 @@ export const createCommitShellMutationsAction = (
 
     // 6. Apply Mutations
     deps.applyShellMutations(shell, session.data.pendingMutations);
+
+    // 6a. Sync shell stats to actor stats (materialized view pattern)
+    deps.syncShellStatsToActor(actor);
 
     // 7. Clear Pending State
     const committedMutations = [...session.data.pendingMutations]; // Copy before clearing

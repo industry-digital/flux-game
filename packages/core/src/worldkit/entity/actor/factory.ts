@@ -4,7 +4,7 @@ import { Actor, ActorInput, Stat, ActorType, Gender } from '~/types/entity/actor
 import { WellKnownPlace } from '~/types/world/space';
 import { merge } from '~/lib/lang';
 import { refreshCapacitorEnergy } from '~/worldkit/entity/actor/capacitor';
-import { createShell } from '~/worldkit/entity/actor/shell';
+import { createShell, syncShellStatsToActor } from '~/worldkit/entity/actor/shell';
 import { initializeWallet } from '~/worldkit/entity/actor/wallet';
 import { createInventory } from '~/worldkit/entity/actor/inventory';
 
@@ -13,6 +13,7 @@ export type ActorTransformer = (actor: Actor) => Actor;
 export type ActorFactoryDependencies = FactoryDependencies & {
   refreshCapacitorEnergy: typeof refreshCapacitorEnergy;
   createShell: typeof createShell;
+  syncShellStatsToActor: typeof syncShellStatsToActor;
   initializeWallet: typeof initializeWallet;
 };
 
@@ -20,6 +21,7 @@ export const DEFAULT_ACTOR_FACTORY_DEPS: ActorFactoryDependencies = {
   ...DEFAULT_FACTORY_DEPS,
   refreshCapacitorEnergy,
   createShell,
+  syncShellStatsToActor,
   initializeWallet,
 };
 
@@ -73,6 +75,9 @@ const createDefaultActor = (deps: ActorFactoryDependencies): Actor => {
       [Stat.INT]: 10,
       [Stat.PER]: 10,
       [Stat.MEM]: 10,
+      [Stat.POW]: 10,
+      [Stat.FIN]: 10,
+      [Stat.RES]: 10,
     },
     injuries: {},
     capacitor: {
@@ -94,14 +99,19 @@ const createDefaultActor = (deps: ActorFactoryDependencies): Actor => {
     session: undefined,
   };
 
-  // Create three shells
-  for (let i = 1; i <= 3; i++) {
-    const shell = deps.createShell({ id: i.toString() });
-    actor.shells[shell.id] = shell;
-  }
+  if (actor.shells) {
+    // Create three shells
+    for (let i = 1; i <= 3; i++) {
+      const shell = deps.createShell({ id: i.toString() });
+      actor.shells[shell.id] = shell;
+    }
 
-  // The first shell is the default shell
-  actor.currentShell = '1';
+    // The first shell is the default shell
+    actor.currentShell = '1';
+
+    // Sync shell stats to actor stats (materialized view pattern for PCs)
+    deps.syncShellStatsToActor(actor);
+  }
 
   return actor;
 };

@@ -20,12 +20,12 @@ import { ShellMutationType, StatMutation, StatMutationOperation } from '~/types/
 import { NarrativeSequence, TemplateFunction } from '~/types/narrative';
 import { ActorURN } from '~/types/taxonomy';
 import { Stat } from '~/types/entity/actor';
-import { SHELL_STAT_NAMES, getNaturalStatValue } from '~/worldkit/entity/actor/stats';
+import { SHELL_STAT_KEYS } from '~/worldkit/entity/actor/shell';
 import { calculateShellPerformance, ShellPerformanceDependencies } from '~/worldkit/entity/actor/shell/instrumentation';
 import { getSchemaTranslation } from '~/narrative/schema';
 import { Locale } from '~/types/i18n';
-import { getShellNaturalStatValue } from '~/worldkit/entity/actor/shell';
 import { CHECK_MARK } from '~/narrative/glyphs';
+import { getStatValue } from '~/worldkit/entity/actor/stats';
 
 const STAT_DISPLAY_NAMES: Readonly<Record<Stat, string>> = Object.freeze({
   [Stat.POW]: 'POW',
@@ -81,17 +81,13 @@ export const narrateActorDidStageShellMutation: TemplateFunction<ActorDidStageSh
     return '';
   }
 
-  const shell = actor.shells[event.payload.shellId];
-  if (!shell) {
-    return '';
-  }
-
   const mutation = event.payload.mutation as StatMutation;
   if (mutation.type !== ShellMutationType.STAT) {
     return ''; // Never supposed to happen
   }
 
-  const from = getShellNaturalStatValue(shell, mutation.stat);
+  // Get stat from actor's materialized view (denormalized shell stats)
+  const from = getStatValue(actor, mutation.stat);
   const to = mutation.operation === StatMutationOperation.ADD
     ? from + mutation.amount
     : from - mutation.amount;
@@ -230,15 +226,15 @@ const baseNarrateActorDidDiffShellMutations: TemplateFunction<ActorDidDiffShellM
       result += '\nSHELL STATS\n';
 
       // Show all three core shell stats (POW, FIN, RES)
-      for (const stat of SHELL_STAT_NAMES) {
+      for (const stat of SHELL_STAT_KEYS) {
         const statValue = stats?.[stat];
         if (typeof statValue === 'string') {
           // This stat has changes
           result += '  ' + STAT_DISPLAY_NAMES[stat] + ':'.padEnd(18 - STAT_DISPLAY_NAMES[stat].length) +
                    formatDiffValue(statValue, '', 0) + '\n';
         } else {
-          // This stat has no changes - show current value
-          const currentValue = getNaturalStatValue(actor, stat);
+          // This stat has no changes - show current value (from actor's denormalized stats)
+          const currentValue = getStatValue(actor, stat);
           result += '  ' + STAT_DISPLAY_NAMES[stat] + ':'.padEnd(18 - STAT_DISPLAY_NAMES[stat].length) +
                    currentValue.toFixed(0) + '\n';
         }
@@ -375,9 +371,10 @@ export const narrateActorDidListShells: TemplateFunction<ActorDidListShells, Act
     const shell = actor.shells[shellId];
     const isActive = shell.id === actor.currentShell;
     const shellName = shell.name || 'Unnamed Shell';
-    const powStat = getShellNaturalStatValue(shell, Stat.POW);
-    const finStat = getShellNaturalStatValue(shell, Stat.FIN);
-    const resStat = getShellNaturalStatValue(shell, Stat.RES);
+    // Read stats directly from shell (each shell maintains its own stats)
+    const powStat = shell.stats[Stat.POW];
+    const finStat = shell.stats[Stat.FIN];
+    const resStat = shell.stats[Stat.RES];
 
     // Calculate shell mass (equipment + base shell mass) and convert to kg
     const shellMassKg = massApi.computeShellMass(shell) / 1000;
@@ -390,8 +387,7 @@ export const narrateActorDidListShells: TemplateFunction<ActorDidListShells, Act
               `Shell ${shellCounter}: "${shellName}" (${shellMassKg.toFixed(1)}kg, ${powStat} POW, ${finStat} FIN, ${resStat} RES)\n`;
   }
 
-  const currentShell = actor.shells[actor.currentShell];
-
+  const currentShell = actor.shells![actor.currentShell!];
 
   result += '\n' + CHECK_MARK + ` ${currentShell.name} is your current shell.`;
 
@@ -488,7 +484,7 @@ export const narrateActorDidSwapShell: TemplateFunction<ActorDidSwapShell, Actor
   }
 
   if (recipientId === event.actor) {
-    const shell = actor.shells[event.payload.toShellId];
+    const shell = actor.shells![event.payload.toShellId];
     return `Core consciousness transferred to shell "${shell.name}."`;
   }
 
@@ -506,7 +502,7 @@ export const narrateActorDidAssessShellStatus: TemplateFunction<ActorDidAssessSh
     return '';
   }
 
-  const shell = actor.shells[event.payload.shellId];
+  const shell = actor.shells?.[event.payload.shellId];
   if (!shell) {
     return '';
   }

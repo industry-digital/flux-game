@@ -2,29 +2,25 @@ import { describe, it, expect } from 'vitest';
 import { sortInitiativeOrder } from './initiative';
 import { createCombatant } from '~/worldkit/combat/combatant';
 import { createTestActor } from '~/testing/world-testing';
-import { Actor, ActorURN, RollResult } from '~/types';
+import { Actor, ActorURN, RollResult, Stat } from '~/types';
 import { Combatant, Team } from '~/types/combat';
 import { ATTACK_ROLL_SPECIFICATION } from './dice';
+import { setStatValue } from '~/worldkit/entity/actor/stats';
 
 describe('sortInitiativeOrder', () => {
   it('should sort by initiative with cascading tie-breaking (roll > finesse > combat initiator)', () => {
     // Create test actors with different finesse stats
-    const alice: Actor = createTestActor({
-      id: 'flux:actor:alice' as ActorURN,
-      stats: { fin: { eff: 15 } } // High finesse
-    });
-    const bob: Actor = createTestActor({
-      id: 'flux:actor:bob' as ActorURN,
-      stats: { fin: { eff: 12 } } // Medium finesse
-    });
-    const charlie: Actor = createTestActor({
-      id: 'flux:actor:charlie' as ActorURN,
-      stats: { fin: { eff: 10 } } // Low finesse
-    });
-    const diana: Actor = createTestActor({
-      id: 'flux:actor:diana' as ActorURN,
-      stats: { fin: { eff: 10 } } // Same finesse as Charlie
-    });
+    const alice: Actor = createTestActor({ id: 'flux:actor:alice' as ActorURN });
+    setStatValue(alice, Stat.FIN, 15); // High finesse
+
+    const bob: Actor = createTestActor({ id: 'flux:actor:bob' as ActorURN });
+    setStatValue(bob, Stat.FIN, 12); // Medium finesse
+
+    const charlie: Actor = createTestActor({ id: 'flux:actor:charlie' as ActorURN });
+    setStatValue(charlie, Stat.FIN, 10); // Low finesse
+
+    const diana: Actor = createTestActor({ id: 'flux:actor:diana' as ActorURN });
+    setStatValue(diana, Stat.FIN, 10); // Same finesse as Charlie
 
     // Create combatants - Diana initiated combat
     const aliceCombatant: Combatant = createCombatant(alice, Team.ALPHA);

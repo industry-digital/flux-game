@@ -7,6 +7,38 @@ import { PotentiallyImpureOperations } from '~/types';
 import { generateRandomShellName } from './name';
 import { MAX_STAT_VALUE } from '~/worldkit/entity/actor/stats';
 
+/**
+ * Shell stat keys - the stats that are stored on shells
+ */
+export const SHELL_STAT_KEYS = [Stat.POW, Stat.FIN, Stat.RES] as const;
+
+/**
+ * Sync shell stats to actor stats (PC only)
+ * This maintains the invariant that actor.stats reflects the current shell's stats
+ *
+ * For PCs: actor.stats.{pow,fin,res} is a materialized view of shells[currentShell].stats
+ * This should be called at:
+ * - Shell swap
+ * - Shell mutation commit
+ * - Actor creation/hydration
+ */
+export const syncShellStatsToActor = (actor: Actor): void => {
+  if (!actor.currentShell || !actor.shells) {
+    // Creature or actor without shells - no sync needed
+    return;
+  }
+
+  const currentShell = actor.shells[actor.currentShell];
+  if (!currentShell) {
+    throw new Error(`Cannot sync stats: current shell ${actor.currentShell} not found`);
+  }
+
+  // Sync shell stats to actor (materialized view pattern)
+  actor.stats[Stat.POW] = currentShell.stats[Stat.POW];
+  actor.stats[Stat.FIN] = currentShell.stats[Stat.FIN];
+  actor.stats[Stat.RES] = currentShell.stats[Stat.RES];
+};
+
 // Re-export for testing
 export { generateRandomShellName };
 
@@ -60,19 +92,19 @@ export const addShellToActor = (actor: Actor, shell?: Shell) => {
     shell = createSequentialShell(actor);
   }
 
-  actor.shells[shell.id] = shell;
+  actor.shells![shell.id] = shell;
 };
 
 export const removeShellFromActor = (actor: Actor, shellId: string) => {
-  delete actor.shells[shellId];
+  delete actor.shells?.[shellId];
 };
 
 export const getShell = (actor: Actor, shellId: string) => {
-  return actor.shells[shellId];
+  return actor.shells?.[shellId];
 };
 
 export const getCurrentShell = (actor: Actor) => {
-  return actor.shells[actor.currentShell];
+  return actor.shells![actor.currentShell!];
 };
 
 export const getShellsFromActor = (actor: Actor) => {

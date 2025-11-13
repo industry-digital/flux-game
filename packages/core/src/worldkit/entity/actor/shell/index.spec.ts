@@ -67,15 +67,15 @@ describe('Shell Management Functions', () => {
 
   describe('addShellToActor', () => {
     it('should add shell to actor shells collection', () => {
-      expect(actor.shells[shell.id]).toBeUndefined();
+      expect(actor.shells?.[shell.id]).toBeUndefined();
       addShellToActor(actor, shell);
-      expect(actor.shells[shell.id]).toBe(shell);
+      expect(actor.shells?.[shell.id]).toBe(shell);
     });
 
     it('should add default shell when no shell provided', () => {
-      const initialShellCount = Object.keys(actor.shells).length;
+      const initialShellCount = Object.keys(actor.shells!).length;
       addShellToActor(actor);
-      const finalShellCount = Object.keys(actor.shells).length;
+      const finalShellCount = Object.keys(actor.shells!).length;
       expect(finalShellCount).toBe(initialShellCount + 1);
     });
   });
@@ -83,9 +83,9 @@ describe('Shell Management Functions', () => {
   describe('removeShellFromActor', () => {
     it('should remove shell from actor shells collection', () => {
       addShellToActor(actor, shell);
-      expect(actor.shells[shell.id]).toBe(shell);
+      expect(actor.shells?.[shell.id]).toBe(shell);
       removeShellFromActor(actor, shell.id);
-      expect(actor.shells[shell.id]).toBeUndefined();
+      expect(actor.shells?.[shell.id]).toBeUndefined();
     });
   });
 

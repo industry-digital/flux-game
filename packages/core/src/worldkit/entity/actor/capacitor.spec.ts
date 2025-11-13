@@ -21,7 +21,6 @@ import { TransformerContext } from '~/types/handler';
 import { createDefaultActors } from '~/testing/actors';
 import { createTransformerContext } from '~/worldkit/context';
 import { setStatValue } from '~/worldkit/entity/actor/stats';
-import { getCurrentShell, setShellStatValue } from '~/worldkit/entity/actor/shell';
 
 describe('Capacitor API (Pure Functions)', () => {
   let context: TransformerContext;
@@ -62,16 +61,14 @@ describe('Capacitor API (Pure Functions)', () => {
     });
 
     it('should handle zero resilience gracefully', () => {
-      const currentShell = getCurrentShell(alice);
-      setShellStatValue(currentShell, Stat.RES, 0);
+      setStatValue(alice, Stat.RES, 0);
 
       expect(getMaxEnergy(alice)).toBe(10000); // Base energy at RES 0 (clamped to RES 10)
       expect(getMaxRecoveryRate(alice)).toBe(150); // Base recovery at RES 0 (clamped to RES 10)
     });
 
     it('should handle very high resilience values', () => {
-      const currentShell = getCurrentShell(alice);
-      setShellStatValue(currentShell, Stat.RES, 100);
+      setStatValue(alice, Stat.RES, 100);
 
       expect(getMaxEnergy(alice)).toBe(45600); // Power curve: RES 100 → 45,600 J (matches UI!)
       expect(getMaxRecoveryRate(alice)).toBe(500); // Power curve: RES 100 → 500W
@@ -167,8 +164,7 @@ describe('Capacitor API (Pure Functions)', () => {
     });
 
     it('should handle zero max energy in percentage calculation', () => {
-      const currentShell = alice.shells[alice.currentShell];
-      setShellStatValue(currentShell, Stat.RES, 0);
+      setStatValue(alice, Stat.RES, 0);
       setEnergy(alice, 0);
 
       expect(getEnergyPercentage(alice)).toBe(0);
@@ -381,8 +377,7 @@ describe('Capacitor API (Pure Functions)', () => {
       expect(getEnergyPercentage(alice)).toBeCloseTo(10000 / initialMaxEnergy, 3);
 
       // Buff increases RES
-      const currentShell = alice.shells[alice.currentShell];
-      setShellStatValue(currentShell, Stat.RES, 20);
+      setStatValue(alice, Stat.RES, 20);
       const buffedMaxEnergy = getMaxEnergy(alice);
       expect(buffedMaxEnergy).toBeGreaterThan(initialMaxEnergy);
       // Energy stays the same, but percentage changes
@@ -390,7 +385,7 @@ describe('Capacitor API (Pure Functions)', () => {
       expect(getEnergyPercentage(alice)).toBeCloseTo(10000 / buffedMaxEnergy, 3);
 
       // Debuff reduces RES below current energy level
-      setShellStatValue(currentShell, Stat.RES, 8);
+      setStatValue(alice, Stat.RES, 8);
       const debuffedMaxEnergy = getMaxEnergy(alice);
       expect(debuffedMaxEnergy).toBeLessThan(initialMaxEnergy);
       // Energy should be clamped when setting
@@ -679,9 +674,8 @@ describe('Capacitor API (Pure Functions)', () => {
 
   describe('edge cases and error handling', () => {
     it('should throw when actor stats are missing', () => {
-      const currentShell = alice.shells[alice.currentShell];
       // @ts-expect-error: Cannot delete a required property, but this is a test
-      delete currentShell.stats[Stat.RES]
+      delete alice.stats[Stat.RES];
 
       // Should throw when stats are missing - this is correct behavior
       expect(() => getMaxEnergy(alice)).toThrow();

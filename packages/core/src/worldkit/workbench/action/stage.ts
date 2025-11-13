@@ -64,7 +64,7 @@ export const createStageMutationAction = (
   ): WorldEvent[] {
     output.length = 0;
 
-    const shell = actor.shells[shellId];
+    const shell = actor.shells![shellId];
     if (!shell) {
       declareError(ErrorCode.NOT_FOUND, trace);
       return [];

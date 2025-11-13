@@ -24,7 +24,7 @@ export const createGetShellStatusAction = (
   ): WorldEvent[] {
     output.length = 0;
 
-    const currentShell = actor.shells[actor.currentShell];
+    const currentShell = actor.shells![actor.currentShell!];
     if (!currentShell) {
       declareError(ErrorCode.INVALID_TARGET, trace);
       return output;

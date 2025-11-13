@@ -13,6 +13,7 @@ import { createDefaultSkillState } from '~/worldkit/entity/actor/skill';
 import { setEnergy, setCapacitorPosition } from '~/worldkit/entity/actor/capacitor';
 import { setAp } from '~/worldkit/combat/ap';
 import { createActor } from '~/worldkit/entity/actor';
+import { syncShellStatsToActor } from '~/worldkit/entity/actor/shell';
 
 export type CombatScenarioDependencies = {
   useCombatSession: typeof createCombatSessionApi;
@@ -200,7 +201,8 @@ export function useCombatScenario(
     const actor = createActor((actor: Actor) => {
       const finalSkills = { ...defaultSkills, ...configuredSkills } as Record<SkillSchemaURN, SkillState>;
 
-      return {
+      // Set mental stats directly on actor
+      const updatedActor: Actor = {
         ...actor,
         id: actorId as ActorURN,
         name: actorName,
@@ -213,20 +215,23 @@ export function useCombatScenario(
           [Stat.PER]: processSingleStat(stats?.per, 10),
           [Stat.MEM]: processSingleStat(stats?.mem, 10),
         },
-        shells: {
-          ...actor.shells,
-          [actor.currentShell]: {
-            ...actor.shells[actor.currentShell],
-            stats: {
-              ...actor.shells[actor.currentShell].stats,
-              [Stat.POW]: processSingleStat(stats?.pow, 10),
-              [Stat.FIN]: processSingleStat(stats?.fin, 10),
-              [Stat.RES]: processSingleStat(stats?.res, 10),
-            },
-          },
-        },
         hp: processHpSetup(participant.hp, actor.hp),
       };
+
+      // Set physical stats on shell if shells exist
+      if (updatedActor.shells && updatedActor.currentShell) {
+        const currentShell = updatedActor.shells[updatedActor.currentShell];
+        if (currentShell) {
+          currentShell.stats[Stat.POW] = processSingleStat(stats?.pow, 10);
+          currentShell.stats[Stat.FIN] = processSingleStat(stats?.fin, 10);
+          currentShell.stats[Stat.RES] = processSingleStat(stats?.res, 10);
+
+          // Sync shell stats to actor (materialized view pattern)
+          syncShellStatsToActor(updatedActor);
+        }
+      }
+
+      return updatedActor;
     });
 
     // Add actor to world context BEFORE adding combatant

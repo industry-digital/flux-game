@@ -43,7 +43,7 @@ describe('SwapShellAction', () => {
 
       // Add a second shell to the actor
       const secondShellId = 'shell-2';
-      actor.shells[secondShellId] = createShell((shell) => ({
+      actor.shells![secondShellId] = createShell((shell) => ({
         ...shell,
         id: secondShellId,
         name: 'Combat Shell',
@@ -68,7 +68,7 @@ describe('SwapShellAction', () => {
       const session = scenario.actors['flux:actor:test-actor'].hooks.session.session;
 
       const secondShellId = 'shell-2';
-      actor.shells[secondShellId] = createShell((shell) => ({
+      actor.shells![secondShellId] = createShell((shell) => ({
         ...shell,
         id: secondShellId,
         name: 'Combat Shell',
@@ -101,7 +101,7 @@ describe('SwapShellAction', () => {
       const session = scenario.actors['flux:actor:test-actor'].hooks.session.session;
 
       const swapAction = createSwapShellAction(context, session);
-      const events = swapAction(actor, actor.currentShell);
+      const events = swapAction(actor, actor.currentShell!);
 
       expect(events).toHaveLength(0);
       expect(context.declareError).toHaveBeenCalled();
@@ -117,7 +117,7 @@ describe('SwapShellAction', () => {
       const session = scenario.actors['flux:actor:test-actor'].hooks.session.session;
 
       // Add second shell
-      actor.shells['shell-2'] = {
+      actor.shells!['shell-2'] = {
         id: 'shell-2',
         name: 'Combat Shell',
         stats: {
@@ -150,7 +150,7 @@ describe('SwapShellAction', () => {
 
       // Add second shell
       const secondShellId = 'shell-2';
-      actor.shells[secondShellId] = createShell((shell) => ({
+      actor.shells![secondShellId] = createShell((shell) => ({
         ...shell,
         id: secondShellId,
         name: 'Combat Shell',
@@ -182,7 +182,7 @@ describe('SwapShellAction', () => {
 
       // Add second shell
       const secondShellId = 'shell-2';
-      actor.shells[secondShellId] = createShell((shell) => ({
+      actor.shells![secondShellId] = createShell((shell) => ({
         ...shell,
         id: secondShellId,
         name: 'Combat Shell',
@@ -233,7 +233,7 @@ describe('SwapShellAction', () => {
       const session = scenario.actors['flux:actor:test-actor'].hooks.session.session;
 
       // Add second shell
-      actor.shells['shell-2'] = createShell((shell) => ({
+      actor.shells!['shell-2'] = createShell((shell) => ({
         ...shell,
         id: 'shell-2',
         name: 'Combat Shell',
@@ -272,7 +272,7 @@ describe('SwapShellAction', () => {
 
       // Add second shell
       const secondShellId = 'shell-2';
-      actor.shells[secondShellId] = createShell((shell) => ({
+      actor.shells![secondShellId] = createShell((shell) => ({
         ...shell,
         id: secondShellId,
         name: 'Combat Shell',
@@ -300,7 +300,7 @@ describe('SwapShellAction', () => {
 
       // Add second shell without name
       const secondShellId = 'shell-2';
-      actor.shells[secondShellId] = createShell((shell) => ({
+      actor.shells![secondShellId] = createShell((shell) => ({
         ...shell,
         id: secondShellId,
         name: '', // Empty name

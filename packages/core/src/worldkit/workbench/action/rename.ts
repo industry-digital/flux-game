@@ -37,7 +37,7 @@ export const createRenameShellAction = (
     output.length = 0;
 
     // Invariant: The target shell exists in the actor's arsenal.
-    const targetShell = actor.shells[shellId];
+    const targetShell = actor.shells![shellId];
     if (!targetShell) {
       context.declareError(ErrorCode.INVALID_TARGET, trace);
       return output;

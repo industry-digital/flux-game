@@ -115,10 +115,10 @@ export function useWorkbenchScenario(
 
       // Update the default shell's stats if shellStats are provided
       if (participant.shellStats) {
-        const currentShellId = updatedActor.currentShell;
-        const currentShell = updatedActor.shells[currentShellId];
+        const currentShellId = updatedActor.currentShell!;
+        const currentShell = updatedActor.shells![currentShellId];
         if (currentShell) {
-          updatedActor.shells[currentShellId] = {
+          updatedActor.shells![currentShellId] = {
             ...currentShell,
             stats: {
               [Stat.POW]: processSingleStat(participant.shellStats?.pow, 10),
@@ -136,7 +136,7 @@ export function useWorkbenchScenario(
     context.world.actors[actorId as ActorURN] = actor;
 
     // Get the shell from the actor (it was auto-created)
-    const shell = actor.shells[actor.currentShell];
+    const shell = actor.shells![actor.currentShell!];
 
     // Create workbench session for this actor
     const sessionHook = useWorkbenchSessionImpl(context, actorId as ActorURN, context.uniqid());
