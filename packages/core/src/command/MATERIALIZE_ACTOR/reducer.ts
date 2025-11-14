@@ -5,6 +5,7 @@ import { EventType } from '~/types/event';
 import { withCommandType } from '~/command/withCommandType';
 import { CommandType } from '~/types/intent';
 import { PlaceEntityDescriptor } from '~/types/entity/place';
+import { withBasicWorldStateValidation, withSystemActorValidation } from '~/command/validation';
 
 const EMPTY_PAYLOAD: Readonly<Record<string, never>> = Object.freeze({});
 const DEFAULT_VISIBILITY: Readonly<PlaceEntityDescriptor> = Object.freeze({
@@ -31,5 +32,9 @@ const reducerCore: PureReducer<TransformerContext, MaterializeActorCommand> = (c
 
 export const materializeActorReducer: PureReducer<TransformerContext, MaterializeActorCommand> =
   withCommandType(CommandType.MATERIALIZE_ACTOR,
-    reducerCore,
+    withSystemActorValidation(
+      withBasicWorldStateValidation(
+        reducerCore,
+      ),
+    ),
   );

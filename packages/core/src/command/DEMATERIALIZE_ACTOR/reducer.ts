@@ -3,7 +3,7 @@ import { DematerializeActorCommand } from './types';
 import { EventType } from '~/types/event';
 import { CommandType } from '~/types/intent';
 import { withCommandType } from '~/command/withCommandType';
-import { withBasicWorldStateValidation } from '~/command/validation';
+import { withBasicWorldStateValidation, withSystemActorValidation } from '~/command/validation';
 
 export const EMPTY_PAYLOAD: Readonly<Record<string, never>> = Object.freeze({});
 
@@ -28,7 +28,9 @@ const reducerCore: PureReducer<TransformerContext, DematerializeActorCommand> = 
 
 export const dematerializeActorReducer: PureReducer<TransformerContext, DematerializeActorCommand> =
   withCommandType(CommandType.DEMATERIALIZE_ACTOR,
-    withBasicWorldStateValidation(
-      reducerCore,
+    withSystemActorValidation(
+      withBasicWorldStateValidation(
+        reducerCore,
+      ),
     ),
   );

@@ -47,3 +47,17 @@ export const withBasicWorldStateValidation = <TCommand extends Command>(
     return reducer(context, command);
   };
 };
+
+export const withSystemActorValidation = <TCommand extends Command>(
+  reducer: PureReducer<TransformerContext, TCommand>,
+): PureReducer<TransformerContext, TCommand> => {
+  return (context, command) => {
+    const { failed } = context;
+
+    if (command.actor !== WellKnownActor.SYSTEM) {
+      return failed(command.id, ErrorCode.INVALID_TARGET);
+    }
+
+    return reducer(context, command);
+  };
+};

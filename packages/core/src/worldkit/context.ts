@@ -15,7 +15,6 @@ import { createActorWeaponApi } from '~/worldkit/entity/actor/weapon';
 import { getSchemaTranslation } from '~/narrative/schema';
 import { createPartyApi } from '~/worldkit/entity/group/party';
 import { ErrorCode } from '~/types/error';
-import { debug } from 'console';
 import { GroupApiContext } from '~/worldkit/entity/group/api';
 
 export type MapFunction<T> = (context: T) => T;
@@ -25,7 +24,7 @@ export const createPotentiallyImpureOperations = (
   random = () => Math.random(),
   timestamp = () => Date.now(),
   uniqid = () => uniqidImpl(24, BASE62_CHARSET),
-  debug = () => {},
+  debug = (...args: any[]) => console.debug(...args),
   profile = profileImpl,
 ): PotentiallyImpureOperations => {
   return {
@@ -184,7 +183,7 @@ export const createTransformerContext = (
 
   (context as TransformerContext).failed = (trace: string, code: ErrorCode): TransformerContext => {
     declareError(code, trace);
-    debug(`Trace ${trace}: code=${code}`);
+    context.debug(`Trace ${trace}: code=${code}`);
     return context as TransformerContext;
   };
 
