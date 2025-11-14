@@ -59,27 +59,13 @@ export function resolveCommandFromIntent(
 
   // Try each parser until one succeeds
   for (const resolver of resolvers) {
-    try {
-      const command = resolver(resolverContext, intent);
-      if (command) {
-        // Successfully resolved - return the command
-        return command;
-      }
-    } catch (error) {
-      // Parser threw an error - log it but continue trying other parsers
-      context.declareError(
-        `Parser error for intent "${intent.text}": ${error instanceof Error ? error.message : String(error)}`,
-        intent.id
-      );
+    const command = resolver(resolverContext, intent);
+    if (command) {
+      return command;
     }
   }
 
   // No parser could handle this intent
-  context.declareError(
-    `No handler found for intent: "${intent.text}"`,
-    intent.id
-  );
-
   return null;
 }
 

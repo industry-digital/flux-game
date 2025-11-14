@@ -27,6 +27,17 @@ const reducerCore: PureReducer<TransformerContext, MaterializeActorCommand> = (c
     payload: EMPTY_PAYLOAD,
   });
 
+  // Simulate a LOOK event so as to send the Place description to the actor
+  declareEvent({
+    type: EventType.ACTOR_DID_LOOK,
+    actor: actor.id,
+    location: place.id,
+    trace: command.id,
+    payload: {
+      target: place.id,
+    },
+  });
+
   return context;
 };
 
