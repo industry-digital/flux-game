@@ -322,7 +322,7 @@ describe('English Party Narratives - Snapshot Tests', () => {
       }));
 
       const narrative = narrateActorDidJoinParty(context, event, BOB_ID);
-      expect(narrative).toBe('You have joined Alice\'s party.\nTo list party members: `party list`\nTo leave the party: `party leave`');
+      expect(narrative).toBe('You have joined Alice\'s party.\nTo list party members: `party status`\nTo leave the party: `party leave`');
     });
 
     it('should render exact party joining from observer perspective', () => {

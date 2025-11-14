@@ -207,7 +207,7 @@ export const narrateActorDidJoinParty: TemplateFunction<ActorDidJoinParty, Actor
 
   if (recipientId === event.actor) {
     return `You have joined ${toPossessive(inviter.name)} party.\n`
-      + `To list party members: \`party list\`\n`
+      + `To list party members: \`party status\`\n`
       + `To leave the party: \`party leave\``;
   }
 
