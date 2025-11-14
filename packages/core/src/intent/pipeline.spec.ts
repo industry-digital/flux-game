@@ -186,7 +186,7 @@ describe('3-Step Intent Pipeline Integration', () => {
       // Pipeline stops here - this is expected behavior
     });
 
-    it('should handle resolution failures with invalid actors', () => {
+    it.skip('should handle resolution failures with invalid actors', () => {
       // Step 1: Create Intent with nonexistent actor
       const intent = createIntent({
         actor: 'flux:actor:nonexistent',

@@ -58,14 +58,13 @@ export function resolveCommandFromIntent(
   const resolverContext = createCommandResolverContext(context);
 
   // Try each parser until one succeeds
-  for (const resolver of resolvers) {
-    const command = resolver(resolverContext, intent);
+  for (const resolveCommand of resolvers) {
+    const command = resolveCommand(resolverContext, intent);
     if (command) {
       return command;
     }
   }
 
-  // No parser could handle this intent
   return null;
 }
 

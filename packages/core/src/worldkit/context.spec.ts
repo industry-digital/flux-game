@@ -649,3 +649,87 @@ describe('DEFAULT_POTENTIALLY_IMPURE_OPERATIONS', () => {
     expect(ops1).toBe(ops2);
   });
 });
+
+describe('Timestamp Generator Memory Leak Prevention', () => {
+  it('should reuse the same timestamp function across multiple contexts', () => {
+    // Create multiple contexts with default dependencies
+    const context1 = createTransformerContext();
+    const context2 = createTransformerContext();
+    const context3 = createTransformerContext();
+
+    // All contexts should share the EXACT SAME timestamp function reference
+    expect(context1.timestamp).toBe(context2.timestamp);
+    expect(context2.timestamp).toBe(context3.timestamp);
+  });
+
+  it('should reuse the same timestamp function across multiple createPotentiallyImpureOperations calls', () => {
+    // Create operations with default parameters (which triggers getOptimizedTimestamp)
+    const ops1 = createPotentiallyImpureOperations();
+    const ops2 = createPotentiallyImpureOperations();
+    const ops3 = createPotentiallyImpureOperations();
+
+    // All should share the same timestamp function
+    expect(ops1.timestamp).toBe(ops2.timestamp);
+    expect(ops2.timestamp).toBe(ops3.timestamp);
+  });
+
+  it('should maintain timestamp function reference equality over many iterations', () => {
+    // Simulate creating many contexts (like in a high-traffic server)
+    const contexts = Array.from({ length: 100 }, () => createTransformerContext());
+
+    // All 100 contexts should share the same timestamp function
+    const firstTimestamp = contexts[0].timestamp;
+    const allUseSameReference = contexts.every(ctx => ctx.timestamp === firstTimestamp);
+
+    expect(allUseSameReference).toBe(true);
+  });
+
+  it('should produce valid timestamps from shared generator', () => {
+    const context1 = createTransformerContext();
+    const context2 = createTransformerContext();
+
+    // Both should produce valid, roughly current timestamps
+    const ts1 = context1.timestamp();
+    const ts2 = context2.timestamp();
+
+    expect(ts1).toBeGreaterThan(1000000000000); // Reasonable timestamp
+    expect(ts2).toBeGreaterThan(1000000000000);
+
+    // Since they share the same generator, they should be very close in value
+    expect(Math.abs(ts1 - ts2)).toBeLessThan(10); // Within 10ms
+  });
+
+  it('should allow explicit timestamp override without affecting singleton', () => {
+    // Create a context with custom timestamp
+    const customTimestamp = vi.fn(() => 1234567890);
+    const customDeps = createPotentiallyImpureOperations(
+      undefined,
+      customTimestamp,
+    );
+    const customContext = createTransformerContext(undefined, undefined, undefined, customDeps);
+
+    // Create a default context
+    const defaultContext = createTransformerContext();
+
+    // Custom context should use the custom function
+    expect(customContext.timestamp).toBe(customTimestamp);
+
+    // Default context should use the shared optimized timestamp (different reference)
+    expect(defaultContext.timestamp).not.toBe(customTimestamp);
+
+    // Verify custom timestamp works
+    expect(customContext.timestamp()).toBe(1234567890);
+    expect(customTimestamp).toHaveBeenCalled();
+  });
+
+  it('should share timestamp generator between DEFAULT_POTENTIALLY_IMPURE_OPERATIONS and new contexts', () => {
+    // The default operations singleton
+    const defaultOps = DEFAULT_POTENTIALLY_IMPURE_OPERATIONS;
+
+    // A new context created after the default
+    const newContext = createTransformerContext();
+
+    // They should share the same timestamp function
+    expect(newContext.timestamp).toBe(defaultOps.timestamp);
+  });
+});

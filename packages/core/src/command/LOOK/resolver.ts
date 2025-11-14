@@ -12,27 +12,15 @@ export const lookResolver: CommandResolver<LookCommand> = (
     return undefined;
   }
 
-  const world = context.world;
-  const actor = world.actors[intent.actor];
-  if (!actor) {
-    return undefined;
-  }
-
-  const place = world.places[actor.location];
-  if (!place) {
-    return undefined;
-  }
-
   // LOOK without a target is interpreted as "look at the place I am in"
   if (intent.tokens.length === 0) {
     return createActorCommand({
       id: intent.id,
       type: CommandType.LOOK,
-      actor: actor.id,
-      location: place.id,
+      actor: intent.actor,
       session: intent.session,
       args: {
-        target: place.id,
+        target: intent.location,
       },
     });
   }
