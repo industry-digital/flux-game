@@ -9,7 +9,7 @@ export const EMPTY_PAYLOAD: Readonly<Record<string, never>> = Object.freeze({});
 
 const reducerCore: PureReducer<TransformerContext, DematerializeActorCommand> = (context, command) => {
   const { world, declareEvent } = context;
-  const actor = world.actors[command.actor];
+  const actor = world.actors[command.args.actorId];
   const place = world.places[actor.location];
 
   // Remove the actor from the place
