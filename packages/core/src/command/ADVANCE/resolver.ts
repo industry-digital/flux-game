@@ -27,7 +27,7 @@ export const advanceResolver: CommandResolver<AdvanceCommand> = (
     return undefined;
   }
 
-  // Parse simplified advance syntax using zero-allocation token parsing:
+  // Parse simplified advance syntax:
   // - "advance" → move as far as possible
   // - "advance distance 10" → move 10 meters
   // - "advance 15" → move 15 meters (shorthand)
@@ -40,7 +40,7 @@ export const advanceResolver: CommandResolver<AdvanceCommand> = (
   if (tokens.length === 1) {
     const value = parseInt(tokens[0], 10);
     if (!isNaN(value) && value > 0 && Number.isFinite(value) && value <= Number.MAX_SAFE_INTEGER) {
-      commandArgs = { type: 'distance', distance: value };
+      commandArgs = { type: DISTANCE, distance: value };
     }
   }
 
@@ -51,9 +51,9 @@ export const advanceResolver: CommandResolver<AdvanceCommand> = (
 
     if (!isNaN(value) && value > 0 && Number.isFinite(value) && value <= Number.MAX_SAFE_INTEGER) {
       if (modifier === AP) {
-        commandArgs = { type: 'ap', ap: value };
+        commandArgs = { type: AP, ap: value };
       } else if (modifier === DISTANCE) {
-        commandArgs = { type: 'distance', distance: Math.floor(value) }; // Distance must be whole meters
+        commandArgs = { type: DISTANCE, distance: Math.floor(value) }; // Distance must be whole meters
       }
     }
   }

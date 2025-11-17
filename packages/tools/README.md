@@ -1,188 +1,119 @@
 # @flux/tools
 
-A collection of development and testing tools for the Flux game engine, built with React and TypeScript.
+Web-based development tools for the Flux game engine, built with React 19 and TypeScript.
 
-## Architecture Overview
+## What It Does
 
-This package follows functional programming principles with dependency injection patterns, emphasizing pure functions, immutable state, and type safety throughout.
+Provides visual tools for testing and debugging game mechanics:
 
-### Core Architectural Patterns
+- **Combat Sandbox** - Test 3v3 combat scenarios
+- **Actor Management** - Configure shells, weapons, and stats
+- **State Visualization** - Watch game state changes in real-time
+- **AI Testing** - Automated combat with configurable AI behavior
+- **Event Log** - Track all game events and commands
 
-#### 1. **Composition Root Pattern**
-The main application components serve as composition roots where all dependencies are created and injected:
+## Running the Tools
 
-```typescript
-// CombatTool.tsx - Composition root
-export function createCombatTool(deps: CombatToolDependencies = DEFAULT_DEPS) {
-  return function CombatTool() {
-    // Create shared context at the root
-    const context = createTransformerContext();
+```bash
+# Start development server
+npm run dev
 
-    // Inject context into all hooks
-    const actors = useCombatActors(context, scenarioData, placeId);
-    const session = useCombatSession(context, placeId);
-    // ...
-  };
-}
+# Build for production
+npm run build
+
+# Preview production build
+npm run preview
+
+# Run tests
+npm test
+
+# Watch mode for tests
+npm run test:watch
+
+# Type check
+npm run type-check
 ```
 
-#### 2. **Dependency Injection for Hooks**
-All hooks accept their dependencies as parameters, following the pattern `(context, ...params, deps?)`:
+The development server runs at `http://localhost:5173` by default.
 
-```typescript
-export function useCombatActors(
-  context: TransformerContext,     // Shared context (first parameter)
-  scenarioData: CombatScenarioData, // Domain data
-  placeId: PlaceURN,              // Configuration
-  deps: CombatActorsDependencies = DEFAULT_DEPS // Injectable dependencies
-): UseCombatActorsResult
-```
+## Features
 
-#### 3. **Pure Functional State Management**
-State mutations are handled through pure functions with immutable updates:
+### Combat Sandbox
 
-```typescript
-const addOptionalActor = useCallback((name: OptionalActorName, onSessionAdd?) => {
-  const actorId = getActorIdFromName(name);
-  const team = TEAM_ASSIGNMENTS[actorId];
+Visual interface for testing combat mechanics:
 
-  // Pure state update
-  setScenarioData(prev => ({
-    ...prev,
-    actors: {
-      ...prev.actors,
-      [actorId]: createDefaultActorData(team)
-    }
-  }));
+- **Team Setup** - Configure ALPHA and BRAVO teams
+- **Actor Configuration** - Customize shells, weapons, ammo, and stats
+- **Turn-Based Combat** - Step through combat round-by-round
+- **AI Control** - Automate actors with intelligent behavior
+- **Event Replay** - See exactly what happened each turn
 
-  // Side effect callback (optional)
-  onSessionAdd?.(actorId, team);
-}, [setScenarioData]);
-```
+### Architecture
 
-#### 4. **Type-Safe Error Handling**
-Custom error handling utilities eliminate `any` types and provide functional error management:
+Built with functional programming principles:
 
-```typescript
-// Functional error handling with Result types
-const result = attempt(() => {
-  session.addCombatant(actorId, sessionTeam);
-});
+- **Pure functions** - All game logic is deterministic
+- **Dependency injection** - Testable hooks with explicit dependencies
+- **React 19** - Concurrent features and automatic batching
+- **Type safety** - Strict TypeScript throughout
 
-if (!result.success) {
-  // result.error is guaranteed to be Error type
-  console.warn('Operation failed:', result.error.message);
-}
-```
-
-### Project Structure
+## Project Structure
 
 ```
 src/
-├── apps/                    # Application-specific tools
-│   └── combat/             # Combat simulation tool
-│       ├── components/     # UI components
-│       ├── hooks/         # Custom React hooks
-│       └── CombatTool.tsx # Main composition root
-├── shared/                 # Shared utilities
-│   └── utils/             # Pure utility functions
-└── App.tsx                # Root application
+├── apps/               # Application-specific tools
+│   └── combat/        # Combat sandbox tool
+│       ├── components/ # UI components
+│       ├── hooks/     # Custom React hooks
+│       └── CombatTool.tsx
+├── shared/            # Shared utilities
+│   └── utils/        # Pure utility functions
+└── App.tsx           # Root application
 ```
 
-### Design Principles
+## Integration
 
-#### **Functional Programming First**
-- Pure functions wherever possible
-- Immutable state updates
-- Function composition over inheritance
-- Side effects isolated and explicit
+The tools integrate with:
 
-#### **Dependency Injection**
-- All impure operations injected via dependencies
-- Default implementations provided for production use
-- Easy mocking and testing through dependency substitution
-- Context/environment passed as first parameter
+- **@flux/core** - Game engine for state management
+- **@flux/ui** - UI components and theming
 
-#### **Type Safety**
-- Strict TypeScript configuration
-- No `any` types in production code
-- Comprehensive error handling with proper types
-- Result types for operations that can fail
+This allows you to test real game mechanics with actual game engine code, ensuring tools stay synchronized with implementation.
 
-#### **React Hook Patterns**
-- Single Responsibility Principle for hooks
-- Dependency injection for testability
-- Pure computation separated from side effects
-- Consistent parameter ordering: `(context, data, config, deps)`
+## Theming
 
-### Combat Tool Architecture
-
-The combat tool demonstrates these patterns in a real-world application:
-
-#### **Hook Composition**
-```typescript
-// Each hook has a single, focused responsibility
-const scenario = useCombatScenario(defaultScenario);           // Scenario data management
-const actors = useCombatActors(context, scenarioData, placeId); // Actor lifecycle
-const session = useCombatSession(context, placeId);            // Session management
-const combatState = useCombatState(context, session, actorId); // Command execution
-const aiControl = useAiControl(context, session, actorId);     // AI automation
-```
-
-#### **Team-Based State Management**
-```typescript
-// Pure functions for team organization
-export const getTeamActors = (scenarioData: CombatScenarioData, team: TeamName): ActorURN[] => {
-  return Object.entries(scenarioData.actors)
-    .filter(([, data]) => data.team === team)
-    .map(([actorId]) => actorId as ActorURN);
-};
-
-// Functional state updates with callbacks for side effects
-const handleAddOptionalActor = useCallback((name: OptionalActorName) => {
-  addOptionalActor(name, (actorId, team) => {
-    // Side effect: sync with combat session
-    const sessionTeam = team === 'ALPHA' ? Team.ALPHA : Team.BRAVO;
-    session.addCombatant(actorId, sessionTeam);
-  });
-}, [addOptionalActor, session]);
-```
-
-#### **Theming Integration**
-Consistent theming using CSS custom properties from `@flux/ui`:
+Uses CSS custom properties from `@flux/ui`:
 
 ```typescript
-// Theme-aware styling
 <div style={{
   backgroundColor: 'var(--color-surface)',
   color: 'var(--color-text)',
-  fontFamily: 'var(--font-family-heading)',
-  fontSize: 'var(--font-size-lg)'
+  fontFamily: 'var(--font-family-heading)'
 }}>
 ```
 
-### Testing Philosophy
+## Development
 
-- **Pure functions are easily testable** without mocking
-- **Dependency injection enables isolated unit testing**
-- **Error handling utilities have comprehensive test coverage**
-- **Components test public interfaces, not implementation details**
+The package uses:
 
-### Key Benefits
+- **Vite** - Fast builds and HMR
+- **React 19** - Latest React features
+- **TypeScript 5.8** - Strict type checking
+- **Vitest** - Fast unit testing
 
-1. **Maintainability**: Clear separation of concerns and dependency injection
-2. **Testability**: Pure functions and injected dependencies
-3. **Type Safety**: Comprehensive TypeScript coverage with no escape hatches
-4. **Reusability**: Shared utilities and consistent patterns
-5. **Performance**: Immutable updates enable React optimizations
+## Testing Philosophy
 
-### Integration with @flux/core
+Tests focus on:
 
-The tools package integrates seamlessly with the core game engine:
+- Pure function behavior
+- Component public interfaces
+- Real integration with @flux/core
+- Type safety guarantees
 
-- **TransformerContext**: Shared context for world state management
-- **Actor Utilities**: Type-safe access to actor properties and stats
-- **Combat Session API**: Direct integration with combat system
-- **Intent Execution**: Universal command processing system
+Dependencies are injected for testability, but tests use real implementations where possible for higher confidence.
 
-This architecture provides a solid foundation for building development tools that are maintainable, testable, and aligned with the broader Flux ecosystem.
+## License
+
+MIT License
+
+This is free software with maximum permissive licensing. You can use these development tools in any project, modify them however you want, and keep your modifications private. Just include the copyright notice and license text.

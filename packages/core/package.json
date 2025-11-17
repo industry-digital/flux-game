@@ -2,7 +2,7 @@
   "name": "@flux/core",
   "version": "0.26.0",
   "description": "Core game logic for the Flux Simulation Project",
-  "license": "CC-BY-NC-SA-4.0",
+  "license": "MIT",
   "author": "",
   "type": "commonjs",
   "main": "./dist/cjs/index.js",

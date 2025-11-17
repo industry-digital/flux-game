@@ -2,13 +2,13 @@ import { CommandResolverContext, CommandType, Intent, CommandResolver } from '~/
 import { LookCommand } from './types';
 import { createActorCommand } from '~/lib/intent';
 
-const LOOK_VERB = 'look';
+const LOOK_PREFIX = 'look';
 
 export const lookResolver: CommandResolver<LookCommand> = (
   context: CommandResolverContext,
   intent: Intent,
 ): LookCommand | undefined => {
-  if (intent.prefix !== LOOK_VERB) {
+  if (intent.prefix !== LOOK_PREFIX) {
     return undefined;
   }
 
@@ -18,6 +18,7 @@ export const lookResolver: CommandResolver<LookCommand> = (
       id: intent.id,
       type: CommandType.LOOK,
       actor: intent.actor,
+      location: intent.location,
       session: intent.session,
       args: {
         target: intent.location,
