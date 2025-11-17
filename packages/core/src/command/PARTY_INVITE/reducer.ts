@@ -2,7 +2,7 @@ import { PureReducer, Transformer, TransformerContext } from '~/types/handler';
 import { PartyInviteCommand } from './types';
 import { withBasicWorldStateValidation } from '../validation';
 import { createWorldEvent } from '~/worldkit/event';
-import { ActorDidCreateParty, EventType } from '~/types/event';
+import { ActorDidCreateParty, EventType, PartyInvitationEventPayload } from '~/types/event';
 import { ErrorCode } from '~/types/error';
 import { Party } from '~/types/entity/group';
 import { withCommandType } from '~/command/withCommandType';
@@ -10,18 +10,18 @@ import { CommandType } from '~/types/intent';
 
 const reducerCore: PureReducer<TransformerContext, PartyInviteCommand> = (context, command) => {
   const { world, failed, partyApi, declareEvent } = context;
-  const actor = world.actors[command.actor];
+  const owner = world.actors[command.actor];
 
-  let party: Party | undefined = actor.party ? world.groups[actor.party] as Party : undefined;
+  let party: Party | undefined = owner.party ? world.groups[owner.party] as Party : undefined;
   if (!party) {
     // Create the party with the inviting actor as the owner
-    party = context.partyApi.createParty(actor.id);
+    party = context.partyApi.createParty(owner.id);
 
     const partyCreatedEvent: ActorDidCreateParty = createWorldEvent({
       type: EventType.ACTOR_DID_CREATE_PARTY,
       trace: command.id,
-      location: actor.location,
-      actor: actor.id,
+      location: owner.location,
+      actor: owner.id,
       payload: {
         partyId: party.id,
       },
@@ -30,7 +30,7 @@ const reducerCore: PureReducer<TransformerContext, PartyInviteCommand> = (contex
     declareEvent(partyCreatedEvent);
   } else {
     // If party already exists, only the owner can invite
-    if (party.owner !== actor.id) {
+    if (party.owner !== owner.id) {
       return failed(command.id, ErrorCode.FORBIDDEN);
     }
   }
@@ -43,17 +43,28 @@ const reducerCore: PureReducer<TransformerContext, PartyInviteCommand> = (contex
   // Actually send the invitation using the Party API
   partyApi.inviteToParty(party, invitee.id);
 
+  const payload: PartyInvitationEventPayload = {
+    partyId: party.id,
+    inviterId: owner.id,
+    inviteeId: invitee.id,
+  };
+
+  // Emit event that the party owner issued the invitation
+  declareEvent({
+    trace: command.id,
+    type: EventType.ACTOR_DID_ISSUE_PARTY_INVITATION,
+    actor: owner.id,
+    location: owner.location,
+    payload,
+  });
+
   // Emit event that the invitee received an invitation
   declareEvent({
     trace: command.id,
     type: EventType.ACTOR_DID_RECEIVE_PARTY_INVITATION,
     actor: invitee.id, // The invitee is the one receiving the invitation
-    location: command.location!,
-    payload: {
-      partyId: party.id,
-      inviterId: party.owner!,
-      inviteeId: invitee.id,
-    },
+    location: invitee.location,
+    payload,
   });
 
   return context;

@@ -87,17 +87,24 @@ export const narrateActorDidDepart: TemplateFunction<ActorDidDepart, ActorURN> =
 export const narrateActorDidLook: TemplateFunction<ActorDidLook, ActorURN> = (context, event, recipientId) => {
   const actor = context.world.actors[event.actor!];
 
+  // Third-person: someone else is observing the look action
   if (recipientId !== event.actor) {
     if (isPlaceUrn(event.payload.target)) {
       return `${actor.name} looks around.`;
     }
   }
 
+  // First-person: actor is looking at themselves
   if (event.payload.target === recipientId) {
     if (event.actor === recipientId) {
-      return `MISSING_NARRATIVE_FOR_SELF_LOOK`;
+      return `You look at yourself.`;
     }
     return `${actor.name} appears to be looking at you.`;
+  }
+
+  // First-person: actor is looking at a place
+  if (recipientId === event.actor && isPlaceUrn(event.payload.target)) {
+    return `You look around.`;
   }
 
   return '';

@@ -34,11 +34,23 @@ export const acceptPartyInvitationResolver: CommandResolver<AcceptPartyInvitatio
 
   const partyOwner = context.resolveActor(intent, partyOwnerToken);
   if (!partyOwner) {
+    // Debug: Log available actors for troubleshooting
+    const availableActors = Object.keys(context.world.actors).map(id => {
+      const actor = context.world.actors[id as any];
+      return `${actor.name}@${actor.location}`;
+    });
+    (context as any).log?.debug?.(
+      `Failed to resolve party owner "${partyOwnerToken}" at location ${intent.location}. Available actors: ${availableActors.join(', ')}`
+    );
     context.declareError(ErrorCode.INVALID_TARGET, intent.id);
     return undefined;
   }
 
   if (!partyOwner.party) {
+    // Debug: Log party status for troubleshooting
+    (context as any).log?.debug?.(
+      `Party owner "${partyOwner.name}" (${partyOwner.id}) does not have a party. Actor party field: ${partyOwner.party}`
+    );
     context.declareError(ErrorCode.INVALID_TARGET, intent.id);
     return undefined;
   }
