@@ -131,8 +131,7 @@ We use direct mutation instead of immutable updates in reducers. This violates c
 **Why This Works:**
 - **Single-threaded execution**: Commands execute sequentially in a single-threaded context
 - **No concurrency concerns**: No shared state across threads or async boundaries
-- **Mathematical purity**: In a single-threaded space, mutation is equivalent to immutability
-- **Performance**: Direct mutation eliminates allocation overhead (orders of magnitude faster)
+- **Performance**: Direct mutation eliminates allocation overhead (4-8X faster than immutable updates)
 
 **Example:**
 ```typescript
@@ -153,10 +152,13 @@ const newOrigin = {
 delete newOrigin.entities[actor.id];
 ```
 
+**Benchmark Results:**
+Benchmarks show mutation is **4-10x faster** than immutable updates across typical game operations (move actor, update inventory, take damage, complex operations). See [Appendix: Benchmark Results](#appendix-benchmark-results) for full details.
+
 ### Direct `for..in` Iteration
 
 **The Tradeoff:**
-We use `for..in` loops directly instead of the defensive `Object.keys()` pattern that modern JavaScript developers are taught.
+We use `for..in` loops directly instead of the defensive `Object.keys()` pattern that has become a modern JavaScript best practice.
 
 **Why Defensive Patterns Exist:**
 The `Object.keys()` pattern exists to protect against prototype pollution, which happens when objects inherit enumerable properties from their prototype chain. This is a real risk when dealing with untrusted data or objects created by external code.
@@ -182,9 +184,13 @@ for (const direction of Object.keys(origin.exits)) {
 }
 ```
 
+**Benchmark Results:**
+For small objects (<100 keys), `for..in` is **4x faster** than `Object.keys()`. For larger objects (100+ keys), `Object.keys()` becomes faster due to better cache locality. The crossover point is around 100 keys. See [Appendix: Benchmark Results](#appendix-benchmark-results) for full details.
+
+
 **When to Use Each:**
-- **Use `for..in`**: When you control object creation (our case)
-- **Use `Object.keys()`**: When dealing with untrusted data or external APIs
+- **Use `for..in`**: When you control object creation (our case) and objects have fewer than ~100 keys
+- **Use `Object.keys()`**: When dealing with untrusted data or external APIs, or when objects have many keys (100+). For large objects, the contiguous array layout provides better CPU cache locality than iterating over scattered object properties, and the array allocation overhead is amortized over the larger key set.
 
 These tradeoffs are informed by our:
 - Learnings from extensive benchmarking of V8
@@ -224,3 +230,171 @@ This is free software with maximum permissive licensing:
 - You can modify, adapt, or remove anything you want
 - No requirement to share modifications or improvements
 - Just include the copyright notice and license text
+
+## Appendix: Benchmark Results
+
+Full benchmark results for the performance tradeoffs discussed above. Benchmarks can be run directly:
+
+```bash
+# Mutation vs Immutable
+npx tsx src/mutation-vs-immutable.ts
+
+# Object iteration
+npx tsx src/object-iteration.benchmark.ts
+```
+
+### Mutation vs Immutable Updates
+
+```
+📊 BENCHMARK RESULTS
+================================================================================
+Game State Updates: Move Actor (Mutation):
+  8918816.47 ops/sec
+  0.0001ms avg
+  11.21ms total (100,000 iterations)
+
+Game State Updates: Move Actor (Immutable):
+  1209488.44 ops/sec
+  0.0008ms avg
+  82.68ms total (100,000 iterations)
+
+Game State Updates: Update Inventory (Mutation):
+  84982850.46 ops/sec
+  0.0000ms avg
+  1.18ms total (100,000 iterations)
+
+Game State Updates: Update Inventory (Immutable):
+  8664603.51 ops/sec
+  0.0001ms avg
+  11.54ms total (100,000 iterations)
+
+Game State Updates: Take Damage (Mutation):
+  101240192.36 ops/sec
+  0.0000ms avg
+  0.99ms total (100,000 iterations)
+
+Game State Updates: Take Damage (Immutable):
+  19805247.08 ops/sec
+  0.0001ms avg
+  5.05ms total (100,000 iterations)
+
+Game State Updates: Complex Operation (Mutation):
+  8954890.01 ops/sec
+  0.0001ms avg
+  11.17ms total (100,000 iterations)
+
+Game State Updates: Complex Operation (Immutable):
+  2077605.50 ops/sec
+  0.0005ms avg
+  48.13ms total (100,000 iterations)
+
+
+📈 PERFORMANCE COMPARISON
+================================================================================
+Move Actor:
+  Mutation:   8918816.47 ops/sec
+  Immutable:  1209488.44 ops/sec
+  ✅ Mutation is 7.37x faster
+  ⚠️  Immutable is 637.4% slower
+
+Update Inventory:
+  Mutation:   84982850.46 ops/sec
+  Immutable:  8664603.51 ops/sec
+  ✅ Mutation is 9.81x faster
+  ⚠️  Immutable is 880.8% slower
+
+Take Damage:
+  Mutation:   101240192.36 ops/sec
+  Immutable:  19805247.08 ops/sec
+  ✅ Mutation is 5.11x faster
+  ⚠️  Immutable is 411.2% slower
+
+Complex Operation:
+  Mutation:   8954890.01 ops/sec
+  Immutable:  2077605.50 ops/sec
+  ✅ Mutation is 4.31x faster
+  ⚠️  Immutable is 331.0% slower
+```
+
+### Object Iteration: `for..in` vs `Object.keys()`
+
+```
+📊 BENCHMARK RESULTS
+================================================================================
+Object Iteration Performance: Small Object (10 keys) - for..in:
+  53339850.75 ops/sec
+  0.0000ms avg
+  18.75ms total (1,000,000 iterations)
+
+Object Iteration Performance: Small Object (10 keys) - Object.keys():
+  12925553.66 ops/sec
+  0.0001ms avg
+  77.37ms total (1,000,000 iterations)
+
+Object Iteration Performance: Small Object (10 keys) - Object.keys().forEach():
+  12043114.35 ops/sec
+  0.0001ms avg
+  83.03ms total (1,000,000 iterations)
+
+Object Iteration Performance: Small Object (10 keys) - Object.entries():
+  15554639.56 ops/sec
+  0.0001ms avg
+  64.29ms total (1,000,000 iterations)
+
+Object Iteration Performance: Medium Object (100 keys) - for..in:
+  443615.71 ops/sec
+  0.0023ms avg
+  225.42ms total (100,000 iterations)
+
+Object Iteration Performance: Medium Object (100 keys) - Object.keys():
+  615218.03 ops/sec
+  0.0016ms avg
+  162.54ms total (100,000 iterations)
+
+Object Iteration Performance: Large Object (1000 keys) - for..in:
+  38485.82 ops/sec
+  0.0260ms avg
+  259.84ms total (10,000 iterations)
+
+Object Iteration Performance: Large Object (1000 keys) - Object.keys():
+  51788.90 ops/sec
+  0.0193ms avg
+  193.09ms total (10,000 iterations)
+
+Object Iteration Performance: Very Large Object (10000 keys) - for..in:
+  1262.49 ops/sec
+  0.7921ms avg
+  792.08ms total (1,000 iterations)
+
+Object Iteration Performance: Very Large Object (10000 keys) - Object.keys():
+  1353.12 ops/sec
+  0.7390ms avg
+  739.03ms total (1,000 iterations)
+
+
+📈 PERFORMANCE COMPARISON
+================================================================================
+Small Object (10 keys):
+  for..in:        53339850.75 ops/sec
+  Object.keys(): 12925553.66 ops/sec
+  ✅ for..in is 4.13x faster
+  ⚠️  Object.keys() is 312.7% slower
+
+Medium Object (100 keys):
+  for..in:        443615.71 ops/sec
+  Object.keys(): 615218.03 ops/sec
+  ⚠️  Object.keys() is 1.39x faster
+  ✅ for..in is 38.7% slower
+
+Large Object (1000 keys):
+  for..in:        38485.82 ops/sec
+  Object.keys(): 51788.90 ops/sec
+  ⚠️  Object.keys() is 1.35x faster
+  ✅ for..in is 34.6% slower
+
+Very Large Object (10000 keys):
+  for..in:        1262.49 ops/sec
+  Object.keys(): 1353.12 ops/sec
+  ⚠️  Object.keys() is 1.07x faster
+  ✅ for..in is 7.2% slower
+```
