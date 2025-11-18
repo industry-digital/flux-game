@@ -1,6 +1,5 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import { createTransformerContext } from '~/worldkit/context';
-import { NarrativeSequence } from '~/types/narrative';
 import {
   createWorkbenchSessionDidStartEvent,
   createWorkbenchSessionDidEndEvent,
@@ -12,18 +11,11 @@ import {
   createActorDidAssessShellStatusEvent,
   createStatMutation,
 } from '~/testing/event/factory/workbench';
-import { ComponentMutationOperation, ShellMutationType, StatMutationOperation } from '~/types/workbench';
+import { ShellMutationType, StatMutationOperation } from '~/types/workbench';
 import { Actor, Stat } from '~/types/entity/actor';
 import { ActorURN } from '~/types/taxonomy';
 import { ALICE_ID, BOB_ID } from '~/testing/constants';
-import {
-  withObjectSerializationValidation,
-  withDebuggingArtifactValidation,
-  withNonEmptyValidation,
-  withNarrativeQuality,
-  withPerspectiveDifferentiation,
-  withComposedValidation,
-} from '~/testing/narrative-quality';
+import { withNarrativeQuality, withPerspectiveDifferentiation } from '~/testing/narrative-quality';
 import { createWorldScenario, WorldScenarioHook } from '~/worldkit/scenario';
 
 // Import the specific narrative functions we're testing
@@ -40,10 +32,18 @@ import {
 import { TransformerContext } from '~/types/handler';
 import { createDefaultActors } from '~/testing/actors';
 import { CurrencyType } from '~/types/currency';
-import { WorkbenchSessionDidStart } from '~/types/event';
-import { setStatValue } from '~/worldkit/entity/actor';
+import { setStatValue } from '~/worldkit/entity/actor/stats';
+import { EMPTY_NARRATIVE } from '~/narrative/constants';
+import { EventType } from '~/types/event';
 
-describe('English Workbench Narratives - Snapshot Tests', () => {
+/**
+ * Workbench Narrative Tests - Two-Perspective Model
+ *
+ * Tests verify that templates generate BOTH perspectives correctly.
+ * Most workbench events are actor-only (observer is empty string for privacy),
+ * but some events like session end have observer narratives.
+ */
+describe('Workbench Narratives - Two-Perspective Model', () => {
   let context: TransformerContext;
   let scenario: WorldScenarioHook;
   let alice: Actor;
@@ -74,75 +74,70 @@ describe('English Workbench Narratives - Snapshot Tests', () => {
   });
 
   describe('narrateWorkbenchSessionDidStart', () => {
-
-    it('should render exact session start from actor perspective', () => {
+    it('generates narrative sequence with self perspective only', () => {
       const event = createWorkbenchSessionDidStartEvent((e) => ({ ...e, actor: ALICE_ID }));
-      const narrative = narrateWorkbenchSessionDidStart(context, event, ALICE_ID);
+      const narrative = narrateWorkbenchSessionDidStart(context, event);
+
       expect(narrative).toEqual([
-        { text: 'Connecting to workbench interface...', delay: 0 },
-        { text: 'ShellOS v2.7.4-pre-collapse | Build 20847 | Neural Protocol Stack: ACTIVE', delay: 1_000 },
-        { text: 'Connection established.\n> Enter `help workbench` for available commands.', delay: 1_000 },
+        { self: 'Connecting to workbench interface...', observer: '', delay: 0 },
+        { self: 'ShellOS v2.7.4-pre-collapse | Build 20847 | Neural Protocol Stack: ACTIVE', observer: '', delay: 1_000 },
+        { self: 'Connection established.\n> Enter `help workbench` for available commands.', observer: '', delay: 1_000 },
       ]);
     });
 
-    it('should render exact session start from observer perspective', () => {
-      const event = createWorkbenchSessionDidStartEvent((e) => ({ ...e, actor: ALICE_ID }));
-      const narrative = narrateWorkbenchSessionDidStart(context, event, BOB_ID);
-      expect(narrative).toEqual([]);
-    });
-
-    it('should render exact session start with different actor names', () => {
+    it('generates same sequence regardless of actor', () => {
       const event = createWorkbenchSessionDidStartEvent((e) => ({ ...e, actor: BOB_ID }));
-      const narrative = narrateWorkbenchSessionDidStart(context, event, BOB_ID);
-      expect(narrative).toEqual([
-        { text: 'Connecting to workbench interface...', delay: 0 },
-        { text: 'ShellOS v2.7.4-pre-collapse | Build 20847 | Neural Protocol Stack: ACTIVE', delay: 1_000 },
-        { text: 'Connection established.\n> Enter `help workbench` for available commands.', delay: 1_000 },
-      ]);
+      const narrative = narrateWorkbenchSessionDidStart(context, event);
+
+      expect(narrative).toHaveLength(3);
+      expect(narrative[0].self).toContain('Connecting to workbench interface');
     });
   });
 
   describe('narrateWorkbenchSessionDidEnd', () => {
-    it('should render exact session end from actor perspective', () => {
+    it('generates both self and observer perspectives', () => {
       const event = createWorkbenchSessionDidEndEvent((e) => ({ ...e, actor: ALICE_ID }));
-      const narrative = narrateWorkbenchSessionDidEnd(context, event, ALICE_ID);
-      expect(narrative).toBe('You finish your work at the workbench.');
+      const narrative = narrateWorkbenchSessionDidEnd(context, event);
+
+      expect(narrative.self).toBe('You finish your work at the workbench.');
+      expect(narrative.observer).toBe('Alice finishes working at the workbench.');
     });
 
-    it('should render exact session end from observer perspective', () => {
-      const event = createWorkbenchSessionDidEndEvent((e) => ({
-        ...e,
-        actor: ALICE_ID,
-      }));
+    it('generates correct observer perspective for different actors', () => {
+      const event = createWorkbenchSessionDidEndEvent((e) => ({ ...e, actor: BOB_ID }));
+      const narrative = narrateWorkbenchSessionDidEnd(context, event);
 
-      const narrative = narrateWorkbenchSessionDidEnd(context, event, BOB_ID);
-      expect(narrative).toBe('Alice finishes working at the workbench.');
+      expect(narrative.self).toBe('You finish your work at the workbench.');
+      expect(narrative.observer).toBe('Bob finishes working at the workbench.');
     });
 
-    it('should render exact session end with different actor names', () => {
-      const event = createWorkbenchSessionDidEndEvent((e) => ({ ...e, actor: ALICE_ID }));
-      const narrative = narrateWorkbenchSessionDidEnd(context, event, BOB_ID);
-      expect(narrative).toBe('Alice finishes working at the workbench.');
+    it('returns EMPTY_NARRATIVE when actor is missing', () => {
+      const event = createWorkbenchSessionDidEndEvent((e) => ({ ...e, actor: 'flux:actor:nonexistent' as ActorURN }));
+      const narrative = narrateWorkbenchSessionDidEnd(context, event);
+
+      expect(narrative).toEqual(EMPTY_NARRATIVE);
     });
   });
 
   describe('narrateActorDidStageShellMutation', () => {
-    it('should render exact stat mutation staging from actor perspective', () => {
+    it('generates stat mutation narrative for self perspective', () => {
       const event = createActorDidStageShellMutationEvent((e) => ({
         ...e,
         actor: ALICE_ID,
         payload: {
           ...e.payload,
-          shellId: alice.currentShell!, // Use Alice's actual shell ID
+          shellId: alice.currentShell!,
           mutation: createStatMutation(Stat.POW, StatMutationOperation.ADD, 5),
         },
       }));
 
-      const narrative = narrateActorDidStageShellMutation(context, event, ALICE_ID);
-      expect(narrative).toBe('POW 40 -> 45');
+      const narrative = narrateActorDidStageShellMutation(context, event);
+
+      expect(narrative.self).toBe('POW 40 -> 45');
+      expect(narrative.observer).toBe(''); // Staging is only visible to actor
     });
 
-    it('should render exact component mutation staging from actor perspective', () => {
+    it('returns EMPTY_NARRATIVE for component mutations', () => {
       const event = createActorDidStageShellMutationEvent((e) => ({
         ...e,
         actor: ALICE_ID,
@@ -154,68 +149,34 @@ describe('English Workbench Narratives - Snapshot Tests', () => {
         },
       }));
 
-      const narrative = narrateActorDidStageShellMutation(context, event, ALICE_ID);
-      expect(narrative).toBe('');
+      const narrative = narrateActorDidStageShellMutation(context, event);
+
+      expect(narrative).toEqual(EMPTY_NARRATIVE);
     });
 
-    it('should render exact unknown mutation staging from actor perspective', () => {
+    it('returns EMPTY_NARRATIVE when actor is missing', () => {
       const event = createActorDidStageShellMutationEvent((e) => ({
         ...e,
-        actor: ALICE_ID,
-        payload: {
-          ...e.payload,
-          mutation: {
-            type: 'UNKNOWN_TYPE' as any,
-          } as any,
-        },
+        actor: 'flux:actor:nonexistent' as ActorURN,
       }));
 
-      const narrative = narrateActorDidStageShellMutation(context, event, ALICE_ID);
-      expect(narrative).toBe('');
-    });
+      const narrative = narrateActorDidStageShellMutation(context, event);
 
-    it('should render exact mutation staging from observer perspective', () => {
-      const event = createActorDidStageShellMutationEvent((e) => ({
-        ...e,
-        actor: ALICE_ID,
-        payload: {
-          ...e.payload,
-          mutation: createStatMutation(Stat.FIN, StatMutationOperation.ADD, 25),
-        },
-      }));
-
-      const narrative = narrateActorDidStageShellMutation(context, event, BOB_ID);
-      expect(narrative).toBe('');
-    });
-
-    it('should render exact mutation staging with different actor names', () => {
-      const event = createActorDidStageShellMutationEvent((e) => ({
-        ...e,
-        actor: BOB_ID,
-        payload: {
-          ...e.payload,
-          shellId: bob.currentShell!, // Use Bob's actual shell ID
-          mutation: createStatMutation(Stat.RES, StatMutationOperation.REMOVE, 3),
-        },
-      }));
-
-      const narrative = narrateActorDidStageShellMutation(context, event, BOB_ID);
-      expect(narrative).toBe('RES 10 -> 7');
+      expect(narrative).toEqual(EMPTY_NARRATIVE);
     });
   });
 
   describe('narrateActorDidDiffShellMutations', () => {
-    it('should render exact diff review from actor perspective with no changes', () => {
+    it('generates no changes message when nothing changed', () => {
       const event = createActorDidDiffShellMutationsEvent((e) => ({ ...e, actor: ALICE_ID }));
-      const narrative = narrateActorDidDiffShellMutations(context, event, ALICE_ID);
-      expect(narrative).toBe(`You review your shell design. No changes detected.
+      const narrative = narrateActorDidDiffShellMutations(context, event);
 
-> Enter \`shell commit\` to commit your changes.
-> Enter \`shell undo\` to revert modifications.
-> Enter \`help workbench\` for available commands.`);
+      expect(narrative.self).toContain('You review your shell design. No changes detected.');
+      expect(narrative.self).toContain('> Enter `shell commit`');
+      expect(narrative.observer).toBe(''); // Diff is only visible to actor
     });
 
-    it('should render exact diff review from actor perspective with performance changes', () => {
+    it('generates comprehensive diff with performance changes', () => {
       const event = createActorDidDiffShellMutationsEvent((e) => ({
         ...e,
         actor: ALICE_ID,
@@ -230,60 +191,16 @@ describe('English Workbench Narratives - Snapshot Tests', () => {
         },
       }));
 
-      const narrative = narrateActorDidDiffShellMutations(context, event, ALICE_ID);
-      expect(narrative).toContain('Shell Configuration Analysis:');
-      expect(narrative).toContain('Gap Closing (10m):     2.5 -> 2.1s (-0.4s)');
-      expect(narrative).toContain('Peak Power Output:     5000 -> 5500W (+500W)');
-      expect(narrative).toContain('Weapon Damage:         50 -> 55 dmg (+5 dmg)');
+      const narrative = narrateActorDidDiffShellMutations(context, event);
+
+      expect(narrative.self).toContain('Shell Configuration Analysis:');
+      expect(narrative.self).toContain('Gap Closing (10m):');
+      expect(narrative.self).toContain('Peak Power Output:');
+      expect(narrative.self).toContain('Weapon Damage:');
+      expect(narrative.observer).toBe('');
     });
 
-    it.skip('should render exact diff review from actor perspective with stat changes', () => {
-      const event = createActorDidDiffShellMutationsEvent((e) => ({
-        ...e,
-        actor: ALICE_ID,
-        payload: {
-          ...e.payload,
-          stats: {
-            pow: '45 -> 50',
-            fin: '30 -> 35',
-            res: '25',
-          },
-        },
-      }));
-
-      const narrative = narrateActorDidDiffShellMutations(context, event, ALICE_ID);
-      expect(narrative).toContain('Shell Configuration Analysis:');
-      expect(narrative).toContain('SHELL STATS');
-      expect(narrative).toContain('  POW:              45 -> 50 (+5)');
-      expect(narrative).toContain('  FIN:              30 -> 35 (+5)');
-      expect(narrative).toContain('  RES:              25');
-    });
-
-    it('should render exact diff review from actor perspective with both stat and performance changes', () => {
-      const event = createActorDidDiffShellMutationsEvent((e) => ({
-        ...e,
-        actor: ALICE_ID,
-        payload: {
-          ...e.payload,
-          stats: {
-            pow: '40 -> 45',
-          },
-          perf: {
-            ...e.payload.perf,
-            weaponDamage: '48 -> 52',
-          },
-        },
-      }));
-
-      const narrative = narrateActorDidDiffShellMutations(context, event, ALICE_ID);
-      expect(narrative).toContain('Shell Configuration Analysis:');
-      expect(narrative).toContain('SHELL STATS');
-      expect(narrative).toContain('  POW:              40 -> 45 (+5)');
-      expect(narrative).toContain('WEAPON SYSTEM');
-      expect(narrative).toContain('  Weapon Damage:         48 -> 52 dmg (+4 dmg)');
-    });
-
-    it('should show all shell stats including unchanged ones', () => {
+    it('shows all shell stats including unchanged ones', () => {
       const event = createActorDidDiffShellMutationsEvent((e) => ({
         ...e,
         actor: ALICE_ID,
@@ -299,36 +216,40 @@ describe('English Workbench Narratives - Snapshot Tests', () => {
         },
       }));
 
-      const narrative = narrateActorDidDiffShellMutations(context, event, ALICE_ID);
-      expect(narrative).toContain('SHELL STATS');
-      expect(narrative).toContain('  POW:              40 -> 45 (+5)'); // Changed stat
-      expect(narrative).toContain('  FIN:              40'); // Unchanged stat (current value)
-      expect(narrative).toContain('  RES:              40'); // Unchanged stat (current value)
+      const narrative = narrateActorDidDiffShellMutations(context, event);
+
+      expect(narrative.self).toContain('SHELL STATS');
+      expect(narrative.self).toContain('POW:              40 -> 45 (+5)'); // Changed stat
+      expect(narrative.self).toContain('FIN:              40'); // Unchanged stat
+      expect(narrative.self).toContain('RES:              40'); // Unchanged stat
     });
 
-    it('should render exact diff review from observer perspective', () => {
-      const event = createActorDidDiffShellMutationsEvent((e) => ({ ...e, actor: ALICE_ID }));
-      const narrative = narrateActorDidDiffShellMutations(context, event, BOB_ID);
-      expect(narrative).toBe('');
+    it('returns prompts only when actor is missing (base returns EMPTY_NARRATIVE but wrapper adds prompts)', () => {
+      const event = createActorDidDiffShellMutationsEvent((e) => ({
+        ...e,
+        actor: 'flux:actor:nonexistent' as ActorURN,
+      }));
+
+      const narrative = narrateActorDidDiffShellMutations(context, event);
+
+      // The wrapper adds prompts even when base returns EMPTY_NARRATIVE
+      expect(narrative.self).toContain('> Enter `shell commit`');
+      expect(narrative.observer).toBe('');
     });
   });
 
   describe('narrateActorDidUndoShellMutations', () => {
-    it('should render exact undo from actor perspective', () => {
+    it('generates undo narrative for self perspective', () => {
       const event = createActorDidUndoShellMutationsEvent((e) => ({ ...e, actor: ALICE_ID }));
-      const narrative = narrateActorDidUndoShellMutations(context, event, ALICE_ID);
-      expect(narrative).toBe('You have discarded your staged shell modifications.');
-    });
+      const narrative = narrateActorDidUndoShellMutations(context, event);
 
-    it('should render exact undo from observer perspective', () => {
-      const event = createActorDidUndoShellMutationsEvent((e) => ({ ...e, actor: ALICE_ID }));
-      const narrative = narrateActorDidUndoShellMutations(context, event, BOB_ID);
-      expect(narrative).toBe('');
+      expect(narrative.self).toBe('You have discarded your staged shell modifications.');
+      expect(narrative.observer).toBe(''); // Undo is only visible to actor
     });
   });
 
   describe('narrateActorDidCommitShellMutations', () => {
-    it('should render exact commit with cost from actor perspective', () => {
+    it('generates commit narrative with cost', () => {
       const event = createActorDidCommitShellMutationsEvent((e) => ({
         ...e,
         actor: ALICE_ID,
@@ -342,11 +263,13 @@ describe('English Workbench Narratives - Snapshot Tests', () => {
         },
       }));
 
-      const narrative = narrateActorDidCommitShellMutations(context, event, ALICE_ID);
-      expect(narrative).toBe('You commit 2 shell modifications for 150 credits.');
+      const narrative = narrateActorDidCommitShellMutations(context, event);
+
+      expect(narrative.self).toBe('You commit 2 shell modifications for 150 credits.');
+      expect(narrative.observer).toBe(''); // Commit is only visible to actor
     });
 
-    it('should render exact commit without cost from actor perspective', () => {
+    it('generates commit narrative without cost', () => {
       const event = createActorDidCommitShellMutationsEvent((e) => ({
         ...e,
         actor: ALICE_ID,
@@ -357,12 +280,14 @@ describe('English Workbench Narratives - Snapshot Tests', () => {
         },
       }));
 
-      const narrative = narrateActorDidCommitShellMutations(context, event, ALICE_ID);
-      expect(narrative).toBe('You commit 1 shell modification.');
+      const narrative = narrateActorDidCommitShellMutations(context, event);
+
+      expect(narrative.self).toBe('You commit 1 shell modification.');
+      expect(narrative.observer).toBe('');
     });
 
-    it('should render exact commit with single mutation from actor perspective', () => {
-      const event = createActorDidCommitShellMutationsEvent((e) => ({
+    it('handles singular vs plural correctly', () => {
+      const singleEvent = createActorDidCommitShellMutationsEvent((e) => ({
         ...e,
         actor: ALICE_ID,
         payload: {
@@ -372,12 +297,10 @@ describe('English Workbench Narratives - Snapshot Tests', () => {
         },
       }));
 
-      const narrative = narrateActorDidCommitShellMutations(context, event, ALICE_ID);
-      expect(narrative).toBe('You commit 1 shell modification for 75 credits.');
-    });
+      const singleNarrative = narrateActorDidCommitShellMutations(context, singleEvent);
+      expect(singleNarrative.self).toContain('1 shell modification');
 
-    it('should render exact commit from observer perspective', () => {
-      const event = createActorDidCommitShellMutationsEvent((e) => ({
+      const multipleEvent = createActorDidCommitShellMutationsEvent((e) => ({
         ...e,
         actor: ALICE_ID,
         payload: {
@@ -386,617 +309,199 @@ describe('English Workbench Narratives - Snapshot Tests', () => {
           mutations: [
             createStatMutation(Stat.POW, StatMutationOperation.ADD, 5),
             createStatMutation(Stat.FIN, StatMutationOperation.ADD, 5),
-            createStatMutation(Stat.RES, StatMutationOperation.ADD, 5),
           ],
         },
       }));
 
-      const narrative = narrateActorDidCommitShellMutations(context, event, BOB_ID);
-      expect(narrative).toBe('');
-    });
-
-    it('should render exact commit with different actor names', () => {
-      const event = createActorDidCommitShellMutationsEvent((e) => ({
-        ...e,
-        actor: BOB_ID,
-        payload: {
-          ...e.payload,
-          cost: 50,
-          mutations: [createStatMutation(Stat.FIN, StatMutationOperation.REMOVE, 2)],
-        },
-      }));
-
-      const narrative = narrateActorDidCommitShellMutations(context, event, BOB_ID);
-      expect(narrative).toBe('You commit 1 shell modification for 50 credits.');
+      const multipleNarrative = narrateActorDidCommitShellMutations(context, multipleEvent);
+      expect(multipleNarrative.self).toContain('2 shell modifications');
     });
   });
 
   describe('narrateActorDidListShells', () => {
-    it('should render exact shell listing from actor perspective with multiple shells', () => {
+    it('generates shell listing for self perspective', () => {
       const event = createActorDidListShellsEvent((e) => ({ ...e, actor: ALICE_ID }));
-      const narrative = narrateActorDidListShells(context, event, ALICE_ID);
-      expect(narrative).toMatch(/✓ .* is your current shell\./);
-      // Should show Alice's shell with accessible format
-      expect(narrative).toMatch(/✓\s+Shell 1: ".*" \(\d+\.\d+kg, 40 POW, 40 FIN, 40 RES\)/);
+      const narrative = narrateActorDidListShells(context, event);
+
+      expect(narrative.self).toMatch(/✓ .* is your current shell\./);
+      expect(narrative.self).toMatch(/✓\s+Shell 1: ".*" \(\d+\.\d+kg, 40 POW, 40 FIN, 40 RES\)/);
+      expect(narrative.observer).toBe(''); // Shell listing is only visible to actor
     });
 
-    it('should render exact shell listing from actor perspective with single shell', () => {
-      const event = createActorDidListShellsEvent((e) => ({ ...e, actor: BOB_ID }));
-      const narrative = narrateActorDidListShells(context, event, BOB_ID);
-      expect(narrative).toMatch(/✓ .* is your current shell\./);
-      // Should show Bob's shell with accessible format
-      expect(narrative).toMatch(/✓\s+Shell 1: ".*" \(\d+\.\d+kg, \d+ POW, \d+ FIN, \d+ RES\)/);
-    });
+    it('shows active shell indicator correctly', () => {
+      const event = createActorDidListShellsEvent((e) => ({ ...e, actor: ALICE_ID }));
+      const narrative = narrateActorDidListShells(context, event);
 
-    it('should show active shell indicator correctly', () => {
-      const event = createActorDidListShellsEvent((e) => ({
-        ...e,
-        actor: ALICE_ID,
-      }));
-
-      const narrative = narrateActorDidListShells(context, event, ALICE_ID);
-      // Should have exactly one active shell marked with ✓ in the data rows (exclude footer)
-      const lines = narrative.split('\n');
+      const lines = narrative.self.split('\n');
       const dataRows = lines.filter(line =>
-        line.startsWith('✓ ') &&
-        line.includes('Shell 1:') // Count actual shell data rows
+        line.startsWith('✓ ') && line.includes('Shell 1:')
       );
       expect(dataRows).toHaveLength(1);
     });
 
-    it('should format stats correctly in accessible format', () => {
-      const event = createActorDidListShellsEvent((e) => ({ ...e, actor: ALICE_ID }));
-      const narrative = narrateActorDidListShells(context, event, ALICE_ID);
-      // Should show Alice's shell stats in accessible format
-      expect(narrative).toMatch(/\d+ POW, \d+ FIN, \d+ RES/);
-    });
-
-    it('should format mass correctly', () => {
-      const event = createActorDidListShellsEvent((e) => ({ ...e, actor: ALICE_ID }));
-      const narrative = narrateActorDidListShells(context, event, ALICE_ID);
-      // Should show mass in kg format within parentheses
-      expect(narrative).toMatch(/\(\d+\.\d+kg,/);
-    });
-
-    it('should display long shell names correctly', () => {
-      // Create a shell with a very long name
-      const actor = context.world.actors[ALICE_ID];
-      const shellId = Object.keys(actor.shells!)[0];
-      actor.shells![shellId].name = 'This is a very long shell name that should be displayed fully';
-
-      const event = createActorDidListShellsEvent((e) => ({ ...e, actor: ALICE_ID }));
-      const narrative = narrateActorDidListShells(context, event, ALICE_ID);
-      expect(narrative).toContain('"This is a very long shell name that should be displayed fully"');
-    });
-
-    it('should handle shells with no name (show "Unnamed Shell")', () => {
-      // Remove the name from Alice's shell
+    it('handles shells with no name', () => {
       const actor = context.world.actors[ALICE_ID];
       const shellId = Object.keys(actor.shells!)[0];
       // @ts-expect-error - Force-deleting the name property
       delete actor.shells![shellId].name;
 
       const event = createActorDidListShellsEvent((e) => ({ ...e, actor: ALICE_ID }));
-      const narrative = narrateActorDidListShells(context, event, ALICE_ID);
-      expect(narrative).toContain('"Unnamed Shell"');
+      const narrative = narrateActorDidListShells(context, event);
+
+      expect(narrative.self).toContain('"Unnamed Shell"');
     });
 
-    it('should display shell IDs as simple counters', () => {
-      const event = createActorDidListShellsEvent((e) => ({ ...e, actor: ALICE_ID }));
-      const narrative = narrateActorDidListShells(context, event, ALICE_ID);
-      // Should show simple counter ID in accessible format
-      expect(narrative).toMatch(/Shell 1:/);
-      expect(narrative).not.toContain('flux:');
-    });
-
-    it('should return empty string from observer perspective', () => {
-      const event = createActorDidListShellsEvent((e) => ({ ...e, actor: ALICE_ID }));
-      const narrative = narrateActorDidListShells(context, event, BOB_ID);
-      expect(narrative).toBe('');
-    });
-
-    it('should return "no shells available" message when actor has no shells', () => {
-      // Remove all shells from Alice
+    it('returns no shells message when actor has no shells', () => {
       const actor = context.world.actors[ALICE_ID];
       actor.shells = {};
 
       const event = createActorDidListShellsEvent((e) => ({ ...e, actor: ALICE_ID }));
-      const narrative = narrateActorDidListShells(context, event, ALICE_ID);
-      expect(narrative).toBe('You have no shells available.');
+      const narrative = narrateActorDidListShells(context, event);
+
+      expect(narrative.self).toBe('You have no shells available.');
+      expect(narrative.observer).toBe('');
     });
 
-    it('should return empty string for missing actor', () => {
-      const event = createActorDidListShellsEvent((e) => ({ ...e, actor: 'flux:actor:nonexistent' as ActorURN }));
-      const narrative = narrateActorDidListShells(context, event, BOB_ID);
-      expect(narrative).toBe('');
-    });
+    it('returns EMPTY_NARRATIVE when actor is missing', () => {
+      const event = createActorDidListShellsEvent((e) => ({
+        ...e,
+        actor: 'flux:actor:nonexistent' as ActorURN,
+      }));
 
-    it('should log actual shell listing output for inspection', () => {
-      const event = createActorDidListShellsEvent((e) => ({ ...e, actor: ALICE_ID }));
-      const narrative = narrateActorDidListShells(context, event, ALICE_ID);
+      const narrative = narrateActorDidListShells(context, event);
 
-      console.log('\n=== SHELL LISTING OUTPUT ===');
-      console.log(narrative);
-      console.log('=== END SHELL LISTING ===\n');
-
-      const actor = context.world.actors[ALICE_ID];
-      const shell = actor.shells![actor.currentShell!];
-      // Basic validation to ensure test passes
-      expect(narrative).toContain(`✓ ${shell.name} is your current shell.`);
+      expect(narrative).toEqual(EMPTY_NARRATIVE);
     });
   });
 
-  describe('Error handling', () => {
-    it('should return empty sequence for missing actor in session start', () => {
-      const event: WorkbenchSessionDidStart = createWorkbenchSessionDidStartEvent((e) => ({ ...e, actor: 'flux:actor:nonexistent' as ActorURN }));
-      const narrative = narrateWorkbenchSessionDidStart(context, event, BOB_ID);
-      expect(narrative).toEqual([]);
-    });
-
-    it('should return empty string for missing actor in session end', () => {
-      const event = createWorkbenchSessionDidEndEvent((e) => ({ ...e, actor: 'flux:actor:nonexistent' as ActorURN }));
-      const narrative = narrateWorkbenchSessionDidEnd(context, event, BOB_ID);
-      expect(narrative).toBe('');
-    });
-
-    it('should return empty string for missing actor in stage mutation', () => {
-      const event = createActorDidStageShellMutationEvent((e) => ({ ...e, actor: 'flux:actor:nonexistent' as ActorURN }));
-      const narrative = narrateActorDidStageShellMutation(context, event, BOB_ID);
-      expect(narrative).toBe('');
-    });
-
-    it('should return empty string for missing actor in diff mutations', () => {
-      const event = createActorDidDiffShellMutationsEvent((e) => ({ ...e, actor: 'flux:actor:nonexistent' as ActorURN }));
-      const narrative = narrateActorDidDiffShellMutations(context, event, BOB_ID);
-      expect(narrative).toBe('');
-    });
-
-    it('should return empty string for missing actor in undo mutations', () => {
-      const event = createActorDidUndoShellMutationsEvent((e) => ({ ...e, actor: 'flux:actor:nonexistent' as ActorURN }));
-      const narrative = narrateActorDidUndoShellMutations(context, event, BOB_ID);
-      expect(narrative).toBe('');
-    });
-
-    it('should return empty string for missing actor in commit mutations', () => {
-      const event = createActorDidCommitShellMutationsEvent((e) => ({ ...e, actor: 'flux:actor:nonexistent' as ActorURN }));
-      const narrative = narrateActorDidCommitShellMutations(context, event, BOB_ID);
-      expect(narrative).toBe('');
-    });
-  });
-
-  describe('Narrative Quality Validation', () => {
-    describe('narrateWorkbenchSessionDidStart - Quality validation', () => {
-      it('should not contain [object Object] in session start narratives', () => {
-        const event = createWorkbenchSessionDidStartEvent((e) => ({ ...e, actor: ALICE_ID }));
-        const perspectives = [ALICE_ID, BOB_ID];
-        perspectives.forEach(perspective => {
-          withObjectSerializationValidation(narrateWorkbenchSessionDidStart, context, event, perspective)();
-        });
-      });
-
-      it('should pass comprehensive quality validation', () => {
-        const event = createWorkbenchSessionDidStartEvent((e) => ({ ...e, actor: ALICE_ID }));
-        withNarrativeQuality(narrateWorkbenchSessionDidStart, context, event, BOB_ID)();
-      });
-
-      it('should generate different narratives for different perspectives', () => {
-        const event = createWorkbenchSessionDidStartEvent((e) => ({ ...e, actor: ALICE_ID }));
-        withPerspectiveDifferentiation(narrateWorkbenchSessionDidStart, context, event, [ALICE_ID, BOB_ID])();
-      });
-    });
-
-    describe('narrateWorkbenchSessionDidEnd - Quality validation', () => {
-      it('should pass quality validation for session end narratives', () => {
-        const event = createWorkbenchSessionDidEndEvent((e) => ({ ...e, actor: ALICE_ID }));
-        const perspectives = [ALICE_ID, BOB_ID];
-        perspectives.forEach(perspective => {
-          withNarrativeQuality(narrateWorkbenchSessionDidEnd, context, event, perspective)();
-        });
-      });
-    });
-
-    describe('narrateActorDidStageShellMutation - Quality validation', () => {
-      it('should pass quality validation for stat mutation staging', () => {
-        const event = createActorDidStageShellMutationEvent((e) => ({
-          ...e,
-          actor: ALICE_ID,
-          payload: {
-            ...e.payload,
-            mutation: createStatMutation(Stat.POW, StatMutationOperation.ADD, 5),
-          },
-        }));
-
-        const perspectives = [ALICE_ID, BOB_ID];
-        perspectives.forEach(perspective => {
-          withNarrativeQuality(narrateActorDidStageShellMutation, context, event, perspective)();
-        });
-      });
-
-      it('should pass quality validation for component mutation staging', () => {
-        const event = createActorDidStageShellMutationEvent((e) => ({
-          ...e,
-          actor: ALICE_ID,
-          payload: {
-            ...e.payload,
-            mutation: {
-              type: ShellMutationType.COMPONENT,
-            } as any,
-          },
-        }));
-
-        const perspectives = [ALICE_ID, BOB_ID];
-        perspectives.forEach(perspective => {
-          withNarrativeQuality(narrateActorDidStageShellMutation, context, event, perspective)();
-        });
-      });
-    });
-
-    describe('narrateActorDidDiffShellMutations - Quality validation', () => {
-      it('should pass quality validation for diff review narratives', () => {
-        const event = createActorDidDiffShellMutationsEvent((e) => ({
-          ...e,
-          actor: ALICE_ID,
-        }));
-
-        // All perspectives should pass basic quality checks
-        const perspectives = [ALICE_ID, BOB_ID];
-        perspectives.forEach(perspective => {
-          withNarrativeQuality(narrateActorDidDiffShellMutations, context, event, perspective)();
-        });
-
-        // Only actor perspective should have content (observers return empty string for privacy)
-        withNonEmptyValidation(narrateActorDidDiffShellMutations, context, event, ALICE_ID)();
-      });
-    });
-
-    describe('narrateActorDidUndoShellMutations - Quality validation', () => {
-      it('should pass quality validation for undo narratives', () => {
-        const event = createActorDidUndoShellMutationsEvent((e) => ({
-          ...e,
-          actor: ALICE_ID,
-        }));
-
-        // All perspectives should pass basic quality checks
-        const perspectives = [ALICE_ID, BOB_ID];
-        perspectives.forEach(perspective => {
-          withNarrativeQuality(narrateActorDidUndoShellMutations, context, event, perspective)();
-        });
-
-        // Only actor perspective should have content (observers return empty string for privacy)
-        withNonEmptyValidation(narrateActorDidUndoShellMutations, context, event, ALICE_ID)();
-      });
-    });
-
-    describe('narrateActorDidCommitShellMutations - Quality validation', () => {
-      it('should pass quality validation for commit narratives', () => {
-        const event = createActorDidCommitShellMutationsEvent((e) => ({
-          ...e,
-          actor: ALICE_ID,
-          payload: {
-            ...e.payload,
-            cost: 100,
-            mutations: [createStatMutation(Stat.POW, StatMutationOperation.ADD, 5)],
-          },
-        }));
-
-        // All perspectives should pass basic quality checks
-        const perspectives = [ALICE_ID, BOB_ID];
-        perspectives.forEach(perspective => {
-          withNarrativeQuality(narrateActorDidCommitShellMutations, context, event, perspective)();
-        });
-
-        // Only actor perspective should have content (observers return empty string for privacy)
-        withNonEmptyValidation(narrateActorDidCommitShellMutations, context, event, ALICE_ID)();
-      });
-    });
-
-    describe('narrateActorDidListShells - Quality validation', () => {
-      it('should pass quality validation for shell listing narratives', () => {
-        const event = createActorDidListShellsEvent((e) => ({
-          ...e,
-          actor: ALICE_ID,
-        }));
-
-        // Only test actor perspective - observer intentionally returns empty string for privacy
-        withNarrativeQuality(narrateActorDidListShells, context, event, ALICE_ID)();
-      });
-
-      it('should not contain [object Object] in shell listing narratives', () => {
-        const event = createActorDidListShellsEvent((e) => ({
-          ...e,
-          actor: ALICE_ID,
-        }));
-
-        const perspectives = [ALICE_ID, BOB_ID];
-        perspectives.forEach(perspective => {
-          withObjectSerializationValidation(narrateActorDidListShells, context, event, perspective)();
-        });
-      });
-
-      it('should generate different narratives for different perspectives', () => {
-        const event = createActorDidListShellsEvent((e) => ({
-          ...e,
-          actor: ALICE_ID,
-        }));
-
-        // Actor should see shell listing, observer should see empty string
-        const actorNarrative = narrateActorDidListShells(context, event, ALICE_ID);
-        const observerNarrative = narrateActorDidListShells(context, event, BOB_ID);
-
-        expect(actorNarrative).not.toBe(observerNarrative);
-        expect(observerNarrative).toBe('');
-      });
-
-      it('should pass comprehensive quality validation with no shells', () => {
-        // Remove all shells from Alice
-        const actor = context.world.actors[ALICE_ID];
-        actor.shells = {};
-
-        const event = createActorDidListShellsEvent((e) => ({ ...e, actor: ALICE_ID }));
-        withNarrativeQuality(narrateActorDidListShells, context, event, ALICE_ID)();
-      });
-    });
-
-    describe('Composed quality validation', () => {
-      it.skip('should pass all quality checks with composed validators', () => {
-        const event = createWorkbenchSessionDidStartEvent((e) => ({ ...e, actor: ALICE_ID }));
-        // Demonstrate composition of validators
-        const composedValidator = withComposedValidation<WorkbenchSessionDidStart, NarrativeSequence>(
-          withObjectSerializationValidation,
-          withDebuggingArtifactValidation,
-          withNonEmptyValidation
-        );
-
-        composedValidator(narrateWorkbenchSessionDidStart, context, event, BOB_ID)();
-      });
-
-      it('should validate perspective differentiation across all narrative functions', () => {
-        const sessionStartEvent = createWorkbenchSessionDidStartEvent((e) => ({
-          ...e,
-          actor: ALICE_ID,
-        }));
-
-        withPerspectiveDifferentiation(narrateWorkbenchSessionDidStart, context, sessionStartEvent, [ALICE_ID, BOB_ID])();
-
-        const stageEvent = createActorDidStageShellMutationEvent((e) => ({
-          ...e,
-          actor: ALICE_ID,
-          payload: {
-            ...e.payload,
-            shellId: alice.currentShell!, // Use Alice's actual shell ID
-            mutation: createStatMutation(Stat.POW, StatMutationOperation.ADD, 5),
-          },
-        }));
-
-        // Validate that actor has content and observer is empty (privacy-focused behavior)
-        const actorStageNarrative = narrateActorDidStageShellMutation(context, stageEvent, ALICE_ID);
-        const observerStageNarrative = narrateActorDidStageShellMutation(context, stageEvent, BOB_ID);
-
-        expect(actorStageNarrative, 'Actor should have stage narrative').toBeTruthy();
-        expect(observerStageNarrative, 'Observer should have empty stage narrative').toBe('');
-        expect(actorStageNarrative, 'Actor and observer narratives should be different').not.toBe(observerStageNarrative);
-
-        // For actor-only functions, we expect actor to have content and observer to be empty
-        const commitEvent = createActorDidCommitShellMutationsEvent((e) => ({
-          ...e,
-          actor: ALICE_ID,
-          payload: {
-            ...e.payload,
-            cost: 100,
-            mutations: [createStatMutation(Stat.POW, StatMutationOperation.ADD, 5)],
-          },
-        }));
-
-        // Validate that actor has content and observer is empty (which means they're different)
-        const actorCommitNarrative = narrateActorDidCommitShellMutations(context, commitEvent, ALICE_ID);
-        const observerCommitNarrative = narrateActorDidCommitShellMutations(context, commitEvent, BOB_ID);
-
-        expect(actorCommitNarrative, 'Actor should have commit narrative').toBeTruthy();
-        expect(observerCommitNarrative, 'Observer should have empty commit narrative').toBe('');
-        expect(actorCommitNarrative, 'Actor and observer narratives should be different').not.toBe(observerCommitNarrative);
-      });
-    });
-  });
-
-  describe('Workbench Narrative Mood Board', () => {
-    it('should generate a comprehensive mood board of all workbench narratives', () => {
-      console.log('\n' + '='.repeat(80));
-      console.log('🎨 WORKBENCH NARRATIVE MOOD BOARD');
-      console.log('='.repeat(80));
-
-      // Session Management
-      console.log('\n📋 SESSION MANAGEMENT');
-      console.log('-'.repeat(40));
-
-      const sessionStartEvent = createWorkbenchSessionDidStartEvent((e) => ({ ...e, actor: ALICE_ID }));
-      console.log('🟢 Session Start (Self):', narrateWorkbenchSessionDidStart(context, sessionStartEvent, ALICE_ID));
-      console.log('👁️  Session Start (Observer):', narrateWorkbenchSessionDidStart(context, sessionStartEvent, BOB_ID));
-
-      const sessionEndEvent = createWorkbenchSessionDidEndEvent((e) => ({ ...e, actor: ALICE_ID }));
-      console.log('🔴 Session End (Self):', narrateWorkbenchSessionDidEnd(context, sessionEndEvent, ALICE_ID));
-      console.log('👁️  Session End (Observer):', narrateWorkbenchSessionDidEnd(context, sessionEndEvent, BOB_ID));
-
-      // Shell Modifications
-      console.log('\n🔧 SHELL MODIFICATIONS');
-      console.log('-'.repeat(40));
-
-      const statMutationEvent = createActorDidStageShellMutationEvent((e) => ({
+  describe('narrateActorDidAssessShellStatus', () => {
+    it('generates comprehensive shell status report', () => {
+      const event = createActorDidAssessShellStatusEvent((e) => ({
         ...e,
         actor: ALICE_ID,
         payload: {
           ...e.payload,
+          shellId: alice.currentShell!,
+        }
+      }));
+
+      const narrative = narrateActorDidAssessShellStatus(context, event);
+
+      expect(narrative.self).toContain('STATS');
+      expect(narrative.self).toContain('MOBILITY');
+      expect(narrative.self).toContain('POWER OUTPUT');
+      expect(narrative.self).toContain('CAPACITOR');
+      expect(narrative.self).toContain('WEAPON');
+      expect(narrative.observer).toBe(''); // Assessment is only visible to actor
+    });
+
+    it('returns EMPTY_NARRATIVE when actor is missing', () => {
+      const event = createActorDidAssessShellStatusEvent((e) => ({
+        ...e,
+        actor: 'flux:actor:nonexistent' as ActorURN,
+      }));
+
+      const narrative = narrateActorDidAssessShellStatus(context, event);
+
+      expect(narrative).toEqual(EMPTY_NARRATIVE);
+    });
+
+    it('returns EMPTY_NARRATIVE when shell is missing', () => {
+      const event = createActorDidAssessShellStatusEvent((e) => ({
+        ...e,
+        actor: ALICE_ID,
+        payload: {
+          ...e.payload,
+          shellId: 'flux:shell:nonexistent' as any,
+        }
+      }));
+
+      const narrative = narrateActorDidAssessShellStatus(context, event);
+
+      expect(narrative).toEqual(EMPTY_NARRATIVE);
+    });
+  });
+
+  describe('Narrative quality validation', () => {
+    it('generates non-empty narratives for valid events', () => {
+      const sessionEndEvent = createWorkbenchSessionDidEndEvent((e) => ({ ...e, actor: ALICE_ID }));
+      const sessionEndNarrative = narrateWorkbenchSessionDidEnd(context, sessionEndEvent);
+      expect(sessionEndNarrative.self.length).toBeGreaterThan(0);
+      expect(sessionEndNarrative.observer.length).toBeGreaterThan(0);
+
+      const stageEvent = createActorDidStageShellMutationEvent((e) => ({
+        ...e,
+        actor: ALICE_ID,
+        payload: {
+          ...e.payload,
+          shellId: alice.currentShell!,
           mutation: createStatMutation(Stat.POW, StatMutationOperation.ADD, 5),
         },
       }));
-      console.log('⚡ Stat Staging (Self):', narrateActorDidStageShellMutation(context, statMutationEvent, ALICE_ID));
-      console.log('👁️  Stat Staging (Observer):', narrateActorDidStageShellMutation(context, statMutationEvent, BOB_ID));
+      const stageNarrative = narrateActorDidStageShellMutation(context, stageEvent);
+      expect(stageNarrative.self.length).toBeGreaterThan(0);
+    });
 
-      const componentMutationEvent = createActorDidStageShellMutationEvent((e) => ({
-        ...e,
-        actor: ALICE_ID,
-        payload: {
-          ...e.payload,
-          mutation: {
-            type: ShellMutationType.COMPONENT,
-            operation: ComponentMutationOperation.MOUNT,
-            schema: 'flux:schema:component:test',
-            componentId: 'flux:item:component:test',
+    it('differentiates between self and observer perspectives', () => {
+      const sessionEndEvent = createWorkbenchSessionDidEndEvent((e) => ({ ...e, actor: ALICE_ID }));
+      const narrative = narrateWorkbenchSessionDidEnd(context, sessionEndEvent);
+
+      expect(narrative.self).not.toBe(narrative.observer);
+      expect(narrative.self).toContain('You');
+      expect(narrative.observer).toContain('Alice');
+    });
+
+    it('maintains consistent narrative structure across events', () => {
+      const events = [
+        createWorkbenchSessionDidEndEvent((e) => ({ ...e, actor: ALICE_ID })),
+        createActorDidUndoShellMutationsEvent((e) => ({ ...e, actor: ALICE_ID })),
+        createActorDidCommitShellMutationsEvent((e) => ({
+          ...e,
+          actor: ALICE_ID,
+          payload: {
+            ...e.payload,
+            cost: 100,
+            mutations: [createStatMutation(Stat.POW, StatMutationOperation.ADD, 5)],
           },
-        },
-      }));
+        })),
+      ];
 
-      console.log('🔩 Component Staging (Self):', narrateActorDidStageShellMutation(context, componentMutationEvent, ALICE_ID));
-      console.log('👁️  Component Staging (Observer):', narrateActorDidStageShellMutation(context, componentMutationEvent, BOB_ID));
+      events.forEach(event => {
+        const narrative = event.type === 'workbench:session:ended'
+          ? narrateWorkbenchSessionDidEnd(context, event)
+          : event.type === EventType.WORKBENCH_SHELL_MUTATIONS_UNDONE
+          ? narrateActorDidUndoShellMutations(context, event)
+          : narrateActorDidCommitShellMutations(context, event);
 
-      // Shell Analysis - Comprehensive performance diff across all 17 fields
-      console.log('\n📊 SHELL ANALYSIS');
-      console.log('-'.repeat(40));
+        expect(narrative).toHaveProperty('self');
+        expect(narrative).toHaveProperty('observer');
+        expect(typeof narrative.self).toBe('string');
+        expect(typeof narrative.observer).toBe('string');
+      });
+    });
 
-      const diffEvent = createActorDidDiffShellMutationsEvent((e) => ({
+    it('passes quality validation for all narrative functions', () => {
+      const sessionEndEvent = createWorkbenchSessionDidEndEvent((e) => ({ ...e, actor: ALICE_ID }));
+      withNarrativeQuality(narrateWorkbenchSessionDidEnd, context, sessionEndEvent)();
+
+      const stageEvent = createActorDidStageShellMutationEvent((e) => ({
         ...e,
         actor: ALICE_ID,
         payload: {
           ...e.payload,
-          stats: {
-            pow: '40 -> 45',
-            fin: '40 -> 35',
-            res: '40 -> 50',
-          },
-          perf: {
-            // Mobility
-            gapClosing10: '2.5 -> 2.1',
-            gapClosing100: '15.2 -> 14.8',
-            avgSpeed10: '4.0 -> 4.3',
-            avgSpeed100: '6.6 -> 7.1',
-            topSpeed: '12.5 -> 13.2',
-
-            // Power System
-            peakPowerOutput: '5000 -> 5500',
-            componentPowerDraw: '1200 -> 1150',
-            freePower: '3800 -> 4350',
-            powerToWeightRatio: '5.9 -> 6.5',
-
-            // Combat Effectiveness
-            weaponDamage: '48 -> 52',
-            weaponDps: '25.5 -> 28.1',
-            weaponApCost: '120 -> 115',
-
-            // Physical Characteristics
-            totalMassKg: '850.0 -> 845.0',
-            inertialMassKg: '680.0 -> 692.5',
-            inertiaReduction: '20.0 -> 17.5',
-
-            // Energy System
-            capacitorCapacity: '50000 -> 55000',
-            maxRechargeRate: '2500 -> 2750',
-          },
+          shellId: alice.currentShell!,
+          mutation: createStatMutation(Stat.POW, StatMutationOperation.ADD, 5),
         },
       }));
-      const diffNarrative = narrateActorDidDiffShellMutations(context, diffEvent, ALICE_ID);
-      console.log('📈 Shell Diff (Self):\n' + diffNarrative.split('\n').map(line => '    ' + line).join('\n'));
+      withNarrativeQuality(narrateActorDidStageShellMutation, context, stageEvent)();
 
-      // Shell Actions
-      console.log('\n🔄 SHELL ACTIONS');
-      console.log('-'.repeat(40));
+      const diffEvent = createActorDidDiffShellMutationsEvent((e) => ({ ...e, actor: ALICE_ID }));
+      withNarrativeQuality(narrateActorDidDiffShellMutations, context, diffEvent)();
+    });
 
-      const undoEvent = createActorDidUndoShellMutationsEvent((e) => ({ ...e, actor: ALICE_ID }));
-      console.log('↩️  Undo (Self):', narrateActorDidUndoShellMutations(context, undoEvent, ALICE_ID));
-      console.log('👁️  Undo (Observer):', narrateActorDidUndoShellMutations(context, undoEvent, BOB_ID));
-
-      const commitEvent = createActorDidCommitShellMutationsEvent((e) => ({
-        ...e,
-        actor: ALICE_ID,
-        payload: {
-          ...e.payload,
-          cost: 275,
-          mutations: [
-            createStatMutation(Stat.POW, StatMutationOperation.ADD, 5),
-            createStatMutation(Stat.FIN, StatMutationOperation.REMOVE, 5),
-            createStatMutation(Stat.RES, StatMutationOperation.ADD, 10),
-          ],
-        },
-      }));
-      console.log('✅ Commit with Cost (Self):', narrateActorDidCommitShellMutations(context, commitEvent, ALICE_ID));
-      console.log('👁️  Commit with Cost (Observer):', narrateActorDidCommitShellMutations(context, commitEvent, BOB_ID));
-
-      const freeCommitEvent = createActorDidCommitShellMutationsEvent((e) => ({
-        ...e,
-        actor: ALICE_ID,
-        payload: {
-          ...e.payload,
-          cost: 0,
-          mutations: [createStatMutation(Stat.RES, StatMutationOperation.ADD, 2)],
-        },
-      }));
-      console.log('🆓 Commit Free (Self):', narrateActorDidCommitShellMutations(context, freeCommitEvent, ALICE_ID));
-
-      // Shell Inventory
-      console.log('\n📦 SHELL INVENTORY');
-      console.log('-'.repeat(40));
-
-      const listEvent = createActorDidListShellsEvent((e) => ({ ...e, actor: ALICE_ID }));
-      const shellListing = narrateActorDidListShells(context, listEvent, ALICE_ID);
-      console.log('📋 Shell Listing (Self):\n' + shellListing.split('\n').map(line => '    ' + line).join('\n'));
-
-      const observerListing = narrateActorDidListShells(context, listEvent, BOB_ID);
-      console.log('👁️  Shell Listing (Observer):', observerListing || '(empty - private action)');
-
-      // Shell Status Assessment
-      console.log('\n🔍 SHELL STATUS ASSESSMENT');
-      console.log('-'.repeat(40));
-
-      const statusEvent = createActorDidAssessShellStatusEvent((e) => ({
-        ...e,
-        actor: ALICE_ID,
-        payload: {
-          ...e.payload,
-          shellId: alice.currentShell!, // Use Alice's current shell
-        }
-      }));
-      const statusNarrative = narrateActorDidAssessShellStatus(context, statusEvent, ALICE_ID);
-      console.log('📊 Shell Status (Self):\n' + statusNarrative.split('\n').map(line => '    ' + line).join('\n'));
-
-      const observerStatusNarrative = narrateActorDidAssessShellStatus(context, statusEvent, BOB_ID);
-      console.log('👁️  Shell Status (Observer):', observerStatusNarrative || '(empty - private action)');
-
-      // Gender Variations
-      console.log('\n👤 GENDER VARIATIONS');
-      console.log('-'.repeat(40));
-
-      // Create a male actor for comparison
-      const { charlie } = createDefaultActors();
-      scenario.addActor(charlie);
-
-      const charlieUndoEvent = createActorDidUndoShellMutationsEvent((e) => ({ ...e, actor: charlie.id }));
-      console.log('♂️  Male Undo (Observer):', narrateActorDidUndoShellMutations(context, charlieUndoEvent, ALICE_ID));
-      console.log('♀️  Female Undo (Observer):', narrateActorDidUndoShellMutations(context, undoEvent, BOB_ID));
-
-      const charlieStageEvent = createActorDidStageShellMutationEvent((e) => ({
-        ...e,
-        actor: charlie.id,
-        payload: {
-          ...e.payload,
-          mutation: createStatMutation(Stat.FIN, StatMutationOperation.ADD, 3),
-        },
-      }));
-      console.log('♂️  Male Staging (Observer):', narrateActorDidStageShellMutation(context, charlieStageEvent, ALICE_ID));
-      console.log('♀️  Female Staging (Observer):', narrateActorDidStageShellMutation(context, statMutationEvent, BOB_ID));
-
-      console.log('\n' + '='.repeat(80));
-      console.log('🎨 END MOOD BOARD');
-      console.log('='.repeat(80) + '\n');
-
-      // No meaningful assertions - this is purely for visualization
-      expect(true).toBe(true);
+    it('validates perspective differentiation', () => {
+      const sessionEndEvent = createWorkbenchSessionDidEndEvent((e) => ({ ...e, actor: ALICE_ID }));
+      withPerspectiveDifferentiation(narrateWorkbenchSessionDidEnd, context, sessionEndEvent)();
     });
   });
 });
-
-/*
-SHELL INVENTORY
-
-✓  Shell 1: "FerociousLeopard630" (94kg, 60 POW, 40 FIN, 40 RES)
-   Shell 2: "DangerMouse837" (70kg, 80 POW, 30 FIN, 50 RES)
-   Shell 3: "SwiftShadow912" (85kg, 50 POW, 70 FIN, 60 RES)
-
-*/

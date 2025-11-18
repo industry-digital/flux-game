@@ -1,6 +1,6 @@
 import { ActorDidGainAmmo, ActorDidLoseAmmo } from '~/types/event';
 import { TemplateFunction } from '~/types/narrative';
-import { ActorURN, AmmoSchemaURN } from '~/types/taxonomy';
+import { AmmoSchemaURN } from '~/types/taxonomy';
 import { Locale } from '~/types/i18n';
 import { TransformerContext } from '~/types/handler';
 
@@ -21,63 +21,60 @@ const formatQuantity = (context: TransformerContext, quantity: number, schemaUrn
 /**
  * Renders narrative for ammunition gain events
  */
-export const narrateActorDidGainInventoryAmmo: TemplateFunction<ActorDidGainAmmo, ActorURN> = (context, event, recipientId) => {
+export const narrateActorDidGainInventoryAmmo: TemplateFunction<ActorDidGainAmmo> = (context, event) => {
   const { world } = context;
   const actor = world.actors[event.actor!];
 
   if (!actor) {
-    return '';
+    return { self: '', observer: '' };
   }
 
   const { schema, quantity, source } = event.payload;
   const formattedQuantity = formatQuantity(context, quantity, schema);
 
-  if (recipientId === event.actor) {
-    // First person perspective - the actor gaining ammo
-    switch (source) {
-      case 'unloaded':
-        return `You unload ${formattedQuantity}.`;
-      case 'found':
-        return `You find ${formattedQuantity}.`;
-      case 'purchased':
-        return `You acquire ${formattedQuantity}.`;
-      default:
-        return `You gain ${formattedQuantity}.`;
-    }
-  }
+  let selfVerb: string;
+  let observerVerb: string;
 
-  // Third person perspective - other observers
   switch (source) {
     case 'unloaded':
-      return `${actor.name} unloads ${formattedQuantity}.`;
+      selfVerb = 'unload';
+      observerVerb = 'unloads';
+      break;
     case 'found':
-      return `${actor.name} finds ${formattedQuantity}.`;
+      selfVerb = 'find';
+      observerVerb = 'finds';
+      break;
     case 'purchased':
-      return `${actor.name} acquires ${formattedQuantity}.`;
+      selfVerb = 'acquire';
+      observerVerb = 'acquires';
+      break;
     default:
-      return `${actor.name} gains ${formattedQuantity}.`;
+      selfVerb = 'gain';
+      observerVerb = 'gains';
   }
+
+  return {
+    self: `You ${selfVerb} ${formattedQuantity}.`,
+    observer: `${actor.name} ${observerVerb} ${formattedQuantity}.`
+  };
 };
 
 /**
  * Renders narrative for ammunition loss events
  */
-export const narrateActorDidLoseInventoryAmmo: TemplateFunction<ActorDidLoseAmmo, ActorURN> = (context, event, recipientId) => {
+export const narrateActorDidLoseInventoryAmmo: TemplateFunction<ActorDidLoseAmmo> = (context, event) => {
   const { world } = context;
   const actor = world.actors[event.actor!];
 
   if (!actor) {
-    return '';
+    return { self: '', observer: '' };
   }
 
   const { schema, quantity } = event.payload;
   const formattedQuantity = formatQuantity(context, quantity, schema);
 
-  if (recipientId === event.actor) {
-    // First person perspective - the actor losing ammo
-    return `You lose ${formattedQuantity}.`;
-  }
-
-  // Third person perspective - other observers
-  return `${actor.name} loses ${formattedQuantity}.`;
+  return {
+    self: `You lose ${formattedQuantity}.`,
+    observer: `${actor.name} loses ${formattedQuantity}.`
+  };
 };

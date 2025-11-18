@@ -17,8 +17,7 @@ import {
   ActorDidAssessShellStatus,
 } from '~/types/event';
 import { ShellMutationType, StatMutation, StatMutationOperation } from '~/types/workbench';
-import { NarrativeSequence, TemplateFunction } from '~/types/narrative';
-import { ActorURN } from '~/types/taxonomy';
+import { Narrative, NarrativeSequence, TemplateFunction } from '~/types/narrative';
 import { Stat } from '~/types/entity/actor';
 import { SHELL_STAT_KEYS } from '~/worldkit/entity/actor/shell';
 import { calculateShellPerformance, ShellPerformanceDependencies } from '~/worldkit/entity/actor/shell/instrumentation';
@@ -26,6 +25,7 @@ import { getSchemaTranslation } from '~/narrative/schema';
 import { Locale } from '~/types/i18n';
 import { CHECK_MARK } from '~/narrative/glyphs';
 import { getStatValue } from '~/worldkit/entity/actor/stats';
+import { EMPTY_NARRATIVE } from '~/narrative/constants';
 
 const STAT_DISPLAY_NAMES: Readonly<Record<Stat, string>> = Object.freeze({
   [Stat.POW]: 'POW',
@@ -36,7 +36,6 @@ const STAT_DISPLAY_NAMES: Readonly<Record<Stat, string>> = Object.freeze({
   [Stat.MEM]: 'MEM',
 });
 const RIGHT_ARROW = ' -> ';
-const EMPTY_NARRATIVE_SEQUENCE: NarrativeSequence = [];
 const HELP_PROMPT = '> Enter \`help workbench\` for available commands.';
 
 const WORKBENCH_PROMPTS = `> Enter \`shell commit\` to commit your changes.
@@ -44,46 +43,51 @@ const WORKBENCH_PROMPTS = `> Enter \`shell commit\` to commit your changes.
 ${HELP_PROMPT}`;
 
 const WORKBENCH_SESSION_DID_START_SEQUENCE: NarrativeSequence = [
-  { text: 'Connecting to workbench interface...', delay: 0 },
-  { text: 'ShellOS v2.7.4-pre-collapse | Build 20847 | Neural Protocol Stack: ACTIVE', delay: 1_000 },
-  { text: `Connection established.\n${HELP_PROMPT}`, delay: 1_000 },
+  {
+    self: 'Connecting to workbench interface...',
+    observer: '',
+    delay: 0
+  },
+  {
+    self: 'ShellOS v2.7.4-pre-collapse | Build 20847 | Neural Protocol Stack: ACTIVE',
+    observer: '',
+    delay: 1_000
+  },
+  {
+    self: `Connection established.\n${HELP_PROMPT}`,
+    observer: '',
+    delay: 1_000
+  },
 ];
 
-export const narrateWorkbenchSessionDidStart: TemplateFunction<WorkbenchSessionDidStart, ActorURN, NarrativeSequence> = (context, event, recipientId): NarrativeSequence => {
-  if (recipientId !== event.actor) {
-    return EMPTY_NARRATIVE_SEQUENCE;
-  }
+export const narrateWorkbenchSessionDidStart: TemplateFunction<WorkbenchSessionDidStart, NarrativeSequence> = (context, event): NarrativeSequence => {
+  // Workbench session start is only visible to the actor
   return WORKBENCH_SESSION_DID_START_SEQUENCE;
 };
 
-export const narrateWorkbenchSessionDidEnd: TemplateFunction<WorkbenchSessionDidEnd, ActorURN> = (context, event, recipientId) => {
+export const narrateWorkbenchSessionDidEnd: TemplateFunction<WorkbenchSessionDidEnd> = (context, event): Narrative => {
   const { world } = context;
   const actor = world.actors[event.actor!];
 
   if (!actor) {
-    return '';
+    return EMPTY_NARRATIVE;
   }
 
-  if (recipientId === event.actor) {
-    return 'You finish your work at the workbench.';
-  }
-
-  return `${actor.name} finishes working at the workbench.`;
+  return {
+    self: 'You finish your work at the workbench.',
+    observer: `${actor.name} finishes working at the workbench.`
+  };
 };
 
-export const narrateActorDidStageShellMutation: TemplateFunction<ActorDidStageShellMutation, ActorURN> = (context, event, recipientId) => {
-  if (recipientId !== event.actor) {
-    return '';
-  }
-
+export const narrateActorDidStageShellMutation: TemplateFunction<ActorDidStageShellMutation> = (context, event): Narrative => {
   const actor = context.world.actors[event.actor!];
   if (!actor) {
-    return '';
+    return EMPTY_NARRATIVE;
   }
 
   const mutation = event.payload.mutation as StatMutation;
   if (mutation.type !== ShellMutationType.STAT) {
-    return ''; // Never supposed to happen
+    return EMPTY_NARRATIVE; // Never supposed to happen
   }
 
   // Get stat from actor's materialized view (denormalized shell stats)
@@ -92,7 +96,12 @@ export const narrateActorDidStageShellMutation: TemplateFunction<ActorDidStageSh
     ? from + mutation.amount
     : from - mutation.amount;
 
-  return `${mutation.stat.toUpperCase()} ${from}${RIGHT_ARROW}${to}`;
+  const mutationText = `${mutation.stat.toUpperCase()} ${from}${RIGHT_ARROW}${to}`;
+
+  return {
+    self: mutationText,
+    observer: '' // Staging mutations are only visible to the actor
+  };
 };
 
 /**
@@ -181,100 +190,98 @@ const hasStatChanges = (stats: any): boolean => {
  * Higher-order function that composes narrative functions with workbench prompts
  * Zero-allocation implementation using direct string concatenation
  */
-const withWorkbenchPrompts = <T extends WorldEvent, R extends ActorURN>(
-  narrativeFunction: TemplateFunction<T, R>
-): TemplateFunction<T, R> => {
-  return (context, event, recipientId) => {
-    const baseNarrative = narrativeFunction(context, event, recipientId);
+const withWorkbenchPrompts = <T extends WorldEvent>(
+  narrativeFunction: TemplateFunction<T>
+): TemplateFunction<T> => {
+  return (context, event) => {
+    const baseNarrative = narrativeFunction(context, event);
 
-    // Only add prompts for the actor themselves
-    if (recipientId === event.actor) {
-      return baseNarrative + '\n\n' + WORKBENCH_PROMPTS;
-    }
-
-    return baseNarrative;
+    // Add prompts to self perspective only
+    return {
+      self: baseNarrative.self + '\n\n' + WORKBENCH_PROMPTS,
+      observer: baseNarrative.observer
+    };
   };
 };
 
-const baseNarrateActorDidDiffShellMutations: TemplateFunction<ActorDidDiffShellMutations, ActorURN> = (context, event, recipientId) => {
-  if (recipientId !== event.actor) {
-    return '';
-  }
-
+const baseNarrateActorDidDiffShellMutations: TemplateFunction<ActorDidDiffShellMutations> = (context, event): Narrative => {
   const { world } = context;
   const actor = world.actors[event.actor!];
 
   if (!actor) {
-    return '';
+    return EMPTY_NARRATIVE;
   }
 
   const perf = event.payload.perf;
   const stats = event.payload.stats;
 
-    const hasStats = hasStatChanges(stats);
-    const hasPerf = hasPerformanceChanges(perf);
+  const hasStats = hasStatChanges(stats);
+  const hasPerf = hasPerformanceChanges(perf);
 
-    if (!hasStats && !hasPerf) {
-      return 'You review your shell design. No changes detected.';
-    }
-
-    // Generate comprehensive shell analysis (zero-allocation)
-    let result = 'Shell Configuration Analysis:\n';
-
-    // Add stat changes section - always show all shell stats for complete context
-    if (hasStats || hasPerf) {
-      result += '\nSHELL STATS\n';
-
-      // Show all three core shell stats (POW, FIN, RES)
-      for (const stat of SHELL_STAT_KEYS) {
-        const statValue = stats?.[stat];
-        if (typeof statValue === 'string') {
-          // This stat has changes
-          result += '  ' + STAT_DISPLAY_NAMES[stat] + ':'.padEnd(18 - STAT_DISPLAY_NAMES[stat].length) +
-                   formatDiffValue(statValue, '', 0) + '\n';
-        } else {
-          // This stat has no changes - show current value (from actor's denormalized stats)
-          const currentValue = getStatValue(actor, stat);
-          result += '  ' + STAT_DISPLAY_NAMES[stat] + ':'.padEnd(18 - STAT_DISPLAY_NAMES[stat].length) +
-                   currentValue.toFixed(0) + '\n';
-        }
-      }
-    }
-
-    // Add performance changes section if present
-    if (hasPerf) {
-      result += '\nMOBILITY\n' +
-        '  Gap Closing (10m):     ' + formatDiffValue(perf.gapClosing10, 's') + '\n' +
-        '  Gap Closing (100m):    ' + formatDiffValue(perf.gapClosing100, 's') + '\n' +
-        '  Avg Speed (10m):       ' + formatDiffValue(perf.avgSpeed10, 'm/s') + '\n' +
-        '  Avg Speed (100m):      ' + formatDiffValue(perf.avgSpeed100, 'm/s') + '\n' +
-        '  Top Speed:             ' + formatDiffValue(perf.topSpeed, 'm/s') + '\n' +
-        '\n' +
-        'POWER\n' +
-        '  Peak Power Output:     ' + formatDiffValue(perf.peakPowerOutput, 'W', 0) + '\n' +
-        '  Component Power Draw:  ' + formatDiffValue(perf.componentPowerDraw, 'W', 0) + '\n' +
-        '  Free Power:            ' + formatDiffValue(perf.freePower, 'W', 0) + '\n' +
-        '  Power-to-Weight:       ' + formatDiffValue(perf.powerToWeightRatio, 'W/kg') + '\n' +
-        '\n' +
-        'WEAPON SYSTEM\n' +
-        '  Weapon Damage:         ' + formatDiffValue(perf.weaponDamage, ' dmg', 0) + '\n' +
-        '  Weapon DPS:            ' + formatDiffValue(perf.weaponDps, ' dps') + '\n' +
-        '  Weapon AP Cost:        ' + formatDiffValue(perf.weaponApCost, ' AP', 0) + '\n' +
-        '\n' +
-        'MASS\n' +
-        '  Total Mass:            ' + formatDiffValue(perf.totalMassKg, 'kg') + '\n' +
-        '  Inertial Mass:         ' + formatDiffValue(perf.inertialMassKg, 'kg') + '\n' +
-        '  Inertia Reduction:     ' + formatPercentage(perf.inertiaReduction) + '\n' +
-        '\n' +
-        'ENERGY\n' +
-        '  Capacitor Capacity:    ' + formatDiffValue(perf.capacitorCapacity, 'J', 0) + '\n' +
-        '  Max Recharge Rate:     ' + formatDiffValue(perf.maxRechargeRate, 'W', 0) + '\n';
-
-    return result;
+  if (!hasStats && !hasPerf) {
+    return {
+      self: 'You review your shell design. No changes detected.',
+      observer: '' // Shell diff is only visible to the actor
+    };
   }
 
-  // No narrative for observers
-  return '';
+  // Generate comprehensive shell analysis (zero-allocation)
+  let result = 'Shell Configuration Analysis:\n';
+
+  // Add stat changes section - always show all shell stats for complete context
+  if (hasStats || hasPerf) {
+    result += '\nSHELL STATS\n';
+
+    // Show all three core shell stats (POW, FIN, RES)
+    for (const stat of SHELL_STAT_KEYS) {
+      const statValue = stats?.[stat];
+      if (typeof statValue === 'string') {
+        // This stat has changes
+        result += '  ' + STAT_DISPLAY_NAMES[stat] + ':'.padEnd(18 - STAT_DISPLAY_NAMES[stat].length) +
+                 formatDiffValue(statValue, '', 0) + '\n';
+      } else {
+        // This stat has no changes - show current value (from actor's denormalized stats)
+        const currentValue = getStatValue(actor, stat);
+        result += '  ' + STAT_DISPLAY_NAMES[stat] + ':'.padEnd(18 - STAT_DISPLAY_NAMES[stat].length) +
+                 currentValue.toFixed(0) + '\n';
+      }
+    }
+  }
+
+  // Add performance changes section if present
+  if (hasPerf) {
+    result += '\nMOBILITY\n' +
+      '  Gap Closing (10m):     ' + formatDiffValue(perf.gapClosing10, 's') + '\n' +
+      '  Gap Closing (100m):    ' + formatDiffValue(perf.gapClosing100, 's') + '\n' +
+      '  Avg Speed (10m):       ' + formatDiffValue(perf.avgSpeed10, 'm/s') + '\n' +
+      '  Avg Speed (100m):      ' + formatDiffValue(perf.avgSpeed100, 'm/s') + '\n' +
+      '  Top Speed:             ' + formatDiffValue(perf.topSpeed, 'm/s') + '\n' +
+      '\n' +
+      'POWER\n' +
+      '  Peak Power Output:     ' + formatDiffValue(perf.peakPowerOutput, 'W', 0) + '\n' +
+      '  Component Power Draw:  ' + formatDiffValue(perf.componentPowerDraw, 'W', 0) + '\n' +
+      '  Free Power:            ' + formatDiffValue(perf.freePower, 'W', 0) + '\n' +
+      '  Power-to-Weight:       ' + formatDiffValue(perf.powerToWeightRatio, 'W/kg') + '\n' +
+      '\n' +
+      'WEAPON SYSTEM\n' +
+      '  Weapon Damage:         ' + formatDiffValue(perf.weaponDamage, ' dmg', 0) + '\n' +
+      '  Weapon DPS:            ' + formatDiffValue(perf.weaponDps, ' dps') + '\n' +
+      '  Weapon AP Cost:        ' + formatDiffValue(perf.weaponApCost, ' AP', 0) + '\n' +
+      '\n' +
+      'MASS\n' +
+      '  Total Mass:            ' + formatDiffValue(perf.totalMassKg, 'kg') + '\n' +
+      '  Inertial Mass:         ' + formatDiffValue(perf.inertialMassKg, 'kg') + '\n' +
+      '  Inertia Reduction:     ' + formatPercentage(perf.inertiaReduction) + '\n' +
+      '\n' +
+      'ENERGY\n' +
+      '  Capacitor Capacity:    ' + formatDiffValue(perf.capacitorCapacity, 'J', 0) + '\n' +
+      '  Max Recharge Rate:     ' + formatDiffValue(perf.maxRechargeRate, 'W', 0) + '\n';
+  }
+
+  return {
+    self: result,
+    observer: '' // Shell diff is only visible to the actor
+  };
 };
 
 
@@ -283,50 +290,42 @@ export const narrateActorDidDiffShellMutations = withWorkbenchPrompts(
   baseNarrateActorDidDiffShellMutations
 );
 
-export const narrateActorDidUndoShellMutations: TemplateFunction<ActorDidUndoShellMutations, ActorURN> = (context, event, recipientId) => {
-  if (recipientId === event.actor) {
-    return 'You have discarded your staged shell modifications.';
-  }
-
-  // No narrative for observers
-  return '';
+export const narrateActorDidUndoShellMutations: TemplateFunction<ActorDidUndoShellMutations> = (context, event): Narrative => {
+  return {
+    self: 'You have discarded your staged shell modifications.',
+    observer: '' // Undo is only visible to the actor
+  };
 };
 
-export const narrateActorDidCommitShellMutations: TemplateFunction<ActorDidCommitShellMutations, ActorURN> = (context, event, recipientId) => {
+export const narrateActorDidCommitShellMutations: TemplateFunction<ActorDidCommitShellMutations> = (context, event): Narrative => {
+  const { cost, mutations } = event.payload;
+  const mutationCount = mutations.length;
+  const costText = cost > 0 ? ` for ${cost} credits` : '';
 
-  if (recipientId === event.actor) {
-    const { cost, mutations } = event.payload;
-    const mutationCount = mutations.length;
-    const costText = cost > 0 ? ` for ${cost} credits` : '';
-    return `You commit ${mutationCount} shell modification${mutationCount !== 1 ? 's' : ''}${costText}.`;
-  }
-
-  // No narrative for observers
-  return '';
+  return {
+    self: `You commit ${mutationCount} shell modification${mutationCount !== 1 ? 's' : ''}${costText}.`,
+    observer: '' // Commit is only visible to the actor
+  };
 };
 
 /**
  * Narrative for when an actor mounts a component to their shell
  */
-export const narrateActorDidMountComponent: TemplateFunction<ActorDidMountComponent, ActorURN> = (context, event, recipientId) => {
-  if (recipientId === event.actor) {
-    return 'You mount a component to your shell.';
-  }
-
-  // No narrative for observers
-  return '';
+export const narrateActorDidMountComponent: TemplateFunction<ActorDidMountComponent> = (context, event): Narrative => {
+  return {
+    self: 'You mount a component to your shell.',
+    observer: '' // Component mounting is only visible to the actor
+  };
 };
 
 /**
  * Narrative for when an actor unmounts a component from their shell
  */
-export const narrateActorDidUnmountComponent: TemplateFunction<ActorDidUnmountComponent, ActorURN> = (context, event, recipientId) => {
-  if (recipientId === event.actor) {
-    return 'You unmount a component from your shell.';
-  }
-
-  // No narrative for observers
-  return '';
+export const narrateActorDidUnmountComponent: TemplateFunction<ActorDidUnmountComponent> = (context, event): Narrative => {
+  return {
+    self: 'You unmount a component from your shell.',
+    observer: '' // Component unmounting is only visible to the actor
+  };
 };
 
 
@@ -334,17 +333,12 @@ export const narrateActorDidUnmountComponent: TemplateFunction<ActorDidUnmountCo
  * Narrative for when an actor lists their available shells
  * Single-pass iteration over shells using for...in (zero-allocation)
  */
-export const narrateActorDidListShells: TemplateFunction<ActorDidListShells, ActorURN> = (context, event, recipientId) => {
+export const narrateActorDidListShells: TemplateFunction<ActorDidListShells> = (context, event): Narrative => {
   const { world } = context;
   const actor = world.actors[event.actor!];
 
   if (!actor) {
-    return '';
-  }
-
-  // Only show to the shell owner
-  if (recipientId !== event.actor) {
-    return '';
+    return EMPTY_NARRATIVE;
   }
 
   // Check if actor has any shells (zero-allocation check)
@@ -355,7 +349,10 @@ export const narrateActorDidListShells: TemplateFunction<ActorDidListShells, Act
   }
 
   if (!hasShells) {
-    return 'You have no shells available.';
+    return {
+      self: 'You have no shells available.',
+      observer: '' // Shell listing is only visible to the actor
+    };
   }
 
   // Create mass API for shell mass calculations
@@ -391,125 +388,123 @@ export const narrateActorDidListShells: TemplateFunction<ActorDidListShells, Act
 
   result += '\n' + CHECK_MARK + ` ${currentShell.name} is your current shell.`;
 
-  return result;
+  return {
+    self: result,
+    observer: '' // Shell listing is only visible to the actor
+  };
 };
 
 /**
  * Narrative for when an actor inspects the status of a specific shell
  */
-export const narrateActorDidInspectShellStatus: TemplateFunction<ActorDidInspectShellStatus, ActorURN> = (context, event, recipientId) => {
+export const narrateActorDidInspectShellStatus: TemplateFunction<ActorDidInspectShellStatus> = (context, event): Narrative => {
   const { world } = context;
   const actor = world.actors[event.actor!];
 
   if (!actor) {
-    return '';
+    return EMPTY_NARRATIVE;
   }
 
   const shellName = event.payload.shell.name || 'shell';
 
-  if (recipientId === event.actor) {
-    return `You inspect the status of your ${shellName}.`;
-  }
-
-  return `${actor.name} inspects their shell status.`;
+  return {
+    self: `You inspect the status of your ${shellName}.`,
+    observer: `${actor.name} inspects their shell status.`
+  };
 };
 
 /**
  * Narrative for when an actor reviews shell statistics
  */
-export const narrateActorDidReviewShellStats: TemplateFunction<ActorDidReviewShellStats, ActorURN> = (context, event, recipientId) => {
+export const narrateActorDidReviewShellStats: TemplateFunction<ActorDidReviewShellStats> = (context, event): Narrative => {
   const { world } = context;
   const actor = world.actors[event.actor!];
 
   if (!actor) {
-    return '';
+    return EMPTY_NARRATIVE;
   }
 
   const hasPendingMutations = event.payload.pendingMutations.length > 0;
 
-  if (recipientId === event.actor) {
-    if (hasPendingMutations) {
-      return 'You review your shell statistics and pending modifications.';
-    }
-    return 'You review your shell statistics.';
-  }
+  const selfText = hasPendingMutations
+    ? 'You review your shell statistics and pending modifications.'
+    : 'You review your shell statistics.';
 
-  return `${actor.name} reviews their shell statistics.`;
+  return {
+    self: selfText,
+    observer: `${actor.name} reviews their shell statistics.`
+  };
 };
 
 /**
  * Narrative for when an actor lists components on their shell
  */
-export const narrateActorDidListShellComponents: TemplateFunction<ActorDidListShellComponents, ActorURN> = (context, event, recipientId) => {
+export const narrateActorDidListShellComponents: TemplateFunction<ActorDidListShellComponents> = (context, event): Narrative => {
   const { world } = context;
   const actor = world.actors[event.actor!];
 
   if (!actor) {
-    return '';
+    return EMPTY_NARRATIVE;
   }
 
   const componentCount = Object.keys(event.payload.components).length;
 
-  if (recipientId === event.actor) {
-    if (componentCount === 0) {
-      return 'Your shell has no mounted components.';
-    }
-    if (componentCount === 1) {
-      return 'You examine the component mounted on your shell.';
-    }
-    return `You examine the ${componentCount} components mounted on your shell.`;
+  let selfText: string;
+  if (componentCount === 0) {
+    selfText = 'Your shell has no mounted components.';
+  } else if (componentCount === 1) {
+    selfText = 'You examine the component mounted on your shell.';
+  } else {
+    selfText = `You examine the ${componentCount} components mounted on your shell.`;
   }
 
-  // No narrative for observers
-  return '';
+  return {
+    self: selfText,
+    observer: '' // Component listing is only visible to the actor
+  };
 };
 
 /**
  * Narrative for when an actor examines a specific component
  */
-export const narrateActorDidExamineComponent: TemplateFunction<ActorDidExamineComponent, ActorURN> = (context, event, recipientId) => {
-  if (recipientId === event.actor) {
-    return 'You examine the component in detail.';
-  }
-
-  // No narrative for observers
-  return '';
+export const narrateActorDidExamineComponent: TemplateFunction<ActorDidExamineComponent> = (context, event): Narrative => {
+  return {
+    self: 'You examine the component in detail.',
+    observer: '' // Component examination is only visible to the actor
+  };
 };
 
-export const narrateActorDidSwapShell: TemplateFunction<ActorDidSwapShell, ActorURN> = (context, event, recipientId) => {
+export const narrateActorDidSwapShell: TemplateFunction<ActorDidSwapShell> = (context, event): Narrative => {
   const actor = context.world.actors[event.actor!];
 
   if (!actor) {
-    return '';
+    return EMPTY_NARRATIVE;
   }
 
-  if (recipientId === event.actor) {
-    const shell = actor.shells![event.payload.toShellId];
-    return `Core consciousness transferred to shell "${shell.name}."`;
+  const shell = actor.shells![event.payload.toShellId];
+  if (!shell) {
+    return EMPTY_NARRATIVE;
   }
 
-  // No narrative for observers
-  return '';
+  return {
+    self: `Core consciousness transferred to shell "${shell.name}."`,
+    observer: '' // Shell swap is only visible to the actor
+  };
 };
 
 const PREALLOCATED_SHELL_PERFORMANCE_DEPS: ShellPerformanceDependencies = {} as any;
 
-export const narrateActorDidAssessShellStatus: TemplateFunction<ActorDidAssessShellStatus, ActorURN> = (context, event, recipientId) => {
+export const narrateActorDidAssessShellStatus: TemplateFunction<ActorDidAssessShellStatus> = (context, event): Narrative => {
   const { world } = context;
   const actor = world.actors[event.actor!];
 
   if (!actor) {
-    return '';
+    return EMPTY_NARRATIVE;
   }
 
   const shell = actor.shells?.[event.payload.shellId];
   if (!shell) {
-    return '';
-  }
-
-  // No narrative for observers
-  if (recipientId !== event.actor) {
-    return '';
+    return EMPTY_NARRATIVE;
   }
 
   const equippedWeapon = context.equipmentApi.getEquippedWeaponSchema(actor);
@@ -552,5 +547,8 @@ export const narrateActorDidAssessShellStatus: TemplateFunction<ActorDidAssessSh
   report += `  AP Cost/Strike:     ${performance.weaponApCost.toFixed(1)} AP\n`;
   report += `  Damage Per Second:  ${performance.weaponDps.toFixed(1)}\n\n`;
 
-  return report;
+  return {
+    self: report,
+    observer: '' // Shell assessment is only visible to the actor
+  };
 };

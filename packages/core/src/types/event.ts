@@ -19,6 +19,7 @@ import { ShellStats } from '~/types/entity/actor';
 import { CurrencyTransaction } from '~/types/currency';
 import { PartyLeaveReason } from '~/types/party';
 import { Party } from '~/types/entity/group';
+import { Narrative, NarrativeSequence } from '~/types/narrative';
 
 export type EventPayload = Record<string, any>;
 
@@ -836,5 +837,5 @@ export type PlaceBoundEnvelope = WorldEventEnvelopeBase & {
 };
 
 export type EnrichedWorldEvent = WorldEvent & {
-  narrative: any;
+  narrative: Narrative | NarrativeSequence;
 };

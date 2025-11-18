@@ -3,27 +3,10 @@
  *
  * Global utilities for narrative template functions that can be used
  * across all event types and domains.
+ *
+ * NOTE: This module is currently empty. Previous utilities have been removed
+ * as they were incompatible with the new two-perspective Narrative architecture.
  */
 
-export {
-  // Core composable utilities
-  withSystemEventFilter,
-  withActorValidation,
-  withActorAndTargetValidation,
-  withSystemEventOnly,
-
-  // Convenience combinations
-  withUserEventValidation,
-  withInteractionValidation,
-
-  // Template creators
-  createPerspectiveTemplate,
-  createSystemTemplate,
-  createSystemPerspectiveTemplate,
-  createDynamicSystemPerspectiveTemplate,
-
-  // Helper utilities
-  getWeaponInfo,
-  formatDistance,
-  formatApCost,
-} from './perspective';
+// This module intentionally left empty for now.
+// Future utilities can be added here as needed.

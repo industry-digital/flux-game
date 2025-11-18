@@ -14,26 +14,17 @@ import {
 } from '~/types/event';
 import { AttackType, MovementDirection } from '~/types/combat';
 import { SessionStatus } from '~/types/entity/session';
-import { TemplateFunction } from '~/types/narrative';
-import { ActorURN, SchemaURN } from '~/types/taxonomy';
+import { Narrative, TemplateFunction } from '~/types/narrative';
+import { SchemaURN } from '~/types/taxonomy';
 import { Actor, Stat } from '~/types/entity/actor';
-import {
-  withUserEventValidation,
-  withInteractionValidation,
-  createPerspectiveTemplate,
-  createSystemTemplate,
-  createSystemPerspectiveTemplate,
-  createDynamicSystemPerspectiveTemplate,
-} from '~/narrative/util';
 import { getAllStats, getMaxHp } from '~/worldkit/entity/actor';
 import { getPrimaryDamageType } from '~/worldkit/combat/damage/damage-type';
 import { DamageType } from '~/types/damage';
 import { Locale, SchemaTranslation } from '~/types/i18n';
 import { TransformerContext } from '~/types/handler';
 import { WeaponSchema } from '~/types/schema/weapon';
-import { Perspective } from '~/types/narrative';
 import { getPossessivePronoun } from './util/grammar';
-
+import { EMPTY_NARRATIVE } from '~/narrative/constants';
 
 /**
  * Get localized weapon name from schema (en_US)
@@ -42,234 +33,170 @@ const getLocalizedSchemaTranslation = (context: TransformerContext, schemaUrn: S
   return context.getSchemaTranslation(Locale.en_US, schemaUrn);
 };
 
-export const FIRST_PERSON_VERBS: Readonly<Record<DamageType, string>> = Object.freeze({
-  [DamageType.SLASH]: 'sweep',
-  [DamageType.PIERCE]: 'drive',
-  [DamageType.IMPACT]: 'swing',
-  [DamageType.KINETIC]: 'swing',
-  [DamageType.THERMAL]: 'sweep',
-  [DamageType.EXPLOSIVE]: 'swing'
+/**
+ * Attack verbs by damage type
+ */
+const ATTACK_VERBS: Readonly<Record<DamageType, Narrative>> = Object.freeze({
+  [DamageType.SLASH]: { self: 'sweep', observer: 'sweeps' },
+  [DamageType.PIERCE]: { self: 'drive', observer: 'drives' },
+  [DamageType.IMPACT]: { self: 'swing', observer: 'swings' },
+  [DamageType.KINETIC]: { self: 'swing', observer: 'swings' },
+  [DamageType.THERMAL]: { self: 'sweep', observer: 'sweeps' },
+  [DamageType.EXPLOSIVE]: { self: 'swing', observer: 'swings' }
 });
 
-export const THIRD_PERSON_VERBS: Readonly<Record<DamageType, string>> = Object.freeze({
-  [DamageType.SLASH]: 'sweeps',
-  [DamageType.PIERCE]: 'drives',
-  [DamageType.IMPACT]: 'swings',
-  [DamageType.KINETIC]: 'swings',
-  [DamageType.THERMAL]: 'sweeps',
-  [DamageType.EXPLOSIVE]: 'swings'
-});
-
-// Helper function to format target list with viewer-specific perspective
-const formatTargetList = (targets: Actor[], viewerActorId: ActorURN): string => {
+/**
+ * Format target list for third-person perspective
+ */
+const formatTargetList = (targets: Actor[]): string => {
   if (targets.length === 0) return '';
-  if (targets.length === 1) {
-    return targets[0].id === viewerActorId ? 'you' : targets[0].name;
-  }
-  if (targets.length === 2) {
-    const target1 = targets[0].id === viewerActorId ? 'you' : targets[0].name;
-    const target2 = targets[1].id === viewerActorId ? 'you' : targets[1].name;
-    return `${target1} and ${target2}`;
-  }
+  if (targets.length === 1) return targets[0].name;
+  if (targets.length === 2) return `${targets[0].name} and ${targets[1].name}`;
 
   const lastTarget = targets[targets.length - 1];
   const otherTargets = targets.slice(0, -1);
-  const lastTargetName = lastTarget.id === viewerActorId ? 'you' : lastTarget.name;
-  const otherTargetNames = otherTargets.map(t => t.id === viewerActorId ? 'you' : t.name);
-  return `${otherTargetNames.join(', ')}, and ${lastTargetName}`;
+  return `${otherTargets.map(t => t.name).join(', ')}, and ${lastTarget.name}`;
 };
 
-const narrateCleaveAttack = (context: any, actor: Actor, targets: Actor[], weapon: WeaponSchema, viewerActorId: ActorURN): string => {
+/**
+ * Generate CLEAVE attack narrative with all perspectives
+ *
+ * NOTE: CLEAVE attacks require INDIVIDUAL dispatch strategy because each
+ * target sees a personalized second-person perspective. This is handled
+ * by the server's dispatch strategy module.
+ */
+const narrateCleaveAttack = (
+  context: TransformerContext,
+  actor: Actor,
+  targets: Actor[],
+  weapon: WeaponSchema
+) => {
   const weaponName = getLocalizedSchemaTranslation(context, weapon.urn).name.singular;
   const possessive = getPossessivePronoun(actor.gender);
   const primaryDamageType = getPrimaryDamageType(weapon);
+  const verbs = ATTACK_VERBS[primaryDamageType];
 
-  // Determine perspective
-  let perspective: Perspective;
-  if (viewerActorId === actor.id) {
-    perspective = Perspective.SELF;
-  } else if (targets.some(target => target.id === viewerActorId)) {
-    perspective = Perspective.TARGET;
-  } else {
-    perspective = Perspective.OBSERVER;
-  }
-
-  const verb = perspective === Perspective.SELF ? FIRST_PERSON_VERBS[primaryDamageType] : THIRD_PERSON_VERBS[primaryDamageType];
-
-  if (perspective === Perspective.SELF) {
-    // Attacker perspective: "You slash your sword at Alice and Bob."
-    if (targets.length === 0) {
-      return `You ${verb} your ${weaponName} in a wide arc.`;
-    }
-    const targetList = targets.map(t => t.name).join(targets.length === 2 ? ' and ' : ', ');
-    if (targets.length === 2) {
-      return `You ${verb} your ${weaponName} at ${targetList}.`;
-    }
-    const lastTarget = targets[targets.length - 1];
-    const otherTargets = targets.slice(0, -1);
-    return `You ${verb} your ${weaponName} at ${otherTargets.map(t => t.name).join(', ')}, and ${lastTarget.name}.`;
-  }
-
-  if (perspective === Perspective.TARGET) {
-    // Target perspective: "Alice slashes her sword at you and Bob."
-    if (targets.length === 0) {
-      return `${actor.name} ${verb} ${possessive} ${weaponName} in a wide arc.`;
-    }
-    const targetList = formatTargetList(targets, viewerActorId);
-    return `${actor.name} ${verb} ${possessive} ${weaponName} at ${targetList}.`;
-  }
-
-  // Observer perspective: "Alice slashes her sword at Bob and Charlie."
   if (targets.length === 0) {
-    return `${actor.name} ${verb} ${possessive} ${weaponName} in a wide arc.`;
+    return {
+      self: `You ${verbs.self} your ${weaponName} in a wide arc.`,
+      observer: `${actor.name} ${verbs.observer} ${possessive} ${weaponName} in a wide arc.`
+    };
   }
-  if (targets.length === 1) {
-    return `${actor.name} ${verb} ${possessive} ${weaponName} at ${targets[0].name}.`;
-  }
-  if (targets.length === 2) {
-    return `${actor.name} ${verb} ${possessive} ${weaponName} at ${targets[0].name} and ${targets[1].name}.`;
-  }
-  const lastTarget = targets[targets.length - 1];
-  const otherTargets = targets.slice(0, -1);
-  return `${actor.name} ${verb} ${possessive} ${weaponName} at ${otherTargets.map(t => t.name).join(', ')}, and ${lastTarget.name}.`;
+
+  const targetList = formatTargetList(targets);
+
+  return {
+    self: `You ${verbs.self} your ${weaponName} at ${targetList}.`,
+    // Target perspective omitted - requires per-recipient rendering for multi-target
+    observer: `${actor.name} ${verbs.observer} ${possessive} ${weaponName} at ${targetList}.`
+  };
 };
 
-const ATTACK_VERBS_POWER_BIAS: Readonly<Partial<Record<DamageType, Record<Perspective, string>>>> = Object.freeze({
-  [DamageType.SLASH]: {
-    [Perspective.SELF]: 'hack',
-    [Perspective.TARGET]: 'hacks',
-    [Perspective.OBSERVER]: 'hacks'
-  },
-  [DamageType.PIERCE]: {
-    [Perspective.SELF]: 'drive',
-    [Perspective.TARGET]: 'drives',
-    [Perspective.OBSERVER]: 'drives'
-  },
-  [DamageType.IMPACT]: {
-    [Perspective.SELF]: 'crush',
-    [Perspective.TARGET]: 'crushes',
-    [Perspective.OBSERVER]: 'crushes'
-  },
+/**
+ * Power-biased attack verbs (high POW stat)
+ */
+const ATTACK_VERBS_POWER: Readonly<Partial<Record<DamageType, Narrative>>> = Object.freeze({
+  [DamageType.SLASH]: { self: 'hack', observer: 'hacks' },
+  [DamageType.PIERCE]: { self: 'drive', observer: 'drives' },
+  [DamageType.IMPACT]: { self: 'crush', observer: 'crushes' },
 });
-
-const ATTACK_VERBS_FINESS_BIAS: Readonly<Partial<Record<DamageType, Record<Perspective, string>>>> = Object.freeze({
-  [DamageType.SLASH]: {
-    [Perspective.SELF]: 'slash',
-    [Perspective.TARGET]: 'slashes',
-    [Perspective.OBSERVER]: 'slashes'
-  },
-  [DamageType.PIERCE]: {
-    [Perspective.SELF]: 'stab',
-    [Perspective.TARGET]: 'stabs',
-    [Perspective.OBSERVER]: 'stabs',
-  },
-  [DamageType.IMPACT]: {
-    [Perspective.SELF]: 'strike',
-    [Perspective.TARGET]: 'strikes',
-    [Perspective.OBSERVER]: 'strikes'
-  },
-});
-
-const DEFAULT_ATTACK_VERB = 'attacks';
 
 /**
- * Generate damage description based on damage amount, target health, and perspective
+ * Finesse-biased attack verbs (high FIN stat)
  */
-const getDamageDescription = (
+const ATTACK_VERBS_FINESSE: Readonly<Partial<Record<DamageType, Narrative>>> = Object.freeze({
+  [DamageType.SLASH]: { self: 'slash', observer: 'slashes' },
+  [DamageType.PIERCE]: { self: 'stab', observer: 'stabs' },
+  [DamageType.IMPACT]: { self: 'strike', observer: 'strikes' },
+});
+
+const DEFAULT_ATTACK_VERBS: Narrative = { self: 'attack', observer: 'attacks' };
+
+/**
+ * Generate damage descriptions for all perspectives
+ *
+ * For ACTOR_WAS_ATTACKED events, the victim IS the event actor,
+ * so `self` represents the victim's perspective.
+ */
+const getDamageDescriptions = (
   damage: number,
-  perspective: Perspective,
   weaponName: string,
-  target: Actor,
+  attacker: Actor,
+  victim: Actor,
   attackRating: number,
   evasionRating: number
-): string => {
+): Narrative => {
   if (damage === 0) {
     // Miss descriptions based on evasion vs attack rating
     const isCloseCall = Math.abs(attackRating - evasionRating) <= 2;
-    if (perspective === Perspective.TARGET) {
-      return isCloseCall
-        ? `narrowly dodges the ${weaponName}`
-        : `easily evades the ${weaponName}`;
-    }
 
-    if (perspective === Perspective.SELF) {
-      return isCloseCall
-        ? `narrowly misses ${target.name} with your ${weaponName}`
-        : `misses ${target.name} completely with your ${weaponName}`;
-    }
-
-    // Fell through; render OBSERVER perspective
-    return isCloseCall
-      ? `barely misses ${target.name} with the ${weaponName}`
-      : `misses ${target.name} with the ${weaponName}`;
+    return {
+      self: isCloseCall
+        ? `You narrowly dodge ${attacker.name}'s ${weaponName}.`
+        : `You easily evade ${attacker.name}'s ${weaponName}.`,
+      observer: isCloseCall
+        ? `${attacker.name} barely misses ${victim.name} with the ${weaponName}.`
+        : `${attacker.name} misses ${victim.name} with the ${weaponName}.`
+    };
   }
 
-  const targetMaxHp = getMaxHp(target);
-  const damagePercent = damage / targetMaxHp;
+  const victimMaxHp = getMaxHp(victim);
+  const damagePercent = damage / victimMaxHp;
 
-  // Damage intensity descriptions
+  // Devastating hit (30%+ of max HP)
   if (damagePercent >= 0.3) {
-    if (perspective === Perspective.TARGET) {
-      return `are devastated by the ${weaponName} for ${damage} damage`;
-    }
-    if (perspective === Perspective.SELF) {
-      return `devastate ${target.name} with your ${weaponName} for ${damage} damage`;
-    }
-    return `brutally strikes ${target.name} with the ${weaponName} for ${damage} damage`;
+    return {
+      self: `You are devastated by ${attacker.name}'s ${weaponName} for ${damage} damage.`,
+      observer: `${attacker.name} brutally strikes ${victim.name} with the ${weaponName} for ${damage} damage.`
+    };
   }
 
+  // Severe hit (15%+ of max HP)
   if (damagePercent >= 0.15) {
-    if (perspective === Perspective.TARGET) {
-      return `are wounded severely by the ${weaponName} for ${damage} damage`;
-    }
-    if (perspective === Perspective.SELF) {
-      return `land a solid hit on ${target.name} with your ${weaponName} for ${damage} damage`;
-    }
-    return `lands a solid hit on ${target.name} with the ${weaponName} for ${damage} damage`;
+    return {
+      self: `You are wounded severely by ${attacker.name}'s ${weaponName} for ${damage} damage.`,
+      observer: `${attacker.name} lands a solid hit on ${victim.name} with the ${weaponName} for ${damage} damage.`
+    };
   }
 
+  // Moderate hit (5%+ of max HP)
   if (damagePercent >= 0.05) {
-    if (perspective === Perspective.TARGET) {
-      return `are struck by the ${weaponName} for ${damage} damage`;
-    }
-    if (perspective === Perspective.SELF) {
-      return `hit ${target.name} with your ${weaponName} for ${damage} damage`;
-    }
-    return `hits ${target.name} with the ${weaponName} for ${damage} damage`;
+    return {
+      self: `You are struck by ${attacker.name}'s ${weaponName} for ${damage} damage.`,
+      observer: `${attacker.name} hits ${victim.name} with the ${weaponName} for ${damage} damage.`
+    };
   }
 
-  if (perspective === Perspective.TARGET) {
-    return `are grazed by the ${weaponName} for ${damage} damage`;
-  }
-  if (perspective === Perspective.SELF) {
-    return `barely scratch ${target.name} with your ${weaponName} for ${damage} damage`;
-  }
-  return `barely scratches ${target.name} with the ${weaponName} for ${damage} damage`;
+  // Grazing hit
+  return {
+    self: `You are grazed by ${attacker.name}'s ${weaponName} for ${damage} damage.`,
+    observer: `${attacker.name} barely scratches ${victim.name} with the ${weaponName} for ${damage} damage.`
+  };
 };
 
-export const narrateActorDidAttack: TemplateFunction<ActorDidAttack, ActorURN> = (context, event, actorId) => {
+export const narrateActorDidAttack: TemplateFunction<ActorDidAttack> = (context, event) => {
   const { world, equipmentApi } = context;
   const actor = world.actors[event.actor];
 
   if (!actor) {
-    return '';
+    return EMPTY_NARRATIVE;
   }
 
   const weapon = equipmentApi.getEquippedWeaponSchema(actor);
 
-  // Handle CLEAVE vs STRIKE attack types
+  // Handle CLEAVE attacks
   if (event.payload.attackType === AttackType.CLEAVE) {
     const targets = event.payload.targets.map(id => world.actors[id]).filter(Boolean);
     if (targets.length === 0) {
-      return '';
+      return EMPTY_NARRATIVE;
     }
-    return narrateCleaveAttack(context, actor, targets, weapon, actorId);
+    return narrateCleaveAttack(context, actor, targets, weapon);
   }
 
-  // Handle STRIKE attacks (original logic)
+  // Handle STRIKE attacks
   const target = world.actors[event.payload.target];
-  if (!actor || !target) {
-    return '';
+  if (!target) {
+    return EMPTY_NARRATIVE;
   }
 
   const weaponName = getLocalizedSchemaTranslation(context, weapon.urn).name.singular;
@@ -278,65 +205,51 @@ export const narrateActorDidAttack: TemplateFunction<ActorDidAttack, ActorURN> =
   const actorPower = actorStats[Stat.POW];
   const actorFinesse = actorStats[Stat.FIN];
   const isPowerBiased = actorPower > actorFinesse;
-  const perspective = actorId === event.actor ? Perspective.SELF : Perspective.TARGET;
-  const attackVerbs = isPowerBiased ? ATTACK_VERBS_POWER_BIAS[primaryDamageType] : ATTACK_VERBS_FINESS_BIAS[primaryDamageType];
-  const attackVerb = attackVerbs?.[perspective] ?? DEFAULT_ATTACK_VERB;
 
-  // Generate narrative for all perspectives (STRIKE attacks only)
-  if (perspective === Perspective.SELF) {
-    // Attacker perspective: "You slash Bob with your sword."
-    return `You ${attackVerb} ${target.name} with your ${weaponName}.`;
-  }
+  // Select verb set based on character build
+  const attackVerbs = isPowerBiased
+    ? (ATTACK_VERBS_POWER[primaryDamageType] ?? DEFAULT_ATTACK_VERBS)
+    : (ATTACK_VERBS_FINESSE[primaryDamageType] ?? DEFAULT_ATTACK_VERBS);
 
-  if (actorId === event.payload.target) {
-    // Target perspective: "Alice slashes you with her sword."
-    return `${actor.name} ${attackVerb} you with ${getPossessivePronoun(actor.gender)} ${weaponName}.`;
-  }
+  const possessive = getPossessivePronoun(actor.gender);
 
-  // Observer perspective: "Alice slashes Bob with her sword."
-  return `${actor.name} ${attackVerb} ${target.name} with ${getPossessivePronoun(actor.gender)} ${weaponName}.`;
+  return {
+    self: `You ${attackVerbs.self} ${target.name} with your ${weaponName}.`,
+    observer: `${actor.name} ${attackVerbs.observer} ${target.name} with ${possessive} ${weaponName}.`
+  };
 };
 
-export const narrateActorWasAttacked: TemplateFunction<ActorWasAttacked, ActorURN> = (context, event, actorId) => {
+export const narrateActorWasAttacked: TemplateFunction<ActorWasAttacked> = (context, event) => {
   const { world, equipmentApi } = context;
   const attacker = world.actors[event.payload.source];
   const target = world.actors[event.actor];
   const { damage, attackRating, evasionRating } = event.payload;
 
   if (!attacker || !target) {
-    return '';
+    return EMPTY_NARRATIVE;
   }
 
   const weapon = equipmentApi.getEquippedWeaponSchema(attacker);
   const weaponName = getLocalizedSchemaTranslation(context, weapon.urn).name.singular;
 
-  // Generate narrative for all perspectives
-  if (actorId === event.actor) {
-    // actorId is the target being attacked
-    return `You ${getDamageDescription(damage, Perspective.TARGET, weaponName, target, attackRating, evasionRating)}.`;
-  }
-
-  if (actorId === event.payload.source) {
-    // actorId is the attacker
-    return `You ${getDamageDescription(damage, Perspective.SELF, weaponName, target, attackRating, evasionRating)}.`;
-  }
-
-  // actorId is an observer
-  return `${attacker.name} ${getDamageDescription(damage, Perspective.OBSERVER, weaponName, target, attackRating, evasionRating)}.`;
+  return getDamageDescriptions(damage, weaponName, attacker, target, attackRating, evasionRating);
 };
 
-export const narrateActorDidDefend = withUserEventValidation(
-  createPerspectiveTemplate<ActorDidDefend>(
-    'You take a defensive stance.',
-    (actorName) => `${actorName} takes a defensive stance.`
-  )
-);
+export const narrateActorDidDefend: TemplateFunction<ActorDidDefend> = (context, event) => {
+  const { world } = context;
+  const actor = world.actors[event.actor];
 
-export const narrateActorDidMoveInCombat: TemplateFunction<ActorDidMoveInCombat> = (context, event, actorId) => {
+  return {
+    self: 'You take a defensive stance.',
+    observer: `${actor.name} takes a defensive stance.`
+  };
+};
+
+export const narrateActorDidMoveInCombat: TemplateFunction<ActorDidMoveInCombat> = (context, event) => {
   const { world, equipmentApi } = context;
   const actor = world.actors[event.actor];
 
-  // Use pre-computed values from event payload - no calculations needed!
+  // Use pre-computed values from event payload
   const distance = event.payload.distance;
   const direction = event.payload.direction === MovementDirection.FORWARD ? 'forward' : 'backward';
 
@@ -345,53 +258,58 @@ export const narrateActorDidMoveInCombat: TemplateFunction<ActorDidMoveInCombat>
   const finesse = actorStats[Stat.FIN];
   const weapon = equipmentApi.getEquippedWeaponSchema(actor);
 
-  const getMovementDescription = (isFirstPerson: boolean) => {
-    const baseDirection = direction;
+  const getMovementVerbs = (): Narrative => {
     const distanceText = `${distance}m`;
 
     // Movement style based on finesse and distance
     if (distance >= 3) {
       if (finesse >= 60) {
-        return isFirstPerson
-          ? `dash ${baseDirection} ${distanceText}`
-          : `dashes ${baseDirection} ${distanceText}`;
-      } else if (finesse >= 30) {
-        return isFirstPerson
-          ? `sprint ${baseDirection} ${distanceText}`
-          : `sprints ${baseDirection} ${distanceText}`;
-      } else {
-        return isFirstPerson
-          ? `charge ${baseDirection} ${distanceText}`
-          : `charges ${baseDirection} ${distanceText}`;
+        return {
+          self: `dash ${direction} ${distanceText}`,
+          observer: `${actor.name} dashes ${direction} ${distanceText}`
+        };
       }
-    } else if (distance >= 2) {
-      if (finesse >= 60) {
-        return isFirstPerson
-          ? `glide ${baseDirection} ${distanceText}`
-          : `glides ${baseDirection} ${distanceText}`;
-      } else {
-        return isFirstPerson
-          ? `move ${baseDirection} ${distanceText}`
-          : `moves ${baseDirection} ${distanceText}`;
+      if (finesse >= 30) {
+        return {
+          self: `sprint ${direction} ${distanceText}`,
+          observer: `${actor.name} sprints ${direction} ${distanceText}`,
+        };
       }
-    } else {
-      if (finesse >= 60) {
-        return isFirstPerson
-          ? `step ${baseDirection} ${distanceText}`
-          : `steps ${baseDirection} ${distanceText}`;
-      }
-      return isFirstPerson
-        ? `shift ${baseDirection} ${distanceText}`
-        : `shifts ${baseDirection} ${distanceText}`;
+      return {
+        self: `charge ${direction} ${distanceText}`,
+        observer: `${actor.name} charges ${direction} ${distanceText}`,
+      };
     }
+
+    if (distance >= 2) {
+      if (finesse >= 60) {
+        return {
+          self: `glide ${direction} ${distanceText}`,
+          observer: `${actor.name} glides ${direction} ${distanceText}`,
+        };
+      }
+      return {
+        self: `move ${direction} ${distanceText}`,
+        observer: `${actor.name} moves ${direction} ${distanceText}`,
+      };
+    }
+
+    if (finesse >= 60) {
+      return {
+        self: `step ${direction} ${distanceText}`,
+        observer: `${actor.name} steps ${direction} ${distanceText}`,
+      };
+    }
+
+    return {
+      self: `shift ${direction} ${distanceText}`,
+      observer: `${actor.name} shifts ${direction} ${distanceText}`,
+    };
   };
 
   // Add tactical context if weapon has range preferences
-  const getTacticalContext = () => {
+  const getTacticalContext = (): string => {
     const optimalRange = weapon.range.optimal || 1;
-    const newPosition = event.payload.to.coordinate;
-
-    // This is simplified - in a real scenario we'd check distances to enemies
     if (direction === 'forward' && optimalRange <= 1) {
       return ' to close distance';
     }
@@ -401,55 +319,59 @@ export const narrateActorDidMoveInCombat: TemplateFunction<ActorDidMoveInCombat>
     return '';
   };
 
-  if (actorId === event.actor) {
-    // actorId is the actor
-    return `You ${getMovementDescription(true)}${getTacticalContext()}.`;
-  }
+  const verbs = getMovementVerbs();
+  const tacticalContext = getTacticalContext();
 
-  // actorId is an observer
-  return `${actor.name} ${getMovementDescription(false)}${getTacticalContext()}.`;
+  return {
+    self: `You ${verbs.self}${tacticalContext}.`,
+    observer: `${actor.name} ${verbs.observer}${tacticalContext}.`
+  };
 };
 
-export const narrateActorDidAcquireTarget: TemplateFunction<ActorDidAcquireTarget, ActorURN> = withInteractionValidation(
-  (context, event, actorId) => {
-    const { actors } = context.world;
-    const actor = actors[event.actor];
-    const target = actors[event.payload.target];
+export const narrateActorDidAcquireTarget: TemplateFunction<ActorDidAcquireTarget> = (context, event) => {
+  const { actors } = context.world;
+  const actor = actors[event.actor];
+  const target = actors[event.payload.target];
 
-    if (!actor || !target) {
-      return '';
-    }
-
-    return actorId === event.actor
-      ? `You target ${target.name}.`
-      : `${actor.name} targets ${target.name}.`;
+  if (!actor || !target) {
+    return EMPTY_NARRATIVE;
   }
-);
 
-export const narrateActorDidDie: TemplateFunction<ActorDidDie> = (context, event, actorId) => {
+  return {
+    self: `You target ${target.name}.`,
+    observer: `${actor.name} targets ${target.name}.`
+  };
+};
+
+export const narrateActorDidDie: TemplateFunction<ActorDidDie> = (context, event) => {
   const { world } = context;
   const actor = world.actors[event.actor];
 
-  if (actorId === event.actor) {
-    // actorId is the actor
-    return 'You have died!';
-  }
-
-  // actorId is an observer
-  return `${actor.name} has been killed!`;
+  return {
+    self: 'You have died!',
+    observer: `${actor.name} has been killed!`
+  };
 };
 
-export const narrateCombatTurnDidEnd = createDynamicSystemPerspectiveTemplate<CombatTurnDidEnd>(
-  (event) => event.payload.turnActor,
-  (context, event) => `Your turn has ended.\nYou have recovered ${event.payload.energy.change} energy.`,
-  (context, event, actorName) => `${actorName}'s turn ends.`
-);
+export const narrateCombatTurnDidEnd: TemplateFunction<CombatTurnDidEnd> = (context, event) => {
+  const { world } = context;
+  const actor = world.actors[event.payload.turnActor];
 
-export const narrateCombatTurnDidStart = createSystemPerspectiveTemplate<CombatTurnDidStart>(
-  (event) => event.payload.turnActor,
-  'Your turn begins.',
-  (actorName) => `${actorName}'s turn begins.`
-);
+  return {
+    self: `Your turn has ended.\nYou have recovered ${event.payload.energy.change} energy.`,
+    observer: `${actor.name}'s turn ends.`
+  };
+};
+
+export const narrateCombatTurnDidStart: TemplateFunction<CombatTurnDidStart> = (context, event) => {
+  const { world } = context;
+  const actor = world.actors[event.payload.turnActor];
+
+  return {
+    self: 'Your turn begins.',
+    observer: `${actor.name}'s turn begins.`
+  };
+};
 
 // Format side descriptions
 const formatSide = (members: string[]): string => {
@@ -462,89 +384,95 @@ const formatSide = (members: string[]): string => {
   return `${members.slice(0, -1).join(', ')}, and ${members[members.length - 1]}`;
 };
 
-export const narrateCombatSessionStarted = createSystemTemplate<CombatSessionStarted>(
-  (context, event) => {
-    const { namesByTeam } = event.payload;
+export const narrateCombatSessionStarted: TemplateFunction<CombatSessionStarted> = (context, event) => {
+  const { namesByTeam } = event.payload;
 
-    // Zero-copy iteration - collect side descriptions directly
-    let side1Desc = '';
-    let side2Desc = '';
-    let isFirstTeam = true;
-    let side1Length = 0;
-    let side2Length = 0;
+  let side1Desc = '';
+  let side2Desc = '';
+  let isFirstTeam = true;
+  let side1Length = 0;
+  let side2Length = 0;
 
-    // ASSUMPTION: There are exactly two teams in a combat session
-    for (const teamName in namesByTeam) {
-      const members = namesByTeam[teamName];
-      const sideDesc = formatSide(members);
+  // ASSUMPTION: There are exactly two teams in a combat session
+  for (const teamName in namesByTeam) {
+    const members = namesByTeam[teamName];
+    const sideDesc = formatSide(members);
 
-      if (isFirstTeam) {
-        side1Desc = sideDesc;
-        side1Length = members.length;
-        isFirstTeam = false;
-      } else {
-        side2Desc = sideDesc;
-        side2Length = members.length;
-      }
-    }
-
-    // Generate side-focused narrative
-    if (side1Length === 1 && side2Length === 1) {
-      return `${side1Desc} faces off against ${side2Desc}!`;
-    }
-
-    return `${side1Desc} clash with ${side2Desc}!`;
-  }
-);
-
-export const narrateCombatSessionEnded = createSystemTemplate<CombatSessionEnded>(
-  (context, event) => {
-    const { winningTeam, finalRound } = event.payload;
-
-    if (winningTeam) {
-      return `Combat ends after ${finalRound} rounds. Team ${winningTeam.toUpperCase()} is victorious!`;
-    }
-
-    return `Combat ends after ${finalRound} rounds with no clear victor.`;
-  }
-);
-
-export const narrateCombatSessionStatusDidChange = createSystemTemplate<CombatSessionStatusDidChange>(
-  (context, event) => {
-    const { currentStatus } = event.payload;
-
-    switch (currentStatus) {
-      case SessionStatus.RUNNING:
-        return 'Combat is now active!';
-      case SessionStatus.PAUSED:
-        return 'Combat has been paused.';
-      case SessionStatus.TERMINATED:
-        return 'Combat has ended.';
-      default:
-        return `Combat status changed to ${currentStatus}.`;
+    if (isFirstTeam) {
+      side1Desc = sideDesc;
+      side1Length = members.length;
+      isFirstTeam = false;
+    } else {
+      side2Desc = sideDesc;
+      side2Length = members.length;
     }
   }
-);
 
-export const narrateActorDidAssessRange: TemplateFunction<ActorDidAssessRange, ActorURN> = (context, event, actorId) => {
+  // Generate side-focused narrative (same for all perspectives)
+  const narrative = side1Length === 1 && side2Length === 1
+    ? `${side1Desc} faces off against ${side2Desc}!`
+    : `${side1Desc} clash with ${side2Desc}!`;
+
+  return {
+    self: narrative,
+    observer: narrative
+  };
+};
+
+export const narrateCombatSessionEnded: TemplateFunction<CombatSessionEnded> = (context, event) => {
+  const { winningTeam, finalRound } = event.payload;
+
+  const narrative = winningTeam
+    ? `Combat ends after ${finalRound} rounds. Team ${winningTeam.toUpperCase()} is victorious!`
+    : `Combat ends after ${finalRound} rounds with no clear victor.`;
+
+  return {
+    self: narrative,
+    observer: narrative
+  };
+};
+
+export const narrateCombatSessionStatusDidChange: TemplateFunction<CombatSessionStatusDidChange> = (context, event) => {
+  const { currentStatus } = event.payload;
+
+  let narrative: string;
+  switch (currentStatus) {
+    case SessionStatus.RUNNING:
+      narrative = 'FIGHT!';
+      break;
+    case SessionStatus.PAUSED:
+      narrative = 'Combat is paused.';
+      break;
+    case SessionStatus.TERMINATED:
+      narrative = 'Combat has ended.';
+      break;
+    default:
+      return EMPTY_NARRATIVE;
+  }
+
+  return {
+    self: narrative,
+    observer: narrative
+  };
+};
+
+export const narrateActorDidAssessRange: TemplateFunction<ActorDidAssessRange> = (context, event) => {
   const { world } = context;
   const actor = world.actors[event.actor];
   const target = world.actors[event.payload.target];
   const range = event.payload.range;
   const direction = event.payload.direction;
 
-  if (actorId === event.actor) {
-    // Get weapon information for the actor
-    const weapon = context.equipmentApi.getEquippedWeaponSchema(actor);
-    const weaponName = getLocalizedSchemaTranslation(context, weapon.urn).name.singular;
-    const weaponInfo = `Your ${weaponName}'s optimal range is ${weapon.range.optimal || 1}m.`;
+  // Get weapon information for the actor
+  const weapon = context.equipmentApi.getEquippedWeaponSchema(actor);
+  const weaponName = getLocalizedSchemaTranslation(context, weapon.urn).name.singular;
+  const weaponInfo = `Your ${weaponName}'s optimal range is ${weapon.range.optimal || 1}m.`;
 
-    // Convert MovementDirection to readable text
-    const directionText = direction === MovementDirection.FORWARD ? 'in front of you' : 'behind you';
+  // Convert MovementDirection to readable text
+  const directionText = direction === MovementDirection.FORWARD ? 'in front of you' : 'behind you';
 
-    return `${target.name} is ${range}m away, ${directionText}.\n${weaponInfo}`;
-  }
-
-  // Third-person narrative for other observers
-  return `${actor.name} is range to ${target.name} (${range}m).`;
+  return {
+    self: `${target.name} is ${range}m away, ${directionText}.\n${weaponInfo}`,
+    observer: `${actor.name} appears to be judging distance to ${target.name}.`
+  };
 };

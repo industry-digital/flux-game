@@ -1,13 +1,13 @@
 import { WorldEvent } from '~/types/event';
 import { TemplateFunction } from '~/types/narrative';
+import { EMPTY_NARRATIVE, NOT_IMPLEMENTED_NARRATIVE } from '~/narrative/constants';
 
-export const NOT_IMPLEMENTED: TemplateFunction<WorldEvent> = (...args: any) => {
-  return 'TEMPLATE_NOT_IMPLEMENTED';
+export const NOT_IMPLEMENTED: TemplateFunction<WorldEvent> = () => {
+  return NOT_IMPLEMENTED_NARRATIVE;
 };
 
-const EMPTY_STRING = '';
 /**
  * Template for events that should not generate any narrative output
  * Use this for administrative/system events that players shouldn't see
  */
-export const NOT_NEEDED: TemplateFunction<WorldEvent> = (...args: any) => EMPTY_STRING;
+export const NOT_NEEDED: TemplateFunction<WorldEvent> = () => EMPTY_NARRATIVE;

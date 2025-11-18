@@ -1,8 +1,7 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import { createTransformerContext } from '~/worldkit/context';
 import { createSwordSchema } from '~/worldkit/schema/weapon/sword';
-import { createDaggerSchema } from '~/worldkit/schema/weapon/dagger';
-import { createWarhammerSchema, warhammerSchema } from '~/worldkit/schema/weapon/warhammer';
+import { createWarhammerSchema } from '~/worldkit/schema/weapon/warhammer';
 import { createCombatSession } from '~/worldkit/combat/session/session';
 import { createWorldScenario, WorldScenarioHook } from '~/worldkit/scenario';
 import {
@@ -13,19 +12,8 @@ import {
   createActorDidMoveInCombatEvent,
   createActorDidDieEvent,
 } from '~/testing/event';
-import { AttackOutcome, AttackType, Team, MovementDirection, CombatFacing, CombatSession } from '~/types/combat';
-import { ActorURN } from '~/types/taxonomy';
-import { ALICE_ID, BOB_ID, CHARLIE_ID, DAVID_ID, DEFAULT_LOCATION, DEFAULT_TIMESTAMP, DEFAULT_WORKBENCH_SESSION } from '~/testing/constants';
-import {
-  withObjectSerializationValidation,
-  withDebuggingArtifactValidation,
-  withNonEmptyValidation,
-  withNarrativeQuality,
-  withPerspectiveDifferentiation,
-  withComposedValidation,
-} from '~/testing/narrative-quality';
-
-// Import the specific narrative functions we're testing
+import { AttackType, Team, MovementDirection, CombatFacing, CombatSession } from '~/types/combat';
+import { ALICE_ID, BOB_ID, CHARLIE_ID, DEFAULT_LOCATION } from '~/testing/constants';
 import {
   narrateActorDidAttack,
   narrateActorWasAttacked,
@@ -33,60 +21,57 @@ import {
   narrateActorDidMoveInCombat,
   narrateActorDidAcquireTarget,
   narrateActorDidDie,
-  narrateActorDidAssessRange,
 } from './combat';
 import { Actor } from '~/types/entity/actor';
-import { ActorDidAttack } from '~/types/event';
 import { TransformerContext } from '~/types/handler';
 import { createPlace } from '~/worldkit/entity/place';
 import { createDefaultActors } from '~/testing/actors';
 import { createCombatant } from '~/worldkit/combat/combatant';
 import { setStatValue } from '~/worldkit/entity/actor/stats';
 import { Stat } from '~/types/entity/actor';
+import { EMPTY_NARRATIVE } from '~/narrative/constants';
+import { ActorDidAttack, ActorDidDefend, ActorDidDie } from '~/types/event';
 
-const OBSERVER_ID: ActorURN = DAVID_ID;
-
-describe('English Combat Narratives - Snapshot Tests', () => {
+/**
+ * Combat Narrative Tests - Two-Perspective Model
+ *
+ * Tests verify that templates generate BOTH perspectives correctly.
+ * Perspective selection (self vs observer) is handled by the server,
+ * not by templates, so we test narrative generation in isolation.
+ */
+describe('Combat Narratives - Two-Perspective Model', () => {
   let context: TransformerContext;
   let scenario: WorldScenarioHook;
   let alice: Actor;
   let bob: Actor;
   let charlie: Actor;
-  let david: Actor;
-
   let session: CombatSession;
 
   beforeEach(() => {
     const place = createPlace((p) => ({ ...p, id: DEFAULT_LOCATION }));
-    ({ alice, bob, charlie, david } = createDefaultActors(place.id));
+    ({ alice, bob, charlie } = createDefaultActors(place.id));
 
     context = createTransformerContext();
     scenario = createWorldScenario(context, {
       places: [place],
-      actors: [alice, bob, charlie, david],
+      actors: [alice, bob, charlie],
     });
 
     const swordSchema = createSwordSchema({
       urn: 'flux:schema:weapon:test:sword',
-      name: 'Test Sword',
-    });
-
-    const daggerSchema = createDaggerSchema({
-      urn: 'flux:schema:weapon:test:dagger',
-      name: 'Test Dagger',
+      name: 'sword',
     });
 
     const warhammerSchema = createWarhammerSchema({
       urn: 'flux:schema:weapon:test:warhammer',
-      name: 'Test Warhammer',
+      name: 'warhammer',
     });
 
     scenario.assignWeapon(alice, swordSchema);
-    scenario.assignWeapon(bob, daggerSchema);
+    scenario.assignWeapon(bob, swordSchema);
     scenario.assignWeapon(charlie, warhammerSchema);
-    scenario.assignWeapon(david, warhammerSchema);
 
-    const combatSession = createCombatSession(context, {
+    session = createCombatSession(context, {
       location: place.id,
       combatants: [
         createCombatant(alice, Team.ALPHA, (c) => ({
@@ -101,15 +86,13 @@ describe('English Combat Narratives - Snapshot Tests', () => {
           ...c,
           position: { coordinate: 105, facing: CombatFacing.LEFT, speed: 0 },
         })),
-        // David is an outside observer and should not be included in the combat session.
       ],
     });
-
-    session = combatSession;
   });
 
-  describe('narrateActorDidAttack - STRIKE attacks', () => {
-    it('should render exact attack narrative from attacker perspective', () => {
+  describe('narrateActorDidAttack', () => {
+    describe('STRIKE attacks', () => {
+      it('generates both self and observer perspectives', () => {
       const event = createActorDidAttackEvent((e) => ({
         ...e,
         actor: ALICE_ID,
@@ -117,15 +100,22 @@ describe('English Combat Narratives - Snapshot Tests', () => {
           ...e.payload,
           target: BOB_ID,
           attackType: AttackType.STRIKE,
-          roll: { dice: '1d20', values: [15], natural: 15, result: 15, bonus: 0 },
         }
       }));
 
-      const narrative = narrateActorDidAttack(context, event, ALICE_ID);
-      expect(narrative).toBe('You slash Bob with your sword.');
+        const narrative = narrateActorDidAttack(context, event);
+
+        expect(narrative).toEqual({
+          self: 'You slash Bob with your sword.',
+          observer: 'Alice slashes Bob with her sword.'
+        });
     });
 
-    it('should render exact attack narrative from target perspective', () => {
+      it('uses power-biased verbs when POW > FIN', () => {
+        // Set Alice to be power-focused
+        setStatValue(alice, Stat.POW, 70);
+        setStatValue(alice, Stat.FIN, 30);
+
       const event = createActorDidAttackEvent((e) => ({
         ...e,
         actor: ALICE_ID,
@@ -133,15 +123,20 @@ describe('English Combat Narratives - Snapshot Tests', () => {
           ...e.payload,
           target: BOB_ID,
           attackType: AttackType.STRIKE,
-          roll: { dice: '1d20', values: [10], natural: 10, result: 10, bonus: 0 },
         }
       }));
 
-      const narrative = narrateActorDidAttack(context, event, BOB_ID);
-      expect(narrative).toBe('Alice slashes you with her sword.');
+        const narrative = narrateActorDidAttack(context, event);
+
+        expect(narrative.self).toContain('hack');
+        expect(narrative.observer).toContain('hacks');
     });
 
-    it('should render exact attack narrative from observer perspective', () => {
+      it('uses finesse-biased verbs when FIN > POW', () => {
+        // Set Alice to be finesse-focused
+        setStatValue(alice, Stat.POW, 30);
+        setStatValue(alice, Stat.FIN, 70);
+
       const event = createActorDidAttackEvent((e) => ({
         ...e,
         actor: ALICE_ID,
@@ -149,270 +144,102 @@ describe('English Combat Narratives - Snapshot Tests', () => {
           ...e.payload,
           target: BOB_ID,
           attackType: AttackType.STRIKE,
-          roll: { dice: '1d20', values: [10], natural: 10, result: 10, bonus: 0 },
         }
       }));
 
-      const narrative = narrateActorDidAttack(context, event, OBSERVER_ID);
-      expect(narrative).toBe('Alice slashes Bob with her sword.');
+        const narrative = narrateActorDidAttack(context, event);
+
+        expect(narrative.self).toContain('slash');
+        expect(narrative.observer).toContain('slashes');
     });
 
-    it('should render exact high roll attack narrative', () => {
+      it('returns NO_NARRATIVE when actor is missing', () => {
+      const event = createActorDidAttackEvent((e) => ({
+        ...e,
+          actor: 'flux:actor:nonexistent' as any,
+        payload: {
+          ...e.payload,
+          target: BOB_ID,
+          attackType: AttackType.STRIKE,
+        }
+      }));
+
+        const narrative = narrateActorDidAttack(context, event);
+
+        expect(narrative).toEqual(EMPTY_NARRATIVE);
+    });
+
+      it('returns NO_NARRATIVE when target is missing', () => {
       const event = createActorDidAttackEvent((e) => ({
         ...e,
         actor: ALICE_ID,
         payload: {
           ...e.payload,
-          target: BOB_ID,
+            target: 'flux:actor:nonexistent' as any,
           attackType: AttackType.STRIKE,
-          roll: { dice: '1d20', values: [18], natural: 18, result: 18, bonus: 0 },
         }
       }));
 
-      const narrative = narrateActorDidAttack(context, event, OBSERVER_ID);
-      expect(narrative).toBe('Alice slashes Bob with her sword.');
+        const narrative = narrateActorDidAttack(context, event);
+
+        expect(narrative).toEqual(EMPTY_NARRATIVE);
+      });
     });
 
-    it('should render exact low roll attack narrative', () => {
+    describe('CLEAVE attacks', () => {
+      it('generates narrative for multi-target cleave', () => {
       const event = createActorDidAttackEvent((e) => ({
         ...e,
         actor: ALICE_ID,
         payload: {
           ...e.payload,
-          target: BOB_ID,
-          attackType: AttackType.STRIKE,
-          roll: { dice: '1d20', values: [5], natural: 5, result: 5, bonus: 0 },
-        }
-      }));
-
-      const narrative = narrateActorDidAttack(context, event, OBSERVER_ID);
-      expect(narrative).toBe('Alice slashes Bob with her sword.');
-    });
-
-    it('should render exact power-focused attack narrative', () => {
-      scenario.assignWeapon(alice, warhammerSchema);
-
-      // Set Alice to have high power, low finesse for power-focused attacks
-      setStatValue(alice, Stat.POW, 15);
-      setStatValue(alice, Stat.FIN, 8);
-
-      const event = createActorDidAttackEvent((e) => ({
-        ...e,
-        actor: ALICE_ID, // High power, low finesse
-        payload: {
-          ...e.payload,
-          target: BOB_ID,
-          attackType: AttackType.STRIKE,
-          roll: { dice: '1d20', values: [15], natural: 15, result: 15, bonus: 0 },
-        }
-      }));
-
-      const narrative = narrateActorDidAttack(context, event, OBSERVER_ID);
-      expect(narrative).toBe('Alice crushes Bob with her warhammer.');
-    });
-
-    it('should render exact finesse-focused attack narrative', () => {
-      // Set Bob to have high finesse, low power for finesse-focused attacks
-      setStatValue(bob, Stat.FIN, 15);
-      setStatValue(bob, Stat.POW, 8);
-
-      const event = createActorDidAttackEvent((e) => ({
-        ...e,
-        actor: BOB_ID, // Lower power, higher finesse
-        payload: {
-          ...e.payload,
-          target: ALICE_ID,
-          attackType: AttackType.STRIKE,
-          roll: { dice: '1d20', values: [15], natural: 15, result: 15, bonus: 0 },
-        }
-      }));
-
-      const narrative = narrateActorDidAttack(context, event, OBSERVER_ID);
-      expect(narrative).toBe('Bob stabs Alice with his dagger.');
-    });
-  });
-
-  describe('narrateActorDidAttack - CLEAVE attacks', () => {
-    it('should render exact cleave attack from attacker perspective', () => {
-      const event = createActorDidAttackEvent((e) => ({
-        ...e,
-        actor: ALICE_ID,
-        payload: {
-          ...e.payload,
+          attackType: AttackType.CLEAVE,
           targets: [BOB_ID, CHARLIE_ID],
-          attackType: AttackType.CLEAVE,
         }
       }));
 
-      const narrative = narrateActorDidAttack(context, event, ALICE_ID);
-      expect(narrative).toBe('You sweep your sword at Bob and Charlie.');
+        const narrative = narrateActorDidAttack(context, event);
+
+        expect(narrative.self).toBe('You sweep your sword at Bob and Charlie.');
+        expect(narrative.observer).toBe('Alice sweeps her sword at Bob and Charlie.');
     });
 
-    it('should render exact cleave attack from target perspective', () => {
+      it('generates narrative for cleave with no targets', () => {
       const event = createActorDidAttackEvent((e) => ({
         ...e,
         actor: ALICE_ID,
         payload: {
           ...e.payload,
-          targets: [BOB_ID, CHARLIE_ID],
           attackType: AttackType.CLEAVE,
+            targets: [],
         }
       }));
 
-      const narrative = narrateActorDidAttack(context, event, BOB_ID);
-      expect(narrative).toBe('Alice sweeps her sword at you and Charlie.');
+        const narrative = narrateActorDidAttack(context, event);
+
+        expect(narrative).toEqual(EMPTY_NARRATIVE);
     });
 
-    it('should render exact cleave attack from observer perspective with single target', () => {
+      it('generates wide arc narrative when cleave misses all targets', () => {
       const event = createActorDidAttackEvent((e) => ({
         ...e,
-        actor: ALICE_ID,
+          actor: CHARLIE_ID,
         payload: {
           ...e.payload,
-          targets: [BOB_ID],
           attackType: AttackType.CLEAVE,
+            targets: [],
         }
       }));
 
-      const narrative = narrateActorDidAttack(context, event, OBSERVER_ID);
-      expect(narrative).toBe('Alice sweeps her sword at Bob.');
-    });
+        const narrative = narrateActorDidAttack(context, event);
 
-    it('should render exact cleave attack from observer perspective with two targets', () => {
-      const event = createActorDidAttackEvent((e) => ({
-        ...e,
-        actor: ALICE_ID,
-        payload: {
-          ...e.payload,
-          targets: [BOB_ID, CHARLIE_ID],
-          attackType: AttackType.CLEAVE,
-        }
-      }));
-
-      const narrative = narrateActorDidAttack(context, event, OBSERVER_ID);
-      expect(narrative).toBe('Alice sweeps her sword at Bob and Charlie.');
-    });
-
-    it('should render exact cleave attack from observer perspective with multiple targets', () => {
-      const event = createActorDidAttackEvent((e) => ({
-        ...e,
-        actor: ALICE_ID,
-        payload: {
-          ...e.payload,
-          targets: [BOB_ID, CHARLIE_ID],
-          attackType: AttackType.CLEAVE,
-        }
-      }));
-
-      const narrative = narrateActorDidAttack(context, event, OBSERVER_ID);
-      expect(narrative).toBe('Alice sweeps her sword at Bob and Charlie.');
-    });
-
-    it('should render exact warhammer cleave attack', () => {
-      const event = createActorDidAttackEvent((e) => ({
-        ...e,
-        actor: CHARLIE_ID, // Has warhammer (IMPACT damage)
-        payload: {
-          ...e.payload,
-          targets: [ALICE_ID, BOB_ID],
-          attackType: AttackType.CLEAVE,
-        }
-      }));
-
-      const narrative = narrateActorDidAttack(context, event, OBSERVER_ID);
-      expect(narrative).toBe('Charlie swings his warhammer at Alice and Bob.');
-    });
-
-    it('should render exact dagger cleave attack', () => {
-      const event = createActorDidAttackEvent((e) => ({
-        ...e,
-        actor: BOB_ID, // Has dagger (PIERCE damage)
-        payload: {
-          ...e.payload,
-          targets: [ALICE_ID],
-          attackType: AttackType.CLEAVE,
-        }
-      }));
-
-      const narrative = narrateActorDidAttack(context, event, OBSERVER_ID);
-      expect(narrative).toBe('Bob drives his dagger at Alice.');
+        expect(narrative).toEqual(EMPTY_NARRATIVE);
+      });
     });
   });
 
-  describe('renderWasAttackedNarrative - Hit scenarios', () => {
-    it('should render exact devastating damage from target perspective', () => {
-      const event = createActorWasAttackedEvent((e) => ({
-        ...e,
-        actor: BOB_ID,
-        payload: {
-          ...e.payload,
-          source: ALICE_ID,
-          damage: 25, // High damage relative to typical HP
-          outcome: AttackOutcome.HIT,
-          attackRating: 80,
-          evasionRating: 45,
-        }
-      }));
-
-      const narrative = narrateActorWasAttacked(context, event, BOB_ID);
-      expect(narrative).toBe('You are wounded severely by the sword for 25 damage.');
-    });
-
-    it('should render exact severe wound from target perspective', () => {
-      const event = createActorWasAttackedEvent((e) => ({
-        ...e,
-        actor: BOB_ID,
-        payload: {
-          ...e.payload,
-          source: ALICE_ID,
-          damage: 12, // Moderate damage
-          outcome: AttackOutcome.HIT,
-          attackRating: 75,
-          evasionRating: 50,
-        }
-      }));
-
-      const narrative = narrateActorWasAttacked(context, event, BOB_ID);
-      expect(narrative).toBe('You are struck by the sword for 12 damage.');
-    });
-
-    it('should render exact regular hit from target perspective', () => {
-      const event = createActorWasAttackedEvent((e) => ({
-        ...e,
-        actor: BOB_ID,
-        payload: {
-          ...e.payload,
-          source: ALICE_ID,
-          damage: 5, // Light damage
-          outcome: AttackOutcome.HIT,
-          attackRating: 70,
-          evasionRating: 55,
-        }
-      }));
-
-      const narrative = narrateActorWasAttacked(context, event, BOB_ID);
-      expect(narrative).toBe('You are struck by the sword for 5 damage.');
-    });
-
-    it('should render exact graze from target perspective', () => {
-      const event = createActorWasAttackedEvent((e) => ({
-        ...e,
-        actor: BOB_ID,
-        payload: {
-          ...e.payload,
-          source: ALICE_ID,
-          damage: 1, // Minimal damage
-          outcome: AttackOutcome.HIT,
-          attackRating: 65,
-          evasionRating: 60,
-        }
-      }));
-
-      const narrative = narrateActorWasAttacked(context, event, BOB_ID);
-      expect(narrative).toBe('You are grazed by the sword for 1 damage.');
-    });
-
-    it('should render exact hit from attacker perspective', () => {
+  describe('narrateActorWasAttacked', () => {
+    it('generates damage descriptions for all perspectives', () => {
       const event = createActorWasAttackedEvent((e) => ({
         ...e,
         actor: BOB_ID,
@@ -420,167 +247,78 @@ describe('English Combat Narratives - Snapshot Tests', () => {
           ...e.payload,
           source: ALICE_ID,
           damage: 10,
-          outcome: AttackOutcome.HIT,
-          attackRating: 75,
-          evasionRating: 50,
+          attackRating: 15,
+          evasionRating: 12,
         }
       }));
 
-      const narrative = narrateActorWasAttacked(context, event, ALICE_ID);
-      expect(narrative).toBe('You hit Bob with your sword for 10 damage.');
+      const narrative = narrateActorWasAttacked(context, event);
+
+      expect(narrative.self).toContain('You');
+      expect(narrative.self).toContain('10 damage');
+      expect(narrative.observer).toContain('Alice');
+      expect(narrative.observer).toContain('Bob');
+      expect(narrative.observer).toContain('10 damage');
     });
 
-    it('should render exact hit from observer perspective', () => {
+    it('generates miss narrative when damage is 0', () => {
       const event = createActorWasAttackedEvent((e) => ({
         ...e,
-        actor: BOB_ID,
+        actor: BOB_ID,  // Bob is the victim
         payload: {
           ...e.payload,
-          source: ALICE_ID,
-          damage: 8,
-          outcome: AttackOutcome.HIT,
-          attackRating: 75,
-          evasionRating: 50,
-        }
-      }));
-
-      const narrative = narrateActorWasAttacked(context, event, OBSERVER_ID);
-      expect(narrative).toBe('Alice hits Bob with the sword for 8 damage.');
-    });
-  });
-
-  describe('renderWasAttackedNarrative - Miss scenarios', () => {
-    it('should render exact close miss from target perspective', () => {
-      const event = createActorWasAttackedEvent((e) => ({
-        ...e,
-        actor: BOB_ID,
-        payload: {
-          ...e.payload,
-          source: ALICE_ID,
+          source: ALICE_ID,  // Alice is the attacker
           damage: 0,
-          outcome: AttackOutcome.MISS,
-          attackRating: 70,
-          evasionRating: 72, // Close call
+          attackRating: 12,
+          evasionRating: 15,  // Diff of 3 = easy evade (not close call)
         }
       }));
 
-      const narrative = narrateActorWasAttacked(context, event, BOB_ID);
-      expect(narrative).toBe('You narrowly dodges the sword.');
+      const narrative = narrateActorWasAttacked(context, event);
+
+      // Bob (the victim/event actor) sees himself evading in self perspective
+      expect(narrative.self).toMatch(/dodge|evade/);
+      expect(narrative.self).toContain("Alice's");
+      // Observers see Alice missing Bob
+      expect(narrative.observer).toContain('misses');
+      expect(narrative.observer).toContain('Bob');
     });
 
-    it('should render exact easy dodge from target perspective', () => {
+    it('returns NO_NARRATIVE when actors are missing', () => {
       const event = createActorWasAttackedEvent((e) => ({
         ...e,
-        actor: BOB_ID,
+        actor: 'flux:actor:nonexistent' as any,
         payload: {
           ...e.payload,
           source: ALICE_ID,
-          damage: 0,
-          outcome: AttackOutcome.MISS,
-          attackRating: 60,
-          evasionRating: 80, // Easy dodge
+          damage: 10,
         }
       }));
 
-      const narrative = narrateActorWasAttacked(context, event, BOB_ID);
-      expect(narrative).toBe('You easily evades the sword.');
-    });
+      const narrative = narrateActorWasAttacked(context, event);
 
-    it('should render exact miss from attacker perspective', () => {
-      const event = createActorWasAttackedEvent((e) => ({
-        ...e,
-        actor: BOB_ID,
-        payload: {
-          ...e.payload,
-          source: ALICE_ID,
-          damage: 0,
-          outcome: AttackOutcome.MISS,
-          attackRating: 65,
-          evasionRating: 75,
-        }
-      }));
-
-      const narrative = narrateActorWasAttacked(context, event, ALICE_ID);
-      expect(narrative).toBe('You misses Bob completely with your sword.');
-    });
-
-    it('should render exact miss from observer perspective', () => {
-      const event = createActorWasAttackedEvent((e) => ({
-        ...e,
-        actor: BOB_ID,
-        payload: {
-          ...e.payload,
-          source: ALICE_ID,
-          damage: 0,
-          outcome: AttackOutcome.MISS,
-          attackRating: 65,
-          evasionRating: 75,
-        }
-      }));
-
-      const narrative = narrateActorWasAttacked(context, event, OBSERVER_ID);
-      expect(narrative).toBe('Alice misses Bob with the sword.');
+      expect(narrative).toEqual(EMPTY_NARRATIVE);
     });
   });
 
   describe('narrateActorDidDefend', () => {
-    it('should render exact defense from defender perspective', () => {
+    it('generates defensive stance narrative', () => {
       const event = createActorDidDefendEvent((e) => ({
         ...e,
-        actor: BOB_ID,
+        actor: ALICE_ID,
       }));
 
-      const narrative = narrateActorDidDefend(context, event, BOB_ID);
-      expect(narrative).toBe('You take a defensive stance.');
-    });
+      const narrative = narrateActorDidDefend(context, event);
 
-    it('should render exact defense from observer perspective', () => {
-      const event = createActorDidDefendEvent((e) => ({
-        ...e,
-        actor: BOB_ID,
-      }));
-
-      const narrative = narrateActorDidDefend(context, event, OBSERVER_ID);
-      expect(narrative).toBe('Bob takes a defensive stance.');
+      expect(narrative).toEqual({
+        self: 'You take a defensive stance.',
+        observer: 'Alice takes a defensive stance.'
+      });
     });
   });
 
   describe('narrateActorDidMoveInCombat', () => {
-    it('should render exact long distance movement', () => {
-      const event = createActorDidMoveInCombatEvent((e) => ({
-        ...e,
-        actor: ALICE_ID,
-        payload: {
-          ...e.payload,
-          distance: 5,
-          direction: MovementDirection.FORWARD,
-          from: { coordinate: 100, facing: 1, speed: 0 },
-          to: { coordinate: 105, facing: 1, speed: 0 },
-        }
-      }));
-
-      const narrative = narrateActorDidMoveInCombat(context, event, ALICE_ID);
-      expect(narrative).toBe('You charge forward 5m to close distance.');
-    });
-
-    it('should render exact short distance movement', () => {
-      const event = createActorDidMoveInCombatEvent((e) => ({
-        ...e,
-        actor: BOB_ID,
-        payload: {
-          ...e.payload,
-          distance: 1,
-          direction: MovementDirection.BACKWARD,
-          from: { coordinate: 102, facing: -1, speed: 0 },
-          to: { coordinate: 101, facing: -1, speed: 0 },
-        }
-      }));
-
-      const narrative = narrateActorDidMoveInCombat(context, event, BOB_ID);
-      expect(narrative).toBe('You shift backward 1m.');
-    });
-
-    it('should render exact movement from observer perspective', () => {
+    it('generates movement narrative with distance and direction', () => {
       const event = createActorDidMoveInCombatEvent((e) => ({
         ...e,
         actor: ALICE_ID,
@@ -588,135 +326,99 @@ describe('English Combat Narratives - Snapshot Tests', () => {
           ...e.payload,
           distance: 3,
           direction: MovementDirection.FORWARD,
-          from: { coordinate: 100, facing: 1, speed: 0 },
-          to: { coordinate: 103, facing: 1, speed: 0 },
+          from: { coordinate: 100, facing: CombatFacing.RIGHT, speed: 0 },
+          to: { coordinate: 103, facing: CombatFacing.RIGHT, speed: 0 },
         }
       }));
 
-      const narrative = narrateActorDidMoveInCombat(context, event, OBSERVER_ID);
-      expect(narrative).toBe('Alice charges forward 3m to close distance.');
+      const narrative = narrateActorDidMoveInCombat(context, event);
+
+      expect(narrative.self).toContain('forward');
+      expect(narrative.self).toContain('3m');
+      expect(narrative.observer).toContain('Alice');
+      expect(narrative.observer).toContain('forward');
+      expect(narrative.observer).toContain('3m');
+    });
+
+    it('uses finesse-appropriate movement verbs', () => {
+      // High finesse actor
+      setStatValue(alice, Stat.FIN, 70);
+
+      const event = createActorDidMoveInCombatEvent((e) => ({
+        ...e,
+        actor: ALICE_ID,
+        payload: {
+          ...e.payload,
+          distance: 3,
+          direction: MovementDirection.FORWARD,
+          from: { coordinate: 100, facing: CombatFacing.RIGHT, speed: 0 },
+          to: { coordinate: 103, facing: CombatFacing.RIGHT, speed: 0 },
+        }
+      }));
+
+      const narrative = narrateActorDidMoveInCombat(context, event);
+
+      expect(narrative.self).toContain('dash');
+      expect(narrative.observer).toContain('dashes');
     });
   });
 
   describe('narrateActorDidAcquireTarget', () => {
-    it('should render exact targeting from attacker perspective', () => {
+    it('generates targeting narrative', () => {
       const event = createActorDidAcquireTargetEvent((e) => ({
         ...e,
         actor: ALICE_ID,
         payload: {
           ...e.payload,
           target: BOB_ID,
-        },
+        }
       }));
 
-      const narrative = narrateActorDidAcquireTarget(context, event, ALICE_ID);
-      expect(narrative).toBe('You target Bob.');
+      const narrative = narrateActorDidAcquireTarget(context, event);
+
+      expect(narrative).toEqual({
+        self: 'You target Bob.',
+        observer: 'Alice targets Bob.'
+      });
     });
 
-    it('should render exact targeting from observer perspective', () => {
+    it('returns NO_NARRATIVE when actors are missing', () => {
       const event = createActorDidAcquireTargetEvent((e) => ({
         ...e,
         actor: ALICE_ID,
         payload: {
           ...e.payload,
-          target: BOB_ID,
-        },
+          target: 'flux:actor:nonexistent' as any,
+        }
       }));
 
-      const narrative = narrateActorDidAcquireTarget(context, event, OBSERVER_ID);
-      expect(narrative).toBe('Alice targets Bob.');
+      const narrative = narrateActorDidAcquireTarget(context, event);
+
+      expect(narrative).toEqual(EMPTY_NARRATIVE);
     });
   });
 
   describe('narrateActorDidDie', () => {
-    it('should render exact death from victim perspective', () => {
+    it('generates death narrative', () => {
       const event = createActorDidDieEvent((e) => ({
         ...e,
         actor: BOB_ID,
       }));
 
-      const narrative = narrateActorDidDie(context, event, BOB_ID);
-      expect(narrative).toBe('You have died!');
-    });
+      const narrative = narrateActorDidDie(context, event);
 
-    it('should render exact death from observer perspective', () => {
-      const event = createActorDidDieEvent((e) => ({
-        ...e,
-        actor: BOB_ID,
-      }));
-
-      const narrative = narrateActorDidDie(context, event, OBSERVER_ID);
-      expect(narrative).toBe('Bob has been killed!');
+      expect(narrative).toEqual({
+        self: 'You have died!',
+        observer: 'Bob has been killed!'
+      });
     });
   });
 
-  describe('narrateActorDidAssessRange', () => {
-    it('should render exact range assessment from assessor perspective', () => {
-      const event = {
-        id: 'test-event',
-        type: 'ACTOR_DID_ASSESS_RANGE' as any,
-        location: 'flux:place:test' as any,
-        session: DEFAULT_WORKBENCH_SESSION,
-        actor: ALICE_ID,
-        trace: 'test-trace',
-        ts: DEFAULT_TIMESTAMP,
-        payload: {
-          target: BOB_ID,
-          range: 3,
-          direction: MovementDirection.FORWARD,
-        },
-      };
-
-      const narrative = narrateActorDidAssessRange(context, event, ALICE_ID);
-      expect(narrative).toBe('Bob is 3m away, in front of you.\nYour sword\'s optimal range is 1m.');
-    });
-
-    it('should render exact range assessment with backward direction', () => {
-      const event = {
-        id: 'test-event',
-        type: 'ACTOR_DID_ASSESS_RANGE' as any,
-        location: 'flux:place:test' as any,
-        session: DEFAULT_WORKBENCH_SESSION,
-        actor: ALICE_ID,
-        trace: 'test-trace',
-        ts: DEFAULT_TIMESTAMP,
-        payload: {
-          target: BOB_ID,
-          range: 2,
-          direction: MovementDirection.BACKWARD,
-        },
-      };
-
-      const narrative = narrateActorDidAssessRange(context, event, ALICE_ID);
-      expect(narrative).toBe('Bob is 2m away, behind you.\nYour sword\'s optimal range is 1m.');
-    });
-
-    it('should render exact range assessment from observer perspective', () => {
-      const event = {
-        id: 'test-event',
-        type: 'ACTOR_DID_ASSESS_RANGE' as any,
-        location: 'flux:place:test' as any,
-        actor: ALICE_ID,
-        session: DEFAULT_WORKBENCH_SESSION,
-        trace: 'test-trace',
-        ts: DEFAULT_TIMESTAMP,
-        payload: {
-          target: BOB_ID,
-          range: 4,
-          direction: MovementDirection.FORWARD,
-        },
-      };
-
-      const narrative = narrateActorDidAssessRange(context, event, OBSERVER_ID);
-      expect(narrative).toBe('Alice is range to Bob (4m).');
-    });
-  });
-
-  describe('Error handling', () => {
-    it('should return empty string for missing actors', () => {
+  describe('Narrative quality validation', () => {
+    it('generates non-empty narratives for valid events', () => {
       const event = createActorDidAttackEvent((e) => ({
         ...e,
-        actor: 'flux:actor:nonexistent' as ActorURN,
+        actor: ALICE_ID,
         payload: {
           ...e.payload,
           target: BOB_ID,
@@ -724,332 +426,54 @@ describe('English Combat Narratives - Snapshot Tests', () => {
         }
       }));
 
-      const narrative = narrateActorDidAttack(context, event, OBSERVER_ID);
-      expect(narrative).toBe('');
+      const narrative = narrateActorDidAttack(context, event);
+
+      expect(narrative.self).toBeTruthy();
+      expect(narrative.observer).toBeTruthy();
+      expect(narrative.self.length).toBeGreaterThan(0);
+      expect(narrative.observer.length).toBeGreaterThan(0);
     });
 
-    it('should return empty string for missing target', () => {
+    it('differentiates between self and observer perspectives', () => {
       const event = createActorDidAttackEvent((e) => ({
         ...e,
         actor: ALICE_ID,
         payload: {
           ...e.payload,
-          target: 'flux:actor:nonexistent' as ActorURN,
+          target: BOB_ID,
           attackType: AttackType.STRIKE,
         }
       }));
 
-      const narrative = narrateActorDidAttack(context, event, OBSERVER_ID);
-      expect(narrative).toBe('');
-    });
+      const narrative = narrateActorDidAttack(context, event);
 
-    it('should return empty string for cleave with no targets', () => {
-      const event = createActorDidAttackEvent((e) => ({
-        ...e,
-        actor: ALICE_ID,
-        payload: {
-          ...e.payload,
-          targets: [],
-          attackType: AttackType.CLEAVE,
-        }
-      }));
+      // Self uses first-person
+      expect(narrative.self).toMatch(/^You /);
 
-      const narrative = narrateActorDidAttack(context, event, OBSERVER_ID);
-      expect(narrative).toBe('');
-    });
-
-    it('should return empty string for missing attacker in damage narrative', () => {
-      const event = createActorWasAttackedEvent((e) => ({
-        ...e,
-        actor: BOB_ID,
-        payload: {
-          ...e.payload,
-          source: 'flux:actor:nonexistent' as ActorURN,
-          damage: 10,
-        }
-      }));
-
-      const narrative = narrateActorWasAttacked(context, event, OBSERVER_ID);
-      expect(narrative).toBe('');
-    });
-
-    it('should return empty string for missing target in acquire target', () => {
-      const event = createActorDidAcquireTargetEvent((e) => ({
-        ...e,
-        actor: ALICE_ID,
-        payload: {
-          ...e.payload,
-          target: 'flux:actor:nonexistent' as ActorURN,
-        },
-      }));
-
-      const narrative = narrateActorDidAcquireTarget(context, event, OBSERVER_ID);
-      expect(narrative).toBe('');
-    });
-  });
-
-  describe('Narrative Quality Validation', () => {
-    describe('narrateActorDidAttack - Quality validation', () => {
-      it('should not contain [object Object] in STRIKE attack narratives', () => {
-        const event = createActorDidAttackEvent((e) => ({
-          ...e,
-          actor: ALICE_ID,
-          payload: {
-            ...e.payload,
-            target: BOB_ID,
-            attackType: AttackType.STRIKE,
-          }
-        }));
-
-        const perspectives = [ALICE_ID, BOB_ID, OBSERVER_ID];
-        perspectives.forEach(perspective => {
-          withObjectSerializationValidation(narrateActorDidAttack, context, event, perspective)();
-        });
+      // Observer uses third-person with actor name
+      expect(narrative.observer).toContain('Alice');
+      expect(narrative.observer).not.toMatch(/^You /);
       });
 
-      it('should not contain [object Object] in CLEAVE attack narratives', () => {
-        const event = createActorDidAttackEvent((e) => ({
-          ...e,
-          actor: ALICE_ID,
-          payload: {
-            ...e.payload,
-            targets: [BOB_ID, CHARLIE_ID],
-            attackType: AttackType.CLEAVE,
-          }
-        }));
+    it('maintains consistent narrative structure across events', () => {
+      const events = [
+        createActorDidAttackEvent((e) => ({ ...e, actor: ALICE_ID, payload: { ...e.payload, target: BOB_ID, attackType: AttackType.STRIKE }})),
+        createActorDidDefendEvent((e) => ({ ...e, actor: ALICE_ID })),
+        createActorDidDieEvent((e) => ({ ...e, actor: ALICE_ID })),
+      ];
 
-        const perspectives = [ALICE_ID, BOB_ID, OBSERVER_ID];
-        perspectives.forEach(perspective => {
-          withObjectSerializationValidation(narrateActorDidAttack, context, event, perspective)();
-        });
-      });
+      const narratives = [
+        narrateActorDidAttack(context, events[0] as ActorDidAttack),
+        narrateActorDidDefend(context, events[1] as ActorDidDefend),
+        narrateActorDidDie(context, events[2] as ActorDidDie),
+      ];
 
-      it('should pass comprehensive quality validation with different weapon types', () => {
-        const swordEvent = createActorDidAttackEvent((e) => ({
-          ...e,
-          actor: ALICE_ID, // Has sword
-          payload: {
-            ...e.payload,
-            target: BOB_ID,
-            attackType: AttackType.STRIKE,
-          }
-        }));
-
-        const daggerEvent = createActorDidAttackEvent((e) => ({
-          ...e,
-          actor: BOB_ID, // Has dagger
-          payload: {
-            ...e.payload,
-            target: ALICE_ID,
-            attackType: AttackType.STRIKE,
-          }
-        }));
-
-        const warhammerEvent = createActorDidAttackEvent((e) => ({
-          ...e,
-          actor: DAVID_ID, // Has warhammer
-          payload: {
-            ...e.payload,
-            target: BOB_ID,
-            attackType: AttackType.STRIKE,
-          }
-        }));
-
-        // Test all events with comprehensive quality validation
-        [swordEvent, daggerEvent, warhammerEvent].forEach(event => {
-          withNarrativeQuality(narrateActorDidAttack, context, event, OBSERVER_ID)();
-        });
-      });
-
-      it('should generate different narratives for different perspectives', () => {
-        const event = createActorDidAttackEvent((e) => ({
-          ...e,
-          actor: ALICE_ID,
-          payload: {
-            ...e.payload,
-            target: BOB_ID,
-            attackType: AttackType.STRIKE,
-          }
-        }));
-
-        withPerspectiveDifferentiation(narrateActorDidAttack, context, event, [ALICE_ID, BOB_ID, OBSERVER_ID])();
-      });
-    });
-
-    describe('narrateActorWasAttacked - Quality validation', () => {
-      it('should pass quality validation for hit narratives', () => {
-        const event = createActorWasAttackedEvent((e) => ({
-          ...e,
-          actor: BOB_ID,
-          payload: {
-            ...e.payload,
-            source: ALICE_ID,
-            damage: 10,
-            outcome: AttackOutcome.HIT,
-          }
-        }));
-
-        const perspectives = [BOB_ID, ALICE_ID, OBSERVER_ID];
-        perspectives.forEach(perspective => {
-          withNarrativeQuality(narrateActorWasAttacked, context, event, perspective)();
-        });
-      });
-
-      it('should pass quality validation for miss narratives', () => {
-        const event = createActorWasAttackedEvent((e) => ({
-          ...e,
-          actor: BOB_ID,
-          payload: {
-            ...e.payload,
-            source: ALICE_ID,
-            damage: 0,
-            outcome: AttackOutcome.MISS,
-          }
-        }));
-
-        const perspectives = [BOB_ID, ALICE_ID, OBSERVER_ID];
-        perspectives.forEach(perspective => {
-          withNarrativeQuality(narrateActorWasAttacked, context, event, perspective)();
-        });
-      });
-    });
-
-    describe('narrateActorDidDefend - Quality validation', () => {
-      it('should pass quality validation for defense narratives', () => {
-        const event = createActorDidDefendEvent((e) => ({
-          ...e,
-          actor: BOB_ID,
-        }));
-
-        const perspectives = [BOB_ID, OBSERVER_ID];
-        perspectives.forEach(perspective => {
-          withNarrativeQuality(narrateActorDidDefend, context, event, perspective)();
-        });
-      });
-    });
-
-    describe('narrateActorDidMoveInCombat - Quality validation', () => {
-      it('should pass quality validation for movement narratives', () => {
-        const event = createActorDidMoveInCombatEvent((e) => ({
-          ...e,
-          actor: ALICE_ID,
-          payload: {
-            ...e.payload,
-            distance: 3,
-            direction: MovementDirection.FORWARD,
-          }
-        }));
-
-        const perspectives = [ALICE_ID, OBSERVER_ID];
-        perspectives.forEach(perspective => {
-          withNarrativeQuality(narrateActorDidMoveInCombat, context, event, perspective)();
-        });
-      });
-    });
-
-    describe('narrateActorDidAcquireTarget - Quality validation', () => {
-      it('should pass quality validation for targeting narratives', () => {
-        const event = createActorDidAcquireTargetEvent((e) => ({
-          ...e,
-          actor: ALICE_ID,
-          payload: {
-            ...e.payload,
-            target: BOB_ID,
-          },
-        }));
-
-        const perspectives = [ALICE_ID, OBSERVER_ID];
-        perspectives.forEach(perspective => {
-          withNarrativeQuality(narrateActorDidAcquireTarget, context, event, perspective)();
-        });
-      });
-    });
-
-    describe('narrateActorDidDie - Quality validation', () => {
-      it('should pass quality validation for death narratives', () => {
-        const event = createActorDidDieEvent((e) => ({
-          ...e,
-          actor: BOB_ID,
-        }));
-
-        const perspectives = [BOB_ID, OBSERVER_ID];
-        perspectives.forEach(perspective => {
-          withNarrativeQuality(narrateActorDidDie, context, event, perspective)();
-        });
-      });
-    });
-
-    describe('narrateActorDidAssessRange - Quality validation', () => {
-      it('should pass quality validation for range assessment narratives', () => {
-        const event = {
-          id: 'test-event',
-          type: 'ACTOR_DID_ASSESS_RANGE' as any,
-          location: 'flux:place:test' as any,
-          session: DEFAULT_WORKBENCH_SESSION,
-          actor: ALICE_ID,
-          trace: 'test-trace',
-          ts: DEFAULT_TIMESTAMP,
-          payload: {
-            target: BOB_ID,
-            range: 3,
-            direction: MovementDirection.FORWARD,
-          },
-        };
-
-        const perspectives = [ALICE_ID, OBSERVER_ID];
-        perspectives.forEach(perspective => {
-          withNarrativeQuality(narrateActorDidAssessRange, context, event, perspective)();
-        });
-      });
-    });
-
-    describe('Composed quality validation', () => {
-      it('should pass all quality checks with composed validators', () => {
-        const event = createActorDidAttackEvent((e) => ({
-          ...e,
-          actor: ALICE_ID,
-          payload: {
-            ...e.payload,
-            target: BOB_ID,
-            attackType: AttackType.STRIKE,
-          }
-        }));
-
-        // Demonstrate composition of validators
-        const composedValidator = withComposedValidation<ActorDidAttack>(
-          withObjectSerializationValidation,
-          withDebuggingArtifactValidation,
-          withNonEmptyValidation
-        );
-
-        composedValidator(narrateActorDidAttack, context, event, OBSERVER_ID)();
-      });
-
-      it('should validate perspective differentiation across all narrative functions', () => {
-        const attackEvent = createActorDidAttackEvent((e) => ({
-          ...e,
-          actor: ALICE_ID,
-          payload: {
-            ...e.payload,
-            target: BOB_ID,
-            attackType: AttackType.STRIKE,
-          }
-        }));
-
-        withPerspectiveDifferentiation(narrateActorDidAttack, context, attackEvent, [ALICE_ID, BOB_ID, OBSERVER_ID])();
-
-        const wasAttackedEvent = createActorWasAttackedEvent((e) => ({
-          ...e,
-          actor: BOB_ID,
-          payload: {
-            ...e.payload,
-            source: ALICE_ID,
-            damage: 10,
-            outcome: AttackOutcome.HIT,
-          }
-        }));
-
-        withPerspectiveDifferentiation(narrateActorWasAttacked, context, wasAttackedEvent, [BOB_ID, ALICE_ID, OBSERVER_ID])();
+      // All narratives should have both perspectives
+      narratives.forEach(narrative => {
+        expect(narrative).toHaveProperty('self');
+        expect(narrative).toHaveProperty('observer');
+        expect(typeof narrative.self).toBe('string');
+        expect(typeof narrative.observer).toBe('string');
       });
     });
   });

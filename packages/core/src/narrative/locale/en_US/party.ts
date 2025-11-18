@@ -22,7 +22,6 @@ import { toSlug } from '~/lib/slug';
 const describePartyMembers = (
   context: TransformerContext,
   party: Party,
-  recipientId: ActorURN,
   lines: string[] = [], // Consumers may opt into zero-allocation by reusing the same array
 ): string => {
   lines.length = 0;
@@ -34,7 +33,7 @@ const describePartyMembers = (
     }
 
     const glyph = member.id === party.owner ? STAR : ' ';
-    lines.push(`${glyph} ${member.name}` + (member.id === recipientId ? ' (you)' : ''));
+    lines.push(`${glyph} ${member.name}`);
   }
 
   return lines.join('\n');
@@ -43,7 +42,6 @@ const describePartyMembers = (
 const describePartyInvitations = (
   context: TransformerContext,
   party: Party,
-  recipientId: ActorURN,
   lines: string[] = [], // Consumers may opt into zero-allocation by reusing the same array
 ): string => {
   lines.length = 0;
@@ -68,201 +66,179 @@ const describePartyInvitations = (
 /**
  * Renders narrative for party creation events
  */
-export const narrateActorDidCreateParty: TemplateFunction<ActorDidCreateParty, ActorURN> = (context, event, recipientId) => {
-  const { world } = context;
-  const actor = world.actors[event.actor!];
-
-  if (!actor) {
-    return '';
-  }
-
-  if (recipientId === event.actor) {
-    return 'You form a new party.';
-  }
-
-  // No observer narrative
-  return '';
+export const narrateActorDidCreateParty: TemplateFunction<ActorDidCreateParty> = (context, event) => {
+  return {
+    self: 'You form a new party.',
+    observer: ''  // Personal action, no observer narrative
+  };
 };
 
 /**
  * Renders narrative for party disbanding events
  */
-export const narrateActorDidDisbandParty: TemplateFunction<ActorDidDisbandParty, ActorURN> = (context, event, recipientId) => {
+export const narrateActorDidDisbandParty: TemplateFunction<ActorDidDisbandParty> = (context, event) => {
   const { world } = context;
   const actor = world.actors[event.actor!];
 
-  if (!actor) {
-    return '';
-  }
-
-  if (recipientId === event.actor) {
-    return 'You have disbanded the party.';
-  }
-
-  return `${actor.name} has disbanded the party.`;
+  return {
+    self: 'You have disbanded the party.',
+    observer: `${actor.name} has disbanded the party.`
+  };
 };
 
 /**
  * Renders narrative for party invitation issuing events
  */
-export const narrateActorDidIssuePartyInvitation: TemplateFunction<ActorDidIssuePartyInvitation, ActorURN> = (context, event, recipientId) => {
+export const narrateActorDidIssuePartyInvitation: TemplateFunction<ActorDidIssuePartyInvitation> = (context, event) => {
   const { world } = context;
-  const actor = world.actors[event.actor!];
   const invitee = world.actors[event.payload.inviteeId];
 
-  if (!actor || !invitee) {
-    return '';
+  if (!invitee) {
+    return { self: '', observer: '' };
   }
 
-  if (recipientId === event.actor) {
-    return `You have invited ${invitee.name} to join your party.`;
-  }
-
-  // No observer narrative
-  return '';
+  return {
+    self: `You have invited ${invitee.name} to join your party.`,
+    observer: ''  // Personal action, no observer narrative
+  };
 };
 
 /**
  * Renders narrative for party invitation receiving events
  */
-export const narrateActorDidReceivePartyInvitation: TemplateFunction<ActorDidReceivePartyInvitation, ActorURN> = (context, event, recipientId) => {
+export const narrateActorDidReceivePartyInvitation: TemplateFunction<ActorDidReceivePartyInvitation> = (context, event) => {
   const { world } = context;
-  const actor = world.actors[event.actor!];
   const inviter = world.actors[event.payload.inviterId];
 
-  if (!actor || !inviter) {
-    return '';
+  if (!inviter) {
+    return { self: '', observer: '' };
   }
 
-  if (recipientId === event.actor) {
-    return `${inviter.name} has invited you to join ${getPossessivePronoun(inviter.gender)} party.\n`
+  return {
+    self: `${inviter.name} has invited you to join ${getPossessivePronoun(inviter.gender)} party.\n`
       + `To accept: \`party accept ${toSlug(inviter.name)}\`\n`
-      + `To reject: \`party reject ${toSlug(inviter.name)}\``;
-  }
-
-  // No observer narrative
-  return '';
+      + `To reject: \`party reject ${toSlug(inviter.name)}\``,
+    observer: ''  // Personal notification, no observer narrative
+  };
 };
 
 /**
  * Renders narrative for party invitation acceptance events
  */
-export const narrateActorDidAcceptPartyInvitation: TemplateFunction<ActorDidAcceptPartyInvitation, ActorURN> = (context, event, recipientId) => {
+export const narrateActorDidAcceptPartyInvitation: TemplateFunction<ActorDidAcceptPartyInvitation> = (context, event) => {
   const { world } = context;
   const actor = world.actors[event.actor!];
   const inviter = world.actors[event.payload.inviterId];
 
   if (!actor || !inviter) {
-    return '';
+    return { self: '', observer: '' };
   }
 
-  if (recipientId === event.actor) {
-    return `You have accepted ${inviter.name}'s party invitation.\n`;
-  }
-
-  if (recipientId === inviter.id) {
-    return `${actor.name} has accepted your party invitation.\n`;
-  }
-
-  // No observer narrative
-  return '';
+  return {
+    self: `You have accepted ${inviter.name}'s party invitation.\n`,
+    observer: ''  // No observer narrative for personal party actions
+  };
 };
 
 /**
  * Renders narrative for party invitation rejection events
  */
-export const narrateActorDidRejectPartyInvitation: TemplateFunction<ActorDidRejectPartyInvitation, ActorURN> = (context, event, recipientId) => {
+export const narrateActorDidRejectPartyInvitation: TemplateFunction<ActorDidRejectPartyInvitation> = (context, event) => {
   const { world } = context;
   const actor = world.actors[event.actor!];
   const inviter = world.actors[event.payload.inviterId];
 
   if (!actor || !inviter) {
-    return '';
+    return { self: '', observer: '' };
   }
 
-  if (recipientId === actor.id) {
-    return `You have rejected ${inviter.name}'s party invitation.`;
-  }
-
-  if (recipientId === inviter.id) {
-    return `${actor.name} has rejected your party invitation.`;
-  }
-
-  // No observer narrative
-  return '';
+  return {
+    self: `You have rejected ${inviter.name}'s party invitation.`,
+    observer: ''  // No observer narrative for personal party actions
+  };
 };
 
 /**
  * Renders narrative for party joining events
  */
-export const narrateActorDidJoinParty: TemplateFunction<ActorDidJoinParty, ActorURN> = (context, event, recipientId) => {
+export const narrateActorDidJoinParty: TemplateFunction<ActorDidJoinParty> = (context, event) => {
   const { world } = context;
   const actor = world.actors[event.actor!];
   const party = world.groups[event.payload.partyId]!;
-  const inviter = world.actors[party.owner!];
+  const owner = world.actors[party.owner!];
 
-  if (!actor) {
-    return '';
+  if (!actor || !owner) {
+    return { self: '', observer: '' };
   }
 
-  if (recipientId === event.actor) {
-    return `You have joined ${toPossessive(inviter.name)} party.\n`
+  return {
+    self: `You have joined ${toPossessive(owner.name)} party.\n`
       + `To list party members: \`party status\`\n`
-      + `To leave the party: \`party leave\``;
-  }
-
-  // Everyone else sees a generic narrative
-  return `${actor.name} has joined the party.`;
+      + `To leave the party: \`party leave\``,
+    observer: `${actor.name} has joined the party.`
+  };
 };
 
 /**
  * Renders narrative for party leaving events
  */
-export const narrateActorDidLeaveParty: TemplateFunction<ActorDidLeaveParty, ActorURN> = (context, event, recipientId) => {
+export const narrateActorDidLeaveParty: TemplateFunction<ActorDidLeaveParty> = (context, event) => {
   const { world } = context;
   const actor = world.actors[event.actor!];
   const { reason, newOwner } = event.payload;
 
   if (!actor) {
-    return '';
+    return { self: '', observer: '' };
   }
 
-  const getReasonText = (isFirstPerson: boolean) => {
+  let selfText: string;
+  let observerText: string;
+
     switch (reason) {
       case PartyLeaveReason.KICKED:
-        return isFirstPerson ? 'You were removed from the party.' : `${actor.name} was removed from the party.`;
+      selfText = 'You were removed from the party.';
+      observerText = `${actor.name} was removed from the party.`;
+      break;
       case PartyLeaveReason.DISBANDED:
-        return 'You are no longer in a party.';
+      selfText = 'You are no longer in a party.';
+      observerText = 'You are no longer in a party.';  // Same for everyone
+      break;
       case PartyLeaveReason.VOLUNTARY:
       default:
-        return isFirstPerson ? 'You have left the party.' : `${actor.name} has left the party.`;
+      selfText = 'You have left the party.';
+      observerText = `${actor.name} has left the party.`;
     }
-  };
-
-  let narrative = getReasonText(recipientId === event.actor);
 
   // Add ownership transfer information if applicable
-  if (newOwner && recipientId !== event.actor) {
+  if (newOwner) {
     const newOwnerActor = world.actors[newOwner];
     if (newOwnerActor) {
-      narrative += `\n${newOwnerActor.name} is the new party leader.`;
+      observerText += `\n${newOwnerActor.name} is the new party leader.`;
     }
   }
 
-  return narrative;
+  return {
+    self: selfText,
+    observer: observerText
+  };
 };
 
 /**
  * Renders narrative for party inspection events
  */
-export const narrateActorDidInspectParty: TemplateFunction<ActorDidInspectParty, ActorURN> = (context, event, recipientId) => {
+export const narrateActorDidInspectParty: TemplateFunction<ActorDidInspectParty> = (context, event) => {
   const { world } = context;
   const party = world.groups[event.payload.partyId] as Party;
 
   if (!party) {
-    return '';
+    return { self: '', observer: '' };
   }
 
-  return describePartyMembers(context, party, recipientId)
-    + (recipientId === party.owner ? `\nInvitations:\n${describePartyInvitations(context, party, recipientId)}` : '');
+  const members = describePartyMembers(context, party);
+  const invitations = describePartyInvitations(context, party);
+
+  return {
+    self: `${members}\nInvitations:\n${invitations}`,  // Owner sees invitations
+    observer: members  // Non-owners see only members
+  };
 };

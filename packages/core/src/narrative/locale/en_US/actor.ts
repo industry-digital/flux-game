@@ -15,114 +15,119 @@ import {
 } from '~/types/event';
 
 import { TemplateFunction } from '~/types/narrative';
-import { ActorURN } from '~/types/taxonomy';
 
-export const narrateActorWasCreated: TemplateFunction<ActorWasCreated, ActorURN> = (context, event, recipientId) => {
+export const narrateActorWasCreated: TemplateFunction<ActorWasCreated> = (context, event) => {
   const { world } = context;
   const actor = world.actors[event.actor!];
 
-  if (recipientId !== event.actor) {
-    return `${actor.name} arrived.`;
-  }
-
-  return '';
+  return {
+    self: '',  // Silent for self (admin event)
+    observer: `${actor.name} arrived.`
+  };
 };
 
-export const narrateActorDidMaterialize: TemplateFunction<ActorDidMaterialize, ActorURN> = (context, event, recipientId) => {
+export const narrateActorDidMaterialize: TemplateFunction<ActorDidMaterialize> = (context, event) => {
   const { world } = context;
   const actor = world.actors[event.actor!];
 
-  if (recipientId === event.actor) {
-    return `You materialize into existence.`;
-  }
-
-  return `${actor.name} materializes into existence.`;
+  return {
+    self: `You materialize into existence.`,
+    observer: `${actor.name} materializes into existence.`
+  };
 };
 
-export const narrateActorDidDematerialize: TemplateFunction<ActorDidDematerialize, ActorURN> = (context, event, recipientId) => {
+export const narrateActorDidDematerialize: TemplateFunction<ActorDidDematerialize> = (context, event) => {
   const { world } = context;
   const actor = world.actors[event.actor!];
 
-  if (recipientId === event.actor) {
-    return `You fade from existence.`;
-  }
-
-  return `${actor.name} just left.`;
+  return {
+    self: `You fade from existence.`,
+    observer: `${actor.name} just left.`
+  };
 };
 
-export const narrateActorDidMove: TemplateFunction<ActorDidMove, ActorURN> = (context, event, recipientId) => {
+export const narrateActorDidMove: TemplateFunction<ActorDidMove> = (context, event) => {
+  const { world } = context;
+  const actor = world.actors[event.actor!];
   const destination = getPlaceTranslation(context, event.payload.destination);
 
-  if (recipientId === event.actor) {
-    return `You move to ${destination}.`;
-  }
-
-  const actor = context.world.actors[event.actor!];
-  return `${actor.name} moves to ${destination}.`;
+  return {
+    self: `You move to ${destination}.`,
+    observer: `${actor.name} moves to ${destination}.`
+  };
 };
 
-export const narrateActorDidArrive: TemplateFunction<ActorDidArrive, ActorURN> = (context, event, recipientId) => {
+export const narrateActorDidArrive: TemplateFunction<ActorDidArrive> = (context, event) => {
+  const { world } = context;
+  const actor = world.actors[event.actor!];
   const origin = getPlaceTranslation(context, event.payload.origin);
-  if (recipientId === event.actor) {
-    return `You arrive from ${origin}.`;
-  }
 
-  const actor = context.world.actors[event.actor!];
-  return `${actor.name} arrives from ${origin}.`;
+  return {
+    self: `You arrive from ${origin}.`,
+    observer: `${actor.name} arrives from ${origin}.`
+  };
 };
 
 /**
  * TODO: narrate direction of departure
  */
-export const narrateActorDidDepart: TemplateFunction<ActorDidDepart, ActorURN> = (context, event, recipientId) => {
+export const narrateActorDidDepart: TemplateFunction<ActorDidDepart> = (context, event) => {
+  const { world } = context;
+  const actor = world.actors[event.actor!];
   const destination = getPlaceTranslation(context, event.payload.destination);
-  if (recipientId === event.actor) {
-    return `You depart for ${destination}.`;
-  }
 
-  const actor = context.world.actors[event.actor!];
-  return `${actor.name} departs for ${destination}.`;
+  return {
+    self: `You depart for ${destination}.`,
+    observer: `${actor.name} departs for ${destination}.`
+  };
 };
 
-export const narrateActorDidLook: TemplateFunction<ActorDidLook, ActorURN> = (context, event, recipientId) => {
-  const actor = context.world.actors[event.actor!];
+export const narrateActorDidLook: TemplateFunction<ActorDidLook> = (context, event) => {
+  const { world } = context;
+  const actor = world.actors[event.actor!];
 
-  // Third-person: someone else is observing the look action
-  if (recipientId !== event.actor) {
+  // Looking at a place
     if (isPlaceUrn(event.payload.target)) {
-      return `${actor.name} looks around.`;
-    }
+    return {
+      self: `You look around.`,
+      observer: `${actor.name} looks around.`
+    };
   }
 
-  // First-person: actor is looking at themselves
-  if (event.payload.target === recipientId) {
-    if (event.actor === recipientId) {
-      return `You look at yourself.`;
-    }
-    return `${actor.name} appears to be looking at you.`;
+  // Looking at self
+  if (event.payload.target === event.actor) {
+    return {
+      self: `You look at yourself.`,
+      observer: `${actor.name} appears to be looking at themselves.`
+    };
   }
 
-  // First-person: actor is looking at a place
-  if (recipientId === event.actor && isPlaceUrn(event.payload.target)) {
-    return `You look around.`;
-  }
-
-  return '';
+  // Looking at another actor - silent for everyone
+  // (The target will see this via their own UI/notification system if needed)
+  return {
+    self: '',
+    observer: ''
+  };
 };
 
-export const narrateActorDidOpenHelpFile: TemplateFunction<ActorDidOpenHelpFile, ActorURN> = (context, event, recipientId) => {
-  return getHelpFileTranslation(context, event.payload.helpFile);
+export const narrateActorDidOpenHelpFile: TemplateFunction<ActorDidOpenHelpFile> = (context, event) => {
+  const helpText = getHelpFileTranslation(context, event.payload.helpFile);
+
+  return {
+    self: helpText,
+    observer: ''  // Silent for observers (personal action)
+  };
 };
 
-export const narrateActorDidSay: TemplateFunction<ActorDidSay> = (context, event, recipientId) => {
+export const narrateActorDidSay: TemplateFunction<ActorDidSay> = (context, event) => {
+  const { world } = context;
+  const actor = world.actors[event.actor!];
   const { spokenText } = event.payload;
   const punctuationMark = getPunctuationMark(spokenText);
   const speechVerb = getSpeechVerb(punctuationMark);
 
-  if (recipientId === event.actor!) {
-    return `You ${speechVerb}, "${spokenText}"`;
-  }
-
-  const actor = context.world.actors[event.actor!];
-  return `${actor.name} ${speechVerb} "${spokenText}"`;
+  return {
+    self: `You ${speechVerb}, "${spokenText}"`,
+    observer: `${actor.name} ${speechVerb} "${spokenText}"`
+  };
 };

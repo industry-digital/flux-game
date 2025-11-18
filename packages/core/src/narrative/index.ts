@@ -2,6 +2,9 @@ import { LanguageTemplates } from '~/types/narrative';
 import { en_US } from './locale/en_US';
 import { Locale } from '~/types/i18n';
 
+// Export narrative types for external use
+export type { Narrative, NarrativeSequence, NarrativeSequenceItem, TemplateFunction } from '~/types/narrative';
+
 export const SUPPORTED_LANGUAGES: Readonly<Locale[]> = Object.freeze(Object.values(Locale));
 
 export const languageRegistry: Record<Locale, LanguageTemplates> = {
