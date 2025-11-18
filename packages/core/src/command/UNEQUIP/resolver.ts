@@ -13,11 +13,8 @@ export const unequipResolver: CommandResolver<UnequipCommand> = (
     return undefined;
   }
 
-  const weapon = context.resolveEquippedWeapon(intent);
-  if (!weapon) {
-    return undefined;
-  }
-
+  // UNEQUIP without arguments unequips the currently equipped weapon
+  // The reducer will handle finding and validating the equipped weapon
   return createActorCommand({
     id: intent.id,
     type: CommandType.UNEQUIP,
@@ -25,7 +22,7 @@ export const unequipResolver: CommandResolver<UnequipCommand> = (
     location: intent.location,
     session: intent.session,
     args: {
-      item: weapon.id,
+      // No item specified - reducer will find currently equipped weapon
     },
   });
 };

@@ -4,6 +4,11 @@ import { Place } from '~/types/entity/place';
 import { Intent } from '~/types/intent';
 import { ActorURN, ItemURN, PlaceURN } from '~/types/taxonomy';
 import { TransformerContext } from '~/types/handler';
+import { EntityType } from '~/types/entity/entity';
+
+const ROOT_NAMESPACE_PREFIX = 'flux:';
+const BARE_ACTOR_URN_PREFIX = 'actor:';
+const ACTOR_URN_PREFIX = `${ROOT_NAMESPACE_PREFIX}${BARE_ACTOR_URN_PREFIX}`;
 
 class TrieNode {
   children: Map<string, TrieNode> = new Map();
@@ -65,12 +70,16 @@ class ActorTrie {
   }
 }
 
+/**
+ * @deprecated Do not use. This is accidental complexity.
+ */
 export type EntityResolverApi = {
   /**
    * Convert a specific token to an Actor
    * @param intent - The intent containing location context
    * @param token - The specific token to resolve (e.g., "alice", "bob")
    * @param matchLocation - Whether to filter by actor's location (default: true)
+   * @deprecated
    */
   resolveActor: (intent: Intent, token: string, matchLocation?: boolean) => Actor | undefined;
 
@@ -78,6 +87,7 @@ export type EntityResolverApi = {
    * Convert a token to a Place, or return current location if no token provided
    * @param intent - The intent containing current location
    * @param token - Optional token to resolve as place name
+   * @deprecated
    */
   resolvePlace: (intent: Intent, token?: string) => Place | undefined;
 
@@ -85,6 +95,7 @@ export type EntityResolverApi = {
    * Convert a token to an Item from actor's inventory
    * @param intent - The intent containing actor context
    * @param token - The token to resolve as item name
+   * @deprecated
    */
   resolveItem: (intent: Intent, token: string) => Item | undefined;
 
@@ -92,6 +103,7 @@ export type EntityResolverApi = {
    * Convert a token to an Item from actor's inventory (specialized version)
    * @param intent - The intent containing actor context
    * @param token - The token to resolve as item name
+   * @deprecated
    */
   resolveInventoryItem: (intent: Intent, token: string) => Item | undefined;
 
@@ -99,6 +111,7 @@ export type EntityResolverApi = {
    * Get the currently equipped weapon, optionally validating against a token
    * @param intent - The intent containing actor context
    * @param token - Optional token to validate weapon name
+   * @deprecated
    */
   resolveEquippedWeapon: (intent: Intent, token?: string) => Weapon | undefined;
 };
@@ -149,11 +162,14 @@ export const createEntityResolverApi = (
     const lowerToken = token.toLowerCase();
 
     // First, check if token looks like an ActorURN and resolve it directly
-    if (lowerToken.startsWith('flux:actor:')) {
+    if (lowerToken.indexOf(ACTOR_URN_PREFIX) === 0) {
       const actor = world.actors[lowerToken as ActorURN];
       if (actor && (!matchLocation || location === actor.location)) {
         return actor; // Direct URN match
       }
+      // If URN resolution failed, don't fall through to name matching
+      // This prevents "flux:actor:nonexistent" from matching a player named "flux"
+      return undefined;
     }
 
     // Fast path: Check exact matches first using O(1) lookup
@@ -213,9 +229,44 @@ export const createEntityResolverApi = (
     return bestMatch;
   };
 
+  /**
+   * Normalize actor token to handle URN shorthand patterns
+   * This is the single source of truth for URN normalization logic
+   *
+   * Note: token is already normalized (trimmed, lowercased) by Intent processing
+   */
+  const normalizeActorToken = (token: string): string => {
+    if (!token) return token;
+
+    // Already a full URN - pass through
+    if (token.indexOf(ACTOR_URN_PREFIX) === 0) {
+      return token;
+    }
+
+    // URN shorthand patterns
+    if (token.indexOf(BARE_ACTOR_URN_PREFIX) === 0) {
+      return `${ROOT_NAMESPACE_PREFIX}${token}`;  // actor:bob → flux:actor:bob
+    }
+
+    if (token.indexOf('a:') === 0) {
+      return `${ACTOR_URN_PREFIX}${token.slice(2)}`; // a:bob → flux:actor:bob
+    }
+
+    // Any other colon pattern - assume it's an actor URN fragment
+    if (token.indexOf(':') !== -1) {
+      return `${ACTOR_URN_PREFIX}${token}`;       // npc:guard → flux:actor:npc:guard
+    }
+
+    // Regular name - no normalization needed
+    return token;
+  };
+
   const resolveActor = (intent: Intent, token: string, matchLocation = true): Actor | undefined => {
-    // Direct token-to-actor resolution
-    return findActorByToken(token, intent.location, matchLocation);
+    // Normalize token to handle URN shorthand patterns
+    const normalizedToken = normalizeActorToken(token);
+
+    // Direct token-to-actor resolution with normalized input
+    return findActorByToken(normalizedToken, intent.location, matchLocation);
   };
 
   const resolveItem = (intent: Intent, token: string): Item | undefined => {
@@ -266,4 +317,84 @@ export const createEntityResolverApi = (
     resolveInventoryItem,
     resolveEquippedWeapon,
   };
+};
+
+
+type ResolvableEntityURN = ActorURN | PlaceURN | ItemURN;
+
+const FULL_PREFIXES: Readonly<Record<EntityType, string>> = Object.freeze({
+  [EntityType.ACTOR]: `${ROOT_NAMESPACE_PREFIX}actor:`,
+  [EntityType.PLACE]: `${ROOT_NAMESPACE_PREFIX}place:`,
+  [EntityType.ITEM]: `${ROOT_NAMESPACE_PREFIX}item:`,
+  [EntityType.GROUP]: `${ROOT_NAMESPACE_PREFIX}group:`,
+  [EntityType.SESSION]: `${ROOT_NAMESPACE_PREFIX}session:`,
+});
+
+// Validate that all entity types have a full prefix at module load time
+// Zero-cost performance improvement over runtime checks.
+for (const type of Object.values(EntityType)) {
+  if (!FULL_PREFIXES[type]) {
+    throw new Error(`Missing full prefix for entity type: ${type}`);
+  }
+}
+
+const COLON = ':';
+
+/**
+ * Resolve a token to a normalized URN using configured prefixes
+ * @param type - Entity type (ACTOR, PLACE, ITEM)
+ * @param token - Raw token like "bob", "a:bob", "actor:bob"
+ * @param prefixes - Allowed shorthand prefixes like ['a', 'actor']
+ * @returns Normalized URN or undefined if invalid
+ */
+const resolveEntityUrn = (
+  type: EntityType,
+  token: string,
+  prefixes: readonly string[],
+): ResolvableEntityURN | undefined => {
+  if (!token) return undefined;
+
+  const fullPrefix = FULL_PREFIXES[type];
+
+  // Already a full URN - validate and pass through
+  if (token.startsWith(fullPrefix)) {
+    return token as ResolvableEntityURN;
+  }
+
+  // Check all configured prefixes (precomputed with colons)
+  for (const prefixWithColon of prefixes) {
+    if (token.startsWith(prefixWithColon)) {
+      const remainder = token.slice(prefixWithColon.length);
+      return `${fullPrefix}${remainder}` as ResolvableEntityURN;
+    }
+  }
+
+  // Any other colon pattern - assume it's a URN fragment
+  if (token.includes(COLON)) {
+    return `${fullPrefix}${token}` as ResolvableEntityURN;
+  }
+
+  // Regular name - convert to standard URN
+  return `${fullPrefix}${token}` as ResolvableEntityURN;
+};
+
+export const ACTOR_URN_PREFIXES = ['a', 'actor'] as const;
+const ACTOR_URN_PREFIXES_WITH_COLON = ['a:', 'actor:'] as const;
+
+export const resolveActorUrn = (token: string): ActorURN | undefined => {
+  return resolveEntityUrn(EntityType.ACTOR, token, ACTOR_URN_PREFIXES_WITH_COLON) as ActorURN | undefined;
+};
+
+export const PLACE_URN_PREFIXES = ['p', 'place'] as const;
+const PLACE_URN_PREFIXES_WITH_COLON = ['p:', 'place:'] as const;
+
+export const resolvePlaceUrn = (token: string): PlaceURN | undefined => {
+  return resolveEntityUrn(EntityType.PLACE, token, PLACE_URN_PREFIXES_WITH_COLON) as PlaceURN | undefined;
+};
+
+export const ITEM_URN_PREFIXES = ['i', 'item'] as const;
+const ITEM_URN_PREFIXES_WITH_COLON = ['i:', 'item:'] as const;
+
+export const resolveItemUrn = (token: string): ItemURN | undefined => {
+  return resolveEntityUrn(EntityType.ITEM, token, ITEM_URN_PREFIXES_WITH_COLON) as ItemURN | undefined;
 };

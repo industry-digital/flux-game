@@ -9,18 +9,7 @@ export const cleaveResolver: CommandResolver<CleaveCommand> = (
   context: CommandResolverContext,
   intent: Intent,
 ): CleaveCommand | undefined => {
-  const { world } = context;
-
   if (intent.prefix !== CLEAVE_VERB) {
-    return undefined;
-  }
-
-  const attacker = world.actors[intent.actor];
-  if (!attacker) {
-    return undefined;
-  }
-
-  if (!attacker.location) {
     return undefined;
   }
 

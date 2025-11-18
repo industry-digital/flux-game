@@ -1,7 +1,7 @@
 import { CommandResolver, CommandResolverContext, CommandType, Intent } from '~/types/intent';
 import { createActorCommand } from '~/lib/intent';
+import { resolveActorUrn } from '~/intent/resolvers';
 import { PartyInviteCommand } from './types';
-import { ErrorCode } from '~/types/error';
 
 const PARTY_PREFIX = 'party';
 const INVITE_TOKEN = 'invite';
@@ -29,21 +29,11 @@ export const partyInviteResolver: CommandResolver<PartyInviteCommand> = (
 
   const [action, invitee] = intent.tokens;
   if (action !== INVITE_TOKEN) {
-    context.declareError(ErrorCode.INVALID_ACTION, intent.id);
     return undefined;
   }
 
-  const inviteeActor = context.resolveActor(intent, invitee);
-  if (!inviteeActor) {
-    // Debug: Log available actors for troubleshooting
-    const availableActors = Object.keys(context.world.actors).map(id => {
-      const actor = context.world.actors[id as any];
-      return `${actor.name}@${actor.location}`;
-    });
-    (context as any).log?.debug?.(
-      `Failed to resolve invitee "${invitee}" at location ${intent.location}. Available actors: ${availableActors.join(', ')}`
-    );
-    context.declareError(ErrorCode.INVALID_TARGET, intent.id);
+  const inviteeUrn = resolveActorUrn(invitee);
+  if (!inviteeUrn) {
     return undefined;
   }
 
@@ -54,7 +44,7 @@ export const partyInviteResolver: CommandResolver<PartyInviteCommand> = (
     location: intent.location,
     session: intent.session,
     args: {
-      invitee: inviteeActor.id,
+      invitee: inviteeUrn,
     },
   });
 };

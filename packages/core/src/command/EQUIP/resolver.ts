@@ -1,27 +1,29 @@
 import { CommandResolver, CommandResolverContext, CommandType, Intent } from '~/types/intent';
 import { createActorCommand } from '~/lib/intent';
+import { resolveItemUrn } from '~/intent/resolvers';
 import { EquipCommand } from './types';
 import { ErrorCode } from '~/types/error';
 
-const EQUIP_VERB = 'equip';
+const EQUIP_PREFIX = 'equip';
 
 export const equipResolver: CommandResolver<EquipCommand> = (
   context: CommandResolverContext,
   intent: Intent,
 ): EquipCommand | undefined => {
-  if (intent.prefix !== EQUIP_VERB) {
+  const { declareError } = context;
+
+  if (intent.prefix !== EQUIP_PREFIX) {
     return undefined;
   }
 
   if (intent.tokens.length < 1) {
-    context.declareError(ErrorCode.INVALID_TARGET, intent.id);
+    declareError(ErrorCode.INVALID_TARGET, intent.id);
     return undefined;
   }
 
-  const itemToken = intent.tokens[0];
-  const item = context.resolveItem(intent, itemToken);
-  if (!item) {
-    context.declareError(ErrorCode.INVALID_TARGET, intent.id);
+  const itemUrn = resolveItemUrn(intent.tokens[0]);
+  if (!itemUrn) {
+    declareError(ErrorCode.INVALID_TARGET, intent.id);
     return undefined;
   }
 
@@ -32,7 +34,7 @@ export const equipResolver: CommandResolver<EquipCommand> = (
     location: intent.location,
     session: intent.session,
     args: {
-      item: item.id,
+      item: itemUrn,
     },
   });
 };

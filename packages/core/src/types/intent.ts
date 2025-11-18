@@ -1,6 +1,5 @@
 import { ActorURN, GroupURN, PlaceURN, SessionURN } from '~/types/taxonomy';
-import { EntityResolverApi } from '~/intent/resolvers';
-import { ErrorDeclarationProducer, TransformerContext } from '~/types/handler';
+import { ErrorDeclarationProducer } from '~/types/handler';
 
 export type InputMetadata = { __type: 'command' | 'intent' };
 
@@ -227,10 +226,7 @@ export type Command<
   A extends Record<string, any> = Record<string, any>
 > = SystemCommand<T, A> | ActorCommand<T, A>;
 
-export type CommandResolverContext =
-  & TransformerContext
-  & ErrorDeclarationProducer
-  & EntityResolverApi;
+export type CommandResolverContext = ErrorDeclarationProducer;
 
 export type CommandResolver<TCommand extends Command = Command> = (
   context: CommandResolverContext,

@@ -2,19 +2,19 @@ import { CommandResolver, CommandResolverContext, CommandType, Intent } from '~/
 import { UseWorkbenchCommand, UseWorkbenchCommandArgs } from './types';
 import { createActorCommand } from '~/lib/intent';
 
-const USE_VERB = 'use';
+const USE_TOKEN = 'use';
+const WORKBENCH_TOKEN = 'workbench';
 const NO_ARGS: Readonly<UseWorkbenchCommandArgs> = Object.freeze({});
-const WORKBENCH = 'workbench';
 
 export const activateWorkbenchResolver: CommandResolver<UseWorkbenchCommand> = (
   context: CommandResolverContext,
   intent: Intent,
 ): UseWorkbenchCommand | undefined => {
-  if (intent.prefix !== USE_VERB) {
+  if (intent.prefix !== USE_TOKEN) {
     return undefined;
   }
 
-  if (intent.tokens[0] !== WORKBENCH) {
+  if (intent.tokens[0] !== WORKBENCH_TOKEN) {
     return undefined;
   }
 

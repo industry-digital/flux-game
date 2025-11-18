@@ -1,5 +1,6 @@
 import { CommandResolver, CommandResolverContext, CommandType, Intent } from '~/types/intent';
 import { createActorCommand } from '~/lib/intent';
+import { resolveActorUrn } from '~/intent/resolvers';
 import { AcceptPartyInvitationCommand } from './types';
 
 const PARTY_TOKEN = 'party';
@@ -31,12 +32,8 @@ export const acceptPartyInvitationResolver: CommandResolver<AcceptPartyInvitatio
     return undefined;
   }
 
-  const partyOwner = context.resolveActor(intent, partyOwnerToken);
-  if (!partyOwner) {
-    return undefined;
-  }
-
-  if (!partyOwner.party) {
+  const partyOwnerUrn = resolveActorUrn(partyOwnerToken);
+  if (!partyOwnerUrn) {
     return undefined;
   }
 
@@ -48,8 +45,7 @@ export const acceptPartyInvitationResolver: CommandResolver<AcceptPartyInvitatio
     session: intent.session,
     group: intent.group, // --> IMPORTANT! This is the party group ID.
     args: {
-      partyId: partyOwner.party,
-      partyOwnerId: partyOwner.id,
+      partyOwnerId: partyOwnerUrn,
     },
   });
 

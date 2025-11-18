@@ -2,15 +2,15 @@ import { CommandResolver, CommandResolverContext, CommandType, Intent } from '~/
 import { ListShellsCommand, ListShellsCommandArgs } from './types';
 import { createActorCommand } from '~/lib/intent';
 
-const SHELL_VERB = 'shell';
-const LIST_VERBS = new Set(['list', 'ls']);
+const SHELL_TOKEN = 'shell';
+const LIST_TOKENS = new Set(['list', 'ls']);
 const NO_ARGS: Readonly<ListShellsCommandArgs> = Object.freeze({});
 
 export const listShellsResolver: CommandResolver<ListShellsCommand> = (
   context: CommandResolverContext,
   intent: Intent,
 ): ListShellsCommand | undefined => {
-  if (intent.prefix !== SHELL_VERB) {
+  if (intent.prefix !== SHELL_TOKEN) {
     return undefined;
   }
 
@@ -18,7 +18,7 @@ export const listShellsResolver: CommandResolver<ListShellsCommand> = (
     return undefined;
   }
 
-  if (!LIST_VERBS.has(intent.tokens[0])) {
+  if (!LIST_TOKENS.has(intent.tokens[0])) {
     return undefined;
   }
 

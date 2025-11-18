@@ -18,6 +18,7 @@ import { TransformerContext } from '~/types/handler';
 import { STAR } from '~/narrative/glyphs';
 import { describeAge } from '~/narrative/locale/en_US/util/time';
 import { toSlug } from '~/lib/slug';
+import { EMPTY_NARRATIVE } from '~/narrative/constants';
 
 const describePartyMembers = (
   context: TransformerContext,
@@ -94,7 +95,7 @@ export const narrateActorDidIssuePartyInvitation: TemplateFunction<ActorDidIssue
   const invitee = world.actors[event.payload.inviteeId];
 
   if (!invitee) {
-    return { self: '', observer: '' };
+    return EMPTY_NARRATIVE;
   }
 
   return {

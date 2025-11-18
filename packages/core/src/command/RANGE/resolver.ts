@@ -1,6 +1,7 @@
 import { CommandResolverContext, CommandType, Intent, CommandResolver } from '~/types/intent';
 import { createActorCommand } from '~/lib/intent';
 import { RangeCommand } from './types';
+import { resolveActorUrn } from '~/intent/resolvers';
 
 const RANGE_VERB = 'range';
 
@@ -8,15 +9,8 @@ export const rangeResolver: CommandResolver<RangeCommand> = (
   context: CommandResolverContext,
   intent: Intent,
 ): RangeCommand | undefined => {
-  const { world } = context;
-
   // Check if this is a range command
   if (intent.prefix !== RANGE_VERB) {
-    return undefined;
-  }
-
-  const actor = world.actors[intent.actor];
-  if (!actor) {
     return undefined;
   }
 
@@ -25,19 +19,19 @@ export const rangeResolver: CommandResolver<RangeCommand> = (
   }
 
   const [targetToken] = intent.tokens;
-  const target = context.resolveActor(intent, targetToken, true);
-  if (!target) {
+  const targetActorId = resolveActorUrn(targetToken);
+  if (!targetActorId) {
     return undefined;
   }
 
   return createActorCommand({
     id: intent.id,
     type: CommandType.RANGE,
-    actor: actor.id,
-    location: actor.location,
+    actor: intent.actor,
+    location: intent.location,
     session: intent.session,
     args: {
-      target: target.id,
+      target: targetActorId,
     },
   });
 };

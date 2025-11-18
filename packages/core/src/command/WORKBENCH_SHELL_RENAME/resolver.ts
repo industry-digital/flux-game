@@ -3,8 +3,9 @@ import { RenameShellCommand } from './types';
 import { createActorCommand } from '~/lib/intent';
 import { sanitize } from '~/intent/sanitization';
 
-const SHELL_VERB = 'shell';
-const RENAME_VERB = 'rename';
+const SHELL_TOKEN = 'shell';
+const RENAME_TOKEN = 'rename';
+const TO_TOKEN = 'to';
 
 /**
  * Syntax:
@@ -15,7 +16,7 @@ export const renameShellResolver: CommandResolver<RenameShellCommand> = (
   context: CommandResolverContext,
   intent: Intent,
 ): RenameShellCommand | undefined => {
-  if (intent.prefix !== SHELL_VERB) {
+  if (intent.prefix !== SHELL_TOKEN) {
     return undefined;
   }
 
@@ -23,7 +24,7 @@ export const renameShellResolver: CommandResolver<RenameShellCommand> = (
     return undefined;
   }
 
-  if (intent.tokens[0] !== RENAME_VERB) {
+  if (intent.tokens[0] !== RENAME_TOKEN) {
     return undefined;
   }
 
@@ -38,7 +39,7 @@ export const renameShellResolver: CommandResolver<RenameShellCommand> = (
     // Format: shell rename <shell-name-or-id> <new-name>
     shellNameOrId = intent.tokens[1];
     newName = intent.tokens[2];
-  } else if (intent.tokens.length === 4 && intent.tokens[2] === 'to') {
+  } else if (intent.tokens.length === 4 && intent.tokens[2] === TO_TOKEN) {
     // Format: shell rename <shell-name-or-id> to <new-name>
     shellNameOrId = intent.tokens[1];
     newName = intent.tokens[3];
@@ -51,7 +52,6 @@ export const renameShellResolver: CommandResolver<RenameShellCommand> = (
   try {
     sanitizedNewName = sanitize(newName);
   } catch (error) {
-    // Invalid shell name, reject the command
     return undefined;
   }
 

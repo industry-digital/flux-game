@@ -1,9 +1,7 @@
 import { PureHandlerInterface, TransformerContext } from '~/types/handler';
 import { MoveCommand } from './types';
 import { actorMovementReducer } from './reducer';
-import { Command, CommandType } from '~/types/intent';
-import { isCommandOfType } from '~/lib/intent';
-import { withCommandType } from '~/command/withCommandType';
+import { CommandType } from '~/types/intent';
 
 /**
  * Handler for MOVE commands
@@ -12,9 +10,6 @@ import { withCommandType } from '~/command/withCommandType';
  */
 export class MOVE implements PureHandlerInterface<TransformerContext, MoveCommand> {
   type = CommandType.MOVE;
-  reduce = withCommandType(CommandType.MOVE, actorMovementReducer);
+  reduce = actorMovementReducer;
   dependencies = [];
-  handles = (input: Command): input is MoveCommand => {
-    return isCommandOfType(input, CommandType.MOVE);
-  };
 }

@@ -27,52 +27,18 @@ export const lookResolver: CommandResolver<LookCommand> = (
   }
 
   // Fell through, so there is a target token
+  // But we don't have enough context to understand if this is an actor, item, or place
+  // So the only logical thing to do is pass the token along to the reducer to handle.
   const [targetToken] = intent.tokens;
 
-  // See if it matches an actor
-  const targetActor = context.resolveActor(intent, targetToken);
-  if (targetActor) {
-    return createActorCommand({
-      id: intent.id,
-      type: CommandType.LOOK,
-      actor: intent.actor,
-      location: intent.location,
-      session: intent.session,
-      args: {
-        target: targetActor.id,
-      },
-    });
-  }
-
-  // See if it matches a place
-  const targetPlace = context.resolvePlace(intent, targetToken);
-  if (targetPlace) {
-    return createActorCommand({
-      id: intent.id,
-      type: CommandType.LOOK,
-      actor: intent.actor,
-      location: intent.location,
-      session: intent.session,
-      args: {
-        target: targetPlace.id,
-      },
-    });
-  }
-
-  // See if it matches an item
-  const targetItem = context.resolveItem(intent, targetToken);
-  if (targetItem) {
-    return createActorCommand({
-      id: intent.id,
-      type: CommandType.LOOK,
-      actor: intent.actor,
-      location: intent.location,
-      session: intent.session,
-      args: {
-        target: targetItem.id,
-      },
-    });
-  }
-
-  return undefined;
+  return createActorCommand({
+    id: intent.id,
+    type: CommandType.LOOK,
+    actor: intent.actor,
+    location: intent.location,
+    session: intent.session,
+    args: {
+      target: targetToken,
+    },
+  });
 };

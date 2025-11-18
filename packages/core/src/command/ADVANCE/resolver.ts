@@ -1,6 +1,7 @@
 import { CommandResolver, CommandResolverContext, CommandType, Intent } from '~/types/intent';
 import { createActorCommand } from '~/lib/intent';
 import { AdvanceCommand, AdvanceCommandArgs } from './types';
+import { parseSafePositiveFloat, parseSafePositiveInteger } from '~/intent/parsing';
 
 const ADVANCE_VERB = 'advance';
 const AP = 'ap';
@@ -11,19 +12,8 @@ export const advanceResolver: CommandResolver<AdvanceCommand> = (
   context: CommandResolverContext,
   intent: Intent,
 ): AdvanceCommand | undefined => {
-  const { world } = context;
-
   // Check if this is an advance command
   if (intent.prefix !== ADVANCE_VERB) {
-    return undefined;
-  }
-
-  const actor = world.actors[intent.actor];
-  if (!actor) {
-    return undefined;
-  }
-
-  if (!actor.location) {
     return undefined;
   }
 
@@ -38,23 +28,30 @@ export const advanceResolver: CommandResolver<AdvanceCommand> = (
 
   // Single token = "advance <number>" → distance shorthand
   if (tokens.length === 1) {
-    const value = parseInt(tokens[0], 10);
-    if (!isNaN(value) && value > 0 && Number.isFinite(value) && value <= Number.MAX_SAFE_INTEGER) {
-      commandArgs = { type: DISTANCE, distance: value };
+    const value = parseSafePositiveInteger(tokens[0]);
+    if (value === undefined) {
+      return undefined;
     }
+    commandArgs = { type: DISTANCE, distance: value };
   }
 
   // Two tokens = "advance ap <number>" or "advance distance <number>"
   else if (tokens.length === 2) {
-    const [modifier, valueStr] = tokens;
+    const [mode, valueStr] = tokens;
     const value = parseFloat(valueStr);
 
-    if (!isNaN(value) && value > 0 && Number.isFinite(value) && value <= Number.MAX_SAFE_INTEGER) {
-      if (modifier === AP) {
-        commandArgs = { type: AP, ap: value };
-      } else if (modifier === DISTANCE) {
-        commandArgs = { type: DISTANCE, distance: Math.floor(value) }; // Distance must be whole meters
+    if (mode === AP) {
+      const value = parseSafePositiveFloat(valueStr);
+      if (value === undefined) {
+        return undefined;
       }
+      commandArgs = { type: AP, ap: value };
+    } else if (mode === DISTANCE) {
+      const value = parseSafePositiveInteger(valueStr);
+      if (value === undefined) {
+        return undefined;
+      }
+      commandArgs = { type: DISTANCE, distance: value };
     }
   }
 

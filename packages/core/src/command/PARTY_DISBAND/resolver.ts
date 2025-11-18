@@ -24,7 +24,7 @@ export const partyDisbandResolver: CommandResolver<PartyDisbandCommand> = (
     return undefined;
   }
 
-  const command: PartyDisbandCommand = createActorCommand({
+  return createActorCommand({
     id: intent.id,
     type: CommandType.PARTY_DISBAND,
     actor: intent.actor,
@@ -32,6 +32,4 @@ export const partyDisbandResolver: CommandResolver<PartyDisbandCommand> = (
     session: intent.session,
     args: NO_ARGS,
   });
-
-  return command;
 };

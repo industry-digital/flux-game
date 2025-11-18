@@ -3,7 +3,7 @@ import { createActorCommand } from '~/lib/intent';
 import { DoneCommand, DoneCommandArgs } from './types';
 
 const DONE_VERB = 'done';
-const DEFAULT_DONE_ARGS: Readonly<DoneCommandArgs> = Object.freeze({});
+const NO_ARGS: Readonly<DoneCommandArgs> = Object.freeze({});
 
 export const doneResolver: CommandResolver<DoneCommand> = (
   context: CommandResolverContext,
@@ -20,6 +20,6 @@ export const doneResolver: CommandResolver<DoneCommand> = (
     actor: intent.actor,
     location: intent.location,
     session: intent.session,
-    args: DEFAULT_DONE_ARGS,
+    args: NO_ARGS,
   });
 };

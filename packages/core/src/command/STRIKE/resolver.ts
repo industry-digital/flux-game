@@ -2,22 +2,19 @@ import { CommandResolver, CommandResolverContext, CommandType, Intent } from '~/
 import { createActorCommand } from '~/lib/intent';
 import { ActorURN } from '~/types/taxonomy';
 import { StrikeCommand } from './types';
+import { resolveActorUrn } from '~/intent/resolvers';
+import { ErrorCode } from '~/types/error';
 
-const STRIKE_VERB = 'strike';
+const STRIKE_TOKEN = 'strike';
 
 export const strikeResolver: CommandResolver<StrikeCommand> = (
   context: CommandResolverContext,
   intent: Intent,
 ): StrikeCommand | undefined => {
-  const { world } = context;
+  const { declareError } = context;
 
   // Check if this is a strike command
-  if (intent.prefix !== STRIKE_VERB) {
-    return undefined;
-  }
-
-  const attacker = world.actors[intent.actor];
-  if (!attacker) {
+  if (intent.prefix !== STRIKE_TOKEN) {
     return undefined;
   }
 
@@ -25,9 +22,9 @@ export const strikeResolver: CommandResolver<StrikeCommand> = (
   let target: ActorURN | undefined;
   if (intent.tokens.length > 0) {
     const targetToken = intent.tokens[0];
-    const target = context.resolveActor(intent, targetToken, true);
+    const target = resolveActorUrn(targetToken);
     if (!target) {
-      context.declareError(`STRIKE: invalid target "${targetToken}"`);
+      declareError(ErrorCode.INVALID_TARGET, intent.id);
       return undefined;
     }
   }
