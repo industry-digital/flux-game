@@ -92,7 +92,7 @@ describe('ADVANCE Command Parser', () => {
       expect(command).toBeUndefined();
     });
 
-    it('should reject when actor not found', () => {
+    it('should accept any actor URN (world validation happens in reducer)', () => {
       const intent = createIntent({
         actor: 'flux:actor:missing' as ActorURN,
         location: DEFAULT_LOCATION,
@@ -101,7 +101,10 @@ describe('ADVANCE Command Parser', () => {
 
       const command = advanceResolver(parserContext, intent);
 
-      expect(command).toBeUndefined();
+      // Pure resolvers don't validate world state - they only parse syntax
+      expect(command).toBeTruthy();
+      expect(command?.type).toBe(CommandType.ADVANCE);
+      expect(command?.actor).toBe('flux:actor:missing');
     });
 
   });

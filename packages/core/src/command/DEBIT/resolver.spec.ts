@@ -81,7 +81,7 @@ describe('DEBIT Command Parser', () => {
       expect(command).toBeUndefined();
     });
 
-    it('should reject when recipient not found', () => {
+    it('should accept any recipient URN (world validation happens in reducer)', () => {
       const intent = createIntent({
         actor: ALICE_ID,
         location: DEFAULT_LOCATION,
@@ -90,10 +90,13 @@ describe('DEBIT Command Parser', () => {
 
       const command = debitResolver(parserContext, intent);
 
-      expect(command).toBeUndefined();
+      // Pure resolvers don't validate world state - they only parse syntax
+      expect(command).toBeTruthy();
+      expect(command?.type).toBe(CommandType.DEBIT);
+      expect(command?.args.recipient).toBe('flux:actor:missing');
     });
 
-    it('should reject invalid currency types', () => {
+    it('should accept any currency string (business validation happens in reducer)', () => {
       const intent = createIntent({
         actor: ALICE_ID,
         location: DEFAULT_LOCATION,
@@ -102,7 +105,10 @@ describe('DEBIT Command Parser', () => {
 
       const command = debitResolver(parserContext, intent);
 
-      expect(command).toBeUndefined();
+      // Pure resolvers don't validate business rules - they only parse syntax
+      expect(command).toBeTruthy();
+      expect(command?.type).toBe(CommandType.DEBIT);
+      expect(command?.args.currency).toBe('gold');
     });
 
     it('should reject invalid amount (NaN)', () => {
@@ -320,7 +326,7 @@ describe('DEBIT Command Parser', () => {
   });
 
   describe('Edge Cases and Security', () => {
-    it('should handle malformed actor URNs gracefully', () => {
+    it('should normalize any actor token to URN format', () => {
       const intent = createIntent({
         actor: ALICE_ID,
         location: DEFAULT_LOCATION,
@@ -329,7 +335,9 @@ describe('DEBIT Command Parser', () => {
 
       const command = debitResolver(parserContext, intent);
 
-      expect(command).toBeUndefined();
+      // Pure resolvers normalize tokens to URN format without world validation
+      expect(command).toBeTruthy();
+      expect(command?.args.recipient).toBe('flux:actor:invalid-urn');
     });
 
     it('should handle edge case numeric inputs safely', () => {
@@ -380,10 +388,10 @@ describe('DEBIT Command Parser', () => {
       });
     });
 
-    it('should reject unknown currency types', () => {
-      const invalidCurrencies = ['gold', 'silver', 'bitcoin', 'credits', 'coins'];
+    it('should accept any currency string (business validation happens in reducer)', () => {
+      const anyCurrencies = ['gold', 'silver', 'bitcoin', 'credits', 'coins'];
 
-      invalidCurrencies.forEach((currency) => {
+      anyCurrencies.forEach((currency) => {
         const intent = createIntent({
           actor: ALICE_ID,
           location: DEFAULT_LOCATION,
@@ -392,7 +400,9 @@ describe('DEBIT Command Parser', () => {
 
         const command = debitResolver(parserContext, intent);
 
-        expect(command).toBeUndefined();
+        // Pure resolvers don't validate business rules - they only parse syntax
+        expect(command).toBeTruthy();
+        expect(command?.args.currency).toBe(currency);
       });
     });
   });

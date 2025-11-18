@@ -4,7 +4,7 @@ import { createActorCommand } from '~/lib/intent';
 import { ShellMutationType, StatMutationOperation } from '~/types/workbench';
 import { ShellStat } from '~/types/entity/actor';
 import { ErrorCode } from '~/types/error';
-import { parseSafePositiveInteger } from '~/intent/parsing';
+import { parseSafeInteger } from '~/intent/parsing';
 
 const SHELL_PREFIX = 'shell';
 const ATTRIBUTE_TOKENS = new Set(['attr', 'attribute']);
@@ -48,7 +48,7 @@ export const addShellAttributeResolver: CommandResolver<AddShellAttributeCommand
     return undefined;
   }
 
-  const amount = parseSafePositiveInteger(digitsToken);
+  const amount = parseSafeInteger(digitsToken);
   if (amount === undefined) {
     declareError(ErrorCode.INVALID_AMOUNT, intent.id);
     return undefined;

@@ -29,29 +29,28 @@ export const advanceResolver: CommandResolver<AdvanceCommand> = (
   // Single token = "advance <number>" → distance shorthand
   if (tokens.length === 1) {
     const value = parseSafePositiveInteger(tokens[0]);
-    if (value === undefined) {
-      return undefined;
+    if (value !== undefined) {
+      commandArgs = { type: DISTANCE, distance: value };
     }
-    commandArgs = { type: DISTANCE, distance: value };
+    // If parsing fails, fall back to max advance
   }
 
   // Two tokens = "advance ap <number>" or "advance distance <number>"
   else if (tokens.length === 2) {
     const [mode, valueStr] = tokens;
-    const value = parseFloat(valueStr);
 
     if (mode === AP) {
       const value = parseSafePositiveFloat(valueStr);
-      if (value === undefined) {
-        return undefined;
+      if (value !== undefined) {
+        commandArgs = { type: AP, ap: value };
       }
-      commandArgs = { type: AP, ap: value };
+      // If parsing fails, fall back to max advance
     } else if (mode === DISTANCE) {
       const value = parseSafePositiveInteger(valueStr);
-      if (value === undefined) {
-        return undefined;
+      if (value !== undefined) {
+        commandArgs = { type: DISTANCE, distance: value };
       }
-      commandArgs = { type: DISTANCE, distance: value };
+      // If parsing fails, fall back to max advance
     }
   }
 
