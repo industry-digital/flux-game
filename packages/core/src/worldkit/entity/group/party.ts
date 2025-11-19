@@ -1,5 +1,6 @@
+import { doesPlainObjectHaveAnyProperty } from '~/lib/lang';
 import { GroupType, Party } from '~/types/entity/group';
-import { ActorURN, PartyURN } from '~/types/taxonomy';
+import { ActorURN, PartyURN, GroupURN } from '~/types/taxonomy';
 import { createGroupApi, DEFAULT_GROUP_API_DEPS, DEFAULT_GROUP_POLICY, GroupApiContext, GroupApiDependencies, GroupPolicy } from '~/worldkit/entity/group/api/api';
 import { Transform } from '~/worldkit/entity/group/factory';
 
@@ -29,6 +30,7 @@ export type PartyApi = {
   getInvitations: (party: Party) => Record<ActorURN, number>;
   cleanupExpiredInvitations: (party: Party) => void;
   refreshParty: (party: Party) => void;
+  cleanupExpiredParties: () => Party[];
 };
 
 export type PartyPolicy = GroupPolicy & {
@@ -165,6 +167,43 @@ export const createPartyApi = (
     return group;
   };
 
+  const cleanupExpiredParties = (): Party[] => {
+    const expiredParties: Party[] = [];
+
+    // Single pass through all groups - zero intermediate allocations
+    for (const groupId in context.world.groups) {
+      const group = context.world.groups[groupId as GroupURN<GroupType>];
+
+      // Skip non-parties early
+      if (group.kind !== GroupType.PARTY) {
+        continue;
+      }
+
+      const party = group;
+      const hasMembers = party.size > 0;
+
+      // Skip parties with members - no cleanup needed
+      if (hasMembers) continue;
+
+      // Clean up expired invitations in-place and check if any remain
+      cleanupExpiredInvitations(party);
+      const hasValidInvitations = doesPlainObjectHaveAnyProperty(party.invitations);
+
+      // Skip if party still has valid invitations
+      if (hasValidInvitations) continue;
+
+      // Party is expired - clean it up
+      const removalResult = removePartyMember(party, party.owner);
+
+      // Track parties that were actually disbanded
+      if (removalResult.wasPartyDisbanded) {
+        expiredParties.push(party);
+      }
+    }
+
+    return expiredParties;
+  };
+
   return {
     createParty,
     getParty: getGroup,
@@ -180,5 +219,6 @@ export const createPartyApi = (
     isInvited: isInvited,
     getInvitations: getInvitations,
     cleanupExpiredInvitations: cleanupExpiredInvitations,
+    cleanupExpiredParties,
   };
 };

@@ -73,7 +73,9 @@ import {
   narrateActorDidRejectPartyInvitation,
   narrateActorDidJoinParty,
   narrateActorDidLeaveParty,
-  narrateActorDidInspectParty
+  narrateActorDidInspectParty,
+  narratePartyDidExpire,
+  narratePartyInvitationDidFail
 } from './party';
 
 export const en_US: LanguageTemplates = {
@@ -91,8 +93,6 @@ export const en_US: LanguageTemplates = {
   [EventType.ACTOR_DID_EQUIP_WEAPON]: NOT_IMPLEMENTED,
   [EventType.ACTOR_DID_UNEQUIP_WEAPON]: NOT_IMPLEMENTED,
   [EventType.ACTOR_DID_ASSESS_SHELL_STATUS]: narrateActorDidAssessShellStatus,
-
-
   [EventType.ACTOR_DID_SAY]: narrateActorDidSay,
 
   // Look Events
@@ -152,4 +152,6 @@ export const en_US: LanguageTemplates = {
   [EventType.ACTOR_DID_LEAVE_PARTY]: narrateActorDidLeaveParty,
   [EventType.ACTOR_DID_INSPECT_PARTY]: narrateActorDidInspectParty,
   [EventType.ACTOR_DID_LIST_PARTY_INVITATIONS]: narrateActorDidInspectParty,
+  [EventType.PARTY_DID_EXPIRE]: narratePartyDidExpire,
+  [EventType.PARTY_INVITATION_DID_FAIL]: narratePartyInvitationDidFail,
 };

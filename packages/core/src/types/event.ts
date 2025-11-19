@@ -18,7 +18,7 @@ import { WellKnownActor } from '~/types/actor';
 import { ShellStats } from '~/types/entity/actor';
 import { CurrencyTransaction } from '~/types/currency';
 import { PartyLeaveReason } from '~/types/party';
-import { Party } from '~/types/entity/group';
+import { ExpirationReason, Party } from '~/types/entity/group';
 import { Narrative, NarrativeSequence } from '~/types/narrative';
 
 export type EventPayload = Record<string, any>;
@@ -148,6 +148,8 @@ export enum EventType {
   ACTOR_DID_INSPECT_PARTY = 'actor:party:members:listed',
   ACTOR_DID_LIST_PARTY_INVITATIONS = 'actor:party:invitations:listed',
   ACTOR_DID_SAY = 'actor:said',
+  PARTY_DID_EXPIRE = 'party:expired',
+  PARTY_INVITATION_DID_FAIL = 'party:invitation:failed',
 }
 
 export type EventBase = {
@@ -728,25 +730,52 @@ export type ActorDidSayInput = AbstractWorldEventInput<
   }
 >;
 
+export type PartyDidExpire = EventBase & PartyDidExpireInput;
+export type PartyDidExpireInput = AbstractWorldEventInput<
+  EventType.PARTY_DID_EXPIRE,
+  {
+    partyId: PartyURN;
+    reason: ExpirationReason;
+  }
+>;
+
+export type PartyInvitationDidFail = EventBase & PartyInvitationDidFailInput;
+export type PartyInvitationDidFailInput = AbstractWorldEventInput<
+  EventType.PARTY_INVITATION_DID_FAIL,
+  {
+    partyId: PartyURN;
+    inviteeId: ActorURN;
+    reason: string;
+  }
+>;
+
 /**
  * Union of all valid event inputs
  */
 export type WorldEventInput =
+  | ActorDidAcceptPartyInvitationInput
   | ActorDidAcquireTargetInput
   | ActorDidArriveInput
   | ActorDidAssessRangeInput
+  | ActorDidAssessShellStatusInput
   | ActorDidAttackInput
   | ActorDidCommitShellMutationsInput
   | ActorDidCompleteCurrencyTransactionInput
+  | ActorDidCreatePartyInput
   | ActorDidDefendInput
   | ActorDidDematerializeInput
   | ActorDidDepartInput
   | ActorDidDieInput
   | ActorDidDiffShellMutationsInput
+  | ActorDidDisbandPartyInput
   | ActorDidEquipWeaponInput
   | ActorDidExamineComponentInput
   | ActorDidGainAmmoInput
+  | ActorDidInspectPartyInput
   | ActorDidInspectShellStatusInput
+  | ActorDidIssuePartyInvitationInput
+  | ActorDidJoinPartyInput
+  | ActorDidLeavePartyInput
   | ActorDidListInventoryComponentsInput
   | ActorDidListInventoryMaterialsInput
   | ActorDidListShellComponentsInput
@@ -758,7 +787,11 @@ export type WorldEventInput =
   | ActorDidMoveInCombatInput
   | ActorDidMoveInput
   | ActorDidOpenHelpFileInput
+  | ActorDidReceivePartyInvitationInput
+  | ActorDidRejectPartyInvitationInput
+  | ActorDidRenameShellInput
   | ActorDidReviewShellStatsInput
+  | ActorDidSay
   | ActorDidStageShellMutationInput
   | ActorDidSwapShellInput
   | ActorDidUndoShellMutationsInput
@@ -771,23 +804,13 @@ export type WorldEventInput =
   | CombatSessionStatusDidChangeInput
   | CombatTurnDidEndInput
   | CombatTurnDidStartInput
+  | PartyDidExpireInput
+  | PartyInvitationDidFailInput
   | PlaceWasCreatedInput
   | ResourcesDidChangeInput
   | WeatherDidChangeInput
   | WorkbenchSessionDidEndInput
   | WorkbenchSessionDidStartInput
-  | ActorDidCreatePartyInput
-  | ActorDidDisbandPartyInput
-  | ActorDidIssuePartyInvitationInput
-  | ActorDidReceivePartyInvitationInput
-  | ActorDidAcceptPartyInvitationInput
-  | ActorDidRejectPartyInvitationInput
-  | ActorDidJoinPartyInput
-  | ActorDidLeavePartyInput
-  | ActorDidInspectPartyInput
-  | ActorDidRenameShellInput
-  | ActorDidAssessShellStatusInput
-  | ActorDidSay
   ;
 
 /**

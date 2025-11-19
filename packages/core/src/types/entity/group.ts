@@ -99,3 +99,11 @@ export type Faction = AbstractGroup<GroupType.FACTION>;
  * Use this type when working with groups in a generic way.
  */
 export type Group = Party | Faction;
+
+export enum ExpirationReason {
+  EXPIRED = 'expired',
+}
+
+export enum PartyInvitationFailureReason {
+  INVITEE_ALREADY_IN_PARTY = 'invitee_already_in_party',
+}

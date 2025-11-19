@@ -86,3 +86,15 @@ function mergeObject(target: Record<string, any>, source: Record<string, any>): 
     }
   }
 }
+
+/**
+ * Determines if a plain object has any properties.
+ * @param plainObj - The plain object to check.
+ * @returns True if the object has any properties, false otherwise.
+ */
+export const doesPlainObjectHaveAnyProperty = (plainObj: object): boolean => {
+  for (const _ in plainObj) {
+    return true;
+  }
+  return false;
+}

@@ -7,7 +7,9 @@ import {
   ActorDidRejectPartyInvitation,
   ActorDidJoinParty,
   ActorDidLeaveParty,
-  ActorDidInspectParty
+  ActorDidInspectParty,
+  PartyDidExpire,
+  PartyInvitationDidFail
 } from '~/types/event';
 import { TemplateFunction } from '~/types/narrative';
 import { ActorURN } from '~/types/taxonomy';
@@ -242,4 +244,25 @@ export const narrateActorDidInspectParty: TemplateFunction<ActorDidInspectParty>
     self: `${members}\nInvitations:\n${invitations}`,  // Owner sees invitations
     observer: members  // Non-owners see only members
   };
+};
+
+/**
+ * Renders narrative for party expiration events
+ */
+export const narratePartyDidExpire: TemplateFunction<PartyDidExpire> = (context, event) => {
+  const { world } = context;
+  const party = world.groups[event.payload.partyId] as Party;
+
+  if (!party) {
+    return EMPTY_NARRATIVE;
+  }
+
+  return {
+    self: 'Your party has expired.',
+    observer: `${party.owner} has disbanded the party.`
+  };
+};
+
+export const narratePartyInvitationDidFail: TemplateFunction<PartyInvitationDidFail> = (context, event) => {
+  return EMPTY_NARRATIVE;
 };

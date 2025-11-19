@@ -4,7 +4,7 @@ import { GroupApiContext } from './api/api';
 import { ActorURN } from '~/types/taxonomy';
 import { createTransformerContext } from '~/worldkit/context';
 import { createTestActor } from '~/testing/world-testing';
-import { ALICE_ID, BOB_ID, CHARLIE_ID, DEFAULT_LOCATION } from '~/testing/constants';
+import { ALICE_ID, BOB_ID, CHARLIE_ID, DEFAULT_LOCATION, DEFAULT_TIMESTAMP } from '~/testing/constants';
 import { createDefaultActors } from '~/testing/actors';
 import { Actor } from '~/types/entity/actor';
 import { createWorldScenario, WorldScenarioHook } from '~/worldkit/scenario';
@@ -314,6 +314,188 @@ describe('Party API', () => {
       // Now Alice can join a party normally
       partyApi.addPartyMember(party1, ALICE_ID);
       expect(context.world.actors[ALICE_ID].party).toBe(party1.id);
+    });
+  });
+
+  describe('cleanupExpiredParties', () => {
+    it('should return empty array when no parties exist', () => {
+      const expiredParties = partyApi.cleanupExpiredParties();
+      expect(expiredParties).toEqual([]);
+    });
+
+    it('should not clean up parties with active members', () => {
+      const party = partyApi.createParty(alice.id);
+      partyApi.addPartyMember(party, alice.id);
+      partyApi.addPartyMember(party, bob.id);
+
+      const expiredParties = partyApi.cleanupExpiredParties();
+
+      expect(expiredParties).toEqual([]);
+      expect(context.world.groups[party.id]).toBeDefined();
+      expect(party.size).toBe(2);
+    });
+
+    it('should not clean up parties with valid invitations', () => {
+      const party = partyApi.createParty(alice.id);
+      partyApi.inviteToParty(party, bob.id);
+
+      // Verify invitation exists and is valid
+      expect(Object.keys(party.invitations)).toContain(bob.id);
+
+      const expiredParties = partyApi.cleanupExpiredParties();
+
+      expect(expiredParties).toEqual([]);
+      expect(context.world.groups[party.id]).toBeDefined();
+    });
+
+    it('should clean up parties with no members and no valid invitations', () => {
+      const party = partyApi.createParty(alice.id);
+
+      // Create a party with expired invitations by manipulating timestamps
+      const expiredTimestamp = DEFAULT_TIMESTAMP - 120000; // 2 minutes ago (assuming 60s timeout)
+      party.invitations[bob.id] = expiredTimestamp;
+      party.invitations[charlie.id] = expiredTimestamp;
+
+      const expiredParties = partyApi.cleanupExpiredParties();
+
+      expect(expiredParties).toHaveLength(1);
+      expect(expiredParties[0].id).toBe(party.id);
+
+      // Verify party was actually disbanded
+      expect(context.world.groups[party.id]).toBeUndefined();
+    });
+
+    it('should clean up multiple expired parties in single pass', () => {
+      const party1 = partyApi.createParty(alice.id);
+      const party2 = partyApi.createParty(bob.id);
+      const party3 = partyApi.createParty(charlie.id);
+
+      // Make party1 and party3 expired (no members, expired invitations)
+      const expiredTimestamp = DEFAULT_TIMESTAMP - 120000;
+      party1.invitations[bob.id] = expiredTimestamp;
+      party3.invitations[alice.id] = expiredTimestamp;
+
+      // Keep party2 alive with valid invitation
+      partyApi.inviteToParty(party2, alice.id);
+
+      const expiredParties = partyApi.cleanupExpiredParties();
+
+      expect(expiredParties).toHaveLength(2);
+      expect(expiredParties.map(p => p.id)).toContain(party1.id);
+      expect(expiredParties.map(p => p.id)).toContain(party3.id);
+
+      // Verify correct parties were disbanded
+      expect(context.world.groups[party1.id]).toBeUndefined();
+      expect(context.world.groups[party2.id]).toBeDefined(); // Still alive
+      expect(context.world.groups[party3.id]).toBeUndefined();
+    });
+
+    it('should clean up expired invitations during the process', () => {
+      const party = partyApi.createParty(alice.id);
+
+      // Add mix of valid and expired invitations
+      const validTimestamp = DEFAULT_TIMESTAMP - 30000; // 30s ago (valid)
+      const expiredTimestamp = DEFAULT_TIMESTAMP - 120000; // 2 minutes ago (expired)
+
+      party.invitations[bob.id] = validTimestamp;
+      party.invitations[charlie.id] = expiredTimestamp;
+
+      // Should not be cleaned up because it has valid invitation
+      const expiredParties = partyApi.cleanupExpiredParties();
+
+      expect(expiredParties).toEqual([]);
+      expect(context.world.groups[party.id]).toBeDefined();
+
+      // But expired invitation should be cleaned up
+      expect(party.invitations[bob.id]).toBe(validTimestamp); // Still there
+      expect(party.invitations[charlie.id]).toBeUndefined(); // Cleaned up
+    });
+
+    it('should handle parties that become expired after invitation cleanup', () => {
+      const party = partyApi.createParty(alice.id);
+
+      // Add only expired invitations
+      const expiredTimestamp = DEFAULT_TIMESTAMP - 120000;
+      party.invitations[bob.id] = expiredTimestamp;
+      party.invitations[charlie.id] = expiredTimestamp;
+
+      const expiredParties = partyApi.cleanupExpiredParties();
+
+      expect(expiredParties).toHaveLength(1);
+      expect(expiredParties[0].id).toBe(party.id);
+      expect(context.world.groups[party.id]).toBeUndefined();
+    });
+
+    it('should clear actor.party fields when disbanding expired parties', () => {
+      const party = partyApi.createParty(alice.id);
+      partyApi.addPartyMember(party, alice.id);
+
+      // Verify actor.party is set
+      expect(context.world.actors[alice.id].party).toBe(party.id);
+
+      // Remove alice to make party empty, then add expired invitations
+      partyApi.removePartyMember(party, alice.id);
+      const expiredTimestamp = DEFAULT_TIMESTAMP - 120000;
+      party.invitations[bob.id] = expiredTimestamp;
+
+      const expiredParties = partyApi.cleanupExpiredParties();
+
+      expect(expiredParties).toHaveLength(1);
+
+      // Verify actor.party field was cleared (though alice was already removed)
+      expect(context.world.actors[alice.id].party).toBeUndefined();
+    });
+
+    it('should handle edge case of empty party with no invitations', () => {
+      const party = partyApi.createParty(alice.id);
+      partyApi.addPartyMember(party, alice.id);
+      partyApi.removePartyMember(party, alice.id);
+
+      // Party now has no members and no invitations
+      expect(party.size).toBe(0);
+      expect(Object.keys(party.invitations)).toHaveLength(0);
+
+      const expiredParties = partyApi.cleanupExpiredParties();
+
+      // Should not be cleaned up because it never had invitations
+      // (not an "ephemeral" party that was created via invitation)
+      expect(expiredParties).toEqual([]);
+      expect(context.world.groups[party.id]).toBeDefined();
+    });
+
+    it('should be performant with large number of parties', () => {
+      // Create many parties of different states
+      const parties = [];
+      for (let i = 0; i < 100; i++) {
+        const actorId = `flux:actor:test${i}` as ActorURN;
+        const actor = createTestActor({ id: actorId });
+        context.world.actors[actorId] = actor;
+
+        const party = partyApi.createParty(actorId);
+        parties.push(party);
+
+        if (i % 3 === 0) {
+          // Every 3rd party: add member (should not be cleaned)
+          partyApi.addPartyMember(party, actorId);
+        } else if (i % 3 === 1) {
+          // Every 3rd party: add valid invitation (should not be cleaned)
+          partyApi.inviteToParty(party, actorId);
+        } else {
+          // Every 3rd party: add expired invitation (should be cleaned)
+          const expiredTimestamp = DEFAULT_TIMESTAMP - 120000;
+          party.invitations[actorId] = expiredTimestamp;
+        }
+      }
+
+      const startTime = performance.now();
+      const expiredParties = partyApi.cleanupExpiredParties();
+      const endTime = performance.now();
+
+      // Should clean up ~33 parties (every 3rd one)
+      expect(expiredParties).toHaveLength(Math.floor(100 / 3));
+
+      // Should be fast (single pass algorithm)
+      expect(endTime - startTime).toBeLessThan(10); // Less than 10ms
     });
   });
 });
