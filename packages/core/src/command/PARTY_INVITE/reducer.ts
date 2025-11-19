@@ -12,24 +12,15 @@ const reducerCore: PureReducer<TransformerContext, PartyInviteCommand> = (contex
   const { world, failed, partyApi, declareEvent } = context;
   const owner = world.actors[command.actor];
 
-  console.log(`[PARTY_INVITE_DEBUG] *** PROCESSING COMMAND ${command.id} *** actor=${command.actor}, owner.party=${owner.party}`);
-
   let party: Party | undefined = owner.party ? world.groups[owner.party] as Party : undefined;
 
-  console.log(`[PARTY_INVITE_DEBUG] Command ${command.id}: party lookup result=${party ? party.id : 'undefined'}`);
-
   if (party) {
-    console.log(`[PARTY_INVITE_DEBUG] Command ${command.id}: using existing party ${party.id}, owner=${party.owner}`);
     if (party.owner !== owner.id) {
       return failed(command.id, ErrorCode.FORBIDDEN);
     }
   } else {
-    console.log(`[PARTY_INVITE_DEBUG] Command ${command.id}: creating new party for ${owner.id}`);
-
     // Create the party with the inviting actor as the owner
     party = context.partyApi.createParty(owner.id);
-
-    console.log(`[PARTY_INVITE_DEBUG] Command ${command.id}: created party ${party.id}, owner.party now=${owner.party}`);
 
     const partyCreatedEvent: ActorDidCreateParty = createWorldEvent({
       type: EventType.ACTOR_DID_CREATE_PARTY,
@@ -41,7 +32,6 @@ const reducerCore: PureReducer<TransformerContext, PartyInviteCommand> = (contex
       },
     });
 
-    console.log(`[PARTY_INVITE_DEBUG] Command ${command.id}: declaring ACTOR_DID_CREATE_PARTY event for party ${party.id}`);
     declareEvent(partyCreatedEvent);
   }
 
@@ -75,14 +65,6 @@ const reducerCore: PureReducer<TransformerContext, PartyInviteCommand> = (contex
     actor: invitee.id, // The invitee is the one receiving the invitation
     location: invitee.location,
     payload,
-  });
-
-  console.log(`[PARTY_INVITE_DEBUG] Command ${command.id}: completed, final party=${party.id}, total declared events=${context.getDeclaredEvents().length}`);
-
-  const partyCreationEvents = context.getDeclaredEvents().filter(e => e.type === EventType.ACTOR_DID_CREATE_PARTY);
-  console.log(`[PARTY_INVITE_DEBUG] Command ${command.id}: total ACTOR_DID_CREATE_PARTY events declared so far: ${partyCreationEvents.length}`);
-  partyCreationEvents.forEach((event: any, index) => {
-    console.log(`[PARTY_INVITE_DEBUG] Command ${command.id}: ACTOR_DID_CREATE_PARTY[${index}]: actor=${event.actor}, partyId=${event.payload.partyId}, trace=${event.trace}`);
   });
 
   return context;
