@@ -18,7 +18,7 @@ import { SessionStrategy } from '~/types/entity/session';
 const unequipOutsideOfCombat: Transformer<UnequipCommand> = (context, command) => {
   const { world, failed, equipmentApi, declareEvent } = context;
   const actor = world.actors[command.actor];
-  const item = actor.inventory.items[command.args.item];
+  const item = actor.inventory.items[command.args.item!];
 
   if (!item) {
     return failed(command.id, ErrorCode.ITEM_NOT_FOUND);

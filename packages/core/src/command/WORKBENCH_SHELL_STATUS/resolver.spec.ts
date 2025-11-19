@@ -31,7 +31,7 @@ describe('WORKBENCH_SHELL_STATUS resolver', () => {
       }
     });
 
-    const resolverContext = createCommandResolverContext(scenario.context);
+    const resolverContext = createCommandResolverContext();
     const intent = createTestIntent('shell status');
 
     const command = shellStatusResolver(resolverContext, intent);
@@ -50,7 +50,7 @@ describe('WORKBENCH_SHELL_STATUS resolver', () => {
       }
     });
 
-    const resolverContext = createCommandResolverContext(scenario.context);
+    const resolverContext = createCommandResolverContext();
     const intent = createTestIntent('shell stat');
 
     const command = shellStatusResolver(resolverContext, intent);
@@ -69,7 +69,7 @@ describe('WORKBENCH_SHELL_STATUS resolver', () => {
       }
     });
 
-    const resolverContext = createCommandResolverContext(scenario.context);
+    const resolverContext = createCommandResolverContext();
     const intent = createTestIntent('weapon status');
 
     const command = shellStatusResolver(resolverContext, intent);
@@ -85,7 +85,7 @@ describe('WORKBENCH_SHELL_STATUS resolver', () => {
       }
     });
 
-    const resolverContext = createCommandResolverContext(scenario.context);
+    const resolverContext = createCommandResolverContext();
     const intent = createTestIntent('shell create');
 
     const command = shellStatusResolver(resolverContext, intent);
@@ -101,7 +101,7 @@ describe('WORKBENCH_SHELL_STATUS resolver', () => {
       }
     });
 
-    const resolverContext = createCommandResolverContext(scenario.context);
+    const resolverContext = createCommandResolverContext();
     const intent = createTestIntent('shell status detailed');
 
     const command = shellStatusResolver(resolverContext, intent);
@@ -117,7 +117,7 @@ describe('WORKBENCH_SHELL_STATUS resolver', () => {
       }
     });
 
-    const resolverContext = createCommandResolverContext(scenario.context);
+    const resolverContext = createCommandResolverContext();
     const intent = createTestIntent('shell');
 
     const command = shellStatusResolver(resolverContext, intent);
@@ -133,7 +133,7 @@ describe('WORKBENCH_SHELL_STATUS resolver', () => {
       }
     });
 
-    const resolverContext = createCommandResolverContext(scenario.context);
+    const resolverContext = createCommandResolverContext();
     const intent = createTestIntent('shell info');
 
     const command = shellStatusResolver(resolverContext, intent);

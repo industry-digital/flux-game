@@ -37,7 +37,7 @@ describe('WORKBENCH_SHELL_ATTRIBUTE_ADD resolver', () => {
     createWorldScenario(context, {
       actors: [createActor({ id: ALICE_ID, name: 'Alice' })],
     });
-    resolverContext = createCommandResolverContext(context);
+    resolverContext = createCommandResolverContext();
   });
 
   describe('Valid Syntax', () => {

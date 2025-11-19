@@ -47,7 +47,7 @@ describe('CREDIT Command Parser', () => {
       })),
     });
 
-    parserContext = createCommandResolverContext(context);
+    parserContext = createCommandResolverContext();
   });
 
   describe('Basic Functionality', () => {

@@ -7,7 +7,7 @@ import { createActor } from '~/worldkit/entity/actor';
 import { createPlace } from '~/worldkit/entity/place';
 import { ALICE_ID, BOB_ID, DEFAULT_LOCATION, DEFAULT_TIMESTAMP } from '~/testing/constants';
 import { CommandType } from '~/types/intent';
-import { ActorDidCreateParty, ActorDidIssuePartyInvitation, ActorDidReceivePartyInvitation, EventType } from '~/types/event';
+import { ActorDidCreateParty, ActorDidReceivePartyInvitation, EventType } from '~/types/event';
 import { createActorCommand } from '~/lib/intent';
 import { extractFirstEventOfType } from '~/testing/event';
 
@@ -58,9 +58,9 @@ describe('PARTY_INVITE Reducer', () => {
     const errors = result.getDeclaredErrors();
     expect(errors).toHaveLength(0);
 
-    // Should emit party creation, issue invitation, and receive invitation events
+    // Should emit both party creation and invitation events
     const events = result.getDeclaredEvents();
-    expect(events).toHaveLength(3);
+    expect(events).toHaveLength(2);
 
     // Verify party creation event
     const partyCreatedEvent = extractFirstEventOfType<ActorDidCreateParty>(events, EventType.ACTOR_DID_CREATE_PARTY)!;
@@ -70,25 +70,14 @@ describe('PARTY_INVITE Reducer', () => {
     expect(partyCreatedEvent.location).toBe(DEFAULT_LOCATION);
     expect(partyCreatedEvent.payload.partyId).toBeDefined();
 
-    // Verify invitation issued event
-    const invitationIssuedEvent = extractFirstEventOfType<ActorDidIssuePartyInvitation>(events, EventType.ACTOR_DID_ISSUE_PARTY_INVITATION)!;
-    expect(invitationIssuedEvent).toBeDefined();
-    expect(invitationIssuedEvent.actor).toBe(ALICE_ID); // Alice issues the invitation
-    expect(invitationIssuedEvent.trace).toBe(command.id);
-    expect(invitationIssuedEvent.location).toBe(DEFAULT_LOCATION);
-    expect(invitationIssuedEvent.payload.inviterId).toBe(ALICE_ID);
-    expect(invitationIssuedEvent.payload.inviteeId).toBe(BOB_ID);
-    expect(invitationIssuedEvent.payload.partyId).toBe(partyCreatedEvent.payload.partyId);
-
     // Verify invitation received event
     const invitationEvent = extractFirstEventOfType<ActorDidReceivePartyInvitation>(events, EventType.ACTOR_DID_RECEIVE_PARTY_INVITATION)!;
     expect(invitationEvent).toBeDefined();
     expect(invitationEvent.actor).toBe(BOB_ID); // Bob receives the invitation
     expect(invitationEvent.payload.inviteeId).toBe(BOB_ID);
 
-    // All events should reference the same party
+    // Both events should reference the same party
     expect(invitationEvent.payload.partyId).toBe(partyCreatedEvent.payload.partyId);
-    expect(invitationIssuedEvent.payload.partyId).toBe(partyCreatedEvent.payload.partyId);
 
     // Alice should now have a party
     const alice = result.world.actors[ALICE_ID];
@@ -118,21 +107,13 @@ describe('PARTY_INVITE Reducer', () => {
     const errors = result.getDeclaredErrors();
     expect(errors).toHaveLength(0);
 
-    // Should emit invitation issued and received events (no party creation since party already exists)
+    // Should emit only invitation event (no party creation since party already exists)
     const events = result.getDeclaredEvents();
-    expect(events).toHaveLength(2);
+    expect(events).toHaveLength(1);
 
     // Should NOT emit party creation event
     const partyCreatedEvents = events.filter(e => e.type === EventType.ACTOR_DID_CREATE_PARTY);
     expect(partyCreatedEvents).toHaveLength(0);
-
-    // Should emit invitation issued event
-    const invitationIssuedEvent = extractFirstEventOfType<ActorDidIssuePartyInvitation>(events, EventType.ACTOR_DID_ISSUE_PARTY_INVITATION)!;
-    expect(invitationIssuedEvent).toBeDefined();
-    expect(invitationIssuedEvent.actor).toBe(ALICE_ID); // Alice issues the invitation
-    expect(invitationIssuedEvent.payload.inviterId).toBe(ALICE_ID);
-    expect(invitationIssuedEvent.payload.inviteeId).toBe(BOB_ID);
-    expect(invitationIssuedEvent.payload.partyId).toBe(party.id);
 
     // Should emit invitation received event
     const invitationEvent = extractFirstEventOfType<ActorDidReceivePartyInvitation>(events, EventType.ACTOR_DID_RECEIVE_PARTY_INVITATION)!;
@@ -195,16 +176,9 @@ describe('PARTY_INVITE Reducer', () => {
     const errors = result.getDeclaredErrors();
     expect(errors).toHaveLength(0);
 
-    // Should emit both invitation issued and received events (invitation timestamp is refreshed)
+    // Should emit the invitation event (invitation timestamp is refreshed)
     const events = result.getDeclaredEvents();
-    expect(events).toHaveLength(2);
-
-    const invitationIssuedEvent = extractFirstEventOfType<ActorDidIssuePartyInvitation>(events, EventType.ACTOR_DID_ISSUE_PARTY_INVITATION)!;
-    expect(invitationIssuedEvent).toBeDefined();
-    expect(invitationIssuedEvent.actor).toBe(ALICE_ID);
-
-    const invitationReceivedEvent = extractFirstEventOfType<ActorDidReceivePartyInvitation>(events, EventType.ACTOR_DID_RECEIVE_PARTY_INVITATION)!;
-    expect(invitationReceivedEvent).toBeDefined();
-    expect(invitationReceivedEvent.actor).toBe(BOB_ID);
+    expect(events).toHaveLength(1);
+    expect(events[0].type).toBe(EventType.ACTOR_DID_RECEIVE_PARTY_INVITATION);
   });
 });

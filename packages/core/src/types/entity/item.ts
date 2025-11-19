@@ -18,6 +18,15 @@ export interface ItemState {
    * This is a normalized value between 0 and 1, where 1 is perfect condition and 0 is broken/unusable.
    */
   condition: NormalizedValueBetweenZeroAndOne;
+
+  /**
+   * Player-assigned labels
+   *   {
+   *     ["main"]: 1,
+   *     ["two-handed"]: 1,
+   *   }
+   */
+  labels: Record<string, 1>;
 }
 
 /**

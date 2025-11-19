@@ -31,7 +31,7 @@ describe('WORKBENCH_SHELL_LIST resolver', () => {
       }
     });
 
-    const resolverContext = createCommandResolverContext(scenario.context);
+    const resolverContext = createCommandResolverContext();
     const intent = createTestIntent('shell list');
 
     const command = listShellsResolver(resolverContext, intent);
@@ -50,7 +50,7 @@ describe('WORKBENCH_SHELL_LIST resolver', () => {
       }
     });
 
-    const resolverContext = createCommandResolverContext(scenario.context);
+    const resolverContext = createCommandResolverContext();
     const intent = createTestIntent('shell ls');
 
     const command = listShellsResolver(resolverContext, intent);
@@ -67,7 +67,7 @@ describe('WORKBENCH_SHELL_LIST resolver', () => {
       }
     });
 
-    const resolverContext = createCommandResolverContext(scenario.context);
+    const resolverContext = createCommandResolverContext();
     const intent = createTestIntent('weapon list');
 
     const command = listShellsResolver(resolverContext, intent);
@@ -83,7 +83,7 @@ describe('WORKBENCH_SHELL_LIST resolver', () => {
       }
     });
 
-    const resolverContext = createCommandResolverContext(scenario.context);
+    const resolverContext = createCommandResolverContext();
     const intent = createTestIntent('shell create');
 
     const command = listShellsResolver(resolverContext, intent);
@@ -99,7 +99,7 @@ describe('WORKBENCH_SHELL_LIST resolver', () => {
       }
     });
 
-    const resolverContext = createCommandResolverContext(scenario.context);
+    const resolverContext = createCommandResolverContext();
     const intent = createTestIntent('shell list all shells');
 
     const command = listShellsResolver(resolverContext, intent);
@@ -115,7 +115,7 @@ describe('WORKBENCH_SHELL_LIST resolver', () => {
       }
     });
 
-    const resolverContext = createCommandResolverContext(scenario.context);
+    const resolverContext = createCommandResolverContext();
     const intent = createTestIntent('shell');
 
     const command = listShellsResolver(resolverContext, intent);

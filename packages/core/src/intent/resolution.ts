@@ -2,9 +2,9 @@ import { TransformerContext, PureHandlerInterface } from '~/types/handler';
 import { Command, Intent } from '~/types/intent';
 import { ActorURN } from '~/types/taxonomy';
 import { PURE_GAME_LOGIC_HANDLERS } from '~/handlers';
-import { createEntityResolverApi } from './resolvers';
 import { createIntent } from './factory';
 import { CommandResolver, CommandResolverContext } from '~/types/intent';
+import { ErrorCode } from '~/types/error';
 
 const RESOLVERS: CommandResolver[] = (() => {
   const resolvers: CommandResolver[] = [];
@@ -20,14 +20,19 @@ const RESOLVERS: CommandResolver[] = (() => {
   return resolvers;
 })();
 
-export const createCommandResolverContext = (input: TransformerContext): CommandResolverContext => {
-  const resolvers = createEntityResolverApi(input);
-  return {
-    ...input,
-    ...resolvers,
-  };
-};
+// No-op
+const DEFAULT_DECLARE_ERROR = (message: ErrorCode, trace?: string) => {};
 
+export const createCommandResolverContext = (
+  declareError: (message: ErrorCode, trace?: string) => void = DEFAULT_DECLARE_ERROR,
+  log?: any,
+): CommandResolverContext => {
+  const failed = (trace: string, code: ErrorCode) => {
+    declareError(code, trace);
+    log?.error(code, trace);
+  };
+  return { failed, declareError };
+};
 
 export type CommandResolutionDependencies = {
   resolvers: CommandResolver[];
@@ -48,18 +53,15 @@ export const DEFAULT_COMMAND_RESOLUTION_DEPENDENCIES: CommandResolutionDependenc
  * @returns Well-formed Command or null if intent couldn't be resolved
  */
 export function resolveCommandFromIntent(
-  context: TransformerContext,
+  context: CommandResolverContext,
   intent: Intent,
   {
     resolvers,
   }: CommandResolutionDependencies = DEFAULT_COMMAND_RESOLUTION_DEPENDENCIES,
 ): Command | null {
-  // Create parser context
-  const resolverContext = createCommandResolverContext(context);
-
   // Try each parser until one succeeds
   for (const resolveCommand of resolvers) {
-    const command = resolveCommand(resolverContext, intent);
+    const command = resolveCommand(context, intent);
     if (command) {
       return command;
     }

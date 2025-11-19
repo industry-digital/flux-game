@@ -31,8 +31,10 @@ export const debitResolver: CommandResolver<DebitCommand> = (
   const [recipient, currencyType, amountString] = intent.tokens;
   // Pure syntax-only resolution - no world validation
   const recipientId = resolveActorUrn(recipient);
-  // Note: recipientId will always be valid since resolveActorUrn is pure
-  // World validation (actor existence) happens in the reducer
+  if (!recipientId) {
+    declareError(ErrorCode.INVALID_TARGET, intent.id);
+    return undefined;
+  }
 
   const amount = parseSafeInteger(amountString);
   if (amount === undefined) {

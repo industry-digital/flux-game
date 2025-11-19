@@ -101,7 +101,9 @@ const lookReducerCore: PureReducer<TransformerContext, LookCommand> = (context, 
     return failed(command.id, ErrorCode.INVALID_SYNTAX);
   }
 
-  const entityType = parseEntityTypeFromURN(command.args.target);
+  // FIXME: `target` arg is not guaranteed to be an entity URN. We have to perform a search
+  // and match the `target` token with world entities.
+  const entityType = parseEntityTypeFromURN(command.args.target as ItemURN | ActorURN | PlaceURN);
 
   switch (entityType) {
     case EntityType.ACTOR:

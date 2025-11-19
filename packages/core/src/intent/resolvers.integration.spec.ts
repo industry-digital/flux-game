@@ -178,14 +178,14 @@ describe('URN Resolution Integration Scenarios', () => {
 
         if ('target' in cmd) {
           // Determine target type based on command type or prefix
-          if (cmd.type === 'look' && cmd.target.startsWith('p:')) {
-            resolved.target = resolvePlaceUrn(cmd.target);
+          if (cmd.type === 'look' && cmd.target?.startsWith('p:')) {
+            resolved.target = resolvePlaceUrn(cmd.target!);
           } else {
-            resolved.target = resolveActorUrn(cmd.target);
+            resolved.target = resolveActorUrn(cmd.target!);
           }
         }
         if ('item' in cmd) {
-          resolved.item = resolveItemUrn(cmd.item);
+          resolved.item = resolveItemUrn(cmd.item!);
         }
 
         return resolved;

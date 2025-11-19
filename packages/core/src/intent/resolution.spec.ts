@@ -141,38 +141,9 @@ describe('Intent Resolution', () => {
 
   describe('createCommandResolverContext', () => {
     it('should create parser context with entity resolvers', () => {
-      const parserContext = createCommandResolverContext(context);
-
-      expect(parserContext).toHaveProperty('world');
-      expect(parserContext).toHaveProperty('uniqid');
-      expect(parserContext).toHaveProperty('timestamp');
-      expect(parserContext).toHaveProperty('resolveActor');
-      expect(parserContext).toHaveProperty('resolvePlace');
-      expect(parserContext).toHaveProperty('resolveItem');
-    });
-
-    it('should resolve actors by name', () => {
-      const parserContext = createCommandResolverContext(context);
-      const intent = createIntent({
-        actor: ACTOR_ID,
-        location: PLACE_ID,
-        text: 'attack bob',
-      });
-      const resolvedActor = parserContext.resolveActor(intent, 'Bob');
-
-      expect(resolvedActor?.id).toBe(TARGET_ID);
-    });
-
-    it('should resolve actors by exact name match', () => {
-      const parserContext = createCommandResolverContext(context);
-      const intent = createIntent({
-        actor: ACTOR_ID,
-        location: PLACE_ID,
-        text: 'attack Bob', // Using exact name match
-      });
-      const resolvedActor = parserContext.resolveActor(intent, 'Bob');
-
-      expect(resolvedActor?.id).toBe(TARGET_ID);
+      const parserContext = createCommandResolverContext();
+      expect(parserContext).toHaveProperty('declareError');
+      expect(parserContext).toHaveProperty('failed');
     });
   });
 

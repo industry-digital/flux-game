@@ -42,7 +42,7 @@ describe('WORKBENCH_SHELL_RENAME Resolver', () => {
 
   describe('valid rename commands', () => {
     it('should resolve "shell rename <new-name>" (rename current shell)', () => {
-      const resolverContext = createCommandResolverContext(scenario.context);
+      const resolverContext = createCommandResolverContext();
       const intent = createTestIntent('shell rename NewShellName');
       const command = renameShellResolver(resolverContext, intent)!;
 
@@ -57,7 +57,7 @@ describe('WORKBENCH_SHELL_RENAME Resolver', () => {
     });
 
     it('should resolve "shell rename <shell-id> <new-name>"', () => {
-      const resolverContext = createCommandResolverContext(scenario.context);
+      const resolverContext = createCommandResolverContext();
       const intent = createTestIntent('shell rename shell123 NewShellName');
       const command = renameShellResolver(resolverContext, intent);
 
@@ -72,7 +72,7 @@ describe('WORKBENCH_SHELL_RENAME Resolver', () => {
     });
 
     it('should resolve "shell rename <shell-id> to <new-name>"', () => {
-      const resolverContext = createCommandResolverContext(scenario.context);
+      const resolverContext = createCommandResolverContext();
       const intent = createTestIntent('shell rename shell123 to NewShellName');
       const command = renameShellResolver(resolverContext, intent);
 
@@ -87,7 +87,7 @@ describe('WORKBENCH_SHELL_RENAME Resolver', () => {
     });
 
     it('should handle "to" syntax correctly', () => {
-      const resolverContext = createCommandResolverContext(scenario.context);
+      const resolverContext = createCommandResolverContext();
       const intent = createTestIntent('shell rename OldShell to NewShell');
       const command = renameShellResolver(resolverContext, intent);
 
@@ -99,7 +99,7 @@ describe('WORKBENCH_SHELL_RENAME Resolver', () => {
     });
 
     it('should handle numeric shell IDs', () => {
-      const resolverContext = createCommandResolverContext(scenario.context);
+      const resolverContext = createCommandResolverContext();
       const intent = createTestIntent('shell rename 123 NewName');
       const command = renameShellResolver(resolverContext, intent);
 
@@ -113,56 +113,56 @@ describe('WORKBENCH_SHELL_RENAME Resolver', () => {
 
   describe('invalid commands', () => {
     it('should reject commands with wrong verb', () => {
-      const resolverContext = createCommandResolverContext(scenario.context);
+      const resolverContext = createCommandResolverContext();
       const intent = createTestIntent('weapon rename NewName');
       const command = renameShellResolver(resolverContext, intent);
       expect(command).toBeUndefined();
     });
 
     it('should reject commands with wrong action', () => {
-      const resolverContext = createCommandResolverContext(scenario.context);
+      const resolverContext = createCommandResolverContext();
       const intent = createTestIntent('shell delete OldName');
       const command = renameShellResolver(resolverContext, intent);
       expect(command).toBeUndefined();
     });
 
     it('should reject commands with insufficient tokens', () => {
-      const resolverContext = createCommandResolverContext(scenario.context);
+      const resolverContext = createCommandResolverContext();
       const intent = createTestIntent('shell rename');
       const command = renameShellResolver(resolverContext, intent);
       expect(command).toBeUndefined();
     });
 
     it('should reject commands with only one token after "rename"', () => {
-      const resolverContext = createCommandResolverContext(scenario.context);
+      const resolverContext = createCommandResolverContext();
       const intent = createTestIntent('shell');
       const command = renameShellResolver(resolverContext, intent);
       expect(command).toBeUndefined();
     });
 
     it('should reject commands with too many tokens (5+ tokens)', () => {
-      const resolverContext = createCommandResolverContext(scenario.context);
+      const resolverContext = createCommandResolverContext();
       const intent = createTestIntent('shell rename old to new extra');
       const command = renameShellResolver(resolverContext, intent);
       expect(command).toBeUndefined();
     });
 
     it('should reject 4-token commands without "to" keyword', () => {
-      const resolverContext = createCommandResolverContext(scenario.context);
+      const resolverContext = createCommandResolverContext();
       const intent = createTestIntent('shell rename old shell new');
       const command = renameShellResolver(resolverContext, intent);
       expect(command).toBeUndefined();
     });
 
     it('should reject commands with invalid shell names (only special characters)', () => {
-      const resolverContext = createCommandResolverContext(scenario.context);
+      const resolverContext = createCommandResolverContext();
       const intent = createTestIntent('shell rename !@#$%');
       const command = renameShellResolver(resolverContext, intent);
       expect(command).toBeUndefined();
     });
 
     it('should reject commands with shell names that are too long', () => {
-      const resolverContext = createCommandResolverContext(scenario.context);
+      const resolverContext = createCommandResolverContext();
       const longName = 'a'.repeat(51);
       const intent = createTestIntent(`shell rename ${longName}`);
       const command = renameShellResolver(resolverContext, intent);
@@ -172,7 +172,7 @@ describe('WORKBENCH_SHELL_RENAME Resolver', () => {
 
   describe('edge cases', () => {
     it('should reject empty new name in 2-token format', () => {
-      const resolverContext = createCommandResolverContext(scenario.context);
+      const resolverContext = createCommandResolverContext();
       const intent = createTestIntent('shell rename ""');
       const command = renameShellResolver(resolverContext, intent);
 
@@ -181,7 +181,7 @@ describe('WORKBENCH_SHELL_RENAME Resolver', () => {
     });
 
     it('should handle special characters in shell names', () => {
-      const resolverContext = createCommandResolverContext(scenario.context);
+      const resolverContext = createCommandResolverContext();
       const intent = createTestIntent('shell rename shell-123_test NewName');
       const command = renameShellResolver(resolverContext, intent);
 
@@ -193,7 +193,7 @@ describe('WORKBENCH_SHELL_RENAME Resolver', () => {
     });
 
     it('should sanitize special characters in new names', () => {
-      const resolverContext = createCommandResolverContext(scenario.context);
+      const resolverContext = createCommandResolverContext();
       const intent = createTestIntent('shell rename old-shell new_name-123');
       const command = renameShellResolver(resolverContext, intent);
 
@@ -207,7 +207,7 @@ describe('WORKBENCH_SHELL_RENAME Resolver', () => {
 
   describe('command structure validation', () => {
     it('should preserve intent metadata in command', () => {
-      const resolverContext = createCommandResolverContext(scenario.context);
+      const resolverContext = createCommandResolverContext();
       const testTime = Date.now();
       const intent = createTestIntent('shell rename NewName', testTime);
       const command = renameShellResolver(resolverContext, intent);
@@ -219,7 +219,7 @@ describe('WORKBENCH_SHELL_RENAME Resolver', () => {
     });
 
     it('should include session information when present in intent', () => {
-      const resolverContext = createCommandResolverContext(scenario.context);
+      const resolverContext = createCommandResolverContext();
       const intent = createTestIntent('shell rename NewName');
       intent.session = 'flux:session:workbench:test123' as any;
       const command = renameShellResolver(resolverContext, intent);

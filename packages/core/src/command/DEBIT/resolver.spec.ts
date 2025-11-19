@@ -47,7 +47,7 @@ describe('DEBIT Command Parser', () => {
       })),
     });
 
-    parserContext = createCommandResolverContext(context);
+    parserContext = createCommandResolverContext();
   });
 
   describe('Basic Functionality', () => {
