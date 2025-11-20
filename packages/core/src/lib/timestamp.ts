@@ -27,7 +27,6 @@ export type TimestampGenerator = {
 
 const DEFAULT_FREQUENCY = 10; // milliseconds
 
-
 export const createTimestampGenerator = (
   frequency: number = DEFAULT_FREQUENCY,
   deps: TimestampGeneratorDependencies = DEFAULT_TIMESTAMP_GENERATOR_FACTORY_DEPS,
@@ -61,3 +60,9 @@ export const createTimestampGenerator = (
     stop,
   };
 };
+
+export const {
+  timestamp,
+  start: startTimestampGenerator,
+  stop: stopTimestampGenerator,
+}  = createTimestampGenerator(DEFAULT_FREQUENCY);

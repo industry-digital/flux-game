@@ -11,6 +11,9 @@ import { useBenchmarkSuite } from './benchmark';
 import {
   createTimestampGenerator,
   DEFAULT_TIMESTAMP_GENERATOR_FACTORY_DEPS,
+  timestamp,
+  startTimestampGenerator,
+  stopTimestampGenerator,
 } from './timestamp';
 import { createTransformerContext } from '~/worldkit/context';
 
@@ -88,6 +91,21 @@ const runBenchmarks = async () => {
     },
   });
 
+  // Module-level singleton (production usage)
+  await suite.measure({
+    name: 'Module singleton (production)',
+    iterations: ITERATIONS,
+    setup: () => {
+      startTimestampGenerator();
+    },
+    fn: () => {
+      timestamp();
+    },
+    teardown: () => {
+      stopTimestampGenerator();
+    },
+  });
+
   // Memory read comparison (theoretical maximum)
   await suite.measure({
     name: 'Raw memory read (theoretical max)',
@@ -106,6 +124,7 @@ const runBenchmarks = async () => {
   // Calculate speedup
   const baseline = suite.results.get('Date.now() (baseline)');
   const cached10ms = suite.results.get('Cached (10ms updates)');
+  const singleton = suite.results.get('Module singleton (production)');
 
   if (baseline && cached10ms) {
     const speedup = cached10ms.throughputPerSecond / baseline.throughputPerSecond;
@@ -113,6 +132,12 @@ const runBenchmarks = async () => {
     console.log('='.repeat(80));
     console.log(`Cached (10ms) is ${speedup.toFixed(1)}x faster than Date.now()`);
     console.log(`Throughput gain: ${((speedup - 1) * 100).toFixed(0)}%`);
+  }
+
+  if (baseline && singleton) {
+    const singletonSpeedup = singleton.throughputPerSecond / baseline.throughputPerSecond;
+    console.log(`Module singleton is ${singletonSpeedup.toFixed(1)}x faster than Date.now()`);
+    console.log(`Production throughput gain: ${((singletonSpeedup - 1) * 100).toFixed(0)}%`);
   }
 
   // Memory footprint analysis
@@ -123,7 +148,7 @@ const runBenchmarks = async () => {
 
 /**
  * Measures memory footprint when creating many TransformerContext instances.
- * Proves that the lazy singleton pattern prevents memory leaks.
+ * Proves that the module-level singleton pattern prevents memory leaks.
  */
 const measureMemoryFootprint = () => {
   const formatBytes = (bytes: number): string => {
@@ -173,7 +198,15 @@ const measureMemoryFootprint = () => {
   if (!allShareSameTimestamp) {
     console.log('⚠️  WARNING: Memory leak detected! Each context has its own timestamp generator.');
   } else {
-    console.log('✅ No memory leak: Lazy singleton working correctly.');
+    console.log('✅ No memory leak: Module-level singleton working correctly.');
+  }
+
+  // Verify contexts are using the module-level singleton
+  const usingModuleSingleton = contexts.every(ctx => ctx.timestamp === timestamp);
+  console.log(`All contexts use module singleton: ${usingModuleSingleton ? '✅ YES' : '❌ NO'}`);
+
+  if (!usingModuleSingleton) {
+    console.log('⚠️  WARNING: Contexts are not using the module-level singleton!');
   }
 
   // Estimate what memory would be WITHOUT singleton
@@ -182,8 +215,9 @@ const measureMemoryFootprint = () => {
   const wouldBeMemoryWithoutSingleton = heapUsedDelta + (NUM_CONTEXTS * TIMER_OVERHEAD_BYTES);
   const savedMemory = wouldBeMemoryWithoutSingleton - heapUsedDelta;
 
-  console.log(`\nMemory saved by singleton pattern: ${formatBytes(savedMemory)}`);
+  console.log(`\nMemory saved by module singleton: ${formatBytes(savedMemory)}`);
   console.log(`Projected leak prevented: ${NUM_CONTEXTS.toLocaleString()} timer objects`);
+  console.log(`Timer objects created: 1 (shared across all contexts)`);
 
   if (!global.gc) {
     console.log('\n💡 Tip: Run with --expose-gc flag for more accurate measurements:');

@@ -6,10 +6,22 @@
  * and updates at the expected frequency.
  */
 
-import { describe, it, expect } from 'vitest';
-import { createTimestampGenerator, DEFAULT_TIMESTAMP_GENERATOR_FACTORY_DEPS } from './timestamp';
+import { describe, it, expect, afterEach } from 'vitest';
+import {
+  createTimestampGenerator,
+  DEFAULT_TIMESTAMP_GENERATOR_FACTORY_DEPS,
+  timestamp,
+  startTimestampGenerator,
+  stopTimestampGenerator
+} from './timestamp';
 
-describe('createTimestampGenerator', () => {
+describe('Timestamp Generator', () => {
+  // Clean up the singleton after each test to avoid interference
+  afterEach(() => {
+    stopTimestampGenerator();
+  });
+
+  describe('createTimestampGenerator (factory)', () => {
   it('should return a number', () => {
     const gen = createTimestampGenerator(1, DEFAULT_TIMESTAMP_GENERATOR_FACTORY_DEPS);
     gen.start();
@@ -137,5 +149,91 @@ describe('createTimestampGenerator', () => {
     expect(gen.timestamp()).toBe(2000);
 
     gen.stop();
+  });
+  });
+
+  describe('Module-level singleton', () => {
+    it('should provide a working timestamp function', () => {
+      startTimestampGenerator();
+
+      const result = timestamp();
+
+      expect(typeof result).toBe('number');
+      expect(result).toBeGreaterThan(0);
+    });
+
+    it('should update timestamp over time', async () => {
+      startTimestampGenerator();
+
+      const firstTimestamp = timestamp();
+
+      // Wait for at least one update cycle (default is 10ms)
+      await new Promise(resolve => setTimeout(resolve, 20));
+
+      const secondTimestamp = timestamp();
+
+      expect(secondTimestamp).toBeGreaterThan(firstTimestamp);
+      expect(secondTimestamp - firstTimestamp).toBeGreaterThanOrEqual(10);
+    });
+
+    it('should return same value for multiple rapid calls', () => {
+      startTimestampGenerator();
+
+      // Multiple rapid calls should return same cached value
+      const values = Array.from({ length: 1000 }, () => timestamp());
+      const uniqueValues = new Set(values);
+
+      // All 1000 calls within microseconds should return same cached value
+      expect(uniqueValues.size).toBe(1);
+    });
+
+    it('should handle multiple start calls gracefully', async () => {
+      startTimestampGenerator();
+      startTimestampGenerator();
+      startTimestampGenerator();
+
+      const firstTimestamp = timestamp();
+
+      await new Promise(resolve => setTimeout(resolve, 15));
+
+      const secondTimestamp = timestamp();
+
+      // Should still work correctly despite multiple start calls
+      expect(secondTimestamp).toBeGreaterThan(firstTimestamp);
+    });
+
+    it('should stop updating after stop is called', async () => {
+      startTimestampGenerator();
+
+      await new Promise(resolve => setTimeout(resolve, 15));
+
+      stopTimestampGenerator();
+
+      const timestampAfterStop = timestamp();
+
+      await new Promise(resolve => setTimeout(resolve, 25));
+
+      const timestampMuchLater = timestamp();
+
+      // Should be frozen at same value
+      expect(timestampMuchLater).toBe(timestampAfterStop);
+    });
+
+    it('should be restartable after stop', async () => {
+      startTimestampGenerator();
+
+      const firstTimestamp = timestamp();
+
+      stopTimestampGenerator();
+
+      // Restart
+      startTimestampGenerator();
+
+      await new Promise(resolve => setTimeout(resolve, 15));
+
+      const secondTimestamp = timestamp();
+
+      expect(secondTimestamp).toBeGreaterThan(firstTimestamp);
+    });
   });
 });
