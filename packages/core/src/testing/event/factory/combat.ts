@@ -23,7 +23,7 @@ import { WellKnownActor } from '~/types/actor';
 import { SessionStatus } from '~/types/entity/session';
 
 // Generic transform function type
-export type EventTransform<T> = (event: T) => T;
+type EventTransform<T> = (event: T) => T;
 
 // Default values
 const DEFAULT_SESSION_ID: SessionURN = DEFAULT_COMBAT_SESSION;

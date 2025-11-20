@@ -128,4 +128,8 @@ packages/*/.turbo/
 .turbo/
 .rush/
 
+# Scripts - exclude compiled JS files except build utilities
+packages/*/scripts/*.js
+!packages/*/scripts/fix-esm-extensions.js
+
 .cursorrules*

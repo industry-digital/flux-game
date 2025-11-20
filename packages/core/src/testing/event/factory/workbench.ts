@@ -15,17 +15,17 @@ import { CombatEventFactoryDependencies, DEFAULT_COMBAT_EVENT_FACTORY_DEPS } fro
 import { ALICE_ID, DEFAULT_LOCATION, DEFAULT_TRACE, DEFAULT_SHELL_ID, DEFAULT_WORKBENCH_SESSION } from '~/testing/constants';
 
 // Generic transform function type
-export type EventTransform<T> = (event: T) => T;
+type EventTransform<T> = (event: T) => T;
 
 const identity = <T>(x: T): T => x;
 
 /**
  * Creates a WORKBENCH_SESSION_DID_START event for testing
  */
-export function createWorkbenchSessionDidStartEvent(
+export const createWorkbenchSessionDidStartEvent = (
   transform: EventTransform<WorkbenchSessionDidStart> = identity,
   deps: CombatEventFactoryDependencies = DEFAULT_COMBAT_EVENT_FACTORY_DEPS
-): WorkbenchSessionDidStart {
+): WorkbenchSessionDidStart => {
   const { createWorldEvent } = deps;
 
   const baseEvent = createWorldEvent({
@@ -45,10 +45,10 @@ export function createWorkbenchSessionDidStartEvent(
 /**
  * Creates a WORKBENCH_SESSION_DID_END event for testing
  */
-export function createWorkbenchSessionDidEndEvent(
+export const createWorkbenchSessionDidEndEvent = (
   transform: EventTransform<WorkbenchSessionDidEnd> = identity,
   deps: CombatEventFactoryDependencies = DEFAULT_COMBAT_EVENT_FACTORY_DEPS
-): WorkbenchSessionDidEnd {
+): WorkbenchSessionDidEnd => {
   const { createWorldEvent } = deps;
 
   const baseEvent = createWorldEvent({
@@ -66,10 +66,10 @@ export function createWorkbenchSessionDidEndEvent(
 /**
  * Creates a WORKBENCH_SHELL_MUTATION_STAGED event for testing
  */
-export function createActorDidStageShellMutationEvent(
+export const createActorDidStageShellMutationEvent = (
   transform: EventTransform<ActorDidStageShellMutation> = identity,
   deps: CombatEventFactoryDependencies = DEFAULT_COMBAT_EVENT_FACTORY_DEPS
-): ActorDidStageShellMutation {
+): ActorDidStageShellMutation => {
   const { createWorldEvent } = deps;
 
   const defaultMutation: StatMutation = {
@@ -97,10 +97,10 @@ export function createActorDidStageShellMutationEvent(
 /**
  * Creates a WORKBENCH_SHELL_MUTATIONS_DIFFED event for testing
  */
-export function createActorDidDiffShellMutationsEvent(
+export const createActorDidDiffShellMutationsEvent = (
   transform: EventTransform<ActorDidDiffShellMutations> = identity,
   deps: CombatEventFactoryDependencies = DEFAULT_COMBAT_EVENT_FACTORY_DEPS
-): ActorDidDiffShellMutations {
+): ActorDidDiffShellMutations => {
   const { createWorldEvent } = deps;
 
   const baseEvent = createWorldEvent({
@@ -141,10 +141,10 @@ export function createActorDidDiffShellMutationsEvent(
 /**
  * Creates a WORKBENCH_SHELL_MUTATIONS_UNDONE event for testing
  */
-export function createActorDidUndoShellMutationsEvent(
+export const createActorDidUndoShellMutationsEvent = (
   transform: EventTransform<ActorDidUndoShellMutations> = identity,
   deps: CombatEventFactoryDependencies = DEFAULT_COMBAT_EVENT_FACTORY_DEPS
-): ActorDidUndoShellMutations {
+): ActorDidUndoShellMutations => {
   const { createWorldEvent } = deps;
 
   const baseEvent = createWorldEvent({
@@ -162,10 +162,10 @@ export function createActorDidUndoShellMutationsEvent(
 /**
  * Creates a WORKBENCH_SHELL_MUTATIONS_COMMITTED event for testing
  */
-export function createActorDidCommitShellMutationsEvent(
+export const createActorDidCommitShellMutationsEvent = (
   transform: EventTransform<ActorDidCommitShellMutations> = identity,
   deps: CombatEventFactoryDependencies = DEFAULT_COMBAT_EVENT_FACTORY_DEPS
-): ActorDidCommitShellMutations {
+): ActorDidCommitShellMutations => {
   const { createWorldEvent } = deps;
 
   const defaultMutations: ShellMutation[] = [
@@ -195,11 +195,11 @@ export function createActorDidCommitShellMutationsEvent(
 /**
  * Helper function to create stat mutations for testing
  */
-export function createStatMutation(
+export const createStatMutation = (
   stat: Stat = Stat.POW,
   operation: StatMutationOperation = StatMutationOperation.ADD,
   amount: number = 5
-): StatMutation {
+): StatMutation => {
   return {
     type: ShellMutationType.STAT,
     stat: stat as ShellStat,
@@ -211,17 +211,17 @@ export function createStatMutation(
 /**
  * Helper function to create component mutations for testing
  */
-export function createComponentMutation(): ShellMutation {
+export const createComponentMutation = (): ShellMutation => {
   return {
     type: ShellMutationType.COMPONENT,
     // Add component-specific fields as needed
   } as ShellMutation;
 }
 
-export function createActorDidListShellsEvent(
+export const createActorDidListShellsEvent = (
   transform: EventTransform<ActorDidListShells> = identity,
   deps: CombatEventFactoryDependencies = DEFAULT_COMBAT_EVENT_FACTORY_DEPS
-): ActorDidListShells {
+): ActorDidListShells => {
   const { createWorldEvent } = deps;
 
   const baseEvent = createWorldEvent({
@@ -239,10 +239,10 @@ export function createActorDidListShellsEvent(
 /**
  * Creates an ACTOR_DID_ASSESS_SHELL_STATUS event for testing
  */
-export function createActorDidAssessShellStatusEvent(
+export const createActorDidAssessShellStatusEvent = (
   transform: EventTransform<ActorDidAssessShellStatus> = identity,
   deps: CombatEventFactoryDependencies = DEFAULT_COMBAT_EVENT_FACTORY_DEPS
-): ActorDidAssessShellStatus {
+): ActorDidAssessShellStatus => {
   const { createWorldEvent } = deps;
 
   const baseEvent = createWorldEvent({

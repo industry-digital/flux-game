@@ -19,6 +19,7 @@ const reducerCore: PureReducer<TransformerContext, AcceptPartyInvitationCommand>
   try {
     partyApi.acceptInvitation(party, invitee.id);
   } catch (error) {
+    console.error(`[DEBUG] error accepting party invitation`, error);
     // Handle cases like: no pending invitation, already a member, etc.
     failed(command.id, ErrorCode.FORBIDDEN);
     return context;

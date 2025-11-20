@@ -40,5 +40,7 @@ export {
 
 export * from './intent';
 
+export * from './testing/actors';
+
 // Export the pure game logic handlers DAG
 export { PURE_GAME_LOGIC_HANDLERS } from '~/handlers';

@@ -1,5 +1,8 @@
 // Export all factory functions
 export * from './combat';
+export * from './party';
+export * from './inventory';
+export * from './workbench';
 
 // Export dependencies
 export {
