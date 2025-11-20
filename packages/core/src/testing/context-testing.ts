@@ -7,6 +7,7 @@ import { createTransformerContext, createWorldProjection } from '~/worldkit/cont
 import { EventType } from '~/types/event';
 import { RollResultWithoutModifiers } from '~/types/dice';
 import { ErrorCode } from '~/types/error';
+import { timestamp } from '~/lib/timestamp';
 
 /**
  * Factory function for creating mock TransformerContext with sensible defaults
@@ -43,7 +44,7 @@ export const createTestTransformerContext = (overrides?: Partial<TransformerCont
           declaredErrors.push({
             code,
             trace,
-            ts: Date.now(),
+            ts: timestamp(),
             stack: new Error().stack ?? '',
           });
           return context as TransformerContext;

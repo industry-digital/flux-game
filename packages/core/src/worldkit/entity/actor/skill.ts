@@ -4,6 +4,7 @@ import { ActorURN, SkillSchemaURN } from '~/types/taxonomy';
 import { AppliedModifiers } from '~/types/modifier';
 import { PotentiallyImpureOperations } from '~/types/handler';
 import { isActiveModifier } from '~/worldkit/entity/modifier';
+import { timestamp } from '~/lib/timestamp';
 
 export const MIN_SKILL_RANK = 0;
 export const MAX_SKILL_RANK = 100;
@@ -45,7 +46,7 @@ type SkillComputationDependencies = {
 };
 
 export const DEFAULT_SKILL_COMPUTATION_DEPS: SkillComputationDependencies = {
-  timestamp: () => Date.now(),
+  timestamp,
 };
 
 /**

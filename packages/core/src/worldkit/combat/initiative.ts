@@ -4,6 +4,7 @@ import { RollResult, RollSpecification } from '~/types/dice';
 import { Combatant } from '~/types/combat';
 import { applyModifierToRollResult, rollDiceWithRng } from '~/worldkit/dice';
 import { calculateStatBonus, getStatValue } from '~/worldkit/entity/actor/stats';
+import { timestamp } from '~/lib/timestamp';
 
 export const INITIATIVE_ROLL_SPECIFICATION: RollSpecification = '1d20';
 
@@ -17,7 +18,7 @@ export type InitiativeDependencies = {
 
 const DEFAULT_INITIATIVE_DEPS: InitiativeDependencies = {
   random: () => Math.random(),
-  timestamp: () => Date.now(),
+  timestamp,
   calculateStatBonus: calculateStatBonus,
   getStatValue: getStatValue,
   rollDiceWithRng: rollDiceWithRng,

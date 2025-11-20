@@ -4,10 +4,11 @@ import { ErrorCode } from '~/types/error';
 import { PotentiallyImpureOperations } from '~/types/handler';
 import { ROOT_NAMESPACE, ItemURN, SchemaURN, ItemType } from '~/types/taxonomy';
 import { MassApi } from '~/worldkit/physics/mass';
+import { timestamp } from '~/lib/timestamp';
 
 const ITEM_TYPE_REGEX = /flux:schema:(.*)$/;
 
-export const createInventory = (now: number = Date.now()): Inventory => {
+export const createInventory = (now: number = timestamp()): Inventory => {
   return {
     mass: 0,
     items: {},
@@ -78,24 +79,19 @@ export type ActorInventoryApi = {
 
 export type ActorInventoryApiDependencies = InventoryItemDependencies & {
   createInventoryItem: typeof createInventoryItem;
-  timestamp: PotentiallyImpureOperations['timestamp'];
+  timestamp: () => number;
 };
 
 export const DEFAULT_ACTOR_INVENTORY_DEPS: Readonly<ActorInventoryApiDependencies> = {
   ...DEFAULT_INVENTORY_ITEM_DEPENDENCIES,
   createInventoryItem,
-  timestamp: () => Date.now(),
+  timestamp,
 };
 
 export function createActorInventoryApi(
   massApi: MassApi,
   deps: ActorInventoryApiDependencies = DEFAULT_ACTOR_INVENTORY_DEPS,
 ): ActorInventoryApi {
-  const {
-    createInventoryItem: createInventoryItemImpl = createInventoryItem,
-    timestamp: timestampImpl = () => Date.now(),
-  } = deps;
-
   function getItem(entity: EntityWithInventory, itemId: ItemURN): InventoryItem {
     const item = entity.inventory.items[itemId];
     if (!item) {
@@ -112,7 +108,7 @@ export function createActorInventoryApi(
     if (input.id && input.id in entity.inventory.items) {
       throw new Error(`Inventory item ${input.id} already exists`);
     }
-    const item = createInventoryItemImpl(input, deps);
+    const item = deps.createInventoryItem(input, deps);
     entity.inventory.items[item.id] = item;
     entity.inventory.count += 1;
 
@@ -174,7 +170,7 @@ export function createActorInventoryApi(
     // Update inventory metadata
     entity.inventory.mass = totalMass;
     entity.inventory.count = computeItemCount(entity);
-    entity.inventory.ts = timestampImpl();
+    entity.inventory.ts = deps.timestamp();
   }
 
   return {

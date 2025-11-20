@@ -1,5 +1,6 @@
 import { PotentiallyImpureOperations } from '~/index';
 import { Modifier, AppliedModifiers } from '~/types/modifier';
+import { timestamp } from '~/lib/timestamp';
 
 const DICE_ROLL_PATTERN = /(\d+)d(\d+)/;
 
@@ -86,7 +87,7 @@ export type ModifierFactoryDependencies = {
 };
 
 export const DEFAULT_MODIFIER_FACTORY_DEPS: ModifierFactoryDependencies = {
-  timestamp: () => Date.now(),
+  timestamp,
 };
 
 export function createModifier(

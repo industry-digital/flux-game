@@ -16,38 +16,21 @@ import { getSchemaTranslation } from '~/narrative/schema';
 import { createPartyApi } from '~/worldkit/entity/group/party';
 import { ErrorCode } from '~/types/error';
 import { GroupApiContext } from '~/worldkit/entity/group/api';
-import { createTimestampGenerator } from '~/lib/timestamp';
+import { timestamp } from '~/lib/timestamp';
 
 export type MapFunction<T> = (context: T) => T;
 const identity = <T extends any>(context: T): T => context;
 
-let sharedTimestampGenerator: ReturnType<typeof createTimestampGenerator> | undefined;
-
-const getOptimizedTimestamp = (): (() => number) => {
-  if (!sharedTimestampGenerator) {
-    sharedTimestampGenerator = createTimestampGenerator(1);
-    sharedTimestampGenerator.start();
-  }
-  return sharedTimestampGenerator.timestamp;
-};
-
-export const stopTimestampGenerator = () => {
-  if (sharedTimestampGenerator) {
-    sharedTimestampGenerator.stop();
-    sharedTimestampGenerator = undefined;
-  }
-};
-
 export const createPotentiallyImpureOperations = (
   random = () => Math.random(),
-  timestamp = getOptimizedTimestamp(),
+  timestampFn = timestamp,
   uniqid = () => uniqidImpl(24, BASE62_CHARSET),
   debug = (...args: any[]) => console.debug(...args),
   profile = profileImpl,
 ): PotentiallyImpureOperations => {
   return {
     random,
-    timestamp,
+    timestamp: timestampFn,
     uniqid,
     debug,
     profile,

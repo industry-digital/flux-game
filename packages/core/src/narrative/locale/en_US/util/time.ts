@@ -1,3 +1,5 @@
+import { timestamp } from '~/lib/timestamp';
+
 const SECOND = 1_000;
 const MINUTE = 60 * 1_000;
 const HOUR = 60 * 60 * 1_000;
@@ -11,8 +13,11 @@ const DAY = 24 * 60 * 60 * 1_000;
  *   - 30 minutes ago
  *   - 10 seconds ago
  *   - just now
+ *
+ * @param {Number} `age` in milliseconds
+ * @param {Number} `now` current timestamp; epoch milliseconds
  */
-export const describeAge = (age: number, now = Date.now()): string => {
+export const describeAge = (age: number, now = timestamp()): string => {
   const diff = now - age;
 
   if (diff < 0) {

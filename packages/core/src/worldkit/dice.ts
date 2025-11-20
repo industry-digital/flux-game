@@ -9,6 +9,7 @@ import { getActorSkill, getEffectiveSkillRank } from '~/worldkit/entity/actor/sk
 import { getNaturalStatValue, calculateStatBonus } from '~/worldkit/entity/actor/stats';
 import { ATTACK_SKILL_MULTIPLIER } from '~/worldkit/combat/attack';
 import { getWeaponBaseDamage } from '~/worldkit/combat/damage/damage-type';
+import { timestamp } from '~/lib/timestamp';
 
 type ParsedRollSpecification = {
   numDice: number;
@@ -170,7 +171,7 @@ export const calculateAverageRollResult = (
 
 export const DEFAULT_ROLL_API_DEPS: RollApiDependencies = Object.freeze({
   random: () => Math.random(),
-  timestamp: () => Date.now(),
+  timestamp,
   getActorSkill,
   getEffectiveSkillRank,
   getNaturalStatValue,

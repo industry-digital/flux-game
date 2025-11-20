@@ -66,3 +66,6 @@ export const {
   start: startTimestampGenerator,
   stop: stopTimestampGenerator,
 }  = createTimestampGenerator(DEFAULT_FREQUENCY);
+
+// Start the timestamp generator immediately
+startTimestampGenerator();

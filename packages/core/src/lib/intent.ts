@@ -8,6 +8,7 @@ import {
   SystemCommand,
 } from '~/types/intent';
 import { WellKnownActor } from '~/types/actor';
+import { timestamp } from '~/lib/timestamp';
 
 const identity = <I, O = I>(x: I): O => x as unknown as O;
 
@@ -20,7 +21,7 @@ type Transformer<I, O = I> = (input: I) => O;
 type CommandTransformer = Transformer<Command>;
 
 export const DEFAULT_COMMAND_FACTORY_DEPS: CommandFactoryDependencies = {
-  timestamp: () => Date.now(),
+  timestamp,
   uniqid: () => uniqidImpl(24, BASE62_CHARSET),
 };
 

@@ -11,6 +11,8 @@ import { createWorldScenario, WorldScenarioHook } from '~/worldkit/scenario';
 import { Place } from '~/types/entity/place';
 import { createPlace } from '~/worldkit/entity/place';
 import { TransformerContext } from '~/types/handler';
+import { GroupFactoryDependencies } from './factory';
+import { GroupType } from '~/types/entity/group';
 
 describe('Party API', () => {
   let context: GroupApiContext;
@@ -20,10 +22,19 @@ describe('Party API', () => {
   let alice: Actor;
   let bob: Actor;
   let charlie: Actor;
+  let mockTimestamp: number;
 
   beforeEach(() => {
     context = createTransformerContext();
-    partyApi = createPartyApi(context);
+    mockTimestamp = DEFAULT_TIMESTAMP; // Start at the fixed test timestamp
+    let groupCounter = 0;
+
+    const mockDeps: GroupFactoryDependencies<GroupType.PARTY> = {
+      generateGroupId: () => `flux:group:party:test${++groupCounter}`,
+      timestamp: () => mockTimestamp,
+    };
+
+    partyApi = createPartyApi(context, undefined, mockDeps);
     place = createPlace((p: Place) => ({ ...p, id: DEFAULT_LOCATION }));
     ({ alice, bob, charlie } = createDefaultActors());
 
@@ -32,6 +43,11 @@ describe('Party API', () => {
       actors: [alice, bob, charlie],
     });
   });
+
+  // Helper function to advance time in tests
+  const advanceTime = (milliseconds: number) => {
+    mockTimestamp += milliseconds;
+  };
 
   describe('addPartyMember', () => {
     it('should assign party ID to actor.party field when adding member', () => {
@@ -351,10 +367,12 @@ describe('Party API', () => {
     it('should clean up parties with no members and no valid invitations', () => {
       const party = partyApi.createParty(alice.id);
 
-      // Create a party with expired invitations by manipulating timestamps
-      const expiredTimestamp = DEFAULT_TIMESTAMP - 120000; // 2 minutes ago (assuming 60s timeout)
-      party.invitations[bob.id] = expiredTimestamp;
-      party.invitations[charlie.id] = expiredTimestamp;
+      // Create expired invitations by inviting and then advancing time
+      partyApi.inviteToParty(party, bob.id);
+      partyApi.inviteToParty(party, charlie.id);
+
+      // Advance time to expire invitations (assuming 60s timeout)
+      advanceTime(120000); // 2 minutes
 
       const expiredParties = partyApi.cleanupExpiredParties();
 
@@ -370,12 +388,14 @@ describe('Party API', () => {
       const party2 = partyApi.createParty(bob.id);
       const party3 = partyApi.createParty(charlie.id);
 
-      // Make party1 and party3 expired (no members, expired invitations)
-      const expiredTimestamp = DEFAULT_TIMESTAMP - 120000;
-      party1.invitations[bob.id] = expiredTimestamp;
-      party3.invitations[alice.id] = expiredTimestamp;
+      // Create expired invitations for party1 and party3
+      partyApi.inviteToParty(party1, bob.id);
+      partyApi.inviteToParty(party3, alice.id);
 
-      // Keep party2 alive with valid invitation
+      // Advance time to expire these invitations
+      advanceTime(120000); // 2 minutes
+
+      // Keep party2 alive with valid invitation (created after time advance)
       partyApi.inviteToParty(party2, alice.id);
 
       const expiredParties = partyApi.cleanupExpiredParties();
@@ -393,12 +413,12 @@ describe('Party API', () => {
     it('should clean up expired invitations during the process', () => {
       const party = partyApi.createParty(alice.id);
 
-      // Add mix of valid and expired invitations
-      const validTimestamp = DEFAULT_TIMESTAMP - 30000; // 30s ago (valid)
-      const expiredTimestamp = DEFAULT_TIMESTAMP - 120000; // 2 minutes ago (expired)
+      // Create an expired invitation
+      partyApi.inviteToParty(party, charlie.id);
+      advanceTime(120000); // 2 minutes - expire charlie's invitation
 
-      party.invitations[bob.id] = validTimestamp;
-      party.invitations[charlie.id] = expiredTimestamp;
+      // Create a valid invitation after time advance
+      partyApi.inviteToParty(party, bob.id);
 
       // Should not be cleaned up because it has valid invitation
       const expiredParties = partyApi.cleanupExpiredParties();
@@ -407,17 +427,19 @@ describe('Party API', () => {
       expect(context.world.groups[party.id]).toBeDefined();
 
       // But expired invitation should be cleaned up
-      expect(party.invitations[bob.id]).toBe(validTimestamp); // Still there
+      expect(party.invitations[bob.id]).toBeDefined(); // Still there
       expect(party.invitations[charlie.id]).toBeUndefined(); // Cleaned up
     });
 
     it('should handle parties that become expired after invitation cleanup', () => {
       const party = partyApi.createParty(alice.id);
 
-      // Add only expired invitations
-      const expiredTimestamp = DEFAULT_TIMESTAMP - 120000;
-      party.invitations[bob.id] = expiredTimestamp;
-      party.invitations[charlie.id] = expiredTimestamp;
+      // Create expired invitations
+      partyApi.inviteToParty(party, bob.id);
+      partyApi.inviteToParty(party, charlie.id);
+
+      // Advance time to expire all invitations
+      advanceTime(120000); // 2 minutes
 
       const expiredParties = partyApi.cleanupExpiredParties();
 
@@ -435,8 +457,10 @@ describe('Party API', () => {
 
       // Remove alice to make party empty, then add expired invitations
       partyApi.removePartyMember(party, alice.id);
-      const expiredTimestamp = DEFAULT_TIMESTAMP - 120000;
-      party.invitations[bob.id] = expiredTimestamp;
+      partyApi.inviteToParty(party, bob.id);
+
+      // Advance time to expire the invitation
+      advanceTime(120000); // 2 minutes
 
       const expiredParties = partyApi.cleanupExpiredParties();
 
@@ -467,23 +491,28 @@ describe('Party API', () => {
       // Create many parties of different states
       const parties = [];
       for (let i = 0; i < 100; i++) {
-        const actorId = `flux:actor:test${i}` as ActorURN;
-        const actor = createTestActor({ id: actorId });
-        context.world.actors[actorId] = actor;
+        const ownerId = `flux:actor:owner${i}` as ActorURN;
+        const inviteeId = `flux:actor:invitee${i}` as ActorURN;
 
-        const party = partyApi.createParty(actorId);
+        const owner = createTestActor({ id: ownerId });
+        const invitee = createTestActor({ id: inviteeId });
+        context.world.actors[ownerId] = owner;
+        context.world.actors[inviteeId] = invitee;
+
+        const party = partyApi.createParty(ownerId);
         parties.push(party);
 
         if (i % 3 === 0) {
           // Every 3rd party: add member (should not be cleaned)
-          partyApi.addPartyMember(party, actorId);
+          partyApi.addPartyMember(party, inviteeId);
         } else if (i % 3 === 1) {
           // Every 3rd party: add valid invitation (should not be cleaned)
-          partyApi.inviteToParty(party, actorId);
+          partyApi.inviteToParty(party, inviteeId);
         } else {
           // Every 3rd party: add expired invitation (should be cleaned)
-          const expiredTimestamp = DEFAULT_TIMESTAMP - 120000;
-          party.invitations[actorId] = expiredTimestamp;
+          partyApi.inviteToParty(party, inviteeId);
+          advanceTime(120000); // Expire this invitation
+          mockTimestamp -= 120000; // Reset time for next iteration
         }
       }
 

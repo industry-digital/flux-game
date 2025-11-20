@@ -2,6 +2,7 @@ import { GroupType, AbstractGroup } from '~/types/entity/group';
 import { ActorURN, GroupURN } from '~/types/taxonomy';
 import { BASE36_CHARSET, uniqid } from '~/lib/random';
 import { EntityType } from '~/types/entity/entity';
+import { timestamp } from '~/lib/timestamp';
 
 export type Transform<T> = (input: T) => T;
 
@@ -24,7 +25,7 @@ export type GroupFactoryDependencies<TGroupType extends GroupType> = {
 
 export const DEFAULT_GROUP_FACTORY_DEPS: GroupFactoryDependencies<any> = {
   generateGroupId,
-  timestamp: () => Date.now(),
+  timestamp,
 };
 
 const identity = <T>(x: T): T => x;

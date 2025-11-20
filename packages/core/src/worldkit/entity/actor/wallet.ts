@@ -4,6 +4,7 @@ import { createWorldEvent } from '~/worldkit/event';
 import { ActorDidCompleteCurrencyTransaction, EventType, WorldEvent } from '~/types/event';
 import { uniqid, BASE62_CHARSET } from '~/lib/random';
 import { TransformerContext } from '~/types/handler';
+import { timestamp } from '~/lib/timestamp';
 
 const ALLOWED_CURRENCIES: readonly CurrencyType[] = Object.values(CurrencyType);
 
@@ -14,7 +15,7 @@ export type CurrencyDependencies = {
 
 export const DEFAULT_CURRENCY_DEPS: Readonly<CurrencyDependencies> = {
   uniqid: () => uniqid(24, BASE62_CHARSET),
-  timestamp: () => Date.now(),
+  timestamp,
 };
 
 export type CreateCurrencyDependencies = Partial<CurrencyDependencies>;

@@ -1,6 +1,7 @@
 import { BASE62_CHARSET, uniqid } from '~/lib/random';
 import { Intent, IntentOptions } from '~/types/intent';
 import { ActorURN, PlaceURN, SessionURN } from '~/types/taxonomy';
+import { timestamp } from '~/lib/timestamp';
 
 export type IntentInput = {
   id?: string;
@@ -17,7 +18,7 @@ export type IntentFactoryDependencies = {
 };
 
 export const DEFAULT_INTENT_FACTORY_DEPENDENCIES: IntentFactoryDependencies = {
-  timestamp: () => Date.now(),
+  timestamp,
   uniqid: () => uniqid(24, BASE62_CHARSET),
 };
 

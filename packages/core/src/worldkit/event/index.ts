@@ -2,11 +2,12 @@ import { WorldEventInput } from '~/types/event';
 import { PotentiallyImpureOperations } from '~/types/handler';
 import { uniqid as uniqidImpl, BASE62_CHARSET } from '~/lib/random';
 import { WorldEvent } from '~/types/event';
+import { timestamp } from '~/lib/timestamp';
 
 export type CreateWorldEventDependencies = Pick<PotentiallyImpureOperations, 'timestamp' | 'uniqid'>;
 
 export const DEFAULT_WORLD_EVENT_DEPS: CreateWorldEventDependencies = {
-  timestamp: () => Date.now(),
+  timestamp,
   uniqid: () => uniqidImpl(24, BASE62_CHARSET),
 };
 

@@ -1,3 +1,4 @@
+import { timestamp } from '~/lib/timestamp';
 /**
  * Damage resolution functions for weapons
  */
@@ -53,7 +54,7 @@ export type RollWeaponDamageDependencies = {
 
 export const ROLL_WEAPON_DAMAGE_DEPS: RollWeaponDamageDependencies = {
   rollDice: (dice) => rollDiceWithRng(dice, () => Math.random()),
-  timestamp: () => Date.now(),
+  timestamp,
 };
 
 /**

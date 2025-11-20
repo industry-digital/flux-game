@@ -16,6 +16,7 @@ import { consumeEnergy } from '~/worldkit/entity/actor/capacitor';
 import { createDoneMethod } from '~/worldkit/combat/action/done';
 import { cleanApPrecision } from '~/worldkit/combat/ap';
 import { computeInitiativeRoll } from '~/worldkit/combat/initiative';
+import { timestamp } from '~/lib/timestamp';
 export { deductAp } from '~/worldkit/combat/ap';
 
 type Transform<T> = (input: T) => T;
@@ -165,7 +166,7 @@ export type CreateCombatantDependencies = {
 export const DEFAULT_CREATE_COMBATANT_DEPS: Readonly<CreateCombatantDependencies> = {
   computeInitiative: computeInitiativeRoll,
   initializeCombatantAttributes: initializeCombatantAttributes,
-  timestamp: () => Date.now(),
+  timestamp,
 };
 
 /**

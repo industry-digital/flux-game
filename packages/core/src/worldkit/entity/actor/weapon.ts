@@ -11,6 +11,7 @@ import {
   needsReload,
 } from '~/worldkit/entity/weapon';
 import { PotentiallyImpureOperations } from '~/types/handler';
+import { timestamp } from '~/lib/timestamp';
 
 export type AmmoConsumedResult = { schema: AmmoSchemaURN, amount: number };
 export type AmmoReturnedResult = { schema: AmmoSchemaURN | undefined, amount: number };
@@ -38,7 +39,7 @@ export type ActorWeaponApiDependencies = {
 };
 
 const DEFAULT_ACTOR_WEAPON_API_DEPENDENCIES: Readonly<ActorWeaponApiDependencies> = {
-  timestamp: () => Date.now(),
+  timestamp,
 };
 
 export const createActorWeaponApi = (

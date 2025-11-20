@@ -6,6 +6,7 @@ import { hashUnsafeString } from '~/worldkit/hash';
 import { PotentiallyImpureOperations } from '~/types';
 import { generateRandomShellName } from './name';
 import { MAX_STAT_VALUE } from '~/worldkit/entity/actor/stats';
+import { timestamp } from '~/lib/timestamp';
 
 /**
  * Shell stat keys - the stats that are stored on shells
@@ -133,7 +134,7 @@ export const DEFAULT_SHELL_FACTORY_DEPS: ShellFactoryDependencies = {
   hashUnsafeString,
   createInventory,
   generateRandomShellName,
-  timestamp: () => Date.now(),
+  timestamp,
 };
 
 export function createShell(
