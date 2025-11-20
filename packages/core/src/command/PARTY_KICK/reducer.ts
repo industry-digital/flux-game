@@ -1,7 +1,7 @@
 import { PureReducer, Transformer, TransformerContext } from '~/types/handler';
 import { PartyKickCommand } from './types';
 import { withBasicWorldStateValidation } from '../validation';
-import { withGroupOwnerValidation, withPartyInvitee } from '../party';
+import { withGroupOwnerValidation } from '../party';
 import { ActorDidLeavePartyInput, EventType } from '~/types/event';
 import { PartyLeaveReason } from '~/types/party';
 import { ErrorCode } from '~/types/error';
@@ -9,7 +9,7 @@ import { PartyRemovalResult } from '~/worldkit/entity/group/party';
 import { withCommandType } from '~/command/withCommandType';
 import { CommandType } from '~/types/intent';
 
-const PREALLOCATED_KICK_RESULT: PartyRemovalResult = {
+const PREALLOCATED_MUTABLE_KICK_RESULT: PartyRemovalResult = {
   wasPartyDisbanded: false,
   newOwner: undefined,
 };
@@ -38,7 +38,7 @@ const reducerCore: PureReducer<TransformerContext, PartyKickCommand> = (context,
   const { newOwner } = context.partyApi.removePartyMember(
     party,
     target.id,
-    PREALLOCATED_KICK_RESULT
+    PREALLOCATED_MUTABLE_KICK_RESULT
   );
 
   // Prepare event payload
@@ -73,10 +73,8 @@ const reducerCore: PureReducer<TransformerContext, PartyKickCommand> = (context,
 export const partyKickReducer: Transformer<PartyKickCommand> =
   withCommandType(CommandType.PARTY_KICK,
     withBasicWorldStateValidation(
-      withPartyInvitee(
-        withGroupOwnerValidation(
-          reducerCore,
-        ),
+      withGroupOwnerValidation(
+        reducerCore,
       ),
     ),
   );

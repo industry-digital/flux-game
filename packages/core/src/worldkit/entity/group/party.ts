@@ -169,6 +169,7 @@ export const createPartyApi = (
 
   const cleanupExpiredParties = (): Party[] => {
     const expiredParties: Party[] = [];
+    const now = deps.timestamp();
 
     // Single pass through all groups - zero intermediate allocations
     for (const groupId in context.world.groups) {
@@ -180,25 +181,42 @@ export const createPartyApi = (
       }
 
       const party = group;
-      const hasMembers = party.size > 0;
 
-      // Skip parties with members - no cleanup needed
-      if (hasMembers) continue;
-
-      // Clean up expired invitations in-place and check if any remain
+      // Clean up expired invitations first
       cleanupExpiredInvitations(party);
       const hasValidInvitations = doesPlainObjectHaveAnyProperty(party.invitations);
 
-      // Skip if party still has valid invitations
-      if (hasValidInvitations) continue;
+      // Handle different party states
+      if (party.size === 0) {
+        // Defensive case: parties with no members should have been cleaned up by removePartyMember
+        // but we'll handle them here as a safety measure
+        if (!hasValidInvitations) {
+          disbandGroup(party, (memberId) => {
+            const memberActor = context.world.actors[memberId];
+            if (memberActor) {
+              memberActor.party = undefined;
+            }
+          });
+          expiredParties.push(party);
+        }
+      } else if (party.size === 1 && party.owner) {
+        // Party contains only owner, check if it's eligible for cleanup:
+        // - no pending invitations
+        // - older than 1 minute
+        const partyAge = now - party.ts;
+        const isOldEnough = partyAge > policy.invitationTimeout;
 
-      // Party is expired - clean it up
-      const removalResult = removePartyMember(party, party.owner);
+        if (!hasValidInvitations && isOldEnough) {
+          // Remove the owner, which will auto-disband the party
+          const removalResult = removePartyMember(party, party.owner);
 
-      // Track parties that were actually disbanded
-      if (removalResult.wasPartyDisbanded) {
-        expiredParties.push(party);
+          // Track parties that were actually disbanded
+          if (removalResult.wasPartyDisbanded) {
+            expiredParties.push(party);
+          }
+        }
       }
+      // Parties with >1 members are active and shouldn't be cleaned up
     }
 
     return expiredParties;

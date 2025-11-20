@@ -1,131 +1,170 @@
 ---
-title: Party Mechanics
-description: Formation, management, and coordination of tactical groups in FSP.
+title: Party System
+description: Team up with friends to explore and fight together!
 ---
 
-# Party Mechanics
+# Party System
 
-## Core Concepts
+## What's a Party?
 
-A **party** consists of up to three actors who travel together through the world and fight as a unified force in combat encounters. The system enforces a strict invariant: **an actor may not be in more than one party at any given time**.
+A **party** is your squad of up to **3 players** who adventure together!
 
-The **party owner** is automatically assigned to the first actor who joins the party. The owner has administrative privileges including the ability to invite new members, remove existing members, and disband the party.
+**Rules**
+- Parties are limited to 3 players.
+- You can only be in one party at a time.
+- The person who starts the party becomes the party leader.
+- Everyone fights together as a team in combat.
 
-**Party formation** follows a structured invitation workflow where actors must be invited and explicitly accept before joining. Invitations expire after one minute if not responded to, maintaining system cleanliness and preventing stale invitation accumulation.
+## How Parties Work
 
-## Party Formation
+When you create a party, you automatically become the leader. As the leader, you can:
 
-Party formation follows a structured invitation workflow that ensures all members explicitly consent to joining. Only party owners may extend invitations to new members.
+- Invite new people to join
+- Kick people out if needed
+- Disband the whole party
 
-### Invitation Workflow
+## Creating and Joining Parties
 
-The party system operates through a formal invitation process:
+### Basic Commands
 
 ```text
-> party invite <actor>    # Send invitation (owner only)
-> party accept <leader>   # Accept pending invitation
-> party reject <leader>   # Decline pending invitation
-> party leave             # Leave current party
+> party invite <player>    # Invite someone (leaders only)
+> party accept <leader>    # Accept an invitation
+> party reject <leader>    # Decline an invitation
+> party leave              # Leave your current party
+> party status             # View party info
 ```
 
-### Example: Creating a Party
+### Example: Starting Your First Party
 
-*Alice starts a party and invites Bob and Charlie*
+**Alice wants to adventure with Bob and Charlie:**
+
 ```
 > party invite bob
-You have invited Bob to join your party.
+You invited Bob to join your party!
 
 > party invite charlie
-You have invited Charlie to join your party.
+You invited Charlie to join your party!
 ```
 
-*Bob accepts Alice's invitation*
+**Bob receives the invitation:**
+```
+Alice has invited you to join her party.
+To accept: `party accept alice`
+To reject: `party reject alice`
+```
+
+**Bob decides to join:**
 ```
 > party accept alice
-You have accepted Alice's invitation to join her party.
-Bob has joined the party.
+You have joined Alice's party.
 ```
 
-*Charlie rejects the invitation*
+**Charlie decides to pass:**
 ```
 > party reject alice
 You have declined Alice's invitation.
-Charlie has declined to join the party.
 ```
 
-### Invitation Rules
+Now Alice and Bob are partied up and ready to go!
 
-- **Timeout**: Invitations automatically expire after one minute
-- **Exclusivity**: Actors cannot be invited to multiple parties simultaneously
-- **Owner Privilege**: Only the party owner may invite new members
-- **Explicit Consent**: All membership changes require explicit acceptance
-- **Size Limits**: Parties are limited to three members.
+### Invitation Rules (The Fine Print)
 
-## Party Management
+- Invitations expire in 1 minute
+- You can only be in one party
+- Only party leaders can invite
 
-The party owner maintains administrative control over party membership and structure. Owners have several management capabilities that do not require consent from other members.
+## Managing Your Party
 
-### Administrative Commands
+### Leader Commands
+
+As a party leader, you have some extra powers:
 
 ```text
-> party kick <actor>     # Remove member from party (owner only)
-> party disband          # Dissolve entire party (owner only)
-> party list             # View party roster (all members)
-> party invitations      # View pending invitations (owner only)
+> party kick <player>      # Remove someone from the party
+> party disband            # Dissolve the entire party
 ```
 
-### Member Management
+### What Leaders Can Do
 
-**Removing Members**: Party owners may remove any member without consent. The removed actor's party affiliation is immediately cleared, and they receive notification of their removal.
+**Kick Members:** Sometimes you need to remove someone from the party. They'll get notified when this happens.
 
-**Disbanding Parties**: Owners may dissolve the entire party structure, immediately removing all members and canceling any pending invitations. This action cannot be undone.
+**Disband the Party:** This completely destroys the party and kicks everyone out. Use this when you're done adventuring together.
 
-**Viewing Status**: All party members may view the current roster, showing member names and their current status. Party owners additionally see pending invitations and their timestamps.
+**Check Status:** Use `party status` to see who's in your party. As the leader, you'll also see any pending invitations that regular members can't see.
 
-### Ownership Transfer
+### What Happens to Leadership?
 
-Party ownership automatically transfers under specific conditions:
-- If the owner leaves voluntarily, ownership passes to the longest-standing member
-- If the owner is removed by administrative action, the party is automatically disbanded
-- Ownership cannot be manually transferred between members
+**If the leader leaves:** Leadership automatically goes to whoever's been in the party longest. No voting required!
 
-## System Behavior
+**If the leader gets kicked by an admin:** The whole party gets disbanded. No party can exist without a leader.
 
-### Automatic Cleanup
+**Can you give leadership to someone else?** Nope! Leadership only transfers when the current leader leaves.
 
-The party system maintains data integrity through automatic cleanup mechanisms:
+## Checking Your Party Status
 
-- **Expired Invitations**: Invitations older than one minute are automatically removed when the party is accessed
-- **Stale References**: Actor party affiliations are validated and corrected during party operations
-- **Consistency Checks**: The system ensures bidirectional consistency between actor records and party membership
+Everyone in the party can use `party status` to see who's currently in the group:
 
-### Error Handling
+```
+> party status
+★ Alice (Party Leader)
+  Bob
+  Charlie
+```
 
-The party system provides clear feedback for invalid operations:
+**If you're the party leader,** you'll also see any pending invitations:
 
-- Attempting to invite existing members results in no-op behavior
-- Inviting actors already in other parties generates appropriate error messages
-- Operations on non-existent parties or actors fail with descriptive errors
-- Expired invitations cannot be accepted or rejected
+```
+> party status
+★ Alice (Party Leader)
+  Bob
+  Charlie
 
-### Performance Characteristics
+Invitations:
+David            30 seconds ago
+Emma             1 minute ago
+```
 
-- **Zero-Copy Operations**: Party data access uses direct references with readonly constraints
-- **Lazy Cleanup**: Expired invitations are removed on-demand rather than via background processes
-- **Idempotent Operations**: Repeated invitations or membership operations are safe and predictable
+**If you're a regular member,** you only see the member list. Leaders keep invitation details private until people join.
 
-## Integration Points
+## Behind the Scenes
 
-### Combat System
+### Automatic Housekeeping
 
-Parties function as tactical units during combat encounters. All party members automatically participate when any member initiates or becomes targeted by combat actions. The combat system treats parties as unified combatant groups.
+The game automatically keeps things tidy:
 
-### Movement System
+- **Old invitations disappear** after 1 minute (no clutter!)
+- **Empty parties get cleaned up** if they've been sitting around with no activity
+- **Solo parties** that are old and have no pending invites get automatically disbanded
 
-Party coordination during movement and exploration maintains group cohesion while allowing individual agency. Members may separate temporarily while retaining party membership benefits.
+### What Happens When Things Go Wrong?
 
-### Event System
+The system is pretty smart about handling mistakes:
 
-Party operations generate appropriate events for logging, notifications, and integration with other game systems. All membership changes, invitations, and administrative actions produce trackable events.
+- **Invite someone already in your party?** Nothing happens (no spam)
+- **Try to invite someone who's already in another party?** You'll get an error message
+- **Try to accept an expired invitation?** Won't work - you'll need a fresh invite
+- **Try to do something with a player who doesn't exist?** Clear error message
 
-[Combat Encounters](../combat/encounters/)
+## How Parties Work with Other Systems
+
+### Combat
+
+When you're in a party, you fight as a team! If any party member starts a fight or gets attacked, the whole party enters combat together.
+
+### Exploration
+
+Party members can spread out and explore different areas while staying in the same party. You don't have to stick together like glue, but you still get all the party benefits.
+
+### Notifications
+
+The game keeps track of everything that happens with your party:
+
+- When someone joins or leaves
+- When invitations are sent or expire
+- When an invitation fails because the player is already in a party
+- When the party gets disbanded
+
+---
+
+[Learn about Combat →](../combat/encounters/)
