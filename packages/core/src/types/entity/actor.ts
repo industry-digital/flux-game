@@ -8,18 +8,18 @@ import {
   AmmoSchemaURN,
   PartyURN,
 } from '~/types/taxonomy';
-import { AppliedEffects } from '~/types/taxonomy/effect';
 import { EntityType, AbstractEntity, Describable } from '~/types/entity/entity';
 import { SkillState } from '~/types/entity/skill';
 import { NormalizedValueBetweenZeroAndOne, NormalizedBipolarValue, StatefulBoundedValue } from '~/types/entity/attribute';
 import { CurvePosition } from '~/types/easing';
 import { Shell } from '~/types/entity/shell';
 import { CurrencyType } from '~/types/currency';
+import { AppliedEffects } from '~/types/entity/effect';
 
 /**
  * The kinds of actors in the simulation
  */
-export enum ActorType {
+export enum KindOfActor {
   /**
    * Player character
    */
@@ -107,7 +107,6 @@ export type Skills = Partial<Record<SkillSchemaURN, SkillState>>;
 export type Membership = { role: string; ts: number; duration?: number };
 export type Memberships = Partial<Record<Taxonomy.Factions, Membership>>;
 export type Traits = Partial<Record<Taxonomy.Traits, 1>>;
-export type Injuries = Partial<Record<Taxonomy.Anatomy, AppliedAnatomicalDamage>>;
 export type Subscriptions = Partial<Record<Taxonomy.Topics, 1>>;
 export type Wallet = Partial<Record<CurrencyType, number>>;
 export type Shells = Partial<Record<string, Shell>>;
@@ -145,21 +144,6 @@ export type Inventory = {
   ts: number;
 };
 
-export type AppliedAnatomicalDamage = {
-  /**
-   * The relative "health" of this part of the body. This is a normalized value between 0 and 1.
-   * 0 means the body part is functionally unusable. 1 means it is in perfect condition.
-   * By mapping anatomy to equipment slots, we can do interesting things when a player takes damage to a part of the
-   * body, like cause the player to drop their weapon if they take critical damage to their hand.
-   */
-  integrity: NormalizedValueBetweenZeroAndOne;
-
-  /**
-   * Effects that are currently affecting this part of the body.
-   */
-  effects: AppliedEffects;
-};
-
 export type CapacitorState = CurvePosition & {
   energy: StatefulBoundedValue;
 };
@@ -189,7 +173,7 @@ export type Actor =
    * Actor subtype; for discriminating between different types of actors when we need to
    * Examples: `pc`, `npc`, `monster`
    */
-  kind: ActorType;
+  kind: KindOfActor;
 
   /**
    * Current location
@@ -237,8 +221,9 @@ export type Actor =
 
   /**
    * Injuries to the actor's body
+   * @deprecated use `effects` instead
    */
-  injuries: Injuries;
+  injuries?: any;
 
   /**
    * Effects that are currently applied to the actor. Buffs/debuffs, etc.
@@ -341,8 +326,8 @@ export type ResourceNeed = {
   search: SearchParameters;
 };
 
-export type AbstractNonPlayerCharacter<T extends ActorType> = Autonomous & Actor & {
+export type AbstractNonPlayerCharacter<T extends KindOfActor> = Autonomous & Actor & {
   kind: T;
 };
 
-export type Creature = AbstractNonPlayerCharacter<ActorType.CREATURE>;
+export type Creature = AbstractNonPlayerCharacter<KindOfActor.CREATURE>;

@@ -2,7 +2,7 @@ import { describe, it, expect, beforeEach } from 'vitest';
 import { createCombatSessionApi } from './session';
 import { createTransformerContext } from '~/worldkit/context';
 import { createActor, setCurrentHp } from '~/worldkit/entity/actor';
-import { ActorType } from '~/types/entity/actor';
+import { KindOfActor } from '~/types/entity/actor';
 import { Team } from '~/types/combat';
 import { SessionStatus } from '~/types/entity/session';
 import { EventType } from '~/types/event';
@@ -33,7 +33,7 @@ describe('Large Scale Combat Integration', () => {
         context.world.actors[actorId] = createActor({
           id: actorId,
           name: `Combatant ${i}`,
-          kind: ActorType.PC,
+          kind: KindOfActor.PC,
           location,
         });
 
@@ -73,7 +73,7 @@ describe('Large Scale Combat Integration', () => {
         context.world.actors[actorId] = createActor({
           id: actorId,
           name: `RapidDeath ${i}`,
-          kind: ActorType.PC,
+          kind: KindOfActor.PC,
           location,
         });
 
@@ -116,7 +116,7 @@ describe('Large Scale Combat Integration', () => {
         context.world.actors[actorId] = createActor({
           id: actorId,
           name: `MutualDestruction ${i}`,
-          kind: ActorType.PC,
+          kind: KindOfActor.PC,
           location,
         });
 
@@ -159,7 +159,7 @@ describe('Large Scale Combat Integration', () => {
         context.world.actors[actorId] = createActor({
           id: actorId,
           name: `MemoryTest ${i}`,
-          kind: ActorType.PC,
+          kind: KindOfActor.PC,
           location,
         });
 
@@ -201,7 +201,7 @@ describe('Large Scale Combat Integration', () => {
           context.world.actors[actorId] = createActor({
             id: actorId,
             name: `PerfTest ${i}`,
-            kind: ActorType.PC,
+            kind: KindOfActor.PC,
             location,
           });
 
@@ -228,7 +228,7 @@ describe('Large Scale Combat Integration', () => {
         context.world.actors[actorId] = createActor({
           id: actorId,
           name: `CacheTest ${i}`,
-          kind: ActorType.PC,
+          kind: KindOfActor.PC,
           location,
         });
 
@@ -267,7 +267,7 @@ describe('Large Scale Combat Integration', () => {
         context.world.actors[actorId] = createActor({
           id: actorId,
           name: `SingleTeam ${i}`,
-          kind: ActorType.PC,
+          kind: KindOfActor.PC,
           location,
         });
 
@@ -290,14 +290,14 @@ describe('Large Scale Combat Integration', () => {
       context.world.actors[actorId1] = createActor({
         id: actorId1,
         name: 'Valid 1',
-        kind: ActorType.PC,
+        kind: KindOfActor.PC,
         location,
       });
 
       context.world.actors[actorId2] = createActor({
         id: actorId2,
         name: 'Valid 2',
-        kind: ActorType.PC,
+        kind: KindOfActor.PC,
         location,
       });
 

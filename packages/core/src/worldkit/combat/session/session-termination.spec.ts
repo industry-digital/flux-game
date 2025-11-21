@@ -2,7 +2,7 @@ import { describe, it, expect, beforeEach } from 'vitest';
 import { createCombatSessionApi } from './session';
 import { createTransformerContext } from '~/worldkit/context';
 import { createActor, setCurrentHp } from '~/worldkit/entity/actor';
-import { ActorType } from '~/types/entity/actor';
+import { KindOfActor } from '~/types/entity/actor';
 import { Team } from '~/types/combat';
 import { SessionStatus } from '~/types/entity/session';
 import { ActorDidDie, CombatSessionEnded, EventType, WorldEvent } from '~/types/event';
@@ -35,28 +35,28 @@ describe('Combat Session - Termination Integration', () => {
     context.world.actors[ALICE_ID] = createActor({
       id: ALICE_ID,
       name: 'Alice',
-      kind: ActorType.PC,
+      kind: KindOfActor.PC,
       location,
     });
 
     context.world.actors[BOB_ID] = createActor({
       id: BOB_ID,
       name: 'Bob',
-      kind: ActorType.PC,
+      kind: KindOfActor.PC,
       location,
     });
 
     context.world.actors[CHARLIE_ID] = createActor({
       id: CHARLIE_ID,
       name: 'Charlie',
-      kind: ActorType.PC,
+      kind: KindOfActor.PC,
       location,
     });
 
     context.world.actors[DAVE_ID] = createActor({
       id: DAVE_ID,
       name: 'Dave',
-      kind: ActorType.PC,
+      kind: KindOfActor.PC,
       location,
     });
   });

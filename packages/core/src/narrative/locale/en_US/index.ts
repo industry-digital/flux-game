@@ -154,4 +154,9 @@ export const en_US: LanguageTemplates = {
   [EventType.ACTOR_DID_LIST_PARTY_INVITATIONS]: narrateActorDidInspectParty,
   [EventType.PARTY_DID_EXPIRE]: narratePartyDidExpire,
   [EventType.PARTY_INVITATION_DID_FAIL]: narratePartyInvitationDidFail,
+
+  // Effect Events
+  [EventType.EFFECT_DID_END]: NOT_IMPLEMENTED,
+  [EventType.EFFECT_DID_START]: NOT_IMPLEMENTED,
+  [EventType.EFFECT_DID_TICK]: NOT_IMPLEMENTED,
 };

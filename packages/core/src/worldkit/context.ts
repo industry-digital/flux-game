@@ -66,6 +66,7 @@ export const createTransformerContext = (
   _removedSkillApi = null, // TODO: Replace with another argument
   rollApi = createRollApi(),
   metrics = createCombatMetricsApi(),
+  ts = timestamp(),
 ): TransformerContext => {
   const declaredEvents: WorldEvent[] = [];
   const declaredEventsByCommand: Map<string, WorldEvent[]> = new Map();
@@ -150,6 +151,7 @@ export const createTransformerContext = (
   };
 
   const context: Omit<TransformerContext, 'failed' | 'partyApi'> = {
+    ts,
     resetEvents,
     resetErrors,
     world,

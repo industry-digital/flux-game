@@ -1,26 +1,26 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import {
-  getCurrentHp,
-  getMaxHp,
-  isAlive,
-  isDead,
-  getHealthPercentage,
-  setCurrentHp,
-  setMaxHp,
-  decrementHp,
-  incrementHp,
-  setHealthPercentage,
-  restoreHpToMax,
-  getResBonus,
-  calculateMaxHpFromRes,
-  updateMaxHpFromRes,
-  initializeHpFromRes,
-  BASE_HP,
-  HP_PER_RES_BONUS,
+    getCurrentHp,
+    getMaxHp,
+    isAlive,
+    isDead,
+    getHealthPercentage,
+    setCurrentHp,
+    setMaxHp,
+    decrementHp,
+    incrementHp,
+    setHealthPercentage,
+    restoreHpToMax,
+    getResBonus,
+    calculateMaxHpFromRes,
+    updateMaxHpFromRes,
+    initializeHpFromRes,
+    BASE_HP,
+    HP_PER_RES_BONUS,
 } from './health';
 import { createActor } from './factory';
 import { setStatValue } from './stats';
-import { Actor, ActorType, Stat } from '~/types/entity/actor';
+import { Actor, KindOfActor, Stat } from '~/types/entity/actor';
 import { ActorURN } from '~/types/taxonomy';
 
 describe('Actor Health Pure Functions', () => {
@@ -31,7 +31,7 @@ describe('Actor Health Pure Functions', () => {
     actor = createActor({
       id: actorId,
       name: 'Test Actor',
-      kind: ActorType.PC,
+      kind: KindOfActor.PC,
       hp: {
         current: 100,
         max: 100,

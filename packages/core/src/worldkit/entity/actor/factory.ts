@@ -1,6 +1,6 @@
 import { DEFAULT_FACTORY_DEPS, FactoryDependencies } from '../util';
 import { EntityType } from '~/types/entity/entity';
-import { Actor, ActorInput, Stat, ActorType, Gender } from '~/types/entity/actor';
+import { Actor, ActorInput, Stat, KindOfActor, Gender } from '~/types/entity/actor';
 import { WellKnownPlace } from '~/types/world/space';
 import { merge } from '~/lib/lang';
 import { refreshCapacitorEnergy } from '~/worldkit/entity/actor/capacitor';
@@ -63,7 +63,7 @@ const createDefaultActor = (deps: ActorFactoryDependencies): Actor => {
       base: '',
     },
     gender: Gender.MALE,
-    kind: ActorType.PC,
+    kind: KindOfActor.PC,
     location: WellKnownPlace.ORIGIN,
     level: 1,
     hp: {

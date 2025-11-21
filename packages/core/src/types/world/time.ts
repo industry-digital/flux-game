@@ -24,14 +24,13 @@ export enum TimeUnit {
  * Special duration values that aren't expressed in standard time units
  */
 export enum SpecialDuration {
-  INSTANT = 'instant', // Takes effect immediately and doesn't last
   INDEFINITE = 'indefinite', // Lasts for an unspecified duration, often until a condition is met
   PERMANENT = 'permanent', // Lasts indefinitely until explicitly removed
 }
 
 /**
  * Common time periods expressed as milliseconds for resource generation,
- * cooldowns, and other timing calculations where performance matters.
+ * cooldowns, and other timing calculations.
  */
 export enum WellKnownDuration {
   MILLISECOND = 1,
@@ -46,6 +45,8 @@ export enum WellKnownDuration {
   SHORT_COOLDOWN = 10 * 1_000, // 10 seconds
   MEDIUM_COOLDOWN = 30 * 1_000, // 30 seconds
   LONG_COOLDOWN = 5 * 60 * 1_000, // 5 minutes
+
+  FOREVER = -1,
 }
 
 /**

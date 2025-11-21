@@ -45,12 +45,11 @@ export {
 export {
   Actor,
   Gender,
-  ActorType,
+  KindOfActor as ActorType,
   ActorInput,
   Stat,
   ActorStats,
   Equipment,
-  AppliedAnatomicalDamage,
   Inventory,
   Skills,
   CoreStat,
@@ -300,7 +299,6 @@ export {
 export {
   Duration,
   ScheduledDuration,
-  SpecialDuration,
   TimeUnit,
   WellKnownDuration,
 } from './world/time';

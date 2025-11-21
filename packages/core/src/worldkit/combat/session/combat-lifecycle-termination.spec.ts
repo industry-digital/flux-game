@@ -3,7 +3,7 @@ import { createCombatLifecycle } from './combat-lifecycle';
 import { createTransformerContext } from '~/worldkit/context';
 import { createCombatSession } from './session';
 import { createActor } from '~/worldkit/entity/actor';
-import { ActorType } from '~/types/entity/actor';
+import { KindOfActor } from '~/types/entity/actor';
 import { Team, CombatFacing } from '~/types/combat';
 import { SessionStatus } from '~/types/entity/session';
 import { CombatSessionEnded, EventType } from '~/types/event';
@@ -28,21 +28,21 @@ describe('Combat Lifecycle - Termination', () => {
     context.world.actors[ALICE_ID] = createActor({
       id: ALICE_ID,
       name: 'Alice',
-      kind: ActorType.PC,
+      kind: KindOfActor.PC,
       location,
     });
 
     context.world.actors[BOB_ID] = createActor({
       id: BOB_ID,
       name: 'Bob',
-      kind: ActorType.PC,
+      kind: KindOfActor.PC,
       location,
     });
 
     context.world.actors[CHARLIE_ID] = createActor({
       id: CHARLIE_ID,
       name: 'Charlie',
-      kind: ActorType.PC,
+      kind: KindOfActor.PC,
       location,
     });
   });

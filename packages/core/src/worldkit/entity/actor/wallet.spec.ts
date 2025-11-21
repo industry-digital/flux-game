@@ -1,21 +1,21 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { Actor, ActorType } from '~/types/entity/actor';
+import { Actor, KindOfActor } from '~/types/entity/actor';
 import { CurrencyType, TransactionType } from '~/types/currency';
 import { ActorDidCompleteCurrencyTransaction, EventType } from '~/types/event';
 import { TransformerContext } from '~/types/handler';
 import { createActor } from './index';
 import {
-  DEFAULT_CURRENCY_BALANCE,
-  getBalance,
-  hasEnoughFunds,
-  getTotalBalance,
-  setBalance,
-  addFunds,
-  deductFunds,
-  clearWallet,
-  initializeWallet,
-  createCurrencyTransaction,
-  executeCurrencyTransaction, type CurrencyDependencies
+    DEFAULT_CURRENCY_BALANCE,
+    getBalance,
+    hasEnoughFunds,
+    getTotalBalance,
+    setBalance,
+    addFunds,
+    deductFunds,
+    clearWallet,
+    initializeWallet,
+    createCurrencyTransaction,
+    executeCurrencyTransaction, type CurrencyDependencies
 } from './wallet';
 
 describe('Wallet Module', () => {
@@ -26,7 +26,7 @@ describe('Wallet Module', () => {
   beforeEach(() => {
     actor = createActor({
       name: 'Test Actor',
-      kind: ActorType.PC,
+      kind: KindOfActor.PC,
     });
 
     mockDeps = {

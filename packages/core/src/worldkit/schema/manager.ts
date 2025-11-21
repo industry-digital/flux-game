@@ -8,6 +8,7 @@ import {
   ContainerSchemaURN,
   ComponentSchemaURN,
   AmmoSchemaURN,
+  EffectURN,
 } from '~/types/taxonomy';
 import {
   BulkResourceSchema,
@@ -19,6 +20,7 @@ import { AbilitySchema } from '~/types/schema/ability';
 import { SkillSchema } from '~/types/schema/skill';
 import { ContainerSchema } from '~/types/schema/container';
 import { AmmoSchema } from '~/types/schema/ammo';
+import { EffectSchema } from '~/types/schema/effect';
 import {
   loadResourceSchemas,
   loadWeaponSchemas,
@@ -44,9 +46,7 @@ export type SchemaRegistry = {
   [key: ContainerSchemaURN]: ContainerSchema;
   [key: ComponentSchemaURN]: ComponentSchema;
   [key: AmmoSchemaURN]: AmmoSchema;
-  // TODO: Add effect, trait schemas when available
-  // [key: EffectSchemaURN]: EffectSchema;
-  // [key: TraitSchemaURN]: TraitSchema;
+  [key: EffectURN]: EffectSchema;
 };
 
 

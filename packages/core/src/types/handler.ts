@@ -105,6 +105,10 @@ export type TransformerContext<W extends WorldProjection = WorldProjection> =
   & SchemaConsumer
   & WorldProjectionConsumer<W>
   & {
+    /**
+     * The current timestamp
+     */
+    ts: number;
     mass: MassApi;
 
     // Combat infrastructure - always available

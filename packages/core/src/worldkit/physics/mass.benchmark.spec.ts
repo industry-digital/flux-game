@@ -5,7 +5,7 @@
 
 import { describe, it, expect, beforeEach } from 'vitest';
 import { createMassApi, createMassComputationState } from './mass';
-import { Actor, ActorType } from '~/types/entity/actor';
+import { Actor, KindOfActor } from '~/types/entity/actor';
 import { Item } from '~/types/entity/item';
 import { Container } from '~/types/entity/container';
 import { EntityType } from '~/types/entity/entity';
@@ -86,7 +86,7 @@ function createTestActor(id: number, inventorySize: number): Actor {
     id: `flux:actor:test-${id}` as any,
     type: EntityType.ACTOR,
     name: `Test Actor ${id}`,
-    kind: ActorType.PC,
+    kind: KindOfActor.PC,
     location: 'flux:place:test' as any,
     level: { base: 1, modifiers: [], current: 1 },
     hp: { base: 100, modifiers: [], current: 100, max: 100 },

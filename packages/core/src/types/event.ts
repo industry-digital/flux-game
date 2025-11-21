@@ -1,6 +1,6 @@
 import { Weather } from '~/types/entity/weather';
 import { ResourceNodes } from '~/types/entity/resource';
-import { ActorURN, AmmoSchemaURN, GroupURN, ItemURN, PartyURN, PlaceURN, SessionURN, WeaponSchemaURN } from '~/types/taxonomy';
+import { ActorURN, AmmoSchemaURN, EffectURN, GroupURN, ItemURN, PartyURN, PlaceURN, SessionURN, WeaponSchemaURN } from '~/types/taxonomy';
 import {
   ActionCost,
   AttackOutcome,
@@ -20,6 +20,7 @@ import { CurrencyTransaction } from '~/types/currency';
 import { PartyLeaveReason } from '~/types/party';
 import { ExpirationReason, Party } from '~/types/entity/group';
 import { Narrative, NarrativeSequence } from '~/types/narrative';
+import { EffectSource } from '~/types/entity/effect';
 
 export type EventPayload = Record<string, any>;
 
@@ -86,31 +87,74 @@ export type ErrorExplanation = {
  * All possible things that can happen in the game universe.
  */
 export enum EventType {
+  ACTOR_DID_ACCEPT_PARTY_INVITATION = 'actor:party:invite:accepted',
+  ACTOR_DID_ACQUIRE_TARGET = 'actor:target:acquired',
   ACTOR_DID_ARRIVE = 'actor:arrived',
+  ACTOR_DID_ASSESS_RANGE = 'actor:range:acquired',
+  ACTOR_DID_ASSESS_SHELL_STATUS = 'actor:shell:status:assessed',
+  ACTOR_DID_ATTACK = 'actor:attack:performed',
+  ACTOR_DID_COMPLETE_CURRENCY_TRANSACTION = 'actor:currency:transaction:completed',
+  ACTOR_DID_CREATE_PARTY = 'actor:party:created',
+  ACTOR_DID_DEFEND = 'actor:did:defend',
   ACTOR_DID_DEMATERIALIZE = 'actor:dematerialized',
   ACTOR_DID_DEPART = 'actor:departed',
   ACTOR_DID_DIE = 'actor:died',
+  ACTOR_DID_DISBAND_PARTY = 'actor:party:disbanded',
+  ACTOR_DID_EQUIP_WEAPON = 'actor:weapon:equipped',
+  ACTOR_DID_EXAMINE_COMPONENT = 'actor:component:examined',
   ACTOR_DID_EXAMINE_SHELL = 'actor:shell:examined',
+  ACTOR_DID_GAIN_AMMO = 'actor:inventory:ammo:gained',
+  ACTOR_DID_INSPECT_PARTY = 'actor:party:members:listed',
+  ACTOR_DID_INSPECT_SHELL_STATUS = 'actor:shell:status:inspected',
+  ACTOR_DID_ISSUE_PARTY_INVITATION = 'actor:party:invite:issued',
+  ACTOR_DID_JOIN_PARTY = 'actor:party:joined',
+  ACTOR_DID_LEAVE_PARTY = 'actor:party:left',
+  ACTOR_DID_LIST_INVENTORY_COMPONENTS = 'actor:inventory:components:listed',
+  ACTOR_DID_LIST_INVENTORY_MATERIALS = 'actor:inventory:materials:listed',
+  ACTOR_DID_LIST_PARTY_INVITATIONS = 'actor:party:invitations:listed',
+  ACTOR_DID_LIST_SHELLS = 'actor:shells:listed',
+  ACTOR_DID_LIST_SHELL_COMPONENTS = 'actor:shell:components:listed',
+  ACTOR_DID_LOAD_WEAPON = 'actor:weapon:loaded',
   ACTOR_DID_LOOK = 'actor:looked',
+  ACTOR_DID_LOSE_AMMO = 'actor:inventory:ammo:lost',
   ACTOR_DID_MATERIALIZE = 'actor:materialized',
+  ACTOR_DID_MOUNT_COMPONENT = 'actor:component:mounted',
   ACTOR_DID_MOVE = 'actor:moved',
-  ACTOR_DID_OPEN_HELPFILE = 'actor:helpfile:opened',
-  ACTOR_DID_RECOVER_ENERGY = 'actor:energy:recovered',
-  ACTOR_DID_SWAP_SHELL = 'actor:shell:swapped',
-  ACTOR_WAS_CREATED = 'actor:created',
-  ACTOR_DID_ACQUIRE_TARGET = 'actor:target:acquired',
-  ACTOR_DID_ATTACK = 'actor:attack:performed',
-  ACTOR_DID_TAKE_COVER = 'actor:cover:taken',
-  ACTOR_DID_DEFEND = 'actor:did:defend',
-  ACTOR_DID_ASSESS_RANGE = 'actor:range:acquired',
   ACTOR_DID_MOVE_IN_COMBAT = 'actor:combat:moved',
+  ACTOR_DID_OPEN_HELPFILE = 'actor:helpfile:opened',
+  ACTOR_DID_RECEIVE_PARTY_INVITATION = 'actor:party:invite:received',
+  ACTOR_DID_RECOVER_ENERGY = 'actor:energy:recovered',
+  ACTOR_DID_REJECT_PARTY_INVITATION = 'actor:party:invite:rejected',
+  ACTOR_DID_RENAME_SHELL = 'actor:shell:renamed',
+  ACTOR_DID_REVIEW_SHELL_STATS = 'actor:shell:stats:reviewed',
+  ACTOR_DID_SAY = 'actor:said',
+  ACTOR_DID_STAGE_SHELL_MUTATION = 'actor:shell:mutation:staged',
+  ACTOR_DID_SWAP_SHELL = 'actor:shell:swapped',
+  ACTOR_DID_TAKE_COVER = 'actor:cover:taken',
+  ACTOR_DID_UNEQUIP_WEAPON = 'actor:weapon:unequipped',
+  ACTOR_DID_UNLOAD_WEAPON = 'actor:weapon:unloaded',
+  ACTOR_DID_UNMOUNT_COMPONENT = 'actor:component:unmounted',
   ACTOR_WAS_ATTACKED = 'actor:attack:received',
-  ACTOR_DID_ASSESS_SHELL_STATUS = 'actor:shell:status:assessed',
+  ACTOR_WAS_CREATED = 'actor:created',
   COMBAT_SESSION_DID_END = 'combat:session:ended',
   COMBAT_SESSION_DID_START = 'combat:session:started',
   COMBAT_SESSION_STATUS_DID_CHANGE = 'combat:session:status:changed',
   COMBAT_TURN_DID_END = 'combat:turn:ended',
   COMBAT_TURN_DID_START = 'combat:turn:started',
+  /**
+   * Applied effect ended
+   */
+  EFFECT_DID_END = 'effect:ended',
+  /**
+   * Applied effect started
+   */
+  EFFECT_DID_START = 'effect:started',
+  /**
+   * Applied effect ticked
+   */
+  EFFECT_DID_TICK = 'effect:tick',
+  PARTY_DID_EXPIRE = 'party:expired',
+  PARTY_INVITATION_DID_FAIL = 'party:invitation:failed',
   PLACE_WAS_CREATED = 'place:created',
   RESOURCES_DID_CHANGE = 'place:resources:changed',
   WEATHER_DID_CHANGE = 'place:weather:changed',
@@ -119,37 +163,6 @@ export enum EventType {
   WORKBENCH_SHELL_MUTATIONS_COMMITTED = 'workbench:mutations:committed',
   WORKBENCH_SHELL_MUTATIONS_DIFFED = 'workbench:mutations:diffed',
   WORKBENCH_SHELL_MUTATIONS_UNDONE = 'workbench:mutations:undone',
-  ACTOR_DID_STAGE_SHELL_MUTATION = 'actor:shell:mutation:staged',
-  ACTOR_DID_LIST_SHELLS = 'actor:shells:listed',
-  ACTOR_DID_INSPECT_SHELL_STATUS = 'actor:shell:status:inspected',
-  ACTOR_DID_REVIEW_SHELL_STATS = 'actor:shell:stats:reviewed',
-  ACTOR_DID_LIST_SHELL_COMPONENTS = 'actor:shell:components:listed',
-  ACTOR_DID_EXAMINE_COMPONENT = 'actor:component:examined',
-  ACTOR_DID_MOUNT_COMPONENT = 'actor:component:mounted',
-  ACTOR_DID_UNMOUNT_COMPONENT = 'actor:component:unmounted',
-  ACTOR_DID_LIST_INVENTORY_COMPONENTS = 'actor:inventory:components:listed',
-  ACTOR_DID_LIST_INVENTORY_MATERIALS = 'actor:inventory:materials:listed',
-  ACTOR_DID_COMPLETE_CURRENCY_TRANSACTION = 'actor:currency:transaction:completed',
-  ACTOR_DID_RENAME_SHELL = 'actor:shell:renamed',
-  ACTOR_DID_GAIN_AMMO = 'actor:inventory:ammo:gained',
-  ACTOR_DID_LOSE_AMMO = 'actor:inventory:ammo:lost',
-  ACTOR_DID_LOAD_WEAPON = 'actor:weapon:loaded',
-  ACTOR_DID_UNLOAD_WEAPON = 'actor:weapon:unloaded',
-  ACTOR_DID_EQUIP_WEAPON = 'actor:weapon:equipped',
-  ACTOR_DID_UNEQUIP_WEAPON = 'actor:weapon:unequipped',
-  ACTOR_DID_CREATE_PARTY = 'actor:party:created',
-  ACTOR_DID_DISBAND_PARTY = 'actor:party:disbanded',
-  ACTOR_DID_ISSUE_PARTY_INVITATION = 'actor:party:invite:issued',
-  ACTOR_DID_RECEIVE_PARTY_INVITATION = 'actor:party:invite:received',
-  ACTOR_DID_ACCEPT_PARTY_INVITATION = 'actor:party:invite:accepted',
-  ACTOR_DID_REJECT_PARTY_INVITATION = 'actor:party:invite:rejected',
-  ACTOR_DID_JOIN_PARTY = 'actor:party:joined',
-  ACTOR_DID_LEAVE_PARTY = 'actor:party:left',
-  ACTOR_DID_INSPECT_PARTY = 'actor:party:members:listed',
-  ACTOR_DID_LIST_PARTY_INVITATIONS = 'actor:party:invitations:listed',
-  ACTOR_DID_SAY = 'actor:said',
-  PARTY_DID_EXPIRE = 'party:expired',
-  PARTY_INVITATION_DID_FAIL = 'party:invitation:failed',
 }
 
 export type EventBase = {
@@ -747,6 +760,30 @@ export type PartyInvitationDidFailInput = AbstractWorldEventInput<
     inviteeId: ActorURN;
     reason: string;
   }
+>;
+
+export type EffectLifecycleEventPayload = {
+  effectId: string;
+  schema: EffectURN;
+  source?: EffectSource;
+};
+
+export type EffectDidStart = EventBase & EffectDidStartInput;
+export type EffectDidStartInput = AbstractWorldEventInput<
+  EventType.EFFECT_DID_START,
+  EffectLifecycleEventPayload
+>;
+
+export type EffectDidTick = EventBase & EffectDidTickInput;
+export type EffectDidTickInput = AbstractWorldEventInput<
+  EventType.EFFECT_DID_TICK,
+  EffectLifecycleEventPayload
+>;
+
+export type EffectDidEnd = EventBase & EffectDidEndInput;
+export type EffectDidEndInput = AbstractWorldEventInput<
+  EventType.EFFECT_DID_END,
+  EffectLifecycleEventPayload
 >;
 
 /**
