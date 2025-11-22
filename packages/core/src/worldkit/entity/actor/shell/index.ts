@@ -11,7 +11,7 @@ import { timestamp } from '~/lib/timestamp';
 /**
  * Shell stat keys - the stats that are stored on shells
  */
-export const SHELL_STAT_KEYS = [Stat.POW, Stat.FIN, Stat.RES] as const;
+export const ALL_SHELL_STATS = [Stat.POW, Stat.FIN, Stat.RES] as const;
 
 /**
  * Sync shell stats to actor stats (PC only)

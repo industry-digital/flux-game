@@ -4,7 +4,7 @@ import { ShellPerformanceProfile } from '~/types/shell';
 import { createShellPreview } from '~/worldkit/workbench/preview';
 import { calculateShellPerformance, ShellPerformanceDependencies } from '~/worldkit/entity/actor/shell/instrumentation';
 import { calculateTotalCost } from '~/worldkit/workbench/cost';
-import { SHELL_STAT_KEYS } from '~/worldkit/entity/actor/shell';
+import { ALL_SHELL_STATS } from '~/worldkit/entity/actor/shell';
 import { Actor } from '~/types/entity/actor';
 import { getShellStatValue } from '~/worldkit/entity/actor/shell';
 
@@ -51,7 +51,7 @@ export const createStatDiff = (current: Shell, preview: Shell): StatChanges | un
   const statChanges: StatChanges = {};
   let hasChanges = false;
 
-  for (const stat of SHELL_STAT_KEYS) {
+  for (const stat of ALL_SHELL_STATS) {
     const currentValue = getShellStatValue(current, stat);
     const previewValue = getShellStatValue(preview, stat);
     if (currentValue !== previewValue) {

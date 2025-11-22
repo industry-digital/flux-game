@@ -1,25 +1,25 @@
 import {
-  WorkbenchSessionDidStart,
-  WorkbenchSessionDidEnd,
-  ActorDidStageShellMutation,
-  ActorDidDiffShellMutations,
-  ActorDidUndoShellMutations,
-  ActorDidCommitShellMutations,
-  ActorDidMountComponent,
-  ActorDidUnmountComponent,
-  ActorDidListShells,
-  ActorDidInspectShellStatus,
-  ActorDidReviewShellStats,
-  ActorDidListShellComponents,
-  ActorDidExamineComponent,
-  WorldEvent,
-  ActorDidSwapShell,
-  ActorDidAssessShellStatus,
+    WorkbenchSessionDidStart,
+    WorkbenchSessionDidEnd,
+    ActorDidStageShellMutation,
+    ActorDidDiffShellMutations,
+    ActorDidUndoShellMutations,
+    ActorDidCommitShellMutations,
+    ActorDidMountComponent,
+    ActorDidUnmountComponent,
+    ActorDidListShells,
+    ActorDidInspectShellStatus,
+    ActorDidReviewShellStats,
+    ActorDidListShellComponents,
+    ActorDidExamineComponent,
+    WorldEvent,
+    ActorDidSwapShell,
+    ActorDidAssessShellStatus,
 } from '~/types/event';
 import { ShellMutationType, StatMutation, StatMutationOperation } from '~/types/workbench';
 import { Narrative, NarrativeSequence, TemplateFunction } from '~/types/narrative';
 import { Stat } from '~/types/entity/actor';
-import { SHELL_STAT_KEYS } from '~/worldkit/entity/actor/shell';
+import { ALL_SHELL_STATS } from '~/worldkit/entity/actor/shell';
 import { calculateShellPerformance, ShellPerformanceDependencies } from '~/worldkit/entity/actor/shell/instrumentation';
 import { getSchemaTranslation } from '~/narrative/schema';
 import { Locale } from '~/types/i18n';
@@ -233,7 +233,7 @@ const baseNarrateActorDidDiffShellMutations: TemplateFunction<ActorDidDiffShellM
     result += '\nSHELL STATS\n';
 
     // Show all three core shell stats (POW, FIN, RES)
-    for (const stat of SHELL_STAT_KEYS) {
+    for (const stat of ALL_SHELL_STATS) {
       const statValue = stats?.[stat];
       if (typeof statValue === 'string') {
         // This stat has changes
